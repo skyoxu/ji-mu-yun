@@ -1,0 +1,272 @@
+[
+    {
+        "slice_id":  "S1",
+        "run_root":  "logs/quick-dev-current-run-20261005/s1-current-1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S1-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:6f7487c555a1e6ab63b3340e428fd204fe9ff2de17fa5bf5012d4ff74076de7a"
+    },
+    {
+        "slice_id":  "S2",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r7/S2-historical-judge-r7",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S2-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:7a60968428c52c3bbf87679b191a5897a40c669815c76716a8f686c71f4b988b"
+    },
+    {
+        "slice_id":  "S3",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/owner-recovery/S3-current-815c",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S3-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:04b520909ab1fb9238b829c5f0c132ebfe7993eed1159616f646fed61fbcd5ca"
+    },
+    {
+        "slice_id":  "S4",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S4-current-r2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S4-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:29a40f2aec6915bd09bcf235e78680b7459cb191cb89b8441aade1d66fff2750"
+    },
+    {
+        "slice_id":  "S5",
+        "run_root":  "logs/quick-dev-current-run-20261005/s5-repair-1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S5-repair-slice-ready.json",
+        "result_sha256":  "sha256:54ca317c2d0883d6521513893b5f925ff0815600ba93f2bf912e33832b64ce6e"
+    },
+    {
+        "slice_id":  "S6",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S6-repair-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S6-repair-slice-ready.json",
+        "result_sha256":  "sha256:3f76918f0e702fa4326ad18d9bd8976bd53ae5c69bbd068ebb72a4a9ce70bbeb"
+    },
+    {
+        "slice_id":  "S7",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r4/S7-historical-judge-r4",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S7-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:464f69ac58984b17a20a34ff7a2d97cd48a3b21d072239a6de150749bee74ce2"
+    },
+    {
+        "slice_id":  "S8",
+        "run_root":  "logs/quick-dev-current-run-20261005/s8-repair-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S8-repair-slice-ready.json",
+        "result_sha256":  "sha256:bc4c9d4f81acfe596a2bd57b84e6a5aafcfc9bd69ef943e6708c9bd294408106"
+    },
+    {
+        "slice_id":  "S9",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r2/S9-historical-judge-r2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S9-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:4fba33529ebf8ce89448a2b2e6682523e82aace618163ec6696218604487dda0"
+    },
+    {
+        "slice_id":  "S10",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r2/S10-historical-judge-r2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S10-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:6f281ce7fe0df3236b538c5c7a9cad75de83a74b3fe598b84c5b05fa5f997735"
+    },
+    {
+        "slice_id":  "S11",
+        "run_root":  "logs/quick-dev-current-run-20261005/s11-repair-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S11-repair-slice-ready.json",
+        "result_sha256":  "sha256:53d69230c52068da5579f106ce009609a0e0c0755e14e15e7b0f1c6978013beb"
+    },
+    {
+        "slice_id":  "S12",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r2/S12-historical-judge-r2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S12-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:83072fed9baaa4f3e82e19c4278e995ba03aac5b7ec524702b804183db16bc5f"
+    },
+    {
+        "slice_id":  "S13",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r6/S13-historical-judge-r6",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S13-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:fcbf9c27bfa003ff40add3bcdfc82c06f594fbb7dae2386591e9b3c3c8f0b157"
+    },
+    {
+        "slice_id":  "S14",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S14-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S14-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:8badffea346439cdeb9c6f0e0db3b4ce5467f5f30273e47ce4d1bfb9742a8341"
+    },
+    {
+        "slice_id":  "S15",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S15-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S15-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:235975b08ca64d99473d4653ac94311a103e3f019fcdac6745f0f251b758ec93"
+    },
+    {
+        "slice_id":  "S16",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S16",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S16-repair-e4-slice-ready.json",
+        "result_sha256":  "sha256:2e8a629ccc932a6f3a40a563c3c0f04099202e632e7daca555de755c9bbb325b"
+    },
+    {
+        "slice_id":  "S17",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r7/S17-historical-judge-r7",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S17-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:307fb08f207f569eb02cc2c34c6af0d83e902caebb3db3a93357bba8e28aefde"
+    },
+    {
+        "slice_id":  "S18",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S18-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S18-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:13e18a0cc16fa1c121048bb336851d9c1989cb3d990557e3541eb0678707aa79"
+    },
+    {
+        "slice_id":  "S19",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S19-repair-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S19-repair-3-slice-ready.json",
+        "result_sha256":  "sha256:1e7dd3b75c64eb3c7e8d1e36902456c0f433c1c186a94578a6575387ff40fac0"
+    },
+    {
+        "slice_id":  "S20",
+        "run_root":  "logs/quick-dev-current-run-20261005/s20-current-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S20-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:6d130ebe0e1d8d2dd92d3cd83420e695d89a1f9146a143cce15bba271d113c0d"
+    },
+    {
+        "slice_id":  "S21",
+        "run_root":  "logs/quick-dev-current-run-20261005/s21-current-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S21-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:7201746c112151acd25152fb33845f0ede58bd6dffa870db9f923b6fcd9ea30d"
+    },
+    {
+        "slice_id":  "S22",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S22-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S22-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:73227df1765f0935bb691c52f2009099d49c0d31200d32705c7d51a26e1139af"
+    },
+    {
+        "slice_id":  "S23",
+        "run_root":  "logs/quick-dev-current-run-20261005/s23-current-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S23-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:0ad5e1ffc9ff1a938f5729bb15af3f97e57fd6fdcab35499375e1bce0dbd3412"
+    },
+    {
+        "slice_id":  "S24",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S24-current-r2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S24-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:40288add588ea664c4dba4c0fa109bbcf25ca58aec0a1439d10c5302027a214c"
+    },
+    {
+        "slice_id":  "S25",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r7/S25-historical-judge-r7",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S25-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:b0576e1a11d43b4f99f02bc21e79c573bc8a5731aac54332aebad1dfa6f5d97e"
+    },
+    {
+        "slice_id":  "S26",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r9-budget3/S26-budget3-r9",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S26-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:12a034f38e595407e064adfe490bb7a86161c3c43b4df594f9a16b694e22aa77"
+    },
+    {
+        "slice_id":  "S27",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S27-repair-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S27-repair-3-slice-ready.json",
+        "result_sha256":  "sha256:3ff4d1fc3b08fc347f0a1e26e29428b85309bbe0787c8b332e668943fbc882c7"
+    },
+    {
+        "slice_id":  "S28",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r9-budget3/S28-budget3-r9",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S28-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:baf48f631ecac6e483f22578e7745818431f7fd017dd76f0f9c3143c8f306187"
+    },
+    {
+        "slice_id":  "S29",
+        "run_root":  "logs/quick-dev-current-run-20261005/s29-repair-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S29-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:1c400ea23f1373b123ad79f11b83a6fac237acb69055d6d6ed392cd68fbe716e"
+    },
+    {
+        "slice_id":  "S30",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r9-budget3/S30-budget3-r9",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S30-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:5c82d068c80bd2f5eb83332dc2da9d7d30d27bb44e8bec3b3b4bed440c5d4f82"
+    },
+    {
+        "slice_id":  "S31",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S31-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S31-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:75abd8b6fd29cfa20a86c13b1be3795ec0613049732eba7fe968456c17b3a6a7"
+    },
+    {
+        "slice_id":  "S32",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S32-repair-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S32-repair-slice-ready.json",
+        "result_sha256":  "sha256:2319de37c6dfba88ffa257d88420f8c7ac255b9926086a853fb61e4745d7a3dc"
+    },
+    {
+        "slice_id":  "S33",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S33",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S33-repair-e4-slice-ready.json",
+        "result_sha256":  "sha256:acc50d20c99f9e03ec54b68a25ff09c827523c2952ee71638dea3dc4411ba29c"
+    },
+    {
+        "slice_id":  "S34",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r8/S34-historical-judge-r8",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S34-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:74d1c239474019c479800b870879bc7557e1156f6f3143c9d876e217ed91568a"
+    },
+    {
+        "slice_id":  "S35",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r9-budget3/S35-budget3-r9",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S35-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:44e6efcbdf48c394aaefcd6183e9fca8244008dbeb7ad991d969db25e5043fb3"
+    },
+    {
+        "slice_id":  "S36",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r8/S36-historical-judge-r8",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S36-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:58e904b99394b74b13a5d2c5e4b62b68aaeae39f1df515fec18bf89b7f2834b7"
+    },
+    {
+        "slice_id":  "S37",
+        "run_root":  "logs/quick-dev-current-run-20261005/s37-repair-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S37-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:617d264a90f66124d24de6ed7c63b5867412f84fbf570b2f23aa0bdc92df8420"
+    },
+    {
+        "slice_id":  "S38",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S38-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:f04ed920e010df7e4e50ae317e793ad074ca354354cdb3c2744ba0fd29a68ee3"
+    },
+    {
+        "slice_id":  "S39",
+        "run_root":  "logs/quick-dev-current-run-20261005/s39-repair-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S39-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:8d58c786b117b3862744dc492174be8490a4f4e0dc8c01e63c1982064f681410"
+    },
+    {
+        "slice_id":  "S40",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S40",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S40-repair-e4-slice-ready.json",
+        "result_sha256":  "sha256:72940b8ab95a93bd20479fedeeda548376d09c9a5d08bc8b8ba0b54bf069417d"
+    },
+    {
+        "slice_id":  "S41",
+        "run_root":  "logs/08-05-real-skill-replay/incremental-q8-047a/S41-repair-3",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S41-repair-3-slice-ready.json",
+        "result_sha256":  "sha256:2601cfca1bb8be4cb29ef52adba989823a8f4d663bccd201b6f92cf0e2f2aa0a"
+    },
+    {
+        "slice_id":  "S42",
+        "run_root":  "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S42-current-r1",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S42-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:def6953085578fa92b3ee3a13344f566f4cd6544f88313702d3f253d1723c67d"
+    },
+    {
+        "slice_id":  "S43",
+        "run_root":  "logs/quick-dev-current-run-20261005/s43-current-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S43-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:9c457d89291e33d0d059192c97c7133eef71d1ac9eb634bc2861d80c34cf2d08"
+    },
+    {
+        "slice_id":  "S44",
+        "run_root":  "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r9-budget3/S44-budget3-r9",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S44-oldreuse-r2-slice-ready.json",
+        "result_sha256":  "sha256:effee00535b5c2a693b63c7a64d368d0850decd0b879847f5892fbd09309531e"
+    },
+    {
+        "slice_id":  "S45",
+        "run_root":  "logs/quick-dev-current-run-20261005/s45-repair-2",
+        "result_ref":  "logs/08-05-real-skill-replay/incremental-q8-047a/S45-repair-slice-ready.json",
+        "result_sha256":  "sha256:5a0599633ba12b073bc047df5118ff467d412a8628054b53a8699c6cc8e2e594"
+    }
+]

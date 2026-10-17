@@ -1,0 +1,770 @@
+{
+  "authorizes": [],
+  "q8_input": "logs\\08-05-real-skill-replay\\review-repair-20261009\\current-run-q8-recovery-r4\\terminal-input.v2.json",
+  "revision": "HEAD",
+  "bound_files": 346,
+  "mismatches": [
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S2-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:fb5bec6c6cfa30a5c3722c43092b3fdd523db61ab79e404a6c78644a921a3a44",
+      "worktree_sha256": "sha256:fb5bec6c6cfa30a5c3722c43092b3fdd523db61ab79e404a6c78644a921a3a44",
+      "git_sha256": "sha256:72457c46decc56ea24bb1ab5e91d8e9b2af0e943e818c3ffa7e9935f86334ab4",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S2-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:fc8bc85ce0144783a2614c038bbf15bc47e24bfd9066560f52f1a6184554fd56",
+      "worktree_sha256": "sha256:fc8bc85ce0144783a2614c038bbf15bc47e24bfd9066560f52f1a6184554fd56",
+      "git_sha256": "sha256:fd821a942b7c6998db231487a19694daf266cb00eccc7e5c1b87a2d248319b0a",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S2-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:7b13b2120458cac98608f3c1687725344b319bb4e635ba301b6398d259a74852",
+      "worktree_sha256": "sha256:7b13b2120458cac98608f3c1687725344b319bb4e635ba301b6398d259a74852",
+      "git_sha256": "sha256:dde794eb67f9dc8534e5ecb6079b9c46b71de8f0abb2843eeeb2d87725411187",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S4-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:771c6a8ff2abbf0b9377766e92c5e9ba4b149728147a699303531da62138ce05",
+      "worktree_sha256": "sha256:771c6a8ff2abbf0b9377766e92c5e9ba4b149728147a699303531da62138ce05",
+      "git_sha256": "sha256:50c2683a6e542447a390ea2bee2fc36642a658ad8d6976df8a48e522a1a4713e",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s4.py",
+      "expected": "sha256:dc24f008ae8016fc188650a3d1a99f31ba52650e208d2385dc8ac90edfa93b6b",
+      "worktree_sha256": "sha256:dc24f008ae8016fc188650a3d1a99f31ba52650e208d2385dc8ac90edfa93b6b",
+      "git_sha256": "sha256:2daa494b8c91593b55cca06bcfab60629be730cac2da1a34614f25cb6cb88a47",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S4-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:e86674ba11d992bb839f42006ad260d2658cc146a1eaf1729641730d0482b613",
+      "worktree_sha256": "sha256:e86674ba11d992bb839f42006ad260d2658cc146a1eaf1729641730d0482b613",
+      "git_sha256": "sha256:0517cf6c560cba62fb38bb2d8b01f0d1d05365bd89554f57f900644f7e7d28ca",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S4-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:9a389e8a9181c1fefbd0a01cc72ae7bf043de1226541414dd98d7466f5c2af4c",
+      "worktree_sha256": "sha256:9a389e8a9181c1fefbd0a01cc72ae7bf043de1226541414dd98d7466f5c2af4c",
+      "git_sha256": "sha256:a6bc62df9b5764a2c41d54da18d3b0f586c90781fbda0a1575128d03efae8ddc",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S6/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:b72b70b66fa6aad005ffe6526ecb1a1935c2877bc527336f61eeb08bcab3f871",
+      "worktree_sha256": "sha256:b72b70b66fa6aad005ffe6526ecb1a1935c2877bc527336f61eeb08bcab3f871",
+      "git_sha256": "sha256:4f618af7719872174335c029642cfda03013f1fa3ff00607700ea54ee74b8ad8",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S6/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:5595d1f957ea430381f4e0898c806c4804137bb62188447c76b151c0d91c2123",
+      "worktree_sha256": "sha256:5595d1f957ea430381f4e0898c806c4804137bb62188447c76b151c0d91c2123",
+      "git_sha256": "sha256:7861839e484a19dd9d0b43db5299938d272f2208a692010d99010e25f84c2051",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S6/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:c4bb346d4e8cd832ee898e1564d09e62bdf3389b556b631cc7eaecad58f39fb6",
+      "worktree_sha256": "sha256:c4bb346d4e8cd832ee898e1564d09e62bdf3389b556b631cc7eaecad58f39fb6",
+      "git_sha256": "sha256:6cc5503e3ec6ccb9610657a2cc621a2781ec4f33de2f7361fbbfbd5fc41f5f7f",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S7-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:b82b3a3506aa070bb920243df46f3e77193325a0c48c99c149183281bbfd73e8",
+      "worktree_sha256": "sha256:b82b3a3506aa070bb920243df46f3e77193325a0c48c99c149183281bbfd73e8",
+      "git_sha256": "sha256:30c8d55e37bb1fd50bd8aee2a1dafd8a3d920342784658362232c212d973251f",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S7-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:6e31213221d881f8717c4fe912366e09624c5b1b3f079aaea139068e3ac1eef0",
+      "worktree_sha256": "sha256:6e31213221d881f8717c4fe912366e09624c5b1b3f079aaea139068e3ac1eef0",
+      "git_sha256": "sha256:b777f949a32555ebf84e9cf4ff9d4db18ab73859435622e8dfeb0b711612c29b",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S7-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:4e939e649b763e22452f7f68b60ee85e1e7c2832731fe5d9be887a430a3e8eb0",
+      "worktree_sha256": "sha256:4e939e649b763e22452f7f68b60ee85e1e7c2832731fe5d9be887a430a3e8eb0",
+      "git_sha256": "sha256:b0985d1f4f65eab4bfae279ee743f4dc6a50e028370e9a1a4ce1deef3d5f5aaa",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S9-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:42e0d72b175b23c19e998662c8515864f3eef3862b9c2240ca8245a92dcf19d7",
+      "worktree_sha256": "sha256:42e0d72b175b23c19e998662c8515864f3eef3862b9c2240ca8245a92dcf19d7",
+      "git_sha256": "sha256:774e2649eb342138bec51e4effe99ae1c997385c66e326b3de9b8eaecc59ac02",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S9-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:653dab7c949beb28e127cb366464a8fc377daca7b70abe6a1e27981fe0db7cec",
+      "worktree_sha256": "sha256:653dab7c949beb28e127cb366464a8fc377daca7b70abe6a1e27981fe0db7cec",
+      "git_sha256": "sha256:d0ef12a4e93d80cbacf66390401e951d0e583030bf2832c6db7459e08b3f6297",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S9-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:69fb54e3fe26ceae2481456c6ea0324cb19b32b0ad959858b648ebcdf921bb85",
+      "worktree_sha256": "sha256:69fb54e3fe26ceae2481456c6ea0324cb19b32b0ad959858b648ebcdf921bb85",
+      "git_sha256": "sha256:e6c29441e316ced5ed8c2e72d575e83fe13bacac186d5912424fb0a92fd7307e",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S10-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:5e18d504c1867afacdfc530f4c27668e81a4d73061fa3357acb9e3094d1b7efe",
+      "worktree_sha256": "sha256:5e18d504c1867afacdfc530f4c27668e81a4d73061fa3357acb9e3094d1b7efe",
+      "git_sha256": "sha256:46fe9ba191109befac57ef2490e8295dd93f7237462d2838d8f0bdbfddff3138",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S10-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:0792f4995b52d4f7c3801a4bc4563a390b8f65a31fa3601a6ec44b9fca84fef3",
+      "worktree_sha256": "sha256:0792f4995b52d4f7c3801a4bc4563a390b8f65a31fa3601a6ec44b9fca84fef3",
+      "git_sha256": "sha256:abd618c744d5f675d63740d7e27e5824b4f494b4d21210edea70d3f92425197d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S10-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:faa59a4fab425c6533795d1518249218ed8ff72ffc4e007979a63e09203dd55f",
+      "worktree_sha256": "sha256:faa59a4fab425c6533795d1518249218ed8ff72ffc4e007979a63e09203dd55f",
+      "git_sha256": "sha256:aa879defd10178550cfb969144a4d935d03709c7f62213bcdd4aee47daa02b1c",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S12-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:6daaa0c20d01e5666c708bead10231b1c12b7db5985b33158bca0877e31e56fb",
+      "worktree_sha256": "sha256:6daaa0c20d01e5666c708bead10231b1c12b7db5985b33158bca0877e31e56fb",
+      "git_sha256": "sha256:83d6b6eccb049277a9385735449b549af424dc7073334c1f62ecbfd5e62c34e3",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S12-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:4db052391a7d68e7414ca2f583ca9bc464c2c70d460f14b6c12eb56cce73b225",
+      "worktree_sha256": "sha256:4db052391a7d68e7414ca2f583ca9bc464c2c70d460f14b6c12eb56cce73b225",
+      "git_sha256": "sha256:c54535fdf64de7dd543ac5cf7cd316216de1791301cdb31631723f2ebdd0d41d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S12-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:086fb908c29402d0269af518ed3c371e3f6fb8b91e2fd0deee11dfe835500109",
+      "worktree_sha256": "sha256:086fb908c29402d0269af518ed3c371e3f6fb8b91e2fd0deee11dfe835500109",
+      "git_sha256": "sha256:fa7580b3cd4f5362a4fc0f52aae3b736dbe6e2abc47947cd0db0ed7ffcd0f46c",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S13-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:0f6dfa473902769b3c9cbe7abb5b9c870b1c8b1e69f21a4d41d41439d8de3781",
+      "worktree_sha256": "sha256:0f6dfa473902769b3c9cbe7abb5b9c870b1c8b1e69f21a4d41d41439d8de3781",
+      "git_sha256": "sha256:86b8ac9251d762fa852e643731836df3bb72b04bf90d366dccda10bcdbdf01f4",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S13-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:ab296ae5827f916eb62439462913abdd14237e12428c73ae588a0d726b2f001c",
+      "worktree_sha256": "sha256:ab296ae5827f916eb62439462913abdd14237e12428c73ae588a0d726b2f001c",
+      "git_sha256": "sha256:e6a660232428120267de933396085293144d94046be68c5317c081c69c833a32",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S13-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:9b2245a6f4e753770d108c6cc5d3f23df9f693c87d7517491c7cf170dfffcfca",
+      "worktree_sha256": "sha256:9b2245a6f4e753770d108c6cc5d3f23df9f693c87d7517491c7cf170dfffcfca",
+      "git_sha256": "sha256:bea2748e42967a04729dc175bfe814d41852e9fd8ae11e2d441b9cad53335c1d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S14-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:1cd22f8e86d060dcf1573231a776d185c3c2a8e78738cf4375cb557b7acd616a",
+      "worktree_sha256": "sha256:1cd22f8e86d060dcf1573231a776d185c3c2a8e78738cf4375cb557b7acd616a",
+      "git_sha256": "sha256:f63ed36e155f51d176a24bf99a26b78f86aa6146b75b84adcff92d4ad1c40a97",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S14-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:4292a72d128ea69923156513880600348388208e4c263548eda2ab38247d2119",
+      "worktree_sha256": "sha256:4292a72d128ea69923156513880600348388208e4c263548eda2ab38247d2119",
+      "git_sha256": "sha256:b834d154d8fc19fda76f00fad8fc11f1864ec2cdb75b2d532f7ca2baa05191a8",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S14-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:ce5d2f11d2ff627a4ffcb3d9bed548f436e01efb541e8e1eea9be060d73ed552",
+      "worktree_sha256": "sha256:ce5d2f11d2ff627a4ffcb3d9bed548f436e01efb541e8e1eea9be060d73ed552",
+      "git_sha256": "sha256:3459dd0fd3d0918a7a46de3c450cbd0bf495e128eeaf38ff04b2267ff461d462",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S15-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:2901e9dfa0b5714aa099acfe610f3c4dbfa0c352070d16e8a4538d7da5df8462",
+      "worktree_sha256": "sha256:2901e9dfa0b5714aa099acfe610f3c4dbfa0c352070d16e8a4538d7da5df8462",
+      "git_sha256": "sha256:76af71df60bb5f93ea635e8763126ecf98e837672c9980e80aefde989b203765",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S15-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:4266e033210036ba8b31ee3a443436561f15f8d6019f9b409a683c576bc1774b",
+      "worktree_sha256": "sha256:4266e033210036ba8b31ee3a443436561f15f8d6019f9b409a683c576bc1774b",
+      "git_sha256": "sha256:976ea3fe6dfa65b827ec05fc16bf49cec94d3fda3b2d6ad4719708e74a38b32d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S15-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:2901e9dfa0b5714aa099acfe610f3c4dbfa0c352070d16e8a4538d7da5df8462",
+      "worktree_sha256": "sha256:2901e9dfa0b5714aa099acfe610f3c4dbfa0c352070d16e8a4538d7da5df8462",
+      "git_sha256": "sha256:76af71df60bb5f93ea635e8763126ecf98e837672c9980e80aefde989b203765",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S17-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:b4672fe32e0d2e16250ae1207d7ff7c60ff2676edd8efcd093a98f50d45460e7",
+      "worktree_sha256": "sha256:b4672fe32e0d2e16250ae1207d7ff7c60ff2676edd8efcd093a98f50d45460e7",
+      "git_sha256": "sha256:b184afe4eaf65fc3e7a69af121985e019cd032d0a88dacfd8d5c9ad29069a172",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S17-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:e0b28e20670a9cff9e65b11bca171e13e58ba1078c57ed7709984644eb5259b2",
+      "worktree_sha256": "sha256:e0b28e20670a9cff9e65b11bca171e13e58ba1078c57ed7709984644eb5259b2",
+      "git_sha256": "sha256:33b68ed32e2be4d80605e4f8a302282d18157666dd676a0ea7395c152dcb4ec4",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S17-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:5939dde550e0249dfe143df14825ebf09e0ed890b4d2c332b0bbb15fe37c29b8",
+      "worktree_sha256": "sha256:5939dde550e0249dfe143df14825ebf09e0ed890b4d2c332b0bbb15fe37c29b8",
+      "git_sha256": "sha256:168433520efab115ad06c043a058853eda82944c5fe46cca0f5a993ce61005ef",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S18-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:0c54ce795c2d9ecb9579b1af754ad5ace4c43fce5e0c073fa334e64350eca9d6",
+      "worktree_sha256": "sha256:0c54ce795c2d9ecb9579b1af754ad5ace4c43fce5e0c073fa334e64350eca9d6",
+      "git_sha256": "sha256:d3892eaac4dcd21a083b74709ab4ae079461a50c0fe23477938e216f4708e565",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S18-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:66a184af8033928a2ec8f613712e87a658fa8d4630ce3c6b2f0d2ba9a90cebdb",
+      "worktree_sha256": "sha256:66a184af8033928a2ec8f613712e87a658fa8d4630ce3c6b2f0d2ba9a90cebdb",
+      "git_sha256": "sha256:74fd32ab05d781b43e82019531ebaeb3be97b7097d9592ad5920069166b639b8",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S18-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:a00ce8e4fa800ca25e04a8c3f2bd5e3a537612bb285d32be784cde34ee031feb",
+      "worktree_sha256": "sha256:a00ce8e4fa800ca25e04a8c3f2bd5e3a537612bb285d32be784cde34ee031feb",
+      "git_sha256": "sha256:0c4c55554da226c22fb0fbd382f97e95c84201385bb104b3c0e87490ce0efb92",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S19-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:48283b1cb450dff02dc2ed3791eed2d00d2258dd4481951035c23dd23ce9244e",
+      "worktree_sha256": "sha256:48283b1cb450dff02dc2ed3791eed2d00d2258dd4481951035c23dd23ce9244e",
+      "git_sha256": "sha256:66d5f9c61901eb3724ef8ba3db40af54a3f4d619881965e8855ce6af823ee044",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S19-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:2a660b043980418482382c8d54914603523a8cfe38e4f5ca93a54145faf4cbe5",
+      "worktree_sha256": "sha256:2a660b043980418482382c8d54914603523a8cfe38e4f5ca93a54145faf4cbe5",
+      "git_sha256": "sha256:048bbe98abfe13fc3828ec42aff4b07270c3b8f982f988086c8e90d8d7097f59",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S19-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:8bd530f382d74f6b520a39aeca214aa10da42da5dbb236c0df7b2b5ff3acebd9",
+      "worktree_sha256": "sha256:8bd530f382d74f6b520a39aeca214aa10da42da5dbb236c0df7b2b5ff3acebd9",
+      "git_sha256": "sha256:5d072aa668e823405c024864a5077c18478374d3927a9d042a7ce7274eb9966a",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s21.py",
+      "expected": "sha256:70328c142943277f03b9eff55b5675a8a595668ed4d43ac3fffacf1638ccc77e",
+      "worktree_sha256": "sha256:70328c142943277f03b9eff55b5675a8a595668ed4d43ac3fffacf1638ccc77e",
+      "git_sha256": "sha256:b474dba4705b4b162b2f9ef35b843f8a8ed456c1cdff26626668207c077b86be",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S22-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:db80ef13e92e5f4207aae7adf10abb9db0cc7dfaccd870dc2654e9a9a25ec009",
+      "worktree_sha256": "sha256:db80ef13e92e5f4207aae7adf10abb9db0cc7dfaccd870dc2654e9a9a25ec009",
+      "git_sha256": "sha256:3b4ad3097d7020cd8b172384869bd1db1102ffc4c9316bde31fef1b3bcacf9c6",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S22-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:88bd8dfdb7a94b6010ba5e505610de7af6f1c0243a48a0fdf1fe146c619a4fa4",
+      "worktree_sha256": "sha256:88bd8dfdb7a94b6010ba5e505610de7af6f1c0243a48a0fdf1fe146c619a4fa4",
+      "git_sha256": "sha256:f574bf83729b682055fea4742e2eec06cd32be9f8694d8319d5361875228ed00",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S22-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:db80ef13e92e5f4207aae7adf10abb9db0cc7dfaccd870dc2654e9a9a25ec009",
+      "worktree_sha256": "sha256:db80ef13e92e5f4207aae7adf10abb9db0cc7dfaccd870dc2654e9a9a25ec009",
+      "git_sha256": "sha256:3b4ad3097d7020cd8b172384869bd1db1102ffc4c9316bde31fef1b3bcacf9c6",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S24-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:1afa9d618d63d5055f37d5428cfcace2fd62c55905ceb3824e2670e42044778d",
+      "worktree_sha256": "sha256:1afa9d618d63d5055f37d5428cfcace2fd62c55905ceb3824e2670e42044778d",
+      "git_sha256": "sha256:83f1f5e03cf4f0384df7c02901d24597ba640f0f0e6479336066fa279209f8dd",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S24-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:77f6264f99d4cd33bb2dec043fdf93476ab6e3c9fc522505a3f9f1df16ae0630",
+      "worktree_sha256": "sha256:77f6264f99d4cd33bb2dec043fdf93476ab6e3c9fc522505a3f9f1df16ae0630",
+      "git_sha256": "sha256:751e8619a64512de05b43fbc6a52e01011dd749a2f5771f5dee63148ff88dfdf",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S24-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:2722406c27b5ef87c55d48b266cb393bbd3447ae4966038357667464e31180c6",
+      "worktree_sha256": "sha256:2722406c27b5ef87c55d48b266cb393bbd3447ae4966038357667464e31180c6",
+      "git_sha256": "sha256:f4bd13809bff17ce5b0f197253bf8366685c38204fa792900aed7524fe83bee9",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S25-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:ef72a13f9958b536e504227b8820285bd090a9dcf888ae1b2c3c702c477036cf",
+      "worktree_sha256": "sha256:ef72a13f9958b536e504227b8820285bd090a9dcf888ae1b2c3c702c477036cf",
+      "git_sha256": "sha256:09229b326b028651d725fa47cd1bae9fd8e0145ff8779bdb84ae2762c00ab737",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S25-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:ef72a13f9958b536e504227b8820285bd090a9dcf888ae1b2c3c702c477036cf",
+      "worktree_sha256": "sha256:ef72a13f9958b536e504227b8820285bd090a9dcf888ae1b2c3c702c477036cf",
+      "git_sha256": "sha256:09229b326b028651d725fa47cd1bae9fd8e0145ff8779bdb84ae2762c00ab737",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S25-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:4266e033210036ba8b31ee3a443436561f15f8d6019f9b409a683c576bc1774b",
+      "worktree_sha256": "sha256:4266e033210036ba8b31ee3a443436561f15f8d6019f9b409a683c576bc1774b",
+      "git_sha256": "sha256:976ea3fe6dfa65b827ec05fc16bf49cec94d3fda3b2d6ad4719708e74a38b32d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S26-current-r4/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:9809288717ecd07503fef2b85cd9002c93132123675f343104eabf5d8b71bba0",
+      "worktree_sha256": "sha256:9809288717ecd07503fef2b85cd9002c93132123675f343104eabf5d8b71bba0",
+      "git_sha256": "sha256:91e943e4c922f466e53815b82319371cc787ab7725518a3bf6e65fcb728becb0",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S26-current-r4/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:3161afb58d1444d91b28b756e62e9d205fcd5b8887be9a24071ea3df4cca8b95",
+      "worktree_sha256": "sha256:3161afb58d1444d91b28b756e62e9d205fcd5b8887be9a24071ea3df4cca8b95",
+      "git_sha256": "sha256:5fac130ab6ac229498ff4642101336ff470ab8b5d5d1c13f7c0224fa95133ede",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S26-current-r4/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:4520edd9291ef6bfa0f79eb68b580bf075ccffb4cb82b88230afc73c4246cfae",
+      "worktree_sha256": "sha256:4520edd9291ef6bfa0f79eb68b580bf075ccffb4cb82b88230afc73c4246cfae",
+      "git_sha256": "sha256:8c41ae1139f3176cd4991605bd39e1a545b0b29dfc6424d4d7d58891bb3097bf",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S27-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:50a96a129708dca44d054becfe895629111c809f7750b321fd2b71c3255a2198",
+      "worktree_sha256": "sha256:50a96a129708dca44d054becfe895629111c809f7750b321fd2b71c3255a2198",
+      "git_sha256": "sha256:d60c952deac8e9ba1d53d0a2b4ddc195be7f0b2dc107e3aaae5def8930400ad1",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S27-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:cdb94903aadd54e5b79a3b99ee878d63991bd51fb295765859e82e14950e3592",
+      "worktree_sha256": "sha256:cdb94903aadd54e5b79a3b99ee878d63991bd51fb295765859e82e14950e3592",
+      "git_sha256": "sha256:24548321b288041069017581f466083db8de132a0fa2d6d4ad549ff90cd97da6",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S27-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:516f185afae0ffe1333320a0d6c2dcf2bcd84285af8d04b720ad2a82b79f4d2c",
+      "worktree_sha256": "sha256:516f185afae0ffe1333320a0d6c2dcf2bcd84285af8d04b720ad2a82b79f4d2c",
+      "git_sha256": "sha256:149a90fbbad82ccc56181a81b6aa2837fdaf5fa8a002dc5ef3e5a53e6c210f16",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S28-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:63d40de3709872ebbe7432d5b0015a3dc2b88c52be83b0a694b9fe3de3339cb8",
+      "worktree_sha256": "sha256:63d40de3709872ebbe7432d5b0015a3dc2b88c52be83b0a694b9fe3de3339cb8",
+      "git_sha256": "sha256:7259bfa19db6ae3cfe0d838b88e35637fb7f328d22ebbef1e05b2bd1e72afd42",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S28-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:b0164857520a07da70bcfabe618c31077c5eb76c356f8fe0621270c30fe4352b",
+      "worktree_sha256": "sha256:b0164857520a07da70bcfabe618c31077c5eb76c356f8fe0621270c30fe4352b",
+      "git_sha256": "sha256:4b3fc3f1b97de7738f033a73e63ea86782edd5330753bad95c522d12b7d66344",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S28-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:2599af6d87bf290e12889b1c2bfe971c89c8d0604be5b89d57d132bea281c56d",
+      "worktree_sha256": "sha256:2599af6d87bf290e12889b1c2bfe971c89c8d0604be5b89d57d132bea281c56d",
+      "git_sha256": "sha256:162ff2bbaad42fc391354f7869ac60bb8ecb9d85e7a0629cad0908fb42b4bc4b",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S30-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:94b65a8337621394d2ef5b058e5af5b41472b6d5b95f519f6155c594e8e19ed9",
+      "worktree_sha256": "sha256:94b65a8337621394d2ef5b058e5af5b41472b6d5b95f519f6155c594e8e19ed9",
+      "git_sha256": "sha256:52d0b66c4317ac2b9fa3edaed1451858452cd939369e52ebffd8f277fcdbcfad",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S30-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:e319edaab0842ab203235c4823b8394bf73bbc89330694164a415a8b11cd2152",
+      "worktree_sha256": "sha256:e319edaab0842ab203235c4823b8394bf73bbc89330694164a415a8b11cd2152",
+      "git_sha256": "sha256:be82703126af67aa6caf0605e4ba50f03c937f67791b8b95e00527565c165c41",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S30-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:d7fc11edada1e662f1cfdc496b9f64277c7896ad123015371480b751db5d1457",
+      "worktree_sha256": "sha256:d7fc11edada1e662f1cfdc496b9f64277c7896ad123015371480b751db5d1457",
+      "git_sha256": "sha256:dbd782fdf5a5b38c53f85a4db60b74a713589585a70b73916bd1959da807b75e",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S31-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:b044696558e44fe243d3af59ed74bb66905aa69783a1ded61ae484cafa143333",
+      "worktree_sha256": "sha256:b044696558e44fe243d3af59ed74bb66905aa69783a1ded61ae484cafa143333",
+      "git_sha256": "sha256:23c05983e8a28aefd5a585568fbc2d78d8850847609a95e76bc85267fe7d307c",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S31-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:17e14b1d7973fe101d00786f8a1a246d17b54227f71a520ff2ee2d6048b1af6e",
+      "worktree_sha256": "sha256:17e14b1d7973fe101d00786f8a1a246d17b54227f71a520ff2ee2d6048b1af6e",
+      "git_sha256": "sha256:51469b1b8867a98157dbd311adb61ac62287605e0a6b3b5acab16fb68815d57d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S31-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:4b0502670d1a0f8838ea955a3aad32614afd7965681a8de75d965550b448903a",
+      "worktree_sha256": "sha256:4b0502670d1a0f8838ea955a3aad32614afd7965681a8de75d965550b448903a",
+      "git_sha256": "sha256:c01e139ae9de5187650e66e521fac31a7dc73947e2bf45b22957ce52d37e4026",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S32/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:97c2ca9d83cbb4d0d8d0f16d44274fd65e6d4e1a88e87b106bd5f0cbf84acbd8",
+      "worktree_sha256": "sha256:97c2ca9d83cbb4d0d8d0f16d44274fd65e6d4e1a88e87b106bd5f0cbf84acbd8",
+      "git_sha256": "sha256:dad8349be1ad2221dadb83cfcd6e5586d968fa1cd78537669a71f829d064a6ab",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S32/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:62fbda78b4d7583d2383b2641ce9e5615023164373dbe687778d423635698a0b",
+      "worktree_sha256": "sha256:62fbda78b4d7583d2383b2641ce9e5615023164373dbe687778d423635698a0b",
+      "git_sha256": "sha256:76ccaca6f0bba4866976b906958f5f7b3d558e948edcde6ac21d5c60a3dd77ae",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S32/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:96366cf52ead1256518366678036cc821ad6c6a9bc61a028acc3b34bd7a1d7f4",
+      "worktree_sha256": "sha256:96366cf52ead1256518366678036cc821ad6c6a9bc61a028acc3b34bd7a1d7f4",
+      "git_sha256": "sha256:51125e34a87d5c3b9ecf99c479170ccaac578ae1f9a147429f520de18de18a3e",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S33-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:40d177142eb53ccb6ea69918103a448d79339ac92b7f533b0909b0772ffd128d",
+      "worktree_sha256": "sha256:40d177142eb53ccb6ea69918103a448d79339ac92b7f533b0909b0772ffd128d",
+      "git_sha256": "sha256:d7e4ad4c69bf37e691129daa48aca98483bae4729f72c38e48a1bd111dffb734",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S33-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:f0895e69932121356e9473862f80ed829969bf0432f1aac759ec9a4d5cbf5948",
+      "worktree_sha256": "sha256:f0895e69932121356e9473862f80ed829969bf0432f1aac759ec9a4d5cbf5948",
+      "git_sha256": "sha256:4a6070b078e8713685bb7d423b62e85d6415f822c5c557fbcd20f48e88981629",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S33-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:1479cfdd8764c1abb5c780a5605d1076d89cc49f1135050e41306d1ea74ef862",
+      "worktree_sha256": "sha256:1479cfdd8764c1abb5c780a5605d1076d89cc49f1135050e41306d1ea74ef862",
+      "git_sha256": "sha256:6493f6f0cf5d50dbd27bff2dc5ab7081995d89c8e1da9f7b1843f4ad03b610ec",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S34-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:c6b9b9705d23e05cd79e9dc98b8ab1525f182dfdb0204457fc81955ae4795529",
+      "worktree_sha256": "sha256:c6b9b9705d23e05cd79e9dc98b8ab1525f182dfdb0204457fc81955ae4795529",
+      "git_sha256": "sha256:aa9178a73e7e2218ffa23de4d462de7283c027de6ba98c1a81073c92c69de28d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S34-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:48294c4b7715de612e7b88a29123d56943644546f45562ec30e3c74c20c95a0c",
+      "worktree_sha256": "sha256:48294c4b7715de612e7b88a29123d56943644546f45562ec30e3c74c20c95a0c",
+      "git_sha256": "sha256:3d487882db891d81146cdac669759791ba6c727e3c59024d8472df25783f11fb",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S34-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:c6d7149ca81e8269bab87cbf595dc997067a272ae0c6447c796b31aee728f3c6",
+      "worktree_sha256": "sha256:c6d7149ca81e8269bab87cbf595dc997067a272ae0c6447c796b31aee728f3c6",
+      "git_sha256": "sha256:8826bec6c715df21d00fccdc5cffff06a9f29b152e1357395431ae3b88ea9930",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S35-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:8971ba576cbe1c38bf975827c3d43a0a17b540bf2b76ecc6681811e17f72ba7d",
+      "worktree_sha256": "sha256:8971ba576cbe1c38bf975827c3d43a0a17b540bf2b76ecc6681811e17f72ba7d",
+      "git_sha256": "sha256:28cf5a100e280dab60e0cfdd114de1bbd6c84a06286df9fd2dda47ce5d573a73",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S35-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:0a507967b08c43d5fadc16140aecf1dcae09a8674194d0e18e89791e88a45e65",
+      "worktree_sha256": "sha256:0a507967b08c43d5fadc16140aecf1dcae09a8674194d0e18e89791e88a45e65",
+      "git_sha256": "sha256:57f47832d4c43ce0d8e015ea571bef206633ed53580bc05cc97243e89e4b4bca",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S35-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:3ca0213c5d1a22b07c4af302ee3201b0f29d16cf90ae8a64cc4c5576c7852cdc",
+      "worktree_sha256": "sha256:3ca0213c5d1a22b07c4af302ee3201b0f29d16cf90ae8a64cc4c5576c7852cdc",
+      "git_sha256": "sha256:1dfe17436344e664fdb9f0eb74793bec3d8214116d46c14d8bf87eb86204de94",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S36-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:db4ce22a81508ccb886f409bf6d5791df57d3810dd37302d8c4c62e5f45a28a3",
+      "worktree_sha256": "sha256:db4ce22a81508ccb886f409bf6d5791df57d3810dd37302d8c4c62e5f45a28a3",
+      "git_sha256": "sha256:a132c74d7b7c74739e7571fb00cd0a8be848d9686b936586ce31a93451c151b2",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S36-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:db4ce22a81508ccb886f409bf6d5791df57d3810dd37302d8c4c62e5f45a28a3",
+      "worktree_sha256": "sha256:db4ce22a81508ccb886f409bf6d5791df57d3810dd37302d8c4c62e5f45a28a3",
+      "git_sha256": "sha256:a132c74d7b7c74739e7571fb00cd0a8be848d9686b936586ce31a93451c151b2",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S36-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:188c7d2c78e3347bd0649f49b266c0cd289fd68f9cfe0221f5ea1989c86953ff",
+      "worktree_sha256": "sha256:188c7d2c78e3347bd0649f49b266c0cd289fd68f9cfe0221f5ea1989c86953ff",
+      "git_sha256": "sha256:c9bcb144c21494e85f380ae0032b056c0b060b27bbfcfada9bc048d41195af09",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:4b901e9fb121489422c56c94f4112a34c14f497e2e01c9caa23941fe690489cf",
+      "worktree_sha256": "sha256:4b901e9fb121489422c56c94f4112a34c14f497e2e01c9caa23941fe690489cf",
+      "git_sha256": "sha256:b6533422d1630740f5655134f45127452989eca69913155ff0cdf6331ecfe21d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:a400013adaef1edbdeb0866d15281fc947f89450579b7b431bbc26c4235145ee",
+      "worktree_sha256": "sha256:a400013adaef1edbdeb0866d15281fc947f89450579b7b431bbc26c4235145ee",
+      "git_sha256": "sha256:3be62f393f5921607a873beb897436b1f6af7bf8e959115d728ee0ecc5bd3a34",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:cac8f2444c91387fbd4c6b3dfeebcac4afaf6000faff0f8746230c740f460d7a",
+      "worktree_sha256": "sha256:cac8f2444c91387fbd4c6b3dfeebcac4afaf6000faff0f8746230c740f460d7a",
+      "git_sha256": "sha256:b4eb7be9000651a3e89c6a77e8b346d05d1d706d620aa6f8193e574a39b3ced1",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S40/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:433665da5547a840adf0f682093a7b4616ee656c4ab6355635a3cc3ad7736f00",
+      "worktree_sha256": "sha256:433665da5547a840adf0f682093a7b4616ee656c4ab6355635a3cc3ad7736f00",
+      "git_sha256": "sha256:e3cb389662450b7eeb13fb986496e0efcc47f4d93769854a85e21e3231aa751d",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S40/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:3bf8c678ff965b1d699c0674c437d3470cc0bb11d550243d9fcaeea210036bdc",
+      "worktree_sha256": "sha256:3bf8c678ff965b1d699c0674c437d3470cc0bb11d550243d9fcaeea210036bdc",
+      "git_sha256": "sha256:ba195f682b374dd026a9d98b72afd84f763a4f99c81f96f6ddacf23c51825edd",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S40/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:3c1d73b885f10faba530abe642aea7adb81e863c146d8029803adea02600c254",
+      "worktree_sha256": "sha256:3c1d73b885f10faba530abe642aea7adb81e863c146d8029803adea02600c254",
+      "git_sha256": "sha256:a0005816027e5ac7521b2a6994a21d301fa6b3765e73f3da32dac9a827ee7d11",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S41-current-r3/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:a13344c69fd600a41aa204bcad91cfcc419ff57d353a974ac2d2bdbaea10acdb",
+      "worktree_sha256": "sha256:a13344c69fd600a41aa204bcad91cfcc419ff57d353a974ac2d2bdbaea10acdb",
+      "git_sha256": "sha256:a86869a0e7b9c69287c6a4afe1e2f8ee05b20933a45c4b0d62690cae8d303b9a",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S41-current-r3/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:f28133e4e502fdf858fc07e1de4216504a0c8b6b960342a3939a0390fa14361c",
+      "worktree_sha256": "sha256:f28133e4e502fdf858fc07e1de4216504a0c8b6b960342a3939a0390fa14361c",
+      "git_sha256": "sha256:b979c12a5c68c39622c8843516a4bcd6048bdb78ee6ae86d6ce85518278163b2",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S41-current-r3/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:712c1a1b497f6373a23f08bc33f35feb6987f1f82b0e6add8622c448241ef9d4",
+      "worktree_sha256": "sha256:712c1a1b497f6373a23f08bc33f35feb6987f1f82b0e6add8622c448241ef9d4",
+      "git_sha256": "sha256:d8e144e9c8d098657d431e5d13e2a3e722faf781f8e070c13d40185cf91c2cdf",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S42-current-r1/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:68c934cb30885a38d81e228bf85245649d7136f8fcd64ab98e30e76941e2ca2c",
+      "worktree_sha256": "sha256:68c934cb30885a38d81e228bf85245649d7136f8fcd64ab98e30e76941e2ca2c",
+      "git_sha256": "sha256:835f1a6a0066c92e253f2a3da3b2d525d85d2c8bb3d280ebf531db7822410544",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S42-current-r1/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:e23e1a07e3bdcb22860bf71dc21bca9c3635019f96bb37bf1d101ee6cdbee2b9",
+      "worktree_sha256": "sha256:e23e1a07e3bdcb22860bf71dc21bca9c3635019f96bb37bf1d101ee6cdbee2b9",
+      "git_sha256": "sha256:144dd359c50092ce8c51a197daf9c4e14474a530a042aa76f2da9dec5265da41",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S42-current-r1/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:52588e218bdcb16df26e1e44bef95c2f3198c923a894378a4ffd6b1daf9222ae",
+      "worktree_sha256": "sha256:52588e218bdcb16df26e1e44bef95c2f3198c923a894378a4ffd6b1daf9222ae",
+      "git_sha256": "sha256:45b6a28be55306e8f9b62486f0fb04486560b57f95e7703fe7fad85a67a5635b",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S44-current-r2/canonical-evidence/probe/stdout.bin",
+      "expected": "sha256:c2441f78d2afb340500867cd83a120c830dd65ee2d4b5ba153912026621920b9",
+      "worktree_sha256": "sha256:c2441f78d2afb340500867cd83a120c830dd65ee2d4b5ba153912026621920b9",
+      "git_sha256": "sha256:53dede2c4381fb7784eb5afb0dc774d563b195e3c0c77a7767caa5047b9308db",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S44-current-r2/canonical-evidence/regression/stdout.bin",
+      "expected": "sha256:ceede72fd416c69a80dea6158ee51b798e7688ecd7fd47345ff9a31f469668ee",
+      "worktree_sha256": "sha256:ceede72fd416c69a80dea6158ee51b798e7688ecd7fd47345ff9a31f469668ee",
+      "git_sha256": "sha256:4b48036ed822caecf20db7f755545095dd3fb402dc334898735a190aa9339e90",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    },
+    {
+      "path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S44-current-r2/canonical-evidence/terminal/stdout.bin",
+      "expected": "sha256:f3a3907062c3f23f2622e03793241522aaabad037be3ec8dcafce4f73e2d94d0",
+      "worktree_sha256": "sha256:f3a3907062c3f23f2622e03793241522aaabad037be3ec8dcafce4f73e2d94d0",
+      "git_sha256": "sha256:4d2acbc6d80bf19adbdbeaf6d59978f5865f464b1dac720e72c9c6c7b12d1d84",
+      "recoverable": true,
+      "semantic_bytes_unchanged": true
+    }
+  ],
+  "unresolved": [],
+  "tests_executed": false
+}

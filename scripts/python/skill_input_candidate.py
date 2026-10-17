@@ -1,4 +1,5 @@
 """Observe candidate changes against the authority-bound Git baseline (ADR-0060)."""
+import fnmatch
 import re
 import subprocess
 from pathlib import Path
@@ -17,7 +18,8 @@ def git(root, *args):
 
 def observe_candidate(root, authority_path, storage):
     root = Path(root).resolve()
-    baseline = read_json(authority_path).get('skill_input_baseline')
+    authority = read_json(authority_path)
+    baseline = authority.get('skill_input_baseline')
     if not isinstance(baseline, str) or not re.fullmatch(r'[0-9a-f]{40}', baseline):
         raise ValueError('authority must bind a full skill_input_baseline Git commit')
     if Path(git(root, 'rev-parse', '--show-toplevel').strip()).resolve() != root:
@@ -28,24 +30,36 @@ def observe_candidate(root, authority_path, storage):
     # Ignore rules cannot conceal changes to Knowledge authority.
     changed.update(filter(None, git(root, 'ls-files', '--others', '--ignored', '--exclude-standard', '-z', '--',
         'knowledge/', '.agents/skills/maintain-knowledge-base/', ':(glob)scripts/python/*knowledge*.py').split('\0')))
+    target_plan = authority.get('target_plan')
+    generated = {storage.rstrip('/') + '/', '.skill-input-work/'}
+    if isinstance(target_plan, str) and target_plan:
+        target_plan = target_plan.replace('\\', '/').rstrip('/')
+        generated.update({
+            f'{target_plan}/acceptance-runs/',
+            f'{target_plan}/acceptance-inputs/',
+            f'{target_plan}/.acceptance-snapshots/',
+            # ADR-0060: finalization output has separate lifecycle custody.
+            f'{target_plan}/acceptance-current.v1.json',
+            f'{target_plan}/acceptance-coordinator-request.*',
+            f'{target_plan}/acceptance-projection-request.v1.json',
+            f'{target_plan}/acceptance-run-request.*.json',
+            f'{target_plan}/compact-vdd-projection-request.*.json',
+            f'{target_plan}/knowledge-context.refactor-acceptance-*.json',
+        })
+
+    def is_generated(path):
+        normalized = path.replace('\\', '/')
+        return any(
+            normalized.startswith(pattern) if pattern.endswith('/')
+            else fnmatch.fnmatch(normalized, pattern)
+            for pattern in generated
+        )
+
     rows = []
     for path in sorted(changed):
         relative(path)
         # Runtime evidence and adapter-owned storage are not candidate authority.
-        if (
-            path.startswith(('logs/', '.skill-input-work/'))
-            or path == storage
-            or path.startswith(storage + '/')
-            # Coordinator request/result files are transport artifacts. They
-            # bind the current Skill-input pointer and must not recursively
-            # change the candidate whose pointer they carry.
-            or Path(path).name.startswith('acceptance-coordinator-request.')
-            or '/acceptance-inputs/' in path
-            or '/.acceptance-snapshots/' in path
-            or '/acceptance-runs/' in path
-            or Path(path).name.startswith('acceptance-run-request.')
-            or Path(path).name == 'acceptance-projection-request.v1.json'
-        ):
+        if path.startswith('logs/') or path == storage or is_generated(path):
             continue
         file = contained(root, path)
         if file.exists() and not file.is_file():

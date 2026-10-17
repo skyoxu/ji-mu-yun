@@ -1,0 +1,22 @@
+{
+  "actionId": "acceptance-acceptance-package-validation",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "acceptance-package-validation",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:551717b85d4e8056390fdec7baa8d2ec00bdfc3e88ff289b78289e7edf18d52b",
+    "knowledgeContextHash": "sha256:f5ab3f5c319c96b166dfaedc95aa4e1ac4e5d78b37ae6c60537a1b3ddd0a0db8",
+    "runInputHash": "sha256:da0ea9a246218e45e568b0c1d9e9e8069cd0b7db69dc0e2684533592d16bad91",
+    "skillInputBindingHash": "sha256:2f1f17c1eb830ac23f3dd683488f542bd1bcbbd566d1a14fd3b235507ba6e18f",
+    "skillInputContextHash": "sha256:70e1fd3fe34b775cd20e00846c61590b3844a2c7bc35074a5c37fc7a2660fe19"
+  },
+  "ownerToken": "owner-acceptance-685ab0649074a499",
+  "processId": 39228,
+  "recordedUtc": "2026-10-16T07:35:36.452006Z",
+  "runId": "acceptance-685ab0649074a499",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 4
+}

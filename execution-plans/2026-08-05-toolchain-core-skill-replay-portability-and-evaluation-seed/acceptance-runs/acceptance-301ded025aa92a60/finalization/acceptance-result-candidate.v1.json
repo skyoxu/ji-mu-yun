@@ -1,0 +1,51 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/acceptance-acceptance-closeout-regressions/attempt-001/result.json",
+        "sha256": "sha256:89a200b0c8dca558ec311612f30bc00980236f2fda5f3561ea83dae4fe86c929"
+      },
+      {
+        "path": "actions/acceptance-acceptance-package-validation/attempt-001/result.json",
+        "sha256": "sha256:a9019cdd5c19ef5bb924e9cb7e4afd9b052734a4bd5cf24606025d5197a2cc0d"
+      },
+      {
+        "path": "actions/acceptance-current-q8-read-only/attempt-001/result.json",
+        "sha256": "sha256:d69416cedddbd7e1ed9ca8a38d90b1f2881b84d4307dde716c8dc776387f4cec"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:b6c20b45379acaab6d8ee68e9f8dae1be21b7629f95dc6514e16ac10ee6aaae6",
+    "implementationReceiptBinding": {
+      "path": "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r11-read-only-budget/Q8-c15c2839/implementation-complete-result.v2.json",
+      "sha256": "sha256:44edfb40402cbf5e0e065c4aa18e55898729429ef0ff089b498a2b6c07215b50",
+      "terminalCommandId": "terminal-full"
+    },
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:b6c20b45379acaab6d8ee68e9f8dae1be21b7629f95dc6514e16ac10ee6aaae6",
+      "contractHash": "sha256:5d7da9281452ae34cd926f4ee87c591b42bb5bc128558c62f952b12442f17fdb",
+      "knowledgeContextHash": "sha256:c16bf89788f73a5a70ab3c3ca99882e45a4254c5b1109a51d7b62a467f9db32a",
+      "runInputHash": "sha256:ebf8fc822dabb648792c8aa0e0dffbacb8cfd5d423568516a0dc61bbe3390782",
+      "skillInputBindingHash": "sha256:9b41fa438c3eddd0072d0068ae8487289f05444617102f9570bf3db70a3ff9f9",
+      "skillInputContextHash": "sha256:70e1fd3fe34b775cd20e00846c61590b3844a2c7bc35074a5c37fc7a2660fe19"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:331e6003a597723b8b17a3550d91e0d060c9103c736a82316b12c1566ae6be7f",
+      "implementationReceipt": {
+        "path": "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r11-read-only-budget/Q8-c15c2839/implementation-complete-result.v2.json",
+        "sha256": "sha256:44edfb40402cbf5e0e065c4aa18e55898729429ef0ff089b498a2b6c07215b50",
+        "terminalCommandId": "terminal-full"
+      },
+      "path": "acceptance-inputs/acceptance-08-05-c15c2839-budget3/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:cb2bdb509b6d81ab853801c7de367d4520227443b5262d672b09db21cc65c92e"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:3ecceb80ac8f633d032786017c24d2aea689ea6309dce25f5ad176d06a9a97cd"
+  },
+  "candidateHash": "sha256:74a3deb91caeb36a92aeaa12c40287774eacdb5a8157f741df65203155686229",
+  "candidateInputHash": "sha256:c3e19883cdac32c8e3f340d5be6a6bd55dcaa23378ef76098ebbecd4ced6d874",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

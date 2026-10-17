@@ -1,0 +1,11 @@
+test_case_only_owner_rename_still_requires_trust_approval (test_skill_replay_windows_regressions.WindowsBindingTests.test_case_only_owner_rename_still_requires_trust_approval) ... ok
+test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default (test_skill_replay_windows_regressions.WindowsBindingTests.test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default) ... ok
+test_materialization_reads_raw_git_bytes_without_eol_conversion (test_skill_replay_windows_regressions.WindowsBindingTests.test_materialization_reads_raw_git_bytes_without_eol_conversion) ... ok
+test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths (test_skill_replay_windows_regressions.WindowsBindingTests.test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths) ... ok
+test_package_and_dependency_identities_are_platform_order_independent (test_skill_replay_windows_regressions.WindowsBindingTests.test_package_and_dependency_identities_are_platform_order_independent) ... ok
+test_windows_path_order_cannot_create_false_trust_membership_drift (test_skill_replay_windows_regressions.WindowsBindingTests.test_windows_path_order_cannot_create_false_trust_membership_drift) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 4.985s
+
+OK

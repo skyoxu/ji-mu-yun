@@ -105,6 +105,7 @@ def _source_contracts(root, payload: Mapping[str, Any]) -> tuple[str, list[dict[
                 "source_ref": source_ref,
                 "repository_relative_source_path": relative_path,
                 "source_text": source_text,
+                "execution_context_text": raw.get("execution_context_text", source_text),
                 "source_sha256": file_sha,
                 "text_sha256": text_sha,
                 "source_order": raw.get("source_order"),

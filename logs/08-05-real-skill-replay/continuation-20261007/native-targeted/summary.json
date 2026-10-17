@@ -1,0 +1,24 @@
+{
+  "schema": "jimuyun.direct-replay-verification.v1",
+  "status": "blocked",
+  "scope": [
+    "scripts/sc/tests/tc_d1_cer/test_s14.py",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+  ],
+  "expected_count_requested": 7,
+  "unittest_selected": true,
+  "platform": "linux",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": [],
+  "unittest": {
+    "exit_code": 0,
+    "reason": null,
+    "tests": 36
+  },
+  "diagnostic": "pytest collection did not produce one complete nonempty manifest",
+  "source_stable": true
+}

@@ -1,0 +1,1 @@
+{"authorizes":[],"findings":[],"metrics":{"acceptance_count":116,"active_obligation_count":116,"fully_chained_obligation_count":116,"obligation_chain_coverage":1.0,"single_slice_acceptance_count":116,"v5_actual_edge_count":156,"v5_expected_edge_count":156,"v6a_actual_edge_count":156,"v6a_expected_edge_count":156},"schema":"vdd.semantic-chain-audit.v1","valid":true}

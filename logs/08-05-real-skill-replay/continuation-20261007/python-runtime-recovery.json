@@ -1,0 +1,14 @@
+{
+  "schema": "jimuyun.direct-runtime-recovery.v1",
+  "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "python_executable": "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+  "pytest": "8.4.2",
+  "jsonschema": "4.26.0",
+  "powershell_exit": 0,
+  "powershell_stdout": "7.6.6\n",
+  "powershell_stderr": "",
+  "method": "Persistent workspace virtual environment with actual pinned pytest/jsonschema packages. No validator substitute.",
+  "head": "7a2859a19a8aaf6ccdcdadf5af9cae7bb8db9964",
+  "C3": "OPEN",
+  "authorizes": []
+}

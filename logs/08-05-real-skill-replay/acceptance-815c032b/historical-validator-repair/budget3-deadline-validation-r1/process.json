@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "C:\\Users\\weiruan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts/sc/tests",
+    "-p",
+    "test_skill_replay_review2_regressions.py",
+    "-v"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 0.813742300029844,
+  "stdout_sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "sha256:20878d3dabcea27916fb9b9ca196d131f4969f4a7470afc3695892f0b9a5140f",
+  "authorizes": []
+}

@@ -5,7 +5,7 @@ from __future__ import annotations
 import shutil
 import sys
 from pathlib import Path, PurePosixPath
-from typing import Iterable
+from typing import Any, Iterable, Mapping
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -28,6 +28,53 @@ def _contained(root: Path, relative: str) -> Path:
     target = (root / Path(*_relative_path(relative).parts)).resolve()
     target.relative_to(root.resolve())
     return target
+
+
+def _sha256(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and value.startswith("sha256:")
+        and len(value) == 71
+        and all(character in "0123456789abcdef" for character in value[7:])
+    )
+
+
+def verify_candidate_external_trust(
+    candidate_identity: Mapping[str, Any],
+    independent_verification: Mapping[str, Any] | None = None,
+) -> bool:
+    """Accept only a separately supplied, integrity-bound trust verification.
+
+    Candidate metadata can identify what must be checked, but cannot attest to
+    itself.  The caller must obtain ``independent_verification`` from a source
+    outside the candidate and bind it to the exact candidate identity.
+    """
+    if not isinstance(candidate_identity, Mapping) or not isinstance(independent_verification, Mapping):
+        return False
+    head = candidate_identity.get("head")
+    contract_hash = candidate_identity.get("contract_hash")
+    validator_hash = candidate_identity.get("validator_hash")
+    if not isinstance(head, str) or not head or not _sha256(contract_hash) or not _sha256(validator_hash):
+        return False
+    source_id = independent_verification.get("source_id")
+    source_hash = independent_verification.get("source_hash")
+    outcome = independent_verification.get("outcome")
+    verifier = independent_verification.get("verified_by")
+    if (
+        not isinstance(source_id, str)
+        or not source_id
+        or not _sha256(source_hash)
+        or outcome != "passed"
+        or not isinstance(verifier, str)
+        or not verifier
+        or verifier in {"candidate", "self"}
+    ):
+        return False
+    return (
+        independent_verification.get("candidate_head") == head
+        and independent_verification.get("contract_hash") == contract_hash
+        and independent_verification.get("validator_hash") == validator_hash
+    )
 
 
 def materialize(source_root: Path, candidate_root: Path, paths: Iterable[str], *, remove: Iterable[str] = ()) -> Path:

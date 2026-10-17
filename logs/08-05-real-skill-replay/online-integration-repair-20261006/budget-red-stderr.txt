@@ -1,0 +1,133 @@
+test_environment_cannot_approve_joint_committed_validator_drift (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_environment_cannot_approve_joint_committed_validator_drift) ... ok
+test_probe_actual_target_comes_from_the_native_child_witness (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_probe_actual_target_comes_from_the_native_child_witness) ... ok
+test_replay_identity_is_the_actual_inspected_package (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package) ... ERROR
+test_rollback_counts_consumers_and_retains_each_fixture_observation (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation) ... ERROR
+test_rollback_refuses_a_missing_negative_fixture (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture) ... ERROR
+test_tiny_native_matrix_output_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_tiny_native_matrix_output_budget_is_not_ignored) ... FAIL
+test_zero_native_matrix_time_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_zero_native_matrix_time_budget_is_not_ignored) ... FAIL
+
+======================================================================
+ERROR: test_replay_identity_is_the_actual_inspected_package (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 63, in test_replay_identity_is_the_actual_inspected_package
+    result, code = replay.replay_package("candidate", "capability.json", "enable")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_package_replay.py", line 413, in replay_package
+    replay_metadata(target, capability_path, replay, snapshot, verdict)
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_package_replay.py", line 324, in replay_metadata
+    execution = runtime.route_transitions(ROOT, target, manifest, capability_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_runtime.py", line 504, in route_transitions
+    observed = invoke(prior, entry, "prior-baseline", fixture)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_runtime.py", line 494, in invoke
+    raise ValueError("required Consumer failed during " + stage + ": " + consumer + "/" + fixture + ": " + result.stdout + result.stderr)
+ValueError: required Consumer failed during prior-baseline: vdd-execution-plan/valid-package: Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_observer.py", line 102, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_observer.py", line 91, in main
+    runpy.run_path(entry, run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/tc-d1-prior-route-b0tzoxw0/prior/.agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", line 102, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/tc-d1-prior-route-b0tzoxw0/prior/.agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", line 20, in main
+    entry, target, output, nonce, *arguments = sys.argv[1:]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected at least 4, got 2)
+
+
+======================================================================
+ERROR: test_rollback_counts_consumers_and_retains_each_fixture_observation (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 22, in test_rollback_counts_consumers_and_retains_each_fixture_observation
+    result, code = replay.replay_package("candidate", "capability.json", "rollback")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_package_replay.py", line 413, in replay_package
+    replay_metadata(target, capability_path, replay, snapshot, verdict)
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_package_replay.py", line 324, in replay_metadata
+    execution = runtime.route_transitions(ROOT, target, manifest, capability_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_runtime.py", line 504, in route_transitions
+    observed = invoke(prior, entry, "prior-baseline", fixture)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_runtime.py", line 494, in invoke
+    raise ValueError("required Consumer failed during " + stage + ": " + consumer + "/" + fixture + ": " + result.stdout + result.stderr)
+ValueError: required Consumer failed during prior-baseline: vdd-execution-plan/valid-package: Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_observer.py", line 102, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_observer.py", line 91, in main
+    runpy.run_path(entry, run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/tc-d1-prior-route-qoaw9k7n/prior/.agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", line 102, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/tc-d1-prior-route-qoaw9k7n/prior/.agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", line 20, in main
+    entry, target, output, nonce, *arguments = sys.argv[1:]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected at least 4, got 2)
+
+
+======================================================================
+ERROR: test_rollback_refuses_a_missing_negative_fixture (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 40, in test_rollback_refuses_a_missing_negative_fixture
+    result, _ = replay.replay_package("candidate", "capability.json", "rollback")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_package_replay.py", line 413, in replay_package
+    replay_metadata(target, capability_path, replay, snapshot, verdict)
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_package_replay.py", line 324, in replay_metadata
+    execution = runtime.route_transitions(ROOT, target, manifest, capability_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_runtime.py", line 504, in route_transitions
+    observed = invoke(prior, entry, "prior-baseline", fixture)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_runtime.py", line 494, in invoke
+    raise ValueError("required Consumer failed during " + stage + ": " + consumer + "/" + fixture + ": " + result.stdout + result.stderr)
+ValueError: required Consumer failed during prior-baseline: vdd-execution-plan/valid-package: Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_observer.py", line 102, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/skill_replay_observer.py", line 91, in main
+    runpy.run_path(entry, run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/tc-d1-prior-route-s9vc7stb/prior/.agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", line 102, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/tc-d1-prior-route-s9vc7stb/prior/.agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py", line 20, in main
+    entry, target, output, nonce, *arguments = sys.argv[1:]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected at least 4, got 2)
+
+
+======================================================================
+FAIL: test_tiny_native_matrix_output_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_tiny_native_matrix_output_budget_is_not_ignored)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 94, in test_tiny_native_matrix_output_budget_is_not_ignored
+    self.assertNotEqual(0, code)
+AssertionError: 0 == 0
+
+======================================================================
+FAIL: test_zero_native_matrix_time_budget_is_not_ignored (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_zero_native_matrix_time_budget_is_not_ignored)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 89, in test_zero_native_matrix_time_budget_is_not_ignored
+    self.assertNotEqual(0, code)
+AssertionError: 0 == 0
+
+----------------------------------------------------------------------
+Ran 7 tests in 11.148s
+
+FAILED (failures=2, errors=3)

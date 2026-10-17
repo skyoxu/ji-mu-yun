@@ -37,7 +37,7 @@ Bootstrap is explicit-only: only `maintainerIntent=request` can require review. 
 ## Model Route Decision
 
 Keep every ordinary Acceptance next action deterministic and pass it through
-`scripts/model_routing.py` as the no-launch route. Request Sol/high only when
+`scripts/model_routing.py` as the no-launch route. Request `gpt-6-sol/high` only when
 the current failure matches one policy-owned complex-recovery trigger:
 Bootstrap control-plane unavailable, candidate-binding recovery failed, or
 lineage evidence inconsistent. Reject free-form recovery reasons. Do not use a
@@ -67,9 +67,12 @@ input into its binding-derived persisted run. It reads actions and commands
 from the bound bundle, not caller route or action overrides.
 
 Identical reentry revalidates Q8, candidate custody, Skill input, action events,
-receipts and finalization. A failed registered action stops after that attempt;
-a waiting result does not authorize an automatic retry. Stale/incomplete proof
-requires explicit recovery or a new bound input; historical artifacts remain.
+receipts and finalization. A failed registered action is terminal for the bound
+run and is reported as `failed`; it cannot be projected back to `ready` or
+retried by identical reentry. Recovery creates an explicitly bound successor
+and preserves the failed run. A waiting result does not authorize an automatic
+retry. Stale/incomplete proof requires explicit recovery or a new bound input;
+historical artifacts remain.
 For an explicit user request for Bootstrap only, set `maintainerIntent=request`.
 That returns a typed handoff without executing the DAG or launching Bootstrap.
 Omission means `default`, which uses deterministic Acceptance.
@@ -81,5 +84,3 @@ Use this repository-owned command for Skill package validation:
 ```text
 py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/run-refactor-implementation-acceptance --capability scripts/sc/config/skill-package-validator-capability.v1.json
 ```
-
-

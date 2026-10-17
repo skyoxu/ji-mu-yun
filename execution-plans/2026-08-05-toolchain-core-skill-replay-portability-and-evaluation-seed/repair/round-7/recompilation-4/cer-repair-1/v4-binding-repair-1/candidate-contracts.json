@@ -1,0 +1,150 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "authorizes": [],
+  "requirements_sha256": "sha256:6f5ca742491849839bf80b19f0fa00d603f5dc95b1a301093a5f6accef6a0c1b",
+  "obligation_contracts": {
+    "O-53C2E081003F": {
+      "acceptance": {
+        "assertion_ids": [
+          "O-53C2E081003F-root-escape-rejected",
+          "O-53C2E081003F-no-trusted-result"
+        ],
+        "given": "An isolated capability fixture declares an active validator entrypoint which resolves outside its declared allowed_root, while the target, capability state, hash input, and probe arguments otherwise remain valid.",
+        "oracle": {
+          "expected": "Capability resolution rejects the root-escaping validator before validator execution and emits no trusted validation or replay result.",
+          "forbidden": [
+            "Proceeding with a validator outside its approved root.",
+            "Accepting an escaping validator path as trusted."
+          ],
+          "observable": "The runtime test observes a nonzero validation invocation caused by root-containment rejection, no validator execution success, and no trusted result payload."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/compiler-requirements.md#FR-3"
+        ],
+        "then": "The escaping validator capability is rejected.",
+        "when": "The validator capability resolves outside its approved root."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "VALIDATOR_ROOT_ESCAPE_NOT_REJECTED",
+          "selector_intent": "Execute the isolated root-escape capability case through validate-package; fail the test unless capability resolution rejects before validator execution and no trusted result is emitted."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Escaping validator capability"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/tests/test_skill_package_replay.py"
+        ],
+        "behavior_change": "Make validator-capability resolution explicitly fail closed when validator_entrypoint resolves outside the capability allowed_root, before subprocess execution or trusted receipt construction.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_package_replay.py"
+        ],
+        "forbidden_paths": [
+          "PhaseA.Platform",
+          "runtime/phase-a"
+        ],
+        "planned_new_files": [],
+        "production_owners": [
+          "scripts/sc/skill_package_replay.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/skill_package_replay.py"
+          ],
+          "state_or_schema_compatibility": "No receipt or capability-schema change; rollback may alter only the root-containment rejection implementation and must retain fail-closed handling of escaping validator paths."
+        },
+        "state_transition": "Validator capability resolves outside approved root -> validator rejected with no trusted result.",
+        "terminal_predicate": "The isolated root-escape invocation deterministically fails before validator execution and produces neither a successful validation receipt nor a trusted replay result.",
+        "validation_commands": [
+          [
+            "py",
+            "-3",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_package_replay.py"
+          ]
+        ],
+        "verification_lane": "runtime"
+      }
+    },
+    "O-DE636F1F6D78": {
+      "acceptance": {
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/compiler-requirements.md#FR-13"
+        ],
+        "given": "An isolated publication fixture with valid current candidate, run, review and prerequisite bindings. The current Acceptance lifecycle owner is resolved independently of the requesting Toolchain component. All required scoped approvals are fixture-local; this does not approve C3.",
+        "when": "A component other than the current Acceptance lifecycle owner attempts to publish acceptance-passed through the real lifecycle publication boundary.",
+        "then": "The non-owner request is denied before any terminal publication; the prior current pointer and lifecycle history remain unchanged. An otherwise identical request through the current owner succeeds as a positive control.",
+        "oracle": {
+          "observable": "The actual publication result and before/after filesystem and lifecycle state for a non-owner attempt and the matched current-owner control.",
+          "expected": "The non-owner attempt is denied with an owner-mismatch diagnostic, emits no acceptance-passed result, does not change the current pointer, and appends no success event. The current-owner control reaches the real publication boundary and succeeds when all independent prerequisites hold.",
+          "forbidden": [
+            "A non-owner publishes acceptance-passed.",
+            "A deny-all or unexecuted path passes the positive control.",
+            "A schema or authorizes=[] check substitutes for an actual non-owner publication attempt.",
+            "Caller self-declaration establishes lifecycle ownership."
+          ]
+        },
+        "assertion_ids": [
+          "O-DE636F1F6D78-nonowner-publication-denied",
+          "O-DE636F1F6D78-no-terminal-publication",
+          "O-DE636F1F6D78-current-owner-control"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "failure_id": "NONOWNER_PUBLICATION_NOT_DENIED",
+          "expected_outcome": "fail",
+          "selector_intent": "Author independent CER-marked S27 cases at the real lifecycle publication boundary. With all other inputs valid, request acceptance-passed as a component different from the independently resolved current owner; fail with NONOWNER_PUBLICATION_NOT_DENIED if denial is absent or any success output, pointer advance or success event occurs. Run the matched current-owner positive control to reject deny-all or unreachable implementations. Missing approvals, setup failures and malformed fixture inputs are not expected RED."
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py"
+        ],
+        "verification_lane": "integration",
+        "behavior_change": "Enforce current lifecycle-owner publication at the real Acceptance terminal boundary, independently of seed-artifact authorization-set validation.",
+        "affected_subjects": [
+          "Acceptance lifecycle publication ownership"
+        ],
+        "state_transition": "A valid non-owner publication attempt is denied without terminal state change; the matched current-owner control can publish after prerequisites hold.",
+        "rollback_scope": {
+          "production_paths": [
+            ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py"
+          ],
+          "state_or_schema_compatibility": "Keep existing persisted Acceptance history append-only and current prerequisite/review checks intact; no Phase state or permission changes."
+        },
+        "allowed_write_paths": [
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/deterministic_finalization.py",
+          "scripts/sc/tests/tc_d1_cer/test_s27.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/tc_d1_cer/test_s27.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/tests/tc_d1_cer/test_s27.py"
+        ],
+        "terminal_predicate": "Independent non-owner denial/no-publication assertions and the matched current-owner positive control pass through the actual lifecycle boundary. Seed authorizes=[] remains a separately covered obligation.",
+        "forbidden_paths": [
+          "PhaseA.Platform",
+          "runtime/phase-a"
+        ],
+        "validation_commands": [
+          [
+            "py",
+            "-3",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/tc_d1_cer/test_s27.py"
+          ]
+        ]
+      }
+    }
+  }
+}

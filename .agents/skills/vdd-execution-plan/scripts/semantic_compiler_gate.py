@@ -152,12 +152,75 @@ def normative_invoke_worker(
     worker_cache: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
     """Invoke one read-only semantic worker with schema repair and stop-loss."""
+    effective_worker_cache = worker_cache
+    if stage == "v3" and worker_cache:
+        # Do not let a pre-contract V3 fixture bypass the current path guard.
+        # Other stage caches remain eligible for normal resume reuse.
+        cache_text = json.dumps(worker_cache, ensure_ascii=False, sort_keys=True)
+        if ("PhaseA.Platform/" in cache_text or "runtime/phase-a/" in cache_text or
+                "candidate-identity.v1.json" in cache_text):
+            effective_worker_cache = {
+                key: value for key, value in worker_cache.items()
+                if key not in {"v3", "v3-schema-repair"}
+            }
     started = time.perf_counter()
-    injected = bool(worker_cache and stage in worker_cache)
+    injected = bool(effective_worker_cache and stage in effective_worker_cache)
     repair_attempted = False
     raw: Mapping[str, Any] | None = None
     findings: list[str] = []
     try:
+        if stage in {"v3", "v3-schema-repair"} and isinstance(effective_worker_cache, Mapping):
+            candidates = [effective_worker_cache.get(stage), effective_worker_cache.get("v3-schema-repair")]
+            for candidate in candidates:
+                if not isinstance(candidate, Mapping) or not isinstance(candidate.get("obligation_contracts"), Mapping):
+                    continue
+                for contract in candidate["obligation_contracts"].values():
+                    hint = contract.get("slice_hint") if isinstance(contract, Mapping) else None
+                    for owner in (hint.get("production_owners", []) if isinstance(hint, Mapping) else []):
+                        if isinstance(owner, str) and not (root / owner).is_file():
+                            raise ValueError("no-real-production-entry:" + owner)
+        # A schema-repair successor may already be present in the explicit
+        # worker cache.  Reuse that frozen result before routing through the
+        # transport layer; this is the bounded cache-reuse path and must not
+        # trigger a new model call merely because the initial V3 envelope was
+        # incomplete.
+        if stage == "v3" and isinstance(effective_worker_cache, Mapping):
+            successor = effective_worker_cache.get("v3-schema-repair")
+            if isinstance(successor, Mapping) and all(
+                isinstance(successor.get(key), list)
+                for key in ("acceptances", "failure_intents", "slice_hints")
+            ):
+                raw = successor
+                findings = _worker_schema_findings(stage, raw)
+                if not findings:
+                    elapsed = int((time.perf_counter() - started) * 1000)
+                    _write_worker_receipt(
+                        root=root, out_dir=out_dir, stage=stage, payload=payload,
+                        prompt=prompt, result=raw, findings=[], duration_ms=elapsed,
+                        repair_attempted=True, injected=True, exit_status="cache-reused",
+                    )
+                    return raw
+            elif (isinstance(successor, Mapping)
+                  and (isinstance(successor.get("obligation_contracts"), Mapping)
+                       or isinstance(successor.get("groups"), list))):
+                import semantic_worker_v3_group_repair_patch as grouped
+                refs = grouped._obligation_refs({"input": payload})
+                if "groups" in successor:
+                    raw = grouped._project(successor, refs_by_oid=refs)
+                else:
+                    raw = grouped._project_current_output(successor, refs)
+                domain_findings = grouped.v3_domain._domain_findings("v3", payload, raw)
+                if domain_findings:
+                    raise ValueError("V3 frozen-domain validation failed: " + "; ".join(domain_findings))
+                findings = _worker_schema_findings(stage, raw)
+                if not findings:
+                    elapsed = int((time.perf_counter() - started) * 1000)
+                    _write_worker_receipt(
+                        root=root, out_dir=out_dir, stage=stage, payload=payload,
+                        prompt=prompt, result=raw, findings=[], duration_ms=elapsed,
+                        repair_attempted=True, injected=True, exit_status="cache-reused",
+                    )
+                    return raw
         try:
             raw = _ORIGINAL_INVOKE_WORKER(
                 root=root,
@@ -165,7 +228,7 @@ def normative_invoke_worker(
                 stage=stage,
                 payload=payload,
                 prompt=prompt,
-                worker_cache=worker_cache,
+                worker_cache=effective_worker_cache,
             )
             findings = _worker_schema_findings(stage, raw) + _source_binding_findings(stage, raw, payload)
         except (ValueError, RuntimeError) as first_error:
@@ -192,7 +255,7 @@ def normative_invoke_worker(
                 stage=f"{stage}-schema-repair",
                 payload={"original_stage": stage, "input": payload, "validator_findings": findings},
                 prompt=repair_prompt,
-                worker_cache=worker_cache,
+                worker_cache=effective_worker_cache,
             )
             second_findings = _worker_schema_findings(stage, repaired) + _source_binding_findings(stage, repaired, payload)
             second_fingerprint = sc.sha256_value({
@@ -413,9 +476,11 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
                                 prompt=prompt, worker_cache=worker_cache)
     identity = {"schema": "vdd.resolved-atomic-recall.v1", "stage": stage,
                 "input_sha256": sc.sha256_value(payload), "prompt_sha256": sc.sha256_value(prompt)}
-    cache_root = Path(out_dir) / ".compiler-work" / "resolved-atomic-recall"
-    path = cache_root / (sc.sha256_value(identity).split(":")[-1] + ".json")
+    path = Path(out_dir) / ".compiler-work" / "resolved-atomic-recall" / (sc.sha256_value(identity).split(":")[-1] + ".json")
+    repair_path = path.with_name(path.stem + "-schema-repair" + path.suffix)
     cached = path.is_file()
+    selected_path = path
+    repair_required = False
     if cached:
         receipt = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
@@ -423,46 +488,84 @@ def _resolved_atomic_recall_worker(*, root, out_dir, payload, prompt, worker_cac
         raw = receipt.get("result")
         if receipt.get("result_sha256") != sc.sha256_value(raw):
             raise ValueError("resolved atomic recall result hash mismatch")
-        # A prior worker may have returned a schema-valid but empty judgment
-        # after truncation/transport loss.  Such a cache is not a reusable
-        # semantic decision when active obligations exist; retain the receipt
-        # for history but obtain a fresh bounded judgment.
-        if (isinstance(raw, Mapping)
-                and isinstance(raw.get("supported_obligation_ids"), list)
-                and not raw.get("supported_obligation_ids")
-                and not raw.get("source_gap_claims")
-                and isinstance(payload.get("obligations"), list)
-                and payload.get("obligations")):
-            # Preserve the immutable historical receipt and use a distinct
-            # retry identity for the bounded re-invocation below.
-            retry_identity = {**identity, "retry": 1}
-            path = cache_root / (sc.sha256_value(retry_identity).split(":")[-1] + ".json")
-            identity = retry_identity
+        # ADR-0041: an empty transport result is not an all-invented verdict.
+        # Retry once under a distinct identity, retaining both immutable receipts.
+        if (isinstance(raw, Mapping) and raw.get("supported_obligation_ids") == []
+                and raw.get("invented_obligation_ids") == []
+                and raw.get("source_gap_claims") == [] and payload.get("obligations")):
+            identity = {**identity, "retry": 1}
+            path = path.parent / (sc.sha256_value(identity).split(":")[-1] + ".json")
+            selected_path = path
+            repair_path = path.with_name(path.stem + "-schema-repair" + path.suffix)
             cached = path.is_file()
+            raw = None
             if cached:
-                retry_receipt = json.loads(path.read_text(encoding="utf-8"))
-                if not isinstance(retry_receipt, Mapping) or any(
-                        retry_receipt.get(k) != v for k, v in identity.items()):
+                receipt = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
                     raise ValueError("resolved atomic recall retry identity mismatch")
-                raw = retry_receipt.get("result")
-                if retry_receipt.get("result_sha256") != sc.sha256_value(raw):
+                raw = receipt.get("result")
+                if receipt.get("result_sha256") != sc.sha256_value(raw):
                     raise ValueError("resolved atomic recall retry result hash mismatch")
-            else:
-                raw = None
-    else:
-        raw = sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
-                               prompt=prompt, worker_cache=None)
-    if not cached and raw is None:
-        raw = sc.invoke_worker(root=root, out_dir=out_dir, stage=stage,
-                               payload=payload, prompt=prompt, worker_cache=None)
+        # Keep the historical receipt, but never reuse a response which a
+        # newer deterministic V4 domain rule proves contradictory.  Route it
+        # through the normal one-shot schema-repair path below instead.
+        from semantic_worker_v4_domain_patch import _domain_findings
+        if cached and (not isinstance(raw, Mapping) or _worker_schema_findings(stage, raw) or _domain_findings(stage, payload, raw)):
+            cached = False
+            repair_required = True
+            selected_path = repair_path
+            if repair_path.is_file():
+                receipt = json.loads(repair_path.read_text(encoding="utf-8"))
+                if not isinstance(receipt, Mapping) or any(receipt.get(k) != v for k, v in identity.items()):
+                    raise ValueError("resolved atomic recall repair identity mismatch")
+                raw = receipt.get("result")
+                if receipt.get("result_sha256") != sc.sha256_value(raw):
+                    raise ValueError("resolved atomic recall repair result hash mismatch")
+                cached = isinstance(raw, Mapping) and not _worker_schema_findings(stage, raw) and not _domain_findings(stage, payload, raw)
+    if not cached:
+        if repair_required:
+            raw = sc.invoke_worker(
+                root=root,
+                out_dir=out_dir,
+                stage=f"{stage}-schema-repair",
+                payload={
+                    "original_stage": stage,
+                    "input": payload,
+                    "validator_findings": ["resolved-atomic-recall:historical-contract-invalid"],
+                },
+                prompt=prompt + "\n\nReturn a corrected JSON object only; the historical V4 partition was contradictory.",
+                worker_cache=None,
+            )
+        else:
+            raw = sc.invoke_worker(root=root, out_dir=out_dir, stage=stage, payload=payload,
+                                   prompt=prompt, worker_cache=None)
     from semantic_worker_v4_domain_patch import _domain_findings
     if not isinstance(raw, Mapping):
         raise ValueError("resolved atomic recall result must be object")
     findings = _worker_schema_findings(stage, raw) + _domain_findings(stage, payload, raw)
+    # A fresh V4 worker response can be structurally valid JSON yet violate
+    # the frozen partition (most commonly by placing one ID in both sets).
+    # Give that single invocation the same bounded schema-repair path already
+    # used for stale resolved receipts.  The repair remains subject to the
+    # exact frozen domain and is rejected if it still overlaps or omits IDs.
+    if findings and not repair_required and worker_cache is None:
+        raw = sc.invoke_worker(
+            root=root,
+            out_dir=out_dir,
+            stage=f"{stage}-schema-repair",
+            payload={
+                "original_stage": stage,
+                "input": payload,
+                "validator_findings": ["resolved-atomic-recall:" + item for item in findings],
+            },
+            prompt=prompt + "\n\nReturn a corrected JSON object only; the previous V4 partition violated the frozen ID domain. Classify every frozen obligation exactly once.",
+            worker_cache=None,
+        )
+        findings = _worker_schema_findings(stage, raw) + _domain_findings(stage, payload, raw)
     if findings:
         raise ValueError("resolved atomic recall contract invalid: " + ";".join(findings))
     if not cached:
-        sc.atomic_json(path, {**identity, "result": raw, "result_sha256": sc.sha256_value(raw), "authorizes": []})
+        sc.atomic_json(selected_path, {**identity, "result": raw, "result_sha256": sc.sha256_value(raw), "authorizes": []})
     return raw
 
 
@@ -676,6 +779,9 @@ def compile_plan(
     recommendation_only: bool = False,
     resume_from: str | None = None,
 ) -> dict[str, Any]:
+    if not resume_from:
+        import semantic_v3_contract_repair as published_repair
+        published_repair.reset_published_overlays()
     """Run fail-closed semantic compilation with optional cache-backed resume."""
     if resume_from not in {None, "first-failed-stage"}:
         raise ValueError("unsupported VDD resume mode")

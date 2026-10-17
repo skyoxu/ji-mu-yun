@@ -1,0 +1,32 @@
+{
+  "schema": "jimuyun.direct-evidence-consistency.v1",
+  "suite_status": "direct-validation-failed",
+  "source_head": "de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5",
+  "finished_nodes": 340,
+  "phase_reports": 1020,
+  "report_outcomes": {
+    "passed": 1013,
+    "failed": 7
+  },
+  "junit": {
+    "tests": 340,
+    "failures": 7,
+    "errors": 0,
+    "skips": 0
+  },
+  "native_pytest_elapsed_seconds": 1870.412,
+  "failure_nodes": [
+    "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+    "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+    "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+    "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit"
+  ],
+  "source_before_after_equal": true,
+  "node_manifest_matches_original": true,
+  "evidence_consistent": true,
+  "C3": "OPEN",
+  "authorizes": []
+}

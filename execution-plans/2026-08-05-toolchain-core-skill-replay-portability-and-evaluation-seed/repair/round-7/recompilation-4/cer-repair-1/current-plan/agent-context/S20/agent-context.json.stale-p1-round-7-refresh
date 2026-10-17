@@ -1,0 +1,63 @@
+{
+  "acceptance_ids": [
+    "A-43A0ABB1B5F0",
+    "A-E362C947576E",
+    "A-F11DB37B5A59"
+  ],
+  "allowed_paths": [
+    ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py",
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+    "scripts/sc/tests/tc_d1_cer/test_s20.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "(Exact Cover validation accepts the complete mapping and the isolated orphan fixture is deterministically blocked.) AND (exact-cover validation 报告每个 Atomic Obligation 和每个 command node 均具有相反方向的有效覆盖，且无孤儿。) AND (结果为 conformant，且每个 Atomic Obligation 有 assertion 覆盖、每个 assertion 节点有对应的反向 Atomic Obligation 覆盖。)",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s20.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-90C19D2FAF04",
+    "O-B0A9A5B205DC",
+    "O-D8BD61C2D74D"
+  ],
+  "requirement_ids": [
+    "FR-11"
+  ],
+  "selector_intents": [
+    "Run the existing exact-cover negative validator with its isolated reverse-mapping orphan fixture and require its deliberate nonzero outcome.",
+    "以现有负例移除 assertion 的反向 Atomic Obligation 绑定，验证器必须以 wrong_binding 阻断。",
+    "向 exact-cover negative validator 提供一个缺少 command-to-Atomic-Obligation 反向覆盖的关系。"
+  ],
+  "slice_id": "S20",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-11"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s20.py"
+    ],
+    [
+      "py",
+      "-3",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover.py"
+    ],
+    [
+      "py",
+      "-3",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py"
+    ],
+    [
+      "py",
+      "-3",
+      "-B",
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py"
+    ]
+  ]
+}

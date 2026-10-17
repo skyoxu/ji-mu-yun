@@ -224,6 +224,12 @@ def preflight(*, workspace: Path, semantic_plan: Path, slice_id: str, candidate_
             safe_relative(path)
         except ValueError:
             errors.append(f"unsafe-path:{path}")
+    if "behavior_routing" in bundle:
+        from behavior_routing import validate_plan
+        try:
+            validate_plan(bundle)
+        except ValueError as exc:
+            errors.append(str(exc))
     env = environment_probe()
     if not env.get("available"):
         return {"status": "environment-blocked", "errors": errors, "environment": env}

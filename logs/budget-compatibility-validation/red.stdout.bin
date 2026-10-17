@@ -1,0 +1,136 @@
+FFFFFF                                                                   [100%]
+================================== FAILURES ===================================
+__________ test_reads_original_bytes_only_inside_explicit_q8_context __________
+
+tmp_path = WindowsPath('C:/buildgame/jimuyun/logs/budget-compatibility-validation/red-temp/test_reads_original_bytes_only0')
+
+    def test_reads_original_bytes_only_inside_explicit_q8_context(tmp_path):
+>       module = owner()
+                 ^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def owner():
+>       assert importlib.util.find_spec("budget_compatibility") is not None, "Q8 lacks approved-budget evidence reuse"
+E       AssertionError: Q8 lacks approved-budget evidence reuse
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001785808FB00>('budget_compatibility')
+E        +    where <function find_spec at 0x000001785808FB00> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:17: AssertionError
+____________ test_extra_semantic_change_rejects_instead_of_masking ____________
+
+tmp_path = WindowsPath('C:/buildgame/jimuyun/logs/budget-compatibility-validation/red-temp/test_extra_semantic_change_rej0')
+
+    def test_extra_semantic_change_rejects_instead_of_masking(tmp_path):
+>       module = owner()
+                 ^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def owner():
+>       assert importlib.util.find_spec("budget_compatibility") is not None, "Q8 lacks approved-budget evidence reuse"
+E       AssertionError: Q8 lacks approved-budget evidence reuse
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001785808FB00>('budget_compatibility')
+E        +    where <function find_spec at 0x000001785808FB00> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:17: AssertionError
+_______________ test_malformed_or_forged_binding_rejects[bad0] ________________
+
+tmp_path = WindowsPath('C:/buildgame/jimuyun/logs/budget-compatibility-validation/red-temp/test_malformed_or_forged_bindi0')
+bad = {}
+
+    @pytest.mark.parametrize("bad", [{}, {"authorizes": ["pass"]}, {"transition_commit": "f" * 40}])
+    def test_malformed_or_forged_binding_rejects(tmp_path, bad):
+>       module = owner()
+                 ^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def owner():
+>       assert importlib.util.find_spec("budget_compatibility") is not None, "Q8 lacks approved-budget evidence reuse"
+E       AssertionError: Q8 lacks approved-budget evidence reuse
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001785808FB00>('budget_compatibility')
+E        +    where <function find_spec at 0x000001785808FB00> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:17: AssertionError
+_______________ test_malformed_or_forged_binding_rejects[bad1] ________________
+
+tmp_path = WindowsPath('C:/buildgame/jimuyun/logs/budget-compatibility-validation/red-temp/test_malformed_or_forged_bindi1')
+bad = {'authorizes': ['pass']}
+
+    @pytest.mark.parametrize("bad", [{}, {"authorizes": ["pass"]}, {"transition_commit": "f" * 40}])
+    def test_malformed_or_forged_binding_rejects(tmp_path, bad):
+>       module = owner()
+                 ^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def owner():
+>       assert importlib.util.find_spec("budget_compatibility") is not None, "Q8 lacks approved-budget evidence reuse"
+E       AssertionError: Q8 lacks approved-budget evidence reuse
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001785808FB00>('budget_compatibility')
+E        +    where <function find_spec at 0x000001785808FB00> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:17: AssertionError
+_______________ test_malformed_or_forged_binding_rejects[bad2] ________________
+
+tmp_path = WindowsPath('C:/buildgame/jimuyun/logs/budget-compatibility-validation/red-temp/test_malformed_or_forged_bindi2')
+bad = {'transition_commit': 'ffffffffffffffffffffffffffffffffffffffff'}
+
+    @pytest.mark.parametrize("bad", [{}, {"authorizes": ["pass"]}, {"transition_commit": "f" * 40}])
+    def test_malformed_or_forged_binding_rejects(tmp_path, bad):
+>       module = owner()
+                 ^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def owner():
+>       assert importlib.util.find_spec("budget_compatibility") is not None, "Q8 lacks approved-budget evidence reuse"
+E       AssertionError: Q8 lacks approved-budget evidence reuse
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001785808FB00>('budget_compatibility')
+E        +    where <function find_spec at 0x000001785808FB00> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:17: AssertionError
+_________ test_unrelated_fixture_and_exception_cleanup_remain_strict __________
+
+tmp_path = WindowsPath('C:/buildgame/jimuyun/logs/budget-compatibility-validation/red-temp/test_unrelated_fixture_and_exc0')
+
+    def test_unrelated_fixture_and_exception_cleanup_remain_strict(tmp_path):
+>       module = owner()
+                 ^^^^^^^
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def owner():
+>       assert importlib.util.find_spec("budget_compatibility") is not None, "Q8 lacks approved-budget evidence reuse"
+E       AssertionError: Q8 lacks approved-budget evidence reuse
+E       assert None is not None
+E        +  where None = <function find_spec at 0x000001785808FB00>('budget_compatibility')
+E        +    where <function find_spec at 0x000001785808FB00> = <module 'importlib.util' (frozen)>.find_spec
+E        +      where <module 'importlib.util' (frozen)> = importlib.util
+
+.agents\skills\quick-dev-tdd-adapter\tools\tests\test_budget_compatibility.py:17: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_budget_compatibility.py::test_reads_original_bytes_only_inside_explicit_q8_context
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_budget_compatibility.py::test_extra_semantic_change_rejects_instead_of_masking
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_budget_compatibility.py::test_malformed_or_forged_binding_rejects[bad0]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_budget_compatibility.py::test_malformed_or_forged_binding_rejects[bad1]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_budget_compatibility.py::test_malformed_or_forged_binding_rejects[bad2]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_budget_compatibility.py::test_unrelated_fixture_and_exception_cleanup_remain_strict
+6 failed in 0.24s

@@ -1,0 +1,24 @@
+{
+  "adr": "ADR-0060",
+  "authorizes": [],
+  "command": [
+    "/workspace/scratch/1ecf047ec2b0/acceptance-env-20261017/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "scripts/python/tests/test_skill_input_consumer_migration.py",
+    "scripts/python/tests/test_toolchain_workflow_repair_e2e.py"
+  ],
+  "dontWriteBytecode": true,
+  "elapsedSeconds": 11.93,
+  "exitCode": 0,
+  "pythonPath": [
+    "scripts/python",
+    "."
+  ],
+  "stderr": "",
+  "stdout": "........................................................................ [ 75%]\n........................                                                 [100%]\n96 passed in 11.75s\n"
+}

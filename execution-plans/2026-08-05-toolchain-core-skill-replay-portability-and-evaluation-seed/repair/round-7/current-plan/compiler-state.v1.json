@@ -1,0 +1,1 @@
+{"authorizes":[],"completed_stages":[],"plan_id":"PLAN-9D747798F026","reason":"Direct review repair; prior compiler and semantic-worker passes are stale. Current independent semantic review and canonical validation are pending.","schema":"vdd.compiler-state.v1","semantic_plan_sha256":"sha256:2eab507d59823997558de9b1c5ac10e3f47d9ccc070f617a0e908a3bff2a3d9a","state":"repair-vdd"}

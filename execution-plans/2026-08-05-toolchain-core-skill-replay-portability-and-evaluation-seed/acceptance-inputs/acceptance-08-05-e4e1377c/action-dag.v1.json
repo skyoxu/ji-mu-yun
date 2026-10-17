@@ -1,0 +1,135 @@
+[
+  {
+    "actionId": "validate-plan-validator",
+    "activation": true,
+    "commandId": "plan-validator",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "validate-plan-validator-tests",
+    "activation": true,
+    "commandId": "plan-validator-tests",
+    "dependsOn": [
+      "validate-plan-validator"
+    ],
+    "order": 2
+  },
+  {
+    "actionId": "validate-slice-s0-predicate",
+    "activation": true,
+    "commandId": "slice-s0-predicate",
+    "dependsOn": [
+      "validate-plan-validator-tests"
+    ],
+    "order": 3
+  },
+  {
+    "actionId": "validate-slice-s1-predicate",
+    "activation": true,
+    "commandId": "slice-s1-predicate",
+    "dependsOn": [
+      "validate-slice-s0-predicate"
+    ],
+    "order": 4
+  },
+  {
+    "actionId": "validate-slice-s2-predicate",
+    "activation": true,
+    "commandId": "slice-s2-predicate",
+    "dependsOn": [
+      "validate-slice-s1-predicate"
+    ],
+    "order": 5
+  },
+  {
+    "actionId": "validate-slice-s3-predicate",
+    "activation": true,
+    "commandId": "slice-s3-predicate",
+    "dependsOn": [
+      "validate-slice-s2-predicate"
+    ],
+    "order": 6
+  },
+  {
+    "actionId": "validate-skill-replay-tests",
+    "activation": true,
+    "commandId": "skill-replay-tests",
+    "dependsOn": [
+      "validate-slice-s3-predicate"
+    ],
+    "order": 7
+  },
+  {
+    "actionId": "validate-historical-skill-package-replay",
+    "activation": true,
+    "commandId": "historical-skill-package-replay",
+    "dependsOn": [
+      "validate-skill-replay-tests"
+    ],
+    "order": 8
+  },
+  {
+    "actionId": "validate-stable-candidate-matrix-replay",
+    "activation": true,
+    "commandId": "stable-candidate-matrix-replay",
+    "dependsOn": [
+      "validate-historical-skill-package-replay"
+    ],
+    "order": 9
+  },
+  {
+    "actionId": "validate-vdd-skill-contract",
+    "activation": true,
+    "commandId": "vdd-skill-contract",
+    "dependsOn": [
+      "validate-stable-candidate-matrix-replay"
+    ],
+    "order": 10
+  },
+  {
+    "actionId": "validate-vdd-skill-tests",
+    "activation": true,
+    "commandId": "vdd-skill-tests",
+    "dependsOn": [
+      "validate-vdd-skill-contract"
+    ],
+    "order": 11
+  },
+  {
+    "actionId": "validate-acceptance-package-validation",
+    "activation": true,
+    "commandId": "acceptance-package-validation",
+    "dependsOn": [
+      "validate-vdd-skill-tests"
+    ],
+    "order": 12
+  },
+  {
+    "actionId": "validate-acceptance-targeted-tests",
+    "activation": true,
+    "commandId": "acceptance-targeted-tests",
+    "dependsOn": [
+      "validate-acceptance-package-validation"
+    ],
+    "order": 13
+  },
+  {
+    "actionId": "validate-downstream-workflow-model-routing-replay",
+    "activation": true,
+    "commandId": "downstream-workflow-model-routing-replay",
+    "dependsOn": [
+      "validate-acceptance-targeted-tests"
+    ],
+    "order": 14
+  },
+  {
+    "actionId": "validate-terminal-implementation-validation",
+    "activation": true,
+    "commandId": "terminal-implementation-validation",
+    "dependsOn": [
+      "validate-downstream-workflow-model-routing-replay"
+    ],
+    "order": 15
+  }
+]

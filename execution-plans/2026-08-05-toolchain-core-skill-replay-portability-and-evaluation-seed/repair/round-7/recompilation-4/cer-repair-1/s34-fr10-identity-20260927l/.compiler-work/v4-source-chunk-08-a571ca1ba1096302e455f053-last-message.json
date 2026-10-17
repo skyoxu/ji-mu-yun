@@ -1,0 +1,83 @@
+{
+  "covered_obligation_ids": [
+    "O-12738417684F",
+    "O-7051147536AB",
+    "O-8AD58EB8B159",
+    "O-AAE432A858C2",
+    "O-D3C9C031919C",
+    "O-E9FF07C7AD8D",
+    "O-EEB6F4FD7D0D",
+    "O-F5A025B7814C"
+  ],
+  "missing_obligation_ids": [],
+  "invented_obligation_ids": [],
+  "misaligned_acceptance_ids": [],
+  "oracle_alignment": {
+    "source_recall": {
+      "status": "covered",
+      "source_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-8",
+      "source_anchor": "FR-8",
+      "covered_terms": [
+        "missing",
+        "copied",
+        "mislabeled",
+        "stale",
+        "reused",
+        "wrong-target",
+        "infrastructure-failed",
+        "non-executed"
+      ]
+    },
+    "obligations": {
+      "O-12738417684F": {
+        "source_term": "infrastructure-failed",
+        "acceptance_ids": ["A-B1BB6A8A571C"],
+        "red_intent_ids": ["FI-31C656790A22", "FI-B8B19D4DBCBB"],
+        "aligned": true
+      },
+      "O-7051147536AB": {
+        "source_term": "reused",
+        "acceptance_ids": ["A-D648F7DF7056"],
+        "red_intent_ids": ["FI-A0FA846FEED8"],
+        "aligned": true
+      },
+      "O-8AD58EB8B159": {
+        "source_term": "non-executed",
+        "acceptance_ids": ["A-F2F987006FC3"],
+        "red_intent_ids": ["FI-069C3D8093D9", "FI-CFA1F254D131"],
+        "aligned": true
+      },
+      "O-AAE432A858C2": {
+        "source_term": "wrong-target",
+        "acceptance_ids": ["A-D0CD5CF2B27D"],
+        "red_intent_ids": ["FI-7642373EC27B"],
+        "aligned": true
+      },
+      "O-D3C9C031919C": {
+        "source_term": "copied",
+        "acceptance_ids": ["A-4048BCD462A7"],
+        "red_intent_ids": ["FI-57657506FC5C"],
+        "aligned": true
+      },
+      "O-E9FF07C7AD8D": {
+        "source_term": "missing",
+        "acceptance_ids": ["A-47C58718B027"],
+        "red_intent_ids": ["FI-072B459F9B8D"],
+        "aligned": true
+      },
+      "O-EEB6F4FD7D0D": {
+        "source_term": "stale",
+        "acceptance_ids": ["A-5446ED62F47E"],
+        "red_intent_ids": ["FI-85B112CAC06B"],
+        "aligned": true
+      },
+      "O-F5A025B7814C": {
+        "source_term": "mislabeled",
+        "acceptance_ids": ["A-9FE8003BCD11"],
+        "red_intent_ids": ["FI-8CA9683460CA"],
+        "aligned": true
+      }
+    }
+  },
+  "repairs": []
+}

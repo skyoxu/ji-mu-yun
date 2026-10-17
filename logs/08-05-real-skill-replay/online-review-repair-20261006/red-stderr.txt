@@ -1,0 +1,53 @@
+test_consumer_executable_changes_invalidate_snapshot (test_skill_replay_review_regressions.ReviewRegressionTests.test_consumer_executable_changes_invalidate_snapshot) ... FAIL
+test_failed_required_consumer_cannot_be_a_successful_replay (test_skill_replay_review_regressions.ReviewRegressionTests.test_failed_required_consumer_cannot_be_a_successful_replay) ... FAIL
+test_path_only_validator_cannot_claim_effective_target_reads (test_skill_replay_review_regressions.ReviewRegressionTests.test_path_only_validator_cannot_claim_effective_target_reads) ... FAIL
+test_six_labels_and_copies_do_not_qualify_as_stable_matrix (test_skill_replay_review_regressions.ReviewRegressionTests.test_six_labels_and_copies_do_not_qualify_as_stable_matrix) ... FAIL
+test_validator_cannot_be_its_own_independent_source (test_skill_replay_review_regressions.ReviewRegressionTests.test_validator_cannot_be_its_own_independent_source) ... FAIL
+
+======================================================================
+FAIL: test_consumer_executable_changes_invalidate_snapshot (test_skill_replay_review_regressions.ReviewRegressionTests.test_consumer_executable_changes_invalidate_snapshot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audite289/scripts/sc/tests/test_skill_replay_review_regressions.py", line 77, in test_consumer_executable_changes_invalidate_snapshot
+    self.assertNotEqual(before["sha256"], after["sha256"])
+AssertionError: 'sha256:0de16de63bef13fba71e91e8c9da55d3fc7279f43f6cb0dd15d145e6ea382ef4' == 'sha256:0de16de63bef13fba71e91e8c9da55d3fc7279f43f6cb0dd15d145e6ea382ef4'
+
+======================================================================
+FAIL: test_failed_required_consumer_cannot_be_a_successful_replay (test_skill_replay_review_regressions.ReviewRegressionTests.test_failed_required_consumer_cannot_be_a_successful_replay)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audite289/scripts/sc/tests/test_skill_replay_review_regressions.py", line 83, in test_failed_required_consumer_cannot_be_a_successful_replay
+    with self.assertRaises((ValueError, RuntimeError)):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (<class 'ValueError'>, <class 'RuntimeError'>) not raised
+
+======================================================================
+FAIL: test_path_only_validator_cannot_claim_effective_target_reads (test_skill_replay_review_regressions.ReviewRegressionTests.test_path_only_validator_cannot_claim_effective_target_reads)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audite289/scripts/sc/tests/test_skill_replay_review_regressions.py", line 45, in test_path_only_validator_cannot_claim_effective_target_reads
+    with self.assertRaises((ValueError, RuntimeError)):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (<class 'ValueError'>, <class 'RuntimeError'>) not raised
+
+======================================================================
+FAIL: test_six_labels_and_copies_do_not_qualify_as_stable_matrix (test_skill_replay_review_regressions.ReviewRegressionTests.test_six_labels_and_copies_do_not_qualify_as_stable_matrix)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audite289/scripts/sc/tests/test_skill_replay_review_regressions.py", line 64, in test_six_labels_and_copies_do_not_qualify_as_stable_matrix
+    self.assertNotEqual(0, code)
+AssertionError: 0 == 0
+
+======================================================================
+FAIL: test_validator_cannot_be_its_own_independent_source (test_skill_replay_review_regressions.ReviewRegressionTests.test_validator_cannot_be_its_own_independent_source)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audite289/scripts/sc/tests/test_skill_replay_review_regressions.py", line 50, in test_validator_cannot_be_its_own_independent_source
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.353s
+
+FAILED (failures=5)

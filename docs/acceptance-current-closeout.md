@@ -79,8 +79,9 @@ directory. Omit `maintainerIntent` for deterministic Acceptance. Set it to
 returns a typed handoff without launching a review.
 
 Never edit stale cached evidence to make reentry succeed. Preserve it and supply
-fresh explicit owner-produced inputs. A failed action returns waiting and cannot
-be retried automatically by replaying that stored result.
+fresh explicit owner-produced inputs. A failed action returns `failed` on the
+action-failed route and cannot be retried automatically by replaying that
+stored result; recovery requires an explicitly bound successor.
 
 ## Validation Scope
 

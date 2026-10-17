@@ -108,20 +108,21 @@ def main() -> int:
         default=REPOSITORY_ROOT / ".agents" / "skills" / "vdd-execution-plan" / "references" / "skill-input-contract.v1.json",
     )
     args = parser.parse_args()
+    repository_root = args.repository_root.resolve()
     skill_input = require_ready_skill_input(
         receipt_path=args.skill_input_receipt,
-        repository_root=args.repository_root,
+        repository_root=repository_root,
         contract_path=args.skill_input_contract,
         consumer="vdd-execution-plan",
         operation=args.skill_input_operation,
     )
     context_artifact = Path(skill_input["context_artifact"]).resolve()
     try:
-        context_artifact_relative = context_artifact.relative_to(args.repository_root.resolve()).as_posix()
+        context_artifact_relative = context_artifact.relative_to(repository_root).as_posix()
     except ValueError as exc:
         raise ValueError("Skill input context artifact must be repository-contained") from exc
     payload = json.loads(args.input.read_text(encoding="utf-8"))
-    result = evaluate_preflight(payload, repository_root=args.repository_root.resolve())
+    result = evaluate_preflight(payload, repository_root=repository_root)
     result["schema_version"] = "jimuyun.vdd-knowledge-preflight.v1"
     result["input_sha256"] = canonical_hash(payload)
     result["skill_input"] = {

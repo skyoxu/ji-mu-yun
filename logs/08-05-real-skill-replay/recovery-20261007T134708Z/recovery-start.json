@@ -1,0 +1,12 @@
+{
+  "schema": "jimuyun.direct-repair-recovery.v1",
+  "source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "remote_head_observed": "f477d84f58b05c96a229997a7c7c633585a10f3d",
+  "old_run": "logs/08-05-real-skill-replay/continuation-20261007/native-full-current",
+  "old_run_finished_nodes": 292,
+  "old_run_terminal_result_available": false,
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

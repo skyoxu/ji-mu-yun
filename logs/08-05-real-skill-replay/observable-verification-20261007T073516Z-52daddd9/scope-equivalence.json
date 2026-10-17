@@ -1,0 +1,12 @@
+{
+  "schema": "jimuyun.direct-verification-scope-equivalence.v1",
+  "original_evidence_commit": "7abdfb25dcc1342d0f2f7b3dc0dbb9268f2bd39f",
+  "original_node_manifest": "logs/08-05-real-skill-replay/observable-verification-20261006T164348Z-07aecb59/selected-nodeids.json",
+  "candidate_head": "de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5",
+  "original_count": 340,
+  "current_count": 340,
+  "ordered_nodeids_equal": true,
+  "original_raw_sha256": "6a6f4ac8c8825522c83c44410b9de8cfdf7fd50e1ea5b5a52b7f91169eac7232",
+  "current_raw_sha256": "6a6f4ac8c8825522c83c44410b9de8cfdf7fd50e1ea5b5a52b7f91169eac7232",
+  "authorizes": []
+}

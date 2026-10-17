@@ -60,7 +60,28 @@ on a separate runtime that does not adopt Skill-input.
 The existing consumer context budget is enforced independently of transport
 coverage; complete delivery does not permit oversized context publication.
 
+## Implementation clarification (2026-10-11)
+
+For `consumer=run-refactor-implementation-acceptance`, the authority
+envelope's `target_plan` identifies the owner of generated Acceptance evidence.
+The candidate observer excludes only that target's `acceptance-runs/`,
+`acceptance-inputs/`, and typed Acceptance request/context artifacts. It does
+not exclude the full target plan or repository-wide `execution-plans/`; other
+target files and implementation inputs remain candidate authority. Acceptance
+outputs remain bound by their own lifecycle and Skill-input contracts.
+
+An Acceptance `action-failed` lifecycle event is terminal for its bound run.
+Identical reentry cannot project it back to `ready` or retry it; recovery must
+create an explicitly bound successor while preserving the failed run.
+
 ## Consequences
+
+Implementation clarification (2026-10-17): the exact bound-target
+`acceptance-current.v1.json` is generated finalization output. Publishing or
+advancing it must not invalidate the Skill-input generation consumed by
+finalization. Another target's pointer and authoritative target files remain
+candidate inputs. The Acceptance lifecycle independently validates pointer and
+final-result integrity on reentry.
 
 The workflow repair must migrate all consumers to v2 before 8-18 can create a
 new current receipt. Existing `skill-input-current*` directories remain
@@ -72,4 +93,3 @@ Bootstrap.
 
 This extends ADR-0048, ADR-0050, ADR-0057, ADR-0058, and ADR-0059. It
 supersedes only their v1 Skill-input selection/current-resolution practices.
-

@@ -1,0 +1,60 @@
+{
+  "schema": "jimuyun.lossless-evidence-archive.v1",
+  "entries": [
+    {
+      "original_path": "collection/stdout.txt",
+      "archive_path": "collection/stdout.txt.gz",
+      "raw_bytes": 135235,
+      "raw_sha256": "0abdca26c5e4448d85c4dd023f854de3e8431d7d35fff9507d82fb01fb3c2c83",
+      "archive_bytes": 10896,
+      "archive_sha256": "07887e4718ecc14b30d6d8864c587686869f481003d27dee3d453748cb95531b",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "pytest/process-result.json",
+      "archive_path": "pytest/process-result.json.gz",
+      "raw_bytes": 813650,
+      "raw_sha256": "6355d2d6e849ea772f9814395e335e294910678467ee3411140d0a13344964e4",
+      "archive_bytes": 48449,
+      "archive_sha256": "06e19140c552bf76219e89e2fdfa7982755cfacfa5d4dd4988a98547dceed719",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "pytest/stdout.txt",
+      "archive_path": "pytest/stdout.txt.gz",
+      "raw_bytes": 147972,
+      "raw_sha256": "f0f0c06b541064b066ab3c75d8a40a6d471971123886bcadcb3a76415e9dd762",
+      "archive_bytes": 12761,
+      "archive_sha256": "ac31971e31230aa7706a5d131fb756d72ccc4ebda9ea6e560c01662097f78871",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "pytest-events.jsonl",
+      "archive_path": "pytest-events.jsonl.gz",
+      "raw_bytes": 684026,
+      "raw_sha256": "7d7fb805c269c2d79826b11e2a99f235b91d9d034fe37119301ecda23b92cc7a",
+      "archive_bytes": 47507,
+      "archive_sha256": "3529bd2ee6d076f0645695efc01be9a44f21da994f66f36c869f815c2dee1e8c",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "source-after.json",
+      "archive_path": "source-after.json.gz",
+      "raw_bytes": 306059,
+      "raw_sha256": "7060510b3a7600765161db397bc2a3739202129fa1b88b4b21d31c87eae74656",
+      "archive_bytes": 72411,
+      "archive_sha256": "d9e12a2d9acf0089bdd5b6d36bc824a47e55259c3eaa2a3d3e5e7b6f0efa53af",
+      "compression": "gzip-lossless"
+    },
+    {
+      "original_path": "source-before.json",
+      "archive_path": "source-before.json.gz",
+      "raw_bytes": 306059,
+      "raw_sha256": "7060510b3a7600765161db397bc2a3739202129fa1b88b4b21d31c87eae74656",
+      "archive_bytes": 72411,
+      "archive_sha256": "d9e12a2d9acf0089bdd5b6d36bc824a47e55259c3eaa2a3d3e5e7b6f0efa53af",
+      "compression": "gzip-lossless"
+    }
+  ],
+  "authorizes": []
+}

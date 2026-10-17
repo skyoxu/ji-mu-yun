@@ -1,0 +1,37 @@
+{
+  "schema": "jimuyun.direct-replay-verification.v1",
+  "status": "direct-validation-passed",
+  "scope": [
+    "scripts/sc/tests/test_skill_package_replay.py"
+  ],
+  "expected_count_requested": 8,
+  "unittest_selected": true,
+  "platform": "linux",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": [],
+  "unittest": {
+    "exit_code": 0,
+    "reason": null,
+    "tests": 32
+  },
+  "collected_count": 8,
+  "pytest": {
+    "pass": true,
+    "expected_count": 8,
+    "finished_count": 8,
+    "exact_node_coverage": true,
+    "all_phases_passed": true,
+    "skipped_reports": 0,
+    "authorizes": []
+  },
+  "process": {
+    "exit_code": 0,
+    "reason": null,
+    "active_nodeid": null,
+    "active_phase": "between-tests",
+    "cleanup": null
+  },
+  "source_stable": true
+}

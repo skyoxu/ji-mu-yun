@@ -1,0 +1,49 @@
+{
+  "reviewed_commit": "e2f4fb09337a5f298321df39362d363822771f6c",
+  "selection_hash": "sha256:9fcc56d354a7fad51219a02a03a1614e4d2153311496a5593ee8bbc58734503a",
+  "reviewed_bundle_sha256": "sha256:2eab507d59823997558de9b1c5ac10e3f47d9ccc070f617a0e908a3bff2a3d9a",
+  "purpose": "Read-only restart input inventory; not approval, Skill-input attestation, or runtime evidence.",
+  "files": [
+    {
+      "git_blob_sha1": "1ee48f270d3ad34c0d8255de19d5a48210f6f394",
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-tc-d1-trustworthy-skill-replay-and-evaluation-repair-2026-09-12/ARCHITECTURE-SPINE.md",
+      "sha256": "sha256:33ec2b6764618b8c827535cc7094714c405a97759cea8ef44c3aa532d9953720"
+    },
+    {
+      "git_blob_sha1": "1183c162798bc158d72c0b583a409fe8116fec57",
+      "path": "_bmad-output/planning-artifacts/prds/prd-jimuyun-2026-09-11/addendum.md",
+      "sha256": "sha256:838333e1d0ad76360471f92d07971957f9389ca053f17cb424e00f20ac6db808"
+    },
+    {
+      "git_blob_sha1": "bd4d3a792424a377d634d10f5f87ea203534d1e0",
+      "path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-tc-d1-trustworthy-skill-replay-and-evaluation-repair.json",
+      "sha256": "sha256:734ff7b53cfa0dcfe19dde81f631db08fcdeb53db56f4052140c3c288d30ffdf"
+    },
+    {
+      "git_blob_sha1": "17544be03b67676993be50cc945ebd8f8fb6820a",
+      "path": "_bmad-output/specs/spec-tc-d1-trustworthy-skill-replay-and-evaluation-repair/SPEC.md",
+      "sha256": "sha256:0cd640802619754039b9e618505337b544cd8f6b067aa3a8bcf7e7cf46f9507a"
+    },
+    {
+      "git_blob_sha1": "a4ad19eff0be9a484557d823967fcc16346d686a",
+      "path": "_bmad-output/specs/spec-tc-d1-trustworthy-skill-replay-and-evaluation-repair/atomic-obligations.md",
+      "sha256": "sha256:f5fff245b0f28c3504e9540dd3e043152342af81f019d91d6975ccdd638a71c4"
+    },
+    {
+      "git_blob_sha1": "3a315c7f381f5cf91c5f6272b56b9bc2321b488d",
+      "path": "_bmad-output/specs/spec-tc-d1-trustworthy-skill-replay-and-evaluation-repair/authority-and-open-questions.md",
+      "sha256": "sha256:0b7b0dd3a880e1b327f6de8642276067baa74ad92e4c38f833bca4c2f9c50d7c"
+    },
+    {
+      "git_blob_sha1": "be798a17c78a1e5585424edb44891e106dfdd457",
+      "path": "_bmad-output/specs/spec-tc-d1-trustworthy-skill-replay-and-evaluation-repair/domain-contract.md",
+      "sha256": "sha256:8a4e5664df25deb8f971f4279e03f1c97546b4432db7beacf43d3df66d133d9a"
+    },
+    {
+      "git_blob_sha1": "f7213bd748dc40301800dfca1b3bd4158d53d07e",
+      "path": "_bmad-output/specs/spec-tc-d1-trustworthy-skill-replay-and-evaluation-repair/requirements-and-acceptance.md",
+      "sha256": "sha256:0f3c76b22b92ff5754c12fbda126b1450e3c56e8ced5c8e922b82134996085ba"
+    }
+  ],
+  "authorizes": []
+}

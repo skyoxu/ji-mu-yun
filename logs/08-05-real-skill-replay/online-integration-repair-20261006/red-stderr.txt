@@ -1,0 +1,65 @@
+test_archive_requires_native_roots_and_checks_reference_bytes (test_skill_replay_review_regressions.NativeRuntimeTests.test_archive_requires_native_roots_and_checks_reference_bytes) ... ok
+test_comment_change_cannot_qualify_as_candidate_behavior_change (test_skill_replay_review_regressions.NativeRuntimeTests.test_comment_change_cannot_qualify_as_candidate_behavior_change) ... ok
+test_environment_change_invalidates_snapshot (test_skill_replay_review_regressions.NativeRuntimeTests.test_environment_change_invalidates_snapshot) ... ok
+test_fresh_checkout_reconstructs_candidate_dependencies_before_replay (test_skill_replay_review_regressions.NativeRuntimeTests.test_fresh_checkout_reconstructs_candidate_dependencies_before_replay) ... ok
+test_joint_validator_source_and_descriptor_drift_requires_external_approval (test_skill_replay_review_regressions.NativeRuntimeTests.test_joint_validator_source_and_descriptor_drift_requires_external_approval) ... ok
+test_native_consumer_failure_blocks_replay (test_skill_replay_review_regressions.NativeRuntimeTests.test_native_consumer_failure_blocks_replay) ... ok
+test_native_six_case_comparison_has_provenance_and_real_state_changes (test_skill_replay_review_regressions.NativeRuntimeTests.test_native_six_case_comparison_has_provenance_and_real_state_changes) ... ok
+test_new_aliased_consumer_is_not_silently_omitted (test_skill_replay_review_regressions.NativeRuntimeTests.test_new_aliased_consumer_is_not_silently_omitted) ... ok
+test_path_only_validator_with_valid_immutable_trust_is_rejected (test_skill_replay_review_regressions.NativeRuntimeTests.test_path_only_validator_with_valid_immutable_trust_is_rejected) ... ok
+test_real_four_stage_consumer_routes_reproduce_frozen_prior (test_skill_replay_review_regressions.NativeRuntimeTests.test_real_four_stage_consumer_routes_reproduce_frozen_prior) ... ok
+test_real_target_reads_and_same_location_probe_oracle (test_skill_replay_review_regressions.NativeRuntimeTests.test_real_target_reads_and_same_location_probe_oracle) ... ok
+test_unreached_validator_dependency_drift_is_rejected (test_skill_replay_review_regressions.NativeRuntimeTests.test_unreached_validator_dependency_drift_is_rejected) ... ok
+test_utf8_output_keeps_native_crlf_bytes (test_skill_replay_review_regressions.NativeRuntimeTests.test_utf8_output_keeps_native_crlf_bytes) ... ok
+test_environment_cannot_approve_joint_committed_validator_drift (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_environment_cannot_approve_joint_committed_validator_drift) ... FAIL
+test_probe_actual_target_comes_from_the_native_child_witness (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_probe_actual_target_comes_from_the_native_child_witness) ... FAIL
+test_replay_identity_is_the_actual_inspected_package (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package) ... FAIL
+test_rollback_counts_consumers_and_retains_each_fixture_observation (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation) ... FAIL
+test_rollback_refuses_a_missing_negative_fixture (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture) ... FAIL
+
+======================================================================
+FAIL: test_environment_cannot_approve_joint_committed_validator_drift (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_environment_cannot_approve_joint_committed_validator_drift)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 57, in test_environment_cannot_approve_joint_committed_validator_drift
+    with self.assertRaisesRegex(ValueError, "Trust Approval"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_probe_actual_target_comes_from_the_native_child_witness (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_probe_actual_target_comes_from_the_native_child_witness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 70, in test_probe_actual_target_comes_from_the_native_child_witness
+    self.assertTrue(Path(row["actual_target"]).is_absolute())
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_replay_identity_is_the_actual_inspected_package (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 64, in test_replay_identity_is_the_actual_inspected_package
+    self.assertEqual(current["effective_inspected_content"]["identity"], current.get("replay_identity"))
+AssertionError: 'sha256:22850195bf75683c897c225c99032b0dfceea001761211a2676aa36ea89a496e' != None
+
+======================================================================
+FAIL: test_rollback_counts_consumers_and_retains_each_fixture_observation (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 25, in test_rollback_counts_consumers_and_retains_each_fixture_observation
+    self.assertEqual(len(entries), rollback["observed_count"])
+AssertionError: 3 != 5
+
+======================================================================
+FAIL: test_rollback_refuses_a_missing_negative_fixture (test_skill_replay_integration_regressions.ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/audit912/scripts/sc/tests/test_skill_replay_integration_regressions.py", line 42, in test_rollback_refuses_a_missing_negative_fixture
+    with self.assertRaisesRegex(ValueError, "rollback.*coverage"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 18 tests in 17.123s
+
+FAILED (failures=5)

@@ -1,0 +1,58 @@
+{
+  "base_commit": "080005d24ebae015425a0e61e9f9e89f1366d80f",
+  "results": [
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/conftest.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s10.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s13.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s19.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s22.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s27.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s28.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s28_cer.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s30.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s31-r2.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s31.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s41.py",
+      "cer_assertion_identity_multiset_preserved": true
+    },
+    {
+      "path": "scripts/sc/tests/tc_d1_cer/test_s42.py",
+      "cer_assertion_identity_multiset_preserved": true
+    }
+  ],
+  "authorizes": []
+}

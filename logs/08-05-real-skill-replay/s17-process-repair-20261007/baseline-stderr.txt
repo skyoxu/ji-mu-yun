@@ -1,0 +1,18 @@
+/workspace/scratch/9aa4df529c3a/repo-s17/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/workspace/scratch/9aa4df529c3a/repo-s17/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/tmp/tc-d1-prior-route-kvrd9a3z/prior/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/tmp/tc-d1-prior-route-kvrd9a3z/prior/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/workspace/scratch/9aa4df529c3a/repo-s17/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/workspace/scratch/9aa4df529c3a/repo-s17/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/tmp/tc-d1-prior-route-kvrd9a3z/prior/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/tmp/tc-d1-prior-route-kvrd9a3z/prior/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json
+/workspace/scratch/9aa4df529c3a/repo-s17/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence '\p'
+  py -3 scripts\python\db_schema_dump.py --glob "%APPDATA%\Godot\app_userdata\GodotGame\*.db" --out logs/ci/<run_id>/schema-dump.json

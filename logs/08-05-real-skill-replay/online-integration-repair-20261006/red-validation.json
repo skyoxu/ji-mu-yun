@@ -1,0 +1,23 @@
+{
+  "candidate_commit": "91279a19ae3d4d6936b86339e9cd5c8c09327fe2",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts/sc/tests",
+    "-p",
+    "test_skill_replay_integration_regressions.py",
+    "-v"
+  ],
+  "exit_code": 1,
+  "source_sha256": {
+    "scripts/sc/skill_package_replay.py": "sha256:3cb8f03c532b345afb11e38f95577b43359a49916302680f6f09d54bd2cfdc90",
+    "scripts/sc/skill_replay_runtime.py": "sha256:56334df3bfbd8e5b73154810ae4ba0eac3d20deebb16d82e5d1ad426601d0839"
+  },
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "authorizes": []
+}

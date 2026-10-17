@@ -11,12 +11,33 @@ $ts = Get-Date -Format 'yyyyMMdd-HHmmss'
 $logDir = Join-Path $root ("logs/ci/$ts/base-clean")
 Ensure-Dir $logDir
 $report = Join-Path $logDir 'summary.json'
+$membershipState = Join-Path $root 'logs/ci/base-clean/membership.json'
+Ensure-Dir (Split-Path -Parent $membershipState)
 
 $violations = @()
 
 function Add-Violation([string]$file,[string]$rule,[string]$message){
   $vi = [pscustomobject]@{ file=$file; rule=$rule; message=$message }
   $script:violations = $script:violations + $vi
+}
+
+# Historical membership is compared as a normalized, relative path set. Keep
+# the baseline under logs so the verifier's own reports cannot affect it.
+$membership = @(Get-ChildItem -LiteralPath $root -Recurse -File -Force |
+  Where-Object { $_.FullName -notmatch [regex]::Escape((Join-Path $root '.git')) -and
+                 $_.FullName -notmatch [regex]::Escape((Join-Path $root 'logs')) } |
+  ForEach-Object { ($_.FullName.Substring($root.Length) -replace '^[\\/]+','') -replace '\\','/' } |
+  Sort-Object)
+
+if (Test-Path -LiteralPath $membershipState) {
+  $baseline = @(Get-Content -Raw -LiteralPath $membershipState | ConvertFrom-Json | ForEach-Object { [string]$_ } | Sort-Object)
+  $beforeOnly = @($baseline | Where-Object { $_ -notin $membership })
+  $afterOnly = @($membership | Where-Object { $_ -notin $baseline })
+  if ($beforeOnly.Count -gt 0 -or $afterOnly.Count -gt 0) {
+    Add-Violation $root 'TRACKED_MEMBERSHIP_CHANGE' ("Historical tracked membership changed; removed=" + ($beforeOnly -join ',') + "; added=" + ($afterOnly -join ','))
+  }
+} else {
+  $membership | ConvertTo-Json | Set-Content -Encoding UTF8 -LiteralPath $membershipState
 }
 
 # 1) Base: no concrete 08 content or PRD-ID

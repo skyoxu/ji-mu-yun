@@ -49,6 +49,33 @@ py -3 scripts/vdd/compile_plan.py --requirements <requirements.md> --out-dir <ex
 
 For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit or any status other than `plan-ready` remains a VDD repair result; no caller may promote it. `--recommendation-only` performs no plan publication and never represents readiness.
 
+For an already reviewed plan whose only defect is the Quick Dev execution
+handoff, use `--repair-quick-dev-handoff-from <predecessor-dir>` with the
+unchanged requirements and a distinct empty successor `--out-dir` inside the
+same repair scope. The predecessor profile is retained. This mode preserves
+semantic scope and records V1/V4 reuse; it performs no model calls. Read
+[the planning guide](references/planning-operation.md) for its exact limits.
+
+For a wrong V3 contract discovered after publication, use
+`--repair-published-v3-from <plan-ready-predecessor> --v3-contract-repair <json>`
+with the original requirements, predecessor profile, and a distinct empty
+sibling successor. The compiler validates the published source/V4 witnesses,
+rehydrates unchanged V3 contracts, and requires fresh V4 and downstream gates.
+It does not modify the predecessor or import prior execution evidence. See the
+planning guide for restrictions.
+
+If independent V4 also proves a genuine source gap in that published repair,
+`--published-v1-gap-extension <json>` may append only separately authored,
+source-bound obligations with complete inline V3 contracts. The published
+predecessor and failed attempt remain untouched; all other V1/V3 contracts are
+reused, while V4 and downstream gates run anew. See the planning guide.
+
+When V4 proves that a frozen V1 obligation itself contradicts a normative
+transition contract, use the explicit `--published-v1-replacement` input. It
+must name the approved source-bound replacements and provide complete V3
+contracts for the resulting new obligation IDs; old V1/V3 evidence is not
+silently relabeled. V4 and all downstream gates remain mandatory.
+
 For real-worker quality evaluation, `scripts/vdd/evaluate_real_semantic_quality.py`
 supervises the compiler with `--compile-timeout-seconds` (default 3600), distinct
 from the optional `--repair-timeout-seconds` override. It prints the progress
@@ -127,8 +154,14 @@ Do not claim completion until the selected profile's required artifacts exist, e
 Use this repository-owned command for Skill package validation:
 
 ```text
-py -3 -B scripts/sc/skill_package_replay.py validate-package --target .agents/skills/vdd-execution-plan --capability scripts/sc/config/skill-package-validator-capability.v1.json
+py -3 -B .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan
 ```
 
 
-For Skill maintenance also run `py -3 .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan` and its unit tests.
+For Skill maintenance also run `py -3 -B -m unittest discover -s .agents/skills/vdd-execution-plan/scripts/tests -p test_validate_skill_contract.py`.
+
+An explicit `--runtime-red-intent <failure-intent-id>` on handoff repair binds
+a reviewed executable assertion to an expected-red role without changing its
+requirement category or existing diagnostic family. This is not automatic
+Governance conversion. See the planning guide and ADR-0041; approval decisions
+can never become runtime implementation authority through this option.

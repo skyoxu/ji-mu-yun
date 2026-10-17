@@ -1,0 +1,117 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-8AD58EB8B159": {
+      "acceptance": {
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-8"],
+        "given": "A required Matrix evidence record is present but marked non-executed.",
+        "when": "The real aggregate validator checks execution completeness before computing validity.",
+        "then": "The aggregate is invalid with a non-executed diagnostic; an omitted-case fixture remains covered by its separate obligation.",
+        "oracle": {"observable": "Aggregate status and case diagnostics", "expected": "Present non-executed evidence yields invalid status naming the case.", "forbidden": ["Non-executed evidence is accepted", "Omission is used as the only proof of non-execution"]},
+        "assertion_ids": ["FR8-NONEXECUTED-EVIDENCE"]
+      },
+      "failure_intents": [{"failure_family": "semantic-contract-gap", "selector_intent": "Supply a present Matrix Case evidence record with executed=false and require aggregate invalid with case-specific diagnostic.", "expected_outcome": "fail", "failure_id": "FR8-NONEXECUTED-ACCEPTED"}],
+      "slice_hint": {
+        "production_owners": ["scripts/sc/skill_package_replay.py"], "verification_lane": "integration", "behavior_change": "Reject present but non-executed Matrix evidence.", "affected_subjects": ["Non-executed Matrix evidence"], "state_transition": "Evidence present -> execution check -> invalid aggregate", "rollback_scope": {"production_paths": ["scripts/sc/skill_package_replay.py"], "state_or_schema_compatibility": "Preserve aggregate fields."}, "allowed_write_paths": ["scripts/sc/skill_package_replay.py", "scripts/sc/tests/tc_d1_cer/test_s31.py", "scripts/sc/tests/tc_d1_cer/test_s44.py"], "execution_snapshot_paths": ["scripts/sc/tests/tc_d1_cer/test_s31.py", "scripts/sc/tests/tc_d1_cer/test_s44.py"], "planned_new_files": ["scripts/sc/tests/tc_d1_cer/test_s31.py", "scripts/sc/tests/tc_d1_cer/test_s44.py"], "terminal_predicate": "Non-executed evidence produces invalid aggregate with case identity.", "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs"], "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s31.py", "-q"], ["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s44.py", "-q"]]
+      }
+    },
+    "O-EA625B1D3DFB": {
+      "acceptance": {
+        "source_refs": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-10"],
+        "given": "Prior and Candidate Route identities are captured for a real Consumer.",
+        "when": "Disable and rollback then re-enable execute through real call surfaces.",
+        "then": "Prior identity is called at disable/rollback and Candidate identity is called at re-enable.",
+        "oracle": {"observable": "Per-transition Consumer route receipts", "expected": "Prior identity appears at disable/rollback and Candidate identity appears at re-enable.", "forbidden": ["Configuration-only switching", "Candidate is required to equal Prior"]},
+        "assertion_ids": ["FR10-EA625B1D3DFB"]
+      },
+      "failure_intents": [{"failure_family": "target-binding-failure", "selector_intent": "Return a wrong route at disable, rollback, or re-enable and require identity-specific rejection.", "expected_outcome": "fail", "failure_id": "FR10-EA625B1D3DFB-DRIFT"}],
+      "slice_hint": {
+        "production_owners": ["scripts/sc/skill_package_replay.py"], "verification_lane": "integration", "behavior_change": "Verify route identity per transition rather than after re-enable only.", "affected_subjects": ["Consumer route identity"], "state_transition": "Prior disable/rollback -> Candidate re-enable", "rollback_scope": {"production_paths": ["scripts/sc/skill_package_replay.py"], "state_or_schema_compatibility": "Preserve route receipt fields."}, "allowed_write_paths": ["scripts/sc/skill_package_replay.py", "scripts/sc/tests/tc_d1_cer/test_s31.py", "scripts/sc/tests/tc_d1_cer/test_s44.py"], "execution_snapshot_paths": ["scripts/sc/tests/tc_d1_cer/test_s31.py", "scripts/sc/tests/tc_d1_cer/test_s44.py"], "planned_new_files": ["scripts/sc/tests/tc_d1_cer/test_s31.py", "scripts/sc/tests/tc_d1_cer/test_s44.py"], "terminal_predicate": "Prior identity is observed at disable/rollback and Candidate at re-enable.", "forbidden_paths": ["PhaseA.Platform", "runtime/phase-a", "logs"], "validation_commands": [["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s31.py", "-q"], ["python", "-m", "pytest", "scripts/sc/tests/tc_d1_cer/test_s44.py", "-q"]]
+      }
+    },
+    "O-9B4561ADE38B": {
+      "acceptance": {
+        "source_refs": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#NFR-2"
+        ],
+        "given": "A verdict is issued by the Toolchain evaluation path after validator execution.",
+        "when": "A verdict is issued.",
+        "then": "The verdict is accepted only when current source identity and real execution evidence are traceable.",
+        "oracle": {
+          "observable": "Serialized verdict and execution record showing current source identity and producing command",
+          "expected": "The verdict artifact contains a traceable current source identity tied to real execution evidence; assistant-only prose cannot satisfy the check.",
+          "forbidden": [
+            "A verdict is emitted without a current source identity reference.",
+            "The verdict is accepted solely from assistant prose without execution evidence."
+          ]
+        },
+        "assertion_ids": [
+          "A-VERDICT-REAL-EXECUTION",
+          "A-VERDICT-SOURCE-IDENTITY-TRACE"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "semantic-contract-gap",
+          "selector_intent": "Validate a verdict with missing, stale, or mismatched source identity; governance validation must reject it.",
+          "expected_outcome": "fail",
+          "failure_id": "F-VERDICT-MISSING-SOURCE-IDENTITY"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          "scripts/sc/skill_package_replay.py"
+        ],
+        "verification_lane": "integration",
+        "behavior_change": "Require verdict validation to include current source identity and linked real execution evidence.",
+        "affected_subjects": [
+          "Every verdict"
+        ],
+        "state_transition": "verdict pending identity trace -> identity and execution checked -> verdict accepted/rejected",
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/skill_package_replay.py"
+          ],
+          "state_or_schema_compatibility": "Keep verdict schema compatibility while rejecting missing identity or execution evidence."
+        },
+        "allowed_write_paths": [
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/tests/tc_d1_cer/test_s31.py",
+          "scripts/sc/tests/tc_d1_cer/test_s44.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/tc_d1_cer/test_s31.py",
+          "scripts/sc/tests/tc_d1_cer/test_s44.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/tests/tc_d1_cer/test_s31.py",
+          "scripts/sc/tests/tc_d1_cer/test_s44.py"
+        ],
+        "terminal_predicate": "A machine validator links each verdict to current source identity and a real command execution record.",
+        "forbidden_paths": [
+          "PhaseA.Platform",
+          "runtime/phase-a",
+          "logs"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/tc_d1_cer/test_s44.py",
+            "-q"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/tc_d1_cer/test_s31.py",
+            "-q"
+          ]
+        ]
+      }
+    }
+  }
+}

@@ -24,6 +24,9 @@ from coverage_predicates import publish_implementation_complete, validate_slice_
 from runtime_evidence import sha256_value
 from skill_input_composition_support import publish_ready_receipt
 from knowledge_context import freeze_knowledge_context
+from scripts.python import skill_input_v2
+from scripts.python.skill_input_protocol import digest as skill_digest
+from scripts.python.skill_input_selection import selection_identity
 
 
 def write(path, value):
@@ -131,10 +134,10 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
     target = root / "execution-plans/target"
     target.mkdir(parents=True)
     (target / "requirements.md").write_text("# Acceptance\nBoth values must return their inputs.\n", encoding="utf-8")
+    policy = ROOT / ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json"
+    shutil.copyfile(policy, target / "policy.json")
     knowledge(root, target, baseline)
-    skill = publish_ready_receipt(root, consumer="run-refactor-implementation-acceptance", operation="acceptance",
-                                 target="execution-plans/target", role_paths={"implementation_target": ["candidate.py"],
-                                 "acceptance_requirements": ["execution-plans/target/requirements.md"]})
+    skill = publish_ready_v2_receipt(root, target="execution-plans/target")
     candidate = git(root, "rev-parse", "HEAD")
     # The present-only fixture uses a declared source baseline predating a comment.
     if all(present):
@@ -143,8 +146,6 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
         overlays = {"candidate.py": "baseline-candidate.txt"}
     else:
         overlays = {}
-    policy = ROOT / ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json"
-    shutil.copyfile(policy, target / "policy.json")
     command = {"id": "acceptance-check", "executable": sys.executable, "argv": ["-c", f"import sys; from candidate import value; assert value(1)==1 and value(2)==2; sys.exit({command_exit})"], "cwd": ".", "timeout_seconds": 10, "shell": False}
     request = {"schemaVersion": "compact-vdd-acceptance-projection-request.v1", "targetPlan": "execution-plans/target",
                "runId": "closeout", "changeId": "test", "baselineRevision": baseline, "candidateRevision": candidate,
@@ -165,6 +166,73 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
              "preparedRunInput": ref(prepared_path, root), "skillInputReceipt": ref(skill["receipt"], root),
              "skillInputContract": ref(skill["contract"], root), "authorizes": []}
     return write(root / "coordinator.json", coord), root / "coordinator-result.json", current
+
+
+def publish_ready_v2_receipt(root, *, target):
+    consumer = "run-refactor-implementation-acceptance"
+    operation = "acceptance"
+    protocol_root = root / target / "acceptance-inputs" / "skill-input"
+    protocol_root.mkdir(parents=True, exist_ok=True)
+    budget = protocol_root / "budget.json"
+    budget.parent.mkdir(parents=True, exist_ok=True)
+    budget.write_text('{"schema_version":"skill-input-budget.v1","max_reference_depth":8,"max_sources":128,"max_context_bytes":6000,"max_snapshot_bytes":262144}\n', encoding="utf-8")
+    contract = json.loads((ROOT / ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json").read_text(encoding="utf-8"))
+    contract["budget_basis"] = {"path": budget.relative_to(root).as_posix(), "sha256": skill_digest(budget.read_bytes())}
+    contract_path = protocol_root / "contract.json"
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+    registry_path = protocol_root / "registry.json"
+    registry_path.write_text('{"commands":[]}\n', encoding="utf-8")
+    authority_path = protocol_root / "authority.json"
+
+    source_paths = ["candidate.py", f"{target}/requirements.md"]
+    sources = [
+        {"role": role, "path": path, "module": module, "resource_set": "acceptance", "authority": "repository",
+         "sha256": skill_digest((root / path).read_bytes())}
+        for role, path, module in (
+            ("implementation_input", source_paths[0], "implementation_target"),
+            ("normative_source", source_paths[1], "acceptance_requirements"),
+        )
+    ]
+    selection = selection_identity(sources, consumer=consumer, policy_revision="test-v2")
+    freeze_path = protocol_root / "knowledge-freeze.json"
+    freeze_path.write_text(json.dumps({
+        "schema_version": "skill-input-direct-source-freeze.v2",
+        "sourceSelectionHash": selection["sourceSelectionHash"],
+        "authorizes": [],
+    }), encoding="utf-8")
+    # Freeze the complete Knowledge publication fixture before binding the
+    # Skill-input baseline; ignored Knowledge bytes are review inputs by
+    # contract and must not appear as post-baseline changes.
+    subprocess.run(["git", "add", "-f", "candidate.py", "rules.md", f"{target}/requirements.md", f"{target}/policy.json", f"{target}/knowledge.json", "knowledge"], cwd=root, check=True)
+    subprocess.run(["git", "commit", "-qm", "acceptance input fixture baseline"], cwd=root, check=True)
+    baseline = git(root, "rev-parse", "HEAD")
+    authority_path.write_text(json.dumps({"skill_input_baseline": baseline, "target_plan": target}), encoding="utf-8")
+    request = {
+        "schema_version": "skill-input-request.v2",
+        "plan_id": "acceptance-closeout-test",
+        "consumer": consumer,
+        "operation": operation,
+        "policy_revision": "test-v2",
+        "storage": f"{target}/acceptance-inputs/skill-input-v2",
+        "sources": sources,
+        # The coordinator binds the target-plan root as the implementation
+        # target; the actual candidate source is a second typed root because
+        # this fixture intentionally keeps it at repository root.
+        "inputs": {"implementation_target": [target, source_paths[0]], "acceptance_requirements": [source_paths[1]]},
+        "bindings": {
+            "contract": {"path": contract_path.relative_to(root).as_posix(), "sha256": skill_digest(contract_path.read_bytes())},
+            "registry": {"path": registry_path.relative_to(root).as_posix(), "sha256": skill_digest(registry_path.read_bytes())},
+            "authority": {"path": authority_path.relative_to(root).as_posix(), "sha256": skill_digest(authority_path.read_bytes())},
+            "knowledge_freeze": {"path": freeze_path.relative_to(root).as_posix(), "sha256": skill_digest(freeze_path.read_bytes())},
+        },
+    }
+    started = skill_input_v2.prepare(root, request)
+    skill_input_v2.consume(root, request["plan_id"], started["attempt_id"], receiver=lambda _page, _data: None)
+    finished = skill_input_v2.finish(root, request["plan_id"], started["attempt_id"])
+    pointer = root / request["storage"] / "current.v1.json"
+    generation = json.loads(pointer.read_text(encoding="utf-8"))["generation_id"]
+    context = root / request["storage"] / "skill-input-generations" / generation / "context.json"
+    return {"receipt": pointer, "contract": contract_path, "context": context, "finish": finished}
 
 
 @pytest.mark.parametrize("present", [(True, True), (True, False), (False, False)])
@@ -202,13 +270,13 @@ def test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf(tmp_pat
 def test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass(tmp_path, monkeypatch):
     request, output, _ = build(tmp_path, monkeypatch, (True, False), command_exit=3)
     result = cli.run_coordinator(str(request), str(output))
-    assert result["status"] == "waiting" and result["finalization"] is None
+    assert result["status"] == "failed" and result["finalization"] is None
     run = tmp_path / result["runDirectory"]
     assert len(list(run.glob("actions/*/*/result.json"))) == 1
     assert cli.run_coordinator(str(request), str(output)) == result
     assert len(list(run.glob("actions/*/*/result.json"))) == 1
     successor_output = output.with_name("coordinator-successor-output.json")
-    assert cli.run_coordinator(str(request), str(successor_output))["status"] == "waiting"
+    assert cli.run_coordinator(str(request), str(successor_output))["status"] == "failed"
     assert len(list(run.glob("actions/*/*/result.json"))) == 1
 
 
@@ -255,7 +323,10 @@ def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch
         value = json.loads(path.read_text()); value["input"]["changed_paths"] = []
         write(path, value)
     else:
-        path = tmp_path / ".skill-input-composition/output/skill-input-context.v1.json"
+        request_value = json.loads(request.read_text(encoding="utf-8"))
+        pointer = tmp_path / request_value["skillInputReceipt"]["path"]
+        generation = json.loads(pointer.read_text(encoding="utf-8"))["generation_id"]
+        path = pointer.parent / "skill-input-generations" / generation / "context.json"
         value = json.loads(path.read_text()); value["sections"] = []
         write(path, value)
     with pytest.raises(ValueError):

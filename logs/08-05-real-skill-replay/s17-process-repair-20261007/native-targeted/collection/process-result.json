@@ -1,0 +1,73 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "--collect-only",
+    "-q",
+    "--tc-d1-progress",
+    "/workspace/scratch/9aa4df529c3a/repo-s17/logs/08-05-real-skill-replay/s17-process-repair-20261007/native-targeted/collection-events.jsonl",
+    "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+    "scripts/sc/tests/tc_d1_cer/test_s10.py",
+    "scripts/sc/tests/tc_d1_cer/test_s13.py",
+    "scripts/sc/tests/tc_d1_cer/test_s17.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 7,
+      "utc": "2026-10-07T05:14:28.740905+00:00",
+      "nodeids": [
+        "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state"
+      ]
+    },
+    {
+      "kind": "session-finish",
+      "pid": 7,
+      "utc": "2026-10-07T05:14:28.741445+00:00",
+      "exit_code": 0
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 0.402,
+  "authorizes": []
+}

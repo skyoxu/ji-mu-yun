@@ -1,0 +1,36 @@
+{
+  "schema_version": "skill-input-request.v2",
+  "plan_id": "08-05-round5-acceptance",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "policy_revision": "acceptance-round5-v1",
+  "storage": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-round5/skill-input-v2/acceptance",
+  "sources": [
+    {
+      "role": "implementation_input",
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/semantic-plan-bundle.v1.json",
+      "module": "implementation",
+      "resource_set": "08-05-round5",
+      "authority": "maintainer-request",
+      "sha256": "sha256:434370608b7bf200f8b4a1a422be18d92964d5b537ce80152b2ba081acacf4a1"
+    },
+    {
+      "role": "normative_source",
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-5/README.md",
+      "module": "requirements",
+      "resource_set": "08-05-round5",
+      "authority": "maintainer-request",
+      "sha256": "sha256:ee1c73af702fa74dcb517dc96eeb0557387fb47a491d5e6a58a9087ef6fad2eb"
+    }
+  ],
+  "inputs": {
+    "implementation_target": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed"],
+    "acceptance_requirements": ["execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-5/README.md"]
+  },
+  "bindings": {
+    "contract": {"path": ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json", "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"},
+    "registry": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/command-registry.v1.json", "sha256": "sha256:2d60c87d73fb2c7b6736af6ff41c3395e83c54833c815836b74aafc57b19f939"},
+    "authority": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-round5/skill-input-authority.v1.json", "sha256": "sha256:80db7bfa8df40627d75fed270c05761bc3eb5e168ca9634b393b844d61f5a814"},
+    "knowledge_freeze": {"path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-round5/skill-input-freeze.v2.json", "sha256": "sha256:dcc5c88569460aee20cf4d8c53e29a9ad343e406067d540641083a0bd6af114d"}
+  }
+}

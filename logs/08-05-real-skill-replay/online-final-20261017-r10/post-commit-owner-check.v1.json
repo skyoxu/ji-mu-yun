@@ -1,0 +1,27 @@
+{
+  "schema": "08-05-post-commit-owner-check.v1",
+  "authorizes": [],
+  "checkedLocalCommit": "81c45b4aee93700b6185caf6d6f28c8333a2150f",
+  "acceptedCandidateCommit": "339f489d304b895e9a04036fd7c79b90f7cba93a",
+  "candidateSourceCount": 89,
+  "candidateSourceMismatches": [],
+  "skillInputCurrent": {
+    "status": "ready",
+    "ready": true,
+    "generation_id": "d2e79de5fde8dafe5536c1f494355a1b087e1a0a560f759d2bdaadc103ca0213",
+    "context_artifact": "/tmp/jimuyun-08-05-native-final/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-inputs/acceptance-08-05-online-final-20261017-r10/skill-input-v2/acceptance/skill-input-generations/d2e79de5fde8dafe5536c1f494355a1b087e1a0a560f759d2bdaadc103ca0213/context.json",
+    "context_artifact_hash": "sha256:70e1fd3fe34b775cd20e00846c61590b3844a2c7bc35074a5c37fc7a2660fe19",
+    "binding_hash": "sha256:bfa3532e4b7c8107bdb073859d2bea7a693e319d9b2565e7cb04628bf407337f",
+    "authorizes": []
+  },
+  "q8": {
+    "status": "pass",
+    "predecessorCount": 45,
+    "runtimeClosureTupleCount": 228,
+    "authorizes": []
+  },
+  "cleanBeforeRecording": true,
+  "testsExecuted": 0,
+  "slicesExecuted": 0,
+  "checkedLocalTree": "156fdd3d96055bdaac56939d1e4221e4f6238479"
+}

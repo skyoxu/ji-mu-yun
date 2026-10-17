@@ -1,0 +1,55 @@
+{
+  "authorizes": [],
+  "formalAcceptance": false,
+  "observed": [
+    {
+      "event": "call",
+      "exists": true,
+      "function": "release_persisted_action",
+      "path": "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/diagnostic-two-actions-r9/action-claims/first.json"
+    },
+    {
+      "event": "return",
+      "exists": false,
+      "function": "release_persisted_action",
+      "path": "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/diagnostic-two-actions-r9/action-claims/first.json"
+    },
+    {
+      "differences": [
+        {
+          "after": "sha256:325451c9abeee6ea0e7036532cc5e31c0984d61f58c9d81dcc112264895a8cbe",
+          "before": null,
+          "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/diagnostic-two-actions-r9/action-claims/first.json"
+        }
+      ],
+      "function": "_validate_read_only_status_delta"
+    },
+    {
+      "event": "call",
+      "exists": true,
+      "function": "release_persisted_action",
+      "path": "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/diagnostic-two-actions-r9/action-claims/second.json"
+    },
+    {
+      "event": "return",
+      "exists": false,
+      "function": "release_persisted_action",
+      "path": "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/diagnostic-two-actions-r9/action-claims/second.json"
+    }
+  ],
+  "results": [
+    {
+      "claimsAfterReturn": [],
+      "exitCode": 0,
+      "status": "completed",
+      "step": 1
+    },
+    {
+      "error": "read-only command changed repository bytes",
+      "status": "failed",
+      "step": 2,
+      "traceback": "Traceback (most recent call last):\n  File \"<stdin>\", line 18, in <module>\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 908, in resume_persisted_run\n    result = resume_run(\n             ^^^^^^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 1659, in resume_run\n    receipt = run_controlled_command(repository_root, descriptor, protected_paths=protected_paths)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 1433, in run_controlled_command\n    _validate_read_only_status_delta(before_manifest, after_manifest)\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 1229, in _validate_read_only_status_delta\n    raise ControlError(\"read-only command changed repository bytes\")\nexecution_control.ControlError: read-only command changed repository bytes\n"
+    }
+  ],
+  "schema": "08-05-two-native-action-release.v1"
+}

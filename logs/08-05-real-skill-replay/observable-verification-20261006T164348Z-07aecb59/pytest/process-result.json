@@ -1,0 +1,3191 @@
+{
+  "command": [
+    "C:\\Users\\weiruan\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "-u",
+    "-B",
+    "-m",
+    "pytest",
+    "-p",
+    "scripts.sc.verify_skill_replay",
+    "-p",
+    "no:cacheprovider",
+    "-vv",
+    "--tb=short",
+    "--tc-d1-progress",
+    "C:\\buildgame\\jimuyun\\logs\\08-05-real-skill-replay\\observable-verification-20261006T164348Z-07aecb59\\pytest-events.jsonl",
+    "--junitxml=C:\\buildgame\\jimuyun\\logs\\08-05-real-skill-replay\\observable-verification-20261006T164348Z-07aecb59\\junit.xml",
+    "scripts/sc/tests/test_skill_package_replay.py",
+    "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+    "scripts/sc/tests/tc_d1_cer"
+  ],
+  "exit_code": 1,
+  "reason": "test-timeout",
+  "active_nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+  "active_phase": "call",
+  "cleanup": {
+    "method": "taskkill-owned-tree",
+    "pid": 16468,
+    "exit_code": 0
+  },
+  "records": [
+    {
+      "kind": "collection",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:41.857228+00:00",
+      "nodeids": [
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+        "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+        "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+        "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+        "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+        "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+        "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+        "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+        "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+        "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+        "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+        "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+        "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+        "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+        "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+        "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+        "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]",
+        "scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_replay_records_independent_validator_source_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_profile_authority_candidate_is_rejected_by_real_entry",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_repository_relative_path_manifest_detects_rename",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_recorded_seed_manifest_has_three_unique_complete_occurrences",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_seed_manifest_rejects_missing_label_or_identity_mutation[missing-label]",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_seed_manifest_rejects_missing_label_or_identity_mutation[duplicate-or-hidden]",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_consumer_manifest_reconciles_both_directions_and_named_scopes",
+        "scripts/sc/tests/tc_d1_cer/test_s19.py::test_foreign_authority_input_cannot_be_accepted_as_success",
+        "scripts/sc/tests/tc_d1_cer/test_s2.py::test_successful_evidence_names_the_effective_inspected_content",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_mutable_state_and_evidence_are_isolated[independent]",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_structural_exact_cover_rejects_orphan_nodes[False]",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_structural_exact_cover_rejects_orphan_nodes[True]",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_required_witness_coverage_is_complete_or_blocked[False]",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_required_witness_coverage_is_complete_or_blocked[True]",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_adversarial_target_success_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_atomic_inventory_requires_bidirectional_exact_cover[False]",
+        "scripts/sc/tests/tc_d1_cer/test_s20.py::test_atomic_inventory_requires_bidirectional_exact_cover[True]",
+        "scripts/sc/tests/tc_d1_cer/test_s21.py::test_sm1_integrity_report[False]",
+        "scripts/sc/tests/tc_d1_cer/test_s21.py::test_sm1_integrity_report[True]",
+        "scripts/sc/tests/tc_d1_cer/test_s21.py::test_sm2_unexecuted_case_is_rejected_with_explicit_reason",
+        "scripts/sc/tests/tc_d1_cer/test_s22.py::test_substituted_target_is_rejected_before_processing",
+        "scripts/sc/tests/tc_d1_cer/test_s23.py::test_support_policy_records_independent_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s23.py::test_compatibility_records_dedicated_independent_result",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_pinned_fresh_checkout_reproduces_semantic_verdict",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_pinned_input_fresh_checkout_reproduces_verdict_and_coverage",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_candidate_external_trust_has_distinct_independent_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_reused_evidence_is_non_success_with_a_diagnostic",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_cross_component_evidence_substitution_cannot_create_success",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_inspection_receipt_contains_an_independent_effective_read_witness",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_successful_replay_has_independent_consumer_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_successful_replay_records_independent_dependency_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_platform_specific_behavior_is_declared_in_the_replay_artifact",
+        "scripts/sc/tests/tc_d1_cer/test_s24.py::test_successful_replay_records_independent_target_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s25.py::test_escaping_target_is_rejected_before_use",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_positive_probe_requires_real_success",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_negative_probe_is_nonzero_and_independent",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_detached_negative_receipt_has_process_boundary",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_successful_replay_has_independent_non_authority_binding",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_successful_replay_has_dependency_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_successful_replay_has_distinct_command_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_wrong_target_evidence_invalidates_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_adversarial_dependency_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_stale_input_rejects_success",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_six_cases_record_both_subjects",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_six_cases_attest_stable_immutability",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_budget_exhaustion_is_terminally_unsuccessful",
+        "scripts/sc/tests/tc_d1_cer/test_s26.py::test_infrastructure_false_negative_is_terminal_failure",
+        "scripts/sc/tests/tc_d1_cer/test_s27.py::test_repair_evidence_keeps_frozen_target_identity_unchanged",
+        "scripts/sc/tests/tc_d1_cer/test_s27.py::test_repair_evidence_rejects_target_outside_declared_boundary",
+        "scripts/sc/tests/tc_d1_cer/test_s27.py::test_all_matrix_cases_record_stable_and_candidate_attribution",
+        "scripts/sc/tests/tc_d1_cer/test_s27.py::test_matrix_rejects_missing_execution_evidence",
+        "scripts/sc/tests/tc_d1_cer/test_s28.py::test_duplicate_effective_evidence_identity_rejects_aggregate_with_both_cases",
+        "scripts/sc/tests/tc_d1_cer/test_s28.py::test_reused_effective_identity_is_not_silently_deduplicated",
+        "scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_duplicate_identity_rejection",
+        "scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_reused_identity_rejection",
+        "scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_duplicate_matrix_input_rejection",
+        "scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_identity_execution_facts_control",
+        "scripts/sc/tests/tc_d1_cer/test_s29.py::test_three_named_evaluation_seeds_are_approved_nonbaseline",
+        "scripts/sc/tests/tc_d1_cer/test_s29.py::test_invalid_seed_classification_is_rejected[baseline]",
+        "scripts/sc/tests/tc_d1_cer/test_s29.py::test_invalid_seed_classification_is_rejected[missing-classification]",
+        "scripts/sc/tests/tc_d1_cer/test_s29.py::test_invalid_seed_classification_is_rejected[unapproved]",
+        "scripts/sc/tests/tc_d1_cer/test_s2_cer.py::test_replay_receipt_declares_active_platform_behavior",
+        "scripts/sc/tests/tc_d1_cer/test_s2_cer.py::test_successful_evidence_names_the_identity_of_the_inspected_package",
+        "scripts/sc/tests/tc_d1_cer/test_s3.py::test_validator_rejects_verdict_without_real_execution_evidence",
+        "scripts/sc/tests/tc_d1_cer/test_s30.py::test_successful_evidence_binds_exact_effective_inspected_content",
+        "scripts/sc/tests/tc_d1_cer/test_s30.py::test_rollback_missing_baseline_observation_is_reported",
+        "scripts/sc/tests/tc_d1_cer/test_s30.py::test_rollback_route_satisfies_complete_baseline_coverage_behavior",
+        "scripts/sc/tests/tc_d1_cer/test_s30.py::test_consumer_calls_and_prior_route_capture_are_observed",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r1.py::test_present_nonexecuted_matrix_evidence_invalidates_named_case",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r2.py::test_each_consumer_transition_receipt_binds_route_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_links_current_source_to_validator_processes",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing]",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing-execution]",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[stale]",
+        "scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[mismatched]",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_binds_current_source_identity_to_real_execution_command",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing]",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing-execution]",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[stale]",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[mismatched]",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_present_nonexecuted_matrix_evidence_invalidates_named_case",
+        "scripts/sc/tests/tc_d1_cer/test_s31.py::test_disable_rollback_and_reenable_receipts_bind_prior_and_candidate_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[unchanged]",
+        "scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[added]",
+        "scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[deleted]",
+        "scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[renamed]",
+        "scripts/sc/tests/tc_d1_cer/test_s32.py::test_external_process_timeout_has_bounded_terminal_receipt",
+        "scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[unchanged]",
+        "scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[added]",
+        "scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[deleted]",
+        "scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[renamed]",
+        "scripts/sc/tests/tc_d1_cer/test_s33.py::test_repair_evidence_append_preserves_historical_prefix",
+        "scripts/sc/tests/tc_d1_cer/test_s33.py::test_repair_evidence_rejects_historical_prefix_mutation[0]",
+        "scripts/sc/tests/tc_d1_cer/test_s33.py::test_repair_evidence_rejects_historical_prefix_mutation[1]",
+        "scripts/sc/tests/tc_d1_cer/test_s33_cer.py::test_external_process_timeout_has_bounded_terminal_receipt",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_complete_fixture_is_accepted_by_manifest_schema",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_recorded_manifest_has_three_inspectable_applicable_occurrences",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_missing_applicability_is_rejected[candidate-baseline-contamination]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_missing_applicability_is_rejected[self-hosted-knowledge-read-set-collision]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_missing_applicability_is_rejected[toolchain-policy-architecture-index-gap]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_empty_applicability_is_rejected[candidate-baseline-contamination]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_empty_applicability_is_rejected[self-hosted-knowledge-read-set-collision]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_empty_applicability_is_rejected[toolchain-policy-architecture-index-gap]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_occurrence_count_or_identity_change_is_rejected[duplicate]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_occurrence_count_or_identity_change_is_rejected[merged]",
+        "scripts/sc/tests/tc_d1_cer/test_s34.py::test_occurrence_count_or_identity_change_is_rejected[fourth]",
+        "scripts/sc/tests/tc_d1_cer/test_s35.py::test_matrix_case_rejects_identical_stable_and_candidate_fixture_state",
+        "scripts/sc/tests/tc_d1_cer/test_s35.py::test_matrix_case_rejects_missing_subject_fixture_state_assignment",
+        "scripts/sc/tests/tc_d1_cer/test_s35.py::test_aggregate_missing_matrix_case_is_invalid_and_lists_missing_case",
+        "scripts/sc/tests/tc_d1_cer/test_s35.py::test_canonical_matrix_executes_distinct_stable_and_candidate_fixture_states",
+        "scripts/sc/tests/tc_d1_cer/test_s35.py::test_six_case_aggregate_missing_execution_is_failed_with_missing_cases",
+        "scripts/sc/tests/tc_d1_cer/test_s36.py::test_adversarial_validator_success_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[provenance]",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[applicability]",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[missing_labels]",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[counterexample]",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_missing_or_duplicate_named_seed[missing]",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_missing_or_duplicate_named_seed[duplicate]",
+        "scripts/sc/tests/tc_d1_cer/test_s37.py::test_manifest_fixture_contains_three_named_complete_seed_records",
+        "scripts/sc/tests/tc_d1_cer/test_s38.py::test_matrix_error_label_invalidates_aggregate_and_is_preserved",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-review_input]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-review_run]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-review_candidate_binding]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-conformance_result]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-implementation_contract]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-command_registry]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-source_freeze]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-requirements_mapping]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-review_input]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-review_run]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-review_candidate_binding]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-conformance_result]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-implementation_contract]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-command_registry]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-source_freeze]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-requirements_mapping]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-review_input]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-review_run]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-review_candidate_binding]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-conformance_result]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-implementation_contract]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-command_registry]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-source_freeze]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-requirements_mapping]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_native_command_identity_change_rejects_historical_reuse[id-renamed]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_native_command_identity_change_rejects_historical_reuse[executable-substituted-python]",
+        "scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_native_command_identity_change_rejects_historical_reuse[argv-replacement2]",
+        "scripts/sc/tests/tc_d1_cer/test_s4.py::test_successful_evidence_is_bound_to_the_effective_inspected_content",
+        "scripts/sc/tests/tc_d1_cer/test_s40.py::test_external_process_excess_output_is_unsuccessful_and_bounded",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_effective_inspection_has_independent_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_successful_replay_has_independent_output_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_target_identity_contains_independent_content_digest",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_matrix_has_exactly_six_executed_cases",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_matrix_cases_have_distinct_ids_and_inputs",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_escaping_target_fails_closed",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_unsupported_target_fails_before_processing",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_successful_result_has_independent_consumer_verification",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_missing_identity_facts_block_success",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_copied_matrix_evidence_invalidates_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_illegal_target_is_rejected_before_validator",
+        "scripts/sc/tests/tc_d1_cer/test_s41.py::test_invalid_package_control_cannot_become_success",
+        "scripts/sc/tests/tc_d1_cer/test_s42.py::test_s42_always_success_validator_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s42.py::test_s42_historical_membership_changes_are_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s42.py::test_six_matrix_cases_require_distinct_recorded_inputs_and_both_subjects",
+        "scripts/sc/tests/tc_d1_cer/test_s42.py::test_duplicate_matrix_input_rejects_six_case_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_only_acceptance_owner_publication_authorizes_empty_set",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_non_empty_authorization_set_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-Replay]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-seed]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-matrix]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-review]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-Quick Dev]",
+        "scripts/sc/tests/tc_d1_cer/test_s43.py::test_negative_fixture_checks_real_preflight",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_verdict_binds_current_source_identity_to_real_execution_command",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_verdict_with_missing_source_identity_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_stale_matrix_evidence_is_invalid",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_stable_and_candidate_fixture_assignments_must_differ",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_nonexecuted_matrix_evidence_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_required_matrix_case_missing_is_invalid",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_duplicate_evidence_identity_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_bound_and_evidence_input_identity_mismatch_is_invalid",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_replay_records_reproducible_result",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_unverifiable_identity_is_rejected",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_the_replay_entry_used_for_execution",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_consumer_verification_records_real_commands_not_file_reads",
+        "scripts/sc/tests/tc_d1_cer/test_s44.py::test_independent_matrix_requires_real_distinct_input_bindings",
+        "scripts/sc/tests/tc_d1_cer/test_s45.py::test_changed_current_snapshot_invalidates_replay_observation",
+        "scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_aggregate_prompt_budget_is_finite_and_observable",
+        "scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_enable_records_real_candidate_route_invocation",
+        "scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_reenable_records_real_candidate_route_invocation",
+        "scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_rollback_restores_prior_route_through_real_call",
+        "scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_consumer_manifest_is_complete_reconciled_and_frozen_before_review",
+        "scripts/sc/tests/tc_d1_cer/test_s5.py::test_worker_delta_rejects_frozen_historical_path_rename",
+        "scripts/sc/tests/tc_d1_cer/test_s6.py::test_historical_byte_mutation_is_rejected_by_the_snapshot_comparison",
+        "scripts/sc/tests/tc_d1_cer/test_s6.py::test_repository_relative_path_relocation_is_rejected_by_the_snapshot_comparison",
+        "scripts/sc/tests/tc_d1_cer/test_s6.py::test_historical_membership_addition_is_rejected_by_the_snapshot_comparison",
+        "scripts/sc/tests/tc_d1_cer/test_s6.py::test_current_snapshot_requires_each_result_determining_input_category",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_stable_eligibility_requires_verified_provenance[stable-no-provenance]",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_stable_eligibility_requires_verified_provenance[stable-temporary-package]",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_adversarial_dependency_case_is_non_success_with_reason",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_adversarial_validator_case_is_non_success_with_diagnostic",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_missing_matrix_evidence_invalidates_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_mislabeled_matrix_evidence_invalidates_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_copied_matrix_evidence_invalidates_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_wrong_target_matrix_evidence_invalidates_aggregate",
+        "scripts/sc/tests/tc_d1_cer/test_s7.py::test_substituted_target_is_rejected_before_target_dependent_execution",
+        "scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_reused_historical_evidence_cannot_authorize_current_replay",
+        "scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_detached_probe_records_a_distinct_child_process",
+        "scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_detached_probe_binds_input_target_outcome_and_output",
+        "scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_always_success_validator_is_a_failed_probe_outcome",
+        "scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_consumer_disable_records_the_real_prior_route_call",
+        "scripts/sc/tests/tc_d1_cer/test_s8.py::test_missing_target_is_rejected_before_target_content_is_accepted",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_runtime_allowed_change_is_rejected_before_entering_the_write_set",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_installed_skill_allowed_change_is_classified_forbidden_and_rejected[bmad-root]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_installed_skill_allowed_change_is_classified_forbidden_and_rejected[installed-bmad-skill]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_installed_skill_allowed_change_is_classified_forbidden_and_rejected[installed-gds-skill]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-e0]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d2]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d3]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d4]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d5]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d6]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[miner]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[curator]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[autonomous-skill-modification]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[learned-ranking]",
+        "scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[reinforcement-learning]",
+        "scripts/sc/tests/tc_d1_cer/test_s9.py::test_consumer_manifest_reconciliation_has_no_missing_callers",
+        "scripts/sc/tests/tc_d1_cer/test_s9.py::test_consumer_manifest_reconciliation_has_no_orphan_entries",
+        "scripts/sc/tests/tc_d1_cer/test_s9.py::test_seed_schema_rejects_occurrence_without_counterexample_or_explicit_absence"
+      ]
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:41.872778+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:41.873039+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:41.874273+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0012191999703645706,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:41.874383+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.602269+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 1.7214906001463532,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.602476+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.602935+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035930005833506584,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.603064+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.603652+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.603895+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.604202+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00030800001695752144,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:43.604290+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.842174+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 1.2375833000987768,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.842359+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.842725+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029460014775395393,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.842817+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.843371+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.843558+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.843840+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00027240021154284477,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:44.843927+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.021193+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 1.1769979996606708,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.021339+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.021646+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002506999298930168,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.021808+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.022939+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.023128+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.023385+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00025379983708262444,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:45:46.023469+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.015265+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 16.99153529992327,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.015406+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.015721+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00026089977473020554,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.015835+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.016248+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.016414+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.016646+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00022670021280646324,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.016722+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.863573+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.8465566001832485,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.863734+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.864068+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002804999239742756,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.864301+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.864704+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.864865+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.865098+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002254997380077839,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:03.865174+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.620872+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 19.755452499724925,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.621066+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.621390+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00025960011407732964,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.621502+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.621908+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.622096+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.622338+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00025090016424655914,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:23.622410+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.547094+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 1.9244426996447146,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.547231+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.547551+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00025960011407732964,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.547681+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.548116+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.548264+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.548490+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00021449988707900047,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:25.548564+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.370916+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.8221346000209451,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.371043+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.371384+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00028929999098181725,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.371541+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.372017+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.372173+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.372389+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002009999006986618,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:46:26.372462+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.619412+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 197.1627669003792,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.619610+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.619874+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00021770037710666656,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.619911+00:00",
+      "nodeid": "scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.620262+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.620417+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.620600+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001881001517176628,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.620662+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.622530+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.0017439001239836216,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.622611+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.622804+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00015350012108683586,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.622933+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.623298+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.623421+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.623608+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001860000193119049,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:49:43.623671+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.589595+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 176.95878499979153,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.589890+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.590131+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00020750006660819054,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.590162+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.590414+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.590533+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.590700+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.000161800067871809,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:52:40.590755+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.537072+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 161.93945679999888,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.537352+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.537727+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00027800025418400764,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.537779+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.538194+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.538385+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.538644+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.000269200187176466,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:22.538727+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.116842+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 1.577890600077808,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.116970+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.117250+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00022220006212592125,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.117331+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.117786+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.117960+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.118176+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00020979996770620346,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:55:24.118249+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.688424+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 163.5624882997945,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.688652+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.688892+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00020240014418959618,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.688922+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.689208+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.689332+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.689508+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00016719987615942955,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T16:58:07.689564+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.161386+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 164.4647574000992,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.161532+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.161778+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00020959973335266113,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.161809+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.162059+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.162200+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.162368+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00016639987006783485,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:00:52.162423+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.861035+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 162.69010599981993,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.861269+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.861686+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034740008413791656,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.861735+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.862133+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.862316+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.862603+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002639000304043293,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:03:34.862697+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.822925+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "call",
+      "outcome": "failed",
+      "duration": 162.9528417000547,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.823129+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.823411+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002669999375939369,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.823446+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.823765+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.823897+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.824156+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002599996514618397,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.824218+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.949515+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.12512779980897903,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.949606+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.949828+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018400000408291817,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.950009+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.950350+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.950473+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.950690+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00021790014579892159,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:17.950751+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.062557+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.11163290031254292,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.062645+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.062859+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00017570005729794502,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.062917+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.063245+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.063370+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.063589+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002194000408053398,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.063646+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.168524+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.10469199996441603,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.168614+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.168841+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018829992040991783,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.169135+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.169442+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.169569+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.169796+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00022670021280646324,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.169856+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.278312+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.10828729998320341,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.278400+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.278606+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001721000298857689,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.278766+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.279095+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.279219+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.279389+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001667998731136322,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.279449+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.476804+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.19719350012019277,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.476891+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.477127+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00019380031153559685,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.477300+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.477677+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.477792+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.487644+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.009824799839407206,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:18.487743+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.467065+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.9790925001725554,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.467195+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.467514+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002661999315023422,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.467590+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.467984+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.468138+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.470047+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0019056000746786594,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.470133+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.891236+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.42089040018618107,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.891355+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.891648+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00024380022659897804,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.891847+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.892317+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:06:19.892470+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:13.786702+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 53.89419719995931,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:13.786814+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.114706+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.3277407996356487,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.114799+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.115019+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018140021711587906,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.115136+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.115458+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.115591+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.115765+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00017190026119351387,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.115827+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.260365+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1443813000805676,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.260452+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.260654+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00016289995983242989,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.260706+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.261010+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.261152+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.261409+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00027270009741187096,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.261469+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.399869+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1382308998145163,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.399956+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.400185+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001880996860563755,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.400278+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.400625+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.400764+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.401020+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0002672998234629631,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.401081+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.546118+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.14486610004678369,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.546211+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.546478+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002247001975774765,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.546592+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.546908+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.547050+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.547218+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00018039997667074203,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.547278+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.685324+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.13788740010932088,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.685407+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.685599+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00015289988368749619,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.685777+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.686135+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.686251+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.686412+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001580999232828617,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.686469+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.828520+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1418827003799379,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.828612+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.828833+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00017570005729794502,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.828919+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.829254+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.829382+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.829543+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001591998152434826,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.829598+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.966787+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1370052001439035,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.966884+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.967107+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018490012735128403,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.967248+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.967593+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:07:14.967732+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.512047+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 161.53390550008044,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.512384+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.512633+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002167997881770134,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.512663+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.512908+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.513023+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.521726+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00018490012735128403,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.521932+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.522179+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00021660001948475838,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.522211+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.522458+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.522590+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.531490+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.0001938999630510807,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.531759+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.532005+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002351999282836914,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.532037+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.532293+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.532409+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.540949+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00018749991431832314,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.541237+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.541469+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00020480016246438026,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.541499+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.541740+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.541850+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.550684+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00017909985035657883,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.550944+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.551179+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018960004672408104,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.551210+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.551459+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.551572+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.551732+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00015730038285255432,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.551789+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.712265+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.16030790004879236,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.712357+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.712567+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00017410004511475563,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.712685+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.713022+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.713161+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.721835+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00021430011838674545,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.722088+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.722311+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001934003084897995,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.722341+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.722582+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.722691+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731041+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "setup",
+      "outcome": "failed",
+      "duration": 0.00018330011516809464,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731288+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731503+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018400000408291817,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731533+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731769+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.731874+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.732028+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00014859996736049652,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:56.732083+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.012092+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.2798511004075408,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.012213+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.012405+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00016220007091760635,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.012459+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.012761+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.012882+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.013073+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00018560001626610756,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.013136+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.153342+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.1400560000911355,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.153429+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.153659+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00019429996609687805,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.153837+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.154213+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.154328+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.154495+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00016369996592402458,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:57.154555+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.040547+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.885840100236237,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.040628+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.040822+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00015449989587068558,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.040986+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.041321+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.041460+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.041622+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00016580009832978249,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.041683+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.442217+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.40032680006697774,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.442329+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.442572+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00019899988546967506,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.442656+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.443033+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.443161+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.443318+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001579001545906067,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.443373+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.453714+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.010202400386333466,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.453793+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.453982+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00015300000086426735,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.454074+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.454431+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.454570+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.454731+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00016870023682713509,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.454789+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.455442+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.0005618003197014332,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.455494+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.455649+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00012090010568499565,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.455768+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.456027+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.456135+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.456283+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.00015200022608041763,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.456335+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+      "phase": "call"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.469836+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+      "phase": "call",
+      "outcome": "passed",
+      "duration": 0.013305199798196554,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.469939+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+      "phase": "teardown"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.470181+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes",
+      "phase": "teardown",
+      "outcome": "passed",
+      "duration": 0.00019640009850263596,
+      "wasxfail": false
+    },
+    {
+      "kind": "finish",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.470379+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes"
+    },
+    {
+      "kind": "start",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.470863+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity"
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.470997+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "setup"
+    },
+    {
+      "kind": "report",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.471196+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "setup",
+      "outcome": "passed",
+      "duration": 0.0001918002963066101,
+      "wasxfail": false
+    },
+    {
+      "kind": "phase",
+      "pid": 16468,
+      "utc": "2026-10-06T17:09:58.471265+00:00",
+      "nodeid": "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+      "phase": "call"
+    }
+  ],
+  "diagnostic": null,
+  "elapsed_seconds": 28972.744,
+  "authorizes": []
+}

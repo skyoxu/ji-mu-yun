@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 from pathlib import Path
 import sys
@@ -121,13 +122,86 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
     argv = [str(item) for item in commands[0]]
     if any(not item for item in argv):
         raise ValueError("validation command contains empty argv")
+    # A CER slice may distribute its assertion cases over several explicit
+    # pytest commands.  Its stage selector must execute that whole declared
+    # case surface, rather than silently treating only command zero as the
+    # proof floor.  Combine only the mechanically equivalent, shell-free form
+    # so heterogeneous commands retain their own explicit routing.
+    normalized = [[str(item) for item in command] for command in commands]
+    def pytest_parts(command: list[str]):
+        offset = 2 if command[:2] == ["py", "-3"] else 1
+        return offset if (len(command) >= offset + 3 and command[offset:offset + 2] == ["-m", "pytest"]
+                          and all(item == "-q" or not item.startswith("-") for item in command[offset + 2:])) else None
+    pytest_offsets = [pytest_parts(command) for command in normalized]
+    pytest_commands = (
+        len(normalized) > 1
+        and all(offset is not None for offset in pytest_offsets)
+    )
+    primary_covers_assertions = False
+    if pytest_commands:
+        required = {
+            assertion_id
+            for acceptance in bundle.get("acceptances", [])
+            if acceptance.get("acceptance_id") in selected.get("acceptance_ids", [])
+            for assertion_id in acceptance.get("assertion_ids", [])
+        }
+        declared: set[str] = set()
+        primary_offset = pytest_offsets[0]
+        for item in normalized[0][primary_offset + 2:]:
+            if item == "-q":
+                continue
+            ref = safe_relative(item.split("::", 1)[0])
+            path = ROOT / ref
+            if path.suffix != ".py" or not path.is_file() or path.is_symlink():
+                continue
+            try:
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError, UnicodeError):
+                continue
+            constants = {
+                node.targets[0].id: node.value.value
+                for node in tree.body
+                if isinstance(node, ast.Assign)
+                and len(node.targets) == 1
+                and isinstance(node.targets[0], ast.Name)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            }
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "cer_assertion":
+                    for arg in node.args:
+                        if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                            declared.add(arg.value)
+                        elif isinstance(arg, ast.Name) and arg.id in constants:
+                            declared.add(constants[arg.id])
+        primary_covers_assertions = bool(required) and required <= declared
+    if pytest_commands and not primary_covers_assertions:
+        prefixes = {tuple(command[:offset]) for command, offset in zip(normalized, pytest_offsets)}
+        if len(prefixes) == 1:
+            prefix = list(prefixes.pop())
+            # Repeated validation commands may legitimately arise when a
+            # single assertion is projected through both its target and
+            # fixture context.  Pytest will execute the same node twice in
+            # that form, which violates CER's unique-case requirement.
+            # Preserve declaration order while making each non-option input
+            # occur once in the combined shell-free selector.
+            selector_items: list[str] = []
+            for command, offset in zip(normalized, pytest_offsets):
+                for item in command[offset + 2:]:
+                    if item != "-q" and item not in selector_items:
+                        selector_items.append(item)
+            argv = [*prefix, "-m", "pytest", *selector_items, "-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
     if not snapshots:
         raise ValueError("slice execution snapshot paths missing")
     selector_text = " ".join(
         [*argv, *[str(item) for item in (selected.get("proof") or {}).get("selector_intents", [])]]
     )
-    targets = [path for path in snapshots if path in selector_text]
+    # Explicit argv targets outrank prose references to fixture paths.
+    argv_paths = {part.split("::", 1)[0] for part in argv}
+    targets = [path for path in snapshots if path in argv_paths]
+    if not targets:
+        targets = [path for path in snapshots if path in selector_text]
     if not targets:
         targets = [path for path in snapshots if Path(path).suffix.lower() in {".py", ".cs", ".gd", ".js", ".ts"}]
     if not targets:
@@ -208,6 +282,35 @@ def q1_preflight(*, semantic: Path, slice_id: str, profile: str) -> dict[str, An
     return {**result, "candidate_identity": identity, "plan_sha256": sha256_bytes(semantic.read_bytes()), "slice_id": slice_id, "profile": profile, "authorizes": []}
 
 
+def _declared_cer_assertions(path: Path) -> set[str]:
+    """Read literal or module-constant CER markers without invoking a worker."""
+    try:
+        # Pytest accepts UTF-8 BOM input, so the marker scanner must do the
+        # same or a valid CER selector is misclassified as unmapped.
+        tree = ast.parse(path.read_text(encoding="utf-8").lstrip("\ufeff"))
+    except (OSError, SyntaxError, UnicodeError):
+        return set()
+    constants = {
+        node.targets[0].id: node.value.value
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and isinstance(node.value, ast.Constant)
+        and isinstance(node.value.value, str)
+    }
+    declared: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute) or node.func.attr != "cer_assertion":
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                declared.add(arg.value)
+            elif isinstance(arg, ast.Name) and arg.id in constants:
+                declared.add(constants[arg.id])
+    return declared
+
+
 def q2_author_red(
     *,
     semantic: Path,
@@ -223,25 +326,22 @@ def q2_author_red(
     argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
     selected = _slice(bundle, slice_id)
     missing = [path for path in sorted(set(target_refs + fixture_refs)) if not (ROOT / path).is_file()]
-    # A planned-new path requires authoring only until it has been materialized.
-    # On recovery, its current bytes are an explicit candidate input; repeatedly
-    # invoking a model author merely because the plan retains its declaration
-    # prevents a bounded probe from resuming after a test-only repair.
+    # `planned_new_files` is a plan-time declaration which permits an absent
+    # RED input.  It is not evidence that an already materialized, correctly
+    # mapped input still needs a model author.  Treating it as such needlessly
+    # re-authorizes workers during resumed runs and can strand an otherwise
+    # deterministic probe behind an unrelated backend timeout.
     worker_required = bool(missing)
     if "behavior_routing" in bundle:
         # A new plan may bind existing tests with new assertion IDs. This only
         # decides whether authoring is needed; the probe alone proves behavior.
-        import ast
         required = {sid for a in bundle["acceptances"] if a["acceptance_id"] in selected["acceptance_ids"] for sid in a["assertion_ids"]}
         declared = set()
-        for ref in target_refs:
-            try:
-                tree = ast.parse((ROOT / ref).read_text(encoding="utf-8"))
-            except (OSError, SyntaxError):
-                continue
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "cer_assertion":
-                    declared.update(arg.value for arg in node.args if isinstance(arg, ast.Constant) and isinstance(arg.value, str))
+        # Assertions may be deliberately split between the primary selector
+        # and frozen fixture tests.  Both are executed by the descriptor, so
+        # authoring is necessary only when their combined mapping is incomplete.
+        for ref in sorted(set(target_refs + fixture_refs)):
+            declared.update(_declared_cer_assertions(ROOT / ref))
         worker_required = worker_required or not required <= declared
     if worker_required:
         failure_record = _worker_failure_record(run_dir)
@@ -394,7 +494,23 @@ def q4_finish(
         slice_item=selected,
         base_commit=base_commit,
     )
-    return {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
+    result = {**result, "plan_id": bundle.get("plan_id"), "slice_id": slice_id, "run_id": run_dir.name}
+    if result.get("status") != "implementation-successor":
+        return result
+    red_descriptor = load_json(_stage_descriptor(run_dir, "red"))
+    identity = candidate_identity(ROOT, bundle, slice_id)
+    green = successor_descriptor(
+        red_descriptor, stage="green", run_id=run_dir.name,
+        candidate_hash=identity["candidate_hash"],
+    )
+    green_path = _stage_descriptor(run_dir, "green")
+    create_json(green_path, green)
+    return {
+        **result,
+        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
+        "green_descriptor_sha256": sha256_value(green),
+        "required_next_action": "run-green",
+    }
 
 
 def q4_implementation_worker(
@@ -424,26 +540,27 @@ def q4_implementation_worker(
         backend=backend,
     )
     if worker.get("status") != "worker-changes-valid":
-        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "worker": worker, "handoff": handoff, "authorizes": []}
+        return {"schema": "quick-dev.implementation-worker-result.v1", "status": worker.get("status"), "failure_family": worker.get("failure_family"), "reason_code": worker.get("reason_code"), "worker": worker, "handoff": handoff, "authorizes": []}
     gate = q4_finish(
         semantic=semantic, slice_id=slice_id, run_dir=run_dir, before=handoff["before"],
         snapshot_roots=snapshot_roots, source_commit=source_commit, base_commit=base_commit,
         claimed_changed_paths=worker.get("changed_paths", []),
     )
-    bundle = load_json(semantic)
-    red_descriptor = load_json(_stage_descriptor(_inside_root(run_dir, "run-dir"), "red"))
-    identity = candidate_identity(ROOT, bundle, slice_id)
-    green = successor_descriptor(red_descriptor, stage="green", run_id=_inside_root(run_dir, "run-dir").name, candidate_hash=identity["candidate_hash"])
-    green_path = _stage_descriptor(_inside_root(run_dir, "run-dir"), "green")
-    create_json(green_path, green)
+    if gate.get("status") != "implementation-successor":
+        return {
+            "schema": "quick-dev.implementation-worker-result.v1",
+            "status": gate.get("status"), "failure_family": gate.get("failure_family"),
+            "reason_code": gate.get("reason_code"), "worker": worker, "q4_gate": gate,
+            "authorizes_evidence": False, "authorizes": [],
+        }
     return {
         "schema": "quick-dev.implementation-worker-result.v1",
         "status": "implementation-successor",
         "worker": worker,
         "q4_gate": gate,
-        "green_descriptor_ref": green_path.relative_to(ROOT).as_posix(),
-        "green_descriptor_sha256": sha256_value(green),
-        "required_next_action": "run-green",
+        "green_descriptor_ref": gate["green_descriptor_ref"],
+        "green_descriptor_sha256": gate["green_descriptor_sha256"],
+        "required_next_action": gate["required_next_action"],
         "authorizes_evidence": False,
         "authorizes": [],
     }
@@ -569,7 +686,7 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
         identity = candidate_identity(ROOT, bundle, slice_id)
         terminal = materialize_descriptor(
             bundle=bundle, slice_id=slice_id, stage=stage, run_id=run_dir.name,
-            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=120,
+            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=600,
             target_refs=target_refs, fixture_refs=fixture_refs, routing_result=route,
         )
         create_json(descriptor, terminal)
@@ -758,7 +875,7 @@ def main() -> int:
         print(json.dumps({"status": "blocked", "recommended_action": "repair-vdd", "reason": str(exc)}, sort_keys=True))
         return 1
     print(json.dumps(result, sort_keys=True))
-    return 0
+    return 1 if result.get("status") == "task-implementation-failure" else 0
 
 
 if __name__ == "__main__":

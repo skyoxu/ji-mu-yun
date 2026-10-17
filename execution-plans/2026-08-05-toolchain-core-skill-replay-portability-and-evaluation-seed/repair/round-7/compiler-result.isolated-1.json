@@ -1,0 +1,1 @@
+{"reason": "semantic worker v3-schema-repair failed: Error loading config.toml: invalid transport\nin `mcp_servers.\"context7\"`", "status": "repair-vdd"}

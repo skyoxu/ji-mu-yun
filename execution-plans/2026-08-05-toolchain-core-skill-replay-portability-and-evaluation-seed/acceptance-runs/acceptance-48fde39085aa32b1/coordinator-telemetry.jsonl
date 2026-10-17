@@ -1,0 +1,2 @@
+{"elapsedMs": 123048, "executedActionCount": 3, "interventionCount": 0, "replayed": false, "route": "deterministic_only", "schemaVersion": "acceptance-coordinator-telemetry.v1", "waitMs": 0}
+{"elapsedMs": 0, "executedActionCount": 0, "interventionCount": 0, "replayed": true, "route": "deterministic_only", "schemaVersion": "acceptance-coordinator-telemetry.v1", "waitMs": 0}

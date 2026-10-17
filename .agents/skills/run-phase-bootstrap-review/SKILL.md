@@ -100,9 +100,9 @@ cohorts. Token counts come from the same Codex JSONL execution, every counted
 attempt directory must match a started and terminal process-event lifecycle,
 and each selected model must match the role-specific route frozen by the run.
 A single-model route keeps the model name as its cohort identity. A legitimate
-mixed route, such as Terra discovery plus Sol verification, uses a canonical
-hash of the complete configured role route and is never attributed to either
-single-model cohort. The history index and calibration candidate publish as
+mixed route uses a canonical hash of the complete configured role route and is
+never attributed to either single-model cohort. The history index and
+calibration candidate publish as
 one staged directory. A finalized run that fails replay fails the complete
 build. Generated
 calibration is a candidate and never updates the promoted reference
@@ -238,7 +238,7 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
   [--ack-high-cost]
 ```
 
-The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses Terra at its profile-declared effort; every valid Round 3 uses Sol/high. Ordinary focused repair verification also uses Terra/high. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. An explicitly selected allowed fallback model creates a separate model-bound proof sidecar; the preferred proof is never silently reused for a fallback. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
+The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses `gpt-6-sol/high`; every valid Round 3 uses `gpt-6-sol/xhigh`. Ordinary focused repair verification uses `gpt-6-sol/high`. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The verifier preferred route is `gpt-6-sol/medium`; its escalated route is `gpt-6-sol/high`. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. An explicitly selected allowed fallback model creates a separate model-bound proof sidecar; the preferred proof is never silently reused for a fallback. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
 
 ## Execution-Plane Continuity
 
@@ -319,7 +319,15 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
   [--ack-high-cost]
 ```
 
-This creates `verifier-access-proof.json` only after the gate exists. A standard P1-only blocker set resolves to Terra/high. A P1 finding classified as `authority_control`, `lifecycle_control`, `protected_path`, or `shared_entrypoint` resolves the whole verifier run to Sol/high. Any P0 or `security` blocker resolves it to Sol/max. `verifierRiskClass` selects model capacity only and never changes severity. Data-corruption and permission-boundary findings must be classified as P0 or `security` so the structured gate can trigger max effort. The discovery `access-proof.json` cannot authorize the verifier.
+This creates `verifier-access-proof.json` only after the gate exists. A standard
+P1-only blocker set resolves to `gpt-6-sol/medium`. A P1 finding classified as
+`authority_control`, `lifecycle_control`, `protected_path`, or
+`shared_entrypoint` resolves the whole verifier run to `gpt-6-sol/high`. Any
+P0 or `security` blocker also resolves to `gpt-6-sol/high` under the current
+active route. `verifierRiskClass` selects model capacity only and never changes
+severity. Data-corruption and permission-boundary findings must still be
+classified as P0 or `security` for structured escalation. The discovery
+`access-proof.json` cannot authorize the verifier.
 
 Then run one independent verifier through `run-layer --role independent_verifier` or the approved external verifier boundary. The verifier must cover each blocker's exact evidence and every `contextRead` reference. If `inspect-run` reports `prove-verifier-access`, complete the verifier probe before launching the verifier.
 
@@ -465,4 +473,3 @@ py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_v
 ```
 
 Then run a fresh `bootstrap-skill-route` review over the repository Skill, external thin route, standard, ADR, compatibility adapter, profiles, schemas, tests, operator guide, repository rules, and usage evidence.
-

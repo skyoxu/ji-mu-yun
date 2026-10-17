@@ -1,0 +1,108 @@
+FFFFFFFFFFF..........                                                    [100%]
+=================================== FAILURES ===================================
+______ AdapterTests.test_prepare_consumes_real_ready_skill_input_context _______
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py:87: in test_prepare_consumes_real_ready_skill_input_context
+    prepared = ADAPTER.prepare_with_skill_input(
+.agents/skills/quick-dev-tdd-adapter/tools/adapter.py:75: in prepare_with_skill_input
+    gate = require_ready_skill_input(
+scripts/python/skill_input_gate.py:24: in require_ready_skill_input
+    raise ValueError("live consumer requires a v2 current pointer; v1 is historical only")
+E   ValueError: live consumer requires a v2 current pointer; v1 is historical only
+__________ CandidateIdentityTests.test_candidate_identity_is_complete __________
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py:35: in test_candidate_identity_is_complete
+    identity = _legacy_candidate_identity("RMAP-S6")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py:24: in _legacy_candidate_identity
+    return module.current_candidate_identity(slice_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py:168: in current_candidate_identity
+    index_tree = read_only_index_tree(REPOSITORY_ROOT)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/isolated_test_repository.py:75: in read_only_index_tree
+    shutil.copy2(git_directory / "index", index)
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:475: in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: in copyfile
+    with open(src, 'rb') as fsrc:
+         ^^^^^^^^^^^^^^^
+E   NotADirectoryError: [Errno 20] Not a directory: '/workspace/scratch/1ecf047ec2b0/ji-mu-yun-baseline-805/.git/index'
+_____ test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds ______
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py:236: in test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds
+    assert result.returncode == 0, result.stderr
+E   AssertionError: 
+E   assert 1 == 0
+E    +  where 1 = CompletedProcess(args=['py', '-3', '-B', '/workspace/scratch/1ecf047ec2b0/ji-mu-yun-baseline-805/scripts/sc/skill_pack...d", "missing_cases": [], "runner_entrypoint": "scripts/sc/skill_package_replay.py", "status": "invalid"}\n', stderr='').returncode
+___________ test_missing_truncated_or_old_runner_output_blocks[None] ___________
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:177: in test_missing_truncated_or_old_runner_output_blocks
+    assert result["predicate_result"] is False
+E   assert True is False
+____________ test_missing_truncated_or_old_runner_output_blocks[{] _____________
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:177: in test_missing_truncated_or_old_runner_output_blocks
+    assert result["predicate_result"] is False
+E   assert True is False
+_ test_missing_truncated_or_old_runner_output_blocks[{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}] _
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:177: in test_missing_truncated_or_old_runner_output_blocks
+    assert result["predicate_result"] is False
+E   assert True is False
+_____________ test_unsupported_command_cannot_fall_back_to_summary _____________
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:185: in test_unsupported_command_cannot_fall_back_to_summary
+    assert "case-adapter-gap" in receipt["case_report_error"]
+E   assert 'case-adapter-gap' in "'-m' is not in list"
+_ test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle _
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py:123: in test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle
+    assert result["status"]=="plan-ready"
+E   AssertionError: assert 'repair-vdd' == 'plan-ready'
+E     
+E     - plan-ready
+E     + repair-vdd
+_________ test_standard_q6_runs_explicit_single_file_consumer_fixture __________
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py:198: in test_standard_q6_runs_explicit_single_file_consumer_fixture
+    result = run_regression_gate(
+.agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py:98: in run_regression_gate
+    raise ValueError("Q6 regression/schema command failed")
+E   ValueError: Q6 regression/schema command failed
+_ PlanDirectoryLoopTests.test_builder_expands_run_path_and_serializes_base64_context _
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py:904: in test_builder_expands_run_path_and_serializes_base64_context
+    result = BUILDER.build(REPOSITORY_ROOT, plan, "RMAP-S0", "RUN-TEST")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py:259: in build
+    identity = _load_candidate_identity(plan, slice_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py:82: in _load_candidate_identity
+    identity = module.current_candidate_identity(slice_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py:168: in current_candidate_identity
+    index_tree = read_only_index_tree(REPOSITORY_ROOT)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/isolated_test_repository.py:75: in read_only_index_tree
+    shutil.copy2(git_directory / "index", index)
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:475: in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: in copyfile
+    with open(src, 'rb') as fsrc:
+         ^^^^^^^^^^^^^^^
+E   NotADirectoryError: [Errno 20] Not a directory: '/workspace/scratch/1ecf047ec2b0/ji-mu-yun-baseline-805/.git/index'
+__________ test_complete_probe_and_regression_reuse_without_execution __________
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py:28: in test_complete_probe_and_regression_reuse_without_execution
+    assert len(calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+=============================== warnings summary ===============================
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py:223
+  /workspace/scratch/1ecf047ec2b0/ji-mu-yun-baseline-805/.agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py:223: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR7-MATRIX-STABLE-CANDIDATE")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_adapter.py::AdapterTests::test_prepare_consumes_real_ready_skill_input_context
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py::CandidateIdentityTests::test_candidate_identity_is_complete
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py::test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_truncated_or_old_runner_output_blocks[None]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_truncated_or_old_runner_output_blocks[{]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_truncated_or_old_runner_output_blocks[{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_unsupported_command_cannot_fall_back_to_summary
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py::test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_runs_explicit_single_file_consumer_fixture
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py::PlanDirectoryLoopTests::test_builder_expands_run_path_and_serializes_base64_context
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution
+11 failed, 10 passed, 1 warning in 26.68s

@@ -1,0 +1,27 @@
+{
+  "schema": "jimuyun.direct-verification-environment.v1",
+  "platform": "linux",
+  "platform_detail": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "python_version": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+  "python_executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+  "pytest_version": "8.4.2",
+  "jsonschema_version": "4.26.0",
+  "head": "de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-u",
+    "-B",
+    "scripts/sc/verify_skill_replay.py",
+    "--expected-count",
+    "340"
+  ],
+  "test_timeout_seconds": 300,
+  "scope": "original-default-three-selectors",
+  "fastctx_available": false,
+  "baseline": "e289d7d3f8572595ca28c498adc798d1fa2a2bf7",
+  "historical_compact_plan_inputs_present": true,
+  "C3": "OPEN",
+  "authorizes": [],
+  "formal_workflow_called": false,
+  "live_backend_called": false
+}

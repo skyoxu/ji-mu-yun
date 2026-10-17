@@ -1,0 +1,24 @@
+F......                                                                  [100%]
+=================================== FAILURES ===================================
+_ NativeProcessOwnershipTests.test_native_timeout_reaps_a_descendant_in_a_separate_process_group _
+
+self = <test_skill_replay_process_regressions.NativeProcessOwnershipTests testMethod=test_native_timeout_reaps_a_descendant_in_a_separate_process_group>
+
+    def test_native_timeout_reaps_a_descendant_in_a_separate_process_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ready, leaked = root / "ready", root / "leaked"
+            child = "import time;from pathlib import Path;Path(" + repr(str(ready)) + ").write_text('ready');time.sleep(2);Path(" + repr(str(leaked)) + ").write_text('leaked')"
+            parent = "import subprocess,sys,time;subprocess.Popen([sys.executable,'-c'," + repr(child) + "],start_new_session=True);time.sleep(30)"
+            with self.assertRaisesRegex(ValueError, "timed out"):
+                runtime.execute([sys.executable, "-c", parent], root, timeout=0.5)
+            self.assertTrue(ready.exists(), "the real descendant must have started")
+            time.sleep(2.2)
+>           self.assertFalse(leaked.exists(), "native timeout left its actual descendant alive")
+E           AssertionError: True is not false : native timeout left its actual descendant alive
+
+scripts/sc/tests/test_skill_replay_process_regressions.py:26: AssertionError
+- generated xml file: /workspace/scratch/9aa4df529c3a/repo-s17/logs/08-05-real-skill-replay/s17-process-repair-20261007/transport-green.xml -
+=========================== short test summary info ============================
+FAILED scripts/sc/tests/test_skill_replay_process_regressions.py::NativeProcessOwnershipTests::test_native_timeout_reaps_a_descendant_in_a_separate_process_group
+1 failed, 6 passed in 9.33s

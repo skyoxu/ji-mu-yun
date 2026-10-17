@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="60.109" timestamp="2026-10-06T22:38:43.731071+09:00" hostname="dfb8520eb0c5"><testcase classname="scripts.sc.tests.tc_d1_cer.test_s13" name="test_successful_replay_has_independent_target_outcome" time="60.019"><error message="failed on setup with &quot;subprocess.TimeoutExpired: Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python', '-B', '/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py', 'replay-package', '--target', '.agents/skills/run-refactor-implementation-acceptance', '--capability', 'scripts/sc/config/skill-package-validator-capability.v1.json', '--probe-mode', 'fresh']' timed out after 60 seconds&quot;">@pytest.fixture(scope="module")
+    def replay() -&gt; dict:
+&gt;       code, receipt = _run(
+            "replay-package", "--target", TARGET, "--capability", CAPABILITY,
+            "--probe-mode", "fresh",
+        )
+
+scripts/sc/tests/tc_d1_cer/test_s13.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/tests/tc_d1_cer/test_s13.py:22: in _run
+    process = subprocess.run(
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:550: in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:1209: in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:2116: in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;Popen: returncode: -9 args: ['/opt/codex/runtimes/codex-primary-runtime/dep...&gt;
+endtime = 4933.534708848, orig_timeout = 60, stdout_seq = []
+stderr_seq = [b'/workspace/scratch/9aa4df529c3a/repo080/scripts/python/db_schema_dump.py:8: SyntaxWarning: invalid escape sequence ...chema_dump.py --glob "%APPDATA%\\Godot\\app_userdata\\GodotGame\\*.db" --out logs/ci/&lt;run_id&gt;/schema-dump.json\n', ...]
+skip_check_and_raise = False
+
+    def _check_timeout(self, endtime, orig_timeout, stdout_seq, stderr_seq,
+                       skip_check_and_raise=False):
+        """Convenience for checking if a timeout has expired."""
+        if endtime is None:
+            return
+        if skip_check_and_raise or _time() &gt; endtime:
+&gt;           raise TimeoutExpired(
+                    self.args, orig_timeout,
+                    output=b''.join(stdout_seq) if stdout_seq else None,
+                    stderr=b''.join(stderr_seq) if stderr_seq else None)
+E           subprocess.TimeoutExpired: Command '['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python', '-B', '/workspace/scratch/9aa4df529c3a/repo080/scripts/sc/skill_package_replay.py', 'replay-package', '--target', '.agents/skills/run-refactor-implementation-acceptance', '--capability', 'scripts/sc/config/skill-package-validator-capability.v1.json', '--probe-mode', 'fresh']' timed out after 60 seconds
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py:1253: TimeoutExpired</error></testcase></testsuite></testsuites>

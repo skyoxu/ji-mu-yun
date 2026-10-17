@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import pytest
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
@@ -103,3 +104,233 @@ def test_duplicate_ids_remain_a_deterministic_domain_failure() -> None:
         },
     )
     assert findings == ["supported_obligation_ids:duplicate-frozen-id:O-1"]
+
+
+def test_overlapping_partition_routes_through_existing_single_repair(tmp_path: Path) -> None:
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall",
+        payload=_payload(),
+        prompt="Classify only frozen obligation ids.",
+        worker_cache={
+            "v4-atomic-recall": {
+                "supported_obligation_ids": ["O-1", "O-2"],
+                "invented_obligation_ids": ["O-2"],
+                "source_gap_claims": [],
+            },
+            "v4-atomic-recall-schema-repair": {
+                "supported_obligation_ids": ["O-1", "O-2"],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            },
+        },
+    )
+    assert result == {
+        "supported_obligation_ids": ["O-1", "O-2"],
+        "invented_obligation_ids": [],
+        "source_gap_claims": [],
+    }
+
+
+def test_incomplete_frozen_partition_requires_repair() -> None:
+    findings = v4_domain._domain_findings(
+        "v4-atomic-recall",
+        _payload(),
+        {"supported_obligation_ids": ["O-1"], "invented_obligation_ids": [], "source_gap_claims": []},
+    )
+    assert findings == ["obligation-partition-incomplete:O-2"]
+
+
+def test_partition_completion_merges_only_the_missing_frozen_id() -> None:
+    merged = v4_domain._merge_partition_completion(
+        _payload(),
+        {
+            "supported_obligation_ids": ["O-1"],
+            "invented_obligation_ids": [],
+            "source_gap_claims": [
+                {
+                    "source_ref": "req.md#FR-1",
+                    "subject": "compiler",
+                    "behavior": "emits plan",
+                    "reason": "missing obligation",
+                }
+            ],
+        },
+        {
+            "supported_obligation_ids": [],
+            "invented_obligation_ids": ["O-2"],
+        },
+    )
+    assert merged == {
+        "supported_obligation_ids": ["O-1"],
+        "invented_obligation_ids": ["O-2"],
+        "source_gap_claims": [
+            {
+                "source_ref": "req.md#FR-1",
+                "subject": "compiler",
+                "behavior": "emits plan",
+                "reason": "missing obligation",
+            }
+        ],
+    }
+
+
+def test_incomplete_partition_repairs_only_missing_id_through_transport(tmp_path: Path) -> None:
+    result = gate.normative_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall",
+        payload=_payload(),
+        prompt="Classify only frozen obligation ids.",
+        worker_cache={
+            "v4-atomic-recall": {
+                "supported_obligation_ids": ["O-1"],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            },
+            "v4-atomic-recall-partition-repair": {
+                "supported_obligation_ids": [],
+                "invented_obligation_ids": ["O-2"],
+            },
+        },
+    )
+    assert result == {
+        "supported_obligation_ids": ["O-1"],
+        "invented_obligation_ids": ["O-2"],
+        "source_gap_claims": [],
+    }
+
+
+def test_schema_repair_partial_partition_repairs_only_missing_id(tmp_path: Path) -> None:
+    result = v4_domain.v4_transport_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall-schema-repair",
+        payload={"input": _payload(), "validator_findings": ["worker-call:RuntimeError:timeout"]},
+        prompt="Return a corrected JSON object only.",
+        worker_cache={
+            "v4-atomic-recall-schema-repair": {
+                "supported_obligation_ids": ["O-1"],
+                "invented_obligation_ids": [],
+                "source_gap_claims": [],
+            },
+            "v4-atomic-recall-partition-repair": {
+                "supported_obligation_ids": [],
+                "invented_obligation_ids": ["O-2"],
+            },
+        },
+    )
+    assert result == {
+        "supported_obligation_ids": ["O-1"],
+        "invented_obligation_ids": ["O-2"],
+        "source_gap_claims": [],
+    }
+
+
+def test_large_atomic_recall_is_split_and_merged_deterministically(tmp_path: Path) -> None:
+    payload = {
+        "source_index": {"entries": [{"source_ref": "req.md#FR-1"}]},
+        "obligations": [
+            {"obligation_id": f"O-{index:02d}", "status": "active"}
+            for index in range(25)
+        ],
+    }
+    worker_cache = {
+        "v4-atomic-recall-source-001": {"source_gap_claims": []},
+        "v4-atomic-recall-chunk-001": {
+            "supported_obligation_ids": [f"O-{index:02d}" for index in range(20)],
+            "invented_obligation_ids": [],
+            "source_gap_claims": [],
+        },
+        "v4-atomic-recall-chunk-002": {
+            "supported_obligation_ids": [f"O-{index:02d}" for index in range(20, 25)],
+            "invented_obligation_ids": [],
+            "source_gap_claims": [],
+        },
+    }
+    result = v4_domain.v4_transport_invoke_worker(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        stage="v4-atomic-recall",
+        payload=payload,
+        prompt="Classify the frozen obligations.",
+        worker_cache=worker_cache,
+    )
+    assert result["supported_obligation_ids"] == [f"O-{index:02d}" for index in range(25)]
+    assert result["invented_obligation_ids"] == []
+
+
+def test_chunk_merge_rejects_duplicate_or_cross_classified_ids() -> None:
+    payload = {
+        "source_index": {"entries": [{"source_ref": "req.md#FR-1"}]},
+        "obligations": [
+            {"obligation_id": "O-1", "status": "active"},
+            {"obligation_id": "O-2", "status": "active"},
+        ],
+    }
+    try:
+        v4_domain._merge_atomic_recall_chunks(payload, [
+            {"supported_obligation_ids": ["O-1"], "invented_obligation_ids": [], "source_gap_claims": []},
+            {"supported_obligation_ids": ["O-1"], "invented_obligation_ids": ["O-2"], "source_gap_claims": []},
+        ])
+    except ValueError as exc:
+        assert "duplicate" in str(exc) or "overlap" in str(exc)
+    else:
+        raise AssertionError("chunk merge accepted an invalid partition")
+
+
+def test_source_gap_chunk_sees_cross_source_obligations() -> None:
+    payload = {
+        "source_index": {"entries": [
+            {"source_ref": "req#FR-1"}, {"source_ref": "req#FR-2"},
+        ]},
+        "obligations": [
+            {"obligation_id": "O-1", "source_refs": ["req#FR-1"], "status": "active"},
+            {"obligation_id": "O-2", "source_refs": ["req#FR-1", "req#FR-2"], "status": "active"},
+            {"obligation_id": "O-3", "source_refs": ["req#FR-2"], "status": "active"},
+        ],
+    }
+    selected = v4_domain._source_recall_payload(payload, ["req#FR-1"])
+    assert [item["obligation_id"] for item in selected["obligations"]] == ["O-1", "O-2", "O-3"]
+    assert [item["source_ref"] for item in selected["source_index"]["entries"]] == ["req#FR-1"]
+
+
+def test_chunk_merge_rejects_missing_and_unknown_ids() -> None:
+    payload = {
+        "source_index": {"entries": [{"source_ref": "req#FR-1"}]},
+        "obligations": [
+            {"obligation_id": "O-1", "status": "active"},
+            {"obligation_id": "O-2", "status": "active"},
+        ],
+    }
+    for ids in (["O-1"], ["O-1", "O-2", "O-X"]):
+        with pytest.raises(ValueError, match="partition mismatch"):
+            v4_domain._merge_atomic_recall_chunks(payload, [{
+                "supported_obligation_ids": ids,
+                "invented_obligation_ids": [], "source_gap_claims": [],
+            }])
+
+
+
+@pytest.mark.parametrize("empty", [True, False])
+def test_cached_empty_verdict_retries_once_but_invented_verdict_is_reused(tmp_path, monkeypatch, empty):
+    """ADR-0041: compose bounded transport recovery with complete negative verdicts."""
+    payload, prompt = _payload(), "frozen prompt"
+    identity = {"schema": "vdd.resolved-atomic-recall.v1", "stage": "v4-atomic-recall",
+                "input_sha256": gate.sc.sha256_value(payload), "prompt_sha256": gate.sc.sha256_value(prompt)}
+    old = {"supported_obligation_ids": [], "invented_obligation_ids": [] if empty else ["O-1", "O-2"], "source_gap_claims": []}
+    path = tmp_path / ".compiler-work/resolved-atomic-recall" / (gate.sc.sha256_value(identity)[7:] + ".json")
+    gate.sc.atomic_json(path, {**identity, "result": old, "result_sha256": gate.sc.sha256_value(old), "authorizes": []})
+    old_bytes = path.read_bytes()
+    calls = []
+    repaired = {"supported_obligation_ids": ["O-1", "O-2"], "invented_obligation_ids": [], "source_gap_claims": []}
+    def worker(**kwargs):
+        calls.append(kwargs["stage"])
+        return repaired
+    monkeypatch.setattr(gate.sc, "invoke_worker", worker)
+    args = dict(root=tmp_path, out_dir=tmp_path, payload=payload, prompt=prompt, worker_cache=None)
+    assert gate._resolved_atomic_recall_worker(**args) == (repaired if empty else old)
+    assert gate._resolved_atomic_recall_worker(**args) == (repaired if empty else old)
+    assert calls == (["v4-atomic-recall"] if empty else [])
+    assert path.read_bytes() == old_bytes

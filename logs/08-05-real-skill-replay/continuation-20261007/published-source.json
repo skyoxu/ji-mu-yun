@@ -1,0 +1,14 @@
+{
+  "schema": "jimuyun.published-source-identity.v1",
+  "repository": "skyoxu/ji-mu-yun",
+  "branch": "fix/08-05-real-skill-replay",
+  "published_source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "source_tree": "8d26c4c389220c7af5571ab31765ffc5c045bf6c",
+  "parent": "de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5",
+  "transport": "Connected GitHub Git-data API; CLI lacked write credentials.",
+  "local_prepublication_targeted_head": "7a2859a19a8aaf6ccdcdadf5af9cae7bb8db9964",
+  "prepublication_local_commits_not_claimed_as_remote_head": true,
+  "all_five_changed_source_blob_ids_equal": true,
+  "C3": "OPEN",
+  "authorizes": []
+}

@@ -1,0 +1,96 @@
+{
+  "acceptance_assertions": [
+    {
+      "acceptance_id": "A-7A02BF807FA5",
+      "assertion_id": "A-FCD3611EEC73-1",
+      "case_source_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py",
+      "fixture_ref": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      "target_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py"
+    },
+    {
+      "acceptance_id": "A-92898EBFD70B",
+      "assertion_id": "A-431D-fresh-replay-1",
+      "case_source_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py",
+      "fixture_ref": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      "target_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py"
+    },
+    {
+      "acceptance_id": "A-96DBE956A08F",
+      "assertion_id": "A-REPLAY-CURRENT-SNAPSHOT-COMPLETE",
+      "case_source_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py",
+      "fixture_ref": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      "target_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py"
+    },
+    {
+      "acceptance_id": "A-96DBE956A08F",
+      "assertion_id": "A-REPLAY-SNAPSHOT-BINDING",
+      "case_source_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py",
+      "fixture_ref": ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+      "target_ref": "scripts/sc/tests/tc_d1_cer/test_s10.py"
+    }
+  ],
+  "argv": [
+    "python",
+    "-m",
+    "pytest",
+    "scripts/sc/tests/tc_d1_cer/test_s10.py",
+    "-q"
+  ],
+  "behavior_route": {
+    "probe_result_sha256": null,
+    "schema": "quick-dev.behavior-route.v1"
+  },
+  "candidate_hash": "sha256:df4652194b88d6cca4fc75f1bf64723d5a6971e5aa3d331ccbbf9021e68e1dff",
+  "case_contract": {
+    "bindings": [
+      {
+        "acceptance_id": "A-7A02BF807FA5",
+        "assertion_id": "A-FCD3611EEC73-1",
+        "case_ids": [],
+        "expected_failure_ids": [
+          "CER-A-7A02BF807FA5-BEHAVIOR"
+        ],
+        "marker": "A-FCD3611EEC73-1"
+      },
+      {
+        "acceptance_id": "A-92898EBFD70B",
+        "assertion_id": "A-431D-fresh-replay-1",
+        "case_ids": [],
+        "expected_failure_ids": [
+          "CER-A-92898EBFD70B-BEHAVIOR"
+        ],
+        "marker": "A-431D-fresh-replay-1"
+      },
+      {
+        "acceptance_id": "A-96DBE956A08F",
+        "assertion_id": "A-REPLAY-CURRENT-SNAPSHOT-COMPLETE",
+        "case_ids": [],
+        "expected_failure_ids": [],
+        "marker": "A-REPLAY-CURRENT-SNAPSHOT-COMPLETE"
+      },
+      {
+        "acceptance_id": "A-96DBE956A08F",
+        "assertion_id": "A-REPLAY-SNAPSHOT-BINDING",
+        "case_ids": [],
+        "expected_failure_ids": [],
+        "marker": "A-REPLAY-SNAPSHOT-BINDING"
+      }
+    ],
+    "collector_sha256": "sha256:0f3ae151d51951f46bcac21605f35881bd8a02aa76c098f3f297fd4a3cbe7714",
+    "schema": "quick-dev.case-contract.v1"
+  },
+  "cwd": ".",
+  "fixture_refs": [
+    ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py",
+    "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json"
+  ],
+  "plan_id": "PLAN-5E3345BD9A05",
+  "run_id": "S10",
+  "shell": false,
+  "slice_id": "S10",
+  "stage": "probe",
+  "target_refs": [
+    "scripts/sc/tests/tc_d1_cer/test_s10.py"
+  ],
+  "timeout_seconds": 600
+}

@@ -1,0 +1,113 @@
+{
+  "actionDag": {
+    "path": "acceptance-inputs/acceptance-08-05-c15c2839-budget3/action-dag.v1.json",
+    "sha256": "sha256:801dc504b563b5c77a4838639f9e935ddec9b1ae868083ca514bd81d3b4c8922"
+  },
+  "authorizes": [],
+  "baselineManifest": {
+    "path": "acceptance-inputs/acceptance-08-05-c15c2839-budget3/baseline-content-manifest.v1.json",
+    "sha256": "sha256:3385d7feebb9c2e622314b4bc6ba9ba267071daf7e00f0f84e9362d1d10cc1fa"
+  },
+  "bundleHash": "sha256:331e6003a597723b8b17a3550d91e0d060c9103c736a82316b12c1566ae6be7f",
+  "candidateManifest": {
+    "path": "acceptance-inputs/acceptance-08-05-c15c2839-budget3/candidate-content-manifest.v1.json",
+    "sha256": "sha256:4e45a7abf5053fb0bf865a47fc0dd230f0a94ed66fbeba238989105994012797"
+  },
+  "candidateSnapshotPath": ".acceptance-snapshots/acceptance-08-05-c15c2839-budget3",
+  "commandRegistry": {
+    "path": "acceptance-inputs/acceptance-08-05-c15c2839-budget3/command-registry.v1.json",
+    "sha256": "sha256:8f942d7b51395f658d0597a95d3b69323b0446fa3ddd3c0b0b3ed7aad152cfc4"
+  },
+  "currentQuickDev": {
+    "baseCommit": "94870bbf087254e5e78fbb7752da42a4c56c3174",
+    "receipt": {
+      "path": "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r11-read-only-budget/Q8-c15c2839/implementation-complete-result.v2.json",
+      "sha256": "sha256:44edfb40402cbf5e0e065c4aa18e55898729429ef0ff089b498a2b6c07215b50"
+    },
+    "semanticPlan": {
+      "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f"
+    },
+    "snapshotRoots": [
+      {
+        "inclusion_reason": "P1 replay production owner",
+        "repository_relative_posix_paths": [
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/skill_replay_runtime.py"
+        ],
+        "root_kind": "candidate_tree",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "current semantic execution plan",
+        "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+        "root_kind": "plan",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "Quick Dev execution contract",
+        "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter",
+        "root_kind": "contract",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "P1 replay behavior selector",
+        "repository_relative_posix_path": "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r9-budget3/S44-budget3-r9/descriptors",
+        "root_kind": "descriptor",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "canonical stable-candidate matrix",
+        "repository_relative_posix_paths": [
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+          "scripts/sc/tests/tc_d1_cer/conftest.py"
+        ],
+        "root_kind": "fixture",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "canonical requirement authority",
+        "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+        "root_kind": "source",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "independent current stage judge",
+        "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+        "root_kind": "validator_judge",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      },
+      {
+        "inclusion_reason": "append-only P1 current run state",
+        "repository_relative_posix_path": "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r11-read-only-budget/Q8-c15c2839",
+        "root_kind": "plan_state_transition",
+        "source_commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+      }
+    ],
+    "sourceCommit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
+  },
+  "implementationReceipt": {
+    "path": "logs/08-05-real-skill-replay/acceptance-815c032b/historical-validator-repair/owner-recovery-r11-read-only-budget/Q8-c15c2839/implementation-complete-result.v2.json",
+    "sha256": "sha256:44edfb40402cbf5e0e065c4aa18e55898729429ef0ff089b498a2b6c07215b50",
+    "terminalCommandId": "terminal-full"
+  },
+  "knowledgeContext": {
+    "path": "knowledge-context.refactor-acceptance-30fd26ed.v1.json",
+    "sha256": "sha256:c16bf89788f73a5a70ab3c3ca99882e45a4254c5b1109a51d7b62a467f9db32a"
+  },
+  "policy": {
+    "path": "acceptance-inputs/acceptance-08-05-c15c2839-budget3/toolchain-code-review.v1.json",
+    "sha256": "sha256:86c88a670f53e2fcdd8293a4c6b931a7955908a9ba708c66518a4a964430623f"
+  },
+  "runId": "acceptance-08-05-c15c2839-budget3",
+  "runRequest": {
+    "path": "acceptance-run-request.acceptance-08-05-c15c2839-budget3.v1.json",
+    "sha256": "sha256:932c33683c9246f20f160633b0a8894eb8137a0b4bd9565468c018835820dab1"
+  },
+  "schemaVersion": "compact-vdd-acceptance-prerequisite-bundle.v1",
+  "targetPlan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed",
+  "terminalRunner": {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    "sha256": "sha256:9e8c0343d5a15f51c1257d4f388633972484d0599efe5fc39ac80afaecb0fcc8"
+  }
+}

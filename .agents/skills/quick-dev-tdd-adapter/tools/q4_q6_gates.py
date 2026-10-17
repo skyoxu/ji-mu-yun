@@ -83,6 +83,18 @@ def finish_q4(*, workspace: Path, snapshot_roots: Sequence[Mapping[str, str]], s
     snapshots = [str(path) for path in slice_item.get("execution_snapshot_paths", []) if isinstance(path, str)]
     if any(_matches_declared(path, snapshots) for path in actual_changed):
         raise ValueError("Q4 changed selector/fixture contract and invalidated RED")
+    # Check resolver-derived changes, not the worker's prose or caller claim.
+    production_changed = [path for path in actual_changed
+                          if _matches_declared(path, slice_item.get("production_owners", []))]
+    if not production_changed:
+        return {
+            "schema": "quick-dev.q4-result.v1", "status": "task-implementation-failure",
+            "failure_family": "task-implementation-failure", "reason_code": "no-production-change",
+            "predecessor_red_sha256": sha256_value(dict(red_stage_result)),
+            "before_snapshot_sha256": prior.get("sha256"), "after_snapshot_sha256": after.get("sha256"),
+            "changed_paths": actual_changed, "changed_paths_source": "current-snapshot-git-delta",
+            "authorizes": [],
+        }
     return {
         "schema": "quick-dev.q4-result.v1",
         "status": "implementation-successor",

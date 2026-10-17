@@ -1,0 +1,9 @@
+{
+  "schema": "vdd.compiler-state.v1",
+  "plan_id": "PLAN-2D462DE421F6",
+  "state": "repair-vdd",
+  "completed_stages": [],
+  "semantic_plan_sha256": "sha256:8284d921a325ec05dd741a18d5fce7e5d61185596aadce96b267452758f58548",
+  "reason": "Direct CER contract repair candidate; canonical compilation and actual author/probe validation pending.",
+  "authorizes": []
+}

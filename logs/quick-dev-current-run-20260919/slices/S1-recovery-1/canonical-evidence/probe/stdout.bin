@@ -1,0 +1,17 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ test_candidate_external_trust_without_independent_verification_is_rejected __
+
+    @pytest.mark.cer_assertion("FR-3-candidate-external-trust-independent-verification")
+    def test_candidate_external_trust_without_independent_verification_is_rejected() -> None:
+        candidate_identity = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+        verifier = getattr(_candidate_workspace_module(), "verify_candidate_external_trust", None)
+>       assert callable(verifier), "candidate trust verifier is unavailable"
+E       AssertionError: candidate trust verifier is unavailable
+E       assert False
+E        +  where False = callable(None)
+
+scripts\sc\tests\tc_d1_cer\test_s1.py:30: AssertionError
+=========================== short test summary info ===========================
+FAILED scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected
+1 failed in 0.18s

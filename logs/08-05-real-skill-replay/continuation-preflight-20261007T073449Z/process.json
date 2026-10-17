@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-u",
+    "-B",
+    "scripts/sc/skill_package_replay.py",
+    "replay-package",
+    "--target",
+    ".agents/skills/run-refactor-implementation-acceptance",
+    "--capability",
+    "scripts/sc/config/skill-package-validator-capability.v1.json",
+    "--probe-mode",
+    "fresh"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 39.072292,
+  "authorizes": []
+}

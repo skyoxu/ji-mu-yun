@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts/sc/tests",
+    "-p",
+    "test_skill_replay_integration_regressions.py",
+    "-v"
+  ],
+  "exit_code": 1,
+  "scope": "New v3 budget fault tests before budget implementation; five integration repairs also exercised",
+  "authorizes": []
+}

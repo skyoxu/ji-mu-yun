@@ -3,7 +3,12 @@
   "capability_id": "skill-package-validator",
   "allowed_root": ".agents/skills/run-refactor-implementation-acceptance",
   "validator_entrypoint": "scripts/acceptance_cli.py",
-  "probe_args": ["validate-package"],
+  "probe_args": ["validate-package", "--skill-root", "{target}"],
+  "validator_sha256": "sha256:62dc3c99d5c269066323a5fcdd1f18e58e670ccd2594cab3f6c7eae90ae3e131",
+  "validator_source": "scripts/sc/config/skill-package-validator-source.v1.json",
+  "validator_source_sha256": "sha256:7592aea543791084d619bf17b0a20d80321381f0ca78eb8276eea9fe3d6c03b0",
+  "required_rules": ["validate_package", "validate-package"],
   "package_identity": "acceptance-package-v1",
+  "state": "active",
   "authorizes": []
 }

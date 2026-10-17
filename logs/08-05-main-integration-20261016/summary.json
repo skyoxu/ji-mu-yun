@@ -1,0 +1,85 @@
+{
+  "schema": "toolchain-main-integration-summary.v1",
+  "recorded_at_utc": "2026-10-16T03:15:18.779579+00:00",
+  "parents": [
+    "2c03b208670466301203be05b9bd0fc2182f3d87",
+    "93884ba457a390739c653f978cf340774904e9e7"
+  ],
+  "source_tree_before_evidence": "a4f5801176837d89fee771b8ff7dc5aa86ae8168",
+  "source_stable": true,
+  "targeted_regressions": {
+    "vdd-final": {
+      "exit_code": 0,
+      "testcases": 424,
+      "failed": [],
+      "skipped": 0,
+      "timed_out": false,
+      "duration_seconds": 15.66
+    },
+    "quickdev-affected": {
+      "exit_code": 0,
+      "testcases": 79,
+      "failed": [],
+      "skipped": 0,
+      "timed_out": false,
+      "duration_seconds": 11.539
+    },
+    "consumers-final": {
+      "exit_code": 0,
+      "testcases": 116,
+      "failed": [],
+      "skipped": 0,
+      "timed_out": false,
+      "duration_seconds": 27.7
+    }
+  },
+  "targeted_passed": 619,
+  "windows_junction_test_deselected": 1,
+  "baseline_comparison": {
+    "parent": {
+      "cases": 21,
+      "passed": 10,
+      "failed": 11
+    },
+    "merged": {
+      "cases": 21,
+      "passed": 5,
+      "failed": 16
+    },
+    "same_preexisting_quick_dev_failures": 11,
+    "old_budget_pin_guard_failures": [
+      {
+        "classname": "scripts.quick_dev.tests.test_approved_budget_replay",
+        "name": "test_reads_original_bytes_only_inside_explicit_q8_context",
+        "time": "21.322"
+      },
+      {
+        "classname": "scripts.quick_dev.tests.test_approved_budget_replay",
+        "name": "test_unrelated_fixture_and_exception_cleanup_remain_strict",
+        "time": "0.007"
+      },
+      {
+        "classname": "scripts.quick_dev.tests.test_approved_budget_replay",
+        "name": "test_current_budget_proof_keeps_current_budget_identity",
+        "time": "0.008"
+      },
+      {
+        "classname": "scripts.quick_dev.tests.test_approved_budget_replay",
+        "name": "test_contract_reconstructs_only_pinned_adapter_and_preserves_extra_files",
+        "time": "0.011"
+      },
+      {
+        "classname": "scripts.quick_dev.tests.test_public_budget_transfer",
+        "name": "test_owner_q8_reuses_success_but_rejects_failed_stale_and_changed_cases",
+        "time": "0.570"
+      }
+    ],
+    "interpretation": "Five historical budget replay tests reject the changed Q8 owner bytes. Exact adapter pins remain unchanged; old transition proofs do not authorize the merged implementation."
+  },
+  "historical_08_05_entries_preserved": 17349,
+  "phase_entries_match_main": 668,
+  "unresolved_conflicts": [],
+  "formal_acceptance_executed": false,
+  "c3": "OPEN",
+  "authorizes": []
+}

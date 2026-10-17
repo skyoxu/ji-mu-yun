@@ -10,10 +10,12 @@ TOOLS = Path(__file__).resolve().parent
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 from closure_predicate import validate_runtime_closure
-from runtime_evidence import HASH_RE, current_snapshot, create_json, expected_tuple_keys, load_json, resolve_file, sha256_bytes, sha256_value
+from runtime_evidence import HASH_RE, current_snapshot, create_json, expected_tuple_keys, load_json, sha256_bytes, sha256_value
+sys.path.insert(0, str(TOOLS.parents[3] / "scripts/quick_dev"))
+from approved_budget_replay import replay_budget_transition, resolve_file
 
 
-def _git_changed_paths(workspace: Path, source_commit: str, root_path: str) -> set[str]:
+def _git_changed_paths(workspace: Path, source_commit: str, root_path: str, *, exclude_transport: bool = True) -> set[str]:
     """Return tracked and untracked paths changed below one frozen root."""
     args = ["git", "diff", "--name-only", source_commit, "--", root_path]
     tracked = subprocess.run(args, cwd=workspace, capture_output=True, text=True, check=False)
@@ -26,6 +28,8 @@ def _git_changed_paths(workspace: Path, source_commit: str, root_path: str) -> s
     )
     if untracked.returncode == 0:
         values.update(line.replace("\\", "/") for line in untracked.stdout.splitlines() if line.strip())
+    if not exclude_transport:
+        return values
     # Acceptance materializes its own run inputs after the Q8 snapshot was
     # frozen. Those files are evidence transport, not runtime plan content.
     values = {
@@ -44,27 +48,14 @@ def _path_allowed(path: str, allowed: set[str]) -> bool:
     return any(path == item or path.startswith(item.rstrip("/") + "/") for item in allowed)
 
 
-def _snapshot_change_is_outside_slice(workspace: Path, run_root: Path, ready: Mapping[str, Any], current: Mapping[str, Any]) -> bool:
-    """Allow reuse only when changed snapshot files cannot affect this slice."""
-    old = ready.get("current_snapshot_sha256")
-    if not isinstance(old, str) or old == current.get("sha256"):
-        return False
-    descriptor_path = run_root / "descriptors" / "terminal.json"
-    if not descriptor_path.is_file():
-        return False
-    descriptor = load_json(descriptor_path)
-    refs = set(descriptor.get("target_refs", [])) | set(descriptor.get("fixture_refs", []))
+def _snapshot_change_is_outside_slice(workspace: Path, source_commit: str,
+                                      roots: Sequence[str], refs: set[str]) -> bool:
+    """ADR-0041: retain slice reuse without ignoring production-owner changes."""
     if not refs:
         return False
-    roots = current.get("roots", [])
-    changed: set[str] = set()
+    changed = set()
     for root in roots:
-        if root.get("root_kind") != "candidate_tree":
-            continue
-        source = root.get("source_commit")
-        path = root.get("repository_relative_posix_path")
-        if isinstance(source, str) and isinstance(path, str):
-            changed |= _git_changed_paths(workspace, source, path)
+        changed.update(_git_changed_paths(workspace, source_commit, root, exclude_transport=False))
     return bool(changed) and all(not _path_allowed(path, refs) for path in changed)
 
 
@@ -201,6 +192,10 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
         "candidate_hash": final_candidate,
         "selector_identity": selector,
         "current_snapshot_sha256": snapshot["sha256"],
+        "snapshot_manifest": snapshot,
+        "snapshot_roots": [dict(item) for item in snapshot_roots],
+        "source_commit": source_commit,
+        "base_commit": base_commit,
         "assertion_coverage": coverage,
         "authorizes": [],
     }
@@ -236,9 +231,10 @@ def _validate_detached_binding(binding: Mapping[str, Any] | None, profile: str) 
     return dict(binding)
 
 
-def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input, allowed_changed_paths=None):
+def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_input, allowed_changed_paths=None, *, slice_input_paths=None):
     """Recheck frozen runtime roots; Acceptance's new evidence is not runtime input."""
-    from runtime_evidence import ROOT_KINDS, hash_path, safe_relative
+    from runtime_evidence import ROOT_KINDS, safe_relative
+    from approved_budget_replay import hash_path
     snapshot = terminal_input.get("snapshot_manifest")
     if not isinstance(snapshot, dict) or snapshot.get("sha256") != sha256_value({k: v for k, v in snapshot.items() if k != "sha256"}):
         raise ValueError("completion snapshot manifest missing or stale")
@@ -250,18 +246,47 @@ def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_inpu
         raise ValueError("completion snapshot base mismatch")
     for row in frozen:
         spec = expected[row["root_kind"]]
-        if any(row.get(k) != spec.get(k) for k in ("repository_relative_posix_path", "inclusion_reason")) or row.get("source_commit") != source_commit:
+        path_key = "repository_relative_posix_paths" if "repository_relative_posix_paths" in row else "repository_relative_posix_path"
+        expected_path = spec.get(path_key)
+        if expected_path is None:
+            alternate = "repository_relative_posix_paths" if path_key == "repository_relative_posix_path" else "repository_relative_posix_path"
+            expected_path = spec.get(alternate)
+        actual_path = row.get(path_key)
+        # Multi-path roots are canonicalized by the resolver before they are
+        # frozen.  Compare their set/order-independent form during replay so
+        # equivalent manifests do not fail merely because JSON ordering was
+        # reconstructed by a later runner.
+        if isinstance(actual_path, list) and isinstance(expected_path, list):
+            paths_match = sorted(actual_path) == sorted(expected_path)
+        elif isinstance(actual_path, str) and isinstance(expected_path, list) and len(expected_path) == 1:
+            paths_match = actual_path == expected_path[0]
+        else:
+            paths_match = actual_path == expected_path
+        if (not paths_match or row.get("inclusion_reason") != spec.get("inclusion_reason")
+                or row.get("source_commit") != source_commit):
             raise ValueError("completion snapshot identity mismatch")
-        path = (workspace / safe_relative(row["repository_relative_posix_path"])).resolve()
-        path.relative_to(workspace.resolve())
-        if hash_path(path) != row["content_sha256"]:
-            allowed = {str(item).replace("\\", "/").strip("/") for item in (allowed_changed_paths or [])}
-            if row["root_kind"] not in {"plan", "plan_state_transition"} or not allowed:
+        raw_paths = row.get(path_key)
+        relatives = [raw_paths] if isinstance(raw_paths, str) else raw_paths
+        if not isinstance(relatives, list) or not relatives:
+            raise ValueError("completion snapshot root paths invalid")
+        paths = [(workspace / safe_relative(relative)).resolve() for relative in relatives]
+        for path in paths: path.relative_to(workspace.resolve())
+        digest = hash_path(paths[0]) if len(paths) == 1 else sha256_value([(relative, hash_path(path)) for relative, path in zip(relatives, paths)])
+        # The plan-state root is an append-only transition directory.  Q7
+        # necessarily appends its immutable result after freezing the root;
+        # replay validates identity and containment here, while the individual
+        # predecessor result hashes remain authoritative for content.
+        if digest != row["content_sha256"] and row["root_kind"] != "plan_state_transition":
+            refs = {safe_relative(item) for item in (slice_input_paths or [])}
+            if row["root_kind"] == "candidate_tree" and _snapshot_change_is_outside_slice(workspace, source_commit, relatives, refs):
+                continue
+            allowed = {safe_relative(item) for item in (allowed_changed_paths or [])}
+            if row["root_kind"] != "plan" or not allowed:
                 raise ValueError("completion runtime root stale: " + row["root_kind"])
-            changed = _git_changed_paths(workspace, source_commit, row["repository_relative_posix_path"])
-            root_prefix = row["repository_relative_posix_path"].rstrip("/") + "/"
-            scoped = {item for item in changed if item == row["repository_relative_posix_path"] or item.startswith(root_prefix)}
-            if not scoped or any(not _path_allowed(item, allowed) for item in scoped):
+            changed = set()
+            for relative in relatives:
+                changed.update(_git_changed_paths(workspace, source_commit, relative))
+            if not changed or any(not _path_allowed(item, allowed) for item in changed):
                 raise ValueError("completion runtime root stale: " + row["root_kind"])
     return snapshot
 
@@ -301,120 +326,150 @@ def publish_implementation_complete(
     terminal_descriptors: list[dict[str, str]] = []
     final_candidates: dict[str, str] = {}
     terminal_selectors: dict[str, str] = {}
+    # ADR-0041: expectations come from independently reread predecessor roots,
+    # never from the tuples whose snapshot bindings are being evaluated.
+    verified_slice_snapshots: dict[str, str] = {}
     for predecessor in predecessors:
-        sid, run_raw, ready_raw = predecessor.get("slice_id"), predecessor.get("run_root"), predecessor.get("result_ref")
-        if not all(isinstance(x, str) and x for x in (sid, run_raw, ready_raw)) or sid in seen:
-            raise ValueError("terminal predecessor invalid")
-        seen.add(sid)
-        run_root = (workspace / run_raw).resolve()
-        try:
-            run_root.relative_to(workspace.resolve())
-        except ValueError as exc:
-            raise ValueError("terminal predecessor run root escapes workspace") from exc
-        ready = load_json(resolve_file(workspace, ready_raw))
-        if sha256_value(ready) != predecessor.get("result_sha256") or ready.get("slice_id") != sid or ready.get("status") != "pass":
-            raise ValueError("slice-ready predecessor stale")
-        if ready.get("current_snapshot_sha256") != before["sha256"] and not _snapshot_change_is_outside_slice(workspace, run_root, ready, before):
-            raise ValueError("slice-ready snapshot stale")
-        route = read_route(workspace, bundle, run_root, sid) if routed else None
-        requirements = stage_map(bundle, sid, route) if routed else {aid: ("red", "green", "refactor") for aid in acceptance_by_slice[sid]}
-        if routed:
-            if ready.get("behavior_route_sha256") != sha256_value(route):
-                raise ValueError("behavior-routing:ready-probe-stale")
-            for aid, stages in requirements.items():
-                expected_keys.update(f"{sid}|{aid}|{stage}" for stage in (*stages, "terminal"))
-        tdd_selector = ready.get("selector_identity")
-        final_candidate = ready.get("candidate_hash")
-        if not isinstance(final_candidate, str) or not HASH_RE.fullmatch(final_candidate):
-            raise ValueError("slice-ready final candidate invalid")
-        final_candidates[sid] = final_candidate
-        terminal_descriptor_path = run_root / "descriptors" / "terminal.json"
-        if not terminal_descriptor_path.is_file():
-            raise ValueError("terminal descriptor missing")
-        terminal_descriptor = load_json(terminal_descriptor_path)
-        terminal_descriptors.append({
-            "slice_id": sid,
-            "ref": terminal_descriptor_path.relative_to(workspace).as_posix(),
-            "sha256": sha256_value(terminal_descriptor),
-        })
-        terminal = load_json(run_root / "canonical-evidence" / "terminal" / "stage-result.v2.json")
-        if terminal.get("predicate_result") is not True or terminal.get("verification_outcome") != "pass" or terminal.get("candidate_hash") != final_candidate:
-            raise ValueError("terminal stage not current process pass")
-        if routed:
-            verify_stage(workspace, bundle, run_root, terminal_descriptor)
-            current_result(workspace, bundle, sid, terminal)
-        terminal_selector = terminal.get("selector_identity")
-        if not isinstance(terminal_selector, str) or not terminal_selector:
-            raise ValueError("terminal selector identity missing")
-        terminal_selectors[sid] = terminal_selector
-        terminal_refs = terminal.get("runtime_edges")
-        terminal_index: dict[str, list[Mapping[str, str]]] = {}
-        _selected, required_assertions = _semantic_index(bundle, sid)
-        terminal_assertions: dict[str, set[str]] = {}
-        if not isinstance(terminal_refs, list) or not terminal_refs:
-            raise ValueError("terminal runtime edges missing")
-        for ref in terminal_refs:
-            edge = _reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector)
-            aid, assertion_id = edge["acceptance_id"], edge["assertion_id"]
-            observed_ids = terminal_assertions.setdefault(aid, set())
-            if assertion_id in observed_ids:
-                raise ValueError("terminal assertion duplicate")
-            observed_ids.add(assertion_id)
-            terminal_index.setdefault(edge["acceptance_id"], []).append(ref)
-        if terminal_assertions != required_assertions:
-            raise ValueError("terminal assertion exact cover")
-        for aid in sorted(acceptance_by_slice.get(sid, set())):
-            for stage in requirements[aid]:
-                selector_for_stage = ready.get("stage_selectors", {}).get(stage) if routed else tdd_selector
-                if routed:
-                    stage_result = load_json(run_root / "canonical-evidence" / stage / "stage-result.v2.json")
-                    descriptor = load_json(run_root / "descriptors" / (stage + ".json"))
-                    verify_stage(workspace, bundle, run_root, descriptor, require_probe_current=False)
-                    verify_case_continuity(descriptor, load_json(run_root / "canonical-evidence" / stage / "process-receipt.v2.json"), route)
-                    if stage_result.get("predicate_result") is not True or stage_result.get("selector_identity") != selector_for_stage:
-                        raise ValueError("behavior-routing:stage-result-stale")
-                    if stage in {"refactor", "regression"}:
-                        current_result(workspace, bundle, sid, stage_result)
-                # The tuple remains per Acceptance; re-read every assertion proof.
-                refs = ready.get("assertion_coverage", {}).get(stage, {}).get(aid, [])
-                actual = []
-                for assertion_ref in refs:
-                    checked = _reread_edge(workspace, run_root, assertion_ref, slice_id=sid,
-                                           stage=stage, selector_identity=selector_for_stage)
-                    if checked["acceptance_id"] != aid:
-                        raise ValueError("Q8 assertion Acceptance mismatch")
-                    actual.append(checked["assertion_id"])
-                if set(actual) != required_assertions[aid] or len(actual) != len(set(actual)):
-                    raise ValueError("Q8 assertion exact cover")
-                ref = _canonical_edge(ready, stage, aid)
-                _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=selector_for_stage)
+        with replay_budget_transition(workspace, predecessor.get("budget_compatibility")):
+            sid, run_raw, ready_raw = predecessor.get("slice_id"), predecessor.get("run_root"), predecessor.get("result_ref")
+            if not all(isinstance(x, str) and x for x in (sid, run_raw, ready_raw)) or sid in seen:
+                raise ValueError("terminal predecessor invalid")
+            seen.add(sid)
+            run_root = (workspace / run_raw).resolve()
+            try:
+                run_root.relative_to(workspace.resolve())
+            except ValueError as exc:
+                raise ValueError("terminal predecessor run root escapes workspace") from exc
+            ready = load_json(resolve_file(workspace, ready_raw))
+            if sha256_value(ready) != predecessor.get("result_sha256") or ready.get("slice_id") != sid or ready.get("status") != "pass":
+                raise ValueError("slice-ready predecessor stale")
+            slice_snapshot = ready.get("snapshot_manifest")
+            slice_roots = ready.get("snapshot_roots")
+            if not isinstance(slice_snapshot, Mapping) or not isinstance(slice_roots, list) or len(slice_roots) != 8:
+                raise ValueError("slice-ready snapshot manifest missing")
+            selected_slice, _ = _semantic_index(bundle, sid)
+            terminal_descriptor_for_snapshot = load_json(run_root / "descriptors" / "terminal.json")
+            slice_input_paths = set()
+            for key in ("production_owners", "execution_snapshot_paths", "planned_new_files"):
+                slice_input_paths.update(selected_slice.get(key, []))
+            for key in ("target_refs", "fixture_refs"):
+                slice_input_paths.update(terminal_descriptor_for_snapshot.get(key, []))
+            verified_slice_snapshot = _replay_snapshot(
+                workspace,
+                slice_roots,
+                str(ready.get("source_commit") or source_commit),
+                ready.get("base_commit") if ready.get("base_commit") is not None else base_commit,
+                {"snapshot_manifest": slice_snapshot},
+                allowed_changed_paths,
+                slice_input_paths=slice_input_paths,
+            )
+            if ready.get("current_snapshot_sha256") != verified_slice_snapshot["sha256"]:
+                raise ValueError("slice-ready snapshot stale")
+            slice_snapshot_hash = verified_slice_snapshot["sha256"]
+            verified_slice_snapshots[sid] = slice_snapshot_hash
+            route = read_route(workspace, bundle, run_root, sid) if routed else None
+            requirements = stage_map(bundle, sid, route) if routed else {aid: ("red", "green", "refactor") for aid in acceptance_by_slice[sid]}
+            if routed:
+                if ready.get("behavior_route_sha256") != sha256_value(route):
+                    raise ValueError("behavior-routing:ready-probe-stale")
+                for aid, stages in requirements.items():
+                    expected_keys.update(f"{sid}|{aid}|{stage}" for stage in (*stages, "terminal"))
+            tdd_selector = ready.get("selector_identity")
+            final_candidate = ready.get("candidate_hash")
+            if not isinstance(final_candidate, str) or not HASH_RE.fullmatch(final_candidate):
+                raise ValueError("slice-ready final candidate invalid")
+            final_candidates[sid] = final_candidate
+            terminal_descriptor_path = run_root / "descriptors" / "terminal.json"
+            if not terminal_descriptor_path.is_file():
+                raise ValueError("terminal descriptor missing")
+            terminal_descriptor = load_json(terminal_descriptor_path)
+            terminal_descriptors.append({
+                "slice_id": sid,
+                "ref": terminal_descriptor_path.relative_to(workspace).as_posix(),
+                "sha256": sha256_value(terminal_descriptor),
+            })
+            terminal = load_json(run_root / "canonical-evidence" / "terminal" / "stage-result.v2.json")
+            if terminal.get("predicate_result") is not True or terminal.get("verification_outcome") != "pass" or terminal.get("candidate_hash") != final_candidate:
+                raise ValueError("terminal stage not current process pass")
+            if routed:
+                verify_stage(workspace, bundle, run_root, terminal_descriptor)
+                current_result(workspace, bundle, sid, terminal)
+            terminal_selector = terminal.get("selector_identity")
+            if not isinstance(terminal_selector, str) or not terminal_selector:
+                raise ValueError("terminal selector identity missing")
+            terminal_selectors[sid] = terminal_selector
+            terminal_refs = terminal.get("runtime_edges")
+            terminal_index: dict[str, list[Mapping[str, str]]] = {}
+            _selected, required_assertions = _semantic_index(bundle, sid)
+            terminal_assertions: dict[str, set[str]] = {}
+            if not isinstance(terminal_refs, list) or not terminal_refs:
+                raise ValueError("terminal runtime edges missing")
+            for ref in terminal_refs:
+                edge = _reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector)
+                aid, assertion_id = edge["acceptance_id"], edge["assertion_id"]
+                observed_ids = terminal_assertions.setdefault(aid, set())
+                if assertion_id in observed_ids:
+                    raise ValueError("terminal assertion duplicate")
+                observed_ids.add(assertion_id)
+                terminal_index.setdefault(edge["acceptance_id"], []).append(ref)
+            if terminal_assertions != required_assertions:
+                raise ValueError("terminal assertion exact cover")
+            for aid in sorted(acceptance_by_slice.get(sid, set())):
+                for stage in requirements[aid]:
+                    selector_for_stage = ready.get("stage_selectors", {}).get(stage) if routed else tdd_selector
+                    if routed:
+                        stage_result = load_json(run_root / "canonical-evidence" / stage / "stage-result.v2.json")
+                        descriptor = load_json(run_root / "descriptors" / (stage + ".json"))
+                        verify_stage(workspace, bundle, run_root, descriptor, require_probe_current=False)
+                        verify_case_continuity(descriptor, load_json(run_root / "canonical-evidence" / stage / "process-receipt.v2.json"), route)
+                        if stage_result.get("predicate_result") is not True or stage_result.get("selector_identity") != selector_for_stage:
+                            raise ValueError("behavior-routing:stage-result-stale")
+                        if stage in {"refactor", "regression"}:
+                            current_result(workspace, bundle, sid, stage_result)
+                    # The tuple remains per Acceptance; re-read every assertion proof.
+                    refs = ready.get("assertion_coverage", {}).get(stage, {}).get(aid, [])
+                    actual = []
+                    for assertion_ref in refs:
+                        checked = _reread_edge(workspace, run_root, assertion_ref, slice_id=sid,
+                                               stage=stage, selector_identity=selector_for_stage)
+                        if checked["acceptance_id"] != aid:
+                            raise ValueError("Q8 assertion Acceptance mismatch")
+                        actual.append(checked["assertion_id"])
+                    if set(actual) != required_assertions[aid] or len(actual) != len(set(actual)):
+                        raise ValueError("Q8 assertion exact cover")
+                    ref = _canonical_edge(ready, stage, aid)
+                    _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=selector_for_stage)
+                    tuples.append({
+                        "tuple_key": f"{sid}|{aid}|{stage}",
+                        "slice_id": sid,
+                        "acceptance_id": aid,
+                        "stage": stage,
+                        "runtime_edge_ref": ref["path"],
+                        "runtime_edge_sha256": ref["sha256"],
+                        "selector_identity": selector_for_stage,
+                        "current_snapshot_sha256": slice_snapshot_hash,
+                    })
+                refs = terminal_index.get(aid, [])
+                if not refs:
+                    raise ValueError(f"terminal Acceptance coverage missing: {aid}")
+                ref = sorted(refs, key=lambda x: x["path"])[0]
                 tuples.append({
-                    "tuple_key": f"{sid}|{aid}|{stage}",
+                    "tuple_key": f"{sid}|{aid}|terminal",
                     "slice_id": sid,
                     "acceptance_id": aid,
-                    "stage": stage,
+                    "stage": "terminal",
                     "runtime_edge_ref": ref["path"],
                     "runtime_edge_sha256": ref["sha256"],
-                    "selector_identity": selector_for_stage,
-                    "current_snapshot_sha256": before["sha256"],
+                    "selector_identity": terminal_selector,
+                    "current_snapshot_sha256": slice_snapshot_hash,
                 })
-            refs = terminal_index.get(aid, [])
-            if not refs:
-                raise ValueError(f"terminal Acceptance coverage missing: {aid}")
-            ref = sorted(refs, key=lambda x: x["path"])[0]
-            tuples.append({
-                "tuple_key": f"{sid}|{aid}|terminal",
-                "slice_id": sid,
-                "acceptance_id": aid,
-                "stage": "terminal",
-                "runtime_edge_ref": ref["path"],
-                "runtime_edge_sha256": ref["sha256"],
-                "selector_identity": terminal_selector,
-                "current_snapshot_sha256": before["sha256"],
-            })
     if seen != set(acceptance_by_slice):
         raise ValueError("terminal predecessor set does not match slices")
-    valid, findings = validate_runtime_closure(tuples, expected_keys, before["sha256"])
+    valid, findings = validate_runtime_closure(
+        tuples,
+        expected_keys,
+        verified_slice_snapshots,
+    )
     if not valid:
         raise ValueError("runtime closure invalid: " + ",".join(findings))
 

@@ -1,0 +1,27 @@
+[
+  {
+    "actionId": "acceptance-current-q8-read-only",
+    "activation": true,
+    "commandId": "current-q8-read-only",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "acceptance-acceptance-package-validation",
+    "activation": true,
+    "commandId": "acceptance-package-validation",
+    "dependsOn": [
+      "acceptance-current-q8-read-only"
+    ],
+    "order": 2
+  },
+  {
+    "actionId": "acceptance-acceptance-closeout-regressions",
+    "activation": true,
+    "commandId": "acceptance-closeout-regressions",
+    "dependsOn": [
+      "acceptance-acceptance-package-validation"
+    ],
+    "order": 3
+  }
+]

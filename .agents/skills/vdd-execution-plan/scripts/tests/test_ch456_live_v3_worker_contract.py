@@ -74,6 +74,20 @@ def _v3_payload(family: str) -> dict:
     }
 
 
+def _v3_inline_repair_payload(value: dict) -> dict:
+    contracts = {}
+    for acceptance in value["acceptances"]:
+        [oid] = acceptance["obligation_ids"]
+        contracts[oid] = {
+            "acceptance": acceptance,
+            "failure_intents": [
+                item for item in value["failure_intents"] if item["obligation_ids"] == [oid]
+            ],
+            "slice_hint": next(item for item in value["slice_hints"] if item["obligation_ids"] == [oid]),
+        }
+    return {"obligation_contracts": contracts}
+
+
 def test_invalid_failure_family_is_caught_at_worker_boundary() -> None:
     findings = gate._worker_schema_findings("v3", _v3_payload("assertion-failure"))
     assert any("failure_family:invalid" in item for item in findings)
@@ -110,7 +124,7 @@ def test_invalid_v3_family_routes_through_single_repair(tmp_path: Path) -> None:
     repaired = _v3_payload("expected-red")
     worker_cache = {
         "v3": invalid,
-        "v3-schema-repair": repaired,
+        "v3-schema-repair": _v3_inline_repair_payload(repaired),
     }
     result = gate.normative_invoke_worker(
         root=tmp_path,
@@ -148,7 +162,7 @@ def test_relational_v3_errors_route_through_single_repair(tmp_path: Path) -> Non
         stage="v3",
         payload={"obligations": [_obligation("O-1"), _obligation("O-2")]},
         prompt="Compile observable Acceptance contracts.",
-        worker_cache={"v3": invalid, "v3-schema-repair": repaired},
+        worker_cache={"v3": invalid, "v3-schema-repair": _v3_inline_repair_payload(repaired)},
     )
     assert result == repaired
 

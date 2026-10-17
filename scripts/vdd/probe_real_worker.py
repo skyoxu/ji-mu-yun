@@ -31,6 +31,8 @@ def main()->int:
         "authorizes":[],
     }
     exit_code=0
+    if info.get("available") is not True:
+        exit_code=1
     if info.get("available") is True:
         output=(args.out.parent if args.out else ROOT/".tmp-vdd-worker-probe")/"worker-last-message.json"
         prompt='Return exactly this JSON object and nothing else: {"probe":"ok","read_only":true}'

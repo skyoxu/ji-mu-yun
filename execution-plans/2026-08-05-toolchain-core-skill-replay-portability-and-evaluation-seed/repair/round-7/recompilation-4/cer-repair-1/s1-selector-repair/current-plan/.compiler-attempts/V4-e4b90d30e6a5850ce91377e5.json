@@ -1,0 +1,1 @@
+{"atomic_quality_metrics":{"active_obligation_count":338,"f1":1.0,"invented_obligation_count":0,"precision":1.0,"recall":1.0,"source_gap_count":0,"supported_obligation_count":338},"findings":["v4:misaligned-acceptance:A-A8E0D3E3648A,A-BF611511B855"],"stage":"V4","status":"repair-vdd"}

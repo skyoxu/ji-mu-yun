@@ -1,0 +1,1332 @@
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target
+scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected
+scripts/sc/tests/test_skill_package_replay_source_identity.py::test_replay_reconstructs_bound_identity_and_launches_fresh_process
+scripts/sc/tests/tc_d1_cer/test_s1.py::test_candidate_external_trust_without_independent_verification_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_records_a_distinct_child_process
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_detached_positive_probe_binds_input_target_outcome_and_output
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_always_success_validator_is_reported_as_a_failed_probe_outcome
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_fresh_replay_reproduces_recorded_verdict_and_coverage
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_result_contains_complete_current_snapshot_binding
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_replay_target_is_observed_by_validator_and_fresh_checkout_is_real
+scripts/sc/tests/tc_d1_cer/test_s10.py::test_supported_replay_route_binds_effective_inspected_content
+scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[complete]
+scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-reverse-edge]
+scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[missing-node-type]
+scripts/sc/tests/tc_d1_cer/test_s11.py::test_exact_cover_graph_reports_bidirectionality_type_coverage_and_orphans[orphan-node]
+scripts/sc/tests/tc_d1_cer/test_s11.py::test_existing_negative_fixture_rejects_a_missing_reverse_binding
+scripts/sc/tests/tc_d1_cer/test_s12.py::test_independent_report_binds_source_content_and_required_rule
+scripts/sc/tests/tc_d1_cer/test_s12.py::test_missing_required_rule_is_rejected_independently
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_unverifiable_identity_and_execution_facts_reject_success
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_ambiguous_identity_rejects_success
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts0-identity-F-96518A7BEA24-1]
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_stale_or_unverifiable_execution_rejects_success[facts1-freshness-F-96518A7BEA24-2]
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_skipped_consumer_rejects_success
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_reused_evidence_rejects_success
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_substituted_target_is_denied_before_processing
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_target_outcome
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_independent_snapshot_outcome
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_separate_probe_verification
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_successful_replay_has_bound_validator_capability_verification
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_fresh_replay_reconstructs_pinned_verdict_and_bindings
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_prose_only_verdict_cannot_validate
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_cover_every_consumer
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_manifest_transitions_have_post_rollback_baselines
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_aggregate_records_deterministic_terminal_state
+scripts/sc/tests/tc_d1_cer/test_s13.py::test_over_budget_aggregate_terminates_unsuccessfully
+scripts/sc/tests/tc_d1_cer/test_s14.py::test_frozen_historical_bytes_remain_identical_after_bounded_operations
+scripts/sc/tests/tc_d1_cer/test_s14.py::test_single_mutated_frozen_artifact_is_reported_by_byte_comparison
+scripts/sc/tests/tc_d1_cer/test_s15.py::test_historical_byte_mutation_is_detected_after_validator_execution
+scripts/sc/tests/tc_d1_cer/test_s16.py::test_unknown_snapshot_root_fails_closed
+scripts/sc/tests/tc_d1_cer/test_s16.py::test_immutable_evidence_writer_preserves_existing_bytes
+scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity
+scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding
+scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure
+scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state
+scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[added]
+scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[deleted]
+scripts/sc/tests/tc_d1_cer/test_s18.py::test_production_verifiers_reject_changed_tracked_membership[renamed]
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_replay_records_independent_validator_source_verification
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_profile_authority_candidate_is_rejected_by_real_entry
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_repository_relative_path_manifest_detects_rename
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_recorded_seed_manifest_has_three_unique_complete_occurrences
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_seed_manifest_rejects_missing_label_or_identity_mutation[missing-label]
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_seed_manifest_rejects_missing_label_or_identity_mutation[duplicate-or-hidden]
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_consumer_manifest_reconciles_both_directions_and_named_scopes
+scripts/sc/tests/tc_d1_cer/test_s19.py::test_foreign_authority_input_cannot_be_accepted_as_success
+scripts/sc/tests/tc_d1_cer/test_s2.py::test_successful_evidence_names_the_effective_inspected_content
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_mutable_state_and_evidence_are_isolated[independent]
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_structural_exact_cover_rejects_orphan_nodes[False]
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_structural_exact_cover_rejects_orphan_nodes[True]
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_required_witness_coverage_is_complete_or_blocked[False]
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_required_witness_coverage_is_complete_or_blocked[True]
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_adversarial_target_success_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_atomic_inventory_requires_bidirectional_exact_cover[False]
+scripts/sc/tests/tc_d1_cer/test_s20.py::test_atomic_inventory_requires_bidirectional_exact_cover[True]
+scripts/sc/tests/tc_d1_cer/test_s21.py::test_sm1_integrity_report[False]
+scripts/sc/tests/tc_d1_cer/test_s21.py::test_sm1_integrity_report[True]
+scripts/sc/tests/tc_d1_cer/test_s21.py::test_sm2_unexecuted_case_is_rejected_with_explicit_reason
+scripts/sc/tests/tc_d1_cer/test_s22.py::test_substituted_target_is_rejected_before_processing
+scripts/sc/tests/tc_d1_cer/test_s23.py::test_support_policy_records_independent_verification
+scripts/sc/tests/tc_d1_cer/test_s23.py::test_compatibility_records_dedicated_independent_result
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_pinned_fresh_checkout_reproduces_semantic_verdict
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_pinned_input_fresh_checkout_reproduces_verdict_and_coverage
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_candidate_external_trust_has_distinct_independent_verification
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_reused_evidence_is_non_success_with_a_diagnostic
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_cross_component_evidence_substitution_cannot_create_success
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_inspection_receipt_contains_an_independent_effective_read_witness
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_successful_replay_has_independent_consumer_verification
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_successful_replay_records_independent_dependency_verification
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_platform_specific_behavior_is_declared_in_the_replay_artifact
+scripts/sc/tests/tc_d1_cer/test_s24.py::test_successful_replay_records_independent_target_verification
+scripts/sc/tests/tc_d1_cer/test_s25.py::test_escaping_target_is_rejected_before_use
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_positive_probe_requires_real_success
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_negative_probe_is_nonzero_and_independent
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_detached_negative_receipt_has_process_boundary
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_successful_replay_has_independent_non_authority_binding
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_successful_replay_has_dependency_verification
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_successful_replay_has_distinct_command_verification
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_windows_support_is_explicit
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_wrong_target_evidence_invalidates_aggregate
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_adversarial_dependency_rejects_success
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_stale_input_rejects_success
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_six_cases_record_both_subjects
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_six_cases_attest_stable_immutability
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_budget_exhaustion_is_terminally_unsuccessful
+scripts/sc/tests/tc_d1_cer/test_s26.py::test_infrastructure_false_negative_is_terminal_failure
+scripts/sc/tests/tc_d1_cer/test_s27.py::test_repair_evidence_keeps_frozen_target_identity_unchanged
+scripts/sc/tests/tc_d1_cer/test_s27.py::test_repair_evidence_rejects_target_outside_declared_boundary
+scripts/sc/tests/tc_d1_cer/test_s27.py::test_all_matrix_cases_record_stable_and_candidate_attribution
+scripts/sc/tests/tc_d1_cer/test_s27.py::test_matrix_rejects_missing_execution_evidence
+scripts/sc/tests/tc_d1_cer/test_s28.py::test_duplicate_effective_evidence_identity_rejects_aggregate_with_both_cases
+scripts/sc/tests/tc_d1_cer/test_s28.py::test_reused_effective_identity_is_not_silently_deduplicated
+scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_duplicate_identity_rejection
+scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_reused_identity_rejection
+scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_duplicate_matrix_input_rejection
+scripts/sc/tests/tc_d1_cer/test_s28_cer.py::test_s28_cer_identity_execution_facts_control
+scripts/sc/tests/tc_d1_cer/test_s29.py::test_three_named_evaluation_seeds_are_approved_nonbaseline
+scripts/sc/tests/tc_d1_cer/test_s29.py::test_invalid_seed_classification_is_rejected[baseline]
+scripts/sc/tests/tc_d1_cer/test_s29.py::test_invalid_seed_classification_is_rejected[missing-classification]
+scripts/sc/tests/tc_d1_cer/test_s29.py::test_invalid_seed_classification_is_rejected[unapproved]
+scripts/sc/tests/tc_d1_cer/test_s2_cer.py::test_replay_receipt_declares_active_platform_behavior
+scripts/sc/tests/tc_d1_cer/test_s2_cer.py::test_successful_evidence_names_the_identity_of_the_inspected_package
+scripts/sc/tests/tc_d1_cer/test_s3.py::test_validator_rejects_verdict_without_real_execution_evidence
+scripts/sc/tests/tc_d1_cer/test_s30.py::test_successful_evidence_binds_exact_effective_inspected_content
+scripts/sc/tests/tc_d1_cer/test_s30.py::test_rollback_missing_baseline_observation_is_reported
+scripts/sc/tests/tc_d1_cer/test_s30.py::test_rollback_route_satisfies_complete_baseline_coverage_behavior
+scripts/sc/tests/tc_d1_cer/test_s30.py::test_consumer_calls_and_prior_route_capture_are_observed
+scripts/sc/tests/tc_d1_cer/test_s31-r1.py::test_present_nonexecuted_matrix_evidence_invalidates_named_case
+scripts/sc/tests/tc_d1_cer/test_s31-r2.py::test_each_consumer_transition_receipt_binds_route_identity
+scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_links_current_source_to_validator_processes
+scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing]
+scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing-execution]
+scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[stale]
+scripts/sc/tests/tc_d1_cer/test_s31-r3.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[mismatched]
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_binds_current_source_identity_to_real_execution_command
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing]
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[missing-execution]
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[stale]
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_verdict_rejects_missing_stale_or_mismatched_source_identity[mismatched]
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_present_nonexecuted_matrix_evidence_invalidates_named_case
+scripts/sc/tests/tc_d1_cer/test_s31.py::test_disable_rollback_and_reenable_receipts_bind_prior_and_candidate_identity
+scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[unchanged]
+scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[added]
+scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[deleted]
+scripts/sc/tests/tc_d1_cer/test_s32.py::test_tracked_membership_snapshot_accepts_only_unchanged_control[renamed]
+scripts/sc/tests/tc_d1_cer/test_s32.py::test_external_process_timeout_has_bounded_terminal_receipt
+scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[unchanged]
+scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[added]
+scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[deleted]
+scripts/sc/tests/tc_d1_cer/test_s32_cer.py::test_repository_relative_path_membership_is_preserved_or_rejected[renamed]
+scripts/sc/tests/tc_d1_cer/test_s33.py::test_repair_evidence_append_preserves_historical_prefix
+scripts/sc/tests/tc_d1_cer/test_s33.py::test_repair_evidence_rejects_historical_prefix_mutation[0]
+scripts/sc/tests/tc_d1_cer/test_s33.py::test_repair_evidence_rejects_historical_prefix_mutation[1]
+scripts/sc/tests/tc_d1_cer/test_s33_cer.py::test_external_process_timeout_has_bounded_terminal_receipt
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_complete_fixture_is_accepted_by_manifest_schema
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_recorded_manifest_has_three_inspectable_applicable_occurrences
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_missing_applicability_is_rejected[candidate-baseline-contamination]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_missing_applicability_is_rejected[self-hosted-knowledge-read-set-collision]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_missing_applicability_is_rejected[toolchain-policy-architecture-index-gap]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_empty_applicability_is_rejected[candidate-baseline-contamination]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_empty_applicability_is_rejected[self-hosted-knowledge-read-set-collision]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_each_empty_applicability_is_rejected[toolchain-policy-architecture-index-gap]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_occurrence_count_or_identity_change_is_rejected[duplicate]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_occurrence_count_or_identity_change_is_rejected[merged]
+scripts/sc/tests/tc_d1_cer/test_s34.py::test_occurrence_count_or_identity_change_is_rejected[fourth]
+scripts/sc/tests/tc_d1_cer/test_s35.py::test_matrix_case_rejects_identical_stable_and_candidate_fixture_state
+scripts/sc/tests/tc_d1_cer/test_s35.py::test_matrix_case_rejects_missing_subject_fixture_state_assignment
+scripts/sc/tests/tc_d1_cer/test_s35.py::test_aggregate_missing_matrix_case_is_invalid_and_lists_missing_case
+scripts/sc/tests/tc_d1_cer/test_s35.py::test_canonical_matrix_executes_distinct_stable_and_candidate_fixture_states
+scripts/sc/tests/tc_d1_cer/test_s35.py::test_six_case_aggregate_missing_execution_is_failed_with_missing_cases
+scripts/sc/tests/tc_d1_cer/test_s36.py::test_adversarial_validator_success_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[provenance]
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[applicability]
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[missing_labels]
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_seed_missing_fr6_required_field[counterexample]
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_missing_or_duplicate_named_seed[missing]
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_rmap_s2_rejects_missing_or_duplicate_named_seed[duplicate]
+scripts/sc/tests/tc_d1_cer/test_s37.py::test_manifest_fixture_contains_three_named_complete_seed_records
+scripts/sc/tests/tc_d1_cer/test_s38.py::test_matrix_error_label_invalidates_aggregate_and_is_preserved
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-review_input]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-review_run]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-review_candidate_binding]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-conformance_result]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-implementation_contract]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-command_registry]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-source_freeze]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[missing-requirements_mapping]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-review_input]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-review_run]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-review_candidate_binding]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-conformance_result]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-implementation_contract]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-command_registry]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-source_freeze]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[mismatched-requirements_mapping]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-review_input]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-review_run]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-review_candidate_binding]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-conformance_result]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-implementation_contract]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-command_registry]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-source_freeze]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_independent_dependency_closure_rejects_missing_or_mismatched_binding[stale-requirements_mapping]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_native_command_identity_change_rejects_historical_reuse[id-renamed]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_native_command_identity_change_rejects_historical_reuse[executable-substituted-python]
+scripts/sc/tests/tc_d1_cer/test_s39.py::test_s39_native_command_identity_change_rejects_historical_reuse[argv-replacement2]
+scripts/sc/tests/tc_d1_cer/test_s4.py::test_successful_evidence_is_bound_to_the_effective_inspected_content
+scripts/sc/tests/tc_d1_cer/test_s40.py::test_external_process_excess_output_is_unsuccessful_and_bounded
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_effective_inspection_has_independent_identity
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_successful_replay_has_independent_output_verification
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_target_identity_contains_independent_content_digest
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_matrix_has_exactly_six_executed_cases
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_matrix_cases_have_distinct_ids_and_inputs
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_escaping_target_fails_closed
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_unsupported_target_fails_before_processing
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_successful_result_has_independent_consumer_verification
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_missing_identity_facts_block_success
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_copied_matrix_evidence_invalidates_aggregate
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_illegal_target_is_rejected_before_validator
+scripts/sc/tests/tc_d1_cer/test_s41.py::test_invalid_package_control_cannot_become_success
+scripts/sc/tests/tc_d1_cer/test_s42.py::test_s42_always_success_validator_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s42.py::test_s42_historical_membership_changes_are_rejected
+scripts/sc/tests/tc_d1_cer/test_s42.py::test_six_matrix_cases_require_distinct_recorded_inputs_and_both_subjects
+scripts/sc/tests/tc_d1_cer/test_s42.py::test_duplicate_matrix_input_rejects_six_case_aggregate
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_only_acceptance_owner_publication_authorizes_empty_set
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_non_empty_authorization_set_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[malformed-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[omitted-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[unreadable-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_missing_or_malformed_artifact_fails_closed[missing-metadata-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value0-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value1-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[None-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[unexpected-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[invalid_value4-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[0-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-Replay]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-seed]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-matrix]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-review]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_named_non_empty_authorization_set_is_rejected[False-Quick Dev]
+scripts/sc/tests/tc_d1_cer/test_s43.py::test_negative_fixture_checks_real_preflight
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_verdict_binds_current_source_identity_to_real_execution_command
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_verdict_with_missing_source_identity_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_stale_matrix_evidence_is_invalid
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_stable_and_candidate_fixture_assignments_must_differ
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_nonexecuted_matrix_evidence_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_required_matrix_case_missing_is_invalid
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_duplicate_evidence_identity_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_bound_and_evidence_input_identity_mismatch_is_invalid
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_replay_records_reproducible_result
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_unverifiable_identity_is_rejected
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_the_replay_entry_used_for_execution
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_consumer_verification_records_real_commands_not_file_reads
+scripts/sc/tests/tc_d1_cer/test_s44.py::test_independent_matrix_requires_real_distinct_input_bindings
+scripts/sc/tests/tc_d1_cer/test_s45.py::test_changed_current_snapshot_invalidates_replay_observation
+scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_aggregate_prompt_budget_is_finite_and_observable
+scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_enable_records_real_candidate_route_invocation
+scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_reenable_records_real_candidate_route_invocation
+scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_rollback_restores_prior_route_through_real_call
+scripts/sc/tests/tc_d1_cer/test_s4_cer.py::test_consumer_manifest_is_complete_reconciled_and_frozen_before_review
+scripts/sc/tests/tc_d1_cer/test_s5.py::test_worker_delta_rejects_frozen_historical_path_rename
+scripts/sc/tests/tc_d1_cer/test_s6.py::test_historical_byte_mutation_is_rejected_by_the_snapshot_comparison
+scripts/sc/tests/tc_d1_cer/test_s6.py::test_repository_relative_path_relocation_is_rejected_by_the_snapshot_comparison
+scripts/sc/tests/tc_d1_cer/test_s6.py::test_historical_membership_addition_is_rejected_by_the_snapshot_comparison
+scripts/sc/tests/tc_d1_cer/test_s6.py::test_current_snapshot_requires_each_result_determining_input_category
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_stable_eligibility_requires_verified_provenance[stable-no-provenance]
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_stable_eligibility_requires_verified_provenance[stable-temporary-package]
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_adversarial_dependency_case_is_non_success_with_reason
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_adversarial_validator_case_is_non_success_with_diagnostic
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_missing_matrix_evidence_invalidates_aggregate
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_mislabeled_matrix_evidence_invalidates_aggregate
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_copied_matrix_evidence_invalidates_aggregate
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_wrong_target_matrix_evidence_invalidates_aggregate
+scripts/sc/tests/tc_d1_cer/test_s7.py::test_substituted_target_is_rejected_before_target_dependent_execution
+scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_reused_historical_evidence_cannot_authorize_current_replay
+scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_detached_probe_records_a_distinct_child_process
+scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_detached_probe_binds_input_target_outcome_and_output
+scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_always_success_validator_is_a_failed_probe_outcome
+scripts/sc/tests/tc_d1_cer/test_s7_cer.py::test_s7_consumer_disable_records_the_real_prior_route_call
+scripts/sc/tests/tc_d1_cer/test_s8.py::test_missing_target_is_rejected_before_target_content_is_accepted
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_runtime_allowed_change_is_rejected_before_entering_the_write_set
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_installed_skill_allowed_change_is_classified_forbidden_and_rejected[bmad-root]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_installed_skill_allowed_change_is_classified_forbidden_and_rejected[installed-bmad-skill]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_installed_skill_allowed_change_is_classified_forbidden_and_rejected[installed-gds-skill]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-e0]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d2]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d3]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d4]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d5]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_roadmap_implementation_scope_is_rejected_as_outside_tc_d1[tc-d6]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[miner]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[curator]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[autonomous-skill-modification]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[learned-ranking]
+scripts/sc/tests/tc_d1_cer/test_s8_cer.py::test_excluded_feature_proposal_is_rejected_with_scope_diagnostic[reinforcement-learning]
+scripts/sc/tests/tc_d1_cer/test_s9.py::test_consumer_manifest_reconciliation_has_no_missing_callers
+scripts/sc/tests/tc_d1_cer/test_s9.py::test_consumer_manifest_reconciliation_has_no_orphan_entries
+scripts/sc/tests/tc_d1_cer/test_s9.py::test_seed_schema_rejects_occurrence_without_counterexample_or_explicit_absence
+
+============================== warnings summary ===============================
+scripts\sc\tests\test_skill_package_replay.py:17
+  C:\buildgame\jimuyun\scripts\sc\tests\test_skill_package_replay.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("RMAP-FIX-ASSERTIONS")
+
+scripts\sc\tests\test_skill_package_replay_source_identity.py:18
+  C:\buildgame\jimuyun\scripts\sc\tests\test_skill_package_replay_source_identity.py:18: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-SM6-IDENTITY-RECONSTRUCTION-AND-FRESH-REPLAY")
+
+scripts\sc\tests\tc_d1_cer\test_s1.py:26
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s1.py:26: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-3-candidate-external-trust-independent-verification")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:13
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("assert-fr4-positive-probe-must-pass"),
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:14
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("assert-fr4-negative-probe-declared-defect-category"),
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:80
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:80: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-PROCESS")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:99
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:99: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-BINDINGS")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:125
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-833C8FA8A239-ALWAYS-SUCCESS-FALSE-NEGATIVE")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:152
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:152: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-431D-fresh-replay-1")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:170
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-REPLAY-CURRENT-SNAPSHOT-COMPLETE")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:171
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:171: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-REPLAY-SNAPSHOT-BINDING")
+
+scripts\sc\tests\tc_d1_cer\test_s10.py:194
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s10.py:194: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FCD3611EEC73-1")
+
+scripts\sc\tests\tc_d1_cer\test_s11.py:78
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s11.py:78: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F61D63C2F175-1")
+
+scripts\sc\tests\tc_d1_cer\test_s11.py:124
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s11.py:124: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F61D63C2F175-1")
+
+scripts\sc\tests\tc_d1_cer\test_s12.py:84
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s12.py:84: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F34-validator-independent")
+
+scripts\sc\tests\tc_d1_cer\test_s12.py:110
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s12.py:110: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F34-validator-independent")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:12
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")]
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:99
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:99: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-identity-execution-facts-gate")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:121
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:121: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("NFR-1.identity-execution-ambiguity-blocks-success")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:128
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-96518A7BEA24-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:138
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:138: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-2.skipped-consumer-rejects-success")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:145
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:145: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-reused-evidence-rejects-success")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:151
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-CCC2E767570E-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:164
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:164: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-5-A1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:176
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:176: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-25E-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:188
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:188: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6C67-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:201
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:201: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-C4A5591E2D9E-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:212
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:212: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-SM6-FRESH-SEMANTIC-REPLAY")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:226
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:226: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-236-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:233
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:233: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-D4C0A15CD173-A1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:246
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-D4C0A15CD173-A2")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:259
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:259: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D4C8E08364E2-1")
+
+scripts\sc\tests\tc_d1_cer\test_s13.py:274
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s13.py:274: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("NFR-7.aggregate-completes-within-bound")
+
+scripts\sc\tests\tc_d1_cer\test_s14.py:131
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s14.py:131: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s14.py:145
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s14.py:145: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s15.py:38
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s15.py:38: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D56F9D0379DE-1")
+
+scripts\sc\tests\tc_d1_cer\test_s16.py:16
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s16.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-54980B218554-fail-closed-unknown-fact")
+
+scripts\sc\tests\tc_d1_cer\test_s16.py:23
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s16.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-3C132B7C6354-runtime-evidence-append-boundary")
+
+scripts\sc\tests\tc_d1_cer\test_s17.py:52
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s17.py:52: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-27F-1")
+
+scripts\sc\tests\tc_d1_cer\test_s17.py:90
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s17.py:90: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-27F-2")
+
+scripts\sc\tests\tc_d1_cer\test_s17.py:112
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s17.py:112: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-0F67A5E3623D")
+
+scripts\sc\tests\tc_d1_cer\test_s17.py:131
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s17.py:131: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-C6F923EBD52F-1")
+
+scripts\sc\tests\tc_d1_cer\test_s18.py:102
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s18.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("added", marks=pytest.mark.cer_assertion(ASSERTION)),
+
+scripts\sc\tests\tc_d1_cer\test_s18.py:103
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s18.py:103: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("deleted", marks=pytest.mark.cer_assertion(ASSERTION)),
+
+scripts\sc\tests\tc_d1_cer\test_s18.py:104
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s18.py:104: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("renamed", marks=pytest.mark.cer_assertion(ASSERTION)),
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:109
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:109: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-BDE93E01BA76-1")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:125
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-EDCB-authority-nonprofile")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:151
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:151: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-5-A1")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:173
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:173: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F173-seed-provenance")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:190
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:190: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-1D1C29C76F06")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:207
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:207: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-220-1")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:208
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:208: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-220-2")
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:235
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s19.py:235: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F8C403BFB034-1")
+
+scripts\sc\tests\tc_d1_cer\test_s2.py:11
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s2.py:11: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("assert-platform-specific-declaration")]
+
+scripts\sc\tests\tc_d1_cer\test_s2.py:38
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s2.py:38: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
+
+scripts\sc\tests\tc_d1_cer\test_s2.py:39
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s2.py:39: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-platform-specific-declaration")
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:71
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:71: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    [pytest.param("independent", marks=pytest.mark.cer_assertion("A-NFR4-ISO-1"))],
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:94
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:94: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(False, marks=pytest.mark.cer_assertion("FR-11-exact-cover-no-orphans")),
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:95
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:95: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(True, marks=pytest.mark.cer_assertion("FR-11-exact-cover-no-orphans")),
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:110
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:110: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(False, marks=pytest.mark.cer_assertion("SM-1.required-witnesses-cover-every-atomic-obligation")),
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:111
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:111: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(True, marks=pytest.mark.cer_assertion("SM-1.required-witnesses-cover-every-atomic-obligation")),
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:149
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:149: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-2-adversarial-target-success-rejected")
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:162
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:162: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(False, marks=pytest.mark.cer_assertion("SM-1-atomic-inventory-bidirectional-exact-cover")),
+
+scripts\sc\tests\tc_d1_cer\test_s20.py:163
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s20.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(True, marks=pytest.mark.cer_assertion("SM-1-atomic-inventory-bidirectional-exact-cover")),
+
+scripts\sc\tests\tc_d1_cer\test_s21.py:18
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s21.py:18: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.parametrize('orphan',[pytest.param(False,marks=pytest.mark.cer_assertion('A-AE55AC232B50-1')),pytest.param(True,marks=pytest.mark.cer_assertion('A-AE55AC232B50-1'))])
+
+scripts\sc\tests\tc_d1_cer\test_s21.py:32
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s21.py:32: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('A-ACEC1E3A90A2-1')
+
+scripts\sc\tests\tc_d1_cer\test_s22.py:17
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s22.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-EA5137E46B75-1")
+
+scripts\sc\tests\tc_d1_cer\test_s23.py:45
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s23.py:45: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-SUPPORT-POLICY-INDEPENDENT-CHECK")
+
+scripts\sc\tests\tc_d1_cer\test_s23.py:60
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s23.py:60: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("compatibility-independent-result")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:11
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:11: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-6F1570D39AE8-1")]
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:48
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:48: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6F1570D39AE8-1")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:49
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-PINNED-FRESH-VERDICT-REPRODUCTION")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:63
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:63: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-171D94D47E51-PINNED-INPUT-FRESH-CHECKOUT-REPRODUCTION")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:78
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:78: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-1BF52DFD1858-CANDIDATE-EXTERNAL-TRUST-INDEPENDENCE")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:93
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-F53D7DB64BB9-1")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:107
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:107: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-CC96C206074F-EVIDENCE-ISOLATION")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:124
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:124: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-EFFECTIVE-INSPECTION-WITNESS")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:139
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:139: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-REPLAY-CONSUMER-INDEPENDENT-VERIFICATION")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:152
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:152: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-D0E9D60AA620-1")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:163
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F397-PLATFORM-BEHAVIOR-DECLARED")
+
+scripts\sc\tests\tc_d1_cer\test_s24.py:176
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s24.py:176: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-SM5-INDEPENDENT-TARGET-VERIFICATION")
+
+scripts\sc\tests\tc_d1_cer\test_s25.py:6
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s25.py:6: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-7C4C-isolated-evidence")]
+
+scripts\sc\tests\tc_d1_cer\test_s25.py:14
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s25.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7C4C-isolated-evidence")
+
+scripts\sc\tests\tc_d1_cer\test_s25.py:15
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s25.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-51605D0F7943-ESCAPING-TARGET")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:11
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:11: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-AF55FF781031-1")]
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:74
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-AF55FF781031-1")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:75
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-fr4-positive-probe-must-pass")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:83
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:83: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-fr4-negative-probe-declared-defect-category")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:93
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("RMAP-R6-S1")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:104
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:104: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-5-non-authority-binding-independent-verification")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:113
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:113: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-E89D613529C4-1")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:122
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:122: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D191B8A1BFB4-1")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:123
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:123: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D191B8A1BFB4-2")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:133
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:133: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-43C7-windows-support-1")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:141
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:141: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-8-wrong-target-evidence-invalidates-aggregate")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:150
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:150: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-2-adversarial-dependency-success-rejection")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:158
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-2-stale-input-success-rejection")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:167
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:167: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-36747B1BB805-six-cases-two-subjects-complete-coverage")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:177
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:177: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-31D7DE0B840F-stable-subject-immutable-six-cases")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:191
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-370AAFBB0DAC-budget-exhaustion-unsuccessful")
+
+scripts\sc\tests\tc_d1_cer\test_s26.py:213
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s26.py:213: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-2B2BDE7F47B2-infrastructure-false-negative-fails")
+
+scripts\sc\tests\tc_d1_cer\test_s27.py:59
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s27.py:59: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-8A9DD7306479-1")
+
+scripts\sc\tests\tc_d1_cer\test_s27.py:69
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s27.py:69: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-8A9DD7306479-1")
+
+scripts\sc\tests\tc_d1_cer\test_s27.py:80
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s27.py:80: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR7-ATTR-1")
+
+scripts\sc\tests\tc_d1_cer\test_s27.py:96
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s27.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR7-ATTR-1")
+
+scripts\sc\tests\tc_d1_cer\test_s28.py:12
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-7817-distinct-inputs")]
+
+scripts\sc\tests\tc_d1_cer\test_s28.py:62
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28.py:62: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7817-distinct-inputs")
+
+scripts\sc\tests\tc_d1_cer\test_s28.py:63
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28.py:63: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7051147536AB-1")
+
+scripts\sc\tests\tc_d1_cer\test_s28.py:89
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:13
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-70341EC7ADE8-1"),
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:14
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-7051147536AB-1"),
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:15
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:15: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-FR4-ASF-1"),
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:16
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("FR5-PATH-MEMBERSHIP"),
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:26
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:26: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR4-ASF-1")
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:35
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:35: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-70341EC7ADE8-1")
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:89
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7817-distinct-inputs")
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:106
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:106: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7817-distinct-inputs")
+
+scripts\sc\tests\tc_d1_cer\test_s42.py:107
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s42.py:107: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7051147536AB-1")
+
+scripts\sc\tests\tc_d1_cer\test_s28_cer.py:18
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28_cer.py:18: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7051147536AB-1")
+
+scripts\sc\tests\tc_d1_cer\test_s28_cer.py:23
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28_cer.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM2-EFFECTIVE-IDENTITY-REUSE")
+
+scripts\sc\tests\tc_d1_cer\test_s28_cer.py:28
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28_cer.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7817-distinct-inputs")
+
+scripts\sc\tests\tc_d1_cer\test_s28_cer.py:33
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s28_cer.py:33: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-identity-execution-facts-gate")
+
+scripts\sc\tests\tc_d1_cer\test_s29.py:74
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s29.py:74: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("three-evaluation-seeds-approved-nonbaseline")
+
+scripts\sc\tests\tc_d1_cer\test_s29.py:92
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s29.py:92: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("three-evaluation-seeds-approved-nonbaseline")
+
+scripts\sc\tests\tc_d1_cer\test_s2_cer.py:19
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s2_cer.py:19: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-platform-specific-declaration")
+
+scripts\sc\tests\tc_d1_cer\test_s2_cer.py:67
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s2_cer.py:67: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
+
+scripts\sc\tests\tc_d1_cer\test_s3.py:12
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s3.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-E489B3A7974A-1")
+
+scripts\sc\tests\tc_d1_cer\test_s30.py:59
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s30.py:59: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6634-1")
+
+scripts\sc\tests\tc_d1_cer\test_s30.py:135
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s30.py:135: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6BE2-1")
+
+scripts\sc\tests\tc_d1_cer\test_s30.py:143
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s30.py:143: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6BE2-1")
+
+scripts\sc\tests\tc_d1_cer\test_s31-r1.py:54
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r1.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('FR8-NONEXECUTED-EVIDENCE')
+
+scripts\sc\tests\tc_d1_cer\test_s31-r2.py:56
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r2.py:56: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR10-EA625B1D3DFB")
+
+scripts\sc\tests\tc_d1_cer\test_s31-r3.py:66
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r3.py:66: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION")
+
+scripts\sc\tests\tc_d1_cer\test_s31-r3.py:114
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r3.py:114: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    marks=pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE"),
+
+scripts\sc\tests\tc_d1_cer\test_s31-r3.py:119
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r3.py:119: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    marks=pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION"),
+
+scripts\sc\tests\tc_d1_cer\test_s31-r3.py:127
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r3.py:127: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    marks=pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE"),
+
+scripts\sc\tests\tc_d1_cer\test_s31-r3.py:135
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31-r3.py:135: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    marks=pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE"),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:13
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION"),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:14
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE"),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:123
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:123: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION")
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:158
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:158: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param({"source_identity": None, "execution_evidence": None}, id="missing", marks=pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE")),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:159
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:159: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param({"source_identity": CURRENT_SOURCE, "execution_evidence": None}, id="missing-execution", marks=pytest.mark.cer_assertion("A-VERDICT-REAL-EXECUTION")),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:160
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:160: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param({"source_identity": {"path": SOURCE_PATH, "sha256": "sha256:" + "0" * 64}, "execution_evidence": {"command": ["stale-command"], "exit_code": 0}}, id="stale", marks=pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE")),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:161
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:161: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param({"source_identity": {"path": "other.py", "sha256": CURRENT_SOURCE["sha256"]}, "execution_evidence": {"command": ["other.py"], "exit_code": 0}}, id="mismatched", marks=pytest.mark.cer_assertion("A-VERDICT-SOURCE-IDENTITY-TRACE")),
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:176
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:176: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR8-NONEXECUTED-EVIDENCE")
+
+scripts\sc\tests\tc_d1_cer\test_s31.py:205
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s31.py:205: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR10-EA625B1D3DFB")
+
+scripts\sc\tests\tc_d1_cer\test_s32.py:14
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s32.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-NFR7-EXTERNAL-PROCESS-BOUNDED")]
+
+scripts\sc\tests\tc_d1_cer\test_s32.py:62
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s32.py:62: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-70341EC7ADE8-1")
+
+scripts\sc\tests\tc_d1_cer\test_s32.py:95
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s32.py:95: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-NFR7-EXTERNAL-PROCESS-BOUNDED")
+
+scripts\sc\tests\tc_d1_cer\test_s32_cer.py:32
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s32_cer.py:32: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR5-PATH-MEMBERSHIP")
+
+scripts\sc\tests\tc_d1_cer\test_s33.py:44
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s33.py:44: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s33.py:65
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s33.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s33_cer.py:76
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s33_cer.py:76: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-NFR7-EXTERNAL-PROCESS-BOUNDED")
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:24
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:24: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(index, id=occurrence, marks=pytest.mark.cer_assertion(ASSERTION))
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:28
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:28: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param(mutation, id=mutation, marks=pytest.mark.cer_assertion(ASSERTION))
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:89
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:89: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:95
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:95: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:117
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:117: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:126
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:126: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s34.py:135
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s34.py:135: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s35.py:61
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s35.py:61: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-DEFC156FA96B-1")
+
+scripts\sc\tests\tc_d1_cer\test_s35.py:86
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s35.py:86: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-DEFC156FA96B-1")
+
+scripts\sc\tests\tc_d1_cer\test_s35.py:114
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s35.py:114: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-E9FF07C7AD8D-1")
+
+scripts\sc\tests\tc_d1_cer\test_s35.py:152
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s35.py:152: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-3-A1")
+
+scripts\sc\tests\tc_d1_cer\test_s36.py:55
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s36.py:55: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-7C7AF-adversarial-reject")
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:82
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:82: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("provenance", marks=pytest.mark.cer_assertion(ASSERTION_FIELDS)),
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:83
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:83: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("applicability", marks=pytest.mark.cer_assertion(ASSERTION_FIELDS)),
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:84
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:84: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("missing_labels", marks=pytest.mark.cer_assertion(ASSERTION_FIELDS)),
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:85
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:85: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("counterexample", marks=pytest.mark.cer_assertion(ASSERTION_FIELDS)),
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:106
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:106: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("missing", marks=pytest.mark.cer_assertion(ASSERTION_EXACTLY_ONCE)),
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:107
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:107: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.param("duplicate", marks=pytest.mark.cer_assertion(ASSERTION_EXACTLY_ONCE)),
+
+scripts\sc\tests\tc_d1_cer\test_s37.py:124
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s37.py:124: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION_FIELDS)
+
+scripts\sc\tests\tc_d1_cer\test_s38.py:22
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s38.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-F5A025B7814C-1")
+
+scripts\sc\tests\tc_d1_cer\test_s39.py:112
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s39.py:112: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(DEPENDENCY_ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s39.py:147
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s39.py:147: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(COMMAND_ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s4.py:12
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-B4382B18F0CA-1")]
+
+scripts\sc\tests\tc_d1_cer\test_s4.py:35
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4.py:35: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-B4382B18F0CA-1")
+
+scripts\sc\tests\tc_d1_cer\test_s4.py:36
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4.py:36: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-2-SUCCESSFUL-EVIDENCE-EFFECTIVE-CONTENT-BINDING")
+
+scripts\sc\tests\tc_d1_cer\test_s40.py:56
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s40.py:56: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(ASSERTION)
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:49
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-429F-1")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:57
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:57: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-42BC-output-1")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:70
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:70: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-6DA5F4052C6D-1")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:79
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:79: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-MATRIX-COUNT-6")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:86
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:86: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-MATRIX-DISTINCT")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:96
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-108EF1A37200")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:102
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-392B52C3CA23-unsupported-fails-closed")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:108
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:108: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-3D7C2B729F95-independent-consumer-verification")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:116
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-3E035D737A50-missing-facts-block-success")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:123
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:123: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-8-aggregate-invalid-on-copied-evidence")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:130
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:130: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR1-ILLEGAL-TARGET-FAILS-CLOSED")
+
+scripts\sc\tests\tc_d1_cer\test_s41.py:139
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s41.py:139: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM2-INVALID-PACKAGE-REJECTS-SUCCESS")
+
+scripts\sc\tests\tc_d1_cer\test_s43.py:44
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s43.py:44: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-E27D4A209E25-1")
+
+scripts\sc\tests\tc_d1_cer\test_s43.py:60
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s43.py:60: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FE5BCD96B20D-1")
+
+scripts\sc\tests\tc_d1_cer\test_s43.py:70
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s43.py:70: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FE5BCD96B20D-2")
+
+scripts\sc\tests\tc_d1_cer\test_s43.py:93
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s43.py:93: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FE5BCD96B20D-1")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:87
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:87: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-12738417684F")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:109
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:109: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-12738417684F")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:131
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:131: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-8AD58EB8B159-1")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:139
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:139: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-B572-1")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:148
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:148: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-B572-2")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:156
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:156: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-B5F-1")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:163
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-B5F-2")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:170
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:170: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-EEB6-stale-invalid")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:178
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:178: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-10-A1")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:185
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:185: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-0C8536BAA793")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:193
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:193: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("fresh-checkout-coverage-reproducibility")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:200
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:200: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("fresh-checkout-coverage-reproducibility")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:216
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:216: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("consumer-call-surface-is-real")
+
+scripts\sc\tests\tc_d1_cer\test_s44.py:246
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s44.py:246: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("matrix-case-binds-real-input")
+
+scripts\sc\tests\tc_d1_cer\test_s45.py:27
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s45.py:27: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR12-UNEXPLAINED-INPUT-DRIFT-STALE-OR-CLOSED")
+
+scripts\sc\tests\tc_d1_cer\test_s4_cer.py:22
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4_cer.py:22: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-B4382B18F0CA-1")
+
+scripts\sc\tests\tc_d1_cer\test_s4_cer.py:62
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4_cer.py:62: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FC484EFFC69B-ENABLE-REAL-CONSUMER")
+
+scripts\sc\tests\tc_d1_cer\test_s4_cer.py:75
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4_cer.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-FR10-REAL-CONSUMER-REENABLE")
+
+scripts\sc\tests\tc_d1_cer\test_s4_cer.py:88
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4_cer.py:88: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-C36692C61A9F-ROLLBACK-REAL-CALL")
+
+scripts\sc\tests\tc_d1_cer\test_s4_cer.py:102
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s4_cer.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("O-EE26E3809DAA-CONSUMER-MANIFEST-FREEZE")
+
+scripts\sc\tests\tc_d1_cer\test_s5.py:8
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s5.py:8: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-5A24A14515F4-frozen-historical-paths-unchanged")
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:12
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-D44384-IMMUTABLE-CANDIDATE"),
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:13
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.cer_assertion("A-D44384-SIX-CASES"),
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:75
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D44384-IMMUTABLE-CANDIDATE")
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:76
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:76: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-88F036CDC1A1-BYTE-IMMUTABILITY")
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:96
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:96: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR5-REPOSITORY_RELATIVE_PATHS-UNCHANGED")
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:120
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:120: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-FR5-HISTORICAL-MEMBERSHIP-UNCHANGED")
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:144
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:144: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-D44384-SIX-CASES")
+
+scripts\sc\tests\tc_d1_cer\test_s6.py:145
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s6.py:145: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-SM6-SNAPSHOT-COMPLETE")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:12
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    _CER_ASSERTION_BINDINGS = [pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")]
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:65
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:65: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:66
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:66: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-BBD73A1FB59F-01")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:91
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:91: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-2C811F501475-ADVERSARIAL-DEPENDENCY-REJECTS-SUCCESS")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:102
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-F1B89B76738E-1")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:113
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:113: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-FR8-MISSING-MATRIX-INVALIDATES-AGGREGATE")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:123
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:123: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-85124C301540-MISLABELED-MATRIX-EVIDENCE-INVALIDATES")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:133
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:133: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-B3386BF4E61D-01")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:143
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:143: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-8-WRONG-TARGET-INVALIDATES-AGGREGATE")
+
+scripts\sc\tests\tc_d1_cer\test_s7.py:153
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7.py:153: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("FR-1-SUBSTITUTED-TARGET-FAILS-CLOSED")
+
+scripts\sc\tests\tc_d1_cer\test_s7_cer.py:27
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7_cer.py:27: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR5-HISTORICAL-NONAUT")
+
+scripts\sc\tests\tc_d1_cer\test_s7_cer.py:51
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7_cer.py:51: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-PROCESS")
+
+scripts\sc\tests\tc_d1_cer\test_s7_cer.py:56
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7_cer.py:56: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-2B7C47734A05-PROBE-BINDINGS")
+
+scripts\sc\tests\tc_d1_cer\test_s7_cer.py:61
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7_cer.py:61: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-833C8FA8A239-ALWAYS-SUCCESS-FALSE-NEGATIVE")
+
+scripts\sc\tests\tc_d1_cer\test_s7_cer.py:66
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s7_cer.py:66: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-O-50826FFB04E3-DISABLE-REAL-CALL")
+
+scripts\sc\tests\tc_d1_cer\test_s8.py:23
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s8.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-FR1-MISSING-TARGET-1")
+
+scripts\sc\tests\tc_d1_cer\test_s8_cer.py:59
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s8_cer.py:59: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-O-B394EE3A39B1-01")
+
+scripts\sc\tests\tc_d1_cer\test_s8_cer.py:75
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s8_cer.py:75: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("SM-6-INSTALLED-BMAD-GDS-WRITE-PROTECTION")
+
+scripts\sc\tests\tc_d1_cer\test_s8_cer.py:99
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s8_cer.py:99: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("ASSERT-A17-ROADMAP-SCOPE-REJECTION")
+
+scripts\sc\tests\tc_d1_cer\test_s8_cer.py:125
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s8_cer.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("TC-D1-A17")
+
+scripts\sc\tests\tc_d1_cer\test_s9.py:66
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s9.py:66: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-675D-1")
+
+scripts\sc\tests\tc_d1_cer\test_s9.py:76
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s9.py:76: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("A-675D-2")
+
+scripts\sc\tests\tc_d1_cer\test_s9.py:125
+  C:\buildgame\jimuyun\scripts\sc\tests\tc_d1_cer\test_s9.py:125: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion("assert-three-seed-occurrences-covered")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+340 tests collected in 0.84s

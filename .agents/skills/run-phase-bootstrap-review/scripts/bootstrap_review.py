@@ -238,7 +238,7 @@ CODEX_EXEC_POLICY_KEYS = {
     "roundModelOverrides", "roundReasoningEffortOverrides", "reasoningEffortByRole",
 }
 REASONING_ROLES = (*REVIEWER_ROLES, "independent_verifier")
-ALLOWED_REASONING_EFFORTS = {"medium", "high", "max"}
+ALLOWED_REASONING_EFFORTS = {"medium", "high", "xhigh", "max"}
 VERIFIER_POLICY_KEYS = {
     "preferredModel", "escalatedModel", "fallbackModels", "modelEscalateOnSeverities",
     "modelEscalateOnDimensions", "modelEscalateOnRiskClasses", "defaultReasoningEffort",
@@ -1057,27 +1057,27 @@ def load_profile(name: str) -> dict[str, Any]:
     round_models = codex_policy.get("roundModelOverrides")
     round_reasoning = codex_policy.get("roundReasoningEffortOverrides")
     if (
-        (round_models != {} if focused else round_models != {"3": "gpt-5.6-sol"})
+        (round_models != {} if focused else round_models != {"3": "gpt-6-sol"})
         or not isinstance(round_reasoning, dict)
         or (set(round_reasoning) != set() if focused else set(round_reasoning) != {"3"})
         or (not focused and not isinstance(round_reasoning.get("3"), dict))
         or (not focused and set(round_reasoning["3"]) != set(LAYERS))
-        or (not focused and any(value != "high" for value in round_reasoning["3"].values()))
-        or "gpt-5.6-sol" in codex_policy["forbiddenModels"]
+        or (not focused and any(value != "xhigh" for value in round_reasoning["3"].values()))
+        or "gpt-6-sol" in codex_policy["forbiddenModels"]
     ):
         raise BootstrapError("Bootstrap profile has an invalid round-specific Codex route")
     verifier_policy = profile.get("verifierPolicy")
     if (
         not isinstance(verifier_policy, dict)
         or set(verifier_policy) != VERIFIER_POLICY_KEYS
-        or verifier_policy.get("preferredModel") != "gpt-5.6-terra"
-        or verifier_policy.get("escalatedModel") != "gpt-5.6-sol"
+        or verifier_policy.get("preferredModel") != "gpt-6-sol"
+        or verifier_policy.get("escalatedModel") != "gpt-6-sol"
         or verifier_policy.get("fallbackModels") != []
         or verifier_policy.get("modelEscalateOnSeverities") != ["P0"]
         or verifier_policy.get("modelEscalateOnDimensions") != ["security"]
         or verifier_policy.get("modelEscalateOnRiskClasses") != VERIFIER_MODEL_ESCALATION_CLASSES
-        or verifier_policy.get("defaultReasoningEffort") != "high"
-        or verifier_policy.get("escalatedReasoningEffort") != "max"
+        or verifier_policy.get("defaultReasoningEffort") != "medium"
+        or verifier_policy.get("escalatedReasoningEffort") != "high"
         or verifier_policy.get("escalateOnSeverities") != ["P0"]
         or verifier_policy.get("escalateOnDimensions") != ["security"]
     ):
@@ -1190,6 +1190,7 @@ def verifier_execution_route(
     effort_escalated = any(
         item.get("proposedSeverity") in policy["escalateOnSeverities"]
         or item.get("dimension") in policy["escalateOnDimensions"]
+        or item.get("verifierRiskClass") in policy.get("modelEscalateOnRiskClasses", [])
         for item in values
         if isinstance(item, dict)
     )
@@ -1672,7 +1673,7 @@ def _matching_cost_cohort(
 def legacy_review_cost_estimate(
     profile: dict[str, Any], artifacts: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    effort_units = {"medium": 1, "high": 2, "max": 3}
+    effort_units = {"medium": 1, "high": 2, "xhigh": 3, "max": 4}
     reviewer_units = sum(
         effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
         for layer in profile["requiredLayers"]
@@ -1713,7 +1714,7 @@ def legacy_review_cost_estimate(
 def baseline_only_review_cost_estimate(
     profile: dict[str, Any], artifacts: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    effort_units = {"medium": 1, "high": 2, "max": 3}
+    effort_units = {"medium": 1, "high": 2, "xhigh": 3, "max": 4}
     reviewer_units = sum(
         effort_units[profile["codexExecPolicy"]["reasoningEffortByRole"][layer]]
         for layer in profile["requiredLayers"]
@@ -1738,7 +1739,7 @@ def review_cost_estimate(
     calibration_ref: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     calibration, resolved_calibration_ref = load_cost_calibration(calibration_ref)
-    effort_units = {"medium": 1, "high": 2, "max": 3}
+    effort_units = {"medium": 1, "high": 2, "xhigh": 3, "max": 4}
     route_owner = {**profile, "fullReviewRound": full_review_round}
     reviewer_units = sum(
         effort_units[reviewer_execution_route(route_owner, layer)["reasoningEffort"]]

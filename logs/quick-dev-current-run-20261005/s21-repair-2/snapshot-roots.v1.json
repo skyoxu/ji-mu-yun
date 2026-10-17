@@ -1,0 +1,47 @@
+[
+  {
+    "root_kind": "candidate_tree",
+    "repository_relative_posix_paths": [
+      "scripts/sc/_semantic_gate_all_runtime.py"
+    ],
+    "inclusion_reason": "S21 current production candidate"
+  },
+  {
+    "root_kind": "plan",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "inclusion_reason": "current canonical plan"
+  },
+  {
+    "root_kind": "contract",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "inclusion_reason": "current semantic contract"
+  },
+  {
+    "root_kind": "descriptor",
+    "repository_relative_posix_path": "logs/quick-dev-current-run-20261005/s21-repair-2/descriptors",
+    "inclusion_reason": "current descriptors"
+  },
+  {
+    "root_kind": "fixture",
+    "repository_relative_posix_paths": [
+      ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py",
+      "scripts/sc/tests/tc_d1_cer/test_s21.py"
+    ],
+    "inclusion_reason": "S21 current inputs"
+  },
+  {
+    "root_kind": "source",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+    "inclusion_reason": "canonical source"
+  },
+  {
+    "root_kind": "validator_judge",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+    "inclusion_reason": "current judge"
+  },
+  {
+    "root_kind": "plan_state_transition",
+    "repository_relative_posix_path": "logs/quick-dev-current-run-20261005/s21-repair-2",
+    "inclusion_reason": "current run state"
+  }
+]

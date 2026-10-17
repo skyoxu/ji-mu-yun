@@ -1,0 +1,16 @@
+..F                                                                      [100%]
+================================== FAILURES ===================================
+_________________________________ test_extra __________________________________
+
+    @pytest.mark.cer_assertion('AS-1')
+    def test_extra():
+     print('FAILURE_ID:FAIL-1')
+>    assert False
+E    assert False
+
+tests\test_one.py:16: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:FAIL-1
+=========================== short test summary info ===========================
+FAILED tests/test_one.py::test_extra - assert False
+1 failed, 2 passed in 0.08s

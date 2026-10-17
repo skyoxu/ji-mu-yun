@@ -1,0 +1,11 @@
+test_graph_and_routing_reject_projection_loss (test_repair_plan.ReviewRepairTests.test_graph_and_routing_reject_projection_loss) ... ok
+test_new_acceptances_have_independent_positive_and_negative_assertions (test_repair_plan.ReviewRepairTests.test_new_acceptances_have_independent_positive_and_negative_assertions) ... ok
+test_old_acceptance_and_failure_ids_cannot_survive (test_repair_plan.ReviewRepairTests.test_old_acceptance_and_failure_ids_cannot_survive) ... ok
+test_only_two_obligations_and_slices_change (test_repair_plan.ReviewRepairTests.test_only_two_obligations_and_slices_change) ... ok
+test_protected_paths_are_not_added_and_generation_is_deterministic (test_repair_plan.ReviewRepairTests.test_protected_paths_are_not_added_and_generation_is_deterministic) ... ok
+test_unreviewed_baseline_is_rejected (test_repair_plan.ReviewRepairTests.test_unreviewed_baseline_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.083s
+
+OK

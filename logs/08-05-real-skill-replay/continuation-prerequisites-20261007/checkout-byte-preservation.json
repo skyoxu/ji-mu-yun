@@ -1,0 +1,13 @@
+{
+  "schema": "jimuyun.checkout-byte-preservation.v1",
+  "historical_path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json",
+  "raw_bytes": 1731,
+  "raw_sha256": "4bfa9206a23122810ec7c41783ce8c6866d91917ab1633a795891a2937c596d9",
+  "head_blob": "6f20cab3ff2d01ecc515777551603429e3105a7c",
+  "working_clean_filter_blob": "6f20cab3ff2d01ecc515777551603429e3105a7c",
+  "working_bytes_equal_head": true,
+  "normalization_only_status_before": " M execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json\n",
+  "status_after": "",
+  "action": "Clone-local exact-path -text attribute preserves the existing mixed-EOL blob. No tracked bytes or index entries were changed.",
+  "authorizes": []
+}

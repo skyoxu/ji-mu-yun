@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SC_DIR = REPO_ROOT / "scripts" / "sc"
@@ -16,6 +18,24 @@ if str(SC_DIR) not in sys.path:
 
 from _change_scope import classify_change_scope_between_snapshots  # noqa: E402
 from _git_snapshot import current_git_fingerprint, git_snapshots_match, has_complete_content_identity  # noqa: E402
+
+
+_CURRENT_SNAPSHOT_INPUT_CATEGORIES = {
+    "git_baseline",
+    "skill_input_v2_selection",
+    "skill_input_v2_content",
+    "code",
+    "fixtures",
+    "contracts",
+    "consumers",
+    "tests",
+    "targets",
+    "validators",
+    "dependencies",
+    "sources",
+    "evidence",
+    "normalization_policy",
+}
 
 
 def _git(root: Path, *args: str) -> None:
@@ -38,7 +58,7 @@ class GitSnapshotTests(unittest.TestCase):
         _git(root, "commit", "-m", "base")
 
     def test_dirty_tracked_bytes_change_with_same_status_is_not_same_snapshot(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as directory:
             root = Path(directory)
             self._repository(root)
             (root / "tracked.txt").write_text("first\n", encoding="utf-8")
@@ -56,7 +76,7 @@ class GitSnapshotTests(unittest.TestCase):
             self.assertNotEqual(unchanged_scope["change_fingerprint"], scope["change_fingerprint"])
 
     def test_staged_and_untracked_bytes_are_part_of_snapshot_identity(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as directory:
             root = Path(directory)
             self._repository(root)
             (root / "tracked.txt").write_text("staged-one\n", encoding="utf-8")
@@ -77,7 +97,7 @@ class GitSnapshotTests(unittest.TestCase):
             self.assertFalse(git_snapshots_match(untracked_one, untracked_two))
 
     def test_legacy_fingerprint_does_not_match_current_versioned_fingerprint(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as directory:
             root = Path(directory)
             self._repository(root)
             current = current_git_fingerprint(root=root)
@@ -86,7 +106,7 @@ class GitSnapshotTests(unittest.TestCase):
             self.assertFalse(git_snapshots_match(legacy, current))
 
     def test_tampered_or_unknown_versioned_fingerprint_fails_closed(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(dir=REPO_ROOT) as directory:
             root = Path(directory)
             self._repository(root)
             current = current_git_fingerprint(root=root)
@@ -105,7 +125,7 @@ class GitSnapshotTests(unittest.TestCase):
 
     def test_special_index_flags_make_snapshot_incomplete(self) -> None:
         for flag in ("--assume-unchanged", "--skip-worktree"):
-            with self.subTest(flag=flag), tempfile.TemporaryDirectory() as directory:
+            with self.subTest(flag=flag), tempfile.TemporaryDirectory(dir=REPO_ROOT) as directory:
                 root = Path(directory)
                 self._repository(root)
                 _git(root, "update-index", flag, "tracked.txt")
@@ -114,6 +134,35 @@ class GitSnapshotTests(unittest.TestCase):
 
                 self.assertFalse(has_complete_content_identity(snapshot))
                 self.assertIn("git_special_index_flags_present", snapshot["content_identity"]["error_codes"])
+
+
+@pytest.mark.cer_assertion("ASSERT-SM6-SNAPSHOT-COMPLETE")
+def test_current_snapshot_requires_each_result_determining_input_category() -> None:
+    with tempfile.TemporaryDirectory(dir=REPO_ROOT) as directory:
+        root = Path(directory)
+        _git(root, "init")
+        _git(root, "config", "user.email", "review@example.invalid")
+        _git(root, "config", "user.name", "Review Test")
+        (root / "tracked.txt").write_text("base\n", encoding="utf-8")
+        _git(root, "add", "tracked.txt")
+        _git(root, "commit", "-m", "base")
+
+        snapshot = current_git_fingerprint(root=root)
+        inputs = snapshot.get("result_determining_inputs")
+        snapshot_complete = (
+            has_complete_content_identity(snapshot)
+            and isinstance(inputs, dict)
+            and _CURRENT_SNAPSHOT_INPUT_CATEGORIES <= set(inputs)
+            and all(
+                isinstance(inputs[category], dict)
+                and isinstance(inputs[category].get("immutable_identity"), str)
+                and inputs[category]["immutable_identity"].startswith("sha256:")
+                for category in _CURRENT_SNAPSHOT_INPUT_CATEGORIES
+            )
+        )
+        if not snapshot_complete:
+            print("FAILURE_ID:SNAPSHOT_INPUT_OMISSION_REJECTED")
+        assert snapshot_complete, "the Current Snapshot omitted a result-determining input category"
 
 
 if __name__ == "__main__":

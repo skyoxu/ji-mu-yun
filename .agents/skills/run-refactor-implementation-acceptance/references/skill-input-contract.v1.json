@@ -4,7 +4,7 @@
   "mode": "strict",
   "trigger": "after acceptance prerequisites, before start-or-resume",
   "source_roles": {
-    "implementation_target": {"selector": "implementation_target", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]},
+    "implementation_target": {"selector": "implementation_target", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"], "payload": false},
     "acceptance_requirements": {"selector": "acceptance_requirements", "required": true, "root": "repository", "allowed_kinds": ["file", "directory"], "reference_kinds": ["markdown-link", "json-path-field"]}
   },
   "operations": {

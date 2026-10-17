@@ -1,0 +1,55 @@
+{
+  "schema": "jimuyun.direct-verification-repair-handoff.v1",
+  "base_commit": "7a8ddaabd78c8da766529e27b2ae66ed2b2060c3",
+  "status": "online-repair-verified-windows-full-scope-pending",
+  "platform": "linux",
+  "python": "3.12.14",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": [],
+  "original_r2_scope_count_reported": 587,
+  "original_r2_scope_independently_available": false,
+  "earlier_documented_scope_collected": 340,
+  "checks": {
+    "watchdog_regressions": {
+      "passed": 5,
+      "skipped": 0,
+      "evidence": "watchdog-published.xml"
+    },
+    "existing_unittest": {
+      "passed": 32,
+      "failures": 0,
+      "errors": 0,
+      "evidence": "unittest-stderr.txt"
+    },
+    "native_s13": {
+      "passed": 17,
+      "skipped": 0,
+      "source_stable": true,
+      "evidence": "native-s13/summary.json"
+    },
+    "native_base_replay_final_cli": {
+      "passed": 8,
+      "skipped": 0,
+      "source_stable": true,
+      "evidence": "native-unit/summary.json"
+    },
+    "scope_mismatch": {
+      "collected": 340,
+      "requested": 587,
+      "status": "blocked-before-pytest-execution",
+      "evidence": "scope-mismatch/summary.json"
+    },
+    "git_diff_check": {
+      "exit_code": 0
+    }
+  },
+  "published_source_sha256": {
+    "scripts/sc/skill_replay_runtime.py": "1c333e76b32b36211219d94d5951ee8f548f58776bc38788bcfcbd028dd616b6",
+    "scripts/sc/verify_skill_replay.py": "05b117a64b2da19d9c3a65f3dbc377c5e729c112c058ca94e3d481f9ff75b814",
+    "scripts/sc/tests/test_skill_replay_verification.py": "9c8361ff806eae49f2e176a61a3304d9bd5e46dcff767745a791b07031a34008",
+    "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md": "7fbc81af0470a004f4da66d0daf35f96d3502517f92e66b7623141dd14fe694c"
+  },
+  "limitation": "No original Windows hung node or 587-test command is independently available. No whole-suite or Windows pass claimed. See README for source epochs."
+}

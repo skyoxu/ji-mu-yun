@@ -79,7 +79,7 @@ def validate_policy(policy: Any) -> None:
     if policy.get("backend") != "codex-cli" or policy.get("sandbox") not in {"read-only", "workspace-write"}:
         raise RoutingError("workflow model routing execution boundary is invalid")
     efforts = policy.get("supportedEfforts")
-    if efforts != ["medium", "high", "max"]:
+    if efforts != ["medium", "high", "xhigh", "max"]:
         raise RoutingError("workflow model routing effort vocabulary is invalid")
     evidence_policy = policy.get("capabilityEvidencePolicy")
     if not isinstance(evidence_policy, dict) or set(evidence_policy) != {

@@ -1,0 +1,7 @@
+[
+  "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_binds_input_and_output_to_same_probe_identity",
+  "scripts/sc/tests/tc_d1_cer/test_s17.py::test_detached_replay_rejects_missing_input_target_binding",
+  "scripts/sc/tests/tc_d1_cer/test_s17.py::test_probe_worker_runs_as_detached_process_and_reports_infrastructure_failure",
+  "scripts/sc/tests/tc_d1_cer/test_s17.py::test_external_probe_timeout_has_deterministic_terminal_state",
+  "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+]

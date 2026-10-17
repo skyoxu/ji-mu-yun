@@ -1,0 +1,352 @@
+{
+  "status": "pass",
+  "scope": "Function-level persisted-run creation plus real Acceptance CLI resume/inspect in index-only temporary Git fixtures.",
+  "notProven": [
+    "Real Acceptance",
+    "Q8",
+    "real 08-05",
+    "Windows behavior",
+    "model launch"
+  ],
+  "authorizes": [],
+  "driverCommand": [
+    "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+    "-B",
+    "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/driver.py"
+  ],
+  "environmentOverrides": {
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "sourceHashes": {
+    "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py": "sha256:62dc3c99d5c269066323a5fcdd1f18e58e670ccd2594cab3f6c7eae90ae3e131",
+    "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py": "sha256:eb8da80aae384a8fa21b7b3865b7c07d13f655c88681287d9d87593e78f02df1"
+  },
+  "observations": [
+    {
+      "scenario": "split-read-only-persistence",
+      "status": "pass",
+      "firstReceiptPreserved": true,
+      "startedActions": 2,
+      "middleStates": {
+        "action-1": "completed",
+        "action-2": "ready"
+      },
+      "finalStates": {
+        "action-1": "completed",
+        "action-2": "completed"
+      }
+    },
+    {
+      "scenario": "real-tracked-write-rejected",
+      "status": "pass",
+      "trackedFileActuallyChanged": true,
+      "pollutionReason": "read-only command changed repository bytes",
+      "limitation": "Guard detects and rejects after execution; it does not roll back the fixture file."
+    },
+    {
+      "scenario": "failed-action-is-terminal",
+      "status": "pass",
+      "realChildExitCode": 7,
+      "inspectionState": "failed",
+      "retryExecuted": false,
+      "lifecycleLogUnchangedAfterRetry": true
+    }
+  ],
+  "commands": [
+    {
+      "command": [
+        "git",
+        "init",
+        "--quiet"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "add",
+        "--",
+        "seed.txt",
+        ".gitignore"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resume-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "--repository-root",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only",
+        "--command-registry",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only-registry.json"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "{\"actionEvent\": {\"actionId\": \"action-1\", \"authorizes\": [], \"commandId\": \"command-1\", \"recordedUtc\": \"2026-10-17T08:12:28.792343Z\", \"schemaVersion\": \"acceptance-action-event.v1\", \"sequence\": 1, \"status\": \"completed\"}, \"actionId\": \"action-1\", \"authorizes\": [], \"commandId\": \"command-1\", \"receipt\": {\"authorizes\": [], \"commandId\": \"command-1\", \"commandRegistryHash\": \"sha256:95c43166408a2679926ef2abd73c1cfb4c2874c65edf18fd6433d84432dca705\", \"environmentIdentity\": {\"hash\": \"sha256:d7e532c8b5dba8afa2e4f69c4e8402eab2fde19f278803eb6cb19af75082fe85\", \"names\": [\"PATH\", \"PYTHONDONTWRITEBYTECODE\"]}, \"exitCode\": 0, \"invocation\": {\"argv\": [\"-B\", \"-c\", \"from pathlib import Path; print('first:' + Path('seed.txt').read_text().strip())\"], \"commandId\": \"command-1\", \"cwd\": \".\", \"environmentAllowlist\": [\"PATH\", \"PYTHONDONTWRITEBYTECODE\"], \"executable\": \"/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python\", \"shell\": false, \"timeoutSeconds\": 20}, \"invocationHash\": \"sha256:8e54491887cc92cca98c9b58c61d46284a4f829dfdcddce7f373ed2f64beda13\", \"processResult\": {\"commandId\": \"command-1\", \"exitCode\": 0, \"stderr\": \"\", \"stderrSha256\": \"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", \"stdout\": \"first:original\\n\", \"stdoutSha256\": \"sha256:c8f55ef37783f2be614adab72d385e7aea21743d07489d6d53d804a9d004b98b\"}, \"processResultHash\": \"sha256:530e34b28bb956b0399515ca941ac9c4ca0f06835d44523465b555ed08680563\", \"schemaVersion\": \"acceptance-controlled-command-receipt.v1\", \"writeManifestDelta\": {\"added\": [], \"changedPaths\": [], \"deleted\": [], \"modified\": []}, \"writeManifestDeltaHash\": \"sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1\"}, \"resultReceipt\": {\"path\": \"actions/action-1/attempt-001/result.json\", \"sha256\": \"sha256:39783a876bef5c0d6a488075dd27ed23809d99799a7a5412f27e837759a471ee\"}, \"runId\": \"run-001\", \"schemaVersion\": \"acceptance-persisted-resume-result.v1\"}\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "inspect-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "{\"actionStates\": {\"action-1\": \"completed\", \"action-2\": \"ready\"}, \"authorizes\": [], \"dependencyClosed\": {\"action-1\": true, \"action-2\": true}, \"missingDependencies\": {\"action-1\": [], \"action-2\": []}, \"nextAction\": {\"actionId\": \"action-2\", \"activation\": true, \"commandId\": \"command-2\", \"dependsOn\": [\"action-1\"], \"order\": 1, \"state\": \"ready\"}, \"readyActionIds\": [\"action-2\"], \"runId\": \"run-001\", \"schemaVersion\": \"acceptance-run-inspection.v1\", \"sortingBasis\": \"dependency-topology,action-order,command-registry-order,command-id\"}\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resume-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "--repository-root",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only",
+        "--command-registry",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only-registry.json"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "{\"actionEvent\": {\"actionId\": \"action-2\", \"authorizes\": [], \"commandId\": \"command-2\", \"recordedUtc\": \"2026-10-17T08:12:29.305742Z\", \"schemaVersion\": \"acceptance-action-event.v1\", \"sequence\": 2, \"status\": \"completed\"}, \"actionId\": \"action-2\", \"authorizes\": [], \"commandId\": \"command-2\", \"receipt\": {\"authorizes\": [], \"commandId\": \"command-2\", \"commandRegistryHash\": \"sha256:95c43166408a2679926ef2abd73c1cfb4c2874c65edf18fd6433d84432dca705\", \"environmentIdentity\": {\"hash\": \"sha256:d7e532c8b5dba8afa2e4f69c4e8402eab2fde19f278803eb6cb19af75082fe85\", \"names\": [\"PATH\", \"PYTHONDONTWRITEBYTECODE\"]}, \"exitCode\": 0, \"invocation\": {\"argv\": [\"-B\", \"-c\", \"from pathlib import Path; print('second:' + Path('seed.txt').read_text().strip())\"], \"commandId\": \"command-2\", \"cwd\": \".\", \"environmentAllowlist\": [\"PATH\", \"PYTHONDONTWRITEBYTECODE\"], \"executable\": \"/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python\", \"shell\": false, \"timeoutSeconds\": 20}, \"invocationHash\": \"sha256:4fdea1d14149f82be88df76950658c7cde05d37a3ab4e93b6d4f70f6e5bab1cc\", \"processResult\": {\"commandId\": \"command-2\", \"exitCode\": 0, \"stderr\": \"\", \"stderrSha256\": \"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", \"stdout\": \"second:original\\n\", \"stdoutSha256\": \"sha256:138ebc1ec0fc74f3c130110ea78e844d4f4939619c0e1f33fff825c67ad735ba\"}, \"processResultHash\": \"sha256:25f7ca514335348199812ea1db0257d03805610cf663979f0109711ff5f9510a\", \"schemaVersion\": \"acceptance-controlled-command-receipt.v1\", \"writeManifestDelta\": {\"added\": [], \"changedPaths\": [], \"deleted\": [], \"modified\": []}, \"writeManifestDeltaHash\": \"sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1\"}, \"resultReceipt\": {\"path\": \"actions/action-2/attempt-001/result.json\", \"sha256\": \"sha256:319379263988ce68cfb20e4a110246185a5e9cc660dce93130e698343dc3b918\"}, \"runId\": \"run-001\", \"schemaVersion\": \"acceptance-persisted-resume-result.v1\"}\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "inspect-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/read-only-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "{\"actionStates\": {\"action-1\": \"completed\", \"action-2\": \"completed\"}, \"authorizes\": [], \"dependencyClosed\": {\"action-1\": true, \"action-2\": true}, \"missingDependencies\": {\"action-1\": [], \"action-2\": []}, \"nextAction\": null, \"readyActionIds\": [], \"runId\": \"run-001\", \"schemaVersion\": \"acceptance-run-inspection.v1\", \"sortingBasis\": \"dependency-topology,action-order,command-registry-order,command-id\"}\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "init",
+        "--quiet"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/tracked-write",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "add",
+        "--",
+        "seed.txt",
+        ".gitignore"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/tracked-write",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resume-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/tracked-write/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/tracked-write-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "--repository-root",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/tracked-write",
+        "--command-registry",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/tracked-write-registry.json"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py\", line 1734, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py\", line 1714, in main\n    result = resume_persisted_run(\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 908, in resume_persisted_run\n    result = resume_run(\n             ^^^^^^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 1659, in resume_run\n    receipt = run_controlled_command(repository_root, descriptor, protected_paths=protected_paths)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 1433, in run_controlled_command\n    _validate_read_only_status_delta(before_manifest, after_manifest)\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 1229, in _validate_read_only_status_delta\n    raise ControlError(\"read-only command changed repository bytes\")\nexecution_control.ControlError: read-only command changed repository bytes\n",
+      "exitCode": 1
+    },
+    {
+      "command": [
+        "git",
+        "init",
+        "--quiet"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "git",
+        "add",
+        "--",
+        "seed.txt",
+        ".gitignore"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resume-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "--repository-root",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action",
+        "--command-registry",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action-registry.json"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "{\"actionEvent\": null, \"actionId\": \"action-1\", \"authorizes\": [], \"commandId\": \"command-1\", \"receipt\": {\"authorizes\": [], \"commandId\": \"command-1\", \"commandRegistryHash\": \"sha256:f9302288573551fe0cd0c4dd4bcc9b81e425d784f9fd83a4cd9922f0fb4158e8\", \"environmentIdentity\": {\"hash\": \"sha256:d7e532c8b5dba8afa2e4f69c4e8402eab2fde19f278803eb6cb19af75082fe85\", \"names\": [\"PATH\", \"PYTHONDONTWRITEBYTECODE\"]}, \"exitCode\": 7, \"invocation\": {\"argv\": [\"-B\", \"-c\", \"import sys; print('intentional failure'); print('fixture stderr', file=sys.stderr); sys.exit(7)\"], \"commandId\": \"command-1\", \"cwd\": \".\", \"environmentAllowlist\": [\"PATH\", \"PYTHONDONTWRITEBYTECODE\"], \"executable\": \"/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python\", \"shell\": false, \"timeoutSeconds\": 20}, \"invocationHash\": \"sha256:38da84e698a3cd0369a74263ec87a9a3d2252cb40ff0b3f1653ae414687ceb65\", \"processResult\": {\"commandId\": \"command-1\", \"exitCode\": 7, \"stderr\": \"fixture stderr\\n\", \"stderrSha256\": \"sha256:998113782533259e61f5ee3ba673430f83c943cda57a7c9a8ae86ef60d8d644f\", \"stdout\": \"intentional failure\\n\", \"stdoutSha256\": \"sha256:0f1fcdc2382e33d879d9599701d948f391e53aeba24826b9d229233ab82d4937\"}, \"processResultHash\": \"sha256:f382d16fdebe78cc56af5d491889e7f8fe9de5f5f5719fe2194c66f11c3eed50\", \"schemaVersion\": \"acceptance-controlled-command-receipt.v1\", \"writeManifestDelta\": {\"added\": [], \"changedPaths\": [], \"deleted\": [], \"modified\": []}, \"writeManifestDeltaHash\": \"sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1\"}, \"resultReceipt\": {\"path\": \"actions/action-1/attempt-001/result.json\", \"sha256\": \"sha256:3e1019d335516e8bcc50363754e43314347789dc8631d1d467921793041b5557\"}, \"runId\": \"run-001\", \"schemaVersion\": \"acceptance-persisted-resume-result.v1\"}\n",
+      "stderr": "",
+      "exitCode": 1
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "inspect-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "{\"actionStates\": {\"action-1\": \"failed\"}, \"authorizes\": [], \"dependencyClosed\": {\"action-1\": true}, \"missingDependencies\": {\"action-1\": []}, \"nextAction\": null, \"readyActionIds\": [], \"runId\": \"run-001\", \"schemaVersion\": \"acceptance-run-inspection.v1\", \"sortingBasis\": \"dependency-topology,action-order,command-registry-order,command-id\"}\n",
+      "stderr": "",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+        "-B",
+        "/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resume-persisted-run",
+        "--run-dir",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action/logs/run-001",
+        "--actions",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action-actions.json",
+        "--run-input-hash",
+        "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "--contract-hash",
+        "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "--repository-root",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action",
+        "--command-registry",
+        "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017/failed-action-registry.json"
+      ],
+      "cwd": "/workspace/scratch/1ecf047ec2b0/acceptance-final-independent-20261017",
+      "environmentOverrides": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py\", line 1734, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py\", line 1714, in main\n    result = resume_persisted_run(\n             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/workspace/scratch/1ecf047ec2b0/repair-08-05-final-20261017/.agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\", line 883, in resume_persisted_run\n    raise ControlError(\"persisted action failed; explicit recovery is required\")\nexecution_control.ControlError: persisted action failed; explicit recovery is required\n",
+      "exitCode": 1
+    }
+  ],
+  "failure": null
+}

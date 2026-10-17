@@ -1,0 +1,116 @@
+F.....FF                                                                 [100%]
+================================== FAILURES ===================================
+________ test_replay_records_independent_validator_source_verification ________
+
+    @pytest.mark.cer_assertion("A-BDE93E01BA76-1")
+    def test_replay_records_independent_validator_source_verification() -> None:
+        result, payload = _replay()
+        replay = payload.get("current_wrapper_replay", {})
+        verification = replay.get("independent_validator_verification", {})
+>       _assert_behavior(
+            result.returncode == 0
+            and verification.get("independent") is True
+            and verification.get("status") == "pass"
+            and isinstance(verification.get("source_path"), str)
+            and verification.get("source_sha256", "").startswith("sha256:"),
+            "F-BDE93E01BA76-1",
+            {"exit": result.returncode, "verification": verification},
+        )
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+condition = False, failure_id = 'F-BDE93E01BA76-1'
+detail = {'exit': 1, 'verification': {}}
+
+    def _assert_behavior(condition: bool, failure_id: str, detail: object) -> None:
+        if not condition:
+            print(f"FAILURE_ID:{failure_id}")
+>       assert condition, detail
+E       AssertionError: {'exit': 1, 'verification': {}}
+E       assert False
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:60: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:F-BDE93E01BA76-1
+_____ test_consumer_manifest_reconciles_both_directions_and_named_scopes ______
+
+    @pytest.mark.cer_assertion("A-220-1")
+    @pytest.mark.cer_assertion("A-220-2")
+    def test_consumer_manifest_reconciles_both_directions_and_named_scopes() -> None:
+        result, payload = _replay()
+        manifest = payload.get("current_wrapper_replay", {}).get("consumer_manifest", {})
+        entries = manifest.get("entries", [])
+        paths = {entry.get("path") for entry in entries if isinstance(entry, dict)}
+        scope_paths = {
+            "VDD": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+            "Acceptance": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+            "workflow-model-routing": "scripts/sc/tests/test_workflow_model_routing.py",
+            "Knowledge": "scripts/python/validate_knowledge_workflow_integration.py",
+        }
+>       _assert_behavior(
+            result.returncode == 0
+            and manifest.get("bidirectional_reconciled") is True
+            and manifest.get("missing_callers") == []
+            and manifest.get("orphan_manifest_entries") == []
+            and {entry.get("consumer") for entry in entries} == {
+                "vdd-execution-plan", "run-refactor-implementation-acceptance", "workflow-model-routing",
+                "knowledge-workflow-vdd-package", "knowledge-workflow-acceptance-package",
+            }
+            and all(path in paths for path in scope_paths.values()),
+            "F-220-SCOPE-OMISSION",
+            manifest,
+        )
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:210: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+condition = False, failure_id = 'F-220-SCOPE-OMISSION', detail = {}
+
+    def _assert_behavior(condition: bool, failure_id: str, detail: object) -> None:
+        if not condition:
+            print(f"FAILURE_ID:{failure_id}")
+>       assert condition, detail
+E       AssertionError: {}
+E       assert False
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:60: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:F-220-SCOPE-OMISSION
+_________ test_foreign_authority_input_cannot_be_accepted_as_success __________
+
+    @pytest.mark.cer_assertion("A-F8C403BFB034-1")
+    def test_foreign_authority_input_cannot_be_accepted_as_success() -> None:
+        result, payload = _replay()
+        replay = payload.get("current_wrapper_replay", {})
+        selected = replay.get("resolved_validator", {}).get("path", "")
+>       _assert_behavior(
+            result.returncode == 0
+            and not selected.startswith("%USERPROFILE%")
+            and not selected.lower().startswith("c:/users/")
+            and replay.get("status") == "pass",
+            "F-F8C403BFB034-1",
+            {"selected_authority": selected, "status": replay.get("status")},
+        )
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:230: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+condition = False, failure_id = 'F-F8C403BFB034-1'
+detail = {'selected_authority': '', 'status': None}
+
+    def _assert_behavior(condition: bool, failure_id: str, detail: object) -> None:
+        if not condition:
+            print(f"FAILURE_ID:{failure_id}")
+>       assert condition, detail
+E       AssertionError: {'selected_authority': '', 'status': None}
+E       assert False
+
+scripts\sc\tests\tc_d1_cer\test_s19.py:60: AssertionError
+---------------------------- Captured stdout call -----------------------------
+FAILURE_ID:F-F8C403BFB034-1
+=========================== short test summary info ===========================
+FAILED scripts/sc/tests/tc_d1_cer/test_s19.py::test_replay_records_independent_validator_source_verification
+FAILED scripts/sc/tests/tc_d1_cer/test_s19.py::test_consumer_manifest_reconciles_both_directions_and_named_scopes
+FAILED scripts/sc/tests/tc_d1_cer/test_s19.py::test_foreign_authority_input_cannot_be_accepted_as_success
+3 failed, 5 passed in 3.21s

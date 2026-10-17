@@ -1,0 +1,46 @@
+{
+  "acceptance_ids": [
+    "A-32156C032B52"
+  ],
+  "allowed_paths": [
+    "scripts/sc/_semantic_gate_all_runtime.py",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s32.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "The matrix validator confirms six executions with six pairwise-distinct input identities.",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s32.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-14A1C833906E"
+  ],
+  "requirement_ids": [
+    "SM-3"
+  ],
+  "selector_intents": [
+    "Use a matrix execution manifest with a duplicate input identity or an omitted case execution; the structural matrix validator must fail."
+  ],
+  "slice_id": "S32",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#SM-3"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s32.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/test_skill_package_replay.py"
+    ]
+  ]
+}

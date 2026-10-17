@@ -1,0 +1,15 @@
+{
+  "schema": "jimuyun.direct-evidence-consistency.v1",
+  "suite_status": "direct-validation-passed",
+  "source_head": "7a2859a19a8aaf6ccdcdadf5af9cae7bb8db9964",
+  "node_count": 7,
+  "same_nodes_as_all_seven_previous_failures": true,
+  "phase_reports": 21,
+  "native_junit_tests": 7,
+  "native_junit_unsuccessful": 0,
+  "source_before_after_equal": true,
+  "evidence_consistent": true,
+  "native_windows_verified": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

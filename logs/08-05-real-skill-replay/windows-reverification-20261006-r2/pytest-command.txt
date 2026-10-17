@@ -1,0 +1,4 @@
+HEAD at original run: 7a8ddaabd78c8da766529e27b2ae66ed2b2060c3
+Original command:
+py -3 -B -m pytest -q scripts/sc/tests/test_skill_package_replay.py scripts/sc/tests/test_skill_package_replay_source_identity.py scripts/sc/tests/tc_d1_cer --junitxml=logs/08-05-real-skill-replay/windows-reverification-20261006-r2/junit.xml
+Original run outcome: no stdout, no stderr, no JUnit; fresh replay child stopped making observable progress; operator interrupted and preserved the incomplete run.

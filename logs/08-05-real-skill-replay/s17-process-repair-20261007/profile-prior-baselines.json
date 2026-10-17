@@ -1,0 +1,37 @@
+{
+  "schema": "jimuyun.prior-baseline-profile-details.v1",
+  "scope": "unique captured baselines embedded in actual route transitions",
+  "authorizes": [],
+  "baseline": {
+    "prior_fixture_count": 9,
+    "all_executed": true,
+    "actual_prior_pids": [
+      28,
+      29,
+      30,
+      31,
+      32,
+      34,
+      36,
+      38,
+      40
+    ],
+    "transition_call_count": 36
+  },
+  "repaired": {
+    "prior_fixture_count": 9,
+    "all_executed": true,
+    "actual_prior_pids": [
+      28,
+      29,
+      30,
+      31,
+      32,
+      34,
+      36,
+      38,
+      40
+    ],
+    "transition_call_count": 36
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "C3": "OPEN (unchanged)",
+  "authorizes": [],
+  "fastCtx": "unavailable; Linux bash/Python fallback",
+  "full340SuiteRerun": false,
+  "lostUnpublishedNativeRuns": [
+    "acceptance-b84d9c235c225350",
+    "acceptance-3145868c8788fd18",
+    "acceptance-1b0dc581c9052cd0",
+    "acceptance-7aabdd265f40b18d",
+    "acceptance-db5146acc36c5593"
+  ],
+  "newEvidenceRequiresFreshObservedExecution": true,
+  "preservedRawFailureDelta": "logs/08-05-real-skill-replay/online-proof-recovery-20261017-r1/native-readonly-guard-delta-r4.jsonl",
+  "previousUnpublishedS3AndFixtureEvidenceLost": true,
+  "previousUnpublishedWorkspaceLost": true,
+  "restoredExactGitEvidenceFiles": 2000,
+  "schema": "08-05-online-runtime-recovery.v2",
+  "sourceCommit": "79f8442a6877e1d03f0a804afe09fda8a856342c",
+  "vddRerun": false
+}

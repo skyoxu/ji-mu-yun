@@ -1,0 +1,15 @@
+test_native_timeout_reaps_a_descendant_in_a_separate_process_group (scripts.sc.tests.test_skill_replay_process_regressions.NativeProcessOwnershipTests.test_native_timeout_reaps_a_descendant_in_a_separate_process_group) ... FAIL
+test_identical_bytes_in_two_checkouts_reuse_parse_without_hiding_changes (scripts.sc.tests.test_skill_replay_process_regressions.SyntaxReuseTests.test_identical_bytes_in_two_checkouts_reuse_parse_without_hiding_changes) ... ok
+
+======================================================================
+FAIL: test_native_timeout_reaps_a_descendant_in_a_separate_process_group (scripts.sc.tests.test_skill_replay_process_regressions.NativeProcessOwnershipTests.test_native_timeout_reaps_a_descendant_in_a_separate_process_group)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/9aa4df529c3a/repo-s17/scripts/sc/tests/test_skill_replay_process_regressions.py", line 26, in test_native_timeout_reaps_a_descendant_in_a_separate_process_group
+    self.assertFalse(leaked.exists(), "native timeout left its actual descendant alive")
+AssertionError: True is not false : native timeout left its actual descendant alive
+
+----------------------------------------------------------------------
+Ran 2 tests in 2.703s
+
+FAILED (failures=1)

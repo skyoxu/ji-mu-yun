@@ -1,0 +1,80 @@
+{
+  "schema": "jimuyun.direct-repair-summary.v1",
+  "base_commit": "080005d24ebae015425a0e61e9f9e89f1366d80f",
+  "branch": "fix/08-05-real-skill-replay",
+  "environment": {
+    "platform": "linux",
+    "python": "3.12.14",
+    "pytest": "9.1.1"
+  },
+  "unittest": {
+    "tests": 32,
+    "passed": 32,
+    "failed": 0,
+    "errors": 0,
+    "exit_code": 0,
+    "command": "python -B -m unittest discover -s scripts/sc/tests -p \"test_skill_replay_*regressions.py\" -v",
+    "raw_stdout": "unittest-stdout.txt",
+    "raw_stderr": "unittest-stderr.txt"
+  },
+  "pytest_batches": [
+    {
+      "label": "targeted before integration harness deadline adjustment",
+      "passed_cases": 30,
+      "passed_subtests": 2,
+      "junit_reported_tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "junit": "pytest-targeted.xml",
+      "exit_code": 0
+    },
+    {
+      "label": "final S13 module",
+      "passed_cases": 17,
+      "passed_subtests": 0,
+      "junit_reported_tests": 17,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "junit": "pytest-s13.xml",
+      "exit_code": 0
+    }
+  ],
+  "windows_reverification_pending": true,
+  "full_windows_scope_executed": false,
+  "C3": "OPEN; unchanged existing-validator identity needs no new approval for corrected enumeration or transport",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "authorizes": [],
+  "batch_overlap": "Two S13 tests are also present in the targeted batch; do not sum these as distinct coverage.",
+  "source_bindings": {
+    "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md": "sha256:91919537304608ddc22cf0367f8dc191586075e75a6672156a42ee50e67834bd",
+    "scripts/sc/skill_package_replay.py": "sha256:da2dfb7c8181aec562bc45dbbf596cf19e3effb176d53ccbe65d738a5e0ffa8b",
+    "scripts/sc/skill_replay_runtime.py": "sha256:ed253c81e0196270ae2b40329ee8d94eb79ade208a73c9509da26fb769d61c7a",
+    "scripts/sc/tests/tc_d1_cer/conftest.py": "sha256:8fc06fe82abfc30df99ff6012a055e559e73bb97b051251aedc154e1b74507fa",
+    "scripts/sc/tests/tc_d1_cer/test_s10.py": "sha256:e329ea728c738c1a48975e9ab4f7be60a7bcc3135962aa1110bcae9ca9275516",
+    "scripts/sc/tests/tc_d1_cer/test_s13.py": "sha256:0308e3d24c3f4526bf830fa35ecb1961761ed52004ba963c2208e9e59f4cca8a",
+    "scripts/sc/tests/tc_d1_cer/test_s19.py": "sha256:f3875f3f384da65d9bec8eeae79b6dbae5443adda0d965bda69480d51d1d47ee",
+    "scripts/sc/tests/tc_d1_cer/test_s22.py": "sha256:fcccc880e51d96f2508685bb23998b89282531929bf2d4ad5b431c8e73fcd401",
+    "scripts/sc/tests/tc_d1_cer/test_s27.py": "sha256:a407f56694dc30e2411fea503dd0c8b0bebf470e2329f742030e3ed8f11eee88",
+    "scripts/sc/tests/tc_d1_cer/test_s28.py": "sha256:0947251bf30b0d8179958b9a702dfdea1d4d777c080ea1c948acf97e42219139",
+    "scripts/sc/tests/tc_d1_cer/test_s28_cer.py": "sha256:11a93649c1c1bc4090c13ce7d923c844d377e705d1b7491806911a75f94bca27",
+    "scripts/sc/tests/tc_d1_cer/test_s30.py": "sha256:c60e83c9518ab4b0a24b915aeee307773f33a0ef03da21d58a263a1bb94437dc",
+    "scripts/sc/tests/tc_d1_cer/test_s31-r2.py": "sha256:e6fd2881461b8f04c3b3a28d558db5a757654fc0dac6a9f29743d3f7b718bf54",
+    "scripts/sc/tests/tc_d1_cer/test_s31.py": "sha256:c5383ae979844ac1a97a632b389b12ece1c55e2f125be3274b82c032a04fd0f4",
+    "scripts/sc/tests/tc_d1_cer/test_s41.py": "sha256:38ce2fb675a1c39fa79914bd258a0d7d92f76b985783a4e458b0f8f4019fcb1a",
+    "scripts/sc/tests/tc_d1_cer/test_s42.py": "sha256:63d6f6861f2f79e566be67f4fbf573b0cef6bfe5e9024f84131b5aaa83c43e60",
+    "scripts/sc/tests/test_skill_replay_windows_regressions.py": "sha256:15d6d5536ce8ae9a8f9949c2e484b7668258169dd1d1445eabae688efd7fc3f3"
+  },
+  "native_final_replay": {
+    "status": "pass",
+    "exit_code": 0,
+    "source_stable": true,
+    "fresh_checkout": true,
+    "semantic_verdict_equal": true,
+    "coverage_equal": true,
+    "consumer_count": 5
+  },
+  "not_complete_suite": "pytest-initial was interrupted, and all retained RED attempts remain failures."
+}

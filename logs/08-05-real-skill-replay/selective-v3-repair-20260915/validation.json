@@ -1,0 +1,34 @@
+{
+  "base_commit": "a4e26d5df0571c2e7c20ba530d3e7622ca58b880",
+  "defect_reproduced_before_fix": {
+    "tests": 4,
+    "failures": 1,
+    "failed_test": "test_only_invalid_contract_is_requested_and_prior_cache_is_preserved"
+  },
+  "checks": [
+    {
+      "name": "targeted-tests",
+      "argv": [
+        "python",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "skill-contract",
+      "argv": [
+        "python",
+        ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+        "--skill-root",
+        ".agents/skills/vdd-execution-plan"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "targeted_tests_passed": 6,
+  "backend": "in-process fixture; no live LLM invocation",
+  "canonical_compilation_executed": false,
+  "private_attempt_replayed": false,
+  "full_skill_package_replay_pending": true,
+  "authorizes": []
+}

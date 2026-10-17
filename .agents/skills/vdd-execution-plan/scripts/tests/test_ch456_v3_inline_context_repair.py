@@ -50,6 +50,22 @@ def test_inline_schema_requires_proof_and_context_without_reference_targets():
         assert contract["additionalProperties"] is False
 
 
+def test_complete_prior_candidate_is_reused_before_chunk_recomposition(tmp_path, monkeypatch):
+    raw = _inline()
+    payload = {"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}}
+    cache_dir = tmp_path / ".compiler-cache"
+    cache_dir.mkdir()
+    prior = cache_dir / "v3-schema-repair-group-v5-inline-context-prior.json"
+    prior.write_text(json.dumps(raw), encoding="utf-8")
+    monkeypatch.setattr(grouped.sc, "_v3_cache_requires_contract_refresh", lambda *_args: False)
+
+    recovered = grouped._reusable_prior_complete_contracts(
+        root=tmp_path, cache_dir=cache_dir, payload=payload, ids=sorted(_refs(raw)),
+    )
+
+    assert recovered == raw
+
+
 def test_37_inline_contracts_compile_once_and_keep_one_cohesive_slice(tmp_path, monkeypatch):
     raw = _inline(37)
     (tmp_path / "src").mkdir()
@@ -156,7 +172,8 @@ def test_live_transport_uses_inline_schema_then_reuses_cache_without_backend(tmp
     calls = []
     def fake_exec(**kwargs):
         calls.append(kwargs)
-        schema = json.loads(Path(kwargs["codex_extra_args"][1]).read_text(encoding="utf-8"))
+        schema_arg = kwargs["codex_extra_args"].index("--output-schema") + 1
+        schema = json.loads(Path(kwargs["codex_extra_args"][schema_arg]).read_text(encoding="utf-8"))
         assert set(schema["properties"]) == {"obligation_contracts"}
         assert "Each value must reference one returned group_id" not in kwargs["prompt"]
         kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
@@ -169,6 +186,63 @@ def test_live_transport_uses_inline_schema_then_reuses_cache_without_backend(tmp
     second = grouped._live_group_repair(**args)
     assert first == second == grouped._project(raw, refs_by_oid=_refs(raw))
     assert len(calls) == 1
+
+
+def test_live_transport_chunks_large_exact_domain_without_losing_contracts(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    raw = _inline(grouped._MAX_CONTRACTS_PER_WORKER + 1)
+    calls = []
+
+    def fake_exec(**kwargs):
+        calls.append(kwargs)
+        schema_arg = kwargs["codex_extra_args"].index("--output-schema") + 1
+        schema = json.loads(Path(kwargs["codex_extra_args"][schema_arg]).read_text(encoding="utf-8"))
+        ids = schema["properties"]["obligation_contracts"]["required"]
+        assert 0 < len(ids) <= grouped._MAX_CONTRACTS_PER_WORKER
+        assert "CHUNK BINDING" in kwargs["prompt"]
+        subset = {oid: raw["obligation_contracts"][oid] for oid in ids}
+        kwargs["output_last_message"].write_text(
+            json.dumps({"obligation_contracts": subset}), encoding="utf-8")
+        return 0, "OK", []
+
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    args = dict(root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
+                payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}})
+    result = grouped._live_group_repair(**args)
+    assert result == grouped._project(raw, refs_by_oid=_refs(raw))
+    assert len(calls) == 2
+
+
+def test_resume_recomposes_parent_chunk_from_successful_child_caches(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    raw = _inline(grouped._MAX_CONTRACTS_PER_WORKER)
+    calls = []
+
+    def fake_exec(**kwargs):
+        calls.append(kwargs)
+        schema_arg = kwargs["codex_extra_args"].index("--output-schema") + 1
+        schema = json.loads(Path(kwargs["codex_extra_args"][schema_arg]).read_text(encoding="utf-8"))
+        ids = schema["properties"]["obligation_contracts"]["required"]
+        if len(ids) > 1:
+            return 1, "transient group transport failure", []
+        kwargs["output_last_message"].write_text(
+            json.dumps({"obligation_contracts": {ids[0]: raw["obligation_contracts"][ids[0]]}}), encoding="utf-8")
+        return 0, "OK", []
+
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    args = dict(root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
+                payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}})
+    assert grouped._live_group_repair(**args) == grouped._project(raw, refs_by_oid=_refs(raw))
+    for path in (tmp_path / "plan/.compiler-cache").glob("v3-schema-repair-group-v5-inline-context-*.json"):
+        if "chunk-" not in path.name:
+            path.unlink()
+    prior_call_count = len(calls)
+    assert grouped._live_group_repair(**args) == grouped._project(raw, refs_by_oid=_refs(raw))
+    assert len(calls) == prior_call_count
 
 
 def test_historical_dangling_assignments_still_fail_closed():
@@ -188,6 +262,11 @@ def test_historical_dangling_assignments_still_fail_closed():
 def test_current_wire_cannot_fall_back_to_legacy_group_contract():
     with pytest.raises(ValueError, match="requires inline obligation_contracts"):
         grouped._project_current_output({"groups": [_raw_group(["O-000"])]}, {"O-000": ["req.md#FR-1"]})
+
+
+def test_current_output_accepts_already_projected_composed_transport_result():
+    projected = {"acceptances": [], "failure_intents": [], "slice_hints": []}
+    assert grouped._project_current_output(projected, {}) == projected
 
 
 def test_live_repair_chunks_large_frozen_obligation_sets(tmp_path: Path, monkeypatch) -> None:
@@ -323,3 +402,67 @@ def test_group_cache_identity_changes_when_frozen_obligation_changes() -> None:
     first = {"obligations": [_obligation("O-001")]}
     second = {"obligations": [_obligation("O-002")]}
     assert grouped.group_cache_identity_payload(first) != grouped.group_cache_identity_payload(second)
+
+
+
+def test_parallel_inline_workers_use_distinct_files_and_keep_phase_scope(tmp_path, monkeypatch):
+    """ADR-0041: parallel transport composes with selective inline repair."""
+    from threading import Barrier, Lock
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    raw = _inline(2)
+    barrier, lock, outputs, schemas = Barrier(2), Lock(), [], []
+    owner = "PhaseA.Platform/Workspaces/RestoreService.cs"
+    (tmp_path / owner).parent.mkdir(parents=True)
+    (tmp_path / owner).write_text("class RestoreService {}\n", encoding="utf-8")
+    for contract in raw["obligation_contracts"].values():
+        hint = contract["slice_hint"]
+        hint["production_owners"] = [owner]
+        hint["allowed_write_paths"] = [owner]
+    def fake_exec(**kwargs):
+        assert "Toolchain-only plan" not in kwargs["prompt"]
+        args = kwargs["codex_extra_args"]
+        schema_path = Path(args[args.index("--output-schema") + 1])
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        ids = schema["properties"]["obligation_contracts"]["required"]
+        with lock:
+            outputs.append(kwargs["output_last_message"])
+            schemas.append(schema_path)
+        barrier.wait(timeout=10)
+        kwargs["output_last_message"].write_text(json.dumps({"obligation_contracts": {oid: raw["obligation_contracts"][oid] for oid in ids}}), encoding="utf-8")
+        return 0, "OK", []
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    result = grouped._live_group_repair(root=tmp_path, out_dir=tmp_path / "plan", prompt="Implement Phase restore.",
+        payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}}, max_obligations=1)
+    assert len(outputs) == len(set(outputs)) == len(schemas) == len(set(schemas)) == 2
+    assert {item["obligation_ids"][0] for item in result["slice_hints"]} == set(_refs(raw))
+    assert all(item["production_owners"] == [owner] for item in result["slice_hints"])
+
+
+def test_partial_chunk_resume_retains_completed_sibling(tmp_path, monkeypatch):
+    """ADR-0041: a prior split peer is neither a foreign response nor a new call."""
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    raw, calls = _inline(2), []
+    obligations = [_obligation(oid) for oid in _refs(raw)]
+    obligations[0]["subject"] = "ledger writer"
+    obligations[1]["subject"] = "snapshot restorer"
+    for item in obligations:
+        raw["obligation_contracts"][item["obligation_id"]]["slice_hint"]["affected_subjects"] = [item["subject"]]
+    def fake_exec(**kwargs):
+        args = kwargs["codex_extra_args"]
+        schema = json.loads(Path(args[args.index("--output-schema") + 1]).read_text())
+        ids = schema["properties"]["obligation_contracts"]["required"]
+        calls.append(ids)
+        kwargs["output_last_message"].write_text(json.dumps({"obligation_contracts": {oid: raw["obligation_contracts"][oid] for oid in ids}}), encoding="utf-8")
+        return 0, "OK", []
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    args = dict(root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.")
+    first = grouped._live_group_repair(**args, payload={"input": {"obligations": obligations[:1]}})
+    complete = grouped._live_group_repair(**args, max_obligations=1,
+        payload={"input": {"obligations": obligations}})
+    assert calls == [["O-000"], ["O-001"]]
+    assert complete["acceptances"][0] == first["acceptances"][0]
+    assert len(complete["acceptances"]) == 2

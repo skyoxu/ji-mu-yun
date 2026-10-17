@@ -1,0 +1,13 @@
+{
+  "schema": "jimuyun.direct-verification-session-control.v1",
+  "status": "operator-interrupted",
+  "session_exit_code": 130,
+  "reason": "Historical receipt input directory was absent from the sparse checkout; native fresh replay rejected the missing 08-01 validator before reporting success.",
+  "collected": 340,
+  "finished_nodes": 16,
+  "failed_reports": 6,
+  "native_pytest_terminal_result_available": false,
+  "native_junit_available": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

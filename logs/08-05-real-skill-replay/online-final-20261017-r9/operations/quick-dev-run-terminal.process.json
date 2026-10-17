@@ -1,0 +1,21 @@
+{
+  "authorizes": [],
+  "command": [
+    "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan",
+    "--slice",
+    "S3",
+    "--profile",
+    "standard",
+    "--run-dir",
+    "logs/08-05-real-skill-replay/online-final-20261017-r9/S3-current",
+    "--action",
+    "run-terminal"
+  ],
+  "exitCode": 0,
+  "stderr": "",
+  "stdout": "{\"authorizes\": [], \"behavior_plan_sha256\": \"sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f\", \"behavior_route\": {\"probe_result_sha256\": \"sha256:90f855e439ceb3f78e533c5c16d48db666a3e823aa65b51cdd0a6b383e914496\", \"schema\": \"quick-dev.behavior-route.v1\"}, \"candidate_hash\": \"sha256:98bd18a691fa14143466dd05bcecfdb178ea0814e5d4a11ae35d90b7cb4b1b3d\", \"case_evidence_error\": null, \"descriptor_sha256\": \"sha256:b3d0ac3a344ecccfd2f34841ef84033acd7d60c015fc5c61a2de243c98417f70\", \"failure_family\": null, \"failure_fingerprint\": null, \"failure_id\": null, \"observation_sha256\": \"sha256:72041348bc0aa750bb36717af56bb06262b0d7540d45ed632e9f13aba340780c\", \"plan_hash\": \"sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f\", \"plan_id\": \"PLAN-5E3345BD9A05\", \"predicate_result\": true, \"production_hashes\": {\".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\": \"sha256:eb8da80aae384a8fa21b7b3865b7c07d13f655c88681287d9d87593e78f02df1\", \"scripts/python/validate_acceptance_execution_evidence.py\": \"sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d\"}, \"receipt_sha256\": \"sha256:1b378315f7184f48640536fcf026967c521c2136570c04d4a5fcdf12739f5b41\", \"run_id\": \"S3-current\", \"runtime_edges\": [{\"acceptance_id\": \"A-D163A2D0BCB8\", \"assertion_id\": \"A-E489B3A7974A-1\", \"path\": \"canonical-evidence/terminal/runtime-edges/0001-A-D163A2D0BCB8-A-E489B3A7974A-1.json\", \"sha256\": \"sha256:3ea09037d4ee794a9df378232fe0cbbddadb5d0baa86909af427a04d3defb4ab\"}], \"schema\": \"quick-dev.stage-result.v2\", \"selector_identity\": \"sha256:3bd97382fcd8d078a3511a397abbadc23ebaebab24d1e50117ab1f2dec9b0a93\", \"slice_id\": \"S3\", \"stage\": \"terminal\", \"verification_outcome\": \"pass\"}\n"
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "inclusion_reason": "S38 current production candidate",
+    "root_kind": "candidate_tree",
+    "repository_relative_posix_paths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py"
+    ]
+  },
+  {
+    "inclusion_reason": "current canonical plan",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "root_kind": "plan"
+  },
+  {
+    "inclusion_reason": "current semantic contract",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "root_kind": "contract"
+  },
+  {
+    "inclusion_reason": "current descriptors",
+    "repository_relative_posix_path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1/descriptors",
+    "root_kind": "descriptor"
+  },
+  {
+    "inclusion_reason": "S38 current inputs",
+    "root_kind": "fixture",
+    "repository_relative_posix_paths": [
+      ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json",
+      "scripts/sc/tests/tc_d1_cer/conftest.py",
+      "scripts/sc/tests/tc_d1_cer/test_s38.py"
+    ]
+  },
+  {
+    "inclusion_reason": "canonical source",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+    "root_kind": "source"
+  },
+  {
+    "inclusion_reason": "current judge",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+    "root_kind": "validator_judge"
+  },
+  {
+    "inclusion_reason": "current run state",
+    "repository_relative_posix_path": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1",
+    "root_kind": "plan_state_transition"
+  }
+]

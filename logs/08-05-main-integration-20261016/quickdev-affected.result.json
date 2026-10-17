@@ -1,0 +1,28 @@
+{
+  "command": [
+    "/workspace/scratch/1ecf047ec2b0/merge-805-main-analysis/test-venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_full_lifecycle.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+    "-q",
+    "--tb=short",
+    "--junitxml",
+    "/workspace/scratch/1ecf047ec2b0/ji-mu-yun-merge-805-main/logs/08-05-main-integration-20261016/quickdev-affected.junit.xml"
+  ],
+  "exit_code": 0,
+  "duration_seconds": 11.539,
+  "timed_out": false,
+  "platform": "linux",
+  "workspace": "/workspace/scratch/1ecf047ec2b0/ji-mu-yun-merge-805-main",
+  "environment": "Linux Python 3; py -3 compatibility launcher; no live model calls",
+  "testcases": 79,
+  "failed": [],
+  "skipped": 0
+}

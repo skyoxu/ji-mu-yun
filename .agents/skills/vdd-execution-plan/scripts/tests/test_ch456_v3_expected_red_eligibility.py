@@ -65,7 +65,7 @@ def test_expected_red_accepts_runtime_behavior_and_quality_obligations() -> None
     assert domain._domain_findings("v3", payload, value) == []
 
 
-def test_expected_red_rejects_constraint_and_governance_guards() -> None:
+def test_expected_red_rejects_constraint_but_ignores_governance() -> None:
     payload = {
         "obligations": [
             _obligation("O-GUARD", kind="constraint"),
@@ -81,9 +81,7 @@ def test_expected_red_rejects_constraint_and_governance_guards() -> None:
 
     assert eligibility._expected_red_eligibility_findings("v3", payload, value) == [
         "v3-expected-red:failure_intents[0]:runtime-marker-ineligible:"
-        "O-GUARD=constraint/Product",
-        "v3-expected-red:failure_intents[1]:runtime-marker-ineligible:"
-        "O-GOVERNANCE=behavior/Governance",
+        "O-GUARD=constraint/Product"
     ]
 
 

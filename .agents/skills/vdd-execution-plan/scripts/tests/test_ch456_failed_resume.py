@@ -12,7 +12,6 @@ for path in (SCRIPTS, TESTS):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from semantic_compiler import _normalize_obligation
 from semantic_compiler_authority import compile_plan
 import semantic_compiler_gate as gate
 from test_ch456_compiler_closure import _cache, _repo
@@ -27,47 +26,15 @@ def test_atomic_recall_failure_can_be_repaired_in_same_out_dir_and_resumed(tmp_p
     ))
     root, req, owner, selector = _repo(tmp_path)
     out = root / "plan"
-    req.write_text(req.read_text(encoding="utf-8") + "The compiler must stop after a repeated deterministic semantic failure.\n", encoding="utf-8")
-
     broken = _cache(owner, selector)
     oid = broken["v4-atomic-recall"]["supported_obligation_ids"][0]
-    broken["v4-atomic-recall"] = {
-        "supported_obligation_ids": [oid],
-        "invented_obligation_ids": [],
-        "source_gap_claims": [{
-            "source_ref": "requirements.md#FR-1",
-            "subject": "compiler retry loop",
-            "behavior": "stop after a repeated deterministic semantic failure",
-            "reason": "the extracted obligation set does not contain this source behavior",
-        }],
-    }
-
-    # ADR-0041: source gaps now trigger a bounded V1 repair before V4 fails.
-    # Supply that worker response too; this resume fixture must stay offline.
-    addition = deepcopy(broken["v1-FR-1"]["obligations"][0])
-    addition.update(
-        subject="compiler retry loop",
-        expected_behavior="stop after a repeated deterministic semantic failure",
-        observable_result="retry loop stops",
-        state_after="stopped",
+    # ADR-0041: pure source gaps now enter automatic bounded repair. This test
+    # owns terminal V4 refusal and explicit same-directory resume, so use an
+    # independently rejected invented obligation instead of a stale gap worker
+    # that recursively requests the same already-added obligation.
+    broken["v4-atomic-recall"].update(
+        supported_obligation_ids=[], invented_obligation_ids=[oid], source_gap_claims=[],
     )
-    broken["v1-source-gap-repair"] = {"obligations": [addition]}
-    added_oid = _normalize_obligation(
-        {"requirement_id": "FR-1", "source_ref": "requirements.md#FR-1"}, addition,
-    )["obligation_id"]
-    for field in ("acceptances", "failure_intents", "slice_hints"):
-        item = deepcopy(broken["v3"][field][0])
-        item["obligation_ids"] = [added_oid]
-        if field == "acceptances":
-            item.update(then="retry loop stops", assertion_ids=["ASSERT-STOP"])
-            item["oracle"] = {"observable": "retry loop", "expected": "stopped", "forbidden": ["continued retries"]}
-        elif field == "failure_intents":
-            item["failure_id"] = "STOP-RED"
-        else:
-            item.update(affected_subjects=["compiler retry loop"], behavior_change="stop repeated failure", state_transition="retrying->stopped")
-        broken["v3"][field].append(item)
-
-
     first = compile_plan(requirements=req, out_dir=out, worker_cache=broken)
     assert first["status"] == "repair-vdd"
     assert first["stage"] == "V4"
@@ -77,15 +44,11 @@ def test_atomic_recall_failure_can_be_repaired_in_same_out_dir_and_resumed(tmp_p
     assert list((out / ".compiler-attempts").glob("v4-atomic-recall-*.json"))
 
     clean = deepcopy(broken)
-    clean["v1-FR-1"]["obligations"].append(addition)
     clean["v4-atomic-recall"].update(
-        supported_obligation_ids=[oid, added_oid], source_gap_claims=[],
+        supported_obligation_ids=[oid], invented_obligation_ids=[], source_gap_claims=[],
     )
-    clean["v4"]["covered_obligation_ids"] = [oid, added_oid]
     repaired = compile_plan(
-        requirements=req,
-        out_dir=out,
-        worker_cache=clean,
+        requirements=req, out_dir=out, worker_cache=clean,
         resume_from="first-failed-stage",
     )
     assert repaired["status"] == "plan-ready"
@@ -97,7 +60,7 @@ def test_atomic_recall_failure_can_be_repaired_in_same_out_dir_and_resumed(tmp_p
     assert (out / "compiler-state.v1.json").is_file()
 
 
-def test_stale_root_alignment_is_preserved_and_current_recall_is_explicitly_bound(tmp_path: Path) -> None:
+def test_stale_root_alignment_is_preserved_and_current_recall_is_explicitly_bound(tmp_path: Path, monkeypatch) -> None:
     root, req, owner, selector = _repo(tmp_path)
     out = root / "plan"
     old_alignment = {
@@ -121,3 +84,16 @@ def test_stale_root_alignment_is_preserved_and_current_recall_is_explicitly_boun
     current_path = out / binding["path"]
     assert current_path.is_file()
     assert binding["sha256"] == gate.sc.sha256_value(json.loads(current_path.read_text(encoding="utf-8")))
+    # ADR-0041: both same-plan resume and explicit V1 reuse consume the final
+    # bound witness while leaving the historical root publication untouched.
+    assert gate.sc.published_recall_path(out) == current_path.resolve()
+    monkeypatch.setattr(gate.sc, "_v1_reuse_predecessor_plan", None)
+    gate.sc.configure_v1_reuse_predecessor_plan(out)
+    monkeypatch.setattr(gate.sc, "invoke_worker", lambda **kw: (_ for _ in ()).throw(AssertionError("unexpected worker call")))
+    resumed = compile_plan(requirements=req, out_dir=out, resume_from="first-failed-stage")
+    assert resumed["status"] == "plan-ready"
+    assert old_path.read_bytes() == gate.sc.canonical_bytes(old_alignment)
+    current_path.write_text("{}", encoding="utf-8")
+    import pytest
+    with pytest.raises(ValueError, match="alignment stale"):
+        gate.sc.published_recall_path(out)

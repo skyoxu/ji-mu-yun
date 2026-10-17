@@ -1,0 +1,31 @@
+{
+  "schema": "jimuyun.direct-verification-environment.v1",
+  "platform": "linux",
+  "platform_detail": "Linux-6.18.44-x86_64-with-glibc2.39",
+  "python_executable": "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+  "command": [
+    "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/replay-python/bin/python",
+    "-u",
+    "-B",
+    "scripts/sc/verify_skill_replay.py",
+    "--expected-count",
+    "340",
+    "--output-dir",
+    "logs/08-05-real-skill-replay/recovery-20261007T134708Z/full"
+  ],
+  "head": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "expected_count": 340,
+  "test_timeout_seconds": 300,
+  "runtime_probes_previously_completed": {
+    "python": "3.12.14",
+    "pytest": "8.4.2",
+    "jsonschema": "4.26.0",
+    "powershell": "7.6.6"
+  },
+  "powershell_executable": "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/powershell-7.6.6/pwsh",
+  "fastctx_available": false,
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

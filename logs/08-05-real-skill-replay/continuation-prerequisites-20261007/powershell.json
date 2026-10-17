@@ -1,0 +1,14 @@
+{
+  "schema": "jimuyun.direct-verification-prerequisite.v1",
+  "name": "PowerShell",
+  "archive_url": "https://github.com/PowerShell/PowerShell/releases/download/v7.6.6/powershell-7.6.6-linux-x64.tar.gz",
+  "hashes_url": "https://github.com/PowerShell/PowerShell/releases/download/v7.6.6/hashes.sha256",
+  "installation_reference": "https://learn.microsoft.com/en-gb/powershell/scripting/install/alternate-install-methods?view=powershell-7.6",
+  "archive_sha256": "ddbc4a2d113bbd46d283cfedcbcd117a70caefd7673f41f2b4e0000badf103bc",
+  "published_hash_equal": true,
+  "version_exit_code": 0,
+  "version_stdout": "7.6.6",
+  "executable": "/workspace/scratch/60fb44ef18f2/continuation-prerequisites/powershell-7.6.6/pwsh",
+  "purpose": "Run the unchanged production PowerShell base-clean verifier on isolated CER fixtures. No alternate implementation or test skip.",
+  "authorizes": []
+}

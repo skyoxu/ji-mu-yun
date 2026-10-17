@@ -1,0 +1,1 @@
+{"reason": "Q6 regression/schema command failed", "recommended_action": "repair-vdd", "status": "blocked"}

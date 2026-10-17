@@ -1,0 +1,35 @@
+{
+  "schema": "quick-dev.source-byte-reconciliation.v1",
+  "authorizes": [],
+  "q8_replay": {
+    "mode": "read-only-existing-q8",
+    "status": "pass",
+    "processes_started": false,
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r4/implementation-complete-result.v2.json",
+    "result_status": "pass"
+  },
+  "predecessor_completeness": {
+    "declared": 45,
+    "result_refs_present_in_worktree": 45,
+    "runtime_roots_declared": 45,
+    "runtime_roots_missing_from_previous_commit": 36,
+    "runtime_roots_force_staged_for_this_successor": 36,
+    "top_level_terminal_current_4_files_force_staged": true,
+    "top_level_terminal_current_4_descriptors_file_count": 0
+  },
+  "source_binding": {
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+    "base_commit": "94870bbf087254e5e78fbb7752da42a4c56c3174",
+    "candidate_commit_before_evidence": "daca642a0509eb2d694b2c60cf7229dfeb08a339",
+    "canonical_git_blob_sha256": "sha256:23a590112fc4f072387e170c86b62798f41e267fe3b11b6463dfd48775583897",
+    "worktree_raw_sha256": "sha256:d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+    "byte_equal": false,
+    "first_difference_offset": 3987,
+    "difference_observation": "The worktree contains CRLF bytes in the embedded front-matter section while the Git blob is LF-normalized; this is not treated as an identity match."
+  },
+  "fixed_commit_replay": {
+    "status": "blocked",
+    "reason": "The frozen source digest recorded by the prior Q8 snapshot is the worktree raw digest, not the canonical Git blob digest.",
+    "authorizes": []
+  }
+}

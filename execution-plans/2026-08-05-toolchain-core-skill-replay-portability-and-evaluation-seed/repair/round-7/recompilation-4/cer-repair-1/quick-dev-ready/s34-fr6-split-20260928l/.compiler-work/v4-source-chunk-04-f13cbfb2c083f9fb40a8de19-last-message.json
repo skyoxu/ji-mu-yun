@@ -1,0 +1,56 @@
+{
+  "covered_obligation_ids": [
+    "O-0F67A5E3623D",
+    "O-27F73E6BC3FA",
+    "O-5EF42F530753",
+    "O-B6E599684A83",
+    "O-F2260E1F7067"
+  ],
+  "missing_obligation_ids": [
+    "O-2B2BDE7F47B2",
+    "O-6F1570D39AE8",
+    "O-C9F5F48B33A1"
+  ],
+  "invented_obligation_ids": [
+    "O-C9F5F48B33A1",
+    "O-F2260E1F7067"
+  ],
+  "misaligned_acceptance_ids": [
+    "A-0F51C1CE9139",
+    "A-E3A7E018BCA4",
+    "A-EF6872CD3B8A"
+  ],
+  "oracle_alignment": {
+    "A-0F51C1CE9139": "RED 意图覆盖 positive Probe 失败，但未覆盖执行被跳过或未启动却判定成功。",
+    "A-65121EB98CFB": "匹配：RED 意图要求 always-success 案例得到非成功判定。",
+    "A-758C4E1E3DAA": "匹配：两个 RED 意图分别检验输入绑定缺失和输出执行标识不符。",
+    "A-81CE9370002B": "匹配：RED 意图检验无进程证据及进程内执行。",
+    "A-975C5A319155": "匹配：RED 意图检验独立子进程身份及非零退出。",
+    "A-D0EFAA6EA17D": "匹配：RED 意图检验诊断类别及对照案例。",
+    "A-E3A7E018BCA4": "RED 意图检验记录字段被删除或篡改，未检验负 Probe 进程实际收到绑定输入。",
+    "A-EF6872CD3B8A": "RED 意图要求失败判定，未要求 Acceptance 可观察结果中的非零失败结果。",
+    "source_recall": "FR-4 明示独立进程、输入输出绑定及两类 false negative 失败；未明示有效目标的 positive Probe 必须通过，也未明示 negative Probe 的声明缺陷和诊断类别。源文本支持性与 Acceptance/RED 覆盖分别判断。"
+  },
+  "repairs": [
+    {
+      "target_id": "A-0F51C1CE9139",
+      "action": "增加绑定到此 Acceptance 的 RED 意图，令 positive Probe 跳过或未启动时仍返回成功的实现失败。"
+    },
+    {
+      "target_id": "A-E3A7E018BCA4",
+      "action": "增加负 Probe 子进程实际未收到声明输入绑定的 RED 情形，并验证该结果被拒绝。"
+    },
+    {
+      "target_id": "A-EF6872CD3B8A",
+      "action": "在 RED 意图中明确断言 Acceptance 所要求的非零失败结果。"
+    },
+    {
+      "target_id": "O-C9F5F48B33A1",
+      "action": "提供明确的冻结来源支持，或从本源分区的活跃义务中移出；不得仅凭 positive Probe 的名称推断成功要求。"
+    },
+    {
+      "target_id": "O-F2260E1F7067",
+      "action": "提供明确的冻结来源支持声明缺陷及预期诊断类别，或从本源分区的活跃义务中移出。"
+    }
+  ]
+}

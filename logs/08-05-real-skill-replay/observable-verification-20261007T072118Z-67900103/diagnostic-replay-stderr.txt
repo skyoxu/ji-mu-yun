@@ -1,0 +1,32 @@
+<unknown>:8: SyntaxWarning: invalid escape sequence '\p'
+Traceback (most recent call last):
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_package_replay.py", line 630, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_package_replay.py", line 595, in main
+    receipt, exit_code = replay_package(args.target, args.capability, args.probe_mode)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_package_replay.py", line 413, in replay_package
+    replay_metadata(target, capability_path, replay, snapshot, verdict)
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_package_replay.py", line 324, in replay_metadata
+    execution = runtime.route_transitions(ROOT, target, manifest, capability_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_replay_runtime.py", line 630, in route_transitions
+    materialize_git(root, commit, prior, archive_paths)
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_replay_runtime.py", line 562, in materialize_git
+    tree = git(root, "ls-tree", "-r", "-l", "-z", commit, "--", *paths)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/scratch/60fb44ef18f2/ji-mu-yun/scripts/sc/skill_replay_runtime.py", line 219, in git
+    result = subprocess.run(["git", *arguments], cwd=root, capture_output=True, timeout=30, check=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 2116, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 1253, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['git', 'ls-tree', '-r', '-l', '-z', 'e289d7d3f8572595ca28c498adc798d1fa2a2bf7', '--', '.agents/skills/run-refactor-implementation-acceptance', '.agents/skills/vdd-execution-plan', '.agents/skills/quick-dev-tdd-adapter', 'scripts/sc', 'scripts/python', 'scripts/toolchain', 'scripts/vdd', 'scripts/quick_dev', 'knowledge', 'docs/adr', '.agents/skills/run-refactor-implementation-acceptance']' timed out after 30 seconds

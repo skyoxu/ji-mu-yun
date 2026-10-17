@@ -1,0 +1,203 @@
+{
+  "schema": "quick-dev.incremental-revalidation.v1",
+  "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+  "source_commit": "94870bbf087254e5e78fbb7752da42a4c56c3174",
+  "run_id": "incremental-revalidation-20261006",
+  "mode": "read-only-q7-revalidation",
+  "test_processes_started": 0,
+  "rows": [
+    {
+      "slice_id": "S1",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s1-current-1",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S1/slice-ready.json",
+      "result_sha256": "sha256:b87d77673317b2e266a82f77babe0e98aa244a7d96580479bd1ba725fd897d57",
+      "snapshot_sha256": "sha256:214a5da950bf902b5f3499ce23fa58f4c4b2986161a97bdbf191dc27ba767cbf"
+    },
+    {
+      "slice_id": "S11",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s11-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S11/slice-ready.json",
+      "result_sha256": "sha256:beb4b16ad67900d25b4c324040d0ee80bc1374c8d44d6dbe0fa6eb10bc516f2f",
+      "snapshot_sha256": "sha256:1a5314f279131c9167051f96b2e23d6fc42f2a2d77889853d8d2b8f1aa76d7d1"
+    },
+    {
+      "slice_id": "S14",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s14-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S14/slice-ready.json",
+      "result_sha256": "sha256:2536b771d9239bf4228f4ec10cd0bb2f8ae00d646ea1d2a69092c7e7bc518696",
+      "snapshot_sha256": "sha256:eff60ed3ac0a55f95a19c099ce502f59ae9ba22918961fd397650b47150de503"
+    },
+    {
+      "slice_id": "S15",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s15-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S15/slice-ready.json",
+      "result_sha256": "sha256:6e5a2de4b387c0e1b5352d938c167c96c4c7e74f895db51dccb32fa4cf0dc446",
+      "snapshot_sha256": "sha256:09cdd93ef383b378a109b1c1ad9954db10e6d3b258f2501104319cdcd830af96"
+    },
+    {
+      "slice_id": "S16",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s16-repair-1",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S16/slice-ready.json",
+      "result_sha256": "sha256:8c528baeb11eb84bd75bf6e8a359f49445dbad5ecde9c8447e6e849f2cbcc2e8",
+      "snapshot_sha256": "sha256:1c73881e9b69930af6f7177ed902f418f6fe5f48280808722b73a8718284dbdb"
+    },
+    {
+      "slice_id": "S18",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s18-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S18/slice-ready.json",
+      "result_sha256": "sha256:2d0bf3cddeedcf2d24ad9d6d83d29f55e9ede1224f7d642ee59ec901359b5dc6",
+      "snapshot_sha256": "sha256:fa2951c0abcfbc00a8062103fa3f42e6586adbd6961d3bdecd97643a11e60ecf"
+    },
+    {
+      "slice_id": "S20",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s20-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S20/slice-ready.json",
+      "result_sha256": "sha256:7cc4da72411dffb642b4e988ab03d00c7ab9981340835a51f6f45bda1c30fbb3",
+      "snapshot_sha256": "sha256:059d61185b76258f2c720ae416991ba9f508ee71b13b1cebe35628a6bd5eff3a"
+    },
+    {
+      "slice_id": "S21",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s21-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S21/slice-ready.json",
+      "result_sha256": "sha256:1cf2adff2751e081a35446e2c5fcd3667b63aff21dc83025669f9f703633bf63",
+      "snapshot_sha256": "sha256:4a8f6ef4a3ca0ba9a3e77cca5afdf11efc3a9b36abc3ee5683103b8143992e24"
+    },
+    {
+      "slice_id": "S22",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s22-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S22/slice-ready.json",
+      "result_sha256": "sha256:b923c88e42371442c3e9f9806f72503e3c19efcc477a0a0e10c5ee9d9ae782f2",
+      "snapshot_sha256": "sha256:23cc20a00116940175611291ba4168e58ebfc135fa94669e95fb362b8de5e3fb"
+    },
+    {
+      "slice_id": "S23",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s23-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S23/slice-ready.json",
+      "result_sha256": "sha256:f7c9742761d3c607c7c5a3b166290b2922bb832a1fc4e9c83e6cd69e648fc632",
+      "snapshot_sha256": "sha256:dbcf23732b2b747e8c2feac558ad53f2ff2676e42fe94d5b94ba498152e31a1e"
+    },
+    {
+      "slice_id": "S24",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s24-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S24/slice-ready.json",
+      "result_sha256": "sha256:66e850b026ade9fa8bf15f2291eea06eca40083c52d952369bb491cacba30e7d",
+      "snapshot_sha256": "sha256:f9df5eb74bee683c1604fcbae1c781c70d6d66b16df320cf72558693404a830f"
+    },
+    {
+      "slice_id": "S27",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s27-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S27/slice-ready.json",
+      "result_sha256": "sha256:b6451888d78ed0f8d832871bab1652caa1c7acde98192f1434718b0ae2553b6b",
+      "snapshot_sha256": "sha256:dea2161333804a25ab40bd7fdf80e3f34e0b5298b6e7bea735595cd5f6c6d610"
+    },
+    {
+      "slice_id": "S29",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s29-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S29/slice-ready.json",
+      "result_sha256": "sha256:d0c5eaf8c68da8cd4564b9176a4321956352b6aca35f9610a193e244f91444e3",
+      "snapshot_sha256": "sha256:895abf547d49ac5d4b05199839c181e48956af26d1ba71fb7fce70dd04c93c29"
+    },
+    {
+      "slice_id": "S3",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s3-repair-1",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S3/slice-ready.json",
+      "result_sha256": "sha256:f75712214b90662b748e1547d31e83293a8e54741ab21524c58fa94d484de02e",
+      "snapshot_sha256": "sha256:adac0c1dcbf1424751994ec25fca308b01788d31f76837b62a2926860e4d834c"
+    },
+    {
+      "slice_id": "S31",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s31-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S31/slice-ready.json",
+      "result_sha256": "sha256:ff03300add38093d10f3816ffd43bf679b418abe0ee3af7fe70715051d1bfbdb",
+      "snapshot_sha256": "sha256:af44f06d3684ed3ef41343255f7927ddda3d162dac74d8d40804633c1d00a2cf"
+    },
+    {
+      "slice_id": "S37",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s37-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S37/slice-ready.json",
+      "result_sha256": "sha256:12b9267d43755c376c5e8a4e4b1ff567861e1030846be8c09c5672559baaef39",
+      "snapshot_sha256": "sha256:4394026ddfa9dfb27b1858ebb876b22f108810ed57af0d71333f464a84b580ec"
+    },
+    {
+      "slice_id": "S38",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s38-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S38/slice-ready.json",
+      "result_sha256": "sha256:4efb2866da803b763c7b87fb09d4174a8d00f148859e2973aef00888fddfc003",
+      "snapshot_sha256": "sha256:c896b30ac4a22e00b3fd072919b2b71f8cbcf71229e156ddfb7347e07ca6723b"
+    },
+    {
+      "slice_id": "S39",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s39-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S39/slice-ready.json",
+      "result_sha256": "sha256:ef5cd6287a1d4a76aa65d9a03355878582cccff21b047cc64320f105160004c6",
+      "snapshot_sha256": "sha256:7438547e90df5900d40b75369c3d835d7e9f352de3a571826300ad7acf279f1d"
+    },
+    {
+      "slice_id": "S4",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s4-repair-1",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S4/slice-ready.json",
+      "result_sha256": "sha256:82f33ef9d42a3a5d757d81ff19c1fab6f9865dc134717d5e2c076735b04eb9ab",
+      "snapshot_sha256": "sha256:8ca67e84796e4fd70a3ebb43ef842a79db9a5a40df7ee57ea485b4375d298599"
+    },
+    {
+      "slice_id": "S42",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s42-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S42/slice-ready.json",
+      "result_sha256": "sha256:74ee1de6f38ebbe6058a2ce7237c6bbaf30c1616a4fd0ff3e87b2e2635bb9914",
+      "snapshot_sha256": "sha256:24513c4637a0d89a909869774d9682bc156c138cced3a7816e3b291a09edc585"
+    },
+    {
+      "slice_id": "S43",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s43-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S43/slice-ready.json",
+      "result_sha256": "sha256:39adda6f8da70dfe5d9b9d6e538422b91f2489dbdcedacc1425a7cf4f851ebfa",
+      "snapshot_sha256": "sha256:c1f97cb2f67efa5fac74b41c3f1e5a90b9692b120fc4d809ebd3a2b524b32894"
+    },
+    {
+      "slice_id": "S45",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s45-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S45/slice-ready.json",
+      "result_sha256": "sha256:bab25c81448c2f97c4dee4b697ebb64958a504674f66b29a545e142f38df47d9",
+      "snapshot_sha256": "sha256:1d4397c195d74b5f27c800aa91e049bcc24918b34ad9046baae164ec69f48d85"
+    },
+    {
+      "slice_id": "S5",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s5-repair-1",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S5/slice-ready.json",
+      "result_sha256": "sha256:fec24a333458201a7216ba0fa2caed6fc31c9e5fc58ac37aabae62d764c09363",
+      "snapshot_sha256": "sha256:9827703fd6055ae7a3e7af5cfcea50e30aa593d70eddf8f0d6ae6b76369e2ec8"
+    },
+    {
+      "slice_id": "S8",
+      "status": "pass",
+      "historical_result_ref": "logs/quick-dev-current-run-20261005/s8-repair-2",
+      "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S8/slice-ready.json",
+      "result_sha256": "sha256:2af0ad99ce7b86f7423e1089fa9f02f50e5c6e56402343f484f0309ee4d2e79d",
+      "snapshot_sha256": "sha256:c85e7d77a4f26acb29b211dbedf62f83c8808085bfe6b40ab8d9b2a4d9b42bf2"
+    }
+  ],
+  "authorizes": []
+}

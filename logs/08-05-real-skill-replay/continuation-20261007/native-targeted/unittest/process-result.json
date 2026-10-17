@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-u",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "scripts/sc/tests",
+    "-p",
+    "test_skill_replay_*regressions.py",
+    "-v"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "active_nodeid": null,
+  "active_phase": "startup",
+  "cleanup": null,
+  "records": [],
+  "diagnostic": null,
+  "elapsed_seconds": 20.369,
+  "authorizes": []
+}

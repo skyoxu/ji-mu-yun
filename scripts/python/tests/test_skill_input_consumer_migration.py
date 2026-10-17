@@ -19,6 +19,7 @@ from scripts.python import skill_input_v2 as v2
 from scripts.python import skill_input_retention as retention
 from scripts.python.skill_input_protocol import digest, read_json, identity
 from scripts.python.skill_input_selection import selection_identity
+from scripts.python.skill_input_candidate import observe_candidate
 
 ROOT = Path(__file__).resolve().parents[3]
 ENTRYPOINTS = {
@@ -106,6 +107,45 @@ def test_missing_trusted_baseline_fails_closed(tmp_path):
         v2.prepare(tmp_path, request)
 
 
+def test_acceptance_owned_artifacts_do_not_change_candidate_but_target_files_do(tmp_path):
+    request = fixture(tmp_path, 'run-refactor-implementation-acceptance')
+    target = 'execution-plans/feature-a'
+    authority_path = tmp_path / 'authority.json'
+    authority = read_json(authority_path)
+    authority['target_plan'] = target
+    authority_path.write_text(json.dumps(authority), encoding='utf-8')
+
+    before = observe_candidate(tmp_path, authority_path, request['storage'])
+    run_output = tmp_path / target / 'acceptance-runs' / 'run-1' / 'result.json'
+    input_output = tmp_path / target / 'acceptance-inputs' / 'bundle.json'
+    run_output.parent.mkdir(parents=True)
+    input_output.parent.mkdir(parents=True)
+    run_output.write_text('{"status":"waiting"}', encoding='utf-8')
+    input_output.write_text('{"generated":true}', encoding='utf-8')
+    after_outputs = observe_candidate(tmp_path, authority_path, request['storage'])
+    assert after_outputs == before
+
+    # ADR-0060: main's transport exclusions apply only to this target plan.
+    for relative in ['.acceptance-snapshots/input.json', 'acceptance-coordinator-request.v3.json',
+                     'acceptance-projection-request.v1.json']:
+        generated = tmp_path / target / relative
+        generated.parent.mkdir(parents=True, exist_ok=True)
+        generated.write_text('{}', encoding='utf-8')
+    assert observe_candidate(tmp_path, authority_path, request['storage']) == before
+    foreign = tmp_path / 'execution-plans/feature-b/acceptance-coordinator-request.v3.json'
+    foreign.parent.mkdir(parents=True)
+    foreign.write_text('{}', encoding='utf-8')
+    assert foreign.relative_to(tmp_path).as_posix() in observe_candidate(
+        tmp_path, authority_path, request['storage'])['changed_paths']
+
+    authoritative = tmp_path / target / 'requirements.md'
+    authoritative.parent.mkdir(parents=True, exist_ok=True)
+    authoritative.write_text('changed candidate requirement', encoding='utf-8')
+    after_source_change = observe_candidate(tmp_path, authority_path, request['storage'])
+    assert after_source_change['candidate_hash'] != before['candidate_hash']
+    assert target + '/requirements.md' in after_source_change['changed_paths']
+
+
 def test_unselected_candidate_change_invalidates_current(tmp_path):
     request = fixture(tmp_path)
     complete(tmp_path, request)
@@ -125,6 +165,38 @@ def test_context_budget_is_enforced(tmp_path):
     with pytest.raises(ValueError, match='context exceeds'):
         v2.finish(tmp_path, 'repair', started['attempt_id'])
     assert not (tmp_path / request['storage'] / 'current.v1.json').exists()
+
+
+@pytest.mark.parametrize('tracked', [False, True])
+def test_acceptance_final_pointer_preserves_current_generation(tmp_path, tracked):
+    """ADR-0060: publishing owner output must permit identical live reentry."""
+    request = fixture(tmp_path, 'run-refactor-implementation-acceptance')
+    target = 'execution-plans/feature-a'
+    authority_path = tmp_path / 'authority.json'
+    authority = read_json(authority_path)
+    authority['target_plan'] = target
+    authority_path.write_text(json.dumps(authority), encoding='utf-8')
+    request['bindings']['authority']['sha256'] = digest(authority_path.read_bytes())
+    current = tmp_path / target / 'acceptance-current.v1.json'
+    current.parent.mkdir(parents=True)
+    current.write_text('{"currentRun":"previous"}', encoding='utf-8')
+    if tracked:
+        subprocess.run(['git', '-C', str(tmp_path), 'add', str(current)], check=True)
+        subprocess.run(['git', '-C', str(tmp_path), '-c', 'user.name=fixture',
+                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm',
+                        'previous acceptance pointer'], check=True)
+    _, ready, _ = complete(tmp_path, request)
+    current.write_text('{"currentRun":"successor"}', encoding='utf-8')
+    args = dict(consumer=request['consumer'], operation=request['operation'],
+                contract_path=tmp_path / 'contract.json')
+    pointer = tmp_path / request['storage'] / 'current.v1.json'
+    assert v2.require_current(tmp_path, pointer, **args)['generation_id'] == ready['pointer']['generation_id']
+
+    foreign = tmp_path / 'execution-plans/feature-b/acceptance-current.v1.json'
+    foreign.parent.mkdir(parents=True)
+    foreign.write_bytes(current.read_bytes())
+    with pytest.raises(ValueError, match='generation candidate changed'):
+        v2.require_current(tmp_path, pointer, **args)
 
 
 @pytest.mark.parametrize('consumer', CONSUMERS)

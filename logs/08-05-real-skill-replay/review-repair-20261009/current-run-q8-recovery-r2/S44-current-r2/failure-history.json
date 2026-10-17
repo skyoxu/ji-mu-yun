@@ -1,0 +1,107 @@
+[
+  {
+    "authorizes": [],
+    "behavior_dispositions": [
+      {
+        "acceptance_ids": [
+          "A-CA2527F1C66B"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-0C8536BAA793",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-B1BB6A8A571C"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-12738417684F",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-DADB87619688"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-4086AC08F278",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-F2F987006FC3"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-8AD58EB8B159",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-E43CD0689604"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-B572BB97D80C",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-FBCDF054065C"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-B5F365100D81",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-54B083BB27D6"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-BB8009B2008C",
+        "reason": "probe-environment-or-process-gap"
+      },
+      {
+        "acceptance_ids": [
+          "A-5446ED62F47E"
+        ],
+        "cases": [],
+        "disposition": "unverifiable",
+        "obligation_id": "O-EEB6F4FD7D0D",
+        "reason": "probe-environment-or-process-gap"
+      }
+    ],
+    "behavior_plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+    "behavior_route": {
+      "probe_result_sha256": null,
+      "schema": "quick-dev.behavior-route.v1"
+    },
+    "candidate_hash": "sha256:ea1e076deed6a48e894530245226747131ce8d1cd50d6feac4315420b9d2d1bd",
+    "case_evidence_error": "behavior-routing:unverifiable:[{'obligation_id': 'O-0C8536BAA793', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-CA2527F1C66B'], 'cases': []}, {'obligation_id': 'O-12738417684F', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-B1BB6A8A571C'], 'cases': []}, {'obligation_id': 'O-4086AC08F278', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-DADB87619688'], 'cases': []}, {'obligation_id': 'O-8AD58EB8B159', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-F2F987006FC3'], 'cases': []}, {'obligation_id': 'O-B572BB97D80C', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-E43CD0689604'], 'cases': []}, {'obligation_id': 'O-B5F365100D81', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-FBCDF054065C'], 'cases': []}, {'obligation_id': 'O-BB8009B2008C', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-54B083BB27D6'], 'cases': []}, {'obligation_id': 'O-EEB6F4FD7D0D', 'disposition': 'unverifiable', 'reason': 'probe-environment-or-process-gap', 'acceptance_ids': ['A-5446ED62F47E'], 'cases': []}]",
+    "descriptor_sha256": "sha256:21755e2b8e1388e2ac33d0439cb94860c7b6e59f1894361449742d1524ee685e",
+    "failure_family": "timeout-no-observation",
+    "failure_fingerprint": "sha256:5e4eb80218bcabfcb4472176eb680d7095d39aa3f1e0c68586c5880bc17b8b74",
+    "failure_id": "QD-TIMEOUT-NO-OBSERVATION-5E4EB80218BCABFC",
+    "observation_sha256": "sha256:cd3494d85684a199612ecda52f19c0b7094f0623c06f546a7f340db4e2213e13",
+    "plan_hash": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+    "plan_id": "PLAN-5E3345BD9A05",
+    "predicate_result": false,
+    "production_hashes": {
+      "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+      "scripts/sc/skill_package_replay.py": "sha256:bc04691a296b82b2818056fde9025154810e3608c0c5ca2da856babd752dc540"
+    },
+    "receipt_sha256": "sha256:81845748ed42654bf2be87896838aa711ce2af6f7315b13334e1c0b515b23c96",
+    "required_next_action": "repair-vdd",
+    "run_id": "S44-current-r1",
+    "runtime_edges": [],
+    "schema": "quick-dev.stage-result.v2",
+    "selector_identity": "sha256:037962c64f5dc79d4ac32b6bb405b2173d90ccf1ef416dc86a472d92509637c4",
+    "slice_id": "S44",
+    "stage": "probe",
+    "verification_outcome": "blocked"
+  }
+]

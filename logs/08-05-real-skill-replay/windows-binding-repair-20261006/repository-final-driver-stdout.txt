@@ -1,0 +1,1 @@
+{"exit_code": 0, "status": "pass", "source_stable": true, "fresh_checkout": true, "semantic_verdict_equal": true, "coverage_equal": true, "consumer_count": 5}

@@ -1,0 +1,10 @@
+[
+  {"root_kind":"candidate_tree","repository_relative_posix_path":"scripts/sc","inclusion_reason":"current replay implementation and round-6 tests"},
+  {"root_kind":"plan","repository_relative_posix_path":"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-6/current-plan/semantic-plan-bundle.v1.json","inclusion_reason":"round-6 current semantic plan"},
+  {"root_kind":"contract","repository_relative_posix_path":".agents/skills/vdd-execution-plan","inclusion_reason":"current VDD contract and v2 preflight tests"},
+  {"root_kind":"descriptor","repository_relative_posix_path":"docs/fix80501.txt","inclusion_reason":"external defect review supplied by the maintainer"},
+  {"root_kind":"fixture","repository_relative_posix_path":"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json","inclusion_reason":"six-category executable matrix"},
+  {"root_kind":"source","repository_relative_posix_path":"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json","inclusion_reason":"original requirement authority"},
+  {"root_kind":"validator_judge","repository_relative_posix_path":".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py","inclusion_reason":"current independent stage judge"},
+  {"root_kind":"plan_state_transition","repository_relative_posix_path":"execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-6","inclusion_reason":"append-only round-6 state"}
+]

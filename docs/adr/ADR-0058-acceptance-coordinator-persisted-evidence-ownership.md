@@ -55,8 +55,10 @@ Trust Recovery directories. The bounded closeout is described in
   target, candidate manifests and knowledge context. Bundle-bound actions and
   registry are authoritative. Derived identity includes Skill-input custody.
 - A successful replay rechecks persisted inputs, lifecycle-bound command receipts,
-  Q8 proof and finalization. Failed commands stop after one attempt; a stored waiting
-  result never authorizes automatic retry. Incomplete or stale proof remains blocked.
+  Q8 proof and finalization. Failed commands stop after one attempt; the
+  persisted result is `failed` on the action-failed route and never authorizes
+  automatic retry. Recovery requires an explicitly bound successor. Incomplete
+  or stale proof remains blocked.
 - No legacy lifecycle reconstruction, consumer-graph project, performance benchmark,
   Bootstrap live run or CH456 reopening is required by this closeout.
 
@@ -76,3 +78,14 @@ and test suggestions include provenance and limits and never replace required
 checks or claim complete coverage. External review materials bind observed input
 files and hash-checked candidate diff bytes; no review is launched or transmitted.
 This adds no authorization, concurrency, automatic retry or Bootstrap route.
+
+## 2026-10-17: Active Claim Scan Custody
+
+The persisted action owner explicitly supplies its already-published claim to
+both read-only byte scans. A delayed Git untracked-file listing must neither
+make that claim appear to be a command-created file nor hide a claim rewrite.
+The claim remains fully byte-checked; it is never excluded from protection.
+These transient scan paths do not become durable receipt input bindings,
+because the owner releases the claim after recording the action result.
+No request fields, write permissions, thresholds, retry or finalization
+authority change.

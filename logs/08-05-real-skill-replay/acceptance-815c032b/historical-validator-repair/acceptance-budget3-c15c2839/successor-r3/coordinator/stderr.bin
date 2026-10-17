@@ -1,0 +1,30 @@
+Acceptance support: logs/acceptance-operator-support/1ccad0ecda9bebdc166fde3b3b897eb7fa4c9365724ed9561477257cfb134fe5/summary.md
+Traceback (most recent call last):
+  File "C:\buildgame\jimuyun\.agents\skills\run-refactor-implementation-acceptance\scripts\acceptance_cli.py", line 1128, in _load_current_coordinator_inputs
+    ready = require_ready_skill_input(
+        receipt_path=pointer_path,
+    ...<2 lines>...
+        consumer="run-refactor-implementation-acceptance", operation="acceptance",
+    )
+  File "C:\buildgame\jimuyun\scripts\python\skill_input_gate.py", line 27, in require_ready_skill_input
+    result = require_current(repository_root, receipt_path, consumer=consumer,
+                             operation=operation, contract_path=contract_path)
+  File "C:\buildgame\jimuyun\scripts\python\skill_input_v2.py", line 275, in require_current
+    receipt = validate_generation(repository_root, pointer_path.parent, current['generation_id'], consumer=consumer, operation=operation, contract_path=contract_path)
+  File "C:\buildgame\jimuyun\scripts\python\skill_input_v2.py", line 237, in validate_generation
+    raise ValueError('generation contract path mismatch')
+ValueError: generation contract path mismatch
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\buildgame\jimuyun\.agents\skills\run-refactor-implementation-acceptance\scripts\acceptance_cli.py", line 1725, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\buildgame\jimuyun\.agents\skills\run-refactor-implementation-acceptance\scripts\acceptance_cli.py", line 1537, in main
+    result = run_coordinator(args.request, args.out)
+  File "C:\buildgame\jimuyun\.agents\skills\run-refactor-implementation-acceptance\scripts\acceptance_cli.py", line 1194, in run_coordinator
+    loaded = _load_current_coordinator_inputs(source, request)
+  File "C:\buildgame\jimuyun\.agents\skills\run-refactor-implementation-acceptance\scripts\acceptance_cli.py", line 1141, in _load_current_coordinator_inputs
+    raise InputError("coordinator Skill input is invalid: " + str(exc)) from exc
+acceptance_core.InputError: coordinator Skill input is invalid: generation contract path mismatch

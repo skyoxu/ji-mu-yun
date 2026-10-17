@@ -1,0 +1,14 @@
+{
+  "schema": "jimuyun.direct-verification-session-control.v1",
+  "status": "operator-interrupted",
+  "session_exit_code": 130,
+  "reason": "Local prerequisite preparation was incomplete: jsonschema was missing and partial-clone historical blob reads exceeded their native 30-second limit.",
+  "collected": 340,
+  "finished_nodes": 121,
+  "failed_reports": 58,
+  "native_pytest_terminal_result_available": false,
+  "native_junit_available": false,
+  "formal_workflow_called": false,
+  "C3": "OPEN",
+  "authorizes": []
+}

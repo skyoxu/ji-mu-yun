@@ -1,0 +1,235 @@
+{
+  "schema": "jimuyun.immutable-compressed-evidence-index.v1",
+  "archived_at_commit": "3769041c7f999a26a4559f6c98453d87b9dc0891",
+  "source_commit": "8d9893054d7fdbb3120e4457128e6ac0bca83bde",
+  "compression": "gzip-lossless",
+  "decompression_equal_to_raw_verified_before_upload": true,
+  "verification_method": "The local preparation command used gzip.compress(raw, mtime=0) and asserted gzip.decompress(archive)==raw for every listed file before upload; every returned GitHub blob ID equaled the raw archive Git blob ID.",
+  "raw_sha256_recorded": false,
+  "entries": [
+    {
+      "original_path": "full-driver-stderr.txt",
+      "archive_path": "full-driver-stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "full-driver-stdout.txt",
+      "archive_path": "full-driver-stdout.txt.gz",
+      "archive_bytes": 1935,
+      "git_blob_sha": "2a17e63a42add576a338046efd1a61fa73872dd0"
+    },
+    {
+      "original_path": "native-full/collection/stderr.txt",
+      "archive_path": "native-full/collection/stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-full/collection/stdout.txt",
+      "archive_path": "native-full/collection/stdout.txt.gz",
+      "archive_bytes": 10896,
+      "git_blob_sha": "9717c030530d1d164755cde6b87fc4cb1a853a0c"
+    },
+    {
+      "original_path": "native-full/collection-events.jsonl",
+      "archive_path": "native-full/collection-events.jsonl.gz",
+      "archive_bytes": 4996,
+      "git_blob_sha": "0ecc5c99621ff6baff83defb407ff1645765777e"
+    },
+    {
+      "original_path": "native-full/collection-events.traceback.txt",
+      "archive_path": "native-full/collection-events.traceback.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-full/pytest/stderr.txt",
+      "archive_path": "native-full/pytest/stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-full/pytest/stdout.txt",
+      "archive_path": "native-full/pytest/stdout.txt.gz",
+      "archive_bytes": 1416,
+      "git_blob_sha": "b32e77131b68ed074b0c8b5f77e3589f80d040fe"
+    },
+    {
+      "original_path": "native-full/pytest-events.jsonl",
+      "archive_path": "native-full/pytest-events.jsonl.gz",
+      "archive_bytes": 11292,
+      "git_blob_sha": "c5ec20e284e5ad622bc6c44a7dbec8e884751ec4"
+    },
+    {
+      "original_path": "native-full/pytest-events.traceback.txt",
+      "archive_path": "native-full/pytest-events.traceback.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-full/source-before.json",
+      "archive_path": "native-full/source-before.json.gz",
+      "archive_bytes": 72408,
+      "git_blob_sha": "b942f8e59d48834ff61b3cd17cb78201289ec692"
+    },
+    {
+      "original_path": "native-full/unittest/stderr.txt",
+      "archive_path": "native-full/unittest/stderr.txt.gz",
+      "archive_bytes": 1335,
+      "git_blob_sha": "bc066eb726647285de234f8282ecca39f6f347b0"
+    },
+    {
+      "original_path": "native-full/unittest/stdout.txt",
+      "archive_path": "native-full/unittest/stdout.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted/collection/stderr.txt",
+      "archive_path": "native-targeted/collection/stderr.txt.gz",
+      "archive_bytes": 100,
+      "git_blob_sha": "864b41ea7d24a9d4219e3b04868abaf90a13ad40"
+    },
+    {
+      "original_path": "native-targeted/collection/stdout.txt",
+      "archive_path": "native-targeted/collection/stdout.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted/source-after.json",
+      "archive_path": "native-targeted/source-after.json.gz",
+      "archive_bytes": 72408,
+      "git_blob_sha": "b942f8e59d48834ff61b3cd17cb78201289ec692"
+    },
+    {
+      "original_path": "native-targeted/source-before.json",
+      "archive_path": "native-targeted/source-before.json.gz",
+      "archive_bytes": 72408,
+      "git_blob_sha": "b942f8e59d48834ff61b3cd17cb78201289ec692"
+    },
+    {
+      "original_path": "native-targeted/unittest/stderr.txt",
+      "archive_path": "native-targeted/unittest/stderr.txt.gz",
+      "archive_bytes": 1335,
+      "git_blob_sha": "dc5dc18bf65240791874332fc1e9574f1d72d7d1"
+    },
+    {
+      "original_path": "native-targeted/unittest/stdout.txt",
+      "archive_path": "native-targeted/unittest/stdout.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted-2/collection/stderr.txt",
+      "archive_path": "native-targeted-2/collection/stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted-2/collection/stdout.txt",
+      "archive_path": "native-targeted-2/collection/stdout.txt.gz",
+      "archive_bytes": 1148,
+      "git_blob_sha": "fdeb30e47a4fb16d68b67e8e7ab363da382798f3"
+    },
+    {
+      "original_path": "native-targeted-2/collection-events.jsonl",
+      "archive_path": "native-targeted-2/collection-events.jsonl.gz",
+      "archive_bytes": 369,
+      "git_blob_sha": "0c19f9a756fc07289faed3bff8770d4f2811e31f"
+    },
+    {
+      "original_path": "native-targeted-2/collection-events.traceback.txt",
+      "archive_path": "native-targeted-2/collection-events.traceback.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted-2/pytest/stderr.txt",
+      "archive_path": "native-targeted-2/pytest/stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted-2/pytest/stdout.txt",
+      "archive_path": "native-targeted-2/pytest/stdout.txt.gz",
+      "archive_bytes": 1380,
+      "git_blob_sha": "bd1872760bf78e7ddc7bb147531d9e68f126a9fe"
+    },
+    {
+      "original_path": "native-targeted-2/pytest-events.jsonl",
+      "archive_path": "native-targeted-2/pytest-events.jsonl.gz",
+      "archive_bytes": 1228,
+      "git_blob_sha": "c36a84e6cdf747addcc4f3b4036dbe59f8004d4e"
+    },
+    {
+      "original_path": "native-targeted-2/pytest-events.traceback.txt",
+      "archive_path": "native-targeted-2/pytest-events.traceback.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "native-targeted-2/source-after.json",
+      "archive_path": "native-targeted-2/source-after.json.gz",
+      "archive_bytes": 72408,
+      "git_blob_sha": "b942f8e59d48834ff61b3cd17cb78201289ec692"
+    },
+    {
+      "original_path": "native-targeted-2/source-before.json",
+      "archive_path": "native-targeted-2/source-before.json.gz",
+      "archive_bytes": 72408,
+      "git_blob_sha": "b942f8e59d48834ff61b3cd17cb78201289ec692"
+    },
+    {
+      "original_path": "native-targeted-2/unittest/stderr.txt",
+      "archive_path": "native-targeted-2/unittest/stderr.txt.gz",
+      "archive_bytes": 1336,
+      "git_blob_sha": "7ec6ea122c36d1186f9f7e38ff1cdc1b8ec0e1f1"
+    },
+    {
+      "original_path": "native-targeted-2/unittest/stdout.txt",
+      "archive_path": "native-targeted-2/unittest/stdout.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "python-recovery-pip-stderr.txt",
+      "archive_path": "python-recovery-pip-stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "python-recovery-pip-stdout.txt",
+      "archive_path": "python-recovery-pip-stdout.txt.gz",
+      "archive_bytes": 628,
+      "git_blob_sha": "b1e7de49005c0b4c7b0225ce7b00897a936fbed2"
+    },
+    {
+      "original_path": "targeted-2-driver-stderr.txt",
+      "archive_path": "targeted-2-driver-stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "targeted-2-driver-stdout.txt",
+      "archive_path": "targeted-2-driver-stdout.txt.gz",
+      "archive_bytes": 631,
+      "git_blob_sha": "68a8a64932a497711c777f34c7aabf8e38c27a32"
+    },
+    {
+      "original_path": "targeted-driver-stderr.txt",
+      "archive_path": "targeted-driver-stderr.txt.gz",
+      "archive_bytes": 20,
+      "git_blob_sha": "d4b9926df0b7defceb6caf0b474c4a190c5ca8f0"
+    },
+    {
+      "original_path": "targeted-driver-stdout.txt",
+      "archive_path": "targeted-driver-stdout.txt.gz",
+      "archive_bytes": 346,
+      "git_blob_sha": "b110d8192b235c65380852f71b925b8330f16956"
+    }
+  ],
+  "C3": "OPEN",
+  "authorizes": []
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "jimuyun.s17-process-repair-handoff.v1",
+  "base_commit": "7abdfb25dcc1342d0f2f7b3dc0dbb9268f2bd39f",
+  "status": "online-repair-verified-windows-pending",
+  "platform": "linux",
+  "python": "3.12.14",
+  "pytest": "8.4.2",
+  "unittest_passed": 36,
+  "watchdog_transport_passed": 9,
+  "native_failure_family_passed": 29,
+  "native_failure_family_source_stable": true,
+  "original_scope_collected": 340,
+  "full_scope_executed": false,
+  "windows_verification_pending": true,
+  "C3": "OPEN",
+  "authorizes": [],
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "published_source_sha256": {
+    "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md": "fb527c459e51116960087ef5b96f8f272d41e391f63864f9413a9c574c83e905",
+    "scripts/sc/skill_replay_runtime.py": "1e5628aeb13afd2417694f16b29121aabead3d12593c4abd8e7665c69d5c3aed",
+    "scripts/sc/tests/tc_d1_cer/conftest.py": "fd2eed62af936273e9a1f99707af69a6c2c2f254a1a32a4540a5e010e51dcd7e",
+    "scripts/sc/tests/tc_d1_cer/test_s10.py": "2943b97a20976cf035bda4e1cadc51319e5efa37765b97e8f618d64f380012d2",
+    "scripts/sc/tests/tc_d1_cer/test_s13.py": "b48882ff9fe6f45f7e051f7817385c92eff243e53066da17063b0fc140d5c496",
+    "scripts/sc/tests/tc_d1_cer/test_s17.py": "b87457666f50a08401e864e34f0c6dfb57db6948ced906db9b5bbff9eeddad8a",
+    "scripts/sc/tests/test_skill_package_replay_source_identity.py": "1769a37e65a688c8db8d60261054fcaee716400db014ee7fb31ed2ba9a09598b",
+    "scripts/sc/tests/test_skill_replay_verification.py": "773c440687bc417d377e8abdeb74fbdb61026c201783c6e4af019b663a7eafc0",
+    "scripts/sc/verify_skill_replay.py": "80ce32630d3b7870456f81dc625e03f6a76638cdb3d8812e8e3d402b9a6a147a",
+    "scripts/sc/tests/test_skill_replay_process_regressions.py": "270f8cff3d68ae43625f87cbae052edca9bb25991648289e3a8d131269fd8ab0"
+  },
+  "semantic_selection_equivalence": {
+    "schema": "jimuyun.syntax-selection-equivalence.v1",
+    "python_files": 837,
+    "mismatches": [],
+    "original_import_and_consumer_selector_semantics_preserved": true,
+    "authorizes": []
+  }
+}

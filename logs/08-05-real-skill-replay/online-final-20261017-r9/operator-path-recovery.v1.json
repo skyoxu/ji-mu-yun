@@ -1,0 +1,10 @@
+{
+  "authorizes": [],
+  "failure": "Relative operator-helper path was passed to absolute Path.relative_to(ROOT).",
+  "nativeProjectionAndPreparedRunReused": true,
+  "originalHelperSha256": "sha256:267218221fed92af7ee4d87e18285b89c7e80364eb4f5db74c4be9ff1f0e5c10",
+  "registeredAcceptanceActionPreviouslyExecuted": false,
+  "repair": "Normalize the helper reference path with resolve(); no native predicate/contract or production source changed.",
+  "repairedHelperSha256": "sha256:4d3b76b2adcaf48a18833d03b461189acccf57e90dbc5130c77b45e74121ff21",
+  "schema": "08-05-operator-path-recovery.v1"
+}

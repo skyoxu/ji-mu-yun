@@ -1,0 +1,5 @@
+[
+  "scripts/sc/tests/test_skill_package_replay.py",
+  "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+  "scripts/sc/tests/tc_d1_cer"
+]

@@ -1,0 +1,1 @@
+{"reason": "completion runtime root stale: fixture", "recommended_action": "repair-vdd", "status": "blocked"}

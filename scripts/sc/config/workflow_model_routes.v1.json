@@ -15,22 +15,12 @@
     "probeReceiptSchemaVersion": "jimuyun.workflow-model-capability-probe-receipt.v1",
     "shadowReceiptSchemaVersion": "jimuyun.workflow-model-shadow-execution-receipt.v1"
   },
-  "supportedEfforts": ["medium", "high", "max"],
+  "supportedEfforts": ["medium", "high", "xhigh", "max"],
   "models": {
-    "terra": {
-      "modelId": "gpt-5.6-terra",
-      "displayLabel": "Terra",
-      "activationState": "active"
-    },
     "sol": {
-      "modelId": "gpt-5.6-sol",
+      "modelId": "gpt-6-sol",
       "displayLabel": "Sol",
       "activationState": "active"
-    },
-    "luna": {
-      "modelId": "gpt-5.6-luna",
-      "displayLabel": "Luna",
-      "activationState": "shadow_candidate"
     }
   },
   "routes": {
@@ -40,7 +30,7 @@
     "vdd.complex_recovery": {
       "consumer": "vdd",
       "model": "sol",
-      "effort": "max",
+      "effort": "high",
       "launchMode": "child",
       "activationState": "disabled_pending_evidence",
       "requiresCapabilityProbe": true,
@@ -52,14 +42,13 @@
     },
     "quick_dev.small_mechanical": {
       "consumer": "quick_dev",
-      "model": "terra",
+      "model": "sol",
       "effort": "medium",
-      "launchMode": "child",
-      "shadowCandidate": {"model": "luna", "effort": "medium"}
+      "launchMode": "child"
     },
-    "quick_dev.normal": {"consumer": "quick_dev", "model": "terra", "effort": "medium", "launchMode": "child"},
-    "quick_dev.complex": {"consumer": "quick_dev", "model": "terra", "effort": "high", "launchMode": "child"},
-    "quick_dev.architectural": {"consumer": "quick_dev", "model": "sol", "effort": "high", "launchMode": "child"},
+    "quick_dev.normal": {"consumer": "quick_dev", "model": "sol", "effort": "medium", "launchMode": "child"},
+    "quick_dev.complex": {"consumer": "quick_dev", "model": "sol", "effort": "medium", "launchMode": "child"},
+    "quick_dev.architectural": {"consumer": "quick_dev", "model": "sol", "effort": "medium", "launchMode": "child"},
     "refactor_acceptance.deterministic": {"consumer": "refactor_acceptance", "launchMode": "none"},
     "refactor_acceptance.complex_recovery": {
       "consumer": "refactor_acceptance",

@@ -1,0 +1,45 @@
+{
+  "actionReceipts": [
+    {
+      "path": "actions/acceptance-acceptance-closeout-regressions/attempt-001/result.json",
+      "sha256": "sha256:79824ead2955b1cfe874b39b2eb826ff1a1311978f8a1268423303494d132d75"
+    },
+    {
+      "path": "actions/acceptance-acceptance-package-validation/attempt-001/result.json",
+      "sha256": "sha256:e8ebd209500c9a6c63a9b23800471e668970c2a15f47071c537966701d79abfc"
+    },
+    {
+      "path": "actions/acceptance-current-q8-read-only/attempt-001/result.json",
+      "sha256": "sha256:086cb03897a10c23f26f42151f05b0311f5c1b5c55e1849b255a40257a5072a4"
+    }
+  ],
+  "authorizes": [],
+  "candidateCustodyHash": "sha256:578010c2940d22bbe703948a6dba2ab35ecc49c8cc67602a244fbe4a5bd5bbf6",
+  "implementationReceiptBinding": {
+    "path": "logs/08-05-real-skill-replay/incremental-q8-047a/implementation-complete-e4e1377c-r1.json",
+    "sha256": "sha256:f33ba3b10d53d7d3bf1e124937c37acaed2ce0427f14c53aa7aceec7ae01c874",
+    "terminalCommandId": "terminal-full"
+  },
+  "inputBindings": {
+    "candidateCustodyHash": "sha256:578010c2940d22bbe703948a6dba2ab35ecc49c8cc67602a244fbe4a5bd5bbf6",
+    "contractHash": "sha256:551717b85d4e8056390fdec7baa8d2ec00bdfc3e88ff289b78289e7edf18d52b",
+    "knowledgeContextHash": "sha256:f5ab3f5c319c96b166dfaedc95aa4e1ac4e5d78b37ae6c60537a1b3ddd0a0db8",
+    "runInputHash": "sha256:da0ea9a246218e45e568b0c1d9e9e8069cd0b7db69dc0e2684533592d16bad91",
+    "skillInputBindingHash": "sha256:2f1f17c1eb830ac23f3dd683488f542bd1bcbbd566d1a14fd3b235507ba6e18f",
+    "skillInputContextHash": "sha256:70e1fd3fe34b775cd20e00846c61590b3844a2c7bc35074a5c37fc7a2660fe19"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:a3b2f877ea557fcf9b0336bc12a50bec4a1fa9f494c754a1fa408830c36e9ee8",
+    "implementationReceipt": {
+      "path": "logs/08-05-real-skill-replay/incremental-q8-047a/implementation-complete-e4e1377c-r1.json",
+      "sha256": "sha256:f33ba3b10d53d7d3bf1e124937c37acaed2ce0427f14c53aa7aceec7ae01c874",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-08-05-e4e1377c-incremental-r3/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:2b24bdda30c04d6cfef41eb72e4d78f436a76a4b8c580336e74cf05d86aa329a"
+  },
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-evaluation.v1",
+  "status": "passed",
+  "terminalResultHash": "sha256:36d6b48e5d09694f44d9bf5c4d1b9e859a719e98bc85564db1bfff2340b58599"
+}

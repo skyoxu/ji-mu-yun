@@ -1,0 +1,19 @@
+{
+  "schema": "jimuyun.direct-replay-verification.v1",
+  "status": "blocked",
+  "scope": [
+    "scripts/sc/tests/test_skill_package_replay.py",
+    "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+    "scripts/sc/tests/tc_d1_cer"
+  ],
+  "expected_count_requested": 587,
+  "unittest_selected": false,
+  "platform": "linux",
+  "formal_workflow_called": false,
+  "live_backend_called": false,
+  "C3": "OPEN",
+  "authorizes": [],
+  "collected_count": 340,
+  "diagnostic": "collection count differs from the requested verification scope",
+  "source_stable": true
+}

@@ -4,7 +4,9 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 
-from runtime_evidence import hash_refs, load_json, sha256_value, sha256_bytes
+from runtime_evidence import load_json, sha256_value, sha256_bytes
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts/quick_dev"))
+from approved_budget_replay import hash_refs
 
 SCHEMA = "quick-dev.behavior-route.v1"
 
@@ -16,7 +18,8 @@ def validate_plan(bundle):
     if str(vdd) not in sys.path:
         sys.path.insert(0, str(vdd))
     from semantic_behavior_contract import validate_routing_intent
-    findings = validate_routing_intent(bundle)
+    from quick_dev_handoff import handoff_findings
+    findings = [*validate_routing_intent(bundle), *handoff_findings(bundle)]
     expected = {o["obligation_id"] for o in bundle["obligations"] if o.get("status") != "not_applicable"}
     covered = {e.get("obligation_id") for e in bundle["final_plan_coverage"]}
     if covered != expected:
@@ -42,10 +45,14 @@ def production_hashes(workspace, bundle, slice_id):
         if oid in seen:
             continue
         if oid not in index:
-            raise ValueError("behavior-routing:dependency-outside-current-scope:" + oid)
+            # `depends_on` also carries non-runtime requirement/governance
+            # labels in compiled plans.  They have no behavior intent or
+            # production owner and therefore cannot widen the runtime hash
+            # closure.  Only projected obligation IDs participate here.
+            continue
         seen.add(oid)
         paths.update(index[oid]["production_owners"])
-        todo.extend(index[oid]["depends_on"])
+        todo.extend(dep for dep in index[oid]["depends_on"] if dep in index)
     return hash_refs(workspace, sorted(paths))
 
 

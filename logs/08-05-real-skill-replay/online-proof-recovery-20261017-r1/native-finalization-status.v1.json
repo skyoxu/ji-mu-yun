@@ -1,0 +1,41 @@
+{
+  "schema": "08-05-native-finalization-status.v1",
+  "authorizes": [],
+  "formalAcceptance": "blocked-execution-environment",
+  "sourceRepair": "Explicitly hash the persisted action owner's existing transient claim in both read-only content scans; keep byte protection and all write boundaries.",
+  "targetedRegression": {
+    "path": "logs/08-05-real-skill-replay/online-proof-recovery-20261017-r1/claim-inventory-green.v1.json",
+    "passed": 76,
+    "exitCode": 0,
+    "observedBeforeExecutionServerDisconnect": true
+  },
+  "testedGitBlobShas": {
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py": "e1e4a0568da0d29d05ddc46f666f4a98cfdfbcba",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py": "97b8e9fdccf6bb4261bb01fc3ab8bc7fba82c6fe",
+    "docs/adr/ADR-0058-acceptance-coordinator-persisted-evidence-ownership.md": "e51a0513b1496405b6d0189fc2c84bb5617b6228"
+  },
+  "historicalNativeRunIdsRetainedAsFailed": [
+    "acceptance-b84d9c235c225350",
+    "acceptance-3145868c8788fd18",
+    "acceptance-1b0dc581c9052cd0",
+    "acceptance-7aabdd265f40b18d"
+  ],
+  "failureDelta": "logs/08-05-real-skill-replay/online-proof-recovery-20261017-r1/native-readonly-guard-delta-r4.jsonl",
+  "historicalRunPublication": "Full failed-run trees are in the isolated local workspace and local checkpoint commits; publication is pending execution-server recovery.",
+  "independentFixtureVerification": {
+    "status": "not-executed",
+    "reason": "Shared exec-server transport disconnected; process creation and recovery timed out."
+  },
+  "nextStep": "On execution-server recovery, publish preserved failed-run trees, bind a fresh clean published candidate, then execute native Acceptance successor and same-input reentry.",
+  "q8OwnerEvidence": {
+    "sourceCandidate": "e3344fbc076e2fbd0d014f33698af25a3a08ec1c",
+    "predecessors": 45,
+    "runtimeClosureTuples": 228,
+    "verification": "read-only",
+    "authorizes": []
+  },
+  "full340SuiteRerun": false,
+  "vddRerun": false,
+  "C3": "OPEN (unchanged)",
+  "executionInfrastructureError": "Failed to create unified exec process: exec-server transport disconnected; failed to resume exec-server session: recovery timed out after 25s"
+}

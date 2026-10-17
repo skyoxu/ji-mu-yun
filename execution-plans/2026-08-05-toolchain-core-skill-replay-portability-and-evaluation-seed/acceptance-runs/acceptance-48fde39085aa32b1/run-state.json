@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:b0eeb99019ecc9392e56ba5eac0fbc5b0ebd4418315aacdf6fec3ebafb2df04b",
+  "createdUtc": "2026-10-17T08:38:18.882829Z",
+  "knowledgeContextHash": "sha256:f5ab3f5c319c96b166dfaedc95aa4e1ac4e5d78b37ae6c60537a1b3ddd0a0db8",
+  "runId": "acceptance-48fde39085aa32b1",
+  "runInputHash": "sha256:ac1e3f9c23b7cf894ce9d712591a9a6acd4e7a6878a155a5dc0dcf59b72082e3",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:6592a38fb3457428967084ede7034b967843e4e649a2f7c717be86a240060a8d",
+  "skillInputContextHash": "sha256:70e1fd3fe34b775cd20e00846c61590b3844a2c7bc35074a5c37fc7a2660fe19",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-inputs/acceptance-08-05-online-final-20261017-r10/skill-input-v2/acceptance/skill-input-generations/d2e79de5fde8dafe5536c1f494355a1b087e1a0a560f759d2bdaadc103ca0213/context.json"
+}

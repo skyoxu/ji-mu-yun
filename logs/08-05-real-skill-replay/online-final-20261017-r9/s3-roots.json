@@ -1,0 +1,58 @@
+[
+  {
+    "inclusion_reason": "P1 replay production owner",
+    "repository_relative_posix_paths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py",
+      "scripts/python/validate_acceptance_execution_evidence.py",
+      "scripts/sc/skill_package_replay.py",
+      "scripts/sc/skill_replay_runtime.py"
+    ],
+    "root_kind": "candidate_tree",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "current semantic execution plan",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan/semantic-plan-bundle.v1.json",
+    "root_kind": "plan",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "Quick Dev execution contract",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter",
+    "root_kind": "contract",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "Current S3 native descriptors after the Acceptance controller repair",
+    "repository_relative_posix_path": "logs/08-05-real-skill-replay/online-final-20261017-r9/S3-current/descriptors",
+    "root_kind": "descriptor",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "canonical stable-candidate matrix",
+    "repository_relative_posix_paths": [
+      "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json",
+      "scripts/sc/tests/tc_d1_cer/conftest.py"
+    ],
+    "root_kind": "fixture",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "canonical requirement authority",
+    "repository_relative_posix_path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/requirements.v1.json",
+    "root_kind": "source",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "independent current stage judge",
+    "repository_relative_posix_path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+    "root_kind": "validator_judge",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  },
+  {
+    "inclusion_reason": "append-only P1 current run state",
+    "repository_relative_posix_path": "logs/08-05-real-skill-replay/incremental-q8-047a",
+    "root_kind": "plan_state_transition",
+    "source_commit": "79f8442a6877e1d03f0a804afe09fda8a856342c"
+  }
+]

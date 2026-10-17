@@ -1,0 +1,1 @@
+{"authorizes": [], "differences": [{"after": "sha256:b61d0c8efc455b9a51c2c482a5bc82e9d1b295c45274f71956dbdd7f6eaaf27b", "before": null, "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-62877994f4c9b236/action-claims/acceptance-current-q8-read-only.json"}], "observabilityOnly": true}

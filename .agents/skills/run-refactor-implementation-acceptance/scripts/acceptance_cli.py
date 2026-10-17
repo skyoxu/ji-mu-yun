@@ -1324,7 +1324,11 @@ def run_coordinator(request_path: str, output_path: str) -> dict:
         inspection = inspect_persisted_run(run_dir, actions, run_input_hash, contract_hash, knowledge_hash)
         if resumed and resumed.get("receipt", {}).get("exitCode") != 0:
             break
-    if inspection.get("actionStates") and all(state in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
+    failed_actions = [action_id for action_id, state in inspection.get("actionStates", {}).items() if state == "failed"]
+    if failed_actions:
+        finalization = None
+        route, status = "action_failed", "failed"
+    elif inspection.get("actionStates") and all(state in {"completed", "not-applicable"} for state in inspection["actionStates"].values()):
         finalization = None
         if run_input.get("execution_mode", "evidence_only") == "evidence_only":
             try:
@@ -1520,7 +1524,8 @@ def main() -> int:
     recover_stale.add_argument("--contract-hash", required=True)
     recover_stale.add_argument("--knowledge-context-hash")
     recover_stale.add_argument("--minimum-age-seconds", type=int, default=60)
-    subcommands.add_parser("validate-package")
+    validate_package_parser = subcommands.add_parser("validate-package")
+    validate_package_parser.add_argument("--skill-root")
     args = parser.parse_args()
     if args.command == "parse-run-input":
         print(json.dumps(parse_run_input(json.loads(Path(args.input).read_text(encoding="utf-8"))), sort_keys=True))
@@ -1719,7 +1724,8 @@ def main() -> int:
             args.knowledge_context_hash, minimum_age_seconds=args.minimum_age_seconds,
         ), sort_keys=True))
         return 0
-    findings = validate_package(Path(__file__).resolve().parents[1])
+    skill_root = Path(args.skill_root).resolve() if args.skill_root else Path(__file__).resolve().parents[1]
+    findings = validate_package(skill_root)
     print(json.dumps({"status": "pass" if not findings else "fail", "findings": findings, "authorizes": []}, sort_keys=True))
     return 0 if not findings else 1
 

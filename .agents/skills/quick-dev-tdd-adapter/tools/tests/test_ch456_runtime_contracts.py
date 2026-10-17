@@ -32,12 +32,46 @@ def test_terminal_selector_may_differ_from_tdd_selector() -> None:
     assert valid, findings
 
 
+def test_runtime_closure_accepts_independent_snapshot_per_slice() -> None:
+    first = "sha256:" + "a" * 64
+    second = "sha256:" + "b" * 64
+    edge_hash = "sha256:" + "c" * 64
+    tuples = [
+        {"tuple_key": f"S1|A-X|terminal", "slice_id": "S1", "acceptance_id": "A-X", "stage": "terminal", "runtime_edge_sha256": edge_hash, "selector_identity": "S1", "current_snapshot_sha256": first},
+        {"tuple_key": f"S2|A-Y|terminal", "slice_id": "S2", "acceptance_id": "A-Y", "stage": "terminal", "runtime_edge_sha256": edge_hash, "selector_identity": "S2", "current_snapshot_sha256": second},
+    ]
+    valid, findings = validate_runtime_closure(
+        tuples,
+        {item["tuple_key"] for item in tuples},
+        {"S1": first, "S2": second},
+    )
+    assert valid, findings
+
+
 def test_duplicate_tuple_fails() -> None:
     snapshot = "sha256:" + "a" * 64
     edge_hash = "sha256:" + "b" * 64
     item = {"tuple_key": "S1|A-X|red", "slice_id": "S1", "acceptance_id": "A-X", "stage": "red", "runtime_edge_sha256": edge_hash, "selector_identity": "X", "current_snapshot_sha256": snapshot}
     valid, findings = validate_runtime_closure([item, dict(item)], {item["tuple_key"]}, snapshot)
     assert not valid and "tuple-key-duplicate" in findings
+
+
+def test_runtime_closure_rejects_missing_snapshot_even_when_tuple_omits_it() -> None:
+    # ADR-0041: missing proof must never compare equal to missing authority.
+    item = {"tuple_key": "S1|A-X|terminal", "slice_id": "S1", "acceptance_id": "A-X",
+            "stage": "terminal", "runtime_edge_sha256": "sha256:" + "b" * 64,
+            "selector_identity": "S1"}
+    valid, findings = validate_runtime_closure([item], {item["tuple_key"]}, {})
+    assert not valid and "tuple[0]:snapshot" in findings
+
+
+def test_runtime_closure_rejects_snapshot_from_another_slice() -> None:
+    first, second = "sha256:" + "a" * 64, "sha256:" + "b" * 64
+    item = {"tuple_key": "S1|A-X|terminal", "slice_id": "S1", "acceptance_id": "A-X",
+            "stage": "terminal", "runtime_edge_sha256": "sha256:" + "c" * 64,
+            "selector_identity": "S1", "current_snapshot_sha256": second}
+    valid, findings = validate_runtime_closure([item], {item["tuple_key"]}, {"S1": first, "S2": second})
+    assert not valid and "tuple[0]:snapshot" in findings
 
 
 def test_repeated_fingerprint_stops_second_identical_failure() -> None:

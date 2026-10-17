@@ -1,0 +1,13 @@
+{
+  "C3": "OPEN (unchanged)",
+  "authorizes": [],
+  "candidateCommit": "339f489d304b895e9a04036fd7c79b90f7cba93a",
+  "priorFailureEvidenceCommit": "c37236029934cf7ff8b4713508442622c8f8310b",
+  "priorReleaseDiagnosticsCommit": "339f489d304b895e9a04036fd7c79b90f7cba93a",
+  "productionCodeChanged": false,
+  "purpose": "Repeat unchanged native controls in a local temporary checkout; diagnose claim reappearance in the online workspace.",
+  "reusedQ8": "logs/08-05-real-skill-replay/online-final-20261017-r9/q8/implementation-complete.v2.json",
+  "schema": "08-05-local-temp-differential.v1",
+  "sliceTestsExecutedInThisCheckout": false,
+  "worktree": "/tmp/jimuyun-08-05-native-final"
+}

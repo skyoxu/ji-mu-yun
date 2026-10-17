@@ -1,0 +1,1278 @@
+{
+  "authorizes": [],
+  "platform": "Linux",
+  "windows_runtime_verified": false,
+  "model_called": false,
+  "production_tests_executed": false,
+  "results": [
+    {
+      "slice_id": "S1",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:1ed09990c9118f8a3bcf1666b9536370048d70f77a6a471c5445894c8aad7e92",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py": "sha256:99e61b21ed877a11ff794c587c8b1aaeb209d1f4e0edb88a2cc1d93240815181",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json": "sha256:035e38d13e124750f5227c2bf3c8c0f1becbb8b6ba5a518a388a5615ac121003",
+            "scripts/sc/tests/tc_d1_cer/test_s1.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S1",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S2",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:10cc4081c125a13d84c8926a996acc1e7530072b70940b98283c6689447fb0d0",
+          "paths": {
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json": "sha256:03e62632aad593738c0934e749107821ce9a2180539c92229195b51bd7d82317",
+            "docs/adr/ADR-0011-windows-only-platform-and-ci.md": "sha256:fdcc4a9295232f62ea91deb727a2270898f78fc72cbbdbfbe227393dbf658dde",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s2.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S2",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S3",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:ce1b96ec58fb9a1ec015e708acaeb4847781794dc26ed6ec7fd78b7074688967",
+          "paths": {
+            ".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py": "sha256:fd466c7b3b82ddb180302515d46fdc36aff914bf1e0ff5f9e53861b0146ca769",
+            "scripts/python/validate_acceptance_execution_evidence.py": "sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d",
+            "scripts/sc/tests/tc_d1_cer/test_s3.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S3",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S4",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:7cf6908cda2c3d3d81861e9e564e230779476d15a49a4151cdbad856953d5c93",
+          "paths": {
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/tests/tc_d1_cer/test_s4.py": null,
+            "scripts/vdd/probe_real_worker.py": "sha256:0d1de91b5846aa34a6b6c9b286a3bcba9291bf480fc1bda80a0f9ac8406b830e"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S4",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S5",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:8103ae58b801f19643ffdd2f80cd9108fcdcb67e6785e0d492a60ebd8ba07c47",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_authorization_transition.py": "sha256:d3584f6a4c5efa9dccf9544e07068a2a2c1a06a1b7456200a56752420e5f5101",
+            ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py": "sha256:d4055cba8efbcab795795acb178c879899396e4e5710b86bf0729a2219ae1e7d",
+            "scripts/sc/tests/tc_d1_cer/test_s5.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S5",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S6",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:77995ece173a97ceecdb33e5ea8430c66dfa7a8908f662cf526d56eaf95ba4a1",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py": "sha256:99e61b21ed877a11ff794c587c8b1aaeb209d1f4e0edb88a2cc1d93240815181",
+            ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py": "sha256:bdb5e4e02e66cdffe974018cf88d786d82493a8bc429365b790c38ff09796b82",
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py": "sha256:d17b3fa38c0ac6c41015d560978e311b4d411ebab6933ce344b2158fc7a9766b",
+            "scripts/quick_dev/run_candidate_bound_metric.py": "sha256:087b08ce73f6a44882cd86305417a842b5624edbebd1c3ebee7e0ef7e8b26bb4",
+            "scripts/sc/tests/tc_d1_cer/test_s6.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S6",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S7",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:9874ece854a44065d54618f39f4726a2da32c90727680e194512f10ac95a392a",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py": "sha256:619713855f7282eca787a7b83211742497d3143359d2f0c1605048b4f4e4eb7e",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py": "sha256:5e8c578fec050f22f3fb4ea9f33f3bc813a50e5e6202e1cc349367f353b62e22",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s7.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S7",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S8",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:038a94794ea9164eced6c60eb1d4642e5a752ff3bba75bcb8ab134aacf9d6444",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            "scripts/sc/tests/tc_d1_cer/test_s8.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S8",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S9",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:bd89d5116f367abb1ec9c25cf2c3be074d611c717287887c6d2771135e9260fd",
+          "paths": {
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s9.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S9",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S10",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:dd3cf292ab57b9fce37207c9fd819453d07a01df182bed51f27fbb989591ad50",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s10.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S10",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S11",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:7b5ad8d7e4b565f548f7c2a41cfe13fdabd3c2b10908c2c3b6a86d4cadd1280e",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/scripts/conformance.py": "sha256:8be6d6729c4040f09e2393a0bd89b24f3114a9c3412ccfb6c72fafc6612a832d",
+            ".agents/skills/vdd-conformance-exact-cover/scripts/validate_conformance.py": "sha256:8e2fa792df847cbd0cbaf00d10bcc74af6a99c80e2d829ed1c8273229eae5a1a",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            "scripts/sc/tests/tc_d1_cer/test_s11.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S11",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S12",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:970a48f57496242490a6b813d0cebd46941d1ef8374e9e64d14b46fb58973600",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s12.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S12",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S13",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:ab40f79cdeefa0fd07933bb9e0103f6f616b5611ef3ae2ca4f9e568471fa8fd3",
+          "paths": {
+            ".agents/skills/authorization/tests/validators/preflight_negative.py": "sha256:2e52563ed2237a211df5e4119b5c05d62eb534db94fc107eb907f26242c3f559",
+            ".agents/skills/quick-dev-tdd-adapter/tools/controlled_red_probe.py": "sha256:4d85e1a2e452eee45e3c09cd5b4decf64c2c08840802d79d34ee68ae728d6d88",
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json": "sha256:035e38d13e124750f5227c2bf3c8c0f1becbb8b6ba5a518a388a5615ac121003",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py": "sha256:5e8c578fec050f22f3fb4ea9f33f3bc813a50e5e6202e1cc349367f353b62e22",
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/validation-result-pass.json": "sha256:59c812e0f292dc61aaa0ef490119e0a1ed8515233d092ac39c73afc5614b2e20",
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s13.py": null,
+            "scripts/vdd/probe_real_worker.py": "sha256:0d1de91b5846aa34a6b6c9b286a3bcba9291bf480fc1bda80a0f9ac8406b830e"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S13",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S14",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:dcb6ef0de28ff3b0443f5526e454b8d1cd66afd39ef5718b4e30ce166c0e3f09",
+          "paths": {
+            ".acceptance-broh-changed-paths.txt": "sha256:78d986b3579f317b87511e18becf6ce9284ae68234b2c4ca9bc7286c900f55b3",
+            "scripts/ci/verify_base_clean.ps1": "sha256:e6476a537950aafc14dbb0f26099a436e185ab6a96cd24ef58b27d02a9e2ffef",
+            "scripts/python/validate_acceptance_execution_evidence.py": "sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d",
+            "scripts/sc/tests/tc_d1_cer/test_s14.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S14",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S15",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:ead68cb9020c42b7fda5dd3ee065ae41fbd13baf55380db798eb341c3ca48983",
+          "paths": {
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            "scripts/python/validate_acceptance_execution_evidence.py": "sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d",
+            "scripts/sc/tests/tc_d1_cer/test_s15.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S15",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S16",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:c1525733517602b291e9e9ebd205048980fb8b75e76f77fbb4d8f1e47dbfb1e4",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py": "sha256:b1c3bd5972f8e2ba429e8de915a1b2c4d55ad19c69f6e17e01afe083cdf5d229",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py": "sha256:ed5ce9c950669f62fecd477dc4fb7a8f6cfe813aee54bc952c810a3a67f3a26d",
+            "scripts/sc/tests/tc_d1_cer/test_s16.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S16",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S17",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:beea21aaeef35c42002388885afd2273254e18e534aa6b5b919c91ae41d8cb68",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s17.py": null,
+            "scripts/vdd/probe_real_worker.py": "sha256:0d1de91b5846aa34a6b6c9b286a3bcba9291bf480fc1bda80a0f9ac8406b830e"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S17",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S18",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:7009ca194069b808578fbef0668df34343f54157ec296f2865d0464b320d1e42",
+          "paths": {
+            ".acceptance-broh-changed-paths.txt": "sha256:78d986b3579f317b87511e18becf6ce9284ae68234b2c4ca9bc7286c900f55b3",
+            "scripts/ci/verify_base_clean.ps1": "sha256:e6476a537950aafc14dbb0f26099a436e185ab6a96cd24ef58b27d02a9e2ffef",
+            "scripts/sc/tests/tc_d1_cer/test_s18.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S18",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S19",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:a2829aa2bdd9893132945b809b29d3d3e0c9c63b8e0f100f6f63541d207d0e6e",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/schemas/baseline-file-manifest.v1.schema.json": "sha256:5627b332d2066f7495c88a5d14cf8069b6a19a46a6a8864642e2fc0d14bff640",
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            "docs/adr/ADR-0058-toolchain-skill-replay-portability-and-evaluation-seeds.md": "sha256:4d4ed8d514b2d7a143aeb7d19331259861733b71b5018cb823e22b34323c4503",
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s19.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S19",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S20",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:94c6ed2284470526a7600975c903b0a09fb3fa854f20d5e47cb788289b8b60d0",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            "scripts/sc/tests/tc_d1_cer/test_s20.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S20",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S21",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:77f0d68d7cb5300ecf55ed0405961034175ce54c94d4b3bb7ab5df139fc75074",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/tests/tc_d1_cer/test_s21.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S21",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S22",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:ceed5cfb568efcf1d72192cde77336647c3a90e47d239e1a7461df0051f16193",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py": "sha256:99e61b21ed877a11ff794c587c8b1aaeb209d1f4e0edb88a2cc1d93240815181",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            "scripts/sc/tests/tc_d1_cer/test_s22.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S22",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S23",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:e86fcc3f2aa6417bf9390dd8836df937a61e2986a48147d69ac329b942abe2bc",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/references/compatibility-operation.md": "sha256:ee46db9bf91da841fcc9a9698f6e52e9174c2b5f18be6fe1a561569edf9d67d4",
+            ".agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py": "sha256:619713855f7282eca787a7b83211742497d3143359d2f0c1605048b4f4e4eb7e",
+            "scripts/sc/tests/tc_d1_cer/test_s23.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S23",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S24",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:44f3f76a70e471a4c4a141df3478726404d5a8528f8d1183b902413278b71104",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            "scripts/sc/tests/tc_d1_cer/test_s24.py": null,
+            "scripts/vdd/probe_real_worker.py": "sha256:0d1de91b5846aa34a6b6c9b286a3bcba9291bf480fc1bda80a0f9ac8406b830e"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S24",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S25",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:70cf506235becb206ad70759299b824fd90305ddfaecc958f96f6d52d7a8c30e",
+          "paths": {
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            "scripts/python/validate_acceptance_execution_evidence.py": "sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s25.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S25",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S26",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:c5fec826af1246cb6d9869464722e970ac20b5ae626a6a248e63f8f22fc23c97",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json": "sha256:035e38d13e124750f5227c2bf3c8c0f1becbb8b6ba5a518a388a5615ac121003",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s26.py": null,
+            "scripts/sc/tests/test_805_round6_full_replay.py": "sha256:36a6ebe8c6795334efd7549a7893f09325b2164001bb6893abc83347a7d3d2ab",
+            "scripts/sc/tests/test_skill_package_replay.py": "sha256:9595d0c1e217992f9cc61d45d58144c19b002602aa07ad337f828eec4050eacf",
+            "scripts/vdd/probe_real_worker.py": "sha256:0d1de91b5846aa34a6b6c9b286a3bcba9291bf480fc1bda80a0f9ac8406b830e"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S26",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S27",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:b2f6bd0022769b3c17bcc2ccb8d4bfdc2d7b8d632373dcf9e2c3caf2a6e9939c",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py": "sha256:ed5ce9c950669f62fecd477dc4fb7a8f6cfe813aee54bc952c810a3a67f3a26d",
+            "scripts/python/validate_acceptance_execution_evidence.py": "sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d",
+            "scripts/sc/tests/tc_d1_cer/test_s27.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S27",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S28",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:40d8dab8c5779d1adc16dbf05294ddf2a230914c935831db53f2e5d9aa8d409b",
+          "paths": {
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json": "sha256:03e62632aad593738c0934e749107821ce9a2180539c92229195b51bd7d82317",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s28.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S28",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S29",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:99d54e5921675bef5da1d22ba97754c141d42f9f15c57304162156276d7622d6",
+          "paths": {
+            "scripts/sc/scenarios/evaluation-seed-manifest.v1.json": null,
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/tests/tc_d1_cer/test_s29.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S29",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S30",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:0943005792180cb4ed9642ab926ed895c4f8fd7a2a5d8f43e299a30f26befb33",
+          "paths": {
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/validation-result-pass.json": "sha256:59c812e0f292dc61aaa0ef490119e0a1ed8515233d092ac39c73afc5614b2e20",
+            "scripts/python/validate_acceptance_execution_evidence.py": "sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s30.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S30",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S31",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:607a4e8a0a884e1569b3d6cee45344b2bb3881a6d11931544caaf64ae9afa1ea",
+          "paths": {
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/tests/tc_d1_cer/test_s31.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S31",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S32",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:4420840d352584315edcd49e3e8f1549bdcbe7b6b29ea28c706830c2610df9bf",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/adapter-lifecycle-probe.txt": "sha256:d0cf7bb4821a41eb7427659b411d6e5e19549c1cce031c832777e6c8075502ef",
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+            "scripts/sc/tests/tc_d1_cer/test_s32.py": null,
+            "scripts/vdd/probe_real_worker.py": "sha256:0d1de91b5846aa34a6b6c9b286a3bcba9291bf480fc1bda80a0f9ac8406b830e"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S32",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S33",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:710a4612358638e9e778e2b67bfde8abbd1c248e9b8317bbac924d8ce3d8f438",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/adapter-lifecycle-probe.txt": "sha256:d0cf7bb4821a41eb7427659b411d6e5e19549c1cce031c832777e6c8075502ef",
+            ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py": "sha256:b1c3bd5972f8e2ba429e8de915a1b2c4d55ad19c69f6e17e01afe083cdf5d229",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s33.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S33",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S34",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:c115f97a3e56dbd4852fc0d14fd36d0ed0332a141ad9ef8951db176b790cdc35",
+          "paths": {
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s34.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S34",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S35",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:42908687c8854c3b21472043a850878aea08756444c5a91bbfd40bcfa32428bd",
+          "paths": {
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json": "sha256:03e62632aad593738c0934e749107821ce9a2180539c92229195b51bd7d82317",
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s35.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S35",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S36",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:7fba4a750617d8495e7cb582333c246c930cddd0f3e32395837def8c96bbb770",
+          "paths": {
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s36.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S36",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S37",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:aa8514dda1cc7e029683f9a286b7ced6a9f212a9be43b6b4f2d665d37e4e3601",
+          "paths": {
+            "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/evaluation-seeds.v1.json": "sha256:59a72db30c814f86871590ad1febd1f05e8933b9c7e1fbb9fbf4cfc961fe9e85",
+            "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/tests/test_validate_implementation.py": "sha256:2722729fa15018cc4e664518647fd43ea841542a5f23b0299cbe8f79aabd9169",
+            "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_implementation.py": "sha256:ab1c91a14034a531b7ae514d37abb2d778965e56c41c3a7436b23bdcfae9cadf",
+            "scripts/sc/tests/tc_d1_cer/test_s37.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S37",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S38",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:9e29f365fa3d6b92b20abaa04791120d79a6fe374a334a4c322d972b9d53e83d",
+          "paths": {
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            ".agents/skills/run-refactor-implementation-acceptance/scripts/matrix_phase.py": "sha256:0a07047465a8411559a132704dc6e3024c6f2b525b711f2d1433b3315a52c1c1",
+            "scripts/sc/tests/tc_d1_cer/test_s38.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S38",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S39",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:306d69f0e959d982a429adfc1209eed0b516386aebe81c9040d1804e301976db",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py": "sha256:cf8e4b04c32093a05c6ff9578d3052d069c25e37299fb92b470386d5fee715a8",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_review_binding.py": "sha256:5e8c578fec050f22f3fb4ea9f33f3bc813a50e5e6202e1cc349367f353b62e22",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py": "sha256:4c0c61f3ed11e47829f65fef8c1cc878873b9bd2524b512670a71e5a2ef09aa0",
+            "scripts/sc/tests/tc_d1_cer/test_s39.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S39",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S40",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:d9cb60c01405b04de572dd374e53bcc5c38d4dc687e37c939c97bb5f8714896f",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "sha256:29ebcd3e19cb6a7418ce170d9aa8e3e71c04fc78b98dc74bf0b933411211d9f2",
+            ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py": "sha256:b1c3bd5972f8e2ba429e8de915a1b2c4d55ad19c69f6e17e01afe083cdf5d229",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py": "sha256:64e7e4f3dcafe6bdc913025cb1e6966e5ee49daf4bf0c6a2ba9c9cd53d29a0e8",
+            "scripts/sc/tests/tc_d1_cer/test_s40.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S40",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S41",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:54f3dc0af909a5f388ff71587c13fe0b044426283447ec8b0923cd0b8d370cbe",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json": "sha256:035e38d13e124750f5227c2bf3c8c0f1becbb8b6ba5a518a388a5615ac121003",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/exact_cover_negative.py": "sha256:aa12f8a166b352349d1777879356e3fc25b1a9a5624764a093034ea3404f5f2b",
+            ".agents/skills/vdd-conformance-exact-cover/tests/validators/readonly_target.py": "sha256:bb48be45c906d67151f2e48e62aa3f1b99b076fac0c41d208c0aa9333ea40087",
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/profile-cases.json": "sha256:03e62632aad593738c0934e749107821ce9a2180539c92229195b51bd7d82317",
+            "scripts/sc/config/skill-package-validator-capability.v1.json": "sha256:304981674348f2831e8bfc550e48f48eec6dece50e8ee6cf9dfb3bd6a08297ac",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s41.py": null,
+            "scripts/sc/tests/test_skill_package_replay.py": "sha256:9595d0c1e217992f9cc61d45d58144c19b002602aa07ad337f828eec4050eacf"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S41",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S42",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:3ecc2ed51a8bdacc3133ce443e5ea8f99fe1bdcefa1ee58cd3fb1b55b355097d",
+          "paths": {
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/tests/tc_d1_cer/test_s42.py": null,
+            "scripts/sc/tests/test_semantic_gate_all_contract.py": "sha256:9893df4abc1b0ca59c8863499e6794f33bcfb405814f6e8ce06adc51a7985dba"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S42",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S43",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:c41541a59ee77a9d200a8e4accf3ca361acbaa7e84b50594c4b1d2004ef8ea75",
+          "paths": {
+            ".agents/skills/authorization/scripts/conformance_preflight.py": "sha256:19f5495b6ee332e7ca4b4799ddbc1b6c793fbd0b852c1a2e6c223048730ee08a",
+            ".agents/skills/authorization/tests/validators/preflight_negative.py": "sha256:2e52563ed2237a211df5e4119b5c05d62eb534db94fc107eb907f26242c3f559",
+            ".agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py": "sha256:619713855f7282eca787a7b83211742497d3143359d2f0c1605048b4f4e4eb7e",
+            "scripts/sc/schemas/toolchain-evaluation-seed-manifest.v1.schema.json": "sha256:c05286dd8fb26af87edc68546dcf822bcae1e6eedae9b223cda99a2249674ee4",
+            "scripts/sc/tests/tc_d1_cer/test_s43.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S43",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S44",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:3eb23d3b24014a54d65133cf8e6738f1ed888238671d47e63eac883bdd150f9c",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/fixtures/candidate-identity.v1.json": "sha256:035e38d13e124750f5227c2bf3c8c0f1becbb8b6ba5a518a388a5615ac121003",
+            ".agents/skills/run-refactor-implementation-acceptance/fixtures/negative-cases.v1.json": "sha256:19f6f4fa0f07608440ece3bd418834fd03da379a152ffddf7e0eae241f669a61",
+            ".agents/skills/vdd-conformance-exact-cover/SKILL.md": "sha256:b11aaaad369c78528b89dd8540c70e86c9da080aac6b3d08f149a85fc029cf8c",
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/validation-result-pass.json": "sha256:59c812e0f292dc61aaa0ef490119e0a1ed8515233d092ac39c73afc5614b2e20",
+            ".agents/skills/vdd-execution-plan/scripts/fixtures/validation-result-stale.json": "sha256:92af68fb9ba53fba44420654990cd0935a9c0d82d125711a53b7930e31ed8172",
+            "scripts/sc/_semantic_gate_all_runtime.py": "sha256:3e622af9c6f87e2b98ade8f2a40656c6f8527a12c70428186bd2d1a1431bbe8f",
+            "scripts/sc/skill_package_replay.py": "sha256:156cd9159af1bc89e662759f68126757cf911f735845ce9ead0ecf6750786871",
+            "scripts/sc/tests/tc_d1_cer/test_s44.py": null,
+            "scripts/sc/tests/test_skill_package_replay.py": "sha256:9595d0c1e217992f9cc61d45d58144c19b002602aa07ad337f828eec4050eacf"
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S44",
+        "status": "preflight-passed"
+      }
+    },
+    {
+      "slice_id": "S45",
+      "exit_code": 0,
+      "result": {
+        "authorizes": [],
+        "candidate_identity": {
+          "candidate_hash": "sha256:495de2f91ec35933041ac13f16422e496741c29800103947b0f20d32928b4f30",
+          "paths": {
+            ".agents/skills/quick-dev-tdd-adapter/tools/current_router.py": "sha256:4308da5017dd27ff0bcaafc9f2f211e4870ef3099b9724549e150f26ce7541a2",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py": "sha256:4c0c61f3ed11e47829f65fef8c1cc878873b9bd2524b512670a71e5a2ef09aa0",
+            "scripts/sc/tests/tc_d1_cer/test_s45.py": null
+          },
+          "schema": "quick-dev.slice-candidate-identity.v1"
+        },
+        "environment": {
+          "available": true,
+          "interpreter_version": "Python 3.12.14",
+          "launcher": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "test_runner_version": "pytest 9.1.1"
+        },
+        "errors": [],
+        "plan_sha256": "sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f",
+        "profile": "self-hosted",
+        "slice_id": "S45",
+        "status": "preflight-passed"
+      }
+    }
+  ]
+}

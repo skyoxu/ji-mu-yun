@@ -1,0 +1,272 @@
+[
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S1-revalidated-2/slice-ready.json",
+    "result_sha256": "sha256:94bd3db3eb911c0affac2f7554b44154975bbdffb7b5cc6359babf31794c2614",
+    "run_root": "logs/quick-dev-current-run-20261005/s1-repair-2",
+    "slice_id": "S1"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S2-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:eddbb495402c930bb504e3653d193df5cb76e8eb74557d7299e3e487ab4c7b7a",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S2-current-r1",
+    "slice_id": "S2"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S3/slice-ready.json",
+    "result_sha256": "sha256:f75712214b90662b748e1547d31e83293a8e54741ab21524c58fa94d484de02e",
+    "run_root": "logs/quick-dev-current-run-20261005/s3-repair-1",
+    "slice_id": "S3"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S4-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:4ace28e3c02404dc6358a1a44518806162a04ac87576d336e801fc110252ecd3",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S4-current-r1",
+    "slice_id": "S4"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S5/slice-ready.json",
+    "result_sha256": "sha256:fec24a333458201a7216ba0fa2caed6fc31c9e5fc58ac37aabae62d764c09363",
+    "run_root": "logs/quick-dev-current-run-20261005/s5-repair-1",
+    "slice_id": "S5"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S6/slice-ready.json",
+    "result_sha256": "sha256:d478dcd7846e82a1d5a709e9910af54c3615222d3e8dd6e6e4830b9422ee1360",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S6",
+    "slice_id": "S6"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S7-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:93cbe636486da9f548c239d1de9853e05439fe9d8ca98788eb2db3bee07334d1",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S7-current-r1",
+    "slice_id": "S7"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S8/slice-ready.json",
+    "result_sha256": "sha256:2af0ad99ce7b86f7423e1089fa9f02f50e5c6e56402343f484f0309ee4d2e79d",
+    "run_root": "logs/quick-dev-current-run-20261005/s8-repair-2",
+    "slice_id": "S8"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S9-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:906eb6bf5b8de3878090a476709850d6401b5a354974564cae5d40b05d2e42d6",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S9-current-r1",
+    "slice_id": "S9"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S10-current-r2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:cdc159303612a49e0053f4d7ad52935553cda3c75f11279b2abcd2a0bce40fa2",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S10-current-r2",
+    "slice_id": "S10"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S11/slice-ready.json",
+    "result_sha256": "sha256:beb4b16ad67900d25b4c324040d0ee80bc1374c8d44d6dbe0fa6eb10bc516f2f",
+    "run_root": "logs/quick-dev-current-run-20261005/s11-repair-2",
+    "slice_id": "S11"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S12-current-r2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:3a625a29993b589be17a40e76f84cc711face45e7250c2b64bda3d9830f656b9",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S12-current-r2",
+    "slice_id": "S12"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S13-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:e4c2342e002546456a7d857d056159def7bfa7902a7146df810d0ce62ae76bf0",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S13-current-r1",
+    "slice_id": "S13"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S14-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:feaf01d260d1686a039c06b25cb66f89a796cb63eabd96310b18ba2338035ff2",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S14-current-r1",
+    "slice_id": "S14"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S15-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:8b6042bddd53505ec8eb8859def791df2ac9a78a34c88d547215cd028d1ce38b",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S15-current-r1",
+    "slice_id": "S15"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S16/slice-ready.json",
+    "result_sha256": "sha256:8c528baeb11eb84bd75bf6e8a359f49445dbad5ecde9c8447e6e849f2cbcc2e8",
+    "run_root": "logs/quick-dev-current-run-20261005/s16-repair-1",
+    "slice_id": "S16"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S17-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:8e2a377e00b36839b17954c84d03470e3afcdab73baacd07235c7fc6a7a75de2",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S17-current-r1",
+    "slice_id": "S17"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S18-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:23665c680de20bc308f096e4b39869a0011a62512ff9ff06cb4006f9da9dc999",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S18-current-r1",
+    "slice_id": "S18"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S19-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:cbc2af84d98701b486a9960c776a7a955fc30600b00216692a7040a6775a6f2b",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S19-current-r1",
+    "slice_id": "S19"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S20/slice-ready.json",
+    "result_sha256": "sha256:7cc4da72411dffb642b4e988ab03d00c7ab9981340835a51f6f45bda1c30fbb3",
+    "run_root": "logs/quick-dev-current-run-20261005/s20-repair-2",
+    "slice_id": "S20"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S21/slice-ready.json",
+    "result_sha256": "sha256:1cf2adff2751e081a35446e2c5fcd3667b63aff21dc83025669f9f703633bf63",
+    "run_root": "logs/quick-dev-current-run-20261005/s21-repair-2",
+    "slice_id": "S21"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S22-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:51f44e06112ed908cf46ffb2e3900d008bfc269edbd9f191d3b479f830f50c39",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S22-current-r1",
+    "slice_id": "S22"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S23/slice-ready.json",
+    "result_sha256": "sha256:f7c9742761d3c607c7c5a3b166290b2922bb832a1fc4e9c83e6cd69e648fc632",
+    "run_root": "logs/quick-dev-current-run-20261005/s23-repair-2",
+    "slice_id": "S23"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S24-current-r2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:26f2264828d58de822f1247859700a432e886a37940e7ac2f77a25ce6e318cdd",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S24-current-r2",
+    "slice_id": "S24"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S25-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:18f5cafb75adbaa1a41dfb8666a8ddc847a9e77eef4e471e4c22bf99c76d4aa4",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S25-current-r1",
+    "slice_id": "S25"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S26-current-r4/slice-ready-result.v2.json",
+    "result_sha256": "sha256:923758f44b377b9f0ac35f8b71c9430c3fbb6566b4691e83fd947f5308b4e2b9",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S26-current-r4",
+    "slice_id": "S26"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S27-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:1da4482f8c58d901b5a23870305d6e359c3a06982b09ada3c7ad27e16bc100d8",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S27-current-r1",
+    "slice_id": "S27"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S28-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:7ec0e561e17c23a2899189b148c44aa93dd5c33d4b8e30eac9ea12d069388f87",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S28-current-r1",
+    "slice_id": "S28"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S29/slice-ready.json",
+    "result_sha256": "sha256:d0c5eaf8c68da8cd4564b9176a4321956352b6aca35f9610a193e244f91444e3",
+    "run_root": "logs/quick-dev-current-run-20261005/s29-repair-2",
+    "slice_id": "S29"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S30-current-r2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:61433d72f72e4ca51bf9e4006acb02db0fef065f175d158d29e799156bfd3a31",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S30-current-r2",
+    "slice_id": "S30"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S31-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:d161b6ea1372332a00ee350003e7a30c6c3d0d82faee98ceeed6c15547cc6192",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S31-current-r1",
+    "slice_id": "S31"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S32/slice-ready.json",
+    "result_sha256": "sha256:f040e8b59bb03d3223ccb9c1c78374f282a820784f056cd9d3f86992d24bd92e",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S32",
+    "slice_id": "S32"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S33-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:199efe72f224b862d6106e59ec6fb7b2ffc568eb6224e5f4acc5cab873fde245",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S33-current-r1",
+    "slice_id": "S33"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S34-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:8a88363d2eb55660c3b8e8cab495ca037fbc1df91585b3e9967b6d03cd2f765f",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S34-current-r1",
+    "slice_id": "S34"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S35-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:f8914a9e0c2def46c7eb0679dd1c22be14dce63db3cc5271a0298f06da9a8cc7",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S35-current-r1",
+    "slice_id": "S35"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S36-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:72306a674357848186c95d3a16b87b5f6faa92cfcc74fa816f9edeab17886345",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S36-current-r1",
+    "slice_id": "S36"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S37/slice-ready.json",
+    "result_sha256": "sha256:12b9267d43755c376c5e8a4e4b1ff567861e1030846be8c09c5672559baaef39",
+    "run_root": "logs/quick-dev-current-run-20261005/s37-repair-2",
+    "slice_id": "S37"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:9b8650081714582c1d716e58594b470f7593119054d3f66de0358e5db64d6cf9",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S38-current-r1",
+    "slice_id": "S38"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S39/slice-ready.json",
+    "result_sha256": "sha256:ef5cd6287a1d4a76aa65d9a03355878582cccff21b047cc64320f105160004c6",
+    "run_root": "logs/quick-dev-current-run-20261005/s39-repair-2",
+    "slice_id": "S39"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S40/slice-ready.json",
+    "result_sha256": "sha256:c6b8e5f4dc8cca23c391cb1f24c918870060590f60b8cd008bb1a01923e100a6",
+    "run_root": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-rerun-20261006-r6/S40",
+    "slice_id": "S40"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S41-current-r3/slice-ready-result.v2.json",
+    "result_sha256": "sha256:ec62b32e1b9c8210de6a8a1f561c2a2d4517431228fc22da4099a77b8d209f07",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S41-current-r3",
+    "slice_id": "S41"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S42-current-r1/slice-ready-result.v2.json",
+    "result_sha256": "sha256:a394b5460c66c77e55f37faf0d070980f2bf68dbfebeee6cafa26d5f1608c623",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S42-current-r1",
+    "slice_id": "S42"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S43/slice-ready.json",
+    "result_sha256": "sha256:39adda6f8da70dfe5d9b9d6e538422b91f2489dbdcedacc1425a7cf4f851ebfa",
+    "run_root": "logs/quick-dev-current-run-20261005/s43-repair-2",
+    "slice_id": "S43"
+  },
+  {
+    "result_ref": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S44-current-r2/slice-ready-result.v2.json",
+    "result_sha256": "sha256:3fc084fa979b406c0e99c8ad163c321d52aba09647bab3797a3f90ec640b336e",
+    "run_root": "logs/08-05-real-skill-replay/review-repair-20261009/current-run-q8-recovery-r2/S44-current-r2",
+    "slice_id": "S44"
+  },
+  {
+    "result_ref": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-run/incremental-revalidation-20261006/S45/slice-ready.json",
+    "result_sha256": "sha256:bab25c81448c2f97c4dee4b697ebb64958a504674f66b29a545e142f38df47d9",
+    "run_root": "logs/quick-dev-current-run-20261005/s45-repair-2",
+    "slice_id": "S45"
+  }
+]

@@ -85,6 +85,13 @@ replay requires `--historical-v1`; its output cannot enter a live consumer.
 Transport coverage is not semantic approval and does not replace downstream
 Knowledge, review, lifecycle, or authorization requirements.
 
+For this consumer, candidate observation excludes only generated
+`acceptance-runs/`, `acceptance-inputs/`, and typed Acceptance request/context
+artifacts owned by the bound `target_plan`. It never excludes the full target
+plan or `execution-plans/`; other target files and implementation inputs remain
+candidate authority. Keep Acceptance outputs in those namespaces so writing a
+run cannot invalidate its own Skill-input generation.
+
 Create the knowledge context only through the canonical Locator and bind the
 adapter to exactly one explicit `--target-plan`. `catalog_stale` alone is a
 non-authorizing `knowledge_freshness=degraded` condition: record it in the

@@ -1,0 +1,45 @@
+{
+  "schema": "windows-reverification-summary.v1",
+  "head": "7a8ddaabd78c8da766529e27b2ae66ed2b2060c3",
+  "branch": "fix/08-05-real-skill-replay",
+  "implementation_changes_made": false,
+  "commands": {
+    "collect": "py -3 -B -m pytest --collect-only -q scripts/sc/tests/test_skill_package_replay.py scripts/sc/tests/test_skill_package_replay_source_identity.py scripts/sc/tests/tc_d1_cer",
+    "unittest": "py -3 -B -m unittest discover -s scripts/sc/tests -p \"test_skill_replay_*regressions.py\" -v",
+    "pytest": "py -3 -B -m pytest -q scripts/sc/tests/test_skill_package_replay.py scripts/sc/tests/test_skill_package_replay_source_identity.py scripts/sc/tests/tc_d1_cer --junitxml=windows-reverification-20261006-r2/junit.xml"
+  },
+  "collection": {
+    "exit_code": 0,
+    "collected_tests": 587,
+    "stdout": "collect.stdout.txt",
+    "stderr": "collect.stderr.txt"
+  },
+  "unittest": {
+    "exit_code": 0,
+    "passed": 32,
+    "failed": 0,
+    "errors": 0,
+    "evidence": "../windows-reverification-20261006-r1/unittest.stderr.txt"
+  },
+  "pytest": {
+    "status": "interrupted-after-inactivity",
+    "exit_code": 1,
+    "passed": null,
+    "failed": null,
+    "errors": null,
+    "skipped": null,
+    "collected": 587,
+    "junit_generated": false,
+    "stdout": "pytest.stdout.txt",
+    "stderr": "pytest.stderr.txt",
+    "exit_code_file": "pytest.exit-code.txt",
+    "observation": "The run produced no stdout, stderr, or JUnit report. Fresh replay child processes stopped appearing and the parent made no observable progress; Ctrl+C preserved the incomplete run. No pass claim is made."
+  },
+  "acceptance": {
+    "C3": "OPEN",
+    "status": "blocked",
+    "vdd_started": false,
+    "quick_dev_started": false,
+    "acceptance_started": false
+  }
+}

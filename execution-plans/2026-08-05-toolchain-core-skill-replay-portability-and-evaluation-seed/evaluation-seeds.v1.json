@@ -10,7 +10,20 @@
           "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-1/repair-closure.json",
           "sha256": "sha256:e4cb1ec619109752804615cdefef1c9011c5f145791e58a7acc951c168d7e161"
         }
-      ]
+      ],
+      "occurrence": "candidate-baseline-contamination",
+      "provenance": {
+        "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-1/repair-closure.json",
+        "sha256": "sha256:e4cb1ec619109752804615cdefef1c9011c5f145791e58a7acc951c168d7e161"
+      },
+      "applicability": {
+        "scope": "RMAP-S2"
+      },
+      "missing_labels": [],
+      "counterexample": {
+        "status": "observed"
+      },
+      "classification": "approved_non_baseline"
     },
     {
       "failure_family": "self-hosted-knowledge-read-set-collision",
@@ -20,7 +33,20 @@
           "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-2/repair-closure.json",
           "sha256": "sha256:330308af0b5f5f85a5b59fd396596e79de2c04b0051d82861386a894015daf50"
         }
-      ]
+      ],
+      "occurrence": "self-hosted-knowledge-read-set-collision",
+      "provenance": {
+        "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-2/repair-closure.json",
+        "sha256": "sha256:330308af0b5f5f85a5b59fd396596e79de2c04b0051d82861386a894015daf50"
+      },
+      "applicability": {
+        "scope": "RMAP-S2"
+      },
+      "missing_labels": [],
+      "counterexample": {
+        "status": "observed"
+      },
+      "classification": "approved_non_baseline"
     },
     {
       "failure_family": "toolchain-policy-architecture-index-gap",
@@ -30,7 +56,20 @@
           "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-3/repair-closure.json",
           "sha256": "sha256:4eb11ad472e2c799517db0e0214eab113d5bc952437b96820569c0ff743496b9"
         }
-      ]
+      ],
+      "occurrence": "toolchain-policy-architecture-index-gap",
+      "provenance": {
+        "path": "execution-plans/2026-08-01-refactor-acceptance-toolchain-compact-vdd/repair/round-3/repair-closure.json",
+        "sha256": "sha256:4eb11ad472e2c799517db0e0214eab113d5bc952437b96820569c0ff743496b9"
+      },
+      "applicability": {
+        "scope": "RMAP-S2"
+      },
+      "missing_labels": [],
+      "counterexample": {
+        "status": "observed"
+      },
+      "classification": "approved_non_baseline"
     }
   ],
   "authorizes": []

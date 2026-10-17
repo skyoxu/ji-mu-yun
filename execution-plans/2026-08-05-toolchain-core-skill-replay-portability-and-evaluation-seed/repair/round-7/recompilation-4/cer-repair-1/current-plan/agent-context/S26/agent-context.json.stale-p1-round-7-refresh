@@ -1,0 +1,49 @@
+{
+  "acceptance_ids": [
+    "A-E6B6698747CC"
+  ],
+  "allowed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/candidate_workspace.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+    "scripts/sc/skill_package_replay.py",
+    "scripts/sc/tests/tc_d1_cer/test_s26.py"
+  ],
+  "contracts": [
+    "vdd.semantic-plan-bundle.v1",
+    "No target package may be accepted or used unless independent identity computation matches package bytes and recorded target identity; mismatch or missing proof rejects.",
+    "Test-author entry: scripts/sc/tests/tc_d1_cer/test_s26.py. Create real tests for every assertion in this slice, using @pytest.mark.cer_assertion for exact assertion IDs. Read the actual production behavior and bound oracle. Never create unconditional RED, skip/xfail, empty cases or prewritten execution receipts. Missing markers are authoring work; only an actual probe decides present/missing."
+  ],
+  "forbidden_paths": [
+    "PhaseA.Platform",
+    "runtime/phase-a"
+  ],
+  "obligation_ids": [
+    "O-F6D991AB8FDC"
+  ],
+  "requirement_ids": [
+    "FR-1"
+  ],
+  "selector_intents": [
+    "Run the mapped cases against the unchanged real production owner. Required observable: Verification result contains independently computed package identity and is referenced by the acceptance decision. Required result: A distinct independent identity-verification result establishes the target package identity before any acceptance or use. Emit CER-A-E6B6698747CC-BEHAVIOR only immediately before a genuine assertion failure demonstrating this unmet behavior. Do not emit it for setup/import/timeout/missing-marker failures, and do not force already-present behavior to fail.",
+    "Substitute or alter the target package after identity verification; the acceptance path must reject the mismatched identity."
+  ],
+  "slice_id": "S26",
+  "source_refs": [
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md#FR-1"
+  ],
+  "validation_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "scripts/sc/tests/tc_d1_cer/test_s26.py"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_candidate_identity.py",
+      "-q"
+    ]
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "quick-dev.p1-semantic-review.v1",
+  "plan_id": "PLAN-5E3345BD9A05",
+  "source_commit": "78667e5b1aad70ab0df76c9fab861e707c59d9df",
+  "q8_result": "logs/quick-dev-current-run-20261005/terminal-current-4/implementation-complete-result.v2.json",
+  "authorizes": [],
+  "status": "blocked",
+  "findings": [
+    {
+      "id": "P1-consumer-call-surface",
+      "scope": "S30/S41/S44",
+      "evidence": "scripts/sc/skill_package_replay.py::replay_metadata constructs a validate-package command but records a separate python -c file-read command for each Consumer; route transitions are synthesized from those reads.",
+      "required_fix": "Execute each applicable repository Consumer call surface through its declared lifecycle and record caller identity, route, verdict and diagnostic before and after rollback."
+    },
+    {
+      "id": "P1-fresh-checkout-replay",
+      "scope": "S10/S44",
+      "evidence": "verify_fresh_replay archives selected paths but calls validate_package and current_snapshot_binding against the process-global ROOT and original validator; the fresh checkout is not the execution root of the replay.",
+      "required_fix": "Reconstruct all pinned inputs in a fresh checkout, execute the validator/replay from that checkout, then compare the result and identities with the pinned reference."
+    },
+    {
+      "id": "P1-stable-candidate-subjects",
+      "scope": "S26/S35/S44",
+      "evidence": "matrix_case_result defaults stable_target and candidate_target to the same target and only materializes copies when subject_contract is explicitly supplied; ordinary cases therefore do not prove independent Stable/Candidate fixture/state execution.",
+      "required_fix": "Require explicit independent Stable/Candidate target, fixture and state bindings for every applicable Matrix Case and reject same-subject execution."
+    },
+    {
+      "id": "P1-target-validator-trust",
+      "scope": "S1/S12/S31/S44",
+      "evidence": "candidate_external_trust and independent_validator_verification accept compatibility records that omit source/rule declarations and derive a source from the selected validator; target/validator observations are therefore not sufficient independent trust proof.",
+      "required_fix": "Require declared source, content and rule bindings, independently execute the bound validator against the actual target, and reject missing or self-attested trust metadata."
+    }
+  ],
+  "next_action": "targeted-tdd-repair-before-acceptance",
+  "historical_evidence_preserved": true,
+  "c3": "OPEN"
+}

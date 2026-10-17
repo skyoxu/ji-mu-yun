@@ -1,0 +1,45 @@
+{
+  "C3": "OPEN (unchanged)",
+  "authorizes": [],
+  "candidateCommit": "339f489d304b895e9a04036fd7c79b90f7cba93a",
+  "full340SuiteRerun": false,
+  "nativeAcceptance": {
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "final": {
+      "path": "finalization/acceptance-passed.v1.json",
+      "sha256": "sha256:b6805a8c297da68b8fc35edb028477a02aa64458018fccd17295bb9f601c10ba"
+    },
+    "status": "acceptance-passed",
+    "wrapper": {
+      "path": "finalization/acceptance-result-final.v1.json",
+      "sha256": "sha256:a79412dc8362c4a7f9401f272b0a3271f5475f038ec0c2d4555d86558f35de55"
+    }
+  },
+  "previousUnpublishedEvidenceGap": "runtime-recovery.v2.json",
+  "q8": {
+    "authorizes": [],
+    "predecessors": 45,
+    "predicate": "implementation-complete",
+    "runtimeClosureTuples": 228,
+    "sliceTestsRerun": [
+      "S3"
+    ],
+    "status": "pass",
+    "unchangedPredecessorsReused": 44
+  },
+  "registeredCloseoutCases": 25,
+  "runDirectory": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-runs/acceptance-48fde39085aa32b1",
+  "sameInputReentry": {
+    "elapsedMs": 0,
+    "executedActionCount": 0,
+    "interventionCount": 0,
+    "replayed": true,
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-coordinator-telemetry.v1",
+    "waitMs": 0
+  },
+  "schema": "08-05-native-closeout.v1",
+  "vddRerun": false
+}

@@ -1,0 +1,10 @@
+[
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_always_successful_validator_cannot_approve_invalid_package",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_disabled_and_rolled_back_capabilities_fail_closed",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_illegal_package_is_rejected",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_missing_target_is_rejected_before_validator_runs",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validate_package_runs_validator_against_requested_target",
+  "scripts/sc/tests/test_skill_package_replay.py::SkillPackageReplayTests::test_validator_content_drift_is_rejected"
+]

@@ -1,0 +1,4 @@
+[
+  "scripts/sc/tests/tc_d1_cer/test_s17.py",
+  "scripts/sc/tests/tc_d1_cer/test_s44.py::test_fresh_checkout_contains_coverage_and_identity"
+]

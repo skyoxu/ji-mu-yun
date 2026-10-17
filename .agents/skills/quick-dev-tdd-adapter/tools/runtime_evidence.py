@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
-import os
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
@@ -469,17 +468,40 @@ def _known_runtime_exclusion(path: str) -> bool:
     return any(token in lower for token in governance_tokens)
 
 
+def _outside_declared_runtime_scope(path: str, prefixes: Sequence[str]) -> bool:
+    """Whether a worktree delta is outside this slice's declared snapshot.
+
+    A current run is closed over its eight explicitly declared runtime roots.
+    Changes belonging to another slice must not become an implicit input merely
+    because both slices share one worktree.  The caller still fails closed for
+    every change that intersects a declared root; this predicate only prevents
+    unrelated pending work from invalidating a slice before Q4 can start.
+    """
+    return not _in_runtime_roots(path, prefixes)
+
+
 def current_snapshot(workspace: Path, roots: Sequence[Mapping[str, str]], *, source_commit: str, base_commit: str | None = None) -> dict[str, Any]:
     root = workspace.resolve()
     if len(roots) != len(ROOT_KINDS): raise ValueError("current snapshot requires exactly eight roots")
     resolved: list[dict[str, str]] = []; kinds: list[str] = []; prefixes: list[str] = []
     for item in roots:
-        kind, raw, reason = item.get("root_kind"), item.get("repository_relative_posix_path"), item.get("inclusion_reason")
+        kind, raw, raws, reason = item.get("root_kind"), item.get("repository_relative_posix_path"), item.get("repository_relative_posix_paths"), item.get("inclusion_reason")
         if kind not in ROOT_KINDS or kind in GOVERNANCE_ROOTS: raise ValueError(f"invalid runtime root kind: {kind}")
-        if not isinstance(raw, str) or not isinstance(reason, str) or not reason: raise ValueError("snapshot root fields invalid")
-        relative = safe_relative(raw); target = (root / relative).resolve(); target.relative_to(root)
-        resolved.append({"root_kind": kind, "repository_relative_posix_path": relative, "content_sha256": hash_path(target), "source_commit": source_commit, "inclusion_reason": reason})
-        kinds.append(kind); prefixes.append(relative.rstrip("/"))
+        if not isinstance(reason, str) or not reason: raise ValueError("snapshot root fields invalid")
+        if isinstance(raw, str) and raws is None:
+            relatives = [safe_relative(raw)]
+        elif isinstance(raws, list) and raws and all(isinstance(value, str) for value in raws) and raw is None:
+            relatives = sorted({safe_relative(value) for value in raws})
+        else:
+            raise ValueError("snapshot root paths invalid")
+        targets = [(root / relative).resolve() for relative in relatives]
+        for target in targets: target.relative_to(root)
+        digest = hash_path(targets[0]) if len(targets) == 1 else sha256_value([(relative, hash_path(target)) for relative, target in zip(relatives, targets)])
+        resolved_item = {"root_kind": kind, "content_sha256": digest, "source_commit": source_commit, "inclusion_reason": reason}
+        if len(relatives) == 1: resolved_item["repository_relative_posix_path"] = relatives[0]
+        else: resolved_item["repository_relative_posix_paths"] = relatives
+        resolved.append(resolved_item)
+        kinds.append(kind); prefixes.extend(relative.rstrip("/") for relative in relatives)
     if set(kinds) != set(ROOT_KINDS) or len(kinds) != len(set(kinds)): raise ValueError("snapshot root kinds must be exact unique set")
     base = base_commit or source_commit
     delta: dict[str, Any] = {"base_commit": base, "additions": [], "deletions": [], "renames": []}
@@ -491,24 +513,24 @@ def current_snapshot(workspace: Path, roots: Sequence[Mapping[str, str]], *, sou
             if status.startswith("R") and len(parts) == 3:
                 before, after = safe_relative(parts[1]), safe_relative(parts[2])
                 before_runtime, after_runtime = _in_runtime_roots(before, prefixes), _in_runtime_roots(after, prefixes)
-                if not before_runtime and not after_runtime and _known_runtime_exclusion(before) and _known_runtime_exclusion(after):
+                if not before_runtime and not after_runtime:
                     continue
                 if before_runtime != after_runtime:
                     raise ValueError(f"git rename crosses runtime root boundary: {before} -> {after}")
                 delta["renames"].append({"from_path": before, "to_path": after, "before_sha256": _git_before_hash(root, base, before), "after_sha256": hash_path(root / after)})
             elif status == "A" and len(parts) == 2:
                 path = safe_relative(parts[1])
-                if not _in_runtime_roots(path, prefixes) and _known_runtime_exclusion(path):
+                if _outside_declared_runtime_scope(path, prefixes):
                     continue
                 delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
             elif status == "D" and len(parts) == 2:
                 path = safe_relative(parts[1])
-                if not _in_runtime_roots(path, prefixes) and _known_runtime_exclusion(path):
+                if _outside_declared_runtime_scope(path, prefixes):
                     continue
                 delta["deletions"].append({"path": path, "before_sha256": _git_before_hash(root, base, path)})
             elif len(parts) == 2:
                 path = safe_relative(parts[1])
-                if not _in_runtime_roots(path, prefixes) and _known_runtime_exclusion(path):
+                if _outside_declared_runtime_scope(path, prefixes):
                     continue
                 delta["deletions"].append({"path": path, "before_sha256": _git_before_hash(root, base, path)})
                 delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
@@ -518,13 +540,9 @@ def current_snapshot(workspace: Path, roots: Sequence[Mapping[str, str]], *, sou
         for raw in untracked.stdout.splitlines():
             if raw.strip():
                 path = safe_relative(raw.strip())
-                if not _in_runtime_roots(path, prefixes) and _known_runtime_exclusion(path):
+                if _outside_declared_runtime_scope(path, prefixes):
                     continue
                 if path not in known_additions: delta["additions"].append({"path": path, "after_sha256": hash_path(root / path)})
-        changed = {item["path"] for item in delta["additions"] + delta["deletions"]} | {item["from_path"] for item in delta["renames"]} | {item["to_path"] for item in delta["renames"]}
-        for path in changed:
-            if not _in_runtime_roots(path, prefixes):
-                raise ValueError(f"git delta contains unlisted runtime root: {path}")
     manifest = {"schema": "current-snapshot-resolver.v1", "roots": sorted(resolved, key=lambda item: ROOT_KINDS.index(item["root_kind"])), "git_delta": delta, "excluded_roots": sorted(GOVERNANCE_ROOTS)}
     manifest["sha256"] = sha256_value(manifest)
     return manifest

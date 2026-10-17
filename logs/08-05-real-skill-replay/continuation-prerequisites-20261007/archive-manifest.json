@@ -1,0 +1,15 @@
+{
+  "schema": "jimuyun.lossless-evidence-archive.v1",
+  "entries": [
+    {
+      "original_path": "powershell-published-hashes.sha256",
+      "archive_path": "powershell-published-hashes.sha256.gz",
+      "raw_bytes": 6522,
+      "raw_sha256": "388b105a0f329ef7ce9739166ca8e86d3fee6d31698137099e0558c9eb63c9f5",
+      "archive_bytes": 2007,
+      "archive_sha256": "d2031bbb78c285e5084441c6626701a5bf7cd95180b228d5e38823ff329a2e4c",
+      "compression": "gzip-lossless"
+    }
+  ],
+  "authorizes": []
+}
