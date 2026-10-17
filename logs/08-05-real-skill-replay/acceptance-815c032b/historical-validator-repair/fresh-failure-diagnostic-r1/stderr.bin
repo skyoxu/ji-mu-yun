@@ -1,5 +1,0 @@
-<unknown>:2: SyntaxWarning: invalid escape sequence '\p'
-Timeout (0:01:00)!
-Thread 0x00009718 (most recent call first):
-  File "C:\buildgame\jimuyun\scripts\sc\skill_replay_windows_job.py", line 32763 in kernel_api
-  File 

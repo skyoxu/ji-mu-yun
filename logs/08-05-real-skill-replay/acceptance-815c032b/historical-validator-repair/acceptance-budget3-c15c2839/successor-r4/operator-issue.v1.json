@@ -1,7 +1,0 @@
-{
-  "schemaVersion": "acceptance-operator-issue.v1",
-  "candidateRevision": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd",
-  "issue": "The reused heartbeat helper successfully renewed the new attempt, then its evidence directory creation collided with preserved successor-r3/heartbeat/0. Its heartbeat thread stopped with FileExistsError before writing any existing evidence.",
-  "impact": "No original evidence was overwritten. Input consume and finish retain independent native results. A separate public heartbeat command may renew the active attempt if needed.",
-  "authorizes": []
-}

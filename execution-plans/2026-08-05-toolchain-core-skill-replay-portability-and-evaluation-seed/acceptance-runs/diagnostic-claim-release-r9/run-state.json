@@ -1,8 +1,0 @@
-{
-  "authorizes": [],
-  "contractHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-  "createdUtc": "2026-10-17T08:26:23.108827Z",
-  "runId": "diagnostic-claim-release-r9",
-  "runInputHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  "schemaVersion": "acceptance-execution-run.v1"
-}

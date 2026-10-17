@@ -1,5 +1,0 @@
-{
-  "authorizes": [],
-  "reason": "read-only command changed repository bytes",
-  "schemaVersion": "acceptance-run-polluted.v1"
-}

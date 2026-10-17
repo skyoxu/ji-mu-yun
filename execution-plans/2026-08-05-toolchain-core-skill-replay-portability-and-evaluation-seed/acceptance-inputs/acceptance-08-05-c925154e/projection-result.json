@@ -1,7 +1,0 @@
-{
-  "authorizes": [],
-  "bundle": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-inputs/acceptance-08-05-c925154e/compact-vdd-acceptance-prerequisite-bundle.v1.json",
-  "bundleHash": "sha256:829f2bfa0640f8577af717b62fa06515748d526becd82143af3286e082597dfc",
-  "runRequest": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/acceptance-run-request.acceptance-08-05-c925154e.v1.json",
-  "status": "ready"
-}
