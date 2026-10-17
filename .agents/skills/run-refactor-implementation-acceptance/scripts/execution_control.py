@@ -901,7 +901,14 @@ def resume_persisted_run(
     record_lifecycle_event(run_dir, event_type="action-reserved", **lifecycle_args)
     record_lifecycle_event(run_dir, event_type="action-started", **lifecycle_args)
     try:
-        result = resume_run(repository_root, actions, completed, command_registry)
+        try:
+            protected_claim = claim_path.resolve().relative_to(repository_root.resolve()).as_posix()
+        except ValueError as exc:
+            raise ControlError("persisted action claim escapes repository root") from exc
+        result = resume_run(
+            repository_root, actions, completed, command_registry,
+            protected_paths=[protected_claim],
+        )
         receipt_path = run_dir / "actions" / action["actionId"] / attempt_id / "result.json"
         try:
             with receipt_path.open("x", encoding="utf-8", newline="\n") as handle:
@@ -1115,7 +1122,10 @@ class _WindowsRepositoryChangeWatch:
         self._event_handle = None
 
 
-def _repository_content_manifest(root: Path, *, include_ignored_evidence: bool = True) -> dict[str, str]:
+def _repository_content_manifest(
+    root: Path, *, include_ignored_evidence: bool = True,
+    protected_paths: list[str] | None = None,
+) -> dict[str, str]:
     """Hash reviewable worktree bytes and ignored evidence for read-only commands."""
     root = root.resolve()
 
@@ -1159,7 +1169,12 @@ def _repository_content_manifest(root: Path, *, include_ignored_evidence: bool =
         if include_ignored_evidence else set()
     )
     tracked = set(index_entries)
-    actual_byte_paths = dirty | untracked | ignored_evidence
+    # ADR-0058: the owner has already published these transient inputs. Hash
+    # them in both scans even if Git's untracked inventory has not caught up.
+    protected = [] if protected_paths is None else protected_paths
+    if not isinstance(protected, list) or any(not isinstance(path, str) for path in protected):
+        raise ControlError("protected read paths are invalid")
+    actual_byte_paths = dirty | untracked | ignored_evidence | set(protected)
     all_paths = tracked | actual_byte_paths
 
     resolved_paths: dict[str, Path] = {}
@@ -1275,6 +1290,8 @@ def run_controlled_command(
     repository_root: Path,
     descriptor: Any,
     input_paths: list[str] | None = None,
+    *,
+    protected_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run one typed local command and return non-authorizing process evidence."""
     validate_command_descriptor(descriptor)
@@ -1321,7 +1338,10 @@ def run_controlled_command(
         change_watch.start()
     try:
         before_manifest = (
-            _repository_content_manifest(root, include_ignored_evidence=change_watch is None)
+            _repository_content_manifest(
+                root, include_ignored_evidence=change_watch is None,
+                protected_paths=protected_paths,
+            )
             if read_only else build_write_manifest(root)
         )
     except Exception:
@@ -1401,7 +1421,10 @@ def run_controlled_command(
         receipt["inputBindingsHash"] = _canonical_hash(input_bindings)
     try:
         after_manifest = (
-            _repository_content_manifest(root, include_ignored_evidence=change_watch is None)
+            _repository_content_manifest(
+                root, include_ignored_evidence=change_watch is None,
+                protected_paths=protected_paths,
+            )
             if read_only else build_write_manifest(root)
         )
         if change_watch is not None and change_watch.changed():
@@ -1618,7 +1641,10 @@ def inspect_run(actions: Any, completed_action_ids: Any, command_registry_order:
     }
 
 
-def resume_run(repository_root: Path, actions: Any, completed_action_ids: Any, command_registry: Any) -> dict[str, Any]:
+def resume_run(
+    repository_root: Path, actions: Any, completed_action_ids: Any, command_registry: Any,
+    *, protected_paths: list[str] | None = None,
+) -> dict[str, Any]:
     order = _command_registry_order(command_registry)
     action = next_action(actions, completed_action_ids, order)
     if set(command_registry) in (
@@ -1630,7 +1656,7 @@ def resume_run(repository_root: Path, actions: Any, completed_action_ids: Any, c
         descriptor = command_registry.get(action["commandId"])
         if descriptor is None:
             raise ControlError("ready action command is absent from registry")
-    receipt = run_controlled_command(repository_root, descriptor)
+    receipt = run_controlled_command(repository_root, descriptor, protected_paths=protected_paths)
     return {
         "schemaVersion": "acceptance-run-resume-result.v1",
         "actionId": action["actionId"],

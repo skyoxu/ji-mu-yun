@@ -13,6 +13,66 @@ sys.path.insert(0, str(SKILL_ROOT / "scripts"))
 
 
 class ExecutionControlTests(unittest.TestCase):
+    def _exercise_stale_claim_inventory(self, *, tamper: bool) -> None:
+        """ADR-0058: use real execution with one stale Git directory listing."""
+        import subprocess
+        import tempfile
+        import execution_control
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(["git", "init", "--quiet"], cwd=root, check=True)
+            run = execution_control.create_persisted_run(
+                root, "run-claim-inventory", "sha256:" + "a" * 64, "sha256:" + "b" * 64
+            )
+            relative_claim = (run / "action-claims" / "run.json").relative_to(root).as_posix()
+            program = (
+                "from pathlib import Path; Path(" + repr(relative_claim) + ").write_text('tampered', encoding='utf-8')"
+                if tamper else "print('ok')"
+            )
+            actions = [{"actionId": "run", "dependsOn": [], "order": 1, "commandId": "probe", "activation": True}]
+            descriptor = {"id": "probe", "executable": sys.executable, "argv": ["-B", "-c", program],
+                "cwd": ".", "timeout_seconds": 10, "shell": False, "allowed_write_roots": [],
+                "forbidden_write_roots": [], "registry_hash": "sha256:" + "a" * 64,
+                "environment_allowlist": [], "typed_placeholders": {}, "placeholder_values": {}}
+            actual_run = subprocess.run
+            scans = 0
+
+            def stale_first_listing(argv, *args, **kwargs):
+                nonlocal scans
+                result = actual_run(argv, *args, **kwargs)
+                if "ls-files" in argv and "--others" in argv and "--ignored" not in argv:
+                    scans += 1
+                    self.assertTrue((root / relative_claim).is_file())
+                    paths = [p for p in result.stdout.split(b"\0") if p and p != relative_claim.encode()]
+                    if scans > 1 and not tamper:
+                        paths.append(relative_claim.encode())
+                    return subprocess.CompletedProcess(result.args, result.returncode,
+                        b"\0".join(paths) + b"\0", result.stderr)
+                return result
+
+            with mock.patch.object(execution_control.subprocess, "run", side_effect=stale_first_listing):
+                if tamper:
+                    with self.assertRaisesRegex(execution_control.ControlError, "changed repository bytes"):
+                        execution_control.resume_persisted_run(
+                            root, run, actions, {"probe": descriptor}, "sha256:" + "a" * 64, "sha256:" + "b" * 64
+                        )
+                    self.assertEqual({"run"}, execution_control.reconstruct_failed_actions(run))
+                else:
+                    result = execution_control.resume_persisted_run(
+                        root, run, actions, {"probe": descriptor}, "sha256:" + "a" * 64, "sha256:" + "b" * 64
+                    )
+                    self.assertEqual(0, result["receipt"]["exitCode"])
+                    self.assertEqual({"run"}, execution_control.reconstruct_completed_actions(run))
+            self.assertEqual(2, scans)
+            self.assertFalse((root / relative_claim).exists())
+
+    def test_persisted_read_only_action_tolerates_stale_claim_listing(self) -> None:
+        self._exercise_stale_claim_inventory(tamper=False)
+
+    def test_persisted_read_only_action_rejects_claim_tampering_with_stale_listing(self) -> None:
+        self._exercise_stale_claim_inventory(tamper=True)
+
     def test_polluted_run_is_rejected_by_inspection(self) -> None:
         import tempfile
         import execution_control

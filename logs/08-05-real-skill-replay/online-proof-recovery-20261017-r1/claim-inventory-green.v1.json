@@ -1,0 +1,22 @@
+{
+  "adr": "ADR-0058",
+  "authorizes": [],
+  "command": [
+    "/workspace/scratch/1ecf047ec2b0/acceptance-env-20261017/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_control.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_coordinator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py"
+  ],
+  "exitCode": 0,
+  "stderr": "",
+  "stdout": "........................................................................ [ 94%]\n....                                                                     [100%]\n76 passed in 23.62s\n",
+  "testSourceSha256": "88d00b35127fcd532961975653a0f04aa8cdc158d95b17898a532b4be4ee0dd4"
+}
