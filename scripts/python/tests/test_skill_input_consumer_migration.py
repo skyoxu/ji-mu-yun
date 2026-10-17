@@ -167,6 +167,38 @@ def test_context_budget_is_enforced(tmp_path):
     assert not (tmp_path / request['storage'] / 'current.v1.json').exists()
 
 
+@pytest.mark.parametrize('tracked', [False, True])
+def test_acceptance_final_pointer_preserves_current_generation(tmp_path, tracked):
+    """ADR-0060: publishing owner output must permit identical live reentry."""
+    request = fixture(tmp_path, 'run-refactor-implementation-acceptance')
+    target = 'execution-plans/feature-a'
+    authority_path = tmp_path / 'authority.json'
+    authority = read_json(authority_path)
+    authority['target_plan'] = target
+    authority_path.write_text(json.dumps(authority), encoding='utf-8')
+    request['bindings']['authority']['sha256'] = digest(authority_path.read_bytes())
+    current = tmp_path / target / 'acceptance-current.v1.json'
+    current.parent.mkdir(parents=True)
+    current.write_text('{"currentRun":"previous"}', encoding='utf-8')
+    if tracked:
+        subprocess.run(['git', '-C', str(tmp_path), 'add', str(current)], check=True)
+        subprocess.run(['git', '-C', str(tmp_path), '-c', 'user.name=fixture',
+                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm',
+                        'previous acceptance pointer'], check=True)
+    _, ready, _ = complete(tmp_path, request)
+    current.write_text('{"currentRun":"successor"}', encoding='utf-8')
+    args = dict(consumer=request['consumer'], operation=request['operation'],
+                contract_path=tmp_path / 'contract.json')
+    pointer = tmp_path / request['storage'] / 'current.v1.json'
+    assert v2.require_current(tmp_path, pointer, **args)['generation_id'] == ready['pointer']['generation_id']
+
+    foreign = tmp_path / 'execution-plans/feature-b/acceptance-current.v1.json'
+    foreign.parent.mkdir(parents=True)
+    foreign.write_bytes(current.read_bytes())
+    with pytest.raises(ValueError, match='generation candidate changed'):
+        v2.require_current(tmp_path, pointer, **args)
+
+
 @pytest.mark.parametrize('consumer', CONSUMERS)
 def test_real_entry_registers_and_protects_generation(tmp_path, consumer):
     request = actual_request(tmp_path, consumer)

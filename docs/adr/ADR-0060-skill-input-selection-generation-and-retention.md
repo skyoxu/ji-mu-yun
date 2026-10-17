@@ -76,6 +76,13 @@ create an explicitly bound successor while preserving the failed run.
 
 ## Consequences
 
+Implementation clarification (2026-10-17): the exact bound-target
+`acceptance-current.v1.json` is generated finalization output. Publishing or
+advancing it must not invalidate the Skill-input generation consumed by
+finalization. Another target's pointer and authoritative target files remain
+candidate inputs. The Acceptance lifecycle independently validates pointer and
+final-result integrity on reentry.
+
 The workflow repair must migrate all consumers to v2 before 8-18 can create a
 new current receipt. Existing `skill-input-current*` directories remain
 immutable historical evidence until an approved retention action handles them.

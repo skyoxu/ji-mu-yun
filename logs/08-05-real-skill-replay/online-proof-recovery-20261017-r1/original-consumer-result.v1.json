@@ -1,0 +1,1 @@
+{"authorizes":[],"originalReceipt":{"path":"logs/08-05-real-skill-replay/incremental-q8-047a/implementation-complete-e4e1377c-r1.json","sha256":"sha256:f33ba3b10d53d7d3bf1e124937c37acaed2ce0427f14c53aa7aceec7ae01c874"},"reason":"current Quick Dev proof cannot be replayed: completion runtime root stale: contract","status":"blocked"}

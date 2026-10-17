@@ -38,6 +38,8 @@ def observe_candidate(root, authority_path, storage):
             f'{target_plan}/acceptance-runs/',
             f'{target_plan}/acceptance-inputs/',
             f'{target_plan}/.acceptance-snapshots/',
+            # ADR-0060: finalization output has separate lifecycle custody.
+            f'{target_plan}/acceptance-current.v1.json',
             f'{target_plan}/acceptance-coordinator-request.*',
             f'{target_plan}/acceptance-projection-request.v1.json',
             f'{target_plan}/acceptance-run-request.*.json',
