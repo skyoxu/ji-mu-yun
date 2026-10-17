@@ -4,7 +4,8 @@ status: proposed
 scope: repository-toolchain-control-plane-only
 roadmap_ids: [TC-E0, TC-D2, TC-D3, TC-D4, TC-D5, TC-D6]
 repository_ref_reviewed: 0dce7806c93e5e0ca4ac4faed61baa13735c8983
-updated_date: 2026-09-11
+updated_date: 2026-10-17
+tc_d2_repository_ref_reviewed: 971e53ebce52eb54a9f78bcd5bf0faa68aec61f4
 tc_d1_source: docs/know-tc-d1-rebuild.md
 ---
 
@@ -115,11 +116,108 @@ adapter needs a current producer fixture and failure evidence.
 
 TC-D2 distinguishes candidate Git/content identity from a versioned Skill
 quality baseline. It consumes real TC-E0 output and accepted TC-D1 semantics.
+The outcome is a repository evaluation and observation entry that carries a
+routine evaluation from case selection to an evidence-backed comparison without
+requiring the maintainer to switch Skills at every step.
+
+This design borrows from the four modes, case format, evidence-based grading,
+and repeated-run reporting in
+[bmad-eval at cfba3ff5](https://github.com/bmad-code-org/BMAD-METHOD/blob/cfba3ff5f982c1809e060606e399f55ebd7bce5e/skills/bmad-eval/SKILL.md).
+That snapshot is design input; integration binds the BMAD version actually
+installed. This refinement does not revalidate the roadmap status rows above
+or satisfy the TC-D1/TC-E0 dependency gates.
+
+### 7.1 Ownership And A Continuous Evaluation Flow
+
+TC-D2 complements bmad-eval; it does not replace it. TC-D2 owns versioned
+evaluation sets, comparable observations, and consolidated reports. Reuse accepted TC-D1 replay for contract and validator behavior, and
+TC-E0 references for producer evidence. Replay success does not prove agent
+output quality. For agent evaluations, reuse compatible installed bmad-eval
+runners and grading facilities rather than building a second harness or
+copying its optimization loops.
+
+Within an authorized evaluation, the TC-D2 entry selects the relevant cases and
+mode, reuses a compatible recorded backend configuration, runs or imports the
+evaluation, grades the evidence, and returns the comparison in the same flow.
+Ask only for unresolved choices that affect the run. Ordinary observation and
+accepted repository replay do not require a BMAD upgrade; capabilities whose
+backend is absent or incompatible remain explicitly unavailable.
+
+Standalone Skill benchmarking, first-time BMAD harness setup, description
+optimization, and explicitly requested Skill-improvement sessions remain native
+bmad-eval use cases. When a handoff is needed, carry the Skill identity, case and
+rubric versions, comparison target, budget, and artifact references; import the
+result into the same evaluation context without manual re-entry or an automatic
+duplicate run. Keep producer-native artifacts intact and add only derived
+bindings and observations. Do not reuse a result after its execution or grading
+bindings change.
+
+TC-D2 does not author or modify Skills, operate an improvement loop, or publish
+a stable version. Improvement findings can inform maintainer work and later
+TC-D5/TC-D6 inputs; native BMAD results grant no repository lifecycle authority.
+
+### 7.2 Evaluation Questions And Discriminating Cases
+
+Select the mode needed to answer the question; do not run all four modes for
+every task or add a new gate to every delivery stage.
+
+| Borrowed mode | TC-D2 question and intended use |
+| --- | --- |
+| Quality | Does this output satisfy the named assertions? Use for focused checks and regressions. |
+| Variant | Does a candidate improve on the prior stable or stripped version on the same cases? Use for a concrete Skill delta or suspected unnecessary instructions. |
+| Baseline | What does the Skill add over the bare model? Use when its added value is in question, not as a mandatory comparison for every run. |
+| Trigger | Does the Skill load for intended requests and stay quiet for near misses? Use when applicability or routing changes; activation is separate from task success. |
+
+Cases bind stable IDs, source provenance, realistic input, fixture identity,
+and independently checkable assertions. Optional workflow-state prefixes may
+reach a particular turn, but cannot prove real multi-turn recovery, state
+transitions, or repository gates. Those claims need actual execution evidence.
+Trigger cases include both should-trigger and near-miss should-not-trigger
+labels and the recorded activation-detection method.
+
+Pair artifact existence with substantive content checks. Include negative
+assertions and observable process requirements where relevant: no unauthorized
+writes, correct call ordering, and fidelity between source decisions and
+outputs. Flag weak assertions that a wrong output can pass, and uncovered
+outcomes. Preserve native BMAD cases where usable; keep repository provenance
+and authority bindings alongside them rather than forking its case protocol.
+
+### 7.3 Comparable Execution And Evidence-Based Grading
+
+Bind each comparison to exact Skill, fixture, rubric, model, harness, and
+relevant configuration identities. Use the same cases and declared conditions
+on both sides. Isolate execution and stage required dependencies explicitly so
+ambient project instructions or previous runs do not contaminate results.
+A clean working directory is not a security sandbox: execution still obeys
+repository-approved write and tool boundaries.
+
+Prefer deterministic checks for facts observable in artifacts or transcripts.
+Use a read-only semantic grader only where judgment is needed, with its rubric
+and judge identity recorded and evidence cited per assertion. Grading must not
+repair outputs, loosen assertions, or rerun a case until it passes. A runner's
+successful exit means execution completed, not that its rubric or repository
+gates passed.
+
+Keep native verdicts and evidence unchanged. Separately distinguish assertion
+failures, execution/time-out errors, grading errors, and unobservable results;
+missing evidence cannot pass or be silently counted as a measured Skill defect.
+An aggregate reports its denominator, missing cases, and failed attempts.
+
+For stochastic agent evaluations, fewer than three repetitions per case and
+configuration are a quick look, not a settled comparison. Three repetitions
+alone do not establish statistical significance. Record the repetition and
+retry budget before execution, retain all attempts, and report variation and
+per-case regressions alongside aggregate differences. Do not impose repeated
+agent runs on deterministic replay or passive observation.
+
+### 7.4 Observations, Evaluation Sets, And Disposition
 
 Initially collect only reproducible observations: command and implementation
 identity, wall time, attempts, review rounds, transport failures, artifact and
 context sizes, reuse decisions, manual pauses, maintainer decisions, missingness,
-and mapping status. False-positive/negative, missed severity, later discovery,
+and mapping status. Token usage and monetary cost are optional measured fields
+with provenance; unsupported usage remains unknown rather than estimated from
+elapsed time. False-positive/negative, missed severity, later discovery,
 repair effectiveness, causal contribution, and counterfactual success require
 label provenance, observation windows, and holdout rules. Unknown stays unknown.
 
@@ -130,9 +228,27 @@ Evaluation sets are immutable per version:
 - Challenge: adversarial and ambiguous boundaries;
 - Holdout: excluded from candidate construction and opened for final comparison.
 
+Freeze assertions and comparison conditions before candidate evaluation.
+Changing them creates a new evaluation version, not a rewritten passing result.
+A BMAD optimization test split is not automatically the TC-D2 Holdout: any case
+or score used during construction or intermediate candidate selection cannot
+serve as its untouched final holdout. Retain exposure history and report the limit of an imported comparison.
+
 Disposition uses hard gates, Pareto comparison, and explicit maintainer judgment.
 No weighted score overrides authority, security, traceability, protected-path,
-or unauthorized-write failures.
+nor unauthorized-write failures. Reports expose the concrete regressions,
+uncertainty, weak assertions, and missing evidence behind an apparent gain;
+they do not automatically approve, retire, or promote a Skill.
+
+### 7.5 Minimum Evidence For The Future TC-D2 Implementation
+
+Demonstrate a routine evaluation through one entry and a native bmad-eval
+handoff/import without duplicate execution or loss of identity and evidence.
+Show a deliberately wrong output failing a substantive assertion, and preserve
+a native grading failure or missing observation without turning it into success.
+Reject stale or incompatible imported bindings, preserve case-level regressions
+when aggregate cost improves, and prove that a passing external benchmark
+cannot publish Acceptance or a stable Skill version.
 
 ## 8. TC-D3: Ordinary Fast-Ship Review Shadow
 
