@@ -1,0 +1,6 @@
+{
+  "schema_version": "jimuyun.skill-package-validator-source.v1",
+  "validator_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+  "validator_sha256": "sha256:f3eb240128dfc439d06f31415fcf611b7e8b79f25e8cb32551a19bd1159017fb",
+  "authorizes": []
+}

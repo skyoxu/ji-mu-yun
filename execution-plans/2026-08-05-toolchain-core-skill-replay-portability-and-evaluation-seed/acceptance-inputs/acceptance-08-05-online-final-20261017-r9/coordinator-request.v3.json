@@ -1,0 +1,17 @@
+{
+  "authorizes": [],
+  "preparedRunInput": {
+    "path": "prepared-run-input.v1.json",
+    "sha256": "sha256:ad5f17d9a291626dba8ca117425b5b597e8cb48d8684715f099784c534b06909"
+  },
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "skillInputContract": {
+    "path": "skill-input-contract.v1.json",
+    "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+  },
+  "skillInputReceipt": {
+    "path": "skill-input-v2/acceptance/current.v1.json",
+    "sha256": "sha256:cd916519d08df84a539496c62a1b7825e02b4b28ff5000795b0b09433c4f8180"
+  },
+  "targetPlan": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed"
+}

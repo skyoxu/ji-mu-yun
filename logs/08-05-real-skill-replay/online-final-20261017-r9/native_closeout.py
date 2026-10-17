@@ -32,7 +32,7 @@ def write(path, value):
 
 
 def ref(path):
-    path = Path(path)
+    path = Path(path).resolve()
     return {"path": path.relative_to(ROOT).as_posix(), "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
