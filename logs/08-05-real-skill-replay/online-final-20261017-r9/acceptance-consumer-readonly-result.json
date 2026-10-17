@@ -1,0 +1,11 @@
+{
+  "authorizes": [],
+  "predecessors": 45,
+  "predicate": "implementation-complete",
+  "runtimeClosureTuples": 228,
+  "sliceTestsRerun": [
+    "S3"
+  ],
+  "status": "pass",
+  "unchangedPredecessorsReused": 44
+}

@@ -1,0 +1,21 @@
+{
+  "authorizes": [],
+  "command": [
+    "/workspace/scratch/1ecf047ec2b0/acceptance-final-env-20261017/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/cer-repair-1/quick-dev-ready/current-plan",
+    "--slice",
+    "S3",
+    "--profile",
+    "standard",
+    "--run-dir",
+    "logs/08-05-real-skill-replay/online-final-20261017-r9/S3-current",
+    "--action",
+    "run-regression"
+  ],
+  "exitCode": 0,
+  "stderr": "",
+  "stdout": "{\"authorizes\": [], \"behavior_plan_sha256\": \"sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f\", \"behavior_route\": {\"probe_result_sha256\": \"sha256:90f855e439ceb3f78e533c5c16d48db666a3e823aa65b51cdd0a6b383e914496\", \"schema\": \"quick-dev.behavior-route.v1\"}, \"candidate_hash\": \"sha256:98bd18a691fa14143466dd05bcecfdb178ea0814e5d4a11ae35d90b7cb4b1b3d\", \"case_evidence_error\": null, \"descriptor_sha256\": \"sha256:2a2787e51d9409523950852dfa8aba36a093770ef70a2ced8344f7d4eb19bd0c\", \"failure_family\": null, \"failure_fingerprint\": null, \"failure_id\": null, \"observation_sha256\": \"sha256:64425d3fe132ff9d82c16c3033ec2c511e03c8612225e69c1a060d7bb5560cae\", \"plan_hash\": \"sha256:509c3396560bd11431e0fd213c3915119c204dd264590fcd4dd4cbadd36a5a5f\", \"plan_id\": \"PLAN-5E3345BD9A05\", \"predicate_result\": true, \"production_hashes\": {\".agents/skills/run-refactor-implementation-acceptance/scripts/execution_control.py\": \"sha256:eb8da80aae384a8fa21b7b3865b7c07d13f655c88681287d9d87593e78f02df1\", \"scripts/python/validate_acceptance_execution_evidence.py\": \"sha256:47a92d8b5f39bee8d2f77d9d5a695fd1b1529a789ee90d924e94b8361ef20b7d\"}, \"receipt_sha256\": \"sha256:f9e71302c0f1c131ec36a4e4c4a971638bb5db4cb33eba1d531b0f70fafca45d\", \"regression_gate\": {\"ref\": \"canonical-evidence/regression/regression-gate.v1.json\", \"sha256\": \"sha256:0005e42166d96ba0324160c6ca6bca4d56e3f3591a91be05ff483d91f4d1c2de\"}, \"required_next_action\": \"validate-slice\", \"run_id\": \"S3-current\", \"runtime_edges\": [{\"acceptance_id\": \"A-D163A2D0BCB8\", \"assertion_id\": \"A-E489B3A7974A-1\", \"path\": \"canonical-evidence/regression/runtime-edges/0001-A-D163A2D0BCB8-A-E489B3A7974A-1.json\", \"sha256\": \"sha256:8d1e5fd914ef243b324a8285d1d0ecd6b6e9479ba0e80b38ed13745a367088ea\"}], \"schema\": \"quick-dev.stage-result.v2\", \"selector_identity\": \"sha256:3bd97382fcd8d078a3511a397abbadc23ebaebab24d1e50117ab1f2dec9b0a93\", \"slice_id\": \"S3\", \"stage\": \"regression\", \"verification_outcome\": \"pass\"}\n"
+}
