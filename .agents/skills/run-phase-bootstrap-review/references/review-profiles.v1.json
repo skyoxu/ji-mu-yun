@@ -3,8 +3,12 @@
   "profiles": {
     "bootstrap-upstream-plan": {
       "reviewProfile": "review-policy://bootstrap-upstream-plan/v1",
-      "policyRevision": "sha256:1bc5c561ffdc62e6658dc9a49830cb7b16cf6d95eb9ce67037071027af28b14a",
-      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
+      "policyRevision": "sha256:f88c6cb67361bac6a44d32ce2c8d09f49fba6d2dbaecb463712eb8f79d639231",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "plan-authority",
@@ -23,12 +27,12 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-6-sol"
+          "3": "$CODEX_MODEL"
         },
         "roundReasoningEffortOverrides": {
           "3": {
@@ -45,8 +49,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-6-sol",
-        "escalatedModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
+        "escalatedModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -185,8 +189,12 @@
     },
     "bootstrap-implementation-conformance": {
       "reviewProfile": "review-policy://bootstrap-implementation-conformance/v1",
-      "policyRevision": "sha256:11ef402af4f0d32492fce0ce71dab4abf96b02f671261ecc826a70cbefced247",
-      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
+      "policyRevision": "sha256:47c77059ae30af88b172273bff7e6ad2cc38c8a62589e6c485ce650f3f565902",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "companionCapabilities": [
@@ -215,12 +223,12 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-6-sol"
+          "3": "$CODEX_MODEL"
         },
         "roundReasoningEffortOverrides": {
           "3": {
@@ -237,8 +245,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-6-sol",
-        "escalatedModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
+        "escalatedModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -377,7 +385,7 @@
     },
     "bootstrap-skill-route": {
       "reviewProfile": "review-policy://bootstrap-skill-route/v1",
-      "policyRevision": "sha256:21ae66da1e7e48cd3e9aed14efb0a47bfeb4274fc87af552db5b73c245edb1fe",
+      "policyRevision": "sha256:4c220e250aaeb95fbe49c5a8b10c9fe81867b83aece1503499e690b5da28c144",
       "companionCapabilities": [
         {
           "capabilityId": "acceptance-inventory-attestation",
@@ -387,7 +395,11 @@
           "schemaHash": "sha256:30cc97ecd207e33a3ed6ebeedc1e28604b290fa2342dc32af96a044db9755018"
         }
       ],
-      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "skill-route",
@@ -408,12 +420,12 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-6-sol"
+          "3": "$CODEX_MODEL"
         },
         "roundReasoningEffortOverrides": {
           "3": {
@@ -430,8 +442,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-6-sol",
-        "escalatedModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
+        "escalatedModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -570,8 +582,12 @@
     },
     "bootstrap-focused-change": {
       "reviewProfile": "review-policy://bootstrap-focused-change/v1",
-      "policyRevision": "sha256:cb42ddd6da805f0ef38bb7107655ddd194e74daef6be27c64ad75717a72f12f1",
-      "authorityRootRegistry": {"path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json", "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1", "registryId": "bootstrap-authority-roots.v1"},
+      "policyRevision": "sha256:91ad86221bdfb666aef84d5cc523e2af3166f5415f09958101b8ef17225e5b28",
+      "authorityRootRegistry": {
+        "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
+        "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
+        "registryId": "bootstrap-authority-roots.v1"
+      },
       "routeVersion": "bootstrap-review-route.v2",
       "controlPlaneRevision": "bootstrap-control-plane.v2",
       "reviewObjectType": "focused-change",
@@ -590,12 +606,12 @@
         "acceptance_auditor"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
         "roundModelOverrides": {
-          "3": "gpt-6-sol"
+          "3": "$CODEX_MODEL"
         },
         "roundReasoningEffortOverrides": {
           "3": {
@@ -612,8 +628,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-6-sol",
-        "escalatedModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
+        "escalatedModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"
@@ -751,7 +767,7 @@
     },
     "bootstrap-focused-repair-verification": {
       "reviewProfile": "review-policy://bootstrap-focused-repair-verification/v1",
-      "policyRevision": "sha256:c359cd5465c0900df4b6129765415bf85e00a928d1c130009526515057ec2576",
+      "policyRevision": "sha256:f05d0f81ffdc3836f68328ca41e8c2892e611279f1effed2dbc39d5471092dcc",
       "authorityRootRegistry": {
         "path": ".agents/skills/run-phase-bootstrap-review/references/authority-roots.v1.json",
         "sha256": "sha256:11c17016b8da55a48183dd6f13c39b5e837d8337cf8ecdab4b5d77e7d02f9fd1",
@@ -774,7 +790,7 @@
         "focused_repair_verifier"
       ],
       "codexExecPolicy": {
-        "preferredModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "forbiddenModels": [],
         "toolProbeRequired": true,
@@ -786,8 +802,8 @@
         }
       },
       "verifierPolicy": {
-        "preferredModel": "gpt-6-sol",
-        "escalatedModel": "gpt-6-sol",
+        "preferredModel": "$CODEX_MODEL",
+        "escalatedModel": "$CODEX_MODEL",
         "fallbackModels": [],
         "modelEscalateOnSeverities": [
           "P0"

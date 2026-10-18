@@ -29,11 +29,13 @@ use the existing explicit source/scope decision path.
 
 ## Model Route Decision
 
+The configured model is read from `model-routing.toml` beside the active Codex `config.toml`; if that file is absent, the loader uses `config.toml`'s `model` value. Set `CODEX_HOME` when Codex uses a non-default configuration directory.
+
 Select `standard`, `resumable`, or `self-hosted` entirely from the profile table
 before model routing. Then pass that already-selected profile to
 `scripts/model_routing.py`; do not add another VDD complexity classifier.
 All three ordinary profiles and the typed complex-recovery route currently
-request `gpt-6-sol/high`. Complex recovery remains blocked until its exact
+request `configured Codex model/high`. Complex recovery remains blocked until its exact
 backend/model/effort/sandbox capability probe and shadow predicate both pass.
 Free-form recovery reasons fail closed.
 

@@ -27,7 +27,7 @@ class PolicyContractTests(unittest.TestCase):
         self.assertEqual(11, len(policy["routes"]))
         for route in policy["routes"].values():
             if route["launchMode"] == "child":
-                self.assertTrue(policy["models"][route["model"]]["modelId"].startswith("gpt-"))
+                self.assertTrue(routing.is_valid_model_id(policy["models"][route["model"]]["modelId"]))
 
     def test_policy_schema_and_decision_schema_are_parseable(self) -> None:
         schema_root = SC_ROOT / "schemas"
@@ -111,7 +111,7 @@ class LauncherTests(unittest.TestCase):
         policy["rolloutMode"] = "active"
         decision = routing.quick_dev_decision(self._normal_facts(), policy=policy)
         runner = mock.Mock(return_value=(0, "ok", [
-            "codex", "exec", "-m", "gpt-6-sol", "-c", 'model_reasoning_effort="medium"',
+            "codex", "exec", "-m", routing.load_model(), "-c", 'model_reasoning_effort="medium"',
             "--sandbox", "workspace-write", "-",
         ]))
         with mock.patch.object(routing, "load_policy", return_value=policy):
@@ -126,7 +126,7 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual("completed", result["status"])
         kwargs = runner.call_args.kwargs
         self.assertEqual("stdin prompt", kwargs["prompt"])
-        self.assertEqual("gpt-6-sol", kwargs["codex_model"])
+        self.assertEqual(routing.load_model(), kwargs["codex_model"])
         self.assertEqual("workspace-write", kwargs["codex_sandbox"])
         self.assertEqual(['model_reasoning_effort="medium"'], kwargs["codex_configs"])
         self.assertNotIn("fallback", json.dumps(result).lower())
@@ -141,7 +141,7 @@ class LauncherTests(unittest.TestCase):
     def test_caller_cannot_self_attest_capability_or_shadow_evidence(self) -> None:
         forged = {
             "status": "passed",
-            "model": "gpt-6-sol",
+            "model": routing.load_model(),
             "effort": "high",
             "backend": "codex-cli",
             "sandbox": "workspace-write",
@@ -166,14 +166,14 @@ class LauncherTests(unittest.TestCase):
         requested = {
             "launchMode": "child",
             "backend": "codex-cli",
-            "model": "gpt-6-sol",
+            "model": routing.load_model(),
             "effort": "high",
             "sandbox": "workspace-write",
         }
         actual = {
             "launched": True,
             "backend": "codex-cli",
-            "model": "gpt-6-sol",
+            "model": routing.load_model(),
             "effort": "high",
             "sandbox": "workspace-write",
             "exitCode": 0,
@@ -266,10 +266,24 @@ class LauncherTests(unittest.TestCase):
     def test_complex_recovery_route_retains_capability_probe_contract(self) -> None:
         policy = routing.load_policy()
         route = policy["routes"]["vdd.complex_recovery"]
-        self.assertEqual("gpt-6-sol", policy["models"][route["model"]]["modelId"])
+        self.assertEqual(routing.load_model(), policy["models"][route["model"]]["modelId"])
         self.assertEqual("high", route["effort"])
         self.assertTrue(route["requiresCapabilityProbe"])
         self.assertTrue(route["requiresShadowPredicate"])
+
+    def test_non_gpt_codex_model_id_is_valid_in_policy(self) -> None:
+        policy = routing.load_policy()
+        policy["models"]["sol"]["modelId"] = "o4-mini"
+        routing.validate_policy(policy)
+        self.assertEqual("o4-mini", policy["models"]["sol"]["modelId"])
+
+    def test_policy_loads_non_gpt_model_from_config_toml_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            codex_dir = Path(temp_dir)
+            (codex_dir / "config.toml").write_text('model = "o4-mini"\n', encoding="utf-8")
+            with mock.patch.dict("os.environ", {"CODEX_HOME": str(codex_dir)}):
+                policy = routing.load_policy()
+        self.assertEqual("o4-mini", policy["models"]["sol"]["modelId"])
 
     def test_unknown_or_duplicate_policy_ownership_is_rejected(self) -> None:
         policy = routing.load_policy()

@@ -23,7 +23,7 @@ class VddModelRoutingTests(unittest.TestCase):
                 decision = model_routing.build_route_decision(profile)
                 self.assertEqual(profile, decision["classification"])
                 self.assertEqual(f"vdd.{route_suffix}", decision["routeId"])
-                self.assertEqual("gpt-6-sol", decision["requestedExecution"]["model"])
+                self.assertEqual(model_routing.routing.load_model(), decision["requestedExecution"]["model"])
                 self.assertEqual("high", decision["requestedExecution"]["effort"])
                 self.assertEqual("observe_only", decision["status"])
 
@@ -31,7 +31,7 @@ class VddModelRoutingTests(unittest.TestCase):
         blocked = model_routing.build_route_decision(
             "self-hosted", complex_recovery_trigger="bounded_repair_exhausted"
         )
-        self.assertEqual("gpt-6-sol", blocked["requestedExecution"]["model"])
+        self.assertEqual(model_routing.routing.load_model(), blocked["requestedExecution"]["model"])
         self.assertEqual("high", blocked["requestedExecution"]["effort"])
         self.assertEqual("blocked", blocked["status"])
 

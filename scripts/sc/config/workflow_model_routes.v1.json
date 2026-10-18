@@ -18,7 +18,7 @@
   "supportedEfforts": ["medium", "high", "xhigh", "max"],
   "models": {
     "sol": {
-      "modelId": "gpt-6-sol",
+      "modelId": "$CODEX_MODEL",
       "displayLabel": "Sol",
       "activationState": "active"
     }

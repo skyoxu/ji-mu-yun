@@ -29,6 +29,11 @@ if str(SCRIPT_ROOT) not in sys.path:
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
+SC_CONFIG_ROOT = REPOSITORY_ROOT / "scripts" / "sc"
+if str(SC_CONFIG_ROOT) not in sys.path:
+    sys.path.insert(0, str(SC_CONFIG_ROOT))
+
+from model_config import MODEL_CONFIG_KEY, load_model  # noqa: E402
 
 from _control_plane import (  # noqa: E402
     ControlPlaneError,
@@ -64,6 +69,7 @@ from runtime_policy import (  # noqa: E402
 
 CONTROL_PLANE_REVISION = "bootstrap-control-plane.v2"
 SKILL_ROOT = Path(__file__).resolve().parents[1]
+CONFIGURED_MODEL = load_model()
 
 from scripts.toolchain.canonical_evidence import canonical_bytes  # noqa: E402
 if str(REPOSITORY_ROOT / "scripts" / "python") not in sys.path:
@@ -874,8 +880,36 @@ def authority_root_reference(profile: dict[str, Any]) -> dict[str, str]:
     return {"path": reference["path"], "sha256": reference["sha256"]}
 
 
-def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
+def load_profile_registry() -> dict[str, Any]:
     registry = read_json(PROFILE_PATH)
+    profiles = registry.get("profiles") if isinstance(registry, dict) else None
+    if not isinstance(profiles, dict):
+        raise BootstrapError("Bootstrap profile registry is invalid")
+    for profile in profiles.values():
+        if not isinstance(profile, dict):
+            raise BootstrapError("Bootstrap profile registry contains an invalid profile")
+        template = {key: value for key, value in profile.items() if key != "policyRevision"}
+        def resolve_model_tokens(value: Any) -> Any:
+            if value == f"${MODEL_CONFIG_KEY}":
+                return CONFIGURED_MODEL
+            if isinstance(value, dict):
+                return {key: resolve_model_tokens(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [resolve_model_tokens(item) for item in value]
+            return value
+
+        resolved = resolve_model_tokens(template)
+        profile.clear()
+        profile.update(resolved)
+        profile["policyRevision"] = value_hash(resolved)
+    return registry
+
+
+def profile_for_policy_revision(policy_revision: str) -> dict[str, Any]:
+    # Resolve configured-model tokens before matching the content-addressed
+    # revision. The on-disk registry intentionally stores tokens so the same
+    # profile follows the active Codex model configuration.
+    registry = load_profile_registry()
     matches = [
         value for value in registry.get("profiles", {}).values()
         if isinstance(value, dict) and value.get("policyRevision") == policy_revision
@@ -935,7 +969,7 @@ def is_baseline_only_historical_replay(
     policy_revision = manifest.get("policyRevision")
     if not isinstance(profile_name, str) or not isinstance(policy_revision, str):
         return False
-    registry = read_json(PROFILE_PATH)
+    registry = load_profile_registry()
     current = (
         registry.get("profiles", {}).get(profile_name)
         if isinstance(registry, dict)
@@ -990,7 +1024,7 @@ def historical_profile_from_manifest(manifest: dict[str, Any]) -> dict[str, Any]
 
 
 def frozen_profile_for_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
-    registry = read_json(PROFILE_PATH)
+    registry = load_profile_registry()
     current = (
         registry.get("profiles", {}).get(manifest.get("profileName"))
         if isinstance(registry, dict) else None
@@ -1023,7 +1057,7 @@ def validate_leaf_root_binding(
 
 
 def load_profile(name: str) -> dict[str, Any]:
-    registry = read_json(PROFILE_PATH)
+    registry = load_profile_registry()
     profile = registry.get("profiles", {}).get(name) if isinstance(registry, dict) else None
     if not isinstance(profile, dict):
         raise BootstrapError(f"Unknown bootstrap review profile: {name}")
@@ -1057,21 +1091,21 @@ def load_profile(name: str) -> dict[str, Any]:
     round_models = codex_policy.get("roundModelOverrides")
     round_reasoning = codex_policy.get("roundReasoningEffortOverrides")
     if (
-        (round_models != {} if focused else round_models != {"3": "gpt-6-sol"})
+        (round_models != {} if focused else round_models != {"3": CONFIGURED_MODEL})
         or not isinstance(round_reasoning, dict)
         or (set(round_reasoning) != set() if focused else set(round_reasoning) != {"3"})
         or (not focused and not isinstance(round_reasoning.get("3"), dict))
         or (not focused and set(round_reasoning["3"]) != set(LAYERS))
         or (not focused and any(value != "xhigh" for value in round_reasoning["3"].values()))
-        or "gpt-6-sol" in codex_policy["forbiddenModels"]
+        or CONFIGURED_MODEL in codex_policy["forbiddenModels"]
     ):
         raise BootstrapError("Bootstrap profile has an invalid round-specific Codex route")
     verifier_policy = profile.get("verifierPolicy")
     if (
         not isinstance(verifier_policy, dict)
         or set(verifier_policy) != VERIFIER_POLICY_KEYS
-        or verifier_policy.get("preferredModel") != "gpt-6-sol"
-        or verifier_policy.get("escalatedModel") != "gpt-6-sol"
+        or verifier_policy.get("preferredModel") != CONFIGURED_MODEL
+        or verifier_policy.get("escalatedModel") != CONFIGURED_MODEL
         or verifier_policy.get("fallbackModels") != []
         or verifier_policy.get("modelEscalateOnSeverities") != ["P0"]
         or verifier_policy.get("modelEscalateOnDimensions") != ["security"]

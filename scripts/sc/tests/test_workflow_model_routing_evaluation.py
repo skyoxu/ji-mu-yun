@@ -33,12 +33,10 @@ class WorkflowModelRoutingEvaluationTests(unittest.TestCase):
             self.assertEqual("keep_disabled", cohort["activationRecommendation"])
             self.assertEqual([], cohort["authorizes"])
 
-    def test_luna_and_sol_max_remain_inactive_without_exact_representative_evidence(self) -> None:
+    def test_shadow_candidates_remain_inactive_without_exact_representative_evidence(self) -> None:
         policy = routing.load_policy()
         report = evaluation.evaluate_shadow_fixture(self.fixture(), policy=policy)
-        luna = policy["models"]["luna"]
         max_route = policy["routes"]["vdd.complex_recovery"]
-        self.assertEqual("shadow_candidate", luna["activationState"])
         self.assertEqual("disabled_pending_evidence", max_route["activationState"])
         self.assertTrue(all(not item["activationEligible"] for item in report["cohorts"]))
 

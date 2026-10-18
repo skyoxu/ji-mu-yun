@@ -5,7 +5,7 @@
     {
       "cohortId": "luna-small-mechanical-shadow",
       "routeId": "quick_dev.small_mechanical",
-      "candidateModel": "gpt-6-sol",
+      "candidateModel": "$CODEX_MODEL",
       "exactCapabilityStatus": "unavailable",
       "representativeExecution": false,
       "samples": [
@@ -32,7 +32,7 @@
     {
       "cohortId": "sol-max-vdd-recovery-shadow",
       "routeId": "vdd.complex_recovery",
-      "candidateModel": "gpt-6-sol",
+      "candidateModel": "$CODEX_MODEL",
       "exactCapabilityStatus": "unavailable",
       "representativeExecution": false,
       "samples": [

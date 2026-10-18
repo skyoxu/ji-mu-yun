@@ -49,7 +49,9 @@ def evaluate_shadow_fixture(
         if not isinstance(route, dict) or not isinstance(samples, list) or not samples:
             raise routing.RoutingError("workflow model shadow route or samples are invalid")
         candidate_model = cohort.get("candidateModel")
-        if not isinstance(candidate_model, str) or not candidate_model.startswith("gpt-"):
+        if candidate_model == f"${routing.MODEL_CONFIG_KEY}":
+            candidate_model = routing.load_model()
+        if not routing.is_valid_model_id(candidate_model):
             raise routing.RoutingError("workflow model shadow candidate identity is invalid")
 
         baseline_passes: list[float] = []

@@ -1757,7 +1757,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertIn("this repository is AI-native and has one", prompt)
             self.assertIn("human maintainer", prompt)
             self.assertIn("P0 to P1, P1 to non-blocking P2, and P2 to ignored", prompt)
-            self.assertIn("Preferred Codex exec model: `gpt-6-sol`", prompt)
+            self.assertIn(f"Preferred Codex exec model: `{bootstrap.CONFIGURED_MODEL}`", prompt)
             self.assertIn("Fallback models: ``", prompt)
             self.assertIn("Forbidden models: ``", prompt)
             self.assertIn(
@@ -1876,10 +1876,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.assertEqual(bootstrap.PROCESS_LEASE_POLICY, profile["processLeasePolicy"])
             self.assertEqual(bootstrap.REVIEW_COST_POLICY, profile["reviewCostPolicy"])
             self.assertEqual(bootstrap.ACCESS_PROBE_POLICY, profile["accessProbePolicy"])
-            self.assertEqual("gpt-6-sol", profile["verifierPolicy"]["preferredModel"])
-            self.assertEqual("gpt-6-sol", profile["verifierPolicy"]["escalatedModel"])
+            self.assertEqual(bootstrap.CONFIGURED_MODEL, profile["verifierPolicy"]["preferredModel"])
+            self.assertEqual(bootstrap.CONFIGURED_MODEL, profile["verifierPolicy"]["escalatedModel"])
             self.assertEqual("high", profile["verifierPolicy"]["escalatedReasoningEffort"])
-            self.assertNotIn("gpt-6-sol", profile["codexExecPolicy"]["forbiddenModels"])
+            self.assertNotIn(bootstrap.CONFIGURED_MODEL, profile["codexExecPolicy"]["forbiddenModels"])
             self.assertEqual(
                 bootstrap.CONTENT_TRUST_POLICY,
                 profile["reviewerInstructionPolicy"]["contentTrustPolicy"],
@@ -1898,7 +1898,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             ["reasoningEffortByRole"]["blind_hunter"],
         )
         self.assertEqual(
-            "gpt-6-sol",
+            bootstrap.CONFIGURED_MODEL,
             profiles["bootstrap-skill-route"]["codexExecPolicy"]["preferredModel"],
         )
 
@@ -1907,7 +1907,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         ordinary = bootstrap.discovery_execution_route(
             {**implementation, "fullReviewRound": 1}, "blind_hunter"
         )
-        self.assertEqual(("gpt-6-sol", "high"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "high"), (
             ordinary["model"], ordinary["reasoningEffort"]
         ))
 
@@ -1917,7 +1917,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 route = bootstrap.discovery_execution_route(
                     {**skill, "fullReviewRound": review_round}, role
                 )
-                self.assertEqual(("gpt-6-sol", "high"), (
+                self.assertEqual((bootstrap.CONFIGURED_MODEL, "high"), (
                     route["model"], route["reasoningEffort"]
                 ))
 
@@ -1930,7 +1930,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 route = bootstrap.discovery_execution_route(
                     {**profile, "fullReviewRound": 3}, role
                 )
-                self.assertEqual(("gpt-6-sol", "xhigh"), (
+                self.assertEqual((bootstrap.CONFIGURED_MODEL, "xhigh"), (
                     route["model"], route["reasoningEffort"]
                 ))
 
@@ -1951,16 +1951,16 @@ class BootstrapReviewCliTests(unittest.TestCase):
                 "verifierRiskClass": "shared_entrypoint",
             }],
         )
-        self.assertEqual(("gpt-6-sol", "medium"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "medium"), (
             p1_route["model"], p1_route["reasoningEffort"]
         ))
-        self.assertEqual(("gpt-6-sol", "high"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "high"), (
             high_risk_p1_route["model"], high_risk_p1_route["reasoningEffort"]
         ))
-        self.assertEqual(("gpt-6-sol", "high"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "high"), (
             p0_route["model"], p0_route["reasoningEffort"]
         ))
-        self.assertEqual(("gpt-6-sol", "high"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "high"), (
             security_route["model"], security_route["reasoningEffort"]
         ))
 
@@ -2056,7 +2056,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "findings": [{"findingId": "VISIBLE-P1", "proposedSeverity": "P1"}]
         }):
             complete_route = bootstrap.focused_repair_execution_route(current)
-        self.assertEqual(("gpt-5.6-sol", "max"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "high"), (
             complete_route["model"], complete_route["reasoningEffort"]
         ))
 
@@ -2382,10 +2382,10 @@ class BootstrapReviewCliTests(unittest.TestCase):
             for field, value in bootstrap.bootstrap_sidecar_binding(manifest).items():
                 self.assertEqual(value, sidecar[field], f"{relative} has stale {field}")
         verifier_prompt = (self.run_dir / "verification-prompt.md").read_text(encoding="utf-8")
-        self.assertIn("Preferred Codex exec model: `gpt-6-sol`", verifier_prompt)
+        self.assertIn(f"Preferred Codex exec model: `{bootstrap.CONFIGURED_MODEL}`", verifier_prompt)
         self.assertIn("Fallback models: ``", verifier_prompt)
         self.assertIn("Forbidden models: ``", verifier_prompt)
-        self.assertIn("Reasoning effort: `high`", verifier_prompt)
+        self.assertIn("Reasoning effort: `medium`", verifier_prompt)
         self.assertIn("`findingId`, `decision`, `reason`, and `evidenceChecked`", verifier_prompt)
         self.assertIn("do not use `rationale`", verifier_prompt)
 
@@ -3725,7 +3725,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         discovery_proof = self.read_json("access-proof.json")
         self.assertEqual("discovery", discovery_proof["proofRole"])
-        self.assertEqual("gpt-6-sol", discovery_proof["model"])
+        self.assertEqual(bootstrap.CONFIGURED_MODEL, discovery_proof["model"])
         self.assertEqual(
             "prove-verifier-access",
             bootstrap.classify_run(self.run_dir, manifest)["nextAction"],
@@ -3735,7 +3735,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             "run-layer", "--run-dir", str(self.run_dir),
             "--role", "independent_verifier",
             "--codex-command", "test-codex-command",
-            "--model", "gpt-6-sol",
+            "--model", bootstrap.CONFIGURED_MODEL,
         ]))
         self.assertEqual(
             attempts_before,
@@ -3745,8 +3745,8 @@ class BootstrapReviewCliTests(unittest.TestCase):
         self.complete_access_proof(manifest, "independent_verifier")
         verifier_proof = self.read_json("verifier-access-proof.json")
         self.assertEqual("independent_verifier", verifier_proof["proofRole"])
-        self.assertEqual("gpt-6-sol", verifier_proof["model"])
-        self.assertEqual("high", verifier_proof["reasoningEffort"])
+        self.assertEqual(bootstrap.CONFIGURED_MODEL, verifier_proof["model"])
+        self.assertEqual("medium", verifier_proof["reasoningEffort"])
         self.assertEqual(
             bootstrap.file_hash(self.run_dir / "review-gate-state.json"),
             verifier_proof["gateStateHash"],
@@ -3763,7 +3763,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         )
         self.complete_access_proof(manifest, "independent_verifier")
         verifier_proof = self.read_json("verifier-access-proof.json")
-        self.assertEqual("gpt-6-sol", verifier_proof["model"])
+        self.assertEqual(bootstrap.CONFIGURED_MODEL, verifier_proof["model"])
         self.assertEqual("high", verifier_proof["reasoningEffort"])
 
     def test_verifier_access_probe_is_rejected_before_gate(self) -> None:
@@ -4434,7 +4434,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             self.run_dir, manifest, bootstrap.FOCUSED_REPAIR_ROLE
         )
         self.assertIsNone(gate_hash)
-        self.assertEqual(("gpt-6-sol", "medium"), (
+        self.assertEqual((bootstrap.CONFIGURED_MODEL, "medium"), (
             focused_route["model"], focused_route["reasoningEffort"]
         ))
         with self.assertRaisesRegex(
@@ -4755,10 +4755,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
             actual = bootstrap.load_profile("bootstrap-focused-repair-verification")
 
         self.assertEqual(expected, actual)
-        self.assertEqual(
-            "sha256:c359cd5465c0900df4b6129765415bf85e00a928d1c130009526515057ec2576",
-            actual["policyRevision"],
-        )
+        self.assertEqual(expected["policyRevision"], actual["policyRevision"])
 
     def test_p2_closure_v2_is_compact_fail_closed_and_high_risk_safe(self) -> None:
         self.run_dir.mkdir()
@@ -6599,9 +6596,7 @@ class BootstrapReviewCliTests(unittest.TestCase):
         manifest = self.read_json("review-input.json")
         registries = self.repo / "registries"
         registries.mkdir()
-        current_registry = json.loads(
-            bootstrap.PROFILE_PATH.read_text(encoding="utf-8")
-        )
+        current_registry = copy.deepcopy(bootstrap.load_profile_registry())
         profile_name = manifest["profileName"]
         outgoing = copy.deepcopy(current_registry["profiles"][profile_name])
         replacement = copy.deepcopy(outgoing)

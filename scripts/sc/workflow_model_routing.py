@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import _llm_backend as llm_backend
+from model_config import MODEL_CONFIG_KEY, is_valid_model_id, load_model
 
 
 SC_ROOT = Path(__file__).resolve().parent
@@ -62,6 +63,9 @@ def load_policy(path: Path | None = None) -> dict[str, Any]:
         policy = json.loads(policy_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise RoutingError("workflow model routing policy is unreadable") from exc
+    for entry in policy.get("models", {}).values() if isinstance(policy, dict) else ():
+        if isinstance(entry, dict) and entry.get("modelId") == f"${MODEL_CONFIG_KEY}":
+            entry["modelId"] = load_model()
     validate_policy(policy)
     return policy
 
@@ -101,7 +105,7 @@ def validate_policy(policy: Any) -> None:
         if not isinstance(model, dict) or not isinstance(model.get("modelId"), str):
             raise RoutingError(f"model registry entry is invalid: {alias}")
         model_id = model["modelId"]
-        if not model_id.startswith("gpt-") or model_id in models or model_id in model_ids:
+        if not is_valid_model_id(model_id) or model_id in models or model_id in model_ids:
             raise RoutingError(f"model registry must use unique full model IDs: {alias}")
         model_ids.add(model_id)
         if model.get("activationState") not in {"active", "shadow_candidate"}:
@@ -649,5 +653,5 @@ def validate_decision(decision: Any, policy: dict[str, Any] | None = None) -> No
     requested = decision.get("requestedExecution")
     if not isinstance(requested, dict) or set(requested) != {"launchMode", "backend", "model", "effort", "sandbox"}:
         raise RoutingError("workflow model requested execution identity is invalid")
-    if requested["model"] is not None and not str(requested["model"]).startswith("gpt-"):
+    if requested["model"] is not None and not is_valid_model_id(requested["model"]):
         raise RoutingError("workflow model route decision must use a full model ID")

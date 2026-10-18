@@ -238,7 +238,9 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
   [--ack-high-cost]
 ```
 
-The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses `gpt-6-sol/high`; every valid Round 3 uses `gpt-6-sol/xhigh`. Ordinary focused repair verification uses `gpt-6-sol/high`. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The verifier preferred route is `gpt-6-sol/medium`; its escalated route is `gpt-6-sol/high`. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. An explicitly selected allowed fallback model creates a separate model-bound proof sidecar; the preferred proof is never silently reused for a fallback. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
+The configured model is read from `model-routing.toml` beside the active Codex `config.toml`; if that file is absent, the loader uses `config.toml`'s `model` value. Set `CODEX_HOME` when Codex uses a non-default configuration directory.
+
+The discovery route is round-bound. Every Round 1-2 profile, including Skill/route review, uses `configured Codex model/high`; every valid Round 3 uses `configured Codex model/xhigh`. Ordinary focused repair verification uses `configured Codex model/high`. A focused repair whose frozen predecessor contains P0, `security`, or a structured high-risk verifier class uses the same escalation policy as independent verification. The verifier preferred route is `configured Codex model/medium`; its escalated route is `configured Codex model/high`. The probe must use the same executable identity, exact resolved model/reasoning route, sandbox, environment class, and Artifact View contract intended for reviewers. When reviewer roles resolve to different routes, one `prove-access --role discovery` command creates one proof per distinct route; roles with an identical route share a proof, and launch authorization binds the complete proof set. An explicitly selected allowed fallback model creates a separate model-bound proof sidecar; the preferred proof is never silently reused for a fallback. It does not cache artifact, preflight, or authority proof. For a high-cost run, show the estimate and obtain explicit acknowledgement before adding `--ack-high-cost`; no model process starts without it.
 
 ## Execution-Plane Continuity
 
@@ -320,10 +322,10 @@ py -3 .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py prov
 ```
 
 This creates `verifier-access-proof.json` only after the gate exists. A standard
-P1-only blocker set resolves to `gpt-6-sol/medium`. A P1 finding classified as
+P1-only blocker set resolves to `configured Codex model/medium`. A P1 finding classified as
 `authority_control`, `lifecycle_control`, `protected_path`, or
-`shared_entrypoint` resolves the whole verifier run to `gpt-6-sol/high`. Any
-P0 or `security` blocker also resolves to `gpt-6-sol/high` under the current
+`shared_entrypoint` resolves the whole verifier run to `configured Codex model/high`. Any
+P0 or `security` blocker also resolves to `configured Codex model/high` under the current
 active route. `verifierRiskClass` selects model capacity only and never changes
 severity. Data-corruption and permission-boundary findings must still be
 classified as P0 or `security` for structured escalation. The discovery

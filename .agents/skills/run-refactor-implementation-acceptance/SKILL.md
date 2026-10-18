@@ -36,8 +36,10 @@ Bootstrap is explicit-only: only `maintainerIntent=request` can require review. 
 
 ## Model Route Decision
 
+The configured model is read from `model-routing.toml` beside the active Codex `config.toml`; if that file is absent, the loader uses `config.toml`'s `model` value. Set `CODEX_HOME` when Codex uses a non-default configuration directory.
+
 Keep every ordinary Acceptance next action deterministic and pass it through
-`scripts/model_routing.py` as the no-launch route. Request `gpt-6-sol/high` only when
+`scripts/model_routing.py` as the no-launch route. Request `configured Codex model/high` only when
 the current failure matches one policy-owned complex-recovery trigger:
 Bootstrap control-plane unavailable, candidate-binding recovery failed, or
 lineage evidence inconsistent. Reject free-form recovery reasons. Do not use a
