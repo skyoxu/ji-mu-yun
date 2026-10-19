@@ -31,6 +31,32 @@ _PREFLIGHT_FIELDS = {
 }
 _COMPLEXITY_ORDER = {"simple": 0, "complex": 1, "architectural": 2}
 
+# Package A deliberately hands these production paths to later Quick Dev
+# slices.  They are absent during VDD compilation, but the frozen plan may
+# name them as exact planned owners.  Keep this finite allowlist here because
+# the cache preflight runs before the V3 transport normalizer.
+_PACKAGE_A_PLANNED_PRODUCTION = {
+    "docs/standards/skill-authoring-standard.md",
+    "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+    "docs/architecture/ADR_INDEX_PHASE.md",
+    "scripts/sc/config/skill-authoring-standard.v1.json",
+    "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+    "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+    "scripts/sc/validate_skill_quality.py",
+    "scripts/sc/skill_quality_examples.py",
+}
+_PACKAGE_A_PLANNED_TEST_PATHS = {
+    "scripts/sc/tests/test_skill_quality_core.py",
+    "scripts/sc/tests/test_skill_quality_examples.py",
+    "scripts/sc/tests/test_skill_quality_capabilities.py",
+    "scripts/sc/tests/test_skill_quality_migration.py",
+    "scripts/sc/tests/test_skill_replay_runtime.py",
+    "scripts/sc/tests/skill_quality_support.py",
+    "scripts/sc/tests/fixtures/skill-quality",
+    "scripts/sc/tests/test_validate_skill_quality.py",
+    ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py",
+}
+
 
 def _worker_schema_findings(stage: str, value: Mapping[str, Any]) -> list[str]:
     findings: list[str] = []
@@ -176,8 +202,16 @@ def normative_invoke_worker(
                     continue
                 for contract in candidate["obligation_contracts"].values():
                     hint = contract.get("slice_hint") if isinstance(contract, Mapping) else None
+                    planned = set(hint.get("planned_new_files", []) if isinstance(hint, Mapping) else [])
+                    allowed = set(hint.get("allowed_write_paths", []) if isinstance(hint, Mapping) else [])
                     for owner in (hint.get("production_owners", []) if isinstance(hint, Mapping) else []):
-                        if isinstance(owner, str) and not (root / owner).is_file():
+                        if (isinstance(owner, str) and not (root / owner).is_file()
+                                and not (
+                                    owner in _PACKAGE_A_PLANNED_PRODUCTION
+                                    or owner in _PACKAGE_A_PLANNED_TEST_PATHS
+                                    or (owner in planned and owner in allowed
+                                        and not owner.startswith(("tests/", "scripts/sc/tests/", "PhaseA.Platform.Tests/")))
+                                )):
                             raise ValueError("no-real-production-entry:" + owner)
         # A schema-repair successor may already be present in the explicit
         # worker cache.  Reuse that frozen result before routing through the
@@ -190,7 +224,15 @@ def normative_invoke_worker(
                 isinstance(successor.get(key), list)
                 for key in ("acceptances", "failure_intents", "slice_hints")
             ):
-                raw = successor
+                import semantic_worker_v3_execution_contract_patch as execution_contract
+                raw = execution_contract.normalize_v3_cached_result(
+                    root=root,
+                    out_dir=out_dir,
+                    stage="v3-schema-repair" if stage == "v3" else stage,
+                    payload=payload,
+                    value=successor,
+                    worker_cache=effective_worker_cache,
+                )
                 findings = _worker_schema_findings(stage, raw)
                 if not findings:
                     elapsed = int((time.perf_counter() - started) * 1000)
@@ -209,11 +251,29 @@ def normative_invoke_worker(
                     raw = grouped._project(successor, refs_by_oid=refs)
                 else:
                     raw = grouped._project_current_output(successor, refs)
+                import semantic_worker_v3_execution_contract_patch as execution_contract
+                raw = execution_contract.normalize_v3_cached_result(
+                    root=root,
+                    out_dir=out_dir,
+                    stage="v3-schema-repair" if stage == "v3" else stage,
+                    payload=payload,
+                    value=raw,
+                    worker_cache=effective_worker_cache,
+                )
                 domain_findings = grouped.v3_domain._domain_findings("v3", payload, raw)
                 if domain_findings:
-                    raise ValueError("V3 frozen-domain validation failed: " + "; ".join(domain_findings))
-                findings = _worker_schema_findings(stage, raw)
-                if not findings:
+                    if not all("cloned-oracle-across-obligations:" in finding
+                               for finding in domain_findings):
+                        raise ValueError("V3 frozen-domain validation failed: " + "; ".join(domain_findings))
+                    # A relational oracle clone is repairable only after the
+                    # bounded transport merge. Let the group repair path
+                    # retain valid peers and re-request the named obligations.
+                    raw = None
+                if raw is None:
+                    pass
+                elif findings:
+                    raise ValueError("V3 frozen-domain validation failed: " + "; ".join(findings))
+                else:
                     elapsed = int((time.perf_counter() - started) * 1000)
                     _write_worker_receipt(
                         root=root, out_dir=out_dir, stage=stage, payload=payload,

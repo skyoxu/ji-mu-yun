@@ -92,6 +92,16 @@ class SelectiveCacheRepairTests(unittest.TestCase):
         repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
         assert calls == []
 
+    def test_missing_unplanned_production_owner_invalidates_cache(self):
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        hint = original['obligation_contracts']['O-1']['slice_hint']
+        hint['production_owners'] = ['src/missing_owner.py']
+        hint['allowed_write_paths'] = ['src/missing_owner.py']
+        hint['planned_new_files'] = []
+        cache.write_text(json.dumps(original), encoding='utf-8')
+        repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
+        assert [ids for ids, _ in calls] == [['O-1']]
+
 
     def test_repeated_missing_selector_still_fails_execution_contract(self):
         from semantic_worker_v3_execution_contract_patch import _findings
@@ -142,6 +152,8 @@ class SelectiveCacheRepairTests(unittest.TestCase):
         assert calls == []
 
     def test_semantically_identical_renamed_obligation_is_rebound_without_worker(self):
+        (self.root / 'src').mkdir()
+        (self.root / 'src/owner.py').write_text('value = 1\n')
         (self.root / 'tests').mkdir()
         (self.root / 'tests/test_real.py').write_text('def test_real(): assert True\n')
         payload = {'original_stage': 'v3', 'input': {'obligations': [{

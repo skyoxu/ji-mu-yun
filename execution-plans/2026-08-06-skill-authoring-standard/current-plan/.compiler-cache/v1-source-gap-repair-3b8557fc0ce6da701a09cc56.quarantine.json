@@ -1,0 +1,6 @@
+{
+  "original": "execution-plans\\2026-08-06-skill-authoring-standard\\current-plan\\.compiler-cache\\v1-source-gap-repair-3b8557fc0ce6da701a09cc56.json",
+  "quarantined_as": "execution-plans\\2026-08-06-skill-authoring-standard\\current-plan\\.compiler-cache\\v1-source-gap-repair-3b8557fc0ce6da701a09cc56.prior-empty.json",
+  "reason": "empty v1 source-gap repair response caused deterministic repair-vdd; preserved for diagnosis",
+  "timestamp_utc": "2026-10-18T16:21:05.913146+00:00"
+}

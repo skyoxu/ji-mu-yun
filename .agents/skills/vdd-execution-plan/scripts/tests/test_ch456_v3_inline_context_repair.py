@@ -55,7 +55,7 @@ def test_complete_prior_candidate_is_reused_before_chunk_recomposition(tmp_path,
     payload = {"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}}
     cache_dir = tmp_path / ".compiler-cache"
     cache_dir.mkdir()
-    prior = cache_dir / "v3-schema-repair-group-v5-inline-context-prior.json"
+    prior = cache_dir / f"{grouped._GROUP_STAGE}-prior.json"
     prior.write_text(json.dumps(raw), encoding="utf-8")
     monkeypatch.setattr(grouped.sc, "_v3_cache_requires_contract_refresh", lambda *_args: False)
 
@@ -64,6 +64,50 @@ def test_complete_prior_candidate_is_reused_before_chunk_recomposition(tmp_path,
     )
 
     assert recovered == raw
+
+
+def test_forced_semantic_repair_does_not_reuse_prior_contract(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+
+    raw = _inline(1)
+    oid = "O-000"
+    payload = {
+        "_force_semantic_repair": True,
+        "input": {"obligations": [_obligation(oid)]},
+    }
+    prior = deepcopy(raw["obligation_contracts"][oid])
+    prior["acceptance"]["oracle"]["observable"] = "stale peer oracle"
+    prior["acceptance"]["assertion_ids"] = ["ASSERT-STALE"]
+    recovered = []
+    calls = []
+
+    def prior_contracts(**kwargs):
+        recovered.append(kwargs["ids"])
+        return {oid: prior}
+
+    def fake_exec(**kwargs):
+        calls.append(kwargs)
+        fresh = deepcopy(raw)
+        fresh["obligation_contracts"][oid]["acceptance"]["oracle"]["observable"] = "fresh obligation oracle"
+        fresh["obligation_contracts"][oid]["acceptance"]["assertion_ids"] = ["ASSERT-FRESH"]
+        kwargs["output_last_message"].write_text(json.dumps(fresh), encoding="utf-8")
+        return 0, "OK", []
+
+    monkeypatch.setattr(grouped, "_reusable_prior_contracts", prior_contracts)
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+
+    result = grouped._live_group_repair_one(
+        root=tmp_path,
+        out_dir=tmp_path / "plan",
+        prompt="Repair.",
+        payload=payload,
+    )
+
+    assert recovered == []
+    assert len(calls) == 1
+    assert result["acceptances"][0]["oracle"]["observable"] == "fresh obligation oracle"
 
 
 def test_37_inline_contracts_compile_once_and_keep_one_cohesive_slice(tmp_path, monkeypatch):
@@ -169,6 +213,8 @@ def test_live_transport_uses_inline_schema_then_reuses_cache_without_backend(tmp
     monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
     import _llm_backend
     raw = _inline(1)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/ledger.py").write_text("class Ledger: pass\n", encoding="utf-8")
     calls = []
     def fake_exec(**kwargs):
         calls.append(kwargs)
@@ -219,6 +265,8 @@ def test_resume_recomposes_parent_chunk_from_successful_child_caches(tmp_path, m
     monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
     import _llm_backend
     raw = _inline(grouped._MAX_CONTRACTS_PER_WORKER)
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/ledger.py").write_text("class Ledger: pass\n", encoding="utf-8")
     calls = []
 
     def fake_exec(**kwargs):
@@ -237,7 +285,7 @@ def test_resume_recomposes_parent_chunk_from_successful_child_caches(tmp_path, m
     args = dict(root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
                 payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}})
     assert grouped._live_group_repair(**args) == grouped._project(raw, refs_by_oid=_refs(raw))
-    for path in (tmp_path / "plan/.compiler-cache").glob("v3-schema-repair-group-v5-inline-context-*.json"):
+    for path in (tmp_path / "plan/.compiler-cache").glob(f"{grouped._GROUP_STAGE}-*.json"):
         if "chunk-" not in path.name:
             path.unlink()
     prior_call_count = len(calls)
@@ -281,6 +329,8 @@ def test_live_repair_chunks_large_frozen_obligation_sets(tmp_path: Path, monkeyp
             oid = item["obligation_id"]
             contracts[oid] = _raw_group([oid])
             contracts[oid].pop("obligation_ids", None)
+            contracts[oid]["acceptance"]["oracle"]["observable"] = f"observable {oid}"
+            contracts[oid]["acceptance"]["assertion_ids"] = [f"ASSERT-{oid}"]
         return grouped._project_current_output(
             {"obligation_contracts": contracts}, grouped._obligation_refs(payload)
         )
@@ -369,6 +419,8 @@ def test_transient_multi_obligation_group_degrades_to_smaller_exact_groups(tmp_p
             raise grouped.TransientV3WorkerFailure("timeout")
         raw = {"obligation_contracts": {ids[0]: _raw_group(ids)}}
         raw["obligation_contracts"][ids[0]].pop("obligation_ids", None)
+        raw["obligation_contracts"][ids[0]]["acceptance"]["oracle"]["observable"] = f"observable {ids[0]}"
+        raw["obligation_contracts"][ids[0]]["acceptance"]["assertion_ids"] = [f"ASSERT-{ids[0]}"]
         return grouped._project_current_output(raw, grouped._obligation_refs(payload))
 
     monkeypatch.setattr(grouped, "_live_group_repair_one", fake_one)
@@ -445,6 +497,8 @@ def test_partial_chunk_resume_retains_completed_sibling(tmp_path, monkeypatch):
     monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
     import _llm_backend
     raw, calls = _inline(2), []
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/ledger.py").write_text("class Ledger: pass\n", encoding="utf-8")
     obligations = [_obligation(oid) for oid in _refs(raw)]
     obligations[0]["subject"] = "ledger writer"
     obligations[1]["subject"] = "snapshot restorer"

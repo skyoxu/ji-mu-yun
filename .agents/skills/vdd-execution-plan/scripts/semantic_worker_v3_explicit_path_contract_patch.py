@@ -162,6 +162,19 @@ def _normalize_hint(
             allowed.update(explicit_owners)
             hint["allowed_write_paths"] = sorted(allowed)
 
+        # A frozen source owner is authoritative write scope. If that exact
+        # production entry is absent in the current repository, preserve the
+        # source-bound intent as a planned new production file so V6 can
+        # distinguish an approved new entry from an invented model path.
+        planned = set(_strings(hint.get("planned_new_files")))
+        missing_explicit_owners = {
+            owner for owner in explicit_owners
+            if owner not in explicit_existing and not _real_file(root, owner)
+            and not owner.startswith(("tests/", "scripts/sc/tests/", "PhaseA.Platform.Tests/"))
+        }
+        if missing_explicit_owners:
+            hint["planned_new_files"] = sorted(planned | missing_explicit_owners)
+
         rollback = hint.get("rollback_scope")
         if isinstance(rollback, Mapping):
             rollback_value = dict(rollback)

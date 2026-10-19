@@ -647,6 +647,22 @@ def _v3_cache_requires_contract_refresh(
         if not isinstance(hint, Mapping):
             continue
         planned = set(hint.get("planned_new_files") or [])
+        allowed = set(hint.get("allowed_write_paths") or [])
+        # A cached V3 contract is unusable when a declared production owner is
+        # absent from the current repository unless that exact non-test path is
+        # explicitly planned and write-authorized.  Snapshot-only refresh used
+        # to let stale owner contracts survive, preventing the frozen source
+        # projection from adding the required planned production entry.
+        for owner in hint.get("production_owners") or []:
+            if not isinstance(owner, str):
+                continue
+            if owner == "PhaseA.Platform" or owner.startswith("PhaseA.Platform/"):
+                continue
+            candidate = root / Path(owner)
+            exists = candidate.is_file() and not candidate.is_symlink()
+            if (not exists and (owner not in planned or owner not in allowed
+                                or owner.startswith(("tests/", "scripts/sc/tests/", "PhaseA.Platform.Tests/")))):
+                return True
         for snapshot in hint.get("execution_snapshot_paths") or []:
             if isinstance(snapshot, str):
                 candidate = root / Path(snapshot)
@@ -861,7 +877,7 @@ def compile_acceptances(*, root: Path, out_dir: Path, obligations: Sequence[Mapp
             "Acceptance: obligation_ids[], source_refs[], given, when, then, oracle{observable,expected,forbidden[]}, assertion_ids[]. Do not include acceptance_id or red_intent_ids; they are assigned deterministically. "
             "Failure intent: obligation_ids[] identifying the Acceptance it serves, failure_family from the allowed taxonomy, selector_intent, expected_outcome='fail', failure_id uppercase token. "
             "Treat expected-red as a runtime observation role, never as a generic label for RED-process guards. For non-Governance obligations, it is eligible only when every bound frozen obligation has obligation_kind behavior or quality. Constraint obligations and rules about RED construction, failure-marker emission, validation commands, write scope, fixtures, or harness integrity must retain a failure intent but use the appropriate non-expected-red family. Governance classification does not change V3 runtime-marker eligibility. "
-            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX. Production owners and execution snapshots must point to real existing repository files; inspect the repository and never invent a missing helper path. If the obligation truly requires a new file, put that exact path in planned_new_files (and do not claim it is an existing production owner). Never assign PhaseA.Platform or runtime/phase-a files as production owners or allowed writes for this Toolchain plan; bind to repository Toolchain implementations and tests instead. Derived evidence contracts must always have authorizes=[]; preserve complete FR-9 Consumer Manifest and real-call-surface reconciliation, and require replay obligations to rebuild the original binding identity before replaying with that same identity."
+            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX. Existing production owners must point to real repository files. A genuinely new non-test production owner must be listed in all three fields production_owners, allowed_write_paths, and planned_new_files; do not invent a path that is not declared there. Test files remain execution snapshots/planned files and can never be production owners. Never assign PhaseA.Platform or runtime/phase-a files as production owners or allowed writes for this Toolchain plan; bind to repository Toolchain implementations and tests instead. Derived evidence contracts must always have authorizes=[]; preserve complete FR-9 Consumer Manifest and real-call-surface reconciliation, and require replay obligations to rebuild the original binding identity before replaying with that same identity."
         ),
     )
     raw_acceptances = raw.get("acceptances")
@@ -1261,8 +1277,9 @@ def feasibility(root: Path, slices: Sequence[Mapping[str, Any]], acceptances: Se
         allowed = set(slice_item["allowed_write_paths"])
         planned = set(slice_item["planned_new_files"])
         existing_owner = False
+        planned_owner = False
         for owner in slice_item["production_owners"]:
-            if owner not in allowed and owner not in planned:
+            if owner not in allowed:
                 findings.append(f"{sid}:owner-outside-write-set:{owner}")
             path = (root / owner).resolve()
             try:
@@ -1272,9 +1289,11 @@ def feasibility(root: Path, slices: Sequence[Mapping[str, Any]], acceptances: Se
                 continue
             if path.is_file() and not path.is_symlink():
                 existing_owner = True
-            elif owner not in planned:
+            elif owner in planned and not owner.startswith(("tests/", "scripts/sc/tests/", "PhaseA.Platform.Tests/")):
+                planned_owner = True
+            else:
                 findings.append(f"{sid}:owner-missing:{owner}")
-        if not existing_owner:
+        if not existing_owner and not planned_owner:
             findings.append(f"{sid}:no-real-production-entry")
         for snapshot in slice_item["execution_snapshot_paths"]:
             path = (root / snapshot).resolve()
