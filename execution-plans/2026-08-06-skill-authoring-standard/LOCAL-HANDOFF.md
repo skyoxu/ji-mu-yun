@@ -1,6 +1,7 @@
 # Local Handoff: Package A Repair To Current Quick Dev
 
-This branch repairs requirements only. It cannot honestly be advertised as
+This branch repairs the Package A input and bounded VDD compiler defects;
+it does not implement Package A. It cannot honestly be advertised as
 ready for immediate Quick Dev execution yet: the temporary workspace lacked
 Codex CLI/API credentials for the current VDD compiler's real semantic workers.
 The missing step is **one local canonical compile/repair**, not a new round of
@@ -21,9 +22,33 @@ the existing local current-plan/ with --resume-from first-failed-stage. Preserve
 its real worker caches and failed records. The changed source/V1 input requires
 normal source-bound revalidation, not unconditional V3-only replay. Do not use
 --v1-reuse-from-plan/--v1-reuse-from-git-ref overrides, --worker-cache fixture
-injection, old whole-domain V1/V3 replacement or hand-authored compiler-state. The deterministic maintenance tests
+injection, old whole-domain V1/V3 replacement or hand-authored compiler-state.
+The deterministic maintenance tests
 are not V3/V4 success or permission to start Quick Dev. Any remaining semantic
 finding still requires normal bounded repair; only actual plan-ready can hand off.
+
+## Online precompile audit (2026-10-19)
+
+Read repair/2026-10-19-precompile-audit.md for the latest simulated VDD-stage
+review and its verification limits. The current source clarifies strict versus
+inventory results, real CLI/API behavior, isolated inspection roots, atomic
+case mappings and dependency-scoped regressions. Its terminal limit is 600
+seconds, matching the current stable runner, rather than the previous 900.
+
+V3 now receives the same-file frozen authoring block even when compiling one
+A01--A25 table row. A narrowed repair retains applicable context without adding
+obligations or replacing source refs. This is a compiler maintenance correction,
+not Package B migration. The public compile below remains the only publisher.
+
+There is a separate first-use execution limitation: the new validator module
+has no callable baseline yet, and current Quick Dev does not authorize Q2 to
+create production before a real RED. Planned-file admission in V7 does not solve
+that runtime problem. Compilation can still be attempted, but do not promise
+immediate first-slice execution solely from plan-ready. Before Q2/probe, require
+the native consumer to identify a legal real-entry path; if none exists, repair
+that owning first-use protocol separately. A missing import, copied fake product
+or prewritten pass/RED receipt is not an alternative. This audit neither changes
+Quick Dev nor implements/seeds the validator outside its permitted stage.
 
 ## Inputs and authority
 
@@ -81,8 +106,8 @@ substitutes for the compiler's slice IDs. Read the published dependency graph
 and the selected `agent-context.json`; start with a zero-dependency slice.
 
 ```powershell
-py -3 scripts/quick_dev/run.py --plan $compiledPlan --slice <published-slice-id> --profile self-hosted --recommendation-only
-py -3 scripts/quick_dev/run.py --plan $compiledPlan --slice <published-slice-id> --profile self-hosted
+py -3 scripts/quick_dev/run.py --plan $compiledPlan --slice <published-slice-id> --profile self-hosted --worker-timeout-seconds 300 --recommendation-only
+py -3 scripts/quick_dev/run.py --plan $compiledPlan --slice <published-slice-id> --profile self-hosted --worker-timeout-seconds 300
 ```
 
 Replace `<published-slice-id>` before running. Q0 is read-only. Q1 must return

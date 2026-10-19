@@ -82,6 +82,16 @@ planning/execution context, not new product features. The original frozen
 context remains available to V3 for path, write and validation contracts;
 independent recall continues to judge the actual product source. No product
 obligation is removed by a keyword filter or replaced by a workflow instruction.
+For table-authored inputs, V3 also receives the explicit file-level authoring
+block from the same V0/V0A-frozen source file. Its source/hash provenance remains
+visible in execution_context_sources; it is not another obligation source.
+This prevents an individual row's V3 request from losing the common path,
+write-set and validation contract stored outside that row. Per-obligation repair
+retains applicable file context without changing source refs or V1 semantics.
+The projection never rereads current files or supplies another file's context
+as authority. Existing candidate validation, independent V4 and current runtime
+production binding still decide admissibility; authoring instructions establish
+no execution result or readiness.
 An explicit empty-owner, all-test envelope retains its verification role across
 schema repair and rollback recovery. A repair-stage label or stale rollback
 field does not authorize promotion to a production writer. These projections

@@ -278,6 +278,14 @@ def _narrow_repair_payload(payload: Mapping[str, Any], obligation_ids: list[str]
             for item in contracts
             if isinstance(item, Mapping) and item.get("source_ref") in refs
         ]
+    contexts = source.get("execution_context_sources")
+    if isinstance(contexts, list):
+        paths = {item.get("repository_relative_source_path")
+                 for item in source.get("source_contracts", []) if isinstance(item, Mapping)}
+        source["execution_context_sources"] = [
+            dict(item) for item in contexts
+            if isinstance(item, Mapping) and item.get("repository_relative_source_path") in paths
+        ]
     return {
         "original_stage": "v3",
         "input": source,

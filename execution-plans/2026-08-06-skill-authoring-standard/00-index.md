@@ -18,6 +18,17 @@ must revalidate before Quick Dev; do not force the old V1/V3 output into reuse. 
 below remains the historical result of the 2026-10-18 online invocation.
 No successful semantic publication is asserted by the maintenance tests.
 
+The latest online precompile audit is
+[2026-10-19-precompile-audit.md](repair/2026-10-19-precompile-audit.md).
+It preserves all 25 intent IDs and all original SAS outcomes, while clarifying
+row-local static scope, A19's no-read oracle and A24's actual CLI integration
+behavior. The earlier
+projection note's byte-identical-row claim describes that earlier repair only.
+The latest bounded compiler correction carries the same-file frozen authoring
+block into row-level V3 requests and their narrowed repair. A first-use real
+production-entry limitation remains explicit before Quick Dev execution;
+planned-path feasibility is not an observed runtime baseline.
+
 ## Current entry
 
 1. Read [requirements.md](requirements.md): the complete, scoped Package A input.
@@ -29,8 +40,8 @@ No successful semantic publication is asserted by the maintenance tests.
    performed and what remains unverified.
 
 The user authorized repair of this existing directory, not implementation of
-Package A production code. No standard/validator or Skill has been implemented
-by this repair. Implementation remains the subsequent local Quick Dev task.
+Package A production code. No Package A standard/validator or Package B Skill migration has been
+implemented by this repair; the bounded compiler fixes are maintenance work. Implementation remains the subsequent local Quick Dev task.
 
 ## Scope
 
