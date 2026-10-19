@@ -1,0 +1,28 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ SelectiveCacheRepairTests.test_empty_required_fields_repair_only_the_invalid_cached_contract _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_empty_required_fields_repair_only_the_invalid_cached_contract>
+
+    def test_empty_required_fields_repair_only_the_invalid_cached_contract(self):
+        """ADR-0041: cache admission must use the current publication schema."""
+        import semantic_worker_contract_patch as contract_schema
+        self.enterContext(mock.patch.object(
+            repair.gate, '_worker_schema_findings', contract_schema._worker_schema_findings))
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        hint = original['obligation_contracts']['O-2']['slice_hint']
+        hint['production_owners'] = []
+        hint['rollback_scope']['production_paths'] = []
+        cache.write_text(json.dumps(original), encoding='utf-8')
+        result = repair._live_group_repair(
+            root=self.root, out_dir=out, payload=payload, prompt='Repair.')
+>       assert [ids for ids, _ in calls] == [['O-2']]
+E       AssertionError: assert [] == [['O-2']]
+E         
+E         Right contains one more item: ['O-2']
+E         Use -v to get more diff
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:99: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_empty_required_fields_repair_only_the_invalid_cached_contract
+1 failed, 15 deselected in 0.17s

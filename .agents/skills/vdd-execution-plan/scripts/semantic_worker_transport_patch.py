@@ -322,7 +322,8 @@ def transport_invoke_worker(
     # valid bounded repair is lost to an unconfigurable transport timeout.
     is_schema_repair = stage.endswith("-schema-repair")
     is_v4_repair = stage in {"v4", "v4-atomic-recall", "v4-recheck"}
-    timeout_sec = _REPAIR_TIMEOUT_SECONDS if (is_schema_repair or is_v4_repair) else _NORMAL_TIMEOUT_SECONDS
+    is_source_gap_repair = stage == "v1-source-gap-repair"
+    timeout_sec = _REPAIR_TIMEOUT_SECONDS if (is_schema_repair or is_v4_repair or is_source_gap_repair) else _NORMAL_TIMEOUT_SECONDS
     reasoning = "medium" if is_schema_repair else "high"
     schema = _worker_output_schema(stage)
     extra_args: list[str] = []

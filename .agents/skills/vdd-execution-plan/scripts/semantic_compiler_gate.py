@@ -21,6 +21,14 @@ _ORIGINAL_PARTITION_SLICES = sc.partition_slices
 _ORIGINAL_VALIDATE_SEMANTIC_BUNDLE = sc.validate_semantic_bundle
 _ORIGINAL_COMPILE_PLAN = sc.compile_plan
 
+
+class SemanticWorkerValidationError(RuntimeError):
+    """ADR-0041: carry this attempt's findings without rewriting old receipts."""
+
+    def __init__(self, message: str, findings: Sequence[str]):
+        self.schema_findings = list(findings)
+        super().__init__(message + ": " + json.dumps(self.schema_findings, ensure_ascii=False))
+
 _PREFLIGHT_FIELDS = {
     "complexity_class",
     "verification_lane",
@@ -340,8 +348,8 @@ def normative_invoke_worker(
                     exit_status="schema-invalid",
                 )
                 if second_fingerprint == first_fingerprint:
-                    raise RuntimeError("repeated deterministic semantic worker failure; stop and repair VDD")
-                raise RuntimeError("semantic worker schema repair failed; stop and repair VDD")
+                    raise SemanticWorkerValidationError("repeated deterministic semantic worker failure; stop and repair VDD", second_findings)
+                raise SemanticWorkerValidationError("semantic worker schema repair failed; stop and repair VDD", second_findings)
             raw = repaired
             findings = []
 
@@ -669,6 +677,7 @@ def atomic_recall_alignment(
             batch = all_obligations[start:start + batch_size]
             batch_payload = {"source_index": source_index, "obligations": batch,
                              "complete_obligation_context": compact_context,
+                "source_recall_context_contract": "complete-candidate-v2-bounded-repair",
                              "review_source_gaps": start == 0}
             batch_raw = _resolved_atomic_recall_worker(
                 root=root, out_dir=out_dir, payload=batch_payload,

@@ -1,0 +1,22 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "observations": {
+    "resume_22": "V3 and V3A passed; V4 independently retained four invented obligations and no source gaps.",
+    "resume_23_25": "Stopped after observing repeated V3 requests rather than waiting for whole repeat. Parent recomposition diagnostics established stale broad-child selection.",
+    "v1_gap_tail": "After additions, an invented-only independent judgment returned the unchanged candidate without entering the existing bounded projection/recheck transaction."
+  },
+  "repairs": [
+    "Use the same exact-partition projection, V2 validation and independent clean recheck after a source-gap addition. Failed rechecks retain the original candidate.",
+    "When parent children collide, try existing per-obligation repairs, preferring specific singleton responses over recently replayed broad children. Admit the recomposed candidate only after complete schema, path and frozen-domain checks.",
+    "Append diagnostic progress for V1 recall and rejected parent recomposition."
+  ],
+  "validation": {
+    "regression": "gap-invented-reconcile-green-v2.txt",
+    "passed": 53,
+    "subtests_passed": 4,
+    "package_tests_passed": 22,
+    "package_evidence": "gap-invented-reconcile-package-tests.txt"
+  },
+  "readiness": "Not asserted; canonical resume-26 is required."
+}

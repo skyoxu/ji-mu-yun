@@ -8,6 +8,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import semantic_compiler_gate as gate
+import pytest
 import semantic_worker_v3_group_repair_patch as group_patch
 import semantic_obligation_gap_repair_patch as gap_patch
 
@@ -222,6 +223,32 @@ def test_large_initial_v3_uses_exact_key_chunk_composer(monkeypatch, tmp_path: P
     assert seen["payload"]["original_stage"] == "v3"
 
 
+@pytest.mark.parametrize('corrected', [True, False])
+def test_gap_addition_repairs_multiple_source_refs_once(monkeypatch, tmp_path, corrected):
+    """ADR-0041: malformed source binding gets one bounded repair, never local relabeling."""
+    calls = []
+    refs = ['req.md#FR-1', 'req.md#FR-2']
+    raw = dict(subject='input', trigger='validation', state_before='unchecked', state_after='rejected',
+               expected_behavior='reject invalid input', observable_result='rejection',
+               requirement_type='Product', obligation_kind='behavior', status='active',
+               source_refs=refs, forbidden_result=[], unresolved_fragments=[], depends_on=[])
+    def worker(**kwargs):
+        calls.append(kwargs['stage'])
+        return {'obligations': [dict(raw, source_refs=refs[:1] if corrected and len(calls) == 2 else refs)]}
+    monkeypatch.setattr(gate, '_ORIGINAL_INVOKE_WORKER', worker)
+    args = dict(root=tmp_path, out_dir=tmp_path / 'plan', worker_cache=None, obligations=[],
+                source_index={'entries': [{'requirement_id': 'FR-1', 'source_ref': refs[0]}]},
+                gaps=[{'source_ref': refs[0]}])
+    if corrected:
+        result = gap_patch._additional_obligations(**args)
+        assert result[0]['source_refs'] == refs[:1]
+    else:
+        with pytest.raises(ValueError, match='exactly one source_ref'):
+            gap_patch._additional_obligations(**args)
+    assert calls == ['v1-source-gap-repair', 'v1-source-gap-repair-schema-repair']
+    assert raw['source_refs'] == refs
+
+
 def test_proven_source_gap_gets_one_bounded_obligation_addition(monkeypatch, tmp_path: Path) -> None:
     original = {
         "obligation_id": "O-1",
@@ -274,6 +301,32 @@ def test_proven_source_gap_gets_one_bounded_obligation_addition(monkeypatch, tmp
         worker_cache=None,
     )
     assert [item["obligation_id"] for item in result] == ["O-1", "O-2"]
+
+
+@pytest.mark.parametrize('clean_recheck', [True, False])
+def test_gap_additions_reconcile_exact_invented_partition_before_v3(monkeypatch, tmp_path, clean_recheck):
+    """ADR-0041: additions need the same negative-judgment repair as initial candidates."""
+    kept = {'obligation_id': 'O-1', 'requirement_id': 'FR-1', 'status': 'active', 'depends_on': []}
+    added = dict(kept, obligation_id='O-2')
+    verdicts = iter([
+        {'valid': False, 'findings': ['atomic-recall:source-gap-count:1'],
+         'source_gap_claims': [{'source_ref': 'req#FR-1', 'subject': 'rule', 'behavior': 'required', 'reason': 'missing'}]},
+        {'valid': False, 'findings': ['atomic-recall:invented-obligation:O-2'], 'source_gap_claims': [],
+         'worker': {'supported_obligation_ids': ['O-1'], 'invented_obligation_ids': ['O-2'], 'source_gap_claims': []}},
+        {'valid': clean_recheck, 'findings': [] if clean_recheck else ['remaining-blocker'], 'source_gap_claims': []},
+    ])
+    seen = []
+    def recall(**kwargs):
+        seen.append([item['obligation_id'] for item in kwargs['obligations']])
+        return next(verdicts)
+    monkeypatch.setattr(gap_patch, '_BASE_COMPILE_OBLIGATIONS', lambda **kwargs: [kept])
+    monkeypatch.setattr(gap_patch, '_additional_obligations', lambda **kwargs: [added])
+    monkeypatch.setattr(gate, 'atomic_recall_alignment', recall)
+    monkeypatch.setattr(gap_patch.sc, 'guard_obligations', lambda *args: {'valid': True})
+    result = gap_patch.compile_obligations_with_gap_repair(
+        root=tmp_path, out_dir=tmp_path / 'plan', source_index={'entries': []}, worker_cache=None)
+    assert seen == [['O-1'], ['O-1', 'O-2'], ['O-1']]
+    assert result == ([kept] if clean_recheck else [kept, added])
 
 
 def test_exact_invented_partition_projects_candidate_after_clean_recheck(monkeypatch, tmp_path: Path) -> None:

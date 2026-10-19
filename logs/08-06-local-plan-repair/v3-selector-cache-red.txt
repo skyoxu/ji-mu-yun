@@ -1,0 +1,85 @@
+.                                                                    [100%]
+================================== FAILURES ===================================
+_ SelectiveCacheRepairTests.test_pytest_node_snapshot_reuses_existing_or_planned_file (target='tests/test_real.py::test_real', planned=[]) _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_pytest_node_snapshot_reuses_existing_or_planned_file>
+
+    def test_pytest_node_snapshot_reuses_existing_or_planned_file(self):
+        """ADR-0041: selector suffixes do not invalidate an admitted file target."""
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        for target, planned, expected in (
+            ('tests/test_real.py::test_real', [], False),
+            ('tests/test_real.py::TestReal::test_case[value]', [], False),
+            ('tests/test_missing.py::test_new', ['tests/test_missing.py'], False),
+            ('tests/test_missing.py::test_new', [], True),
+        ):
+            with self.subTest(target=target, planned=planned):
+                value = deepcopy(original)
+                hint = value['obligation_contracts']['O-1']['slice_hint']
+                hint['execution_snapshot_paths'] = [target]
+                hint['planned_new_files'] = planned
+>               assert repair.sc._v3_cache_requires_contract_refresh(value, self.root, payload) is expected
+E               AssertionError: assert True is False
+E                +  where True = <function _v3_cache_requires_contract_refresh at 0x000001C9926E68E0>({'obligation_contracts': {'O-1': {'acceptance': {'source_refs': ['req.md#FR-1'], 'given': 'input', 'when': 'checked', ...r.py'], 'verification_lane': 'unit', 'behavior_change': 'reject invalid input', 'affected_subjects': ['input'], ...}}}}, WindowsPath('C:/Windows/TEMP/2/tmp9gs48gt7'), {'original_stage': 'v3', 'input': {'obligations': [{'obligation_id': 'O-1', 'source_refs': ['req.md#FR-1'], 'status': ...d#FR-1'], 'status': 'active', 'requirement_type': 'Product', ...}]}, 'validator_findings': ['selector target missing']})
+E                +    where <function _v3_cache_requires_contract_refresh at 0x000001C9926E68E0> = <module 'semantic_compiler' from 'C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\semantic_compiler.py'>._v3_cache_requires_contract_refresh
+E                +      where <module 'semantic_compiler' from 'C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\semantic_compiler.py'> = repair.sc
+E                +    and   WindowsPath('C:/Windows/TEMP/2/tmp9gs48gt7') = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_pytest_node_snapshot_reuses_existing_or_planned_file>.root
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:119: AssertionError
+_ SelectiveCacheRepairTests.test_pytest_node_snapshot_reuses_existing_or_planned_file (target='tests/test_real.py::TestReal::test_case[value]', planned=[]) _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_pytest_node_snapshot_reuses_existing_or_planned_file>
+
+    def test_pytest_node_snapshot_reuses_existing_or_planned_file(self):
+        """ADR-0041: selector suffixes do not invalidate an admitted file target."""
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        for target, planned, expected in (
+            ('tests/test_real.py::test_real', [], False),
+            ('tests/test_real.py::TestReal::test_case[value]', [], False),
+            ('tests/test_missing.py::test_new', ['tests/test_missing.py'], False),
+            ('tests/test_missing.py::test_new', [], True),
+        ):
+            with self.subTest(target=target, planned=planned):
+                value = deepcopy(original)
+                hint = value['obligation_contracts']['O-1']['slice_hint']
+                hint['execution_snapshot_paths'] = [target]
+                hint['planned_new_files'] = planned
+>               assert repair.sc._v3_cache_requires_contract_refresh(value, self.root, payload) is expected
+E               AssertionError: assert True is False
+E                +  where True = <function _v3_cache_requires_contract_refresh at 0x000001C9926E68E0>({'obligation_contracts': {'O-1': {'acceptance': {'source_refs': ['req.md#FR-1'], 'given': 'input', 'when': 'checked', ...r.py'], 'verification_lane': 'unit', 'behavior_change': 'reject invalid input', 'affected_subjects': ['input'], ...}}}}, WindowsPath('C:/Windows/TEMP/2/tmp9gs48gt7'), {'original_stage': 'v3', 'input': {'obligations': [{'obligation_id': 'O-1', 'source_refs': ['req.md#FR-1'], 'status': ...d#FR-1'], 'status': 'active', 'requirement_type': 'Product', ...}]}, 'validator_findings': ['selector target missing']})
+E                +    where <function _v3_cache_requires_contract_refresh at 0x000001C9926E68E0> = <module 'semantic_compiler' from 'C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\semantic_compiler.py'>._v3_cache_requires_contract_refresh
+E                +      where <module 'semantic_compiler' from 'C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\semantic_compiler.py'> = repair.sc
+E                +    and   WindowsPath('C:/Windows/TEMP/2/tmp9gs48gt7') = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_pytest_node_snapshot_reuses_existing_or_planned_file>.root
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:119: AssertionError
+_ SelectiveCacheRepairTests.test_pytest_node_snapshot_reuses_existing_or_planned_file (target='tests/test_missing.py::test_new', planned=['tests/test_missing.py']) _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_pytest_node_snapshot_reuses_existing_or_planned_file>
+
+    def test_pytest_node_snapshot_reuses_existing_or_planned_file(self):
+        """ADR-0041: selector suffixes do not invalidate an admitted file target."""
+        payload, original, cache, out, calls = setup_run(self.root, self, bad=False)
+        for target, planned, expected in (
+            ('tests/test_real.py::test_real', [], False),
+            ('tests/test_real.py::TestReal::test_case[value]', [], False),
+            ('tests/test_missing.py::test_new', ['tests/test_missing.py'], False),
+            ('tests/test_missing.py::test_new', [], True),
+        ):
+            with self.subTest(target=target, planned=planned):
+                value = deepcopy(original)
+                hint = value['obligation_contracts']['O-1']['slice_hint']
+                hint['execution_snapshot_paths'] = [target]
+                hint['planned_new_files'] = planned
+>               assert repair.sc._v3_cache_requires_contract_refresh(value, self.root, payload) is expected
+E               AssertionError: assert True is False
+E                +  where True = <function _v3_cache_requires_contract_refresh at 0x000001C9926E68E0>({'obligation_contracts': {'O-1': {'acceptance': {'source_refs': ['req.md#FR-1'], 'given': 'input', 'when': 'checked', ...r.py'], 'verification_lane': 'unit', 'behavior_change': 'reject invalid input', 'affected_subjects': ['input'], ...}}}}, WindowsPath('C:/Windows/TEMP/2/tmp9gs48gt7'), {'original_stage': 'v3', 'input': {'obligations': [{'obligation_id': 'O-1', 'source_refs': ['req.md#FR-1'], 'status': ...d#FR-1'], 'status': 'active', 'requirement_type': 'Product', ...}]}, 'validator_findings': ['selector target missing']})
+E                +    where <function _v3_cache_requires_contract_refresh at 0x000001C9926E68E0> = <module 'semantic_compiler' from 'C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\semantic_compiler.py'>._v3_cache_requires_contract_refresh
+E                +      where <module 'semantic_compiler' from 'C:\\jimuyun\\.agents\\skills\\vdd-execution-plan\\scripts\\semantic_compiler.py'> = repair.sc
+E                +    and   WindowsPath('C:/Windows/TEMP/2/tmp9gs48gt7') = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_pytest_node_snapshot_reuses_existing_or_planned_file>.root
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:119: AssertionError
+=========================== short test summary info ===========================
+SUBFAILED(target='tests/test_real.py::test_real', planned=[]) .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_pytest_node_snapshot_reuses_existing_or_planned_file
+SUBFAILED(target='tests/test_real.py::TestReal::test_case[value]', planned=[]) .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_pytest_node_snapshot_reuses_existing_or_planned_file
+SUBFAILED(target='tests/test_missing.py::test_new', planned=['tests/test_missing.py']) .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_pytest_node_snapshot_reuses_existing_or_planned_file
+3 failed, 1 passed, 14 deselected, 1 subtests passed in 0.15s

@@ -191,6 +191,8 @@ def normative_invoke_worker(
             worker_cache=worker_cache,
         )
     except RuntimeError as exc:
+        if isinstance(exc, gate.SemanticWorkerValidationError):
+            raise
         message = str(exc)
         if "semantic worker schema repair failed" in message or "repeated deterministic semantic worker failure" in message:
             details = _repair_diagnostics(out_dir=out_dir, stage=stage, payload=payload, prompt=augmented)

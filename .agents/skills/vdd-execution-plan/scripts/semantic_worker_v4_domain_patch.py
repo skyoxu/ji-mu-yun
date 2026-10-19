@@ -234,7 +234,7 @@ def _chunk_obligation_payload(payload: Mapping[str, Any], ids: list[str]) -> dic
 
 def _source_recall_payload(payload: Mapping[str, Any], refs: list[str]) -> dict[str, Any]:
     source_index = payload.get("source_index")
-    obligations = payload.get("obligations")
+    obligations = payload.get("complete_obligation_context", payload.get("obligations"))
     if not isinstance(source_index, Mapping) or not isinstance(source_index.get("entries"), list) or not isinstance(obligations, list):
         raise ValueError("V4 source recall requires frozen sources and obligations")
     allowed = set(refs)
@@ -426,7 +426,8 @@ def v4_transport_invoke_worker(
     # V1/V3 inputs, source refs, and the final canonical witness remain
     # unchanged; this prevents a large obligation set from timing out before
     # producing machine-readable JSON.
-    if stage == "v4-atomic-recall":
+    if stage in {"v4-atomic-recall", "v4-atomic-recall-schema-repair"}:
+        payload = _semantic_payload(stage, payload)
         obligations = payload.get("obligations")
         active_ids = sorted(
             str(item.get("obligation_id"))
@@ -484,6 +485,10 @@ def v4_transport_invoke_worker(
                 assigned_chunks.append(chunk_ids)
             merged = _merge_atomic_recall_chunks(payload, chunks, assigned_chunks)
             _, source_refs = _domains(stage, payload)
+            # ADR-0041: the outer bounded classifier owns one global source
+            # review. Later classification batches cannot judge source gaps.
+            if payload.get("review_source_gaps") is False:
+                source_refs = []
             source_gaps: list[Mapping[str, Any]] = []
             for offset in range(0, len(source_refs), _SOURCE_RECALL_CHUNK_SIZE):
                 refs = source_refs[offset:offset + _SOURCE_RECALL_CHUNK_SIZE]

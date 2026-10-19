@@ -1,0 +1,21 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "observed_result": "compiler-result-resume-22.json",
+  "defect": "Partial independent entailment recheck updated the worker partition and metrics but left the original invented-ID diagnostic unchanged. Exact candidate reconciliation therefore rejected the inconsistent domain.",
+  "repair": "Rebuild only the invented-obligation diagnostic from the independently rechecked partition; preserve all other blockers and historical evidence.",
+  "validation": {
+    "regression": "partial-entailment-regression.txt",
+    "passed": 22,
+    "package_tests": "partial-entailment-package-tests.txt",
+    "package_passed": 22,
+    "skill_contract": "partial-entailment-skill-contract.txt"
+  },
+  "remaining_invented_ids": [
+    "O-1201853321C4",
+    "O-3CAA26C3C32D",
+    "O-7444B512ACDD",
+    "O-850B43B84777"
+  ],
+  "readiness": "Not asserted. Canonical V2, independent V4 recheck and downstream gates remain required."
+}

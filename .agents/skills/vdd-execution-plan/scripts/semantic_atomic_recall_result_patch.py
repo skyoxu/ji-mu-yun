@@ -110,10 +110,16 @@ def _recheck_invented(
     updated_worker["invented_obligation_ids"] = [oid for oid in prior_invented if oid not in supported_ids]
     updated = dict(result)
     updated["worker"] = updated_worker
-    updated["findings"] = [
-        str(finding) for finding in result.get("findings", [])
-        if not (str(finding).startswith("atomic-recall:invented-obligation:") and not updated_worker["invented_obligation_ids"])
-    ]
+    updated["findings"] = []
+    for finding in result.get("findings", []):
+        if str(finding).startswith("atomic-recall:invented-obligation:"):
+            if updated_worker["invented_obligation_ids"]:
+                updated["findings"].append(
+                    "atomic-recall:invented-obligation:"
+                    + ",".join(sorted(updated_worker["invented_obligation_ids"]))
+                )
+        else:
+            updated["findings"].append(str(finding))
     total = len([item for item in obligations if isinstance(item, Mapping) and item.get("status") == "active"])
     supported_count = len(set(updated_worker["supported_obligation_ids"]))
     invented_count = len(set(updated_worker["invented_obligation_ids"]))

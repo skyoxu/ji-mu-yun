@@ -1,0 +1,92 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:220398488db6b9334321bbdba3b159e221b9be63b56453faa99eaa7ea4baec18",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-5CE9569F83D9": {
+      "acceptance": {
+        "assertion_ids": [
+          "A20-MISSING-CANCELLATION-OWNER-REJECTED"
+        ],
+        "given": "A disposable package fixture declares a subprocess capability with its cancellation/process-tree owner omitted; the expected rejection is derived from frozen SM-A20 independently of candidate policy.",
+        "oracle": {
+          "expected": "A subprocess declaration missing its cancellation/process-tree owner fails validation with the expected ownership rule, field path and non-empty diagnostic message.",
+          "forbidden": [
+            "A declaration missing the cancellation/process-tree owner is accepted.",
+            "The check executes the declared subprocess command or treats declaration validation as proof of runtime process-tree enforcement."
+          ],
+          "observable": "The real validate_package result for the missing-owner fixture exposes failure status and a rule/path/message diagnostic; a subprocess execution spy records zero calls."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20"
+        ],
+        "then": "Validation fails with a structured diagnostic identifying the missing cancellation/process-tree owner, its rule identifier, field path and message.",
+        "when": "validate_package inspects the missing-owner fixture without executing its declared command."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A20_MISSING_CANCELLATION_OWNER_ACCEPTED",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 independently asserts rejection of a subprocess declaration with no cancellation/process-tree owner through validate_package, checks the rule/path/message diagnostic and proves no declared command executes. Missing validator imports or test collection failures do not count as behavioral RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A subprocess capabilities"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py"
+        ],
+        "behavior_change": "Validate that each subprocess capability declaration explicitly names its cancellation/process-tree owner; report a structured failure when the owner is missing, without executing the declared command or adding subprocess infrastructure.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/** outside the declared validator and test paths",
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "No persistent state or database changes; preserve the frozen A20 declaration and structured diagnostic contract."
+        },
+        "state_transition": "Subprocess capability declaration is inspected; a declaration with an explicit owner satisfies this check, while one without it produces a structured validation failure.",
+        "terminal_predicate": "The A20 selector passes its independent missing-owner rejection assertion with the expected rule/path/message diagnostic and zero subprocess execution; missing imports or collection failures do not satisfy the predicate.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a20",
+            "-q"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

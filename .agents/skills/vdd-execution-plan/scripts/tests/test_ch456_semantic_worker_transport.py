@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import sys
 import types
+import pytest
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
@@ -139,7 +140,12 @@ def test_v4_recheck_uses_explicit_repair_timeout_and_high_reasoning(tmp_path: Pa
     assert 'model_reasoning_effort="high"' in calls[0]["codex_configs"]
 
 
-def test_v4_atomic_recall_uses_explicit_repair_timeout(tmp_path: Path, monkeypatch) -> None:
+@pytest.mark.parametrize(('stage', 'expected_timeout'), [
+    ('v4-atomic-recall', 600), ('v1-source-gap-repair', 600), ('v1-FR-1', 180),
+])
+def test_semantic_repair_uses_explicit_timeout(tmp_path: Path, monkeypatch, stage, expected_timeout) -> None:
+    """ADR-0041: source-gap repair honors the configured bounded repair budget."""
+    monkeypatch.setattr(transport, '_REPAIR_TIMEOUT_SECONDS', 600)
     calls: list[dict] = []
 
     def run_llm_exec(**kwargs):
@@ -163,12 +169,12 @@ def test_v4_atomic_recall_uses_explicit_repair_timeout(tmp_path: Path, monkeypat
     result = transport.transport_invoke_worker(
         root=tmp_path,
         out_dir=tmp_path / "plan",
-        stage="v4-atomic-recall",
+        stage=stage,
         payload={"obligations": []},
         prompt="Recheck atomic coverage.",
     )
     assert result["covered_obligation_ids"] == ["O-1"]
-    assert calls[0]["timeout_sec"] == 300
+    assert calls[0]["timeout_sec"] == expected_timeout
     assert 'model_reasoning_effort="high"' in calls[0]["codex_configs"]
 
 

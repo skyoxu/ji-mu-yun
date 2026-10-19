@@ -1,0 +1,76 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+____ test_gap_additions_reconcile_exact_invented_partition_before_v3[True] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EC008FE600>
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-485/test_gap_additions_reconcile_e0')
+clean_recheck = True
+
+    @pytest.mark.parametrize('clean_recheck', [True, False])
+    def test_gap_additions_reconcile_exact_invented_partition_before_v3(monkeypatch, tmp_path, clean_recheck):
+        """ADR-0041: additions need the same negative-judgment repair as initial candidates."""
+        kept = {'obligation_id': 'O-1', 'requirement_id': 'FR-1', 'status': 'active', 'depends_on': []}
+        added = dict(kept, obligation_id='O-2')
+        verdicts = iter([
+            {'valid': False, 'findings': ['atomic-recall:source-gap-count:1'],
+             'source_gap_claims': [{'source_ref': 'req#FR-1', 'subject': 'rule', 'behavior': 'required', 'reason': 'missing'}]},
+            {'valid': False, 'findings': ['atomic-recall:invented-obligation:O-2'], 'source_gap_claims': [],
+             'worker': {'supported_obligation_ids': ['O-1'], 'invented_obligation_ids': ['O-2'], 'source_gap_claims': []}},
+            {'valid': clean_recheck, 'findings': [] if clean_recheck else ['remaining-blocker'], 'source_gap_claims': []},
+        ])
+        seen = []
+        def recall(**kwargs):
+            seen.append([item['obligation_id'] for item in kwargs['obligations']])
+            return next(verdicts)
+        monkeypatch.setattr(gap_patch, '_BASE_COMPILE_OBLIGATIONS', lambda **kwargs: [kept])
+        monkeypatch.setattr(gap_patch, '_additional_obligations', lambda **kwargs: [added])
+        monkeypatch.setattr(gate, 'atomic_recall_alignment', recall)
+        monkeypatch.setattr(gap_patch.sc, 'guard_obligations', lambda *args: {'valid': True})
+        result = gap_patch.compile_obligations_with_gap_repair(
+            root=tmp_path, out_dir=tmp_path / 'plan', source_index={'entries': []}, worker_cache=None)
+>       assert seen == [['O-1'], ['O-1', 'O-2'], ['O-1']]
+E       AssertionError: assert [['O-1'], ['O-1', 'O-2']] == [['O-1'], ['O...-2'], ['O-1']]
+E         
+E         Right contains one more item: ['O-1']
+E         Use -v to get more diff
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_grouped_v3_and_obligation_gap_repair.py:302: AssertionError
+___ test_gap_additions_reconcile_exact_invented_partition_before_v3[False] ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001EC008FFC20>
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-485/test_gap_additions_reconcile_e1')
+clean_recheck = False
+
+    @pytest.mark.parametrize('clean_recheck', [True, False])
+    def test_gap_additions_reconcile_exact_invented_partition_before_v3(monkeypatch, tmp_path, clean_recheck):
+        """ADR-0041: additions need the same negative-judgment repair as initial candidates."""
+        kept = {'obligation_id': 'O-1', 'requirement_id': 'FR-1', 'status': 'active', 'depends_on': []}
+        added = dict(kept, obligation_id='O-2')
+        verdicts = iter([
+            {'valid': False, 'findings': ['atomic-recall:source-gap-count:1'],
+             'source_gap_claims': [{'source_ref': 'req#FR-1', 'subject': 'rule', 'behavior': 'required', 'reason': 'missing'}]},
+            {'valid': False, 'findings': ['atomic-recall:invented-obligation:O-2'], 'source_gap_claims': [],
+             'worker': {'supported_obligation_ids': ['O-1'], 'invented_obligation_ids': ['O-2'], 'source_gap_claims': []}},
+            {'valid': clean_recheck, 'findings': [] if clean_recheck else ['remaining-blocker'], 'source_gap_claims': []},
+        ])
+        seen = []
+        def recall(**kwargs):
+            seen.append([item['obligation_id'] for item in kwargs['obligations']])
+            return next(verdicts)
+        monkeypatch.setattr(gap_patch, '_BASE_COMPILE_OBLIGATIONS', lambda **kwargs: [kept])
+        monkeypatch.setattr(gap_patch, '_additional_obligations', lambda **kwargs: [added])
+        monkeypatch.setattr(gate, 'atomic_recall_alignment', recall)
+        monkeypatch.setattr(gap_patch.sc, 'guard_obligations', lambda *args: {'valid': True})
+        result = gap_patch.compile_obligations_with_gap_repair(
+            root=tmp_path, out_dir=tmp_path / 'plan', source_index={'entries': []}, worker_cache=None)
+>       assert seen == [['O-1'], ['O-1', 'O-2'], ['O-1']]
+E       AssertionError: assert [['O-1'], ['O-1', 'O-2']] == [['O-1'], ['O...-2'], ['O-1']]
+E         
+E         Right contains one more item: ['O-1']
+E         Use -v to get more diff
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_grouped_v3_and_obligation_gap_repair.py:302: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_grouped_v3_and_obligation_gap_repair.py::test_gap_additions_reconcile_exact_invented_partition_before_v3[True]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_grouped_v3_and_obligation_gap_repair.py::test_gap_additions_reconcile_exact_invented_partition_before_v3[False]
+2 failed, 14 deselected in 0.17s

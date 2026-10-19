@@ -1,1 +1,453 @@
-{"invented_obligation_ids":[],"source_gap_claims":[],"supported_obligation_ids":["O-91D15401AAEA","O-9E724F4984B7","O-A34BE7497AFE","O-B429CDA8EAF0","O-C86C4C61CAE2","O-E65598E2CFBD","O-EFAC0CBFCD8F","O-02716C308623","O-0A40700C8E00","O-20CDF785F117","O-28D7831ED166","O-2A89EDCA585B","O-4D88A14E3AB8","O-52BD7CD8AFC1","O-9FA0D5A56DCC","O-D07102875594","O-D5D64ACC3FB8","O-504663C6505A","O-50A07FCE8417","O-50F2370897B8","O-53FC6BE35008","O-783D0547B13E","O-85AC5AC734A7","O-8D1B8E728AD6","O-D0A638AFA044","O-D4087FCC3FDF","O-EED4E0C1F28A","O-F7FCDB720372","O-246DD783A268","O-4E71318FA736","O-5E91842E7180","O-5F5704BF610D","O-AAD1A189B8BA","O-E5044674EF45","O-1BC2F2CD58EB","O-1BCA2780788C","O-5E993E3EB664","O-5F9E28DF7BDC","O-BAD3D54EC7B9","O-F9671FF85F76","O-00014CB742F5","O-06073F1E2B88","O-1AC1322A4D44","O-3E062DE9FA5F","O-C7F8E51C49C9","O-C8A6A6313662","O-CB9136665C99","O-EAE90649ED8F","O-FCDCDD9295A5","O-001FE8A97AC1","O-016BB0058F15","O-023425E378ED","O-092175322DF6","O-0A5C33C6A115","O-0E5FB41159EF","O-1109BC7BEE6B","O-1622AD9765EF","O-1A01A2AED9E5","O-1A5BD402DC06","O-1C7C5A039FCD","O-1CCBF328372B","O-2041DF51A2E8","O-236CBA74D964","O-23821D0FC50C","O-23FE830C4E2D","O-2D17DF2AD616","O-2E3E78F44C2E","O-31F042D1B6FA","O-31F9861933AA","O-34DAA82F5AC5","O-35076D6A8562","O-39AE9C2352CF","O-3A4C63433A26","O-4040ACA4EA04","O-41AF04A36DD9","O-4441CFB224CC","O-4829BD8F5ADC","O-4988B2B36843","O-49E5EACBE7E3","O-4A8A3A292456"]}
+{
+  "invented_obligation_ids": [],
+  "source_gap_claims": [
+    {
+      "behavior": "Reject an unsupported quality-contract version.",
+      "reason": "This rejection is bundled with independently variable type, field and reference failures rather than having its own atomic obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A02",
+      "subject": "Quality-contract validation"
+    },
+    {
+      "behavior": "Reject malformed contract types.",
+      "reason": "The candidate bundles this rejection with other independent schema failures.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A02",
+      "subject": "Quality-contract validation"
+    },
+    {
+      "behavior": "Reject undeclared fields in the owned quality namespace.",
+      "reason": "The candidate provides only a combined schema-rejection obligation for this independently observable outcome.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A02",
+      "subject": "Quality-contract validation"
+    },
+    {
+      "behavior": "Reject unresolved contract references.",
+      "reason": "This outcome is merged with independent schema failures and has no separate atomic obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A02",
+      "subject": "Quality-contract validation"
+    },
+    {
+      "behavior": "Reject a misspelled capability name without silently disabling the capability.",
+      "reason": "Capability-name and schema-version typo failures are combined despite being independently observable.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A02",
+      "subject": "Capability-name validation"
+    },
+    {
+      "behavior": "Reject a misspelled schema version without silently producing an empty or disabled capability.",
+      "reason": "The candidate merges this outcome with capability-name typo rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A02",
+      "subject": "Schema-version validation"
+    },
+    {
+      "behavior": "Reject an empty name.",
+      "reason": "Name and description emptiness are covered only by one combined obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A03",
+      "subject": "Frontmatter name"
+    },
+    {
+      "behavior": "Reject an empty description.",
+      "reason": "This independent outcome is merged with empty-name rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A03",
+      "subject": "Frontmatter description"
+    },
+    {
+      "behavior": "Reject missing frontmatter.",
+      "reason": "The candidate combines this rejection with other frontmatter validity boundaries.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A03",
+      "subject": "Frontmatter validation"
+    },
+    {
+      "behavior": "Reject malformed frontmatter.",
+      "reason": "This rejection lacks an independent atomic obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A03",
+      "subject": "Frontmatter validation"
+    },
+    {
+      "behavior": "Reject duplicate frontmatter keys.",
+      "reason": "Duplicate-key rejection is merged with independent frontmatter defects.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A03",
+      "subject": "Frontmatter validation"
+    },
+    {
+      "behavior": "Reject an unsupported frontmatter extension.",
+      "reason": "This independently observable rejection appears only in a combined boundary obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A03",
+      "subject": "Frontmatter validation"
+    },
+    {
+      "behavior": "Reject a missing referenced file.",
+      "reason": "Missing-file rejection is bundled with missing-anchor and path-boundary failures.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A05",
+      "subject": "Required local references"
+    },
+    {
+      "behavior": "Reject a missing referenced section anchor.",
+      "reason": "This independent rejection has only combined reference-boundary coverage.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A05",
+      "subject": "Required local references"
+    },
+    {
+      "behavior": "Reject an absolute package-content reference.",
+      "reason": "The candidate merges absolute-reference rejection with other path failures; containment of absolute caller paths is a different behavior.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A05",
+      "subject": "Required local references"
+    },
+    {
+      "behavior": "Reject traversal in a package-content reference before reading outside the package.",
+      "reason": "Traversal rejection is combined with other reference and containment failures rather than represented atomically.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A05",
+      "subject": "Required local references"
+    },
+    {
+      "behavior": "Exclude timestamps from returned results.",
+      "reason": "Timestamp exclusion and environment-secret exclusion are independent but share one obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A06",
+      "subject": "Validator output"
+    },
+    {
+      "behavior": "Exclude environment secrets from returned results.",
+      "reason": "This behavior is merged with timestamp exclusion; other diagnostic constraints also combine several independent exclusions.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A06",
+      "subject": "Validator output"
+    },
+    {
+      "behavior": "Bound the diagnostics list.",
+      "reason": "The list bound is merged with diagnostic-field completeness.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A06",
+      "subject": "Validator diagnostics"
+    },
+    {
+      "behavior": "Reject a primary example set with a missing or empty Input/Output pair.",
+      "reason": "Positive Input and Output obligations exist, but this rejection outcome is bundled with unrelated example-set failures.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A07",
+      "subject": "Example-set validation"
+    },
+    {
+      "behavior": "Reject incorrect primary-example order.",
+      "reason": "The positive ordering obligation does not separately represent this rejection; the rejection is merged with other defects.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A07",
+      "subject": "Example-set validation"
+    },
+    {
+      "behavior": "Reject a duplicate primary-example branch.",
+      "reason": "This independently observable failure appears only in combined example-defect obligations.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A07",
+      "subject": "Example-set validation"
+    },
+    {
+      "behavior": "Reject an unknown primary-example branch.",
+      "reason": "Unknown-branch rejection is merged with other independent example defects.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A07",
+      "subject": "Example-set validation"
+    },
+    {
+      "behavior": "Reject identical normalized Input/Output pairs assigned different labels.",
+      "reason": "The candidate has no separate atomic obligation for this normalization-sensitive rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A07",
+      "subject": "Example-set validation"
+    },
+    {
+      "behavior": "Reject a string shell-command specification during static validation.",
+      "reason": "The candidate declares structured invocation requirements and subprocess shell rejection, but lacks this independent complex-check rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a complex-check invocation with a missing timeout.",
+      "reason": "Declaring a bounded timeout does not independently represent the required negative validation outcome.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a complex-check invocation with a zero timeout.",
+      "reason": "No atomic obligation requires this boundary rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a complex-check invocation with an unbounded timeout.",
+      "reason": "The candidate specifies bounded invocation declarations but omits this separate static rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a complex-check invocation with an unsafe cwd.",
+      "reason": "An explicit cwd declaration does not establish safe-cwd rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a complex deterministic check missing its script entry.",
+      "reason": "The candidate requires a script declaration but has no independent missing-script failure obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a complex deterministic check missing test coverage.",
+      "reason": "The positive test-coverage declaration does not separately cover this required rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject an untyped complex-check result specification.",
+      "reason": "The candidate declares typed results without independently representing rejection of an untyped result.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A11",
+      "subject": "Complex deterministic checks"
+    },
+    {
+      "behavior": "Reject a synthetic literal credential field.",
+      "reason": "This rejection is merged with known-secret-marker rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A15",
+      "subject": "Credential declaration validation"
+    },
+    {
+      "behavior": "Reject a known secret marker.",
+      "reason": "The candidate combines this independently observable rejection with literal credential fields.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A15",
+      "subject": "Credential declaration validation"
+    },
+    {
+      "behavior": "Declare transaction handling for a database-write capability.",
+      "reason": "Transaction handling and failure handling are combined in one obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A17",
+      "subject": "Database-write capability"
+    },
+    {
+      "behavior": "Declare failure handling for a database-write capability.",
+      "reason": "This independently observable declaration is merged with transaction handling.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A17",
+      "subject": "Database-write capability"
+    },
+    {
+      "behavior": "Reject a subprocess capability with no timeout.",
+      "reason": "The candidate requires a finite timeout declaration but omits the independent absent-timeout rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20",
+      "subject": "Subprocess capability validation"
+    },
+    {
+      "behavior": "Reject a subprocess capability with no cancellation owner.",
+      "reason": "Naming an owner and rejecting its absence are separate observable outcomes; the latter has no obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20",
+      "subject": "Subprocess capability validation"
+    },
+    {
+      "behavior": "Reject a subprocess declaration using shell=true.",
+      "reason": "This rejection is combined with string-command rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20",
+      "subject": "Subprocess capability validation"
+    },
+    {
+      "behavior": "Reject a subprocess declaration using a string command.",
+      "reason": "The candidate merges this independent rejection with shell=true rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20",
+      "subject": "Subprocess capability validation"
+    },
+    {
+      "behavior": "Reject a network declaration missing redirect policy.",
+      "reason": "Missing redirect policy and missing address policy share one rejection obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A21",
+      "subject": "Network declaration validation"
+    },
+    {
+      "behavior": "Reject a network declaration missing address policy.",
+      "reason": "This rejection is merged with missing redirect-policy rejection.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A21",
+      "subject": "Network declaration validation"
+    },
+    {
+      "behavior": "Block terminal acceptance for inconsistent policy/schema versions.",
+      "reason": "The independent terminal rejection is bundled with four other blockers.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A23",
+      "subject": "Terminal acceptance"
+    },
+    {
+      "behavior": "Block terminal acceptance when the policy is unused.",
+      "reason": "Actual policy consumption is declared elsewhere, but its terminal blocker is not independently represented.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A23",
+      "subject": "Terminal acceptance"
+    },
+    {
+      "behavior": "Block terminal acceptance for a schema-invalid result.",
+      "reason": "This failure outcome appears only in a combined terminal-blocker obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A23",
+      "subject": "Terminal acceptance"
+    },
+    {
+      "behavior": "Block terminal acceptance for a dangling standard link.",
+      "reason": "The candidate merges this blocker with independent version, policy, result and reference-package failures.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A23",
+      "subject": "Terminal acceptance"
+    },
+    {
+      "behavior": "Block terminal acceptance for an invalid reference package.",
+      "reason": "This independently observable terminal outcome lacks its own atomic obligation.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A23",
+      "subject": "Terminal acceptance"
+    },
+    {
+      "behavior": "Fail the bound terminal case when the validator ignores the selected mode.",
+      "reason": "The candidate requires honoring mode but does not independently require the terminal case to detect and fail on this defect.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A24",
+      "subject": "Terminal case assertions"
+    },
+    {
+      "behavior": "Fail the bound terminal case for non-JSON output.",
+      "reason": "Fresh-JSON assertions are present, but this negative terminal outcome is not separately represented.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A24",
+      "subject": "Terminal case assertions"
+    },
+    {
+      "behavior": "Fail the bound terminal case for extra output accompanying the JSON result.",
+      "reason": "The CLI output contract exists, but the independent terminal detection requirement is absent.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A24",
+      "subject": "Terminal case assertions"
+    },
+    {
+      "behavior": "Fail the bound terminal case for mismatched API/CLI diagnostics.",
+      "reason": "General parity exercise does not separately state this independently observable failure oracle.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A24",
+      "subject": "Terminal case assertions"
+    },
+    {
+      "behavior": "Keep semantic fields in the quality sidecar or references.",
+      "reason": "Rejecting unsupported frontmatter keys does not independently enforce the stated location of all semantic fields.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Semantic declaration placement"
+    },
+    {
+      "behavior": "Do not reuse or overwrite ADR-0060.",
+      "reason": "ADR-0062 creation and collision handling do not explicitly preserve the separately reserved ADR-0060.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "ADR identity preservation"
+    },
+    {
+      "behavior": "Keep the validator's exit-code taxonomy local to this validator rather than creating a toolchain-wide taxonomy.",
+      "reason": "The candidate specifies exit-code values but omits their explicit authority boundary.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Exit-code authority"
+    },
+    {
+      "behavior": "Do not treat the Markdown standard itself as an installed Skill.",
+      "reason": "The prohibition on inventing a governance Skill and the reference-package registration boundary do not separately cover classification of the standard document.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Standard document classification"
+    },
+    {
+      "behavior": "Return a result containing a versioned schema identifier.",
+      "reason": "Result versioning is merged with identity, status, diagnostics and authorization fields.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Validator result"
+    },
+    {
+      "behavior": "Include package identity in the result.",
+      "reason": "This independently observable result field has only combined result-shape coverage.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Validator result"
+    },
+    {
+      "behavior": "Include status in the result.",
+      "reason": "The result-shape obligation combines this field with independent fields.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Validator result"
+    },
+    {
+      "behavior": "Include authorizes: [] in the result.",
+      "reason": "The explicit empty authorization field is merged with other result-shape requirements; a general no-authority claim does not independently establish this field.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Validator result"
+    },
+    {
+      "behavior": "Exclude absolute host paths from diagnostics.",
+      "reason": "This exclusion is merged with secret-value and arbitrary-source-text exclusions.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Diagnostic content"
+    },
+    {
+      "behavior": "Exclude arbitrary source text from diagnostics.",
+      "reason": "The candidate provides only a combined diagnostic-content boundary for this independent exclusion.",
+      "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+      "subject": "Diagnostic content"
+    }
+  ],
+  "supported_obligation_ids": [
+    "O-0250CBD01B72",
+    "O-06F56FA829B4",
+    "O-0976854BA162",
+    "O-110D5665F3A7",
+    "O-1487B4C87B47",
+    "O-1D2669330EF3",
+    "O-21665ADEBC0E",
+    "O-23132BEFC1FE",
+    "O-24804DA8035F",
+    "O-2661E1825A17",
+    "O-276247EA7B5D",
+    "O-27FDCDA47FF1",
+    "O-32AAEAE3F552",
+    "O-3D6A27ADCD71",
+    "O-3F697BEC8FFF",
+    "O-445E201A7962",
+    "O-44B07BEA78A5",
+    "O-452364AED4A7",
+    "O-462F64A686EA",
+    "O-480F9731ED2D",
+    "O-498AA134E62A",
+    "O-4C4BC3184CDC",
+    "O-511C28374082",
+    "O-52DE3A3C47ED",
+    "O-54346907B86F",
+    "O-5DE3F2879F77",
+    "O-5EE523765F96",
+    "O-60B983D15976",
+    "O-6109432D914E",
+    "O-62A60ACD4AE8",
+    "O-7378ED41D96C",
+    "O-75662112AE20",
+    "O-7657CD1586FC",
+    "O-77D10B1504E5",
+    "O-7902256EFC28",
+    "O-7B02E186864D",
+    "O-7E51316B0CE4",
+    "O-7E8E1F30B868",
+    "O-84E55FAF94D5",
+    "O-87087A4FB14C",
+    "O-8CC763357B93",
+    "O-90DFBCA3F781",
+    "O-936576258C0A",
+    "O-945D42143461",
+    "O-96500D9D4EA9",
+    "O-991C281B5663",
+    "O-9AD4A4D5B26B",
+    "O-9CC283E0F2C9",
+    "O-9D91539C6F29",
+    "O-9F6EBBDA8D40",
+    "O-A01FF5AF65D5",
+    "O-A0C93CDA60F8",
+    "O-A33009E56C6D",
+    "O-A4545FEAA107",
+    "O-A54DEED7E747",
+    "O-A7D59E45EA2B",
+    "O-A9A489B8935D",
+    "O-AB91E6D05D78",
+    "O-ACF8FD2D2E95",
+    "O-B83220B1D980",
+    "O-BA46FB443203",
+    "O-BAA8FB90C544",
+    "O-BC8EC3064EBA",
+    "O-BF960FA05C37",
+    "O-C05161C42E01",
+    "O-C0F95921DA31",
+    "O-C18F4E850EDF",
+    "O-C4D0B83860C4",
+    "O-C853521D6F42",
+    "O-C87DEB8F7B15",
+    "O-D5C4644942C0",
+    "O-DAC3487BE1C1",
+    "O-E140B558211D",
+    "O-E22FC88563F6",
+    "O-EAC80B824A22",
+    "O-EB7603F8A6E8",
+    "O-ED23C6AA5BA7",
+    "O-FAF28A995120",
+    "O-FC4F16B48E21",
+    "O-FECC4A9F7100"
+  ]
+}

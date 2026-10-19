@@ -1,0 +1,109 @@
+{
+  "obligation_contracts": {
+    "O-9033A08397FD": {
+      "acceptance": {
+        "assertion_ids": [
+          "A20_SUBPROCESS_WORKING_DIRECTORY_EXPLICIT",
+          "A20_SUBPROCESS_WORKING_DIRECTORY_OMISSION_DETECTED"
+        ],
+        "given": "A disposable inspection root contains otherwise valid subprocess capability declarations, including paired variants differing only in whether an explicit working-directory specification is present. Expected declaration requirements are frozen independently of candidate-controlled policy.",
+        "oracle": {
+          "expected": "Each subprocess capability explicitly specifies cwd or an equivalent working-directory declaration. The artifact check verifies that the standard and declaration contract require this specification. Through the real validate_package entry, the explicitly declared variant satisfies this requirement, while the omitted variant produces a structured defect identifying the affected declaration and applicable rule.",
+          "forbidden": [
+            "A subprocess capability omits its working-directory specification.",
+            "An implicit process working directory is treated as an explicit declaration.",
+            "The validator accepts the omission without the applicable structured defect.",
+            "Runtime return values alone are treated as proof that the normative declaration contract requires cwd.",
+            "A missing module, import failure, timeout or absent test is reported as causal RED."
+          ],
+          "observable": "During test_a20 artifact evaluation, inspect the standard, policy and schema for the explicit working-directory requirement. During validation evaluation, directly call scripts.sc.validate_skill_quality.validate_package on paired disposable package variants and assert the cwd-specific status, rule, path and code without executing the declared subprocess."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20"
+        ],
+        "then": "The declaration contract requires an explicit working-directory specification, and validation distinguishes declarations that provide it from declarations that omit it.",
+        "when": "The planned A20 unit selector evaluates the declaration artifacts and validates the paired subprocess capability declarations through the real Python production entry."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "SUBPROCESS_WORKING_DIRECTORY_CONTRACT_GAP",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 with independently marked cwd-specific cases. Assert the explicit working-directory requirement in the normative artifacts and directly invoke scripts.sc.validate_skill_quality.validate_package on paired declarations. A missing requirement or an undetected cwd omission must cause an observable AssertionError. Freeze tests and helper bytes before evaluation; missing imports, absent selectors, invalid fixtures and timeouts are harness blockers rather than evidence of this constraint failure. Bound the targeted command to 300 seconds."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A subprocess capability working-directory declarations",
+          "A20 declaration validation artifacts and structured diagnostics"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Within the cohesive A3 capability-validation context, require each subprocess capability to declare cwd or an equivalent explicit working-directory specification. Preserve existing subprocess infrastructure; this constraint does not authorize a Runner, timeout engine or process controller.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Revert only the affected Package A declaration-contract changes together. Preserve historical evidence, frozen tests, existing subprocess execution infrastructure and Phase isolation. Shared validator, policy or schema changes invalidate affected proofs and require current regression evaluation."
+        },
+        "state_transition": "A subprocess capability under definition or review becomes a declaration with an explicit working-directory specification; omission is exposed by the declaration-contract check and validator.",
+        "terminal_predicate": "The cwd-specific artifact and validation assertions in test_a20 pass through the real validator with independently frozen expectations and explicit parameter-level assertion bindings. Tests operate only in disposable inspection roots, cannot pass against an unconditional-pass validator, and never execute declared subprocesses. Q2 authors only the declared test/helper files; GREEN and REFACTOR change only declared production owners. The validator is currently absent: inability to establish its first real production call under the existing protocol blocks execution, without fake imports, Q2 production seeding or an initial missing-module RED. Use 300 seconds for targeted validation and applicable nonempty Q6 regression selections; after all required cases are authored and exercised, Q8 runs all four group modules once with a 600-second limit. Preserve ADR-0041/ADR-0058 execution boundaries and ADR-0061 Phase isolation. No internal review receipt, knowledge publication, historical-evidence rewrite or scope expansion is authorized.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a20"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

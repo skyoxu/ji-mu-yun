@@ -7,7 +7,7 @@ checks; malformed references are never guessed or silently repaired.
 """
 from __future__ import annotations
 
-from semantic_progress import worker_call, stage_call
+from semantic_progress import worker_call, stage_call, emit
 
 from concurrent.futures import ThreadPoolExecutor
 import json
@@ -122,11 +122,26 @@ def _invalid_contract_ids(payload: Mapping[str, Any], contracts: Mapping[str, An
         {"obligation_contracts": contracts}, _obligation_refs(payload))
     findings = v3_domain._domain_findings("v3-schema-repair", payload, projected)
     known = set(_obligation_refs(payload))
-    return {
+    invalid = {
         oid for finding in findings
         for oid in re.findall(r"O-[0-9A-F]+", finding)
         if oid in known
     }
+    # ADR-0041: a usable path is not proof of a schema-valid contract. Check
+    # each projection to bind field-level failures to only its owning ID.
+    for oid in known & set(contracts):
+        single = _project_current_output(
+            {"obligation_contracts": {oid: contracts[oid]}},
+            {oid: _obligation_refs(payload)[oid]})
+        if gate._worker_schema_findings("v3", single):
+            invalid.add(oid)
+    return invalid
+
+
+def _cache_requires_refresh(projected, root, payload):
+    """Apply current publication schema before accepting any persisted V3 cache."""
+    return bool(gate._worker_schema_findings("v3", projected)) or sc._v3_cache_requires_contract_refresh(
+        projected, root, payload)
 
 
 def _text_tokens(value: Any) -> set[str]:
@@ -305,6 +320,7 @@ def _repair_chunks(payload: Mapping[str, Any]) -> list[list[str]]:
 
 def _reusable_prior_contracts(
     *, root: Path, cache_dir: Path, payload: Mapping[str, Any], ids: list[str],
+    prefer_recent: bool = False,
 ) -> dict[str, Any]:
     """Recover usable per-obligation contracts across changed group payloads.
 
@@ -325,7 +341,28 @@ def _reusable_prior_contracts(
     # complete parent cache.  Both contain independently reusable contracts;
     # restricting recovery to ``chunk-*`` would re-run an already completed
     # obligation when a later request changes the split shape.
-    for path in sorted(cache_dir.glob(_GROUP_STAGE + "-*.json")):
+    paths = list(cache_dir.glob(_GROUP_STAGE + "-*.json"))
+    def repair_candidate_order(path):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            contracts = raw.get("obligation_contracts", {})
+            size = len(contracts) if isinstance(contracts, Mapping) and contracts else sys.maxsize
+        except (OSError, UnicodeError, ValueError, AttributeError):
+            size = sys.maxsize
+        return (size != 1, -path.stat().st_mtime_ns, path.name)
+    # Replayed broad children may have newer filesystem times than completed
+    # singleton repairs. Prefer the more specific candidate before recency.
+    paths = sorted(paths, key=repair_candidate_order)
+    exact_ids = set()
+    for path in paths:
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+            values = value.get("obligation_contracts", {}) if isinstance(value, Mapping) else {}
+            if isinstance(values, Mapping):
+                exact_ids.update(values)
+        except (OSError, UnicodeError, ValueError):
+            continue
+    for path in paths:
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
             contracts = raw.get("obligation_contracts") if isinstance(raw, Mapping) else None
@@ -335,6 +372,10 @@ def _reusable_prior_contracts(
             for oid in remaining:
                 contract = contracts.get(oid)
                 matched_oid = oid if isinstance(contract, Mapping) else None
+                if matched_oid is None and (prefer_recent or oid in exact_ids):
+                    # Parent collision recovery has stable frozen IDs. A
+                    # loosely matching peer must not mask a later exact repair.
+                    continue
                 if matched_oid is None:
                     candidates = [
                         (old_oid, value) for old_oid, value in contracts.items()
@@ -351,7 +392,7 @@ def _reusable_prior_contracts(
                 rebound = _rebind_contract(contract, oid, _obligation_refs(single_payload)[oid])
                 single = {"obligation_contracts": rebound}
                 projected = _project_execution_output(root, single_payload, single)
-                if not sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
+                if not _cache_requires_refresh(projected, root, single_payload):
                     recovered[oid] = rebound[oid]
         except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
             continue
@@ -404,7 +445,7 @@ def _reusable_prior_complete_contracts(
                 continue
             candidate = {"obligation_contracts": rebound_contracts}
             projected = _project_execution_output(root, payload, candidate)
-            if (not sc._v3_cache_requires_contract_refresh(projected, root, payload)
+            if (not _cache_requires_refresh(projected, root, payload)
                     and not _invalid_contract_ids(payload, rebound_contracts)):
                 return candidate
         except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
@@ -764,6 +805,32 @@ def _project_execution_output(root: Path, payload: Mapping[str, Any], value: Map
     return _ground_group_result(root, payload, _project_current_output(value, _obligation_refs(payload)))
 
 
+class InvalidBoundV3Cache(ValueError):
+    """A malformed exact request cache must not be bypassed by decomposition."""
+
+
+def _conflicting_oracle_peers(value: Mapping[str, Any], oid: str) -> dict[str, Any]:
+    """ADR-0041: bound repair context to the exact clone relation being repaired."""
+    acceptances = value.get("acceptances", [])
+    target = next((item for item in acceptances
+                   if isinstance(item, Mapping) and item.get("obligation_ids") == [oid]), None)
+    if target is None:
+        return {}
+    def oracle_key(item):
+        return sc.sha256_value({"oracle": item.get("oracle"),
+                                "assertions": sorted(item.get("assertion_ids", []))})
+    target_key = oracle_key(target)
+    return {
+        item["obligation_ids"][0]: {
+            "oracle": item.get("oracle"), "assertion_ids": item.get("assertion_ids"),
+        }
+        for item in acceptances
+        if isinstance(item, Mapping) and isinstance(item.get("obligation_ids"), list)
+        and len(item["obligation_ids"]) == 1 and item["obligation_ids"][0] != oid
+        and oracle_key(item) == target_key
+    }
+
+
 def _live_group_repair(
     *, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str,
     max_obligations: int | None = None,
@@ -790,7 +857,13 @@ def _live_group_repair(
                     root=root, out_dir=out_dir, payload=chunk_payload, prompt=prompt,
                     max_attempts=_BEFORE_SPLIT_TRANSIENT_ATTEMPTS if len(chunk) > 1 else None,
                 )
-            except (TransientV3WorkerFailure, ValueError):
+            except (TransientV3WorkerFailure, ValueError) as exc:
+                if isinstance(exc, InvalidBoundV3Cache):
+                    raise
+                emit(out_dir, "V3-group-repair", "repair-rejected",
+                     sc._worker_cache_key(_GROUP_STAGE, group_cache_identity_payload(chunk_payload)),
+                     obligation_ids=[item["obligation_id"] for item in chunk],
+                     error_type=type(exc).__name__, reason=str(exc))
                 if len(chunk) == 1:
                     raise
                 return _live_group_repair(
@@ -807,6 +880,28 @@ def _live_group_repair(
                     raise ValueError(f"V3 chunk output is missing {key}")
                 combined[key].extend(values)
         combined = _ground_group_result(root, payload, combined)
+        # ADR-0041: positional children can retain old peer collisions after
+        # singleton repairs succeeded. Recompose those existing candidates
+        # before requesting them again; recency selects candidates, while the
+        # complete current schema, paths and semantic domain decide admission.
+        if v3_domain._domain_findings("v3-schema-repair", payload, combined):
+            ids = sorted(_obligation_refs(payload))
+            recovered = _reusable_prior_contracts(
+                root=root, cache_dir=out_dir / ".compiler-cache", payload=payload,
+                ids=ids, prefer_recent=True)
+            if set(recovered) == set(ids):
+                candidate = _project_execution_output(root, payload, {"obligation_contracts": recovered})
+                candidate_findings = v3_domain._domain_findings("v3-schema-repair", payload, candidate)
+                prior_findings = v3_domain._domain_findings("v3-schema-repair", payload, combined)
+                if (not _cache_requires_refresh(candidate, root, payload)
+                        and (not _invalid_contract_ids(payload, recovered)
+                             or len(candidate_findings) < len(prior_findings))):
+                    combined = candidate
+                else:
+                    emit(out_dir, "V3-group-repair", "cache-recomposition-rejected", "parent",
+                         invalid_ids=sorted(_invalid_contract_ids(payload, recovered)),
+                         schema_findings=gate._worker_schema_findings("v3", candidate),
+                         domain_findings=v3_domain._domain_findings("v3-schema-repair", payload, candidate))
         # The parent merge is the first point where contracts from different
         # worker chunks can be compared. Repair only cross-chunk cloned oracles
         # here; child caches and all valid contracts remain reusable.
@@ -836,17 +931,7 @@ def _live_group_repair(
                         ],
                     },
                 }
-                peer_summary = {
-                    str(item.get("obligation_ids", [""])[0]): {
-                        "oracle": item.get("oracle"),
-                        "assertion_ids": item.get("assertion_ids"),
-                    }
-                    for item in combined.get("acceptances", [])
-                    if isinstance(item, Mapping)
-                    and isinstance(item.get("obligation_ids"), list)
-                    and len(item["obligation_ids"]) == 1
-                    and item["obligation_ids"][0] != oid
-                }
+                peer_summary = _conflicting_oracle_peers(combined, oid)
                 repaired = _live_group_repair_one(
                     root=root, out_dir=out_dir, payload=single_payload,
                     prompt=(prompt + "\n\nORACLE UNIQUENESS CONSTRAINT: author an oracle and assertion set "
@@ -875,7 +960,13 @@ def _live_group_repair(
                     max_attempts=_BEFORE_SPLIT_TRANSIENT_ATTEMPTS,
                 ),
             )
-        except (TransientV3WorkerFailure, ValueError):
+        except (TransientV3WorkerFailure, ValueError) as exc:
+            if isinstance(exc, InvalidBoundV3Cache):
+                raise
+            emit(out_dir, "V3-group-repair", "repair-rejected",
+                 sc._worker_cache_key(_GROUP_STAGE, group_cache_identity_payload(payload)),
+                 obligation_ids=[item["obligation_id"] for item in obligations],
+                 error_type=type(exc).__name__, reason=str(exc))
             return _live_group_repair(
                 root=root, out_dir=out_dir, payload=payload, prompt=prompt,
                 max_obligations=max(1, len(obligations) // 2),
@@ -896,7 +987,7 @@ def _cached_group_result(*, root: Path, out_dir: Path, payload: Mapping[str, Any
         projected = _ground_group_result(
             root, payload, _project_current_output(raw, _obligation_refs(payload)))
         contracts = raw.get("obligation_contracts")
-        if (sc._v3_cache_requires_contract_refresh(projected, root, payload)
+        if (_cache_requires_refresh(projected, root, payload)
                 or (isinstance(contracts, Mapping) and _invalid_contract_ids(payload, contracts))
                 or v3_domain._domain_findings("v3-schema-repair", payload, projected)):
             return None
@@ -967,9 +1058,24 @@ def _live_group_repair_one(
         projected = _project_execution_output(root, payload, cached)
         contracts = cached.get("obligation_contracts")
         if (isinstance(contracts, Mapping)
-                and not sc._v3_cache_requires_contract_refresh(projected, root, payload)
+                and not _cache_requires_refresh(projected, root, payload)
                 and not _invalid_contract_ids(payload, contracts)):
             return projected
+
+    if not force_semantic_repair:
+        # An exact request cache is a bound response, unlike unrelated history.
+        # Validate its complete ID domain before prior-candidate recovery can
+        # narrow it and silently hide a malformed foreign contract (ADR-0041).
+        for index, ids in enumerate(_repair_chunks(payload), start=1):
+            child_payload = _narrow_repair_payload(payload, ids)
+            child_path = cache_dir / sc._worker_cache_key(
+                f"{_GROUP_STAGE}-chunk-{index:02d}", child_payload)
+            if child_path.is_file():
+                raw = json.loads(child_path.read_text(encoding="utf-8"))
+                try:
+                    _project_current_output(raw, _obligation_refs(child_payload))
+                except ValueError as exc:
+                    raise InvalidBoundV3Cache(str(exc)) from exc
 
     complete = None if force_semantic_repair else _reusable_prior_complete_contracts(
         root=root, cache_dir=cache_dir, payload=payload, ids=sorted(refs_by_oid))
@@ -977,39 +1083,36 @@ def _live_group_repair_one(
         _write_refreshable_json(cache_path, complete)
         return _project_execution_output(root, payload, complete)
 
-    # Recompose a complete parent directly from successful child caches. A
-    # forced relational repair must bypass this replay path entirely: sibling
-    # caches may contain the very clone being repaired.
+    # ADR-0041: recover child caches through the exact request keys below.
+    # Directory-wide scans mix unrelated historical domains and can admit a
+    # stale same-ID contract or reject an unrelated cache as a foreign response.
     if not force_semantic_repair:
         wanted = set(refs_by_oid)
         recomposed: dict[str, Any] = {}
-        domain = set(payload.get("_repair_domain_ids", wanted))
-        foreign: set[str] = set()
-        for child_path in cache_dir.glob(_GROUP_STAGE + "-chunk-*.json"):
+        for child_path in sorted(cache_dir.glob(_GROUP_STAGE + "-chunk-*.json")):
             try:
                 child = json.loads(child_path.read_text(encoding="utf-8"))
                 contracts = child.get("obligation_contracts") if isinstance(child, Mapping) else None
-                if isinstance(contracts, Mapping):
-                    foreign.update(set(contracts) - domain)
-                    for oid, contract in contracts.items():
-                        # Parallel/split peers share this directory. Only this
-                        # chunk's frozen IDs are candidates for reuse; other
-                        # cached peers are not a response to the current request.
-                        if oid not in wanted or not isinstance(contract, Mapping):
-                            continue
-                        single_payload = _narrow_repair_payload(payload, [oid])
-                        single = {"obligation_contracts": {oid: contract}}
-                        projected = _project_execution_output(root, single_payload, single)
-                        if not sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
-                            recomposed[oid] = contract
-            except (OSError, UnicodeError, json.JSONDecodeError):
+                if not isinstance(contracts, Mapping) or not contracts or not set(contracts) <= wanted:
+                    continue
+                child_payload = _narrow_repair_payload(payload, sorted(contracts))
+                child_stage = child_path.name.rsplit("-", 1)[0]
+                if child_path.name != sc._worker_cache_key(child_stage, child_payload):
+                    continue
+                projected = _project_execution_output(root, child_payload, child)
+                if (_cache_requires_refresh(projected, root, child_payload)
+                        or _invalid_contract_ids(child_payload, contracts)
+                        or v3_domain._domain_findings("v3-schema-repair", child_payload, projected)):
+                    continue
+                recomposed.update(contracts)
+            except (OSError, UnicodeError, ValueError):
                 continue
-        if foreign:
-            raise ValueError("V3 cache contains unknown obligation IDs: " + ",".join(sorted(foreign)))
         if set(recomposed) == wanted:
             composed = {"obligation_contracts": recomposed}
-            _write_refreshable_json(cache_path, composed)
-            return _project_execution_output(root, payload, composed)
+            projected = _project_execution_output(root, payload, composed)
+            if not v3_domain._domain_findings("v3-schema-repair", payload, projected):
+                _write_refreshable_json(cache_path, composed)
+                return projected
 
     grouped_prompt = (
         prompt
@@ -1037,7 +1140,7 @@ def _live_group_repair_one(
         if chunk_cache.is_file() and not force_semantic_repair:
             raw = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected = _project_execution_output(root, chunk_payload, raw)
-            if not sc._v3_cache_requires_contract_refresh(projected, root, chunk_payload):
+            if not _cache_requires_refresh(projected, root, chunk_payload):
                 return raw
             rejected = raw
         if len(ids) > 1 and isinstance(rejected, Mapping):
@@ -1051,7 +1154,7 @@ def _live_group_repair_one(
                     single = {"obligation_contracts": {oid: contracts[oid]}}
                     single_payload = _narrow_repair_payload(payload, [oid])
                     projected = _project_execution_output(root, single_payload, single)
-                    if sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
+                    if _cache_requires_refresh(projected, root, single_payload):
                         single = request_chunk([oid], f"{label}-{index}", rejected=single)
                     repaired.update(single["obligation_contracts"])
                 raw = {"obligation_contracts": repaired}
@@ -1073,7 +1176,7 @@ def _live_group_repair_one(
                     break
                 child = json.loads(child_cache.read_text(encoding="utf-8"))
                 projected_child = _project_execution_output(root, child_payload, child)
-                if sc._v3_cache_requires_contract_refresh(projected_child, root, child_payload):
+                if _cache_requires_refresh(projected_child, root, child_payload):
                     recovered = {}
                     break
                 recovered.update(child["obligation_contracts"])
@@ -1090,6 +1193,12 @@ def _live_group_repair_one(
                         + ",".join(ids))
         if isinstance(rejected, Mapping):
             rejected_projection = _project_execution_output(root, chunk_payload, rejected)
+            schema_findings = gate._worker_schema_findings("v3", rejected_projection)
+            if schema_findings:
+                chunk_prompt += (
+                    "\nREJECTED CONTRACT FIELDS: " + json.dumps(schema_findings)
+                    + ". Supply source-supported values for the rejected fields; do not weaken the contract."
+                )
             missing = sorted({
                 path for hint in rejected_projection["slice_hints"]
                 for path in hint.get("execution_snapshot_paths", [])
@@ -1158,7 +1267,7 @@ def _live_group_repair_one(
         if chunk_cache.is_file() and not force_semantic_repair:
             raw_chunk = json.loads(chunk_cache.read_text(encoding="utf-8"))
             projected_chunk = _project_execution_output(root, chunk_payload, raw_chunk)
-            if sc._v3_cache_requires_contract_refresh(projected_chunk, root, chunk_payload):
+            if _cache_requires_refresh(projected_chunk, root, chunk_payload):
                 raw_chunk = request_chunk(ids, f"{chunk_index:02d}", rejected=raw_chunk)
         else:
             # The full group payload can change when a bounded V3 repair adds

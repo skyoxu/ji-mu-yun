@@ -8,6 +8,31 @@ The missing step is **one local canonical compile/repair**, not a new round of
 requirements design or a Bootstrap review. A successful compile is still
 required; its result must not be assumed in advance.
 
+## 2026-10-20 local continuation checkpoint
+
+The authenticated local continuation reached V4. Resume 31 validated all 286
+active source obligations with zero invented obligations and zero source gaps;
+it still rejected O-5CE9569F83D9 because its executable contract tested cwd
+instead of rejecting a missing cancellation/process-tree owner. This is not
+plan-ready and does not authorize Package A implementation.
+
+The explicit one-obligation correction is retained at
+`logs/08-06-local-plan-repair/a20-missing-owner-v3-repair.v1.json`.
+Resume 32 failed closed because compiler initialization reset the installed
+candidate correction. The initialization fix now preserves explicitly selected
+candidate repairs; its local regression and Skill package checks pass. No real
+compile has yet verified that fix or the downstream stages.
+
+Use the existing current-plan caches and the public CLI for the next attempt:
+
+```powershell
+py -3 -B scripts/vdd/compile_plan.py --requirements execution-plans/2026-08-06-skill-authoring-standard/requirements.md --out-dir execution-plans/2026-08-06-skill-authoring-standard/current-plan --profile self-hosted --resume-from first-failed-stage --repair-timeout-seconds 600 --v3-contract-repair logs/08-06-local-plan-repair/a20-missing-owner-v3-repair.v1.json --result-json logs/08-06-local-plan-repair/compiler-result-resume-33.json
+```
+
+The correction is authoring input, not approval or a worker-cache fixture.
+Independent V4 and all downstream gates remain required. Historical outputs
+remain available; the separate Quick Dev first-use limitation below remains open.
+
 ## 2026-10-19 V3 compiler continuation
 
 The local follow-up reached V3 but reported inconsistent owner/write/planned

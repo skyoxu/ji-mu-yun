@@ -1,0 +1,117 @@
+{
+  "obligation_contracts": {
+    "O-E36EEAA44ACD": {
+      "acceptance": {
+        "assertion_ids": [
+          "A18_UNTRUSTED_TARGET_EXPANSION_PROHIBITED",
+          "A18_UNTRUSTED_COMMAND_EXPANSION_PROHIBITED",
+          "A18_UNTRUSTED_TOOL_PERMISSION_EXPANSION_PROHIBITED",
+          "A18_UNTRUSTED_AUTHORITY_EXPANSION_PROHIBITED",
+          "A18_DECLARATION_CHECK_GRANTS_NO_AUTHORITY"
+        ],
+        "given": "A disposable, repository-contained Skill package declares that it consumes untrusted content. Frozen test code supplies independently specified compliant declarations and variants that omit or contradict each of the four expansion prohibitions.",
+        "oracle": {
+          "expected": "At artifact evaluation, the normative standard explicitly requires consuming Skills to prohibit untrusted content from expanding targets, commands, tool permissions and authority, and the compliant package explicitly declares all four prohibitions. At declaration-validation evaluation, the real validate_package entry accepts the otherwise compliant declaration and rejects each independently missing or contradictory prohibition with status fail and a stable rule ID and package-relative diagnostic path. Every derived validation result has authorizes=[]. These checks establish declaration presence and consistency, not semantic injection-proofness or runtime enforcement.",
+          "forbidden": [
+            "The standard or compliant declaration permits untrusted content to expand targets.",
+            "The standard or compliant declaration permits untrusted content to expand commands.",
+            "The standard or compliant declaration permits untrusted content to expand tool permissions.",
+            "The standard or compliant declaration permits untrusted content to expand authority.",
+            "A missing or contradictory prohibition is silently accepted.",
+            "Static validation grants authority or claims that arbitrary prose is semantically injection-proof.",
+            "A runtime return value alone is treated as proof of the normative artifact constraint."
+          ],
+          "observable": "During the A18 artifact and declaration checks, inspect the actual standard and package declarations for four explicit prohibitions; independently exercise each declaration mutation through scripts.sc.validate_skill_quality.validate_package and compare structured status, rule ID, relative path and authorizes."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A18"
+        ],
+        "then": "The consuming Skill's declarations explicitly prohibit all four forms of expansion, and declaration validation identifies each missing or contradictory prohibition without granting execution authority.",
+        "when": "During the bounded A18 capability test, evaluate the normative artifacts and explicit package declaration, then call the real validator on the compliant package and each independently mutated declaration."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A18_UNTRUSTED_EXPANSION_PROHIBITION_GAP",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a18 with explicitly bound parameter-level assertions for target, command, tool-permission and authority prohibitions. Assert the actual standard's normative requirement and the consuming package's explicit declarations, then directly call scripts.sc.validate_skill_quality.validate_package on disposable compliant and independently mutated packages. A missing normative prohibition, accepted missing/contradictory declaration, or nonempty authorizes must produce an observable AssertionError. This constraint check has a non-expected-red role; missing imports, absent planned tests, environmental failures and timeouts are harness blockers, not causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Skills that consume untrusted content"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Define and statically validate the consuming Skill's explicit prohibition against untrusted-content expansion of targets, commands, tool permissions and authority. Attach this constraint to the cohesive A3 capability context without adding a separate runtime enforcement feature.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Revert only the affected candidate changes through the owning workflow; preserve owner-specific Skill protocols, immutable tests and historical failure evidence. Changes to shared policy, schema or validator semantics invalidate affected proofs and require rebuilding the original binding identity before replay with that same identity. No live state or database migration is authorized."
+        },
+        "state_transition": "A consuming Skill's expansion boundary becomes an explicit, independently checked four-part declaration contract. Validation remains read-only and confers no authority.",
+        "terminal_predicate": "The exact A18 selector must execute every bound prohibition assertion against actual normative artifacts and the real validator, including independently invalid declarations and authorizes=[]. Q2 may author only the declared tests/helper and disposable fixtures; freeze their bytes and assertions before formal execution, and keep mutable production owners outside execution snapshots. The currently absent validator must become callable only through the existing authorized protocol; inability to establish that first call blocks execution and cannot be disguised as AssertionError or repaired by Q2 production writes. Use a 300-second targeted timeout; timeout is a harness failure. Preserve failures, require nonempty applicable regression coverage, and require one current whole-plan terminal run of all four authorized test modules with a 600-second timeout after their behaviors have been exercised. Shared dependency changes invalidate affected proof. ADR-0041 and ADR-0058 retain execution/evidence authority; no proposed-ADR approval, fabricated receipt, Skill migration, internal review requirement or protected-tree modification is introduced. These are future checks, not claims of completed execution.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a18",
+            "-q"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py",
+            "-q"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

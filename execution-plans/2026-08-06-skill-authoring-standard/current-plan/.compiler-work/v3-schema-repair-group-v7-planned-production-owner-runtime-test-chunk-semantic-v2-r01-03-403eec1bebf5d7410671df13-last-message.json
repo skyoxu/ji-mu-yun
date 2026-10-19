@@ -1,0 +1,88 @@
+{
+  "obligation_contracts": {
+    "O-7E51316B0CE4": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-SM-A01-TRIGGER-DEFINITION"
+        ],
+        "given": "The Skill authoring standard is being authored at docs/standards/skill-authoring-standard.md.",
+        "oracle": {
+          "expected": "The standard explicitly requires Skill authors to define the conditions that trigger invocation or applicability, with substantive guidance describing those conditions.",
+          "forbidden": [
+            "The standard omits trigger definitions.",
+            "The standard contains only a trigger heading or keyword without defining the required trigger information.",
+            "A passing validator result is substituted for inspection of the standard's trigger definition."
+          ],
+          "observable": "During foundation artifact validation, scripts/sc/tests/test_skill_quality_core.py::test_a01 inspects the standard's actual UTF-8 document bytes and independently asserts that its trigger guidance substantively defines when a Skill applies."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A01"
+        ],
+        "then": "The standard explicitly defines trigger information required from Skill authors.",
+        "when": "The A01 foundation artifact check evaluates the authored standard before foundation completion and again during whole-plan terminal validation."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "STANDARD_TRIGGER_DEFINITION_MISSING",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_core.py::test_a01 binds A-SM-A01-TRIGGER-DEFINITION to the actual standard artifact. An omitted or heading-only trigger definition must produce an AssertionError identifying the missing substantive trigger guidance. This documentary guard is not runtime expected-red; missing tests, imports or environment prerequisites are harness failures, not its causal failure."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Skill authoring standard"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Define substantive Skill invocation and applicability triggers in the standard, within the compatible A1 foundation context. This artifact guard does not introduce a separate runtime feature or fake Python owner.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Revert only the declared standard change; preserve historical evidence and frozen execution inputs. No runtime state, schema migration, permission expansion or Phase compatibility change is authorized."
+        },
+        "state_transition": "The standard under definition gains explicit, substantive trigger guidance, verified by an independent artifact assertion.",
+        "terminal_predicate": "A-SM-A01-TRIGGER-DEFINITION passes against the current standard bytes through test_a01 within a 300-second targeted-command limit. Its expectations are frozen independently of candidate-controlled policy. Q2 may author the declared tests/helper before freeze; implementation may change only the declared production owner. Frozen tests and fixtures remain immutable thereafter. Applicable predecessor regression remains nonempty, affected proofs are invalidated after shared dependency changes, and one current whole-plan terminal run selects all four group modules with a 600-second limit after their cases are authored and exercised. Timeouts and missing prerequisites are harness failures. This artifact assertion grants no execution authority, proves no runtime validator behavior and requires no fabricated approval, Bootstrap receipt or initial RED for a proposed ADR. ADR-0041 governs development; final Package A acceptance retains the normal maintainer ADR decision boundary. Preserve shared runtime/evidence writers, model routing, Skill-input authority stores and historical reports without modification.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a01"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

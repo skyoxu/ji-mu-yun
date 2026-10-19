@@ -1,0 +1,106 @@
+{
+  "obligation_contracts": {
+    "O-7B08727401CD": {
+      "acceptance": {
+        "assertion_ids": [
+          "POLICY_SCHEMA_PATHS_DECLARED",
+          "POLICY_FRONTMATTER_KEYS_DECLARED",
+          "POLICY_STABLE_RULE_IDS_DECLARED",
+          "POLICY_LIMITS_DECLARED",
+          "POLICY_DEPENDENCY_VERSION_AUTHORITIES_DECLARED"
+        ],
+        "given": "待创建或消费的实际作者政策，以及从冻结要求独立确定的五类声明预期；不预设政策已经合规。",
+        "oracle": {
+          "expected": "实际政策明确选择本地 schema 路径、受支持 frontmatter 键、稳定规则 ID、限制，以及显式依赖和版本权威记录。五类分别断言；逐类删除声明的变体必须触发对应 AssertionError，不能从候选政策动态推导预期。派生检查证据的 authorizes 必须为 []。",
+          "forbidden": [
+            "遗漏任一声明类别。",
+            "仅凭文件存在、验证器返回 pass 或退出码为 0 判定政策完整。",
+            "从候选政策读取预期类别并据此降低检查要求。",
+            "把工件约束失败、缺失导入、未编写测试或超时计为 expected-red。",
+            "将声明或检查证据解释为运行授权。"
+          ],
+          "observable": "在基础契约检查及最终回归阶段，由 scripts/sc/tests/test_skill_quality_core.py::test_a01 对 scripts/sc/config/skill-authoring-standard.v1.json 的实际解析内容逐类检查，并以独立参数标识验证各类别缺失时检查确实失败。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "政策显式包含全部五类选择，并由独立工件断言证明完整性。",
+        "when": "政策创建或消费后，在兼容的 A1 基础单元验证通道执行政策工件检查，并在整计划终验中重新执行。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "POLICY_DECLARATION_CATEGORY_MISSING",
+          "selector_intent": "在计划编写的 scripts/sc/tests/test_skill_quality_core.py::test_a01 中，以独立参数标识绑定五项政策断言，读取实际政策；缺失任一类别时产生指向该类别的 AssertionError。使用 slice_hint 的定向 argv，调用方超时为 300 秒。兼容基础运行用例绑定 scripts.sc.validate_skill_quality.validate_package，本条证明来自政策工件检查，不从附近运行行为继承 expected-red 身份。测试与助手须先由 Q2 编写并冻结；缺失生产入口、无效导入、未编写测试及环境失败均不能充当该工件缺陷的证明。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Policy declaration fields"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "在兼容 A1 基础实现上下文中创建声明完整的规范政策，并由真实验证器消费；本条只证明五类政策声明，不新增独立控制器或证据系统。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "仅回退本上下文的政策及验证器候选变更；不修改现有 owner-specific Skill 协议、Phase 状态或数据库。共享政策或验证器变化必须使受影响证明失效，经重新验证恢复；保留历史失败证据。"
+        },
+        "state_transition": "政策内容尚未建立 -> 实际政策显式声明 schema 路径、受支持键、稳定规则 ID、限制及依赖/版本权威记录。",
+        "terminal_predicate": "五项独立工件断言及逐类缺失变体均按预期执行；适用前置回归通过后，所有声明测试及产品行为具备执行条件时，以 600 秒调用方超时完成四模块整计划终验。定向命令超时为 300 秒；超时属于测试框架失败。生产入口缺失不得伪装为 AssertionError、由 Q2 创建替身或越阶段补写生产；若现行协议不能建立首次真实调用，应在 TDD 循环前报告阻塞。Q2 仅编写声明测试和助手，正式 RED 前冻结；实现阶段仅修改声明生产路径，不修改冻结快照。不得重写历史证据、发布知识、伪造审批或将草案 ADR 标记 Accepted；最终验收仍遵守正常维护者 ADR 决策。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a01"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

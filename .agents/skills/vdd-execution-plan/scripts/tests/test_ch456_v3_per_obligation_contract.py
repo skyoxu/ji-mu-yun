@@ -130,6 +130,8 @@ def test_invalid_shared_oracle_uses_one_repair_then_v5_v6_keep_atomic_proof(tmp_
 
 
 def test_cloned_repair_is_terminal_and_never_reaches_v4(tmp_path, monkeypatch):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/ledger.py").write_text("VALUE = 0\n", encoding="utf-8")
     raw = _repair()
     raw["obligation_contracts"]["O-2"] = deepcopy(raw["obligation_contracts"]["O-1"])
     payload = {"obligations": [_obligation("O-1"), _obligation("O-2")]}

@@ -1,0 +1,20 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "resume_21": {
+    "job_id": "j-eg0zoy",
+    "exit_code": 1,
+    "result": "compiler-result-resume-21.json",
+    "reason": "semantic worker did not return JSON"
+  },
+  "observed_output": "The final worker explicitly reported truncation inside the all-peer oracle directory and returned prose rather than JSON.",
+  "repair": "Provide only peers sharing the exact oracle/assertion signature with the target obligation. Keep frozen obligation/source inputs and whole-domain post-repair checks unchanged.",
+  "validation": {
+    "evidence": "oracle-context-green-v4.txt",
+    "passed": 59,
+    "subtests_passed": 4,
+    "integration": "Parent merge excludes unrelated peers from the repair prompt and still validates the whole merged domain."
+  },
+  "test_fixture_repair": "Create the declared production owner in the clone-rejection fixture so the test reaches its intended clone gate rather than failing the earlier owner gate.",
+  "readiness": "Not asserted; canonical compile still required."
+}

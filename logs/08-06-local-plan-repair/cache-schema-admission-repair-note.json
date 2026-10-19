@@ -1,0 +1,29 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "scope": "Persisted V3 cache admission only; no publication gate relaxed",
+  "reproduction": "A cached contract with empty production_owners and rollback production_paths was reused without a worker request.",
+  "red_evidence": "cache-schema-admission-red.txt",
+  "repair": "Apply current V3 publication schema at cache admission and identify invalid obligation contracts individually. Include rejected field findings in repair prompts.",
+  "targeted_validation": {
+    "evidence": "cache-schema-admission-regression.txt",
+    "passed": 119,
+    "subtests_passed": 4
+  },
+  "package_validation": {
+    "evidence": "cache-schema-admission-package-tests.txt",
+    "passed": 22,
+    "skill_contract_evidence": "cache-schema-admission-skill-contract.txt"
+  },
+  "resume_18": {
+    "job_id": "j-pq5dj7",
+    "outcome": "Stopped after the local reproduction established a cache-admission defect; not a compiler rejection or timeout. Existing outputs retained."
+  },
+  "resume_19": {
+    "job_id": "j-dxc5b3",
+    "result_path": "compiler-result-resume-19.json",
+    "entry": "scripts/vdd/compile_plan.py",
+    "resume_from": "first-failed-stage"
+  },
+  "readiness": "Not asserted; only the public compiler may publish plan-ready."
+}

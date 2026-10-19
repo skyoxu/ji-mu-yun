@@ -1,0 +1,412 @@
+{
+  "obligation_contracts": {
+    "O-45EC43D9BAB4": {
+      "acceptance": {
+        "assertion_ids": [
+          "STANDARD_DELIVERABLE_PRESENT"
+        ],
+        "given": "Package A deliverables are candidates for foundation verification; presence of the standard has not been established.",
+        "oracle": {
+          "expected": "The declared path is a readable, nonempty repository file containing the skill-authoring standard. This artifact check grants no execution authority and does not represent runtime RED.",
+          "forbidden": [
+            "Omitting the declared standard deliverable.",
+            "Substituting a fixture, installed governance Skill, historical report or plan-status string for the production standard.",
+            "Treating missing maintainer ADR acceptance as a product RED failure."
+          ],
+          "observable": "During foundation artifact verification, inspect docs/standards/skill-authoring-standard.md itself and assert its file identity and standard content."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "The skill-authoring standard is present at its declared production path.",
+        "when": "The foundation test_a01 evaluates production artifacts alongside its compatible declaration-validation checks."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "STANDARD_DELIVERABLE_MISSING",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_core.py::test_a01 with an independent STANDARD_DELIVERABLE_PRESENT artifact assertion. A missing, empty or substituted production standard must produce AssertionError. Execute the targeted argv with a caller-enforced 300-second timeout. This guard shares the foundation unit lane but does not inherit runtime-marker authority."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Skill-authoring standard deliverable"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "behavior_change": "Author the declared standard within the cohesive foundation validator/policy/schema context. Verify this obligation through its own artifact assertion; do not create a standalone documentary runtime feature or a fake Python owner.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/**",
+          "knowledge/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Bound rollback to the current foundation candidate; preserve existing owner-specific Skill protocols, historical evidence and Phase state. No database migration or runtime permission change is authorized."
+        },
+        "state_transition": "Unestablished standard deliverable -> independently verified production standard at the declared path.",
+        "terminal_predicate": "The standard artifact assertion passes in the compatible foundation lane. Q2 alone authors declared tests/helpers and freezes them before formal RED; green/refactor changes only listed production owners. Production files remain outside immutable execution snapshots. Missing validator imports, absent tests, environment failures and timeouts cannot establish causal RED; unresolved first-use callable materialization blocks the owning execution protocol. Preserve ADR-0041/0058/0061 boundaries, normal maintainer ADR acceptance, and external normative review without fabricated internal receipts or self-acceptance. Q6 has applicable regression coverage; Q8 runs all four declared test modules once current, with a 600-second terminal limit. Changed shared dependencies invalidate affected proof; replay rebuilds the original binding identity before using that same identity. Derived evidence retains authorizes=[] and creates no new authority or evidence writer.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a01"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-4D113990270F": {
+      "acceptance": {
+        "assertion_ids": [
+          "SCHEMA_IMPLEMENTATION_AVAILABLE",
+          "UNSUPPORTED_SCHEMA_CONSTRUCT_REJECTED"
+        ],
+        "given": "The foundation candidate includes declared local policy/schema inputs and disposable supported-schema and unsupported-construct variants, with independently frozen expected outcomes.",
+        "oracle": {
+          "expected": "Schema validation executes through an existing available repository dependency/utility or a supported local implementation in the declared modules, without assuming a new library. Supported inputs validate; constructs unsupported by the selected implementation are explicitly rejected. Invalid owned schemas produce structured error/2, while package data violating a supported schema produces fail/1. Results retain authorizes=[].",
+          "forbidden": [
+            "Assuming a new schema library is available.",
+            "Silently accepting unsupported schema constructs.",
+            "Installing a dependency, fetching a schema or bypassing actual policy/schema consumption.",
+            "Treating an import failure or missing production entry as an observable product AssertionError."
+          ],
+          "observable": "At foundation implementation-boundary verification, inspect the schema-validation import/call path and its available dependencies; then directly call the real validate_package entry with supported and unsupported schema cases and inspect structured rejection diagnostics."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "Schema validation has an available implementation and explicitly rejects constructs outside its supported local schema vocabulary.",
+        "when": "The foundation test_a02 checks implementation availability and invokes schema validation through scripts.sc.validate_skill_quality.validate_package."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "SCHEMA_IMPLEMENTATION_CONTRACT_GAP",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_core.py::test_a02 with separately bound availability and unsupported-construct assertions. Inspect the actual implementation dependency path and directly call scripts.sc.validate_skill_quality.validate_package using disposable owned-schema variants. An assumed unavailable library or silently accepted unsupported construct must fail the corresponding assertion. Use the targeted argv with a 300-second caller timeout. This implementation constraint uses a non-expected-red role; missing imports and harness failures are not causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Local schema validation implementation"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "behavior_change": "Implement supported local schema validation in the declared foundation context, reusing an available repository utility/dependency when suitable and explicitly rejecting unsupported constructs. Do not modify unrelated existing schema utilities merely to supply an owner.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/**",
+          "knowledge/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/_artifact_schema.py",
+          "scripts/sc/_artifact_schema_fallback.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Restore only affected foundation candidates; preserve existing schema consumers and Skill protocols. No new dependency installation, schema service, persisted-state migration or Phase change is authorized."
+        },
+        "state_transition": "Unspecified schema-validation implementation -> available local validation with an explicit supported-construct boundary.",
+        "terminal_predicate": "Both availability and unsupported-construct assertions pass through the real foundation entry. Tests freeze independent expected values rather than reading expectations from mutable policy. Q2 authors only declared test/helper bytes; production implementation remains outside execution snapshots and is never seeded by Q2. A missing callable, invalid import, missing test or environment error blocks valid execution rather than proving RED; a 300-second targeted timeout is a harness failure. Q6 selects applicable current/predecessor cases, and Q8 requires all four declared modules with a 600-second limit after all required cases exist and execute. Preserve ADR-0041/0058/0061, historical evidence, normal maintainer ADR acceptance and the existing evidence owners. Shared changes invalidate affected proofs; replay reconstructs the original binding identity before replay with that identity. Derived evidence retains authorizes=[]; no internal review receipt, publication or new controller is introduced.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a02"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-5274BB0CA913": {
+      "acceptance": {
+        "assertion_ids": [
+          "VERSION_DATE_STATIC_RECORD_SCOPE",
+          "VERSION_DATE_NO_LIVE_FRESHNESS_EFFECTS"
+        ],
+        "given": "Disposable version-sensitive package variants contain declared version/date records, including historical but structurally valid records and malformed or missing records; expected classifications are frozen independently.",
+        "oracle": {
+          "expected": "Version/date fields are checked as declared records. Historical dates alone do not cause a live-staleness verdict; malformed or missing required records receive the applicable typed package diagnostic. Identical bytes and policy yield equivalent record-validation results without external lookup or a claim of current latest-version knowledge. Results retain authorizes=[].",
+          "forbidden": [
+            "Claiming or performing a live freshness check from version/date records.",
+            "Fetching current versions, invoking Context7 or contacting remote services during static validation.",
+            "Using the current clock or latest-successful logs to reinterpret historical records as live freshness evidence.",
+            "Skipping record validation entirely while returning pass."
+          ],
+          "observable": "During A14 record-scope verification, inspect the validator's record-validation call path and observe lookup/network invocation boundaries while calling validate_package on historical, malformed and missing-record variants; inspect diagnostics and freshness claims."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "Version/date validation remains a static record check rather than a live freshness service.",
+        "when": "The capability test_a14 directly calls the real validator for version/date variants and evaluates the static-validation boundary during those calls."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "VERSION_DATE_FRESHNESS_SCOPE_VIOLATION",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a14 with individually bound record-scope assertions and explicit parameter identities. Directly call scripts.sc.validate_skill_quality.validate_package; observe attempted lookup/network calls without replacing the product implementation. Assert on structured record outcomes and absence of live-freshness effects or claims. A forbidden lookup, freshness claim, or omitted record check must produce AssertionError. Enforce a 300-second targeted timeout; this constraint is not expected-red."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Version and date record validation"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Keep version/date validation within the existing A14 static capability-declaration context, validating supplied records without live freshness infrastructure.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/**",
+          "knowledge/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Restore affected static declaration semantics only. Preserve declaration protocols and existing lookup/runtime authorities; introduce no freshness service, network permission, persistence change or Phase migration."
+        },
+        "state_transition": "Unspecified version/date validation scope -> explicit static record validation with no live freshness effects.",
+        "terminal_predicate": "The independently bound A14 scope assertions pass for valid historical, malformed and missing record variants, and observed validation performs no live lookup. Disposable inspection roots contain unchanged copies of actual policy/schema/standard bytes; production remains imported from the repository. Q2 freezes tests/helpers before execution; green/refactor cannot modify them. No missing import, absent selector, environment failure or timeout counts as causal RED. Targeted execution has a 300-second limit. Foundation/declaration predecessors receive applicable regression coverage before capability closure; Q8 runs all four declared modules with a 600-second limit only after required cases are authored and exercised. Preserve ADR-0041/0058/0061 and existing evidence ownership; shared changes invalidate affected proof and replay reconstructs the original binding identity before using that identity. Derived evidence retains authorizes=[] and grants no runtime freshness or execution authority.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a14"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-54C10ECB4D96": {
+      "acceptance": {
+        "assertion_ids": [
+          "DEPENDENCY_EXPLICIT_LOCAL_RECORD_SOURCES",
+          "DEPENDENCY_IMPLICIT_REMOTE_SOURCES_UNUSED"
+        ],
+        "given": "Disposable package/policy variants contain matching explicit local dependency records, missing or unresolved records, and conflicting implicit or remote alternatives.",
+        "oracle": {
+          "expected": "Dependency identity and version/authority resolution uses only explicitly supplied local policy and package declaration records within their declared containment roots. Matching records resolve; missing or unresolved records yield the applicable typed package diagnostic rather than implicit discovery or remote substitution. Results retain authorizes=[].",
+          "forbidden": [
+            "Resolving dependencies from implicit or remote records.",
+            "Scanning repositories, sibling packages or historical logs to discover substitute authority.",
+            "Executing, installing or contacting a dependency to resolve its declaration.",
+            "Treating package self-assertions as a replacement for required policy-owned authority."
+          ],
+          "observable": "During A09 source-boundary verification, inspect the dependency-resolution call path and observe file-read, discovery, subprocess and network boundaries while the real validator processes explicit-local, missing-local and conflicting-source variants."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "Dependency resolution is confined to the declared explicit local policy and package records.",
+        "when": "The declarations test_a09 calls scripts.sc.validate_skill_quality.validate_package and evaluates which authority sources are consulted during dependency validation."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "DEPENDENCY_RECORD_SOURCE_BOUNDARY_VIOLATION",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_examples.py::test_a09 with independently bound source assertions and explicit parameter identities. Directly invoke scripts.sc.validate_skill_quality.validate_package on supplied-local and missing-local variants with conflicting implicit/remote alternatives. Assert actual consulted-source boundaries and typed diagnostics; a remote lookup, implicit discovery or substitute authority must produce AssertionError. Use the targeted argv with a caller-enforced 300-second timeout. Keep this constraint under a non-expected-red role."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Dependency record sources"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Constrain dependency resolution to explicit supplied local records within the cohesive A2 declarations context; retain the real validator entry and declared examples helper without introducing a dependency executor or discovery service.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/**",
+          "knowledge/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Restore only affected declaration-validation candidates. Preserve owner-specific Skill protocols, current runtime dependency owners and historical evidence; no dependency installation, publication, database migration or Phase state change is authorized."
+        },
+        "state_transition": "Unspecified dependency record sources -> resolution exclusively from explicit supplied local policy/package records.",
+        "terminal_predicate": "A09 independently proves allowed record sources and rejects missing/unresolved authority without consulting implicit or remote substitutes. Observe forbidden read/discovery operations rather than relying on stdout alone. Q2 generates disposable package variants inside an explicit inspection root, freezes declared tests/helpers and independent expectations, and never seeds production. Green/refactor modifies only listed production owners; production is excluded from execution snapshots. Missing entries/imports, absent tests, environment failures and timeouts are not causal RED; unresolved first-use callable materialization blocks execution. Apply the 300-second targeted limit, applicable foundation/declaration regression selection, and one current Q8 terminal selection of all four modules with a 600-second limit after required cases execute. Preserve ADR-0041/0058/0061 and existing evidence writers. Shared dependency changes invalidate affected proofs; replay rebuilds the original binding identity before using that same identity. Derived evidence retains authorizes=[]; no knowledge publication, new controller, internal receipt or runtime capability grant is introduced.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

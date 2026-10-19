@@ -1,0 +1,408 @@
+{
+  "obligation_contracts": {
+    "O-110D5665F3A7": {
+      "acceptance": {
+        "assertion_ids": [
+          "A09_REQUIRED_RECORD_BLOCKING"
+        ],
+        "given": "在显式 disposable inspection root 中准备可检查的 Skill 包变体，删除一个 required dependency record，其余声明保持有效；预期值独立冻结。",
+        "oracle": {
+          "expected": "真实 validate_package 返回 fail；结构化诊断以稳定 rule/code、包内相对 path 和安全 message 标识缺失 required dependency record，并明确阻断。结果 authorizes=[]，检查过程不执行依赖。",
+          "forbidden": [
+            "缺失 required dependency record 被接受或仅作为非阻塞提示",
+            "诊断没有类型或无法定位缺失记录",
+            "执行依赖或根据验证结果授予执行权限",
+            "将缺少生产模块、导入失败、环境错误或超时冒充因果 RED"
+          ],
+          "observable": "test_a09 的对应参数实例直接调用 scripts.sc.validate_skill_quality.validate_package，检查结构化 status、diagnostic rule/code/path、阻断分类、authorizes 和依赖执行边界；以独立 AssertionError 表达预期诊断缺失。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A09"
+        ],
+        "then": "required dependency record 缺失时产生可定位的 typed blocking diagnostic。",
+        "when": "Q2 冻结测试及其参数级 assertion 绑定后，在受控行为检查和后续回归中调用真实验证入口；首次真实调用无法建立时先报告协议阻塞，不进入伪造 RED 的循环。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "REQUIRED_DEPENDENCY_RECORD_NOT_BLOCKED",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09 中缺失 required dependency record 的独立参数实例直接调用真实 validate_package；若结果不是 blocking fail，或缺少匹配的 typed diagnostic，则触发 AssertionError。该意图只用于已建立真实生产调用的行为观察，不接受缺失导入、无效 fixture 或超时作为 RED。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "依赖解析"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "在同一 A2 declarations 上下文实现 required dependency record 缺失的类型化阻断诊断；消费真实 policy/schema，不执行依赖。开发依据 Accepted ADR-0041，保留 ADR-0058 的证据边界。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/**",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "仅回退本次声明验证改动，不修改旧 sidecar 协议、执行权限、平台状态或历史证据；共享 policy/schema/validator 回退必须失效并重建受影响证明。"
+        },
+        "state_transition": "required dependency record 缺失的可检查包 -> fail 和 typed blocking diagnostic；authorizes 保持空数组。",
+        "terminal_predicate": "本 obligation 的参数级断言及适用前序回归通过；完整 A2 后验证整个 examples 模块。目标命令限时 300 秒，超时归为 harness failure。全计划结束须在四个指定测试模块均已编写并执行后进行一次限时 600 秒的当前终验。Q2 仅编写声明的测试/helper，冻结后实现阶段不得修改它们；共享生产变更失效受影响证明。保留历史失败，不新增授权收据、内部审查或证据系统，不将拟议 ADR 未获接受当作初始 RED。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-1487B4C87B47": {
+      "acceptance": {
+        "assertion_ids": [
+          "A09_OPTIONAL_FALLBACK_AUTHORITY_BOUNDARY"
+        ],
+        "given": "准备 optional dependency 缺失且声明 fallback 的可检查包变体，并分别准备普通 fallback 与试图授予 protected work 权限的 fallback 声明；不预设验证结果。",
+        "oracle": {
+          "expected": "在静态声明及关联规范检查阶段，optional absence 选择的 fallback 不产生 protected-work 授权。普通 fallback 的验证结果仍为 authorizes=[]；试图利用 fallback 或 optional absence 授权 protected work 的声明被识别并阻断。规范和 policy/schema 不将 fallback 定义为授权来源。",
+          "forbidden": [
+            "optional fallback 被当作 protected-work 授权依据",
+            "通过 optional absence 绕过原有 protected-work 授权边界",
+            "仅凭普通 fallback 返回成功就宣称授权边界已获证明",
+            "为验证边界实际执行 protected work"
+          ],
+          "observable": "test_a09 的独立参数级边界断言检查标准、policy/schema 的 fallback 权限定义，并直接调用真实 validate_package 比较普通与越权声明的结构化结果、诊断及 authorizes；验证只检查声明，不运行 fallback 或 protected work。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A09"
+        ],
+        "then": "optional fallback 不获得也不产生 protected-work 授权。",
+        "when": "在 test_a09 的静态边界检查阶段审查 fallback 声明与规范，并对受控包变体调用真实验证入口；随后在同一 A2 行为 lane 的回归和终验中复查。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "OPTIONAL_FALLBACK_GRANTS_PROTECTED_AUTHORITY",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09 的 fallback 授权边界参数检查真实标准/policy/schema 与 validate_package 结果；若任何声明或结果把 optional fallback 当作 protected-work 授权，或越权声明未被阻断，则产生 AssertionError。此为 constraint 的边界证明，不承担 expected-red runtime-marker 角色。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "可选依赖 fallback"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "在同一 A2 declarations 上下文明确并校验 optional fallback 的非授权边界；不实现 protected work 的执行器或新授权系统。开发依据 Accepted ADR-0041，保留 ADR-0058 的证据边界。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/**",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "保留现有授权来源、工具/网络上限和 owner-specific sidecar 协议；不得通过回退引入 fallback 授权。共享生产语义变化须失效受影响证明，历史证据不改写。"
+        },
+        "state_transition": "optional absence 选择声明的 fallback -> 声明被静态检查，protected-work 授权边界保持不变，结果 authorizes=[]。",
+        "terminal_predicate": "独立 artifact/声明边界断言和真实入口结果检查通过；不以运行成功代替授权边界证明。目标命令限时 300 秒，超时属于 harness failure。Q2 在 disposable inspection root 编写并冻结声明测试/helper；实现阶段仅修改生产 owners，不执行依赖、不修改冻结快照。适用前序回归通过，完整 A2 后验证 examples 模块；全计划四模块完成后进行一次限时 600 秒的当前终验。保留既有生命周期和证据所有权。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-24804DA8035F": {
+      "acceptance": {
+        "assertion_ids": [
+          "A09_DETERMINISTIC_MISSING_MISMATCH_DECLARATION"
+        ],
+        "given": "准备多个 dependency declaration 变体，分别包含、遗漏或含糊地描述 missing/mismatch behavior；关联规范使用显式本地引用，预期完整性规则独立于候选 policy 冻结。",
+        "oracle": {
+          "expected": "在声明及关联规范的静态检查阶段，每个 dependency 的 missing 和 mismatch 处理都可确定解析。完整记录或明确关联规范能够提供规则；遗漏任一处理、无法解析或含糊的规则被诊断并拒绝，诊断定位对应 dependency 和声明位置。",
+          "forbidden": [
+            "依赖没有定义 missing 或 mismatch handling 却被视为完整",
+            "将非确定性或不可解析处理描述当作有效规则",
+            "只验证字段存在而不检查其确定性语义及关联规范",
+            "执行依赖来猜测未声明的处理行为"
+          ],
+          "observable": "test_a09 的独立参数实例检查声明/关联规范 artifact，并通过真实 validate_package 比较完整、缺失和含糊声明的结构化 status、rule/code/path；两个处理维度分别绑定断言，不从候选 policy 读取预期答案。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A09"
+        ],
+        "then": "每个依赖的 missing/mismatch handling 均有明确、可确定解析的声明或关联规范。",
+        "when": "在 test_a09 的声明完整性与本地规范解析阶段进行 artifact 检查，再调用真实验证入口验证相应包变体；不以实际依赖执行结果代替声明检查。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "DEPENDENCY_HANDLING_RULE_UNDEFINED",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09 的声明完整性参数分别检查 missing 和 mismatch 规则；若声明或关联规范不能确定解析处理行为，而真实 validate_package 未拒绝或未定位该缺陷，则触发 AssertionError。此 constraint 保留自己的非 expected-red 失败角色。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "依赖声明"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "在同一 A2 declarations 上下文定义并校验每个依赖的确定性 missing/mismatch handling 声明及关联规范；不执行依赖。开发依据 Accepted ADR-0041，保留 ADR-0058 的证据边界。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/**",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "保留版本化 quality namespace 与现有 owner-specific sidecar 协议；无持久化或数据库迁移。回退共享声明语义后必须失效并重建受影响证明，不修改历史失败。"
+        },
+        "state_transition": "依赖声明待校验 -> missing/mismatch handling 可确定解析，或以对应声明缺陷拒绝；验证结果不产生授权。",
+        "terminal_predicate": "missing 与 mismatch 两个维度的独立参数级 artifact 和真实入口断言均通过，结果 authorizes=[]。目标命令限时 300 秒，超时不作 RED。Q2 仅在声明测试/helper 内生成 disposable 包变体，冻结后实现阶段不得改测试；共享生产语义变化失效受影响证明。适用前序回归通过，完整 A2 后验证 examples 模块；全计划四模块完成后进行一次限时 600 秒的当前终验，不新增工作流控制器、审查收据或证据系统。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-E140B558211D": {
+      "acceptance": {
+        "assertion_ids": [
+          "A08_DECISION_DIAGRAM_LINKAGE"
+        ],
+        "given": "准备 routing/orchestration Skill 包，其 decision diagram 文件存在；构造 Skill 直接链接该图与仅保留未链接图文件的两个变体，其余内容相同。",
+        "oracle": {
+          "expected": "在包内容与本地引用检查阶段，Skill 中存在可解析到 decision diagram 的链接。已链接变体满足此 linkage 规则；仅有图文件但 Skill 未链接的变体产生对应规则的 fail 诊断和相对位置。结果 authorizes=[]。",
+          "forbidden": [
+            "图文件存在但没有从 Skill 链接仍满足 linkage 规则",
+            "仅凭 routing 声明或目录中发现图文件推断链接成立",
+            "只检查运行时返回状态而未检查 Skill 的实际链接及解析目标",
+            "把本 linkage constraint 当作 expected-red runtime-marker 资格"
+          ],
+          "observable": "test_a08 在静态 artifact 检查阶段读取受控 Skill 内容并解析其本地链接目标，再直接调用真实 validate_package 比较 linked/unlinked 变体的 linkage rule、status 和相对 path；断言只证明图的链接关系。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A08"
+        ],
+        "then": "routing/orchestration Skill 从自身内容链接到其 decision diagram。",
+        "when": "在 test_a08 的包结构及本地引用检查阶段评估 linked/unlinked 变体，并在同一 A2 declarations lane 的后续回归中复查。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "ROUTING_DIAGRAM_NOT_LINKED",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a08 的链接关系参数检查真实 Skill 内容及解析目标，并调用真实 validate_package；若图存在但未链接的包仍满足 linkage 规则，或 linked/unlinked 变体无法被对应诊断区分，则触发 AssertionError。此为独立结构约束检查，使用非 expected-red 角色。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Routing/orchestration Skill decision diagram linkage"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "在同一 A2 declarations 上下文定义并校验 routing/orchestration Skill 到 decision diagram 的显式本地链接；此 obligation 不扩展为图格式、分支覆盖或 leaf 分类的联合 oracle。开发依据 Accepted ADR-0041，保留 ADR-0058 的证据边界。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/**",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "仅回退链接声明与验证规则，不修改实际 Skill 包、Package B 迁移内容、既有 sidecar 协议或证据。共享生产语义回退须失效受影响证明。"
+        },
+        "state_transition": "routing/orchestration Skill 的图已存在 -> 检查 Skill 是否明确链接该图；未链接时对应 linkage 规则失败。",
+        "terminal_predicate": "linked/unlinked 变体的独立 artifact 与真实入口断言通过，不能仅靠无条件 pass 实现满足测试。目标命令限时 300 秒，超时归为 harness failure。Q2 在显式 disposable inspection root 编写并冻结声明测试/helper；实现阶段只改生产 owners，不改冻结快照，不扫描或迁移真实 .agents/skills。适用前序回归通过，完整 A2 后验证 examples 模块；全计划四模块完成后进行一次限时 600 秒的当前终验。标准 ADR 按维护者正常决策接受，不伪造接受状态或内部审查证据。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a08"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "obligation_contracts": {
+    "O-59A94B5C1335": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-A21-DNS-RESOLVER-CALLS-ZERO",
+          "A-A21-DNS-BOUNDARY-INSTRUMENTATION"
+        ],
+        "given": "Disposable, contained packages declare network capabilities with hostname targets and valid or intentionally invalid declaration controls; the actual Package A validator entry is available for execution.",
+        "oracle": {
+          "expected": "Package A completes declaration inspection with zero attempted DNS-resolution operations. Declaration outcomes are asserted independently so an unconditional-pass replacement cannot satisfy the check. Resolver instrumentation detects attempts before resolution, including attempts whose exceptions the validator catches; source/call-surface inspection reconciles indirect resolver paths.",
+          "forbidden": [
+            "Package A performs DNS resolution.",
+            "A caught resolver exception hides a DNS-resolution attempt.",
+            "An uninstrumented indirect resolver path is treated as proof of no DNS activity.",
+            "Missing production imports, absent tests, timeout or environment failure are accepted as causal RED."
+          ],
+          "observable": "During targeted A21 execution, instrument resolver entry points before importing and directly calling scripts.sc.validate_skill_quality.validate_package; inspect the resulting attempted-call trace and reconcile the real validator call surface for direct or indirect DNS paths. Assert the resolver attempt count independently of validator status or diagnostic text."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A21"
+        ],
+        "then": "Package A completes without performing DNS resolution.",
+        "when": "At the A21 capability-boundary check, execute the real validator against the contained network-declaration variants under resolver instrumentation and evaluate the corresponding implementation call surface."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "PACKAGE_A_DNS_BOUNDARY_VIOLATION",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a21 with explicit parameter-level assertion bindings for this DNS constraint. Directly import and call scripts.sc.validate_skill_quality.validate_package under resolver instrumentation installed before import. Raise an observable AssertionError if Package A attempts DNS resolution, even if it catches the resolver exception. Reconcile indirect resolver call surfaces. Run the targeted pytest command with a 300-second external limit. Missing imports or tests are blockers, not this failure; do not seed production in Q2 or manufacture expected-red for this constraint."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A DNS behavior",
+          "Network capability declaration inspection"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Keep A21 network capability validation declarative and local, without resolving declared hostname targets. Attach this constraint to the cohesive A3 capability implementation and test_a21 selector family; it does not authorize a separate DNS controller, infrastructure or guard-only implementation slice. ADR-0041 governs development.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "scripts/toolchain/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Revert only affected A3 production changes while preserving the agreed public validator and sidecar contracts. No Phase database, hosted workspace or runtime state migration is authorized. Preserve historical evidence and invalidate affected proofs after shared validator, policy or schema changes."
+        },
+        "state_transition": "Package A begins local inspection of a network-capability declaration and completes that inspection without any DNS-resolution operation.",
+        "terminal_predicate": "The authored test_a21 parameters execute through the actual Python validator and independently establish zero DNS attempts plus complete resolver call-surface coverage. Freeze tests and helper bytes before formal RED; Q2 writes only declared test material, and implementation changes only declared production owners. The currently absent validator must become callable through the existing authorized protocol; otherwise report the first-use blocker before TDD. Use disposable contained inspection roots and actual policy/schema bytes, with independently frozen expected values. Preserve applicable predecessor regression coverage, invalidate affected proofs after shared changes, and require the existing workflow's current whole-plan terminal run over all four authored modules with a 600-second limit. Targeted commands have a 300-second limit; timeout is a harness failure. Preserve isolation, shared execution/evidence ownership and historical reports; do not publish knowledge, fabricate approval receipts, self-accept, commit or merge. Any derived evidence has authorizes=[]; replay first rebuilds the original binding identity and uses that same identity.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a21",
+            "-q"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

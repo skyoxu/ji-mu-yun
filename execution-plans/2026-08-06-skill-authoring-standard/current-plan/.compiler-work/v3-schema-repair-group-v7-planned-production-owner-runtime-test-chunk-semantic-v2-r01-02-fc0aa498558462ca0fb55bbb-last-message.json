@@ -1,0 +1,112 @@
+{
+  "obligation_contracts": {
+    "O-E3D98550014B": {
+      "acceptance": {
+        "assertion_ids": [
+          "A15-DENIED-OUTPUT-LOCATIONS-DECLARED",
+          "A15-DENIED-OUTPUT-LOCATIONS-OMISSION-REJECTED"
+        ],
+        "given": "A disposable package declares a secret-using capability. Paired variants differ only in whether denied output locations are explicitly named; all other applicable declarations remain fixed. Fixtures contain synthetic data only.",
+        "oracle": {
+          "expected": "During declaration validation, explicitly named denied output locations satisfy this requirement. Omitting that declaration produces fail with the applicable rule and package-relative location. Results retain authorizes=[]; declaring denied locations grants no runtime enforcement authority.",
+          "forbidden": [
+            "A secret-using capability passes despite omitting denied output locations.",
+            "A generic redaction-policy declaration substitutes for naming denied output locations.",
+            "Static declaration validation claims to enforce runtime output restrictions.",
+            "Diagnostics disclose credential values."
+          ],
+          "observable": "The A15 test independently inspects the capability declaration artifact for named denied output locations, then directly calls the real validate_package entry for both variants and checks structured status, rule and relative location. Artifact inspection proves the declaration constraint; validator results prove its static checking."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A15"
+        ],
+        "then": "The capability explicitly names denied output locations, and static validation rejects their omission.",
+        "when": "The A15 declaration-contract check inspects each package before invoking scripts.sc.validate_skill_quality.validate_package against the same disposable inspection root."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A15_DENIED_OUTPUT_LOCATIONS_MISSING",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a15 with independent assertions for this obligation. Inspect explicitly named denied output locations and call the real scripts.sc.validate_skill_quality.validate_package entry on otherwise equivalent declared and omitted variants. Raise AssertionError if the declaration omits the locations or omission is accepted. Use the targeted pytest argv with a caller-enforced 300-second timeout. This constraint check is not an expected-red runtime role. Missing production imports, absent tests, invalid fixtures and timeouts are blockers or harness failures, never causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Secret-using capability denied output location declarations",
+          "A15 static declaration validation"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Define and statically check explicit denied output locations for secret-using capabilities within the cohesive A3 capability-check context, without implementing runtime secret or output enforcement.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Rollback only this bounded Toolchain declaration change while preserving unrelated candidate changes, existing owner-specific contracts, ADR-0060 and historical evidence. No live database, Hosted workspace or runtime state migration is authorized."
+        },
+        "state_transition": "A secret-using capability is specified -> denied output locations are explicitly named and independently checked; an otherwise equivalent omission is rejected during static validation.",
+        "terminal_predicate": "The independently bound A15 assertions pass through the real validator, detect an unconditional-pass replacement, and establish the declaration artifact and omission-rejection checks without runtime-enforcement claims. Q2 authors only the declared test/helper files, generates synthetic variants in disposable inspection roots, and freezes independent expected values before formal execution; production owners remain outside execution snapshots. Green/refactor modifies only declared production files. Missing first-use callable/import support blocks execution rather than becoming RED. Targeted commands have 300-second caller timeouts; applicable predecessor regressions are nonempty. After all required cases exist and execute, one current whole-plan terminal selection passes within 600 seconds. Shared semantic changes invalidate affected proofs before replay. ADR-0041 remains the development authority; normal maintainer acceptance of the standard ADR precedes final Package A acceptance, without manufacturing an initial RED blocker. Historical failures remain intact; no knowledge publication, internal review receipt, shared workflow modification or Phase implementation is introduced.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a15"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

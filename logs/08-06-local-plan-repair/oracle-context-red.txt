@@ -1,0 +1,19 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ SelectiveCacheRepairTests.test_oracle_repair_context_contains_only_exact_conflicting_peers _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_oracle_repair_context_contains_only_exact_conflicting_peers>
+
+    def test_oracle_repair_context_contains_only_exact_conflicting_peers(self):
+        """ADR-0041: unrelated proofs must not crowd frozen input out of context."""
+        acceptance = contract('tests/test_real.py')['acceptance']
+        values = [dict(deepcopy(acceptance), obligation_ids=[oid]) for oid in ('O-1', 'O-2', 'O-3')]
+        values[2]['oracle']['expected'] = 'an unrelated result'
+>       summary = repair._conflicting_oracle_peers({'acceptances': values}, 'O-1')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'semantic_worker_v3_group_repair_patch' has no attribute '_conflicting_oracle_peers'
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:74: AttributeError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_oracle_repair_context_contains_only_exact_conflicting_peers
+1 failed, 16 deselected in 0.15s

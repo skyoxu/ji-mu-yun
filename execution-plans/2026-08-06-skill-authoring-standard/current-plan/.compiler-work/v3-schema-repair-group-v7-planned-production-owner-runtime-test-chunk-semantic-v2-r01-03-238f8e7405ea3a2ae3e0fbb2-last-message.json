@@ -1,0 +1,99 @@
+{
+  "obligation_contracts": {
+    "O-B6099D2B8A5E": {
+      "acceptance": {
+        "assertion_ids": [
+          "A17_NO_DATABASE_DECLARATION_NEEDS_NO_DATABASE_SYSTEM",
+          "A17_OTHER_CAPABILITIES_DO_NOT_REQUIRE_BACKUP",
+          "A17_DATABASE_REQUIREMENT_BOUNDARY_IS_SELECTIVE"
+        ],
+        "given": "Disposable packages declare no database capability and provide no database or backup infrastructure. Variants include an otherwise valid local-only package and otherwise valid packages declaring other capabilities. Expected values are frozen independently of candidate policy.",
+        "oracle": {
+          "expected": "Every no-database variant passes the database prerequisite check without database configuration, backup systems, recovery declarations or restore evidence. Other capabilities do not activate database-specific requirements. A paired database-write variant missing its required recovery declaration produces the applicable structured rejection, demonstrating selective enforcement rather than unconditional success. Derived results retain authorizes=[].",
+          "forbidden": [
+            "Requiring database or backup infrastructure when no database capability is declared.",
+            "Inferring database capability solely from another capability declaration.",
+            "Suppressing unrelated capability validation to obtain a passing no-database result.",
+            "An unconditional-pass validator satisfying the selective-enforcement assertions.",
+            "Treating static validation as a restore drill or execution authorization."
+          ],
+          "observable": "During parameter-level execution of scripts/sc/tests/test_skill_quality_capabilities.py::test_a17, directly call scripts.sc.validate_skill_quality.validate_package and inspect structured status, rule IDs, diagnostic paths and codes. Inspect the evaluated prerequisite requirements for each no-database variant and compare the database-write negative control."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A17"
+        ],
+        "then": "Database-specific infrastructure requirements remain absent unless a database capability is declared.",
+        "when": "The real validator evaluates each disposable package under an explicitly supplied contained inspection root, using copied, unchanged standard, policy and schema bytes."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A17_UNDECLARED_DATABASE_PREREQUISITE_LEAK",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a17 with explicitly marked no-database parameter instances and the selective-enforcement control. Directly invoke validate_package and raise AssertionError if any no-database package receives a database or backup prerequisite, or if the control exposes unconditional success. Bind only this obligation's assertions to its parameter instances. Use the targeted validation argv with a 300-second harness timeout. Missing imports, absent tests, environment errors and timeouts are not causal RED; a missing real callable requires reporting the first-use protocol limitation before the TDD loop."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package without declared database capability"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Apply database and backup prerequisite validation only to declared database capabilities, preserving validation of other declared capabilities. Implement within the cohesive A3 capability-check context.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Revert only this bounded Toolchain change while preserving public validator compatibility, existing package data and historical evidence. No live database, Hosted workspace or Phase runtime mutation is authorized."
+        },
+        "state_transition": "A package declares no database capability, possibly alongside other capabilities; evaluation leaves database and backup infrastructure requirements inactive.",
+        "terminal_predicate": "All explicitly bound no-database parameter instances and the selective-enforcement control execute through the real callable and satisfy this obligation's assertions. Q2 freezes only declared tests/helpers before formal RED; implementation changes only declared production owners, never frozen snapshots. Applicable predecessor regression coverage is nonempty. Shared validator/policy/schema changes invalidate affected proofs. After all groups are complete, the existing workflow runs one current whole-plan terminal selection across the four source-declared test modules with a 600-second timeout; targeted commands have a 300-second timeout. Timeouts and unavailable production entrypoints cannot count as accepted RED. Preserve historical failures, append execution evidence under logs through existing workflows, and grant no authority from derived evidence. Preserve ADR-0041/ADR-0058 execution boundaries and ADR-0061 Phase isolation; normal maintainer acceptance of ADR-0062 remains required before Package A final acceptance, never an initial product RED. Do not reopen completed controllers, modify shared runtime/evidence writers, publish knowledge, install packages or fabricate review receipts. No implementation, validation result or readiness is asserted by this contract.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a17"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

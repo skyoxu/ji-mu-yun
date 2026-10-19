@@ -285,6 +285,7 @@ def main() -> int:
             recommendation_only=args.recommendation_only,
             resume_from=args.resume_from,
             published_v3_repair=published is not None,
+            candidate_v3_repair=args.v3_contract_repair is not None,
         )
         if published is not None and result.get("status") == "plan-ready":
             current = json.loads((args.out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))

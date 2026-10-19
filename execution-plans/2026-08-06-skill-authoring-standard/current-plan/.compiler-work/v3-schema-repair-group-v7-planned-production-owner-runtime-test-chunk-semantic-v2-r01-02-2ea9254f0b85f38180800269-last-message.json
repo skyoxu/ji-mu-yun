@@ -1,0 +1,115 @@
+{
+  "obligation_contracts": {
+    "O-C93427474BF2": {
+      "acceptance": {
+        "assertion_ids": [
+          "A20-SHELL-EXPLICIT-FALSE",
+          "A20-SHELL-TRUE-REJECTED",
+          "A20-SHELL-OMISSION-REJECTED",
+          "A20-ARGV-STRING-REJECTED",
+          "A20-SHELL-DECLARATION-NOT-EXECUTED"
+        ],
+        "given": "Disposable package variants contain subprocess capability declarations differing only in shell and argv representation; other required fields are held valid using frozen test expectations.",
+        "oracle": {
+          "expected": "During artifact review, the standard, policy and contract schema require explicit boolean shell=false and an argv array rather than a command string. During static package validation, the conforming declaration passes this check; shell=true, an omitted shell field and a string-command declaration are rejected with structured status, rule ID, code and the affected declaration path. No declared subprocess is executed.",
+          "forbidden": [
+            "A declaration with shell=true passes this check.",
+            "An omitted shell field is treated as an explicit shell=false declaration.",
+            "A command string is accepted in place of an argv array.",
+            "Runtime status alone is used to prove the normative declaration constraint.",
+            "The validator executes inspected subprocess declarations.",
+            "Expected declaration requirements are derived from candidate-controlled policy.",
+            "A missing import, missing test, collection error or timeout is classified as causal RED."
+          ],
+          "observable": "Parameter-specific artifact assertions and direct calls to scripts.sc.validate_skill_quality.validate_package in scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 inspect the normative shell/argv requirements, actual declaration fields, structured rejection diagnostics and a subprocess-execution sentinel. Each variant binds only its applicable assertion IDs."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20"
+        ],
+        "then": "Subprocess declarations explicitly disable shell execution and use argv arrays; contradictory or incomplete declarations fail static validation.",
+        "when": "The A20 targeted check reviews the normative declaration artifacts and validates each independently constructed package variant through the real validator entry."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A20_SUBPROCESS_SHELL_ARGV_CONSTRAINT",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 with independently marked shell/argv variants. Raise AssertionError when normative artifacts omit the explicit shell=false/argv constraint, or the real validate_package accepts shell=true, missing shell or a command string, rejects the conforming variant for this constraint, or executes the declaration. This constraint check has a non-expected-red role; import, collection and environment failures are not its expected observation."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A subprocess capabilities"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json"
+        ],
+        "behavior_change": "Within the cohesive A3 capability-check context, require explicit shell=false and argv-array subprocess declarations in normative artifacts and enforce that declaration constraint through the real static validator. Preserve existing execution infrastructure and ADR-0041/ADR-0058 boundaries.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only the bounded shell/argv declaration changes while preserving unrelated user changes and historical evidence. No live database, Runner, process-tree controller, timeout engine or Phase runtime state is changed."
+        },
+        "state_transition": "A subprocess declaration under definition or review becomes explicitly constrained to shell=false and argv-array representation; violations produce inspectable static-validation diagnostics.",
+        "terminal_predicate": "The A20 shell/argv artifact and validator assertions pass with every relevant parameter executed against the real production entry. Q2 authors and freezes only the declared tests/helper before formal execution; Green/refactor changes only declared production owners. Disposable inspection roots contain unchanged actual normative artifacts, and expected values remain independent of candidate policy. Missing first-use production entry is a protocol blocker, never a fabricated AssertionError or permission for Q2 production writes. Targeted validation has a 300-second harness limit; whole-plan validation has a 600-second limit and runs all four modules only after their required cases exist and behaviors have been exercised. Q6 includes applicable predecessor regression cases, shared dependency changes invalidate affected proofs, and Q8 requires one current whole-plan terminal result. Preserve failure history, existing evidence ownership, immutable tests and all NFR-1 scope exclusions; no new execution controller, evidence system, internal approval receipt or current-status claim is introduced.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a20",
+            "-q"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py",
+            "-q"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

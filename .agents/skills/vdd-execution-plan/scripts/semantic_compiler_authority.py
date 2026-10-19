@@ -276,8 +276,9 @@ def compile_plan(
     recommendation_only: bool = False,
     resume_from: str | None = None,
     published_v3_repair: bool = False,
+    candidate_v3_repair: bool = False,
 ) -> dict[str, Any]:
-    if not published_v3_repair:
+    if not (published_v3_repair or candidate_v3_repair):
         import semantic_v3_contract_repair as published_repair
         published_repair.reset_published_overlays()
     published_marker = Path(out_dir) / ".compiler-work" / "published-v3-repair-active.json"

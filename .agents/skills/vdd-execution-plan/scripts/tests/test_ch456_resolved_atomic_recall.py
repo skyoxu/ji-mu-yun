@@ -116,3 +116,32 @@ def test_exact_source_recheck_can_resolve_a_bulk_invented_verdict(tmp_path, monk
     assert result["valid"]
     assert result["worker"]["supported_obligation_ids"] == ["O-1"]
     assert result["worker"]["invented_obligation_ids"] == []
+
+
+def test_partial_entailment_recheck_preserves_exact_remaining_repair_domain(tmp_path, monkeypatch):
+    """ADR-0041: diagnostics must identify the same disputed IDs as the current judgment."""
+    from semantic_obligation_gap_repair_patch import _exact_invented_partition
+
+    obligations = [{"obligation_id": oid, "status": "active", "source_refs": ["req#FR-1"]}
+                   for oid in ("O-1", "O-2", "O-3")]
+    initial = {
+        "valid": False,
+        "findings": ["atomic-recall:invented-obligation:O-1,O-2", "other-blocker"],
+        "source_gap_claims": [],
+        "worker": {"supported_obligation_ids": ["O-3"], "invented_obligation_ids": ["O-1", "O-2"],
+                   "source_gap_claims": []},
+    }
+    monkeypatch.setattr(gate.sc, "invoke_worker", lambda **kwargs: {
+        "supported_obligation_ids": ["O-1"], "invented_obligation_ids": ["O-2"], "source_gap_claims": []
+    })
+    result = atomic_result._recheck_invented(
+        root=tmp_path, out_dir=tmp_path / "plan",
+        source_index={"entries": [{"source_ref": "req#FR-1", "source_text": "Required behavior."}]},
+        obligations=obligations, result=initial, worker_cache=None,
+    )
+    assert result["findings"] == ["atomic-recall:invented-obligation:O-2", "other-blocker"]
+    assert not result["valid"]
+    assert _exact_invented_partition(result, obligations) == set()
+    result["findings"].remove("other-blocker")
+    assert _exact_invented_partition(result, obligations) == {"O-2"}
+    assert initial["findings"] == ["atomic-recall:invented-obligation:O-1,O-2", "other-blocker"]

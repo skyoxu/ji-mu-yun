@@ -1,0 +1,18 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "observations": [
+    "Parent recovery was choosing a semantically matching foreign ID before a later exact-ID singleton; relational recovery now requires exact IDs. Canonical resume-27 reused V3 in 5.094 seconds without model calls.",
+    "V4 schema-repair bypassed bounded classification/source review. It now uses the same bounded path; the protocol marker invalidates only judgments produced by the old transport contract.",
+    "Resume-28 failed closed when one added obligation bound two source refs. One bounded schema-repair response is now validated by the original exact source-binding gate."
+  ],
+  "validation": {
+    "regression": "source-ref-repair-regression.txt",
+    "passed": 64,
+    "subtests_passed": 4,
+    "package_tests": "source-ref-repair-package-tests.txt",
+    "package_passed": 22
+  },
+  "readiness": "Not asserted. Resume-29 still requires canonical completion.",
+  "history": "All prior cache and failure evidence retained."
+}

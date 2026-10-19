@@ -1,0 +1,20 @@
+.F....................
+======================================================================
+FAIL: test_excluded_recovery_architecture_is_absent (test_validate_skill_contract.SkillContractTests.test_excluded_recovery_architecture_is_absent) (forbidden='\\bsignature\\b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\jimuyun\.agents\skills\vdd-execution-plan\scripts\tests\test_validate_skill_contract.py", line 262, in test_excluded_recovery_architecture_is_absent
+    self.assertEqual([], offenders)
+AssertionError: Lists differ: [] != ['scripts/semantic_worker_v3_group_repair_patch.py']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'scripts/semantic_worker_v3_group_repair_patch.py'
+
+- []
++ ['scripts/semantic_worker_v3_group_repair_patch.py']
+
+----------------------------------------------------------------------
+Ran 22 tests in 7.489s
+
+FAILED (failures=1)

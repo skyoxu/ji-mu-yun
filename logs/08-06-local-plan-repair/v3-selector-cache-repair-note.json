@@ -1,0 +1,18 @@
+{
+  "schema": "vdd.local-recovery-note.v1",
+  "adr": "ADR-0041",
+  "baseline": "9ce5400a",
+  "repairs": [
+    "Normalize pytest node selectors to their file component when deciding whether V3 execution snapshots need refresh; preserve the missing-unplanned-file rejection.",
+    "Fail closed for foreign contracts in an exact bound chunk cache; ignore unrelated historical cache domains.",
+    "Append V3 split-rejection IDs and reasons to compiler progress."
+  ],
+  "red": "v3-selector-cache-red.txt: existing-file and planned-file node selectors incorrectly required refresh before the fix.",
+  "green": "v3-selector-cache-green-v3.txt: 105 passed, 4 subtests passed.",
+  "package_tests": "22 passed; v3-selector-package-tests.txt",
+  "skill_contract": "passed; v3-selector-skill-contract.txt",
+  "formal_resume": "compiler-result-resume-17.json",
+  "job": "j-hdvlbb",
+  "evidence_policy": "Existing caches and historical failure evidence preserved. No authority override or forced injected worker cache used.",
+  "execution_handoff": "The separate first-callable-validator / Quick Dev Q2 entry blocker remains unresolved."
+}

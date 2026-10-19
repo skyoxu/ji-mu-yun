@@ -665,8 +665,11 @@ def _v3_cache_requires_contract_refresh(
                 return True
         for snapshot in hint.get("execution_snapshot_paths") or []:
             if isinstance(snapshot, str):
-                candidate = root / Path(snapshot)
-                if not candidate.is_file() and snapshot not in planned:
+                # ADR-0041: use the same file component as the execution-
+                # contract gate; pytest node IDs are selectors, not filenames.
+                file_path = snapshot.split("::", 1)[0]
+                candidate = root / Path(file_path)
+                if not candidate.is_file() and snapshot not in planned and file_path not in planned:
                     return True
     return False
 

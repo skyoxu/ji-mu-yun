@@ -293,6 +293,49 @@ def test_resume_recomposes_parent_chunk_from_successful_child_caches(tmp_path, m
     assert len(calls) == prior_call_count
 
 
+@pytest.mark.parametrize("overlapping_id", [False, True, "changed-source"])
+def test_unrelated_chunk_cache_is_not_a_response_to_current_request(tmp_path, monkeypatch, overlapping_id):
+    """ADR-0041: historical chunks cannot block or supply an unrelated request."""
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+
+    raw = _inline(1)
+    historical = _inline(2)
+    if not overlapping_id:
+        del historical["obligation_contracts"]["O-000"]
+    else:
+        historical["obligation_contracts"]["O-000"]["acceptance"]["oracle"]["observable"] = "stale unrelated oracle"
+    if overlapping_id == "changed-source":
+        del historical["obligation_contracts"]["O-001"]
+    cache_dir = tmp_path / "plan/.compiler-cache"
+    cache_dir.mkdir(parents=True)
+    historical_payload = {"input": {"obligations": [
+        _obligation(oid) for oid in historical["obligation_contracts"]
+    ]}}
+    if overlapping_id == "changed-source":
+        historical_payload["input"]["obligations"][0]["subject"] = "Historical subject"
+    historical_path = cache_dir / grouped.sc._worker_cache_key(
+        f"{grouped._GROUP_STAGE}-chunk-01", historical_payload)
+    historical_text = json.dumps(historical)
+    historical_path.write_text(historical_text, encoding="utf-8")
+    calls = []
+
+    def fake_exec(**kwargs):
+        calls.append(kwargs)
+        kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
+        return 0, "OK", []
+
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+    result = grouped._live_group_repair(
+        root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
+        payload={"input": {"obligations": [_obligation("O-000")]}},
+    )
+    assert result == grouped._project(raw, refs_by_oid=_refs(raw))
+    assert len(calls) == 1
+    assert historical_path.read_text(encoding="utf-8") == historical_text
+
+
 def test_historical_dangling_assignments_still_fail_closed():
     # Same failure class reported by the user; no invented copy of their raw output.
     raw = _inline(38)
@@ -431,6 +474,13 @@ def test_transient_multi_obligation_group_degrades_to_smaller_exact_groups(tmp_p
     assert [item["obligation_ids"] for item in result["slice_hints"]] == [["O-001"], ["O-002"]]
     assert calls[0] == (["O-001", "O-002"], 2)
     assert [ids for ids, _ in calls[1:]] == [["O-001"], ["O-002"]]
+    events = [json.loads(line) for line in
+              (tmp_path / ".compiler-work/compiler-progress.jsonl").read_text(encoding="utf-8").splitlines()]
+    rejected = [event for event in events if event["event"] == "repair-rejected"]
+    assert len(rejected) == 1
+    assert rejected[0]["obligation_ids"] == ["O-001", "O-002"]
+    assert rejected[0]["reason"] == "timeout"
+    assert rejected[0]["error_type"] == "TransientV3WorkerFailure"
 
 
 def test_group_cache_identity_ignores_discovery_context_and_repair_wrapper() -> None:

@@ -1,0 +1,111 @@
+{
+  "obligation_contracts": {
+    "O-E684BB93880B": {
+      "acceptance": {
+        "assertion_ids": [
+          "A20-CANCELLATION-OWNER-NORMATIVE-REQUIREMENT",
+          "A20-CANCELLATION-OWNER-NAMED",
+          "A20-CANCELLATION-OWNER-OMISSION-DIAGNOSTIC"
+        ],
+        "given": "A subprocess capability declaration is being defined or reviewed in Package A, with disposable package variants differing only in whether cancellation/process-tree ownership is explicitly named.",
+        "oracle": {
+          "expected": "At artifact evaluation, the standard, policy and contract schema explicitly require each subprocess capability declaration to identify the owner responsible for cancellation and termination of its subprocess tree. At static validation, an otherwise conforming declaration naming that owner satisfies the ownership check; omitting the owner produces structured rejection diagnostics identifying the ownership defect and affected declaration path. This checks declared responsibility without implementing or executing process-tree control.",
+          "forbidden": [
+            "A subprocess capability declaration omits the cancellation/process-tree owner and satisfies the ownership check.",
+            "An implicit or unspecified responsibility is treated as an explicitly named owner.",
+            "Runtime return values alone establish that the normative artifacts require explicit ownership.",
+            "The inspected subprocess is executed to establish declaration ownership.",
+            "Candidate-controlled policy supplies the test's expected ownership requirement.",
+            "A missing production import, absent test, collection failure or timeout is treated as causal RED."
+          ],
+          "observable": "In scripts/sc/tests/test_skill_quality_capabilities.py::test_a20, ownership-specific artifact assertions inspect the standard, policy and contract schema. Parameter-specific direct calls to scripts.sc.validate_skill_quality.validate_package inspect ownership-check status and rejection rule ID, code and declaration path. Each ownership variant binds only its applicable assertion IDs."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20"
+        ],
+        "then": "Each subprocess capability declaration explicitly names the cancellation/process-tree owner; omission fails the ownership check.",
+        "when": "During A20 artifact-contract evaluation and static package validation, the ownership-specific cases inspect normative requirements and call the real validator on named-owner and omitted-owner variants."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A20_CANCELLATION_OWNER_CONTRACT_GAP",
+          "selector_intent": "Ownership-specific assertions within scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 must raise AssertionError if the normative artifacts do not require an explicit cancellation/process-tree owner, or if the real validate_package entry accepts an omitted owner or misclassifies a named owner. This is a declaration-contract guard, not an expected-red runtime role. Run the targeted pytest command with a 300-second execution limit; missing imports, collection failures and timeouts are harness failures."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A subprocess capabilities"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Require explicit cancellation/process-tree ownership in subprocess capability declarations and reject omitted ownership through the real static validator, within the cohesive A20 capability-check context.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Revert the ownership declaration rule coherently across validator, policy, schema and standard. No live data migration or subprocess-runtime change is authorized; preserve historical evidence and invalidate affected proofs when shared semantics change."
+        },
+        "state_transition": "A declaration under review gains an explicit assignment of cancellation and subprocess-tree termination responsibility; declarations omitting that assignment are rejected.",
+        "terminal_predicate": "Ownership-specific artifact and validator assertions pass with independent frozen expectations, applicable current/predecessor regression cases pass, and one current whole-plan terminal run covers all four authored modules. Targeted commands have a 300-second limit and terminal execution a 600-second limit. Tests/helpers freeze before formal RED and remain immutable during implementation; production owners remain outside execution snapshots. No duplicate Runner, job envelope, process-tree controller or timeout engine is introduced. Missing first-use production entry execution blocks TDD under the existing protocol; it cannot be converted into causal RED or repaired through Q2 production writes. Final acceptance retains the normal maintainer ADR decision boundary.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a20",
+            "-q"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py",
+            "-q"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

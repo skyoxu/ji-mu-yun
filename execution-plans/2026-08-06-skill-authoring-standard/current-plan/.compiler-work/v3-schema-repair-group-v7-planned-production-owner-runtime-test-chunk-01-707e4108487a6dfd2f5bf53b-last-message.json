@@ -1,0 +1,102 @@
+{
+  "obligation_contracts": {
+    "O-7EC6CD93C2B0": {
+      "acceptance": {
+        "assertion_ids": [
+          "SM-A15-raw-secret-output-policy-rejected"
+        ],
+        "given": "A disposable, explicitly authorized inspection root contains an otherwise valid Skill package whose secret-using capability declares a runtime credential owner, safe reference mechanism and denied output locations, but explicitly permits raw credential output. The fixture uses synthetic data only.",
+        "oracle": {
+          "expected": "The actual validator returns validation failure attributable to the raw secret-output policy. An unconditional-pass implementation causes the rejection assertion to fail.",
+          "forbidden": [
+            "The raw secret-output policy passes validation.",
+            "An unrelated fixture defect supplies the only reason for rejection.",
+            "A missing module, import error, absent test, timeout or environment failure is accepted as causal RED.",
+            "Real credentials are introduced into fixtures."
+          ],
+          "observable": "During scripts/sc/tests/test_skill_quality_capabilities.py::test_a15, call scripts.sc.validate_skill_quality.validate_package directly against the disposable package and inspect its structured status and the diagnostic identifying the raw-output-policy violation. Bind this assertion only to the parameter instance exercising that policy."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A15"
+        ],
+        "then": "Validation fails because the declared policy permits raw secret output.",
+        "when": "The real validator evaluates the package's secret-output policy."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "RAW_SECRET_OUTPUT_POLICY_ACCEPTED",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a15 with an explicitly identified raw-output-policy parameter bound to SM-A15-raw-secret-output-policy-rejected. Directly invoke scripts.sc.validate_skill_quality.validate_package. The observable AssertionError must arise when the actual validator accepts the prohibited policy or fails to attribute rejection to it. Run the targeted argv command with a 300-second harness limit. If the real entry cannot be imported and executed under the owning protocol, report the first-use blocker before TDD; do not seed production during Q2, substitute a lookalike or relabel import failure as RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Secret-using capability raw-output policy validation"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Reject a declared raw secret-output policy through the real callable validator, consuming the normative policy and schemas. Keep this behavior in the cohesive A3 capability-check context without expanding secret-detection claims or changing runtime credential ownership.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Rollback only this behavior's production changes while preserving predecessor functionality and existing quality-contract/result compatibility. No database, live runtime or Hosted workspace state changes are authorized. Preserve frozen tests and historical failure evidence; shared production changes invalidate affected proofs."
+        },
+        "state_transition": "An input declaring raw credential output is evaluated by the actual validator and reaches validation failure for that policy.",
+        "terminal_predicate": "The obligation-specific assertion passes through the real production entry and cannot pass against an unconditional-pass validator. Freeze tests, helpers, synthetic fixture construction and parameter-level assertion bindings before formal RED; Q2 authors only declared test inputs, and implementation changes only declared production owners. Use Accepted ADR-0041 and preserve ADR-0058/ADR-0061 boundaries. Run the targeted command within 300 seconds and a nonempty applicable predecessor regression selection; do not select future unimplemented cases. Final plan acceptance additionally requires the existing workflow's current whole-plan run of all four prescribed test modules within 600 seconds, complete runtime case coverage and normal maintainer acceptance of the proposed standard ADR. Missing first-use entry execution is blocking, not RED. Keep evidence append-only under logs, derived evidence authorizes empty, historical statuses non-authoritative, and production owners outside immutable execution snapshots. Do not modify shared controllers/evidence writers, model-routing authority, knowledge publication or historical reports; this slice grants no installation, network, sandbox, review or approval authority.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a15",
+            "-q"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}
