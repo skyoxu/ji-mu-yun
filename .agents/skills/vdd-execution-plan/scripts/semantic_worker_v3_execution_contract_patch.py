@@ -330,7 +330,7 @@ def _package_a_production_for_snapshots(snapshots: Sequence[str]) -> list[str]:
                 "scripts/sc/schemas/skill-quality-result.v1.schema.json",
             }
         )
-    return [path for path in _PACKAGE_A_PLANNED_PRODUCTION if path in owners]
+    return sorted(path for path in _PACKAGE_A_PLANNED_PRODUCTION if path in owners)
 
 
 def _existing_production_for_snapshots(snapshots: Sequence[str]) -> list[str]:
@@ -453,10 +453,18 @@ def _normalize_production_write_sets(
                 selector_paths
                 and all(_is_package_a_test_path(path) for path in selector_paths)
             ):
-                allowed = list(dict.fromkeys(selector_paths))
+                # ADR-0041: a missing write projection cannot erase a
+                # separately declared production identity. Only an all-test
+                # envelope can be recovered as test-only.
+                declared_production = [
+                    owner for owner in (owners or [])
+                    if not _is_test_path(owner) and not _is_package_a_test_path(owner)
+                ]
+                allowed = [] if declared_production else list(dict.fromkeys(selector_paths))
                 hint["allowed_write_paths"] = allowed
-                hint["production_owners"] = []
-                owners = []
+                if not declared_production:
+                    hint["production_owners"] = []
+                    owners = []
                 changed = True
             else:
                 normalized.append(hint)
@@ -486,10 +494,17 @@ def _normalize_production_write_sets(
             path in _PACKAGE_A_PLANNED_PRODUCTION
             for path in [*(owners or []), *(allowed or [])]
         )
+        package_a_test_only = (
+            not owners
+            and bool(allowed)
+            and all(_is_package_a_test_path(path) for path in allowed)
+            and bool(snapshots)
+            and all(_is_package_a_test_path(_selector_file_path(path)) for path in snapshots)
+        )
         if snapshots and (
             has_declared_package_a_production
             or exact_existing_selector
-            or promote_package_a_selectors
+            or (promote_package_a_selectors and not package_a_test_only)
         ):
             mapped_owners = _package_a_production_for_snapshots(snapshots)
             if not mapped_owners:
@@ -630,7 +645,17 @@ def _normalize_production_write_sets(
                 changed = True
         real_owners = [owner for owner in owners
                        if (root / owner).is_file() and not (root / owner).is_symlink()]
-        expanded = list(dict.fromkeys([*allowed, *real_owners]))
+        # Grouped inline and already-projected cache forms must agree.
+        # An explicitly planned, contained non-test owner needs the same write
+        # projection as an existing owner; an arbitrary missing file does not.
+        planned = _string_list(hint.get("planned_new_files")) or []
+        planned_owners = [
+            owner for owner in owners
+            if owner in planned and not _is_test_path(owner)
+            and not _is_package_a_test_path(owner)
+            and _safe_path(root, owner) is not None
+        ]
+        expanded = list(dict.fromkeys([*allowed, *real_owners, *planned_owners]))
         if expanded != allowed:
             hint["allowed_write_paths"] = expanded
             changed = True
@@ -693,17 +718,10 @@ def _findings(
 ) -> list[str]:
     if stage != "v3" and not stage.startswith("v3-schema-repair"):
         return []
-    # Keep the final validator fail-closed while making it independent of
-    # which cache projection reached it.  Historical V3 cache entries may
-    # omit owner fields or retain test-only owners; the normalizer only
-    # projects the finite Package A allowlist and leaves arbitrary paths
-    # invalid.
+    # ADR-0041: validate the actual candidate returned to the consumer.
+    # All projection happens before this gate; repairing a private copy here
+    # would validate fields that are absent from the published candidate.
     original_value = value
-    value = _normalize_production_write_sets(
-        root,
-        value,
-        promote_package_a_selectors=stage.startswith("v3-schema-repair"),
-    )
     obligations = _obligations(stage, payload)
     by_id = {
         str(item.get("obligation_id")): item
@@ -748,77 +766,13 @@ def _findings(
         for index, raw in enumerate(hints):
             if not isinstance(raw, Mapping):
                 continue
-            raw_owners = raw.get("production_owners")
-            owners = [] if raw_owners == [] else _string_list(raw_owners, nonempty=True)
+            owners = _string_list(raw.get("production_owners"))
             allowed = _string_list(raw.get("allowed_write_paths"))
             planned = _string_list(raw.get("planned_new_files"))
             snapshots = _string_list(raw.get("execution_snapshot_paths"), nonempty=True)
-            if owners in (None, []) and allowed in (None, []) and snapshots:
-                selector_paths = [_selector_file_path(snapshot) for snapshot in snapshots]
-                # An explicit empty owner list plus an all-test write set is a
-                # valid test-only envelope. Preserve it before considering the
-                # finite production projection; otherwise the projection turns
-                # a test-only slice into a production contract and the later
-                # test-only gate can never recognize it.
-                if raw_owners == [] and allowed == [] and all(
-                    _is_package_a_test_path(path) for path in selector_paths
-                ):
-                    owners = []
-                    allowed = list(dict.fromkeys(selector_paths))
-                else:
-                    projected_owners = _package_a_production_for_snapshots(snapshots)
-                    if projected_owners:
-                        owners = projected_owners
-                        allowed = list(projected_owners)
             if owners is None:
-                # A grouped cache may omit the write set entirely while still
-                # carrying an exact Package A selector. Reconstruct the finite
-                # production binding and write set before applying the strict
-                # gate; an explicit test-only write set remains test-only.
-                if allowed is None and snapshots:
-                    omitted_set_owners = _package_a_production_for_snapshots(snapshots)
-                    if omitted_set_owners:
-                        owners = omitted_set_owners
-                        allowed = list(omitted_set_owners)
-                declared_package_a_production = (
-                    bool(allowed)
-                    and any(path in _PACKAGE_A_PLANNED_PRODUCTION for path in allowed)
-                    and bool(snapshots)
-                )
-                projected_owners = []
-                if declared_package_a_production:
-                    projected_owners = _package_a_production_for_snapshots(snapshots)
-                    if not projected_owners:
-                        projected_owners = _existing_production_for_snapshots(snapshots)
-                package_a_test_only = (
-                    bool(allowed)
-                    and all(_is_package_a_test_path(path) for path in allowed)
-                    and bool(snapshots)
-                    and all(_is_package_a_test_path(_selector_file_path(snapshot)) for snapshot in snapshots)
-                )
-                if projected_owners and all(owner in allowed for owner in projected_owners):
-                    owners = projected_owners
-                elif package_a_test_only:
-                    owners = []
-                else:
-                    findings.append(f"v3-contract:slice_hints[{index}]:no-real-production-entry:obligations={raw.get('obligation_ids', [])}:snapshots={raw.get('execution_snapshot_paths', [])}")
-                    continue
-            # Some grouped/reused V3 cache projections reach the final gate
-            # after the normalizer has preserved an empty owner list.  If that
-            # same hint already declares a finite Package A production write
-            # set, re-derive its exact production owner from the frozen test
-            # selector here.  This is the same bounded mapping used by the
-            # normalizer; it does not promote a pure test-only hint.
-            if owners == [] and snapshots and allowed is not None:
-                declared_package_a_production = any(
-                    path in _PACKAGE_A_PLANNED_PRODUCTION for path in allowed
-                )
-                if declared_package_a_production:
-                    projected_owners = _package_a_production_for_snapshots(snapshots)
-                    if not projected_owners:
-                        projected_owners = _existing_production_for_snapshots(snapshots)
-                    if projected_owners and all(owner in allowed for owner in projected_owners):
-                        owners = projected_owners
+                findings.append(f"v3-contract:slice_hints[{index}]:no-real-production-entry:obligations={raw.get('obligation_ids', [])}")
+                continue
             if allowed is None or planned is None or snapshots is None:
                 continue
             allowed_set = set(allowed)
@@ -835,12 +789,6 @@ def _findings(
                     if owner not in allowed_set:
                         findings.append(f"v3-contract:slice_hints[{index}]:owner-outside-write-set:{owner}")
                 elif owner in planned_set and owner in allowed_set and not _is_test_path(owner):
-                    planned_owner = True
-                elif owner in _PACKAGE_A_PLANNED_PRODUCTION and owner in allowed_set and not _is_test_path(owner):
-                    # The exact Package A production allowlist is frozen in the
-                    # requirements. Treat an omitted projection as planned here
-                    # so a worker typo cannot turn a valid future owner into a
-                    # false contract failure.
                     planned_owner = True
                 elif owner in planned_set and owner not in allowed_set:
                     findings.append(f"v3-contract:slice_hints[{index}]:owner-outside-write-set:{owner}")

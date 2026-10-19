@@ -7,6 +7,24 @@ The missing step is **one local canonical compile/repair**, not a new round of
 requirements design or a Bootstrap review. A successful compile is still
 required; its result must not be assumed in advance.
 
+## 2026-10-19 V3 compiler continuation
+
+The local follow-up reached V3 but reported inconsistent owner/write/planned
+fields after grouped repair. This branch now normalizes those fields before
+cache admission, preserves explicit test-only roles and validates the actual
+returned candidate. Existing workflow instructions now remain in the native V3
+authoring context and are excluded from V1 product extraction; the 25 product
+rows are unchanged. Read repair/2026-10-19-v3-projection.md for the bounded fix.
+
+Synchronize the latest branch, then use the existing compile command below on
+the existing local current-plan/ with --resume-from first-failed-stage. Preserve
+its real worker caches and failed records. The changed source/V1 input requires
+normal source-bound revalidation, not unconditional V3-only replay. Do not use
+--v1-reuse-from-plan/--v1-reuse-from-git-ref overrides, --worker-cache fixture
+injection, old whole-domain V1/V3 replacement or hand-authored compiler-state. The deterministic maintenance tests
+are not V3/V4 success or permission to start Quick Dev. Any remaining semantic
+finding still requires normal bounded repair; only actual plan-ready can hand off.
+
 ## Inputs and authority
 
 - Repository baseline: `f7ac19dbc1dde82e73f91854b5dc0c157c78703a`.

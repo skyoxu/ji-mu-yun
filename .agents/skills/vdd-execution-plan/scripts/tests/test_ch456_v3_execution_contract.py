@@ -250,7 +250,7 @@ def test_package_a_declared_future_owner_is_projected_as_planned(tmp_path: Path)
     ))
 
 
-def test_grouped_repair_promotes_package_a_selector_only_hint_to_planned_owner(tmp_path: Path) -> None:
+def test_grouped_repair_preserves_explicit_package_a_test_only_hint(tmp_path: Path) -> None:
     candidate = {"slice_hints": [{
         **_hint(
             ["O-1"],
@@ -264,9 +264,9 @@ def test_grouped_repair_promotes_package_a_selector_only_hint_to_planned_owner(t
         tmp_path, candidate, promote_package_a_selectors=True
     )
     hint = projected["slice_hints"][0]
-    assert "scripts/sc/validate_skill_quality.py" in hint["production_owners"]
-    assert "scripts/sc/validate_skill_quality.py" in hint["allowed_write_paths"]
-    assert "scripts/sc/validate_skill_quality.py" in hint["planned_new_files"]
+    assert hint["production_owners"] == []
+    assert hint["allowed_write_paths"] == ["scripts/sc/tests/test_skill_quality_core.py"]
+    assert hint["planned_new_files"] == ["scripts/sc/tests/test_skill_quality_core.py"]
     assert not any("no-real-production-entry" in item for item in _findings(
         tmp_path, "v3-schema-repair-group-v7", {"obligations": [_obligation("O-1")]}, projected
     ))
@@ -436,14 +436,16 @@ def test_package_a_test_only_hint_rewrites_null_production_owners(tmp_path: Path
     ))
 
 
-def test_package_a_test_only_findings_accept_null_production_owners(tmp_path: Path) -> None:
+def test_package_a_test_only_findings_require_normalized_empty_owners(tmp_path: Path) -> None:
     test_path = "scripts/sc/tests/test_skill_quality_examples.py"
     candidate = {"slice_hints": [{
         **_hint(["O-1"], allowed=[test_path], planned=[test_path]),
         "production_owners": None,
         "execution_snapshot_paths": [test_path],
     }]}
-    findings = _findings(tmp_path, "v3", {"obligations": [_obligation("O-1")]}, candidate)
+    projected = _normalize_production_write_sets(tmp_path, candidate)
+    assert projected["slice_hints"][0]["production_owners"] == []
+    findings = _findings(tmp_path, "v3", {"obligations": [_obligation("O-1")]}, projected)
     assert not any("no-real-production-entry" in item for item in findings)
 
 
@@ -537,7 +539,9 @@ def test_package_a_owner_allowlist_is_planned_even_when_worker_omits_projection(
         **_hint(["O-1"], allowed=[owner], planned=[]),
         "production_owners": [owner],
     }]}
-    findings = _findings(tmp_path, "v3", {"obligations": [_obligation("O-1")]}, candidate)
+    projected = _normalize_production_write_sets(tmp_path, candidate)
+    assert owner in projected["slice_hints"][0]["planned_new_files"]
+    findings = _findings(tmp_path, "v3", {"obligations": [_obligation("O-1")]}, projected)
     assert not any("no-real-production-entry" in item for item in findings)
 
 
@@ -785,3 +789,139 @@ def test_path_grounding_maps_restore_recovery_selector_only_for_sm_r07(tmp_path:
         "PhaseA.Platform.Tests/PhaseB/Repair/RestoreBoundaryTests.cs"
     ]
     assert changes
+
+
+# ADR-0041: repair projections preserve declared execution roles and raw history.
+def test_group_cache_projects_future_owner_before_refresh_check(tmp_path: Path) -> None:
+    import json
+    import semantic_worker_v3_group_repair_patch as grouped
+
+    oid = "O-CAFE"
+    owner = "scripts/sc/validate_skill_quality.py"
+    test = "scripts/sc/tests/test_skill_quality_core.py"
+    payload = {"input": {"obligations": [_obligation(oid)]}}
+    hint = {**_hint([oid], allowed=[owner], planned=[test]),
+            "production_owners": [owner], "execution_snapshot_paths": [test]}
+    raw = {"obligation_contracts": {oid: {
+        "acceptance": {k: v for k, v in _acceptance([oid]).items() if k != "obligation_ids"},
+        "failure_intents": [{k: v for k, v in _failure([oid]).items() if k != "obligation_ids"}],
+        "slice_hint": {k: v for k, v in hint.items() if k != "obligation_ids"},
+    }}}
+    cache = tmp_path / "plan/.compiler-cache" / grouped.sc._worker_cache_key(
+        grouped._GROUP_STAGE, grouped.group_cache_identity_payload(payload))
+    cache.parent.mkdir(parents=True)
+    cache.write_text(json.dumps(raw), encoding="utf-8")
+    original = cache.read_bytes()
+
+    projected = grouped._cached_group_result(root=tmp_path, out_dir=tmp_path / "plan", payload=payload)
+
+    assert projected is not None, "A repairable redundant planned field must not force another model call"
+    result = projected["slice_hints"][0]
+    assert set(result["production_owners"]) <= set(result["allowed_write_paths"])
+    assert owner in result["planned_new_files"]
+    assert cache.read_bytes() == original
+
+
+def test_schema_repair_keeps_test_only_and_production_candidates_separate(tmp_path: Path) -> None:
+    test = "scripts/sc/tests/test_skill_quality_core.py"
+    owner = "scripts/sc/validate_skill_quality.py"
+    obligations = [_obligation("O-CAFE"), _obligation("O-BEEF")]
+    obligations[0]["obligation_kind"] = "constraint"
+    acceptances = [_acceptance([item["obligation_id"]]) for item in obligations]
+    for acceptance, obligation in zip(acceptances, obligations):
+        acceptance["oracle"]["expected"] = obligation["observable_result"]
+        acceptance["assertion_ids"] = ["ASSERT-" + obligation["obligation_id"]]
+    failures = [_failure([item["obligation_id"]]) for item in obligations]
+    failures[0]["failure_family"] = "test-harness-failure"
+    value = {"acceptances": acceptances, "failure_intents": failures, "slice_hints": [
+        {**_hint(["O-CAFE"], allowed=[test], planned=[test]),
+         "production_owners": [], "execution_snapshot_paths": [test]},
+        {**_hint(["O-BEEF"], allowed=[], planned=[test]),
+         "production_owners": [owner], "allowed_write_paths": None,
+         "execution_snapshot_paths": [test]},
+    ]}
+
+    result = normalize_v3_cached_result(root=tmp_path, out_dir=tmp_path / "plan",
+        stage="v3-schema-repair", payload={"input": {"obligations": obligations}}, value=value)
+
+    tests_only, production = result["slice_hints"]
+    assert tests_only["production_owners"] == []
+    assert tests_only["allowed_write_paths"] == [test]
+    assert owner in production["production_owners"]
+    assert set(production["production_owners"]) <= set(production["allowed_write_paths"])
+    assert set(production["production_owners"]) <= set(production["planned_new_files"])
+    assert value["slice_hints"][1]["allowed_write_paths"] is None
+
+
+def test_initial_normalization_preserves_declared_owner_when_write_set_is_omitted(tmp_path: Path) -> None:
+    owner = "scripts/sc/skill_quality_examples.py"
+    test = "scripts/sc/tests/test_skill_quality_examples.py"
+    value = {"slice_hints": [{**_hint(["O-CAFE"], allowed=[], planned=[test]),
+        "production_owners": [owner], "allowed_write_paths": None,
+        "execution_snapshot_paths": [test]}]}
+
+    result = _normalize_production_write_sets(tmp_path, value)["slice_hints"][0]
+
+    assert owner in result["production_owners"]
+    assert owner in result["allowed_write_paths"]
+    assert owner in result["planned_new_files"]
+
+
+def test_final_findings_cannot_accept_owner_planned_only_in_validator_copy(tmp_path: Path) -> None:
+    owner = "scripts/sc/validate_skill_quality.py"
+    test = "scripts/sc/tests/test_skill_quality_core.py"
+    hint = {**_hint(["O-CAFE"], allowed=[owner], planned=[test]),
+            "production_owners": [owner], "execution_snapshot_paths": [test]}
+
+    findings = _findings(tmp_path, "v3", {"obligations": [_obligation("O-CAFE")]},
+        {"acceptances": [_acceptance(["O-CAFE"])], "slice_hints": [hint]})
+
+    assert any("no-real-production-entry" in item for item in findings)
+    assert owner not in hint["planned_new_files"]
+
+
+def test_group_safety_does_not_promote_explicit_test_only_rollback(tmp_path: Path) -> None:
+    import semantic_worker_v3_group_safety_patch as safety
+
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src/owner.py").write_text("VALUE = 1\n", encoding="utf-8")
+    test = "scripts/sc/tests/test_skill_quality_core.py"
+    value = {"slice_hints": [{**_hint(["O-CAFE"], allowed=[test], planned=[test]),
+        "production_owners": [], "execution_snapshot_paths": [test]}]}
+
+    result = safety._normalize_repaired_value(tmp_path, value)["slice_hints"][0]
+
+    assert result["production_owners"] == []
+    assert result["allowed_write_paths"] == [test]
+
+
+def test_group_projection_agrees_for_inline_and_already_projected_planned_owner(tmp_path: Path) -> None:
+    import semantic_worker_v3_group_repair_patch as grouped
+
+    oid = "O-CAFE"
+    owner = "src/new_quality_rule.py"
+    test = "scripts/sc/tests/test_skill_quality_core.py"
+    payload = {"input": {"obligations": [_obligation(oid)]}}
+    hint = {**_hint([oid], allowed=[], planned=[owner, test]),
+            "production_owners": [owner], "execution_snapshot_paths": [test]}
+    acceptance = _acceptance([oid])
+    failure = _failure([oid])
+    forms = [
+        {"acceptances": [acceptance], "failure_intents": [failure], "slice_hints": [hint]},
+        {"obligation_contracts": {oid: {
+            "acceptance": {k: v for k, v in acceptance.items() if k != "obligation_ids"},
+            "failure_intents": [{k: v for k, v in failure.items() if k != "obligation_ids"}],
+            "slice_hint": {k: v for k, v in hint.items() if k != "obligation_ids"},
+        }}},
+    ]
+    results = []
+    for raw in forms:
+        result = grouped._project_execution_output(tmp_path, payload, raw)
+        projected_hint = result["slice_hints"][0]
+        assert projected_hint["production_owners"] == [owner]
+        assert owner in projected_hint["allowed_write_paths"]
+        assert owner in projected_hint["planned_new_files"]
+        assert grouped._project_execution_output(tmp_path, payload, result) == result
+        results.append(result)
+    assert results[0] == results[1]
+    assert hint["allowed_write_paths"] == []

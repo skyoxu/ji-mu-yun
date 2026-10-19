@@ -795,13 +795,18 @@ def compile_obligations(*, root: Path, out_dir: Path, source_index: Mapping[str,
             obligations.extend(reused[entry["requirement_id"]])
             continue
         stage = f"v1-{entry['requirement_id']}"
-        payload = {"source": entry}
+        # ADR-0041: V1 extracts product obligations from semantic source only.
+        # The full frozen entry remains available to V3; handing its authoring
+        # context to V1 would turn existing workflow controls into new features.
+        payload = {"source": {key: value for key, value in entry.items()
+                              if key != "execution_context_text"}}
         if "companions" in source_index:
             payload["companions"] = _entry_companion_context(entry, source_index["companions"])
         raw = invoke_worker(
             root=root, out_dir=out_dir, stage=stage, payload=payload, worker_cache=worker_cache,
             prompt=(
-                "Extract every independently assertable atomic obligation from the one requirement. The supplied "
+                "Extract every independently assertable atomic obligation from source.source_text only. "
+                "Source identity fields are provenance, not additional feature requirements. The supplied "
                 "companions are frozen interpretation context for this requirement only: do not duplicate every "
                 "companion clause into this row, and do not emit a duty that is not explicitly bound by the row. "
                 "Treat each semicolon-separated "

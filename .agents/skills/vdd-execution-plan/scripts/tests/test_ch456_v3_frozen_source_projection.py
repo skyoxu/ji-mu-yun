@@ -202,3 +202,54 @@ def test_rollback_owner_recovery_removes_only_recovered_owner_from_forbidden(tmp
     assert normalized["production_owners"] == ["src/owner.py"]
     assert normalized["allowed_write_paths"] == ["src/owner.py"]
     assert normalized["forbidden_paths"] == ["src/unrelated.py"]
+
+
+# ADR-0041: implementation instructions are V3 context, not V1 feature scope.
+def test_v1_does_not_receive_v3_only_execution_context(tmp_path: Path, monkeypatch) -> None:
+    sc = projection.sc
+    source = _source_index()
+    source["entries"][0]["execution_context_text"] = (
+        source["entries"][0]["source_text"] + "\nQ2 must not modify the existing Runner.")
+    captured = []
+
+    def worker(**kwargs):
+        captured.append(kwargs["payload"]["source"])
+        return {"obligations": [{
+            "source_refs": [source["entries"][0]["source_ref"]],
+            "subject": "package validation", "trigger": "validation",
+            "state_before": "unchecked", "state_after": "checked",
+            "expected_behavior": "validate the package", "observable_result": "typed result",
+            "forbidden_result": [], "requirement_type": "Product", "obligation_kind": "behavior",
+            "unresolved_fragments": [], "status": "active", "depends_on": [],
+        }]}
+
+    monkeypatch.setattr(sc, "invoke_worker", worker)
+    # Exercise the real V1 producer without starting the independent recall worker.
+    from semantic_obligation_gap_repair_patch import _BASE_COMPILE_OBLIGATIONS
+    assert len(_BASE_COMPILE_OBLIGATIONS(root=tmp_path, out_dir=tmp_path / "plan",
+        source_index=source, worker_cache=None)) == 1
+    assert "execution_context_text" not in captured[0]
+    assert captured[0]["source_text"] == source["entries"][0]["source_text"]
+    assert "execution_context_text" in source["entries"][0]
+
+
+def test_package_a_controls_remain_in_v3_context_without_becoming_product_source() -> None:
+    root = SCRIPTS.parents[3]
+    requirements = root / "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+    try:
+        source = projection.sc.build_source_index(root, requirements)
+        assert projection.sc.source_preflight(root, source)["valid"]
+        ids = {entry["requirement_id"] for entry in source["entries"]}
+        assert {f"SM-A{i:02d}" for i in range(1, 26)} <= ids
+        entry = next(item for item in source["entries"] if item["requirement_id"] == "SM-REPAIR-CONSTRAINTS")
+        payload = {"obligations": [{"source_refs": [entry["source_ref"]]}]}
+        _, contracts = projection._source_contracts(root, payload)
+        contract = contracts[0]
+        assert "## NFR-1:" not in contract["source_text"]
+        assert "## NFR-2:" not in contract["source_text"]
+        assert "## NFR-1:" in contract["execution_context_text"]
+        assert "## NFR-2:" in contract["execution_context_text"]
+        assert "Q2 may author positive" in contract["execution_context_text"]
+        assert "scripts/sc/_llm_backend.py" in contract["execution_context_text"]
+    finally:
+        projection._FROZEN_SOURCE_CONTEXT.set(None)

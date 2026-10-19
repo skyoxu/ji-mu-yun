@@ -1,16 +1,5 @@
 # Package A: Repository Skill Authoring Standard
 
-Status: `requirements-input`; this file is not a published VDD plan.
-Plan target: `execution-plans/2026-08-06-skill-authoring-standard`.
-Source: `docs/workflows/skill-control-plane-evolution-requirements.md`, Package A.
-Baseline: `f7ac19dbc1dde82e73f91854b5dc0c157c78703a` (main, 2026-10-18).
-
-This scoped repair is the current Package A input. It retains the original
-SAS-001 through SAS-012 outcomes and resolves their stale execution assumptions.
-The legacy JSON, Bootstrap history and plan-local predicates are historical
-inputs only. Their statuses do not authorize the current implementation.
-See `LOCAL-HANDOFF.md` for compilation and the current Quick Dev entry.
-
 ## FR-1: Standard, contract and deterministic validation entry
 
 Implement one capability-aware authoring standard and a read-only local package
@@ -138,14 +127,6 @@ published policy/schemas and the reference package against them, plus external
 review of the normative standard. A Markdown standard is not itself an installed
 Skill. Do not invent a governance Skill solely to validate that document.
 
-All test helpers operate in disposable fixture roots. Intentional corruptions
-and synthetic credentials are test data only. Tests invoke the real validator
-entry/CLI and compare structured status, rule IDs, path, code and relevant
-boundary effects. Tests must fail if the validator is replaced by an
-unconditional pass implementation. No global scan of `.agents/skills` is a
-Package A acceptance target. No Phase/Godot/Windows isolation suite is required
-for this Python/static-standard change.
-
 The terminal command, after Q2 authors the declared tests, is:
 
 ```text
@@ -156,8 +137,31 @@ The terminal integration test calls the published CLI with a literal argv list,
 `shell=False`, repository cwd and a finite timeout. It parses the fresh JSON,
 checks the declared result schema and proves the reference package passes while
 a mutated package is rejected. Merely observing exit 0, stdout containing an ID,
-a file existing or a plan status string is insufficient. Q7/Q8 exact runtime
-case coverage and Acceptance remain owned by the existing workflows.
+a file existing or a plan status string is insufficient.
+
+## Implementation binding guidance
+
+<!-- selector-repair-binding-start -->
+### Source and execution baseline
+
+Status: `requirements-input`; this file is not a published VDD plan.
+Plan target: `execution-plans/2026-08-06-skill-authoring-standard`.
+Source: `docs/workflows/skill-control-plane-evolution-requirements.md`, Package A.
+Baseline: `f7ac19dbc1dde82e73f91854b5dc0c157c78703a` (main, 2026-10-18).
+
+This scoped repair is the current Package A input. It retains the original
+SAS-001 through SAS-012 outcomes and resolves their stale execution assumptions.
+The legacy JSON, Bootstrap history and plan-local predicates are historical
+inputs only. Their statuses do not authorize the current implementation.
+See `LOCAL-HANDOFF.md` for compilation and the current Quick Dev entry.
+
+The following NFR sections and test-authoring rules constrain VDD/Quick Dev
+planning and execution through their existing owners. They are not new Package A
+runtime features and must not become independent production-write slices.
+Keep them in the generated write/forbidden/snapshot, failure-intent, validation
+and terminal contracts. They remain binding even though V1 extracts only the
+product source outside this authoring-context block. Do not reimplement the
+completed 8-05/8-24 controllers or fabricate a production owner for a guard.
 
 ## NFR-1: Scope and authority limits
 
@@ -221,13 +225,23 @@ regression list, and Q8 requires one current whole-plan terminal validation.
 The implementation worker cannot review/accept its own output or commit/merge
 on behalf of the maintainer.
 
-## Implementation binding guidance
+All test helpers operate in disposable fixture roots. Intentional corruptions
+and synthetic credentials are test data only. Tests invoke the real validator
+entry/CLI and compare structured status, rule IDs, path, code and relevant
+boundary effects. Tests must fail if the validator is replaced by an
+unconditional pass implementation. No global scan of `.agents/skills` is a
+Package A acceptance target. No Phase/Godot/Windows isolation suite is required
+for this Python/static-standard change.
 
-<!-- selector-repair-binding-start -->
+Q7/Q8 exact runtime
+case coverage and Acceptance remain owned by the existing workflows.
+
 This section is V3 authoring metadata, not additional product scope. Grouping
 labels A1--A4 are suggestions, not published slice IDs or evidence identities.
 The compiler may split atomic behavior lanes when necessary, but may not merge
-independent oracles or omit any A01--A25 intent or either NFR constraint.
+independent oracles or omit any A01--A25 intent. Retain both NFR constraints
+in the applicable generated boundaries and checks; their existing workflow
+consumers are not new Package A implementation obligations.
 
 | Group | Depends on | Intent coverage | Q2 test owner | Production owner |
 | --- | --- | --- | --- | --- |

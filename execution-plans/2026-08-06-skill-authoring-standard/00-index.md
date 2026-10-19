@@ -2,9 +2,21 @@
 
 Current state: **requirements refreshed; canonical compilation blocked**.
 This is not `plan-ready`, `implementation-complete` or `acceptance-passed`.
-Updated: 2026-10-18. Main baseline:
+Updated: 2026-10-19. Main baseline:
 `f7ac19dbc1dde82e73f91854b5dc0c157c78703a`.
 Work branch: `fix/08-06-skill-authoring-plan-refresh`.
+
+The 2026-10-19 compiler maintenance repair fixes grouped/cache execution-hint
+projection and retains strict validation of the returned candidate. It also
+keeps existing workflow controls in V3 authoring context instead of extracting
+them as new Package A implementation features. All 25 product intent rows are
+unchanged. See
+[the V3 repair note](repair/2026-10-19-v3-projection.md). The latest reported
+local compile stopped in V3 execution-contract validation. Because the source
+role and V1 transport changed, current source-bound V1/V3 and downstream checks
+must revalidate before Quick Dev; do not force the old V1/V3 output into reuse. The environment failure described
+below remains the historical result of the 2026-10-18 online invocation.
+No successful semantic publication is asserted by the maintenance tests.
 
 ## Current entry
 

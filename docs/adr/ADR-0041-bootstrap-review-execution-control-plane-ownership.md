@@ -69,6 +69,25 @@ Source-role contract revisions partition affected transport caches; old worker
 judgments are not silently reused as fresh judgments under a changed contract.
 The exact-ID partition, coverage thresholds and single recheck budget remain.
 
+V3 grouped wire, chunk recomposition and cached internal candidates apply the
+same environment-aware execution-hint projection before cache admission and
+execution-contract validation. Declared production owners remain writable;
+missing production owners require the exact planned-file declaration in the
+returned candidate. Exact source-authorized redundant fields may be projected,
+but a validator cannot repair only a private copy and then return different
+bytes. Raw semantic worker output and failed history remain unchanged.
+V1 receives only semantic source and provenance, excluding V3-only
+`execution_context_text`. Existing controller/Q2/RED ownership instructions are
+planning/execution context, not new product features. The original frozen
+context remains available to V3 for path, write and validation contracts;
+independent recall continues to judge the actual product source. No product
+obligation is removed by a keyword filter or replaced by a workflow instruction.
+An explicit empty-owner, all-test envelope retains its verification role across
+schema repair and rollback recovery. A repair-stage label or stale rollback
+field does not authorize promotion to a production writer. These projections
+establish declarations only; current file existence, runtime binding and
+independent V4 semantic alignment retain their existing gates and ownership.
+
 ### Existing Ownership Consequences
 
 Real-semantic evaluation supervises the public compiler CLI with an independent
