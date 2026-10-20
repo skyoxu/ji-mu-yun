@@ -274,3 +274,26 @@ def test_implementation_handoff_requires_clean_expected_red_and_binds_before_sna
         pass
     else:
         raise AssertionError("Q4 handoff must reject non-expected RED")
+
+
+def test_descriptor_combines_B_nodes_without_promoting_terminal_regression(tmp_path, monkeypatch):
+    """ADR-0041: interpreter flags and file-wide markers do not hide node gaps."""
+    from test_ch456_worker_orchestration import _fixture
+    plan, semantic, _ = _fixture(tmp_path)
+    bundle = json.loads(semantic.read_text())
+    snapshot = bundle['slices'][0]['execution_snapshot_paths'][0]
+    target = tmp_path/snapshot
+    target.write_text("import pytest\n@pytest.mark.cer_assertion('ASSERT-X')\ndef test_first(): pass\n@pytest.mark.cer_assertion('ASSERT-Y')\ndef test_second(): pass\n")
+    context_path=plan/'agent-context/S1/agent-context.json'
+    context=json.loads(context_path.read_text())
+    context['validation_commands']=[
+        [sys.executable,'-B','-m','pytest',snapshot+'::test_first','-q'],
+        [sys.executable,'-B','-m','pytest',snapshot+'::test_second','-q'],
+        [sys.executable,'-B','-m','pytest',snapshot,'tests/future_terminal.py','-q']]
+    context_path.write_text(json.dumps(context))
+    monkeypatch.setattr(stable_runner,'ROOT',tmp_path)
+    argv,targets,_=stable_runner._descriptor_inputs(bundle,plan,'S1')
+    assert '-B' in argv
+    assert snapshot+'::test_first' in argv and snapshot+'::test_second' in argv
+    assert 'tests/future_terminal.py' not in argv
+    assert targets==[snapshot]

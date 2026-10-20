@@ -130,15 +130,27 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
     normalized = [[str(item) for item in command] for command in commands]
     def pytest_parts(command: list[str]):
         offset = 2 if command[:2] == ["py", "-3"] else 1
+        while command[offset:offset + 1] == ["-B"]:
+            offset += 1
         return offset if (len(command) >= offset + 3 and command[offset:offset + 2] == ["-m", "pytest"]
                           and all(item == "-q" or not item.startswith("-") for item in command[offset + 2:])) else None
+    # Only declared frozen test files belong to this stage selector. Broader
+    # agent-context commands remain required Q6 regressions, never Q2 targets.
+    snapshot_set = set(selected.get("execution_snapshot_paths", []))
+    scoped = []
+    for index, command in enumerate(normalized):
+        offset = pytest_parts(command)
+        paths = [v.split("::", 1)[0] for v in command[offset + 2:] if v != "-q"] if offset is not None else []
+        if index == 0 or (paths and set(paths) <= snapshot_set):
+            scoped.append(command)
+    normalized = scoped
     pytest_offsets = [pytest_parts(command) for command in normalized]
     pytest_commands = (
         len(normalized) > 1
         and all(offset is not None for offset in pytest_offsets)
     )
     primary_covers_assertions = False
-    if pytest_commands:
+    if pytest_commands and not any("::" in part for part in normalized[0][pytest_offsets[0] + 2:]):
         required = {
             assertion_id
             for acceptance in bundle.get("acceptances", [])
@@ -190,6 +202,8 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
                 for item in command[offset + 2:]:
                     if item != "-q" and item not in selector_items:
                         selector_items.append(item)
+            full_files = {v for v in selector_items if "::" not in v}
+            selector_items = [v for v in selector_items if "::" not in v or v.split("::", 1)[0] not in full_files]
             argv = [*prefix, "-m", "pytest", *selector_items, "-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
     if not snapshots:
@@ -714,12 +728,14 @@ def main() -> int:
     parser.add_argument(
         "--action",
         choices=(
-            "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
+            "prepare-entry", "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
             "run-refactor", "execute-stage", "implementation-handoff", "implementation-finish", "slice-ready",
             "validate-slice", "run-terminal", "implementation-complete", "recover",
         ),
         default="preflight",
     )
+    parser.add_argument("--first-use-contract", type=Path)
+    parser.add_argument("--first-use-receipt", type=Path)
     parser.add_argument("--failure-history", type=Path)
     parser.add_argument("--state", type=Path)
     parser.add_argument("--changed-path", action="append", default=[])
@@ -760,9 +776,22 @@ def main() -> int:
             )
         elif args.action in {"preflight", "run-preflight"}:
             result = q1_preflight(semantic=semantic, slice_id=args.slice_id, profile=args.profile)
+        elif args.action == "prepare-entry":
+            if args.first_use_contract is None or args.out is None:
+                raise ValueError("prepare-entry requires --first-use-contract --out")
+            if q1_preflight(semantic=semantic, slice_id=args.slice_id, profile=args.profile).get("status") != "preflight-passed":
+                raise ValueError("prepare-entry requires current Q1 preflight")
+            from first_use_entry import prepare_entry
+            result = prepare_entry(workspace=ROOT, bundle=load_json(semantic), slice_id=args.slice_id,
+                contract=_load_json_object(args.first_use_contract, "first-use-contract"),
+                out=_inside_root(args.out, "first-use out"))
         elif args.action == "author-red":
             if args.run_dir is None:
                 raise ValueError("author-red requires --run-dir")
+            if args.first_use_receipt is not None:
+                from first_use_entry import validate_prepared_entry
+                validate_prepared_entry(workspace=ROOT, bundle=load_json(semantic), slice_id=args.slice_id,
+                    receipt=_load_json_object(args.first_use_receipt, "first-use-receipt"))
             result = q2_author_red(
                 semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, profile=args.profile,
                 timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,

@@ -61,6 +61,8 @@ def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seco
     from case_evidence import COLLECTOR
     from runtime_evidence import sha256_value
     argv = descriptor["argv"]
+    if "-m" not in argv or argv[argv.index("-m") + 1:argv.index("-m") + 2] != ["pytest"]:
+        raise ValueError("case-adapter-gap: supported Python pytest invocation required")
     index = argv.index("-m")
     args = argv[index + 2:]
     request = {"run_id": descriptor["run_id"], "stage": descriptor["stage"],

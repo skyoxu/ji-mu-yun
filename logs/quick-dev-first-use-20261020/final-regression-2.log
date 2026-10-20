@@ -1,0 +1,17 @@
+........................................................................ [ 56%]
+........................................................           [100%]
+=============================== warnings summary ===============================
+scripts/sc/tests/test_skill_quality_migration.py:34
+  /workspace/scratch/e4e648ddd442/quick-dev-first-use-20261020/scripts/sc/tests/test_skill_quality_migration.py:34: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('A22_STRICT_REJECTS_PRESTANDARD')
+
+scripts/sc/tests/test_skill_quality_migration.py:45
+  /workspace/scratch/e4e648ddd442/quick-dev-first-use-20261020/scripts/sc/tests/test_skill_quality_migration.py:45: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    marks=pytest.mark.cer_assertion('ASSERT-O-CDE014A7614A-INVENTORY-LEGACY')),
+
+scripts/sc/tests/test_skill_quality_migration.py:47
+  /workspace/scratch/e4e648ddd442/quick-dev-first-use-20261020/scripts/sc/tests/test_skill_quality_migration.py:47: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    marks=pytest.mark.cer_assertion('ASSERT-O-CDE014A7614A-STRICT-FAIL')),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+128 passed, 3 warnings, 6 subtests passed in 18.91s

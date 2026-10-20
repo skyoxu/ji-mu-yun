@@ -15,20 +15,35 @@ Plan semantic SHA-256 is
 `c647f2711e31dde964c81efa466cd9ec5235998b0c63fecc4e64dad55ff6b057`.
 These are planning results, not Package A implementation or acceptance evidence.
 
-## Remaining first-use blocker
+## First-use protocol and current implementation progress
 
-`validate_skill_quality.py` is genuinely new and remains absent. Existing Quick
-Dev forbids Q2 from creating production, rejects missing imports as behavioral
-RED, and requires real RED before Q4. A planned path admitted by VDD is not a
-runtime entry. Before implementation, resolve the owning Quick Dev first-use
-protocol or identify an already legal real-entry route. Do not seed production,
-write a test lookalike, fake RED, or relax these gates to start Package A.
+The prior online Q2 block is historical. ADR-0041 now permits the explicit,
+deterministic `prepare-entry` action: exact absent planned Python owner paths
+receive function interfaces returning None; exact planned JSON interfaces
+receive empty objects. It does not implement behavior or authorize RED. Existing
+Q2 is still test-only, while Q4 still requires real, bound expected RED.
 
-This branch adds online transport and repairs planning; it does not claim to
-solve that separate first-use protocol. No Q1/Q2/Q8 or Acceptance execution was
-performed for Package A. A Q0 call without snapshot roots/source commit correctly
-returned `current-snapshot-input-missing`; it was a negative invocation, not a
-complete handoff test.
+The actual online S10 trial used this route and observed three bound cases:
+probe classified both obligations as missing; formal RED returned expected-red;
+Q4 accepted the frozen predecessor and a bounded implementation worker; GREEN
+passed all three cases. Those records retain their then-current runtime binding.
+After the executor diagnostic repair, a fresh final-runtime probe also passed
+all three cases and classified both obligations present, with run-regression
+as the next action. Do not reuse stale RED/GREEN as current closure authority. Only missing-sidecar inventory/strict behavior is
+implemented in `scripts/sc/validate_skill_quality.py`. The other quality checks,
+the policy and both schema contracts remain incomplete. Empty JSON files are
+first-use interfaces, not accepted Package A policy or schemas.
+
+Evidence: `logs/quick-dev-first-use-20261020/live-s10/`. No Q6/Q7/Q8 or Acceptance
+has completed, and this is not an implementation-complete claim. Current S10
+agent-context also contains the full four-module Package A regression command;
+those other modules are not yet authored. Do not omit that gate, add empty test
+modules or claim S10 slice-ready just because targeted GREEN passed.
+
+S1 has no expected-red role and must not be promoted to implementation by its
+slice number. Start/resume according to the observed route and actual current
+contracts. Re-probe on current candidate/contract changes and preserve the trial
+as historical evidence when those inputs change.
 
 ## Local continuation
 
@@ -40,8 +55,8 @@ successor route if a source or semantic correction becomes necessary.
 
 For Quick Dev, select the dependency-ready slice from the published plan, not
 historical SAS IDs. Prepare the native eight-kind snapshot roots JSON for that
-scope and use the actual checked-out commit. Example only, after resolving the
-first-use blocker and preparing those inputs:
+scope and use the actual checked-out commit. Example only, after preparing the
+current snapshot inputs:
 
 ```powershell
 $compiledPlan = "execution-plans/2026-08-06-skill-authoring-standard/current-plan"

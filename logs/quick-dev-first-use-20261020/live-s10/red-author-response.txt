@@ -1,0 +1,1 @@
+Authored only the declared migration test module. Three independently marked cases call the real validate_package entry for strict rejection and inventory/strict status plus exit semantics, checking inspected bytes remain unchanged. Production, plan, descriptors and evidence were not modified. No tests have been classified by this response.

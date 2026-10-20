@@ -10,11 +10,12 @@ import case_evidence
 
 def counter(monkeypatch):
     calls = []
-    original = case_evidence.run_cases
+    import process_executor_v2 as executor
+    original = executor._run_cases_bounded
     def measured(*args, **kwargs):
         calls.append(1)
         return original(*args, **kwargs)
-    monkeypatch.setattr(case_evidence, 'run_cases', measured)
+    monkeypatch.setattr(executor, '_run_cases_bounded', measured)
     return calls
 
 

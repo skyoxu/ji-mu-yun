@@ -1,0 +1,17 @@
+.......................F                                                 [100%]
+=================================== FAILURES ===================================
+____ test_descriptor_combines_B_nodes_without_promoting_terminal_regression ____
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-2/test_descriptor_combines_B_nod0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ffb2530a960>
+
+    def test_descriptor_combines_B_nodes_without_promoting_terminal_regression(tmp_path, monkeypatch):
+        """ADR-0041: interpreter flags and file-wide markers do not hide node gaps."""
+>       plan, semantic, _ = _fixture(tmp_path)
+                            ^^^^^^^^
+E       NameError: name '_fixture' is not defined
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py:281: NameError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py::test_descriptor_combines_B_nodes_without_promoting_terminal_regression
+1 failed, 23 passed in 1.24s
