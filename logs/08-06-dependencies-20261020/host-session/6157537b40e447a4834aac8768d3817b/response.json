@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "b2ea367e93eb443d901149bc4fa21726",
+  "request_id": "6157537b40e447a4834aac8768d3817b",
+  "request_sha256": "sha256:aeb6d83978592720521d3c9acc0a718ff4ab50cc589a1f324a392a4c61a675f7",
+  "output_text": "Implemented only the missing dependency diagnostic behavior in the declared validator owner: missing records, unresolved contained local authority and exact version conflicts. JSON objects reject duplicate keys, authority reads reject traversal/absolute/symlink paths before content access, and diagnostics return only canonical dependency identity and generic relative context. No dependency execution, network, installation, package writes, tests or native evidence changes. Non-dependency sidecar conformance remains explicitly unimplemented and fail-closed; policy/schema placeholders were not presented as completed contracts.",
+  "authorizes": []
+}

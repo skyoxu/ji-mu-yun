@@ -1,0 +1,76 @@
+F..............F.....                                                    [100%]
+=================================== FAILURES ===================================
+________ test_0806_splits_independent_outcomes_without_changing_source _________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-2/test_0806_splits_independent_o0')
+
+    def test_0806_splits_independent_outcomes_without_changing_source(tmp_path):
+        value, source, bundle = inputs()
+        result = load(tmp_path, value, source, bundle)
+        assert len(result['normalized_obligations']) == 4
+        assert len(result['projected_v3']['acceptances']) == 4
+        assert all(x['source_refs'] == [value['source_ref']] for x in result['normalized_obligations'])
+        assert result['authorizes'] == []
+>       assert len(bundle['obligations']) == 286
+E       AssertionError: assert 287 == 286
+E        +  where 287 = len([{'depends_on': [], 'expected_behavior': 'Reject a governed fixture when a required declaration or its referenced requ... inputs.', 'forbidden_result': ['The standard omits input definitions.'], 'obligation_id': 'O-5EE523765F96', ...}, ...])
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py:38: AssertionError
+_____________ test_published_v3_repair_stops_at_new_v4_source_gap ______________
+
+    def test_published_v3_repair_stops_at_new_v4_source_gap() -> None:
+        with tempfile.TemporaryDirectory() as location:
+            root = Path(location)
+            (root / ".agents").mkdir()
+            (root / "AGENTS.md").write_text("Test repository.\n", encoding="utf-8")
+            requirements = root / "req.md"
+            requirements.write_text("# FR-1\nA requirement.\n", encoding="utf-8")
+            out_dir = root / "plan"
+            observations = {
+                "V0": {"entries": []},
+                "V0A": {"valid": True},
+                "V1": [],
+                "V2": {"valid": True},
+                "V3": ([], [], []),
+                "V3A": {"valid": True},
+                "V4-atomic-recall": {
+                    "valid": False, "findings": ["atomic-recall:source-gap-count:2"],
+                    "metrics": {}, "source_gap_claims": [{"source_ref": "req.md#FR-1"}],
+                },
+            }
+            def stage(_out, label, _function, *args, **kwargs):
+                return observations[label]
+            with mock.patch.object(authority, "stage_call", side_effect=stage):
+>               result = authority.compile_plan(requirements=requirements, out_dir=out_dir,
+                                                published_v3_repair=True)
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py:351: in compile_plan
+    execution_check = stage_call(out_dir, "V3-execution-preflight", check_candidate,
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py:1139: in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py:1143: in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/unittest/mock.py:1204: in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+_out = PosixPath('/tmp/tmpb9wej5rg/plan'), label = 'V3-execution-preflight'
+_function = <function check_candidate at 0x7f4269ac5bc0>
+args = (<module 'semantic_compiler' from '/workspace/scratch/e4e648ddd442/skill-authoring-next-20261020/.agents/skills/vdd-ex...req.md#FR-1', ...}], 'sha256': 'sha256:0ec177896864626f08c1dcb76c4e654d07a0e04e7298fc07729ac1d8ba392f92'}, [], [], ...)
+kwargs = {'profile': 'standard'}
+
+    def stage(_out, label, _function, *args, **kwargs):
+>       return observations[label]
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'V3-execution-preflight'
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py:128: KeyError
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py::test_0806_splits_independent_outcomes_without_changing_source
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py::test_published_v3_repair_stops_at_new_v4_source_gap
+2 failed, 19 passed in 1.43s

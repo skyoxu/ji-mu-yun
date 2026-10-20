@@ -1,0 +1,20 @@
+{
+  "schema": "quick-dev.first-use-contract.v1",
+  "plan_sha256": "sha256:c647f2711e31dde964c81efa466cd9ec5235998b0c63fecc4e64dad55ff6b057",
+  "slice_id": "S3",
+  "source_commit": "119e2407ec26fa2c1b0c4379513955cdfc5c83e1",
+  "entries": [
+    {
+      "path": "scripts/sc/skill_quality_examples.py",
+      "exports": [
+        {
+          "name": "validate_examples",
+          "parameters": [
+            "contract"
+          ],
+          "keyword_parameters": []
+        }
+      ]
+    }
+  ]
+}

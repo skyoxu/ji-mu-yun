@@ -1,88 +1,71 @@
-# Package A: Current VDD and Implementation Handoff
+# Package A: Active Plan and Quick Dev Continuation
 
-## Current result
+## Active native plan
 
-The public compiler returned `plan-ready` on 2026-10-20 using the real online
-host-session route. No local recompile is needed merely because the author was
-not running Codex CLI. Read `current-plan/compiler-state.v1.json` together with
-the bound semantic bundle, source index, semantic alignment, atomic recall and
-chain audit. Result: `logs/08-06-online-plan-repair/compiler-result-09.json`.
+Use `dependency-atomic-plan-03/` under this directory. The canonical compiler
+returned plan-ready with 289 active obligations, 289 Acceptances, 299 coverage
+edges and 25 slices. Requirements bytes remain unchanged. Semantic SHA-256:
+`7d90d6df1513cc4a6b232493e7da06e69151266a0202c91cf850e1141cdd7af0`.
+`current-plan/` retains its original 286-obligation predecessor; do not overwrite
+it or resume that published plan as though it were a failed compile.
 
-There are 286 active obligations, 286 Acceptances, 297 coverage edges and 25
-slices. Source SHA-256 is
-`220398488db6b9334321bbdba3b159e221b9be63b56453faa99eaa7ea4baec18`.
-Plan semantic SHA-256 is
-`c647f2711e31dde964c81efa466cd9ec5235998b0c63fecc4e64dad55ff6b057`.
-These are planning results, not Package A implementation or acceptance evidence.
+Compiler result: `logs/08-06-dependency-plan-repair-20261020/compiler-result-04.json`.
+Only the dependency obligation was atomically split into four outcomes.
+Unselected obligations, Acceptances, failures and execution contracts passed
+the native successor drift checks unchanged. No source requirements were added.
 
-## First-use protocol and current implementation progress
+## Current implementation
 
-The prior online Q2 block is historical. ADR-0041 now permits the explicit,
-deterministic `prepare-entry` action: exact absent planned Python owner paths
-receive function interfaces returning None; exact planned JSON interfaces
-receive empty objects. It does not implement behavior or authorize RED. Existing
-Q2 is still test-only, while Q4 still requires real, bound expected RED.
+The native S3 probe observed three missing diagnostics and a present no-execution
+boundary. Formal expected RED authorized the bounded worker. It changed only
+`scripts/sc/validate_skill_quality.py`; frozen tests/helper remained unchanged.
+GREEN, REFACTOR, both applicable Q6 regression commands and the present-behavior
+regression passed. Q7 returned slice-ready in:
+`logs/08-06-dependencies-20261020/s3-ready.json`.
+The bound source commit is `15f6e3b3680598d273f2ceb74ea0953ce4026761`.
 
-The actual online S10 trial used this route and observed three bound cases:
-probe classified both obligations as missing; formal RED returned expected-red;
-Q4 accepted the frozen predecessor and a bounded implementation worker; GREEN
-passed all three cases. Those records retain their then-current runtime binding.
-After the executor diagnostic repair, a fresh final-runtime probe also passed
-all three cases and classified both obligations present, with run-regression
-as the next action. Do not reuse stale RED/GREEN as current closure authority. Only missing-sidecar inventory/strict behavior is
-implemented in `scripts/sc/validate_skill_quality.py`. The other quality checks,
-the policy and both schema contracts remain incomplete. Empty JSON files are
-first-use interfaces, not accepted Package A policy or schemas.
+Implemented product behavior is limited to missing-sidecar inventory/strict
+outcomes and local dependency diagnostics (missing record, unresolved authority,
+version conflict). The latter performs no dependency invocation, installation,
+network fetch or inspected-package writes. Dependency conformance alone never
+returns full package pass; other sidecars still fail closed.
 
-Evidence: `logs/quick-dev-first-use-20261020/live-s10/`. No Q6/Q7/Q8 or Acceptance
-has completed, and this is not an implementation-complete claim. Current S10
-agent-context also contains the full four-module Package A regression command;
-those other modules are not yet authored. Do not omit that gate, add empty test
-modules or claim S10 slice-ready just because targeted GREEN passed.
+The JSON policy/schema files remain empty first-use interfaces. The examples
+helper remains an unimplemented interface. The normative keyword-only public
+API, main/CLI, full schema/policy validation, standard/ADR deliverables and other
+A01--A25 behavior remain outstanding. Current fixtures use the provisional
+existing callable; this is not proof of A24 API/CLI parity. Do not claim Q8,
+implementation-complete or acceptance-passed.
 
-S1 has no expected-red role and must not be promoted to implementation by its
-slice number. Start/resume according to the observed route and actual current
-contracts. Re-probe on current candidate/contract changes and preserve the trial
-as historical evidence when those inputs change.
+## Continue locally or online
 
-## Local continuation
+Fetch the working branch into a clean worktree. Read the current repository
+Quick Dev Skill and its execution/recovery guides. Use the active plan above,
+not the historical root contract. Local Codex CLI defaults remain supported;
+online callers explicitly use `docs/workflows/caller-session-execution.md`.
 
-Fetch this branch into a clean worktree and read the current VDD and Quick Dev
-Skills. Check the exact requirements hash and current plan bindings before use.
-Do not recompile an unchanged plan unnecessarily. Do not append the candidate
-repair flag to an already published plan: use the documented published-plan
-successor route if a source or semantic correction becomes necessary.
+Preserve the current S3 proof until a shared validator/policy/schema/test change
+invalidates it. Such changes require current reprobe/regression under a fresh
+run; do not edit old receipts or manufacture RED for a present behavior.
+Choose a dependency-ready slice by its actual owner/oracle/RED contract, not
+numeric slice order. Most remaining slices still share test modules and may
+need bounded source-bound repair if their independently observed outcomes mix
+or a runtime oracle has only a guard failure role. Do not globally convert
+governance/harness constraints into expected RED.
 
-For Quick Dev, select the dependency-ready slice from the published plan, not
-historical SAS IDs. Prepare the native eight-kind snapshot roots JSON for that
-scope and use the actual checked-out commit. Example only, after preparing the
-current snapshot inputs:
+Q6 regression uses applicable current and predecessor cases. The S3 successor
+corrected its context to A09 plus the existing migration module. Other slices'
+contexts may still contain the full four-module selection before all modules
+exist; repair the affected contract through VDD rather than dropping a gate or
+adding empty tests. Q8 must run the complete original four-module command after
+all required tests exist and every obligation has current closure.
 
-```powershell
-$compiledPlan = "execution-plans/2026-08-06-skill-authoring-standard/current-plan"
-$candidateCommit = git rev-parse HEAD
-py -3 -B scripts/quick_dev/run.py --plan $compiledPlan --slice <published-slice-id> --profile self-hosted --snapshot-roots <eight-root-input.json> --source-commit $candidateCommit --recommendation-only
-```
+The native runner currently uses its finite descriptor timeout; the source
+requests 300 seconds for targeted work and 600 for terminal. Reconcile that
+caller/descriptor budget before claiming whole-plan source conformance.
 
-Q0 is read-only. Require the real Q1 result before Q2. Follow native invalidation
-and reauthoring when shared frozen test modules change; do not silently edit
-previous proof inputs. Q7/Q8 and Acceptance remain the only completion owners.
-Use the normal local Codex CLI backend without an online override.
-
-## Online continuation
-
-Read `docs/workflows/caller-session-execution.md`. Initialize a fresh explicit
-session, invoke `scripts/workflow_host.py`, and answer live bound worker requests.
-The route supports VDD, Quick Dev authoring and deterministic Acceptance. It does
-not enable Bootstrap or optional complex recovery, claim a separate reviewer
-process, supply missing runtimes, or grant lifecycle authority to model text.
-
-For the failed/unpublished predecessor, the successful command was:
-
-```text
-python -B scripts/workflow_host.py --session logs/host-session-08-06-20261019 --host-timeout-seconds 3600 vdd -- --requirements execution-plans/2026-08-06-skill-authoring-standard/requirements.md --out-dir execution-plans/2026-08-06-skill-authoring-standard/current-plan --profile self-hosted --resume-from first-failed-stage --repair-timeout-seconds 3600 --v3-contract-repair execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-20-online-v3-corrections.v1.json --result-json logs/08-06-online-plan-repair/compiler-result-09.json
-```
-
-This is the recorded historical invocation, not a command to rerun against the
-now-published target. The explicit repair input is authored source-bound input,
-not a worker cache or self-issued readiness receipt.
+Keep explicit eight-kind snapshot roots and the actual checked-out Git commit.
+The retained S3 commands and roots are in `logs/08-06-dependencies-20261020/`.
+First-use prepare-entry is explicit, bounded and non-authorizing; Q2 is test-only
+and Q4 still requires actual expected RED. Bootstrap, Package B, knowledge-query
+changes, Phase runtime and Acceptance have not been activated.

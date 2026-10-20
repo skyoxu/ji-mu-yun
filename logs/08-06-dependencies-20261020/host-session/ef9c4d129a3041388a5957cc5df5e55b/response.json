@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "b2ea367e93eb443d901149bc4fa21726",
+  "request_id": "ef9c4d129a3041388a5957cc5df5e55b",
+  "request_sha256": "sha256:32c4492151bd0b9e19697f6d635214addc8ec609eb9dab720ee4adb8becc55be",
+  "output_text": "Authored the exact S3 test/helper boundaries only. Three independently marked A09 defect variants assert typed dependency diagnostics and repaired controls; a fourth marked case observes no execution, network or writes. Actual candidate policy/schema bytes are copied unchanged. Public keyword/CLI parity and full policy compliance remain downstream behaviors, not claimed by this fixture. No production or native evidence was written.",
+  "authorizes": []
+}
