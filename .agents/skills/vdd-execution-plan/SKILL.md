@@ -165,3 +165,11 @@ a reviewed executable assertion to an expected-red role without changing its
 requirement category or existing diagnostic family. This is not automatic
 Governance conversion. See the planning guide and ADR-0041; approval decisions
 can never become runtime implementation authority through this option.
+
+## Online caller-session route
+
+For an online temporary workspace without authenticated Codex CLI, use the
+explicit [caller-session route](../../../docs/workflows/caller-session-execution.md).
+It invokes this Skill's existing native entry and retains its gates and lifecycle
+ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
+execution or acceptance evidence.

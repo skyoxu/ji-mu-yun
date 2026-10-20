@@ -74,7 +74,7 @@ def handoff_findings(bundle, workspace=None):
         commands = context.get('validation_commands', [])
         # The current CER adapter is single-process pytest. Other adapters need
         # their own explicit contract, not a file-extension fallback.
-        command = commands[0] if commands else []
+        command = [v for v in commands[0] if v != '-B'] if commands else []
         offset = 2 if command[:2] == ['py', '-3'] else 1
         targets = command[offset + 2:] if command[offset:offset + 2] == ['-m', 'pytest'] else []
         paths = [v.split('::', 1)[0] for v in targets if v.endswith('.py') or '.py::' in v]
@@ -90,7 +90,8 @@ def handoff_findings(bundle, workspace=None):
             # slice's frozen test surface.  Require exact slice-wide marker
             # coverage, not an impossible copy of every marker into each
             # individual pytest entry file.
-            for other_command in commands:
+            for raw_command in commands:
+                other_command = [v for v in raw_command if v != '-B']
                 other_offset = 2 if other_command[:2] == ['py', '-3'] else 1
                 other_targets = (other_command[other_offset + 2:]
                                  if other_command[other_offset:other_offset + 2] == ['-m', 'pytest'] else [])

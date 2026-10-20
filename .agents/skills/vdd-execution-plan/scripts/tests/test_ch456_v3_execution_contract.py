@@ -925,3 +925,21 @@ def test_group_projection_agrees_for_inline_and_already_projected_planned_owner(
         results.append(result)
     assert results[0] == results[1]
     assert hint["allowed_write_paths"] == []
+
+
+def test_pytest_node_snapshot_projects_only_declared_file_for_v7(tmp_path):
+    """ADR-0041: preserve selector identity in argv, file identity in snapshots."""
+    owner = 'src/subject.py'
+    test = 'tests/test_subject.py'
+    node = test + '::test_value[boundary]'
+    hint = {'production_owners': [owner], 'allowed_write_paths': [owner],
+            'execution_snapshot_paths': [node], 'planned_new_files': [owner, test],
+            'validation_commands': [['python', '-m', 'pytest', node]]}
+    value = {'slice_hints': [hint]}
+    result = _normalize_production_write_sets(tmp_path, value)
+    assert result['slice_hints'][0]['execution_snapshot_paths'] == [test]
+    assert result['slice_hints'][0]['validation_commands'][0][-1] == node
+    assert hint['execution_snapshot_paths'] == [node]
+    unplanned = {'slice_hints': [{**hint, 'planned_new_files': [owner]}]}
+    denied = _normalize_production_write_sets(tmp_path, unplanned)
+    assert denied['slice_hints'][0]['execution_snapshot_paths'] == [node]

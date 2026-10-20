@@ -211,3 +211,13 @@ def test_cli_refuses_drift_or_missing_review_without_publishing(cli_root, fault)
     assert result.returncode == 1
     assert json.loads(result.stdout)['status'] == 'repair-vdd'
     assert not (out / 'compiler-state.v1.json').exists()
+
+
+def test_handoff_accepts_python_no_bytecode_option_without_changing_target(tmp_path):
+    bundle = repaired()
+    for context in bundle['agent_contexts']:
+        for command in context['validation_commands']:
+            command.insert(1, '-B')
+    assert handoff_findings(bundle, workspace=tmp_path) == []
+    bundle['agent_contexts'][0]['validation_commands'][0] = ['python', '-B', '-c', 'print(1)']
+    assert any('missing-authorable-pytest-entry' in f for f in handoff_findings(bundle, workspace=tmp_path))

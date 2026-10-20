@@ -375,3 +375,16 @@ successor still requires fresh V4 and every downstream gate. Historical plan,
 cache, Quick Dev evidence, authorization and C3 status remain unchanged. If
 fresh atomic recall discovers a source gap, this successor stops at V4; it
 does not silently expand V1 under an Acceptance-only correction.
+
+### Explicit caller-session transport (2026-10-20)
+
+The maintainer authorized an additional host-session transport for VDD, Quick
+Dev and deterministic Acceptance in online workspaces. The shared backend may
+publish bound pending requests for the trusted current caller and consume its
+actual responses, without requiring a Codex executable or API credentials.
+Requests bind repository/session, nonce, exact prompt, mode and deadline; replies
+are single-use non-authorizing inputs. Native consumers still own schema,
+semantic, write-set, test and lifecycle checks. This is not an adversarial
+sandbox or proof of a separate reviewer process. Local CLI defaults and optional
+Bootstrap/complex-recovery capability policy remain unchanged. See
+`docs/workflows/caller-session-execution.md`.

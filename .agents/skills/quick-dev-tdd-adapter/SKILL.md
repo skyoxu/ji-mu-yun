@@ -82,3 +82,11 @@ Completion remains Q7 exact case/assertion coverage plus Q8 whole-plan terminal 
 Historical v1 plans are read-only compatibility inputs. The legacy combined receipt/observation fields cannot become current completion authority. The historical replay harness never authorizes current evidence. Read the compatibility guide only when handling those inputs.
 
 Q6 uses `tools/regression_gate.py`. `standard` and `self-hosted` must consume the slice `agent-context.validation_commands`; missing context, an empty required command set, timeout, nonzero exit, or zero-case pytest regression blocks publication before REFACTOR runtime edges/stage result. `fast-ship` may omit extra regressions but never the primary selector truth floor. Read the execution guide before running stages.
+
+## Online caller-session route
+
+For an online temporary workspace without authenticated Codex CLI, use the
+explicit [caller-session route](../../../docs/workflows/caller-session-execution.md).
+It invokes this Skill's existing native entry and retains its gates and lifecycle
+ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
+execution or acceptance evidence.

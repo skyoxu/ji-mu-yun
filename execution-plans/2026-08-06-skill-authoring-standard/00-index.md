@@ -1,91 +1,43 @@
-# Skill Authoring Standard: Current Package A Repair
+# Skill Authoring Standard: Package A
 
-Current state: **requirements refreshed; canonical compilation blocked**.
-This is not `plan-ready`, `implementation-complete` or `acceptance-passed`.
-Updated: 2026-10-19. Main baseline:
-`f7ac19dbc1dde82e73f91854b5dc0c157c78703a`.
-Work branch: `fix/08-06-skill-authoring-plan-refresh`.
+Current VDD state: **plan-ready** (native compiler publication, 2026-10-20).
+Implementation and acceptance have not run. The first-use Quick Dev limitation
+below remains open; plan-ready does not mean immediate implementation readiness.
 
-The 2026-10-19 compiler maintenance repair fixes grouped/cache execution-hint
-projection and retains strict validation of the returned candidate. It also
-keeps existing workflow controls in V3 authoring context instead of extracting
-them as new Package A implementation features. All 25 product intent rows are
-unchanged. See
-[the V3 repair note](repair/2026-10-19-v3-projection.md). The latest reported
-local compile stopped in V3 execution-contract validation. Because the source
-role and V1 transport changed, current source-bound V1/V3 and downstream checks
-must revalidate before Quick Dev; do not force the old V1/V3 output into reuse. The environment failure described
-below remains the historical result of the 2026-10-18 online invocation.
-No successful semantic publication is asserted by the maintenance tests.
+- Branch: `fix/08-06-skill-authoring-plan-refresh`.
+- Current plan: `current-plan/semantic-plan-bundle.v1.json`.
+- Plan ID: `PLAN-D6248F18A869`.
+- Plan semantic SHA-256: `c647f2711e31dde964c81efa466cd9ec5235998b0c63fecc4e64dad55ff6b057`.
+- Coverage: 286 active obligations, 286 Acceptances, 297 exact coverage edges,
+  25 slices; zero source gaps or invented obligations.
+- Source bytes and all 25 product intent rows remain unchanged by this online repair.
 
-The latest online precompile audit is
-[2026-10-19-precompile-audit.md](repair/2026-10-19-precompile-audit.md).
-It preserves all 25 intent IDs and all original SAS outcomes, while clarifying
-row-local static scope, A19's no-read oracle and A24's actual CLI integration
-behavior. The earlier
-projection note's byte-identical-row claim describes that earlier repair only.
-The latest bounded compiler correction carries the same-file frozen authoring
-block into row-level V3 requests and their narrowed repair. A first-use real
-production-entry limitation remains explicit before Quick Dev execution;
-planned-path feasibility is not an observed runtime baseline.
+## Start here
 
-## Current entry
+1. [requirements.md](requirements.md): authoritative Package A source.
+2. [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md): current compilation result, local/online
+   routes, first-use blocker and next action.
+3. [Online repair report](repair/2026-10-20/online-repair.md): changes, verification
+   and exact evidence paths.
+4. [Earlier reconciliation](repair/2026-10-18/reconciliation.md): original SAS
+   coverage and exclusions.
 
-1. Read [requirements.md](requirements.md): the complete, scoped Package A input.
-2. Read [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md): local compilation, the readiness
-   gate and the current Quick Dev route.
-3. Read [the reconciliation](repair/2026-10-18/reconciliation.md) for old-to-new
-   coverage, preserved exclusions and why the old route cannot be reused.
-4. Read [verification](repair/2026-10-18/verification.md) for checks actually
-   performed and what remains unverified.
+## Scope and authority
 
-The user authorized repair of this existing directory, not implementation of
-Package A production code. No Package A standard/validator or Package B Skill migration has been
-implemented by this repair; the bounded compiler fixes are maintenance work. Implementation remains the subsequent local Quick Dev task.
+Package A covers the Skill authoring standard, deterministic static package
+validator, fixtures and migration guidance. It does not implement Package B,
+knowledge query changes, Phase services, Bootstrap/internal review, or runtime
+capability enforcement. Completed 8-05 and 8-24 remain the baseline.
 
-## Scope
-
-Package A defines the standard, a deterministic **static package** validator,
-reference fixtures and Package B migration guidance. Its 25 authoring intents
-cover all 12 original SAS requirements. Four suggested implementation groups
-organize the work; canonical compilation determines actual slice IDs and exact
-behavior/Acceptance partitioning.
-
-The completed 8-05 toolchain and 8-24 Phase capabilities are the baseline.
-Their Runner, authorization, recovery, current CER probe and evidence mechanisms
-are not new work in 8-06. Package B, BMAD/VDD knowledge queries, 7-31, S1/S2/S3,
-internal review activation and app-server/SDK changes remain separate.
-
-The VDD profile is `self-hosted`; development governance is off. No new Bootstrap
-review, frozen knowledge receipt, Skill-input attestation or 95 report is needed.
-External review does not require enabling the internal review Skill.
-
-## Publication boundary
-
-Current VDD only permits `scripts/vdd/compile_plan.py` to publish canonical
-artifacts and `plan-ready`. The real public compiler was invoked and stopped
-because `codex` is unavailable. No model API backend is configured either.
-No worker fixtures, synthetic pass receipts or hand-authored semantic bundle
-were substituted.
-
-The output location is `current-plan/`, inside this same requirement directory.
-This isolates the current-format publication from the incompatible historical
-v1 contracts; it is not another requirement package or a new review lineage.
-Until successful compilation, that directory has no consumable current plan.
-The local start command must use `current-plan/` **after** publication, never the
-historical root `implementation-contract.v1.json`.
+The three Skill online-route changes are separately authorized maintenance in
+this branch. The compiled Package A write set does not authorize changing those
+Skills. Only `scripts/vdd/compile_plan.py` published this plan. Online responses
+were actual host-authored worker inputs; native schema, source, semantic,
+feasibility, chain and handoff gates decided publication.
 
 ## Historical records
 
-All pre-refresh files except this navigation index are preserved byte for byte.
-The original index is also preserved as
-[00-index.before-refresh.md](repair/2026-10-18/00-index.before-refresh.md).
-The root v1 requirements, implementation contract, command registry, plan/resume
-states, 95 report, tools, frozen inputs and review/repair results describe their
-original run only. Their `plan-ready`, authorization or blocked Bootstrap
-wording does not describe this repair. Do not run their old plan-local combined
-writers or import their evidence into the new Quick Dev run.
-
-The later successful compiler output and its exact source identity become the
-current machine-consumable input. A local maintainer/agent should then update
-this navigation status with that real result without rewriting old evidence.
+Historical v1 contracts, plan-local tools, old statuses and earlier repair records
+are not current execution authority. The previous navigation and handoff text
+are retained under `repair/2026-10-20/`. Earlier failed compiler attempts remain
+historical. Use `current-plan/`, never the root historical implementation contract.

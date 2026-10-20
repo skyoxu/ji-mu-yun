@@ -27,7 +27,7 @@ def _strings(value: Any) -> set[str]:
 
 
 def _base_key(hint: Mapping[str, Any]) -> str:
-    owners = _paths(hint, "production_owners", nonempty=True)
+    owners = _paths(hint, "production_owners")
     lane = hint.get("verification_lane")
     if lane not in sc.LANES:
         raise ValueError("slice hint verification_lane invalid")
@@ -53,7 +53,7 @@ def _compatible(cluster: Sequence[tuple[Mapping[str, Any], Mapping[str, Any]]], 
         return False
     candidate_allowed = set(_paths(candidate, "allowed_write_paths"))
     candidate_planned = set(_paths(candidate, "planned_new_files"))
-    candidate_owners = set(_paths(candidate, "production_owners", nonempty=True))
+    candidate_owners = set(_paths(candidate, "production_owners"))
     candidate_forbidden = _strings(candidate.get("forbidden_paths"))
     cluster_allowed: set[str] = set()
     cluster_planned: set[str] = set()
@@ -62,7 +62,7 @@ def _compatible(cluster: Sequence[tuple[Mapping[str, Any], Mapping[str, Any]]], 
     for _acceptance, hint in cluster:
         cluster_allowed.update(_paths(hint, "allowed_write_paths"))
         cluster_planned.update(_paths(hint, "planned_new_files"))
-        cluster_owners.update(_paths(hint, "production_owners", nonempty=True))
+        cluster_owners.update(_paths(hint, "production_owners"))
         cluster_forbidden.update(_strings(hint.get("forbidden_paths")))
     candidate_writes = candidate_allowed | candidate_planned | candidate_owners
     cluster_writes = cluster_allowed | cluster_planned | cluster_owners
@@ -104,7 +104,7 @@ def cohesive_partition_slices(obligations: Sequence[Mapping[str, Any]], acceptan
         obligation_ids = sorted({str(oid) for a, _ in pairs for oid in a["obligation_ids"]})
         related_failures = [f for f in failures if set(f.get("acceptance_ids", [])) & set(acceptance_ids)]
         first_hint = pairs[0][1]
-        production_owners = sorted({p for _, h in pairs for p in _paths(h, "production_owners", nonempty=True)})
+        production_owners = sorted({p for _, h in pairs for p in _paths(h, "production_owners")})
         allowed_write_paths = sorted({p for _, h in pairs for p in _paths(h, "allowed_write_paths")})
         execution_snapshot_paths = sorted({p for _, h in pairs for p in _paths(h, "execution_snapshot_paths", nonempty=True)})
         planned_new_files = sorted({p for _, h in pairs for p in _paths(h, "planned_new_files")})

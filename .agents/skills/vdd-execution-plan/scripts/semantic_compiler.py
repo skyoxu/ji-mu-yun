@@ -1301,7 +1301,17 @@ def feasibility(root: Path, slices: Sequence[Mapping[str, Any]], acceptances: Se
                 planned_owner = True
             else:
                 findings.append(f"{sid}:owner-missing:{owner}")
-        if not existing_owner and not planned_owner:
+        test_only_guard = (
+            slice_item["production_owners"] == []
+            and allowed
+            and all(p.startswith(("tests/", "scripts/sc/tests/")) and ".." not in p.split("/")
+                    for p in [*allowed, *planned, *slice_item["execution_snapshot_paths"]])
+            and all(failure_by_id[fid].get("failure_family") != "expected-red"
+                    for fid in slice_item["failure_intent_ids"])
+        )
+        # Final semantic validation additionally requires governance/constraint
+        # obligations; V7 only checks this bounded test-only execution surface.
+        if not existing_owner and not planned_owner and not test_only_guard:
             findings.append(f"{sid}:no-real-production-entry")
         for snapshot in slice_item["execution_snapshot_paths"]:
             path = (root / snapshot).resolve()
@@ -1373,7 +1383,21 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
     contexts = stage_call(out_dir, "agent-context", agent_contexts, slices, obligations, acceptances, hints_by_acceptance)
     feasibility_result = stage_call(out_dir, "V7", feasibility, root, slices, acceptances, failures, hints_by_acceptance)
     if not feasibility_result["valid"]:
-        return {"status": "repair-vdd", "stage": "V7", "findings": feasibility_result["findings"]}
+        # ADR-0041: preserve the exact rejected candidate for bounded authoring
+        # repair. This diagnostic is not a published plan or worker cache.
+        candidate = {"schema": "vdd.rejected-execution-candidate.v1", "authorizes": [],
+                     "source_index_sha256": source_index["sha256"],
+                     "obligations": obligations, "acceptances": acceptances,
+                     "failure_intents": failures, "slice_hints": hints,
+                     "slices": slices, "findings": feasibility_result["findings"]}
+        identity = sha256_value(candidate).removeprefix("sha256:")
+        path = out_dir / ".compiler-work" / "rejected-execution-candidates" / (identity + ".json")
+        if not path.exists():
+            atomic_json(path, candidate)
+        elif json.loads(path.read_text(encoding="utf-8")) != candidate:
+            raise ValueError("rejected execution candidate collision")
+        return {"status": "repair-vdd", "stage": "V7", "findings": feasibility_result["findings"],
+                "rejected_candidate": {"path": str(path.relative_to(out_dir)), "sha256": sha256_value(candidate)}}
     plan_id = "PLAN-" + sha256_value({"source": source_index["sha256"], "profile": profile})[7:19].upper()
     bundle = {
         "schema_version": "vdd.semantic-plan-bundle.v1", "plan_id": plan_id, "profile": profile,

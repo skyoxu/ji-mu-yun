@@ -30,6 +30,16 @@ _MAX_TRANSPORT_ATTEMPTS = 3  # user-approved automatic retry budget
 _TRACE_LIMIT = 500
 
 
+class HostWorkerStopped(BaseException):
+    """Explicit host stop bypasses semantic/schema repair retries."""
+
+    def __init__(self, code: int, stage: str):
+        self.code = code
+        self.stage = stage
+        super().__init__(f"host-session {stage} {'cancelled' if code == 130 else 'timed out'}")
+
+
+
 def _codex_config_path() -> Path:
     """Return the active user config without treating its contents as VDD input."""
     home = os.environ.get("CODEX_HOME")
@@ -349,6 +359,8 @@ def transport_invoke_worker(
     for attempt in range(1, _MAX_TRANSPORT_ATTEMPTS + 1):
         _preserve_prior_output(output)
         code, trace, argv = execute(extra_args)
+        if backend == "host-session" and code in {124, 130}:
+            raise HostWorkerStopped(code, stage)
         if code != 0 and extra_args and _unsupported_output_schema(trace):
             # Compatibility fallback for an older Codex CLI. This remains a
             # transport fallback inside the same attempt.

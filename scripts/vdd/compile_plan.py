@@ -16,6 +16,7 @@ sys.path.insert(0, str(SCRIPTS))
 import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
 from semantic_compiler_authority import compile_plan
 import semantic_compiler as semantic_compiler
+from semantic_worker_transport_patch import HostWorkerStopped
 
 
 def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
@@ -298,6 +299,9 @@ def main() -> int:
                     **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
                        if split else {}),
                 })
+    except HostWorkerStopped as exc:
+        result = {"status": "repair-vdd", "stage": exc.stage, "reason": str(exc),
+                  "transport_exit_code": exc.code, "authorizes": []}
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
         if published is not None and (args.out_dir / "compiler-state.v1.json").is_file():
             from semantic_compiler_authority import _archive_repair_publications
@@ -307,7 +311,7 @@ def main() -> int:
         args.result_json.parent.mkdir(parents=True, exist_ok=True)
         args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result, sort_keys=True))
-    return 0 if result.get("status") in {"plan-ready", "recommendation-only"} else 1
+    return result.get("transport_exit_code", 0 if result.get("status") in {"plan-ready", "recommendation-only"} else 1)
 
 
 if __name__ == "__main__":

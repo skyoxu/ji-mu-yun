@@ -435,6 +435,25 @@ def _normalize_production_write_sets(
         owners = _string_list(hint.get("production_owners"))
         allowed = _string_list(hint.get("allowed_write_paths"))
         snapshots = _string_list(hint.get("execution_snapshot_paths"))
+        # ADR-0041: a pytest node is a selector, not a filesystem snapshot.
+        # V3 already checks its file portion; retain that exact identity for
+        # V6/V7 and Quick Dev. Never infer a new planned file from a node.
+        if snapshots:
+            planned_files = set(_string_list(hint.get("planned_new_files")) or [])
+            canonical = []
+            for snapshot in snapshots:
+                file_path = _selector_file_path(snapshot)
+                safe = _safe_path(root, file_path)
+                if ("::" in snapshot and file_path.endswith(".py") and safe is not None
+                        and (file_path in planned_files or safe.is_file())):
+                    canonical.append(file_path)
+                else:
+                    canonical.append(snapshot)
+            canonical = list(dict.fromkeys(canonical))
+            if canonical != snapshots:
+                snapshots = canonical
+                hint["execution_snapshot_paths"] = snapshots
+                changed = True
         if allowed is None or (
             allowed == []
             and snapshots

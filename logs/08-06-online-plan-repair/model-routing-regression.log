@@ -1,0 +1,660 @@
+F..FFFFFFFFF.FFFF                                                     [100%]
+=================================== FAILURES ===================================
+_ PolicyContractTests.test_canonical_policy_covers_every_route_with_full_model_ids _
+
+self = <test_workflow_model_routing.PolicyContractTests testMethod=test_canonical_policy_covers_every_route_with_full_model_ids>
+
+    def test_canonical_policy_covers_every_route_with_full_model_ids(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ PolicyContractTests.test_each_owned_consumer_can_be_disabled_independently (consumer='vdd') _
+
+self = <test_workflow_model_routing.PolicyContractTests testMethod=test_each_owned_consumer_can_be_disabled_independently>
+
+    def test_each_owned_consumer_can_be_disabled_independently(self) -> None:
+        cases = {
+            "vdd": lambda policy: routing.vdd_decision("standard", policy=policy),
+            "quick_dev": lambda policy: routing.quick_dev_decision(
+                LauncherTests()._normal_facts(), policy=policy
+            ),
+            "refactor_acceptance": lambda policy: routing.refactor_acceptance_decision(
+                complex_recovery_trigger="candidate_binding_recovery_failed", policy=policy
+            ),
+        }
+        for consumer, decide in cases.items():
+            with self.subTest(consumer=consumer):
+>               policy = routing.load_policy()
+                         ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ PolicyContractTests.test_each_owned_consumer_can_be_disabled_independently (consumer='quick_dev') _
+
+self = <test_workflow_model_routing.PolicyContractTests testMethod=test_each_owned_consumer_can_be_disabled_independently>
+
+    def test_each_owned_consumer_can_be_disabled_independently(self) -> None:
+        cases = {
+            "vdd": lambda policy: routing.vdd_decision("standard", policy=policy),
+            "quick_dev": lambda policy: routing.quick_dev_decision(
+                LauncherTests()._normal_facts(), policy=policy
+            ),
+            "refactor_acceptance": lambda policy: routing.refactor_acceptance_decision(
+                complex_recovery_trigger="candidate_binding_recovery_failed", policy=policy
+            ),
+        }
+        for consumer, decide in cases.items():
+            with self.subTest(consumer=consumer):
+>               policy = routing.load_policy()
+                         ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ PolicyContractTests.test_each_owned_consumer_can_be_disabled_independently (consumer='refactor_acceptance') _
+
+self = <test_workflow_model_routing.PolicyContractTests testMethod=test_each_owned_consumer_can_be_disabled_independently>
+
+    def test_each_owned_consumer_can_be_disabled_independently(self) -> None:
+        cases = {
+            "vdd": lambda policy: routing.vdd_decision("standard", policy=policy),
+            "quick_dev": lambda policy: routing.quick_dev_decision(
+                LauncherTests()._normal_facts(), policy=policy
+            ),
+            "refactor_acceptance": lambda policy: routing.refactor_acceptance_decision(
+                complex_recovery_trigger="candidate_binding_recovery_failed", policy=policy
+            ),
+        }
+        for consumer, decide in cases.items():
+            with self.subTest(consumer=consumer):
+>               policy = routing.load_policy()
+                         ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+________ PolicyContractTests.test_short_runtime_model_alias_is_rejected ________
+
+self = <test_workflow_model_routing.PolicyContractTests testMethod=test_short_runtime_model_alias_is_rejected>
+
+    def test_short_runtime_model_alias_is_rejected(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ LauncherTests.test_active_launcher_binds_stdin_model_effort_sandbox_and_no_fallback _
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_active_launcher_binds_stdin_model_effort_sandbox_and_no_fallback>
+
+    def test_active_launcher_binds_stdin_model_effort_sandbox_and_no_fallback(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+__ LauncherTests.test_caller_cannot_self_attest_capability_or_shadow_evidence __
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_caller_cannot_self_attest_capability_or_shadow_evidence>
+
+    def test_caller_cannot_self_attest_capability_or_shadow_evidence(self) -> None:
+        forged = {
+            "status": "passed",
+>           "model": routing.load_model(),
+                     ^^^^^^^^^^^^^^^^^^^^
+            "effort": "high",
+            "backend": "codex-cli",
+            "sandbox": "workspace-write",
+            "shadowPredicateStatus": "passed",
+        }
+
+scripts/sc/tests/test_workflow_model_routing.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ LauncherTests.test_capability_proof_requires_policy_bound_producer_receipts __
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_capability_proof_requires_policy_bound_producer_receipts>
+
+    def test_capability_proof_requires_policy_bound_producer_receipts(self) -> None:
+        with self.assertRaisesRegex(routing.RoutingError, "policy-bound"):
+>           routing.build_capability_proof(route_id="vdd.complex_recovery")
+
+scripts/sc/tests/test_workflow_model_routing.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:230: in build_capability_proof
+    current = policy or load_policy()
+                        ^^^^^^^^^^^^^
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ LauncherTests.test_complex_recovery_route_retains_capability_probe_contract __
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_complex_recovery_route_retains_capability_probe_contract>
+
+    def test_complex_recovery_route_retains_capability_probe_contract(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:267: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+__ LauncherTests.test_execution_rejects_a_caller_supplied_noncanonical_policy __
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_execution_rejects_a_caller_supplied_noncanonical_policy>
+
+    def test_execution_rejects_a_caller_supplied_noncanonical_policy(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:297: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_________ LauncherTests.test_non_gpt_codex_model_id_is_valid_in_policy _________
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_non_gpt_codex_model_id_is_valid_in_policy>
+
+    def test_non_gpt_codex_model_id_is_valid_in_policy(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:275: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ LauncherTests.test_observe_only_never_invokes_runner_or_replaces_current_session _
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_observe_only_never_invokes_runner_or_replaces_current_session>
+
+    def test_observe_only_never_invokes_runner_or_replaces_current_session(self) -> None:
+>       decision = routing.quick_dev_decision(self._normal_facts())
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:94: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:467: in quick_dev_decision
+    current = policy or load_policy()
+                        ^^^^^^^^^^^^^
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_ LauncherTests.test_policy_bound_probe_and_representative_execution_build_proof _
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_policy_bound_probe_and_representative_execution_build_proof>
+
+    def test_policy_bound_probe_and_representative_execution_build_proof(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+______ LauncherTests.test_requested_actual_identity_drift_fails_execution ______
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_requested_actual_identity_drift_fails_execution>
+
+    def test_requested_actual_identity_drift_fails_execution(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:244: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+________ LauncherTests.test_unknown_model_cannot_become_an_active_route ________
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_unknown_model_cannot_become_an_active_route>
+
+    def test_unknown_model_cannot_become_an_active_route(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+_____ LauncherTests.test_unknown_or_duplicate_policy_ownership_is_rejected _____
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_unknown_or_duplicate_policy_ownership_is_rejected>
+
+    def test_unknown_or_duplicate_policy_ownership_is_rejected(self) -> None:
+>       policy = routing.load_policy()
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+scripts/sc/tests/test_workflow_model_routing.py:289: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+______ LauncherTests.test_unsupported_max_capability_leaves_route_blocked ______
+
+self = <test_workflow_model_routing.LauncherTests testMethod=test_unsupported_max_capability_leaves_route_blocked>
+
+    def test_unsupported_max_capability_leaves_route_blocked(self) -> None:
+>       decision = routing.vdd_decision(
+            "self-hosted", complex_recovery=True, recovery_trigger="bounded_repair_exhausted",
+        )
+
+scripts/sc/tests/test_workflow_model_routing.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/sc/workflow_model_routing.py:488: in vdd_decision
+    current = policy or load_policy()
+                        ^^^^^^^^^^^^^
+scripts/sc/workflow_model_routing.py:68: in load_policy
+    entry["modelId"] = load_model()
+                       ^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+codex_dir = None
+
+    def load_model(*, codex_dir: Path | None = None) -> str:
+        """Prefer the adjacent model file; fall back to config.toml when it is absent."""
+        directory = codex_dir or codex_config_dir()
+        model_path = directory / MODEL_FILE_NAME
+        config_path = directory / "config.toml"
+        selected = model_path if model_path.is_file() else config_path
+        if not selected.is_file():
+            raise ValueError("Codex model configuration is missing")
+        try:
+            config = tomllib.loads(selected.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+            raise ValueError("Codex model configuration is unreadable") from exc
+        model = config.get("model")
+        if not is_valid_model_id(model):
+>           raise ValueError("Codex model configuration must define a valid model string")
+E           ValueError: Codex model configuration must define a valid model string
+
+scripts/sc/model_config.py:39: ValueError
+=========================== short test summary info ============================
+FAILED scripts/sc/tests/test_workflow_model_routing.py::PolicyContractTests::test_canonical_policy_covers_every_route_with_full_model_ids
+SUBFAILED(consumer='vdd') scripts/sc/tests/test_workflow_model_routing.py::PolicyContractTests::test_each_owned_consumer_can_be_disabled_independently
+SUBFAILED(consumer='quick_dev') scripts/sc/tests/test_workflow_model_routing.py::PolicyContractTests::test_each_owned_consumer_can_be_disabled_independently
+SUBFAILED(consumer='refactor_acceptance') scripts/sc/tests/test_workflow_model_routing.py::PolicyContractTests::test_each_owned_consumer_can_be_disabled_independently
+FAILED scripts/sc/tests/test_workflow_model_routing.py::PolicyContractTests::test_short_runtime_model_alias_is_rejected
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_active_launcher_binds_stdin_model_effort_sandbox_and_no_fallback
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_caller_cannot_self_attest_capability_or_shadow_evidence
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_capability_proof_requires_policy_bound_producer_receipts
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_complex_recovery_route_retains_capability_probe_contract
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_execution_rejects_a_caller_supplied_noncanonical_policy
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_non_gpt_codex_model_id_is_valid_in_policy
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_observe_only_never_invokes_runner_or_replaces_current_session
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_policy_bound_probe_and_representative_execution_build_proof
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_requested_actual_identity_drift_fails_execution
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_unknown_model_cannot_become_an_active_route
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_unknown_or_duplicate_policy_ownership_is_rejected
+FAILED scripts/sc/tests/test_workflow_model_routing.py::LauncherTests::test_unsupported_max_capability_leaves_route_blocked
+17 failed, 3 passed in 0.29s

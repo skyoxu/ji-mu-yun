@@ -59,7 +59,13 @@ def validate_routing_intent(bundle):
     findings = []
     deferred_ids = {oid for item in bundle["obligations"] if item.get("status") == "deferred" for oid in [item["obligation_id"]]}
     for row in expected:
-        if row["obligation_id"] not in deferred_ids and any(not row.get(key) for key in ("acceptance_ids", "assertion_ids", "production_owners", "selector_intents", "observable", "expected_result")):
+        obligation = next(o for o in bundle["obligations"] if o["obligation_id"] == row["obligation_id"])
+        required = ["acceptance_ids", "assertion_ids", "selector_intents", "observable", "expected_result"]
+        # Pure test-only guards are checked by the final slice contract. They
+        # have no writable production owner and cannot claim behavior RED.
+        if row["production_owners"] or obligation.get("obligation_kind") not in {"governance", "constraint"}:
+            required.append("production_owners")
+        if row["obligation_id"] not in deferred_ids and any(not row.get(key) for key in required):
             findings.append("behavior-routing:unverifiable-intent:" + row["obligation_id"])
         # Each Acceptance must retain one atomic obligation; no mixed disposition cloning.
         for aid in row["acceptance_ids"]:

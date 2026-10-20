@@ -41,3 +41,16 @@ def test_missing_unplanned_red_paths_remain_fail_closed(tmp_path: Path) -> None:
     result = feasibility_with_planned_red_files(tmp_path, slices, acceptances, failures, hints)
     assert result["valid"] is False
     assert any("selector-target-missing" in item for item in result["findings"])
+
+
+def test_ownerless_guard_cannot_mask_a_production_write_or_behavior_red(tmp_path):
+    slices, acceptances, failures, hints = _case(tmp_path, planned=True)
+    slices[0]['production_owners'] = []
+    slices[0]['allowed_write_paths'] = ['tests/test_subject.py']
+    failures[0]['failure_family'] = 'semantic-contract-gap'
+    assert feasibility_with_planned_red_files(tmp_path, slices, acceptances, failures, hints)['valid']
+    failures[0]['failure_family'] = 'expected-red'
+    assert not feasibility_with_planned_red_files(tmp_path, slices, acceptances, failures, hints)['valid']
+    failures[0]['failure_family'] = 'semantic-contract-gap'
+    slices[0]['allowed_write_paths'].append('src/subject.py')
+    assert not feasibility_with_planned_red_files(tmp_path, slices, acceptances, failures, hints)['valid']
