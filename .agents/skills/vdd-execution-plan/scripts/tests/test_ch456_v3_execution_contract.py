@@ -507,17 +507,11 @@ def test_cached_v3_successor_runs_owner_normalization_before_gate(tmp_path: Path
             "execution_snapshot_paths": [test_path],
         }],
     }
-    result = normalize_v3_cached_result(
-        root=tmp_path,
-        out_dir=tmp_path,
-        stage="v3",
-        payload={"obligations": [obligation]},
-        value=cached,
-    )
-    assert result["slice_hints"][0]["production_owners"] == []
-    assert not any("no-real-production-entry" in item for item in _findings(
-        tmp_path, "v3", {"obligations": [obligation]}, result
-    ))
+    # ADR-0041: a missing owner for product RED is not a test-only guard.
+    import pytest
+    with pytest.raises(ValueError, match="unowned-production-behavior"):
+        normalize_v3_cached_result(root=tmp_path, out_dir=tmp_path, stage="v3",
+            payload={"obligations": [obligation]}, value=cached)
 
 
 def test_package_a_test_support_owner_is_planned_without_becoming_product_owner(tmp_path: Path) -> None:
@@ -835,7 +829,8 @@ def test_schema_repair_keeps_test_only_and_production_candidates_separate(tmp_pa
     failures[0]["failure_family"] = "test-harness-failure"
     value = {"acceptances": acceptances, "failure_intents": failures, "slice_hints": [
         {**_hint(["O-CAFE"], allowed=[test], planned=[test]),
-         "production_owners": [], "execution_snapshot_paths": [test]},
+         "production_owners": [], "execution_snapshot_paths": [test],
+         "rollback_scope": {"production_paths": [], "state_or_schema_compatibility": "unchanged"}},
         {**_hint(["O-BEEF"], allowed=[], planned=[test]),
          "production_owners": [owner], "allowed_write_paths": None,
          "execution_snapshot_paths": [test]},

@@ -347,6 +347,15 @@ def compile_plan(
         _attempt(out_dir, "v3a", result)
         return result
 
+    from execution_preflight import check_candidate
+    execution_check = stage_call(out_dir, "V3-execution-preflight", check_candidate,
+        gate.sc, root, out_dir, source_index, obligations, acceptances, failures, _hints, profile=profile)
+    if not execution_check["valid"]:
+        result = {"status": "repair-vdd", "stage": "V3-execution-preflight",
+                  "repair_class": "execution-contract", **execution_check}
+        _attempt(out_dir, "v3-execution-preflight", result)
+        return result
+
     recall = stage_call(out_dir, "V4-atomic-recall", gate.atomic_recall_alignment,
         root=root,
         out_dir=out_dir,
@@ -398,6 +407,7 @@ def compile_plan(
             recommendation_only=False,
         )
     )
+    result["execution_preflight"] = execution_check
     result["atomic_quality_metrics"] = recall["metrics"]
     result["atomic_recall_alignment"] = recall_binding
     if result.get("status") != "plan-ready":

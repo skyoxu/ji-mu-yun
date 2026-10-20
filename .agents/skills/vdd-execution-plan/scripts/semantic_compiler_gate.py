@@ -7,6 +7,8 @@ model workers any plan-ready or runtime-evidence authority.
 """
 from __future__ import annotations
 
+from semantic_worker_errors import WorkerTransportError
+
 import json
 from pathlib import Path
 import sys
@@ -299,6 +301,8 @@ def normative_invoke_worker(
                 worker_cache=effective_worker_cache,
             )
             findings = _worker_schema_findings(stage, raw) + _source_binding_findings(stage, raw, payload)
+        except WorkerTransportError:
+            raise
         except (ValueError, RuntimeError) as first_error:
             raw = None
             findings = [f"worker-call:{type(first_error).__name__}:{first_error}"]

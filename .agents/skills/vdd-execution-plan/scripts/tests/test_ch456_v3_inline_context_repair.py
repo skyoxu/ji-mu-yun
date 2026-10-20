@@ -274,8 +274,7 @@ def test_resume_recomposes_parent_chunk_from_successful_child_caches(tmp_path, m
         schema_arg = kwargs["codex_extra_args"].index("--output-schema") + 1
         schema = json.loads(Path(kwargs["codex_extra_args"][schema_arg]).read_text(encoding="utf-8"))
         ids = schema["properties"]["obligation_contracts"]["required"]
-        if len(ids) > 1:
-            return 1, "transient group transport failure", []
+        assert len(ids) == 1, "resume must reuse successful exact child contracts"
         kwargs["output_last_message"].write_text(
             json.dumps({"obligation_contracts": {ids[0]: raw["obligation_contracts"][ids[0]]}}), encoding="utf-8")
         return 0, "OK", []
@@ -284,6 +283,9 @@ def test_resume_recomposes_parent_chunk_from_successful_child_caches(tmp_path, m
     monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
     args = dict(root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
                 payload={"input": {"obligations": [_obligation(oid) for oid in _refs(raw)]}})
+    # Establish successful exact child caches without timeout-driven fan-out.
+    for oid in _refs(raw):
+        grouped._live_group_repair(**{**args, "payload": {"input": {"obligations": [_obligation(oid)]}}})
     assert grouped._live_group_repair(**args) == grouped._project(raw, refs_by_oid=_refs(raw))
     for path in (tmp_path / "plan/.compiler-cache").glob(f"{grouped._GROUP_STAGE}-*.json"):
         if "chunk-" not in path.name:
@@ -434,7 +436,7 @@ def test_live_group_repair_retries_transient_worker_failure(tmp_path: Path, monk
     def fake_exec(**kwargs):
         attempts.append(kwargs)
         if len(attempts) == 1:
-            return 124, "temporary transport timeout", []
+            return 1, "service unavailable: Error code: 503", []
         kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
         return 0, "OK", []
 

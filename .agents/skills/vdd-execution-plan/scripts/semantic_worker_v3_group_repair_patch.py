@@ -499,7 +499,7 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
     slice_hint = {
         "type": "object", "additionalProperties": False,
         "properties": {
-            "production_owners": _string_array(nonempty=True),
+            "production_owners": _string_array(),
             "verification_lane": {"type": "string", "enum": sorted(sc.LANES)},
             "behavior_change": {"type": "string", "minLength": 1},
             "affected_subjects": _string_array(nonempty=True),
@@ -507,7 +507,7 @@ def _group_schema(payload: Mapping[str, Any]) -> dict[str, Any]:
             "rollback_scope": {
                 "type": "object", "additionalProperties": False,
                 "properties": {
-                    "production_paths": _string_array(nonempty=True),
+                    "production_paths": _string_array(),
                     "state_or_schema_compatibility": {"type": "string", "minLength": 1},
                 },
                 "required": ["production_paths", "state_or_schema_compatibility"],
@@ -1044,7 +1044,7 @@ def _live_group_repair_one(
     try:
         from _llm_backend import run_llm_exec, resolve_llm_backend
     except ImportError as exc:
-        raise RuntimeError("shared LLM backend is unavailable") from exc
+        raise transport.WorkerTransportError(_GROUP_STAGE, "environment", 0, "shared LLM backend is unavailable") from exc
 
     cache_dir = out_dir / ".compiler-cache"
     cache_identity = group_cache_identity_payload(payload)
@@ -1130,7 +1130,10 @@ def _live_group_repair_one(
         "Verification contracts remain independent even when execution contexts match."
 
     )
-    backend = resolve_llm_backend(None)
+    try:
+        backend = resolve_llm_backend(None)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise transport.WorkerTransportError(_GROUP_STAGE, "environment", 0, transport._bounded_trace(str(exc))) from exc
     def request_chunk(ids: list[str], label: str, rejected=None,
                       avoid_oracles: Mapping[str, Any] | None = None) -> dict[str, Any]:
         """Repair invalid cached contracts individually; retain valid peers."""
@@ -1228,36 +1231,17 @@ def _live_group_repair_one(
                 timeout_sec=transport._REPAIR_TIMEOUT_SECONDS, codex_configs=['model_reasoning_effort="medium"'],
                 codex_sandbox="read-only", codex_extra_args=[*transport.codex_worker_isolation_args(), *extra])
 
-        attempts = min(max_attempts or transport._MAX_TRANSPORT_ATTEMPTS, 1 if len(ids) > 1 else transport._MAX_TRANSPORT_ATTEMPTS)
-        traces: list[str] = []
-        for attempt in range(1, attempts + 1):
-            if output.exists():
-                output.unlink()
-            code, trace, _argv = run(extra_args)
-            if code != 0 and extra_args and transport._unsupported_output_schema(trace):
-                if output.exists():
-                    output.unlink()
-                code, trace, _argv = run([])
-            if code == 0 and output.is_file():
-                raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
-                contracts = raw.get("obligation_contracts") if isinstance(raw, Mapping) else None
-                if isinstance(contracts, Mapping):
-                    for contract in contracts.values():
-                        if isinstance(contract, dict):
-                            _declare_supported_missing_fixture(contract)
-                _project_execution_output(root, chunk_payload, raw)
-                _write_refreshable_json(chunk_cache, raw)
-                return raw
-            traces.append(f"attempt {attempt}: {_trace_summary(trace)}")
-        if len(ids) > 1:
-            # A timed-out grouped request has no semantic result. Re-request each
-            # exact obligation independently, retaining all successful siblings.
-            contracts: dict[str, Any] = {}
-            for index, oid in enumerate(ids, start=1):
-                child = request_chunk([oid], f"{label}-{index}")
-                contracts.update(child["obligation_contracts"])
-            return {"obligation_contracts": contracts}
-        raise RuntimeError("semantic worker v3-schema-repair failed after " + str(attempts) + " attempts: " + "\n".join(traces))
+        transport.execute_transport(run, backend=backend, stage=chunk_stage,
+                                    output=output, extra_args=extra_args, max_attempts=max_attempts)
+        raw = sc._parse_json_output(output.read_text(encoding="utf-8"))
+        contracts = raw.get("obligation_contracts") if isinstance(raw, Mapping) else None
+        if isinstance(contracts, Mapping):
+            for contract in contracts.values():
+                if isinstance(contract, dict):
+                    _declare_supported_missing_fixture(contract)
+        _project_execution_output(root, chunk_payload, raw)
+        _write_refreshable_json(chunk_cache, raw)
+        return raw
 
     merged: dict[str, Any] = {}
     for chunk_index, ids in enumerate(_repair_chunks(payload), start=1):
@@ -1293,27 +1277,6 @@ def _live_group_repair_one(
                     raise ValueError("V3 group repair chunks duplicate frozen obligations: " + ",".join(sorted(overlap)))
                 merged.update(contracts)
                 continue
-            output = out_dir / ".compiler-work" / f"{chunk_stage}-{call_suffix}-last-message.json"
-            output.parent.mkdir(parents=True, exist_ok=True)
-            if output.exists():
-                output.unlink()
-            schema_path = transport._schema_path(out_dir, f"{chunk_stage}-{call_suffix}", _group_schema(chunk_payload))
-            extra_args = ["--output-schema", str(schema_path)] if backend == "codex-cli" else []
-            chunk_prompt = (
-                grouped_prompt
-                + "\n\nCHUNK BINDING: return contracts for these and only these frozen obligation IDs: "
-                + ",".join(ids)
-                + "\n\nINPUT:\n" + json.dumps(chunk_payload, ensure_ascii=False, sort_keys=True)
-            )
-            def run(extra: list[str]):
-                return worker_call(run_llm_exec, progress_dir=out_dir,
-                    progress_stage=f"v3-schema-repair-chunk-{chunk_index:02d}",
-                    backend=backend, root=root, prompt=chunk_prompt, output_last_message=output,
-                    timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
-                    codex_configs=['model_reasoning_effort="medium"'], codex_sandbox="read-only",
-                    codex_extra_args=[*transport.codex_worker_isolation_args(), *extra],
-                )
-
             raw_chunk = request_chunk(ids, f"{chunk_index:02d}")
         _project_execution_output(root, chunk_payload, raw_chunk)
         contracts = raw_chunk.get("obligation_contracts") if isinstance(raw_chunk, Mapping) else None

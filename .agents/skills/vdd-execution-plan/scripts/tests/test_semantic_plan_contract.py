@@ -98,6 +98,7 @@ def test_test_only_governance_guard_preserves_empty_owner_and_rejects_unowned_be
     item = bundle['slices'][0]
     item.update(production_owners=[], allowed_write_paths=['tests/test_one.py'],
                 execution_snapshot_paths=['tests/test_one.py'], planned_new_files=['tests/test_one.py'])
+    item['rollback_scope']['production_paths'] = []
     bundle['obligations'][0].update(requirement_type='Governance', obligation_kind='governance')
     bundle['failure_intents'][0]['failure_family'] = 'semantic-contract-gap'
     bundle['behavior_routing'] = {'schema': SCHEMA, 'intents': project_intents(bundle), 'deferred': project_deferred(bundle)}

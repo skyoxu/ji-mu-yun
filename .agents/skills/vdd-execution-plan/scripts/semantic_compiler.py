@@ -16,6 +16,7 @@ import sys
 from typing import Any, Mapping, Sequence
 
 from semantic_plan_contract import STAGE_SCOPE, validate_semantic_bundle
+from execution_contract import selector_file_path, test_only_surface
 
 REQ_ID_RE = re.compile(r"^(FR-[0-9]+|NFR-[0-9]+|SM-[A-Z0-9-]+)$")
 HEADING_RE = re.compile(r"^#{1,6}\s*(FR-[0-9]+|NFR-[0-9]+|SM-[A-Z0-9-]+)\b(?:\s*[:：\-]\s*)?(.*)$", re.I)
@@ -1301,25 +1302,19 @@ def feasibility(root: Path, slices: Sequence[Mapping[str, Any]], acceptances: Se
                 planned_owner = True
             else:
                 findings.append(f"{sid}:owner-missing:{owner}")
-        test_only_guard = (
-            slice_item["production_owners"] == []
-            and allowed
-            and all(p.startswith(("tests/", "scripts/sc/tests/")) and ".." not in p.split("/")
-                    for p in [*allowed, *planned, *slice_item["execution_snapshot_paths"]])
-            and all(failure_by_id[fid].get("failure_family") != "expected-red"
-                    for fid in slice_item["failure_intent_ids"])
-        )
+        test_only_guard = test_only_surface(slice_item,
+            [failure_by_id[fid] for fid in slice_item["failure_intent_ids"]])
         # Final semantic validation additionally requires governance/constraint
         # obligations; V7 only checks this bounded test-only execution surface.
         if not existing_owner and not planned_owner and not test_only_guard:
             findings.append(f"{sid}:no-real-production-entry")
         for snapshot in slice_item["execution_snapshot_paths"]:
-            path = (root / snapshot).resolve()
+            path = (root / selector_file_path(snapshot)).resolve()
             if not path.is_file() or path.is_symlink():
                 findings.append(f"{sid}:selector-target-missing:{snapshot}")
         for fid in slice_item["failure_intent_ids"]:
             selector = failure_by_id[fid]["selector_intent"].lower()
-            if any(token in selector for token in ("assert false", "always fail", "exit 1", "raise assertionerror")):
+            if selector.strip().rstrip(".;") in {"assert false", "always fail", "exit 1", "raise assertionerror"}:
                 findings.append(f"{sid}:fixed-failure-selector:{fid}")
         for aid in slice_item["acceptance_ids"]:
             hint = hints_by_acceptance[aid]

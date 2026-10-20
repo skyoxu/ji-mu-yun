@@ -388,3 +388,37 @@ semantic, write-set, test and lifecycle checks. This is not an adversarial
 sandbox or proof of a separate reviewer process. Local CLI defaults and optional
 Bootstrap/complex-recovery capability policy remain unchanged. See
 `docs/workflows/caller-session-execution.md`.
+
+
+### Execution preflight and transport repair boundaries (2026-10-20)
+
+The maintainer authorized bounded VDD stability repairs after the 08-06 online
+compilation and review of retained 08-05/08-24 evidence. V3 candidates now have
+a non-authorizing projection through existing execution and handoff gates before
+V4 Acceptance alignment. Source recall remains distinct and may precede V3.
+Preview operates on copies, records diagnostics by content hash and never
+changes worker inputs. Final semantic, coverage and publication gates remain
+mandatory; published historical evidence is not rewritten or reclassified.
+
+Ordinary and grouped V3 schemas permit an empty owner array only as a shape.
+The shared semantic rule allows it for bounded test-only governance/constraint
+guards without expected-red or production rollback scope. An ownerless product
+behavior remains invalid. Pytest node selectors retain their identity in argv;
+filesystem checks use the file component. Conditional failure descriptions are
+not unconditional failure programs; static checks do not establish real RED.
+
+Normal/V3-group/V4-domain/V4-source-gap transports share a bounded retry policy.
+Only positively identified transient service failures retry. Environment,
+unknown failures, timeout and cancellation stop without schema repair or group
+fan-out. Successful malformed responses retain one-shot schema repair, and
+successful exact child caches survive interruption. Provider/model defaults
+and shared backend ownership remain unchanged.
+
+Absent declared future production owners are reported as consumer warnings.
+Their first-use protocol belongs to Quick Dev; this change cannot authorize Q2
+production seeding or missing-import RED. Existing exact semantic-projection
+handoff repair remains the reuse route. Semantic changes require fresh V4.
+
+Evidence and limits: `logs/vdd-stability-20261020/README.md`. This maintenance
+does not implement Package A, certify acceptance, enable Bootstrap or change
+Phase runtime behavior.

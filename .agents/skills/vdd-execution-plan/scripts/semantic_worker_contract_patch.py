@@ -105,7 +105,7 @@ def _worker_schema_findings(stage: str, value: Mapping[str, Any]) -> list[str]:
                 continue
             if not _string_list(raw.get("obligation_ids"), nonempty=True):
                 findings.append(f"{prefix}:obligation_ids:nonempty-string-list-required")
-            if not _string_list(raw.get("production_owners"), nonempty=True):
+            if not _string_list(raw.get("production_owners")):
                 findings.append(f"{prefix}:production_owners:nonempty-string-list-required")
             if raw.get("verification_lane") not in gate.sc.LANES:
                 findings.append(f"{prefix}:verification_lane:invalid")
@@ -119,7 +119,7 @@ def _worker_schema_findings(stage: str, value: Mapping[str, Any]) -> list[str]:
             if not isinstance(rollback, Mapping):
                 findings.append(f"{prefix}:rollback_scope:object-required")
             else:
-                if not _string_list(rollback.get("production_paths"), nonempty=True):
+                if not _string_list(rollback.get("production_paths")):
                     findings.append(f"{prefix}:rollback_scope.production_paths:nonempty-string-list-required")
                 compatibility = rollback.get("state_or_schema_compatibility")
                 if not isinstance(compatibility, str) or not compatibility.strip():

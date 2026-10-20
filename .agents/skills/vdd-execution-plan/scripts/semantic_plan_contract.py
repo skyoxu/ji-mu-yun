@@ -5,6 +5,8 @@ and rejects runtime evidence in VDD-authored artifacts.
 """
 from __future__ import annotations
 
+from execution_contract import ownerless_guard
+
 import argparse
 import json
 from pathlib import Path
@@ -179,15 +181,9 @@ def validate_semantic_bundle(bundle: Mapping[str, Any]) -> tuple[bool, list[str]
         elif not owners:
             # ADR-0041: a pure test-only governance guard has no production
             # owner. It must not turn product behavior into unowned execution.
-            paths = [*item.get("allowed_write_paths", []), *item.get("planned_new_files", []),
-                     *item.get("execution_snapshot_paths", [])]
             bound = [obligation_by_id.get(oid, {}) for oid in item.get("obligation_ids", [])]
-            test_only = (paths and all(isinstance(p, str) and ".." not in p.split("/")
-                         and p.startswith(("tests/", "scripts/sc/tests/")) for p in paths))
-            guard_only = bound and all(o.get("obligation_kind") in {"governance", "constraint"} for o in bound)
-            no_red = all(failure_by_id.get(fid, {}).get("failure_family") != "expected-red"
-                         for fid in item.get("failure_intent_ids", []))
-            if not (test_only and guard_only and no_red):
+            bound_failures = [failure_by_id.get(fid, {}) for fid in item.get("failure_intent_ids", [])]
+            if not ownerless_guard(item, bound, bound_failures):
                 findings.append(f"slice:{slice_id}:unowned-production-behavior")
         if item.get("verification_lane") not in {"unit", "integration", "matrix", "runtime"}:
             findings.append(f"slice:{slice_id}:verification-lane")

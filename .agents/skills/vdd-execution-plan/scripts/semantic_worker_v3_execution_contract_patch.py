@@ -17,6 +17,8 @@ the existing fail-closed schema-repair path. No finding is suppressed.
 """
 from __future__ import annotations
 
+from execution_contract import ownerless_guard, selector_file_path
+
 from pathlib import Path
 import hashlib
 import json
@@ -296,7 +298,7 @@ def _is_test_path(path: str) -> bool:
 
 def _selector_file_path(path: str) -> str:
     """Return the repository path for a pytest node selector."""
-    return path.split("::", 1)[0]
+    return selector_file_path(path)
 
 
 def _is_package_a_test_path(path: str) -> bool:
@@ -811,7 +813,13 @@ def _findings(
                     planned_owner = True
                 elif owner in planned_set and owner not in allowed_set:
                     findings.append(f"v3-contract:slice_hints[{index}]:owner-outside-write-set:{owner}")
-            if not existing_owner and not planned_owner:
+            bound_ids = set(raw.get("obligation_ids", []))
+            bound = [by_id.get(oid, {}) for oid in bound_ids]
+            bound_failures = [f for f in value.get("failure_intents", [])
+                              if bound_ids.intersection(f.get("obligation_ids", []))]
+            if owners == [] and not ownerless_guard(raw, bound, bound_failures):
+                findings.append(f"v3-contract:slice_hints[{index}]:unowned-production-behavior")
+            if not existing_owner and not planned_owner and not ownerless_guard(raw, bound, bound_failures):
                 test_only = (
                     all(owner.startswith("PhaseA.Platform.Tests/") for owner in owners)
                     and all(path.startswith("PhaseA.Platform.Tests/") or path.startswith("tests/") or path.startswith(".agents/") for path in allowed)

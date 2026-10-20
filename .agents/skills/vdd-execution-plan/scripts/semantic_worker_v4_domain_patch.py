@@ -367,11 +367,13 @@ def _invoke_source_gap_chunk(
         scripts = root / "scripts" / "sc"
         if str(scripts) not in sys.path:
             sys.path.insert(0, str(scripts))
-        from _llm_backend import run_llm_exec, resolve_llm_backend
+        try:
+            from _llm_backend import run_llm_exec, resolve_llm_backend
+            backend = resolve_llm_backend(None)
+        except (ImportError, OSError, ValueError, RuntimeError) as exc:
+            raise transport.WorkerTransportError(stage, "environment", 0, transport._bounded_trace(str(exc))) from exc
         output = out_dir / ".compiler-work" / f"{stage}-last-message.json"
         output.parent.mkdir(parents=True, exist_ok=True)
-        transport._preserve_prior_output(output)
-        backend = resolve_llm_backend(None)
         schema = _source_gap_schema(refs)
         extra = ["--output-schema", str(_schema_path(out_dir, stage, schema))] if backend == "codex-cli" else []
         full_prompt = (
@@ -384,15 +386,15 @@ def _invoke_source_gap_chunk(
             "are not gaps. Return source_gap_claims[] only; an empty array is valid. Do not invent requirements."
             "\n\nINPUT:\n" + json.dumps(payload, ensure_ascii=False, sort_keys=True)
         )
-        code, trace, _ = worker_call(
-            run_llm_exec, progress_dir=out_dir, progress_stage=stage,
-            backend=backend, root=root, prompt=full_prompt,
-            output_last_message=output, timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
-            codex_configs=['model_reasoning_effort="high"'], codex_sandbox="read-only",
-            codex_extra_args=[*transport.codex_worker_isolation_args(), *extra],
-        )
-        if code != 0 or not output.is_file():
-            raise RuntimeError(f"semantic worker {stage} failed: {transport._bounded_trace(trace)}")
+        def execute(extra_args):
+            return worker_call(
+                run_llm_exec, progress_dir=out_dir, progress_stage=stage,
+                backend=backend, root=root, prompt=full_prompt,
+                output_last_message=output, timeout_sec=transport._REPAIR_TIMEOUT_SECONDS,
+                codex_configs=['model_reasoning_effort="high"'], codex_sandbox="read-only",
+                codex_extra_args=[*transport.codex_worker_isolation_args(), *extra_args],
+            )
+        transport.execute_transport(execute, backend=backend, stage=stage, output=output, extra_args=extra)
         value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     if not isinstance(value, Mapping):
         raise ValueError(f"V4 source gap chunk {stage} is not an object")
@@ -574,7 +576,7 @@ def v4_transport_invoke_worker(
     try:
         from _llm_backend import run_llm_exec, resolve_llm_backend
     except ImportError as exc:
-        raise RuntimeError("shared LLM backend is unavailable") from exc
+        raise transport.WorkerTransportError(stage, "environment", 0, "shared LLM backend is unavailable") from exc
 
     work = out_dir / ".compiler-work"
     output = work / f"{stage}-last-message.json"
@@ -604,7 +606,10 @@ def v4_transport_invoke_worker(
         + "\n\nINPUT:\n"
         + json.dumps(_worker_input_payload(stage, payload), ensure_ascii=False, sort_keys=True)
     )
-    backend = resolve_llm_backend(None)
+    try:
+        backend = resolve_llm_backend(None)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise transport.WorkerTransportError(stage, "environment", 0, transport._bounded_trace(str(exc))) from exc
     is_schema_repair = stage.endswith("-schema-repair")
     is_v4_repair = stage in {"v4", "v4-atomic-recall", "v4-recheck"} or stage.startswith("v4-atomic-recall-chunk-")
     timeout_sec = transport._REPAIR_TIMEOUT_SECONDS if (is_schema_repair or is_v4_repair) else transport._NORMAL_TIMEOUT_SECONDS
@@ -626,12 +631,7 @@ def v4_transport_invoke_worker(
             codex_extra_args=extra,
         )
 
-    code, trace, _argv = execute(extra_args)
-    if code != 0 and extra_args and transport._unsupported_output_schema(trace):
-        transport._preserve_prior_output(output)
-        code, trace, _argv = execute([])
-    if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker {stage} failed: {transport._bounded_trace(trace)}")
+    transport.execute_transport(execute, backend=backend, stage=stage, output=output, extra_args=extra_args)
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     value = complete_if_needed(value)

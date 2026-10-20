@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any, Mapping, Sequence
 
 import semantic_compiler as sc
+from execution_contract import selector_file_path
 import semantic_worker_transport_patch  # noqa: F401  # structured JSON + bounded repair transport
 import semantic_worker_v3_domain_patch  # noqa: F401  # frozen obligation/source domain for V3
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe one-shot V3 repair
@@ -62,7 +63,7 @@ def feasibility_with_planned_red_files(
         parts = finding.split(":", 2)
         if len(parts) == 3 and parts[1] == "selector-target-missing":
             slice_id, missing_path = parts[0], parts[2]
-            if missing_path in planned_by_slice.get(slice_id, set()):
+            if selector_file_path(missing_path) in planned_by_slice.get(slice_id, set()):
                 continue
         findings.append(finding)
     return {

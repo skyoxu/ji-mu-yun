@@ -17,6 +17,7 @@ import semantic_feasibility_patch  # noqa: F401  # installs normative planned-ne
 from semantic_compiler_authority import compile_plan
 import semantic_compiler as semantic_compiler
 from semantic_worker_transport_patch import HostWorkerStopped
+from semantic_worker_errors import WorkerTransportError
 
 
 def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
@@ -299,6 +300,10 @@ def main() -> int:
                     **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
                        if split else {}),
                 })
+    except WorkerTransportError as exc:
+        result = {"status": "repair-vdd", "stage": exc.stage, "repair_class": "transport",
+                  "transport_category": exc.category, "attempts": exc.attempts,
+                  "reason": str(exc), "authorizes": []}
     except HostWorkerStopped as exc:
         result = {"status": "repair-vdd", "stage": exc.stage, "reason": str(exc),
                   "transport_exit_code": exc.code, "authorizes": []}
