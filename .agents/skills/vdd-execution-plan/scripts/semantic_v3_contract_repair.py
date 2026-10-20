@@ -57,7 +57,9 @@ def load_published_predecessor(predecessor: Path, successor: Path,
     source = json.loads((predecessor / "source-index.v1.json").read_text(encoding="utf-8"))
     entries = source.get("entries") if isinstance(source, dict) else None
     if (not isinstance(entries, list) or not entries
-            or source.get("sha256") != group.sc.sha256_value(entries)):
+            or source.get("sha256") != group.sc.sha256_value(
+                {"entries": entries, "companions": source["companions"]}
+                if "companions" in source else entries)):
         raise ValueError("published V3 predecessor source index is invalid")
     matched = False
     current_sections = {
@@ -109,6 +111,7 @@ def project_published_v3(bundle: Mapping[str, Any]) -> dict[str, Any]:
             key: deepcopy(item[key]) for key in (
                 "failure_family", "selector_intent", "expected_outcome", "failure_id")}})
     contexts = {item["slice_id"]: item for item in bundle["agent_contexts"]}
+    acceptance_by_obligation = {item["obligation_ids"][0]: item for item in bundle["acceptances"]}
     hints = []
     covered = set()
     for item in bundle["slices"]:
@@ -122,7 +125,13 @@ def project_published_v3(bundle: Mapping[str, Any]) -> dict[str, Any]:
                 "state_transition", "rollback_scope", "allowed_write_paths",
                 "execution_snapshot_paths", "planned_new_files", "terminal_predicate")},
                 "forbidden_paths": deepcopy(context["forbidden_paths"]),
-                "validation_commands": deepcopy(context["validation_commands"])})
+                "validation_commands": deepcopy(context["validation_commands"]),
+                # A merged slice may have broader preflight metadata than its
+                # individual Acceptances. Preserve each published contract.
+                **{key: deepcopy(acceptance_by_obligation[oid][key]) for key in (
+                    "verification_lane", "complexity_class", "context_lookup_required",
+                    "context_lookup_reason", "minimum_red_scope", "upgrade_conditions")
+                   if key in acceptance_by_obligation[oid]}})
     if covered != active or {item["obligation_ids"][0] for item in acceptances} != active:
         raise ValueError("published V3 projection does not cover the active domain")
     return {"acceptances": acceptances, "failure_intents": failures, "slice_hints": hints}
@@ -565,7 +574,7 @@ def load_v1_replacement(path: Path, requirements: Path, source_index: Mapping[st
 
 def load_v1_split(path: Path, requirements: Path, source_index: Mapping[str, Any],
                   predecessor: Mapping[str, Any]) -> dict[str, Any]:
-    """Validate a reviewed source-bound split of one FR-6 atomic obligation."""
+    """Validate a reviewed split of one exact source-bound active obligation."""
     value = json.loads(path.read_text(encoding="utf-8"))
     required = {"schema", "requirements_sha256", "authorizes", "source_ref", "replaced_obligation_id", "obligations", "v3_contracts"}
     if not isinstance(value, dict) or set(value) != required:
@@ -576,18 +585,25 @@ def load_v1_split(path: Path, requirements: Path, source_index: Mapping[str, Any
     if value["requirements_sha256"] != digest:
         raise ValueError("published V1 split requirements identity is stale")
     entries = [item for item in source_index["entries"] if item.get("source_ref") == value["source_ref"]]
-    if len(entries) != 1 or entries[0].get("requirement_id") != "FR-6":
-        raise ValueError("published V1 split must bind the current FR-6 source")
+    if len(entries) != 1:
+        raise ValueError("published V1 split must bind exactly one current source")
     old_id = value["replaced_obligation_id"]
-    old = next((item for item in predecessor["obligations"] if item.get("obligation_id") == old_id), None)
-    if not isinstance(old, Mapping) or old.get("requirement_id") != "FR-6":
-        raise ValueError("published V1 split targets an unknown FR-6 obligation")
+    targets = [item for item in predecessor["obligations"] if item.get("obligation_id") == old_id]
+    if len(targets) != 1:
+        raise ValueError("published V1 split targets an unknown or duplicate obligation")
+    old = targets[0]
+    if (old.get("status") != "active"
+            or old.get("requirement_id") != entries[0].get("requirement_id")
+            or old.get("source_refs") != [value["source_ref"]]):
+        raise ValueError("published V1 split must bind the target current source and active status")
     raw_items = value["obligations"]
-    if not isinstance(raw_items, list) or len(raw_items) != 2:
-        raise ValueError("published V1 split requires exactly two replacement obligations")
+    if not isinstance(raw_items, list) or len(raw_items) < 2:
+        raise ValueError("published V1 split requires at least two replacement obligations")
     normalized = [group.sc._normalize_obligation(entries[0], raw) for raw in raw_items]
     ids = [item["obligation_id"] for item in normalized]
-    if len(set(ids)) != 2 or old_id in ids or any(item["status"] != "active" for item in normalized):
+    peer_ids = {item["obligation_id"] for item in predecessor["obligations"]}
+    if (len(set(ids)) != len(normalized) or set(ids) & peer_ids
+            or any(item["status"] != "active" for item in normalized)):
         raise ValueError("published V1 split replacement IDs or status are invalid")
     contracts = value["v3_contracts"]
     if not isinstance(contracts, dict) or set(contracts) != set(ids):
@@ -601,7 +617,7 @@ def load_v1_split(path: Path, requirements: Path, source_index: Mapping[str, Any
 
 
 def install_v1_split(split: Mapping[str, Any]) -> None:
-    """Compose one reviewed FR-6 obligation split with predecessor reuse."""
+    """Compose one reviewed source-bound split with predecessor reuse."""
     base_compile = group.sc.compile_obligations
     base_invoke = group.sc.invoke_worker
     old_id = str(split["replaced_obligation_id"])

@@ -118,6 +118,14 @@ obligation ID. Replacement is limited to explicitly named obligations;
 unselected V1/V3 peers remain semantically stable. An input without complete
 contracts fails closed, and no historical worker output is promoted.
 
+For an observed mixed result inside one published obligation, use the explicit
+`--published-v1-split <json>` together with published V3 repair. Replace exactly
+one active predecessor obligation by at least two distinct active outcomes bound
+to the same exact source. Supply complete per-outcome V3 contracts. Source drift,
+cross-source children, predecessor-ID collisions, missing contracts and inactive
+targets fail closed. This does not relax V4, atomic recall or downstream gates,
+and cannot turn a harness failure into expected RED.
+
 ## Execution-only handoff repair
 
 Use the public compiler's `--repair-quick-dev-handoff-from` only for a

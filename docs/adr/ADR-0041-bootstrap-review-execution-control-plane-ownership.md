@@ -457,3 +457,42 @@ This is a bounded repository-maintainer protocol, not sandbox execution or a
 new lifecycle state. Historical failures and 08-06 source/semantic bindings are
 preserved. The entry preparation is not Package A or Skill-standard acceptance.
 See `logs/quick-dev-first-use-20261020/README.md` for tests and actual evidence.
+
+
+### Source-bound atomic repair after a controlled mixed probe (2026-10-20)
+
+The authorized online 08-06 continuation found one published obligation that
+combined three missing dependency diagnostics with an already-present static
+execution boundary. It also misclassified a harness failure as expected RED.
+The current probe correctly stopped; no production implementation is authorized
+by that mixed or invalid proof.
+
+The existing explicit published V1 split route is source-bound rather than
+hard-coded to the historical FR-6 label or exactly two outcomes. A caller may
+replace exactly one active predecessor obligation with two or more distinct
+active outcomes bound to the same exact current source. The route rejects
+unknown/duplicate/inactive targets, cross-source records, collisions with any
+predecessor obligation, stale source bytes and incomplete V3 contracts. It is
+non-authorizing authored input. Independent V4/atomic recall, downstream checks
+and the canonical compiler remain mandatory, and all predecessor evidence is
+immutable. Unrelated obligations/contracts are retained. This is a VDD repair
+capability, not a Package A product feature or permission to bypass RED.
+
+Published predecessor admission also verifies the exact source-index identity
+shape emitted by V0: ordinary indexes hash entries, while case-section indexes
+hash entries plus companions, including an explicitly empty companion list.
+The full declared shape must match; entries-only fallback cannot hide companion
+mutations. Historical index bytes are not rewritten.
+
+When a shared planned pytest module has been partially authored by Q2, a
+published repair may admit its incomplete static mapping only if every existing
+marker belongs to this same plan and exact frozen test surface. Empty mappings,
+unknown markers and markers assigned only to another file remain binding
+errors. This is Q2 authoring admission, not case coverage: native probe/RED,
+frozen selectors, runtime collectors and Q7/Q8 still require every exact case.
+No marker, file or plan string is promoted to execution evidence.
+
+Published V3 rehydration preserves each Acceptance's own preflight metadata
+through its source-bound hint, instead of recomputing it from the merged slice's
+broader owners. Unselected complexity/context/verification contracts must remain
+unchanged; the final drift gate is retained and semantic edits still fail.

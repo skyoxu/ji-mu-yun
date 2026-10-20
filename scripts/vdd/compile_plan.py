@@ -196,8 +196,8 @@ def main() -> int:
                 split_old = str(split["replaced_obligation_id"])
                 if split_old in correction["obligation_contracts"]:
                     # The reviewed S34 correction was authored against the
-                    # predecessor identity.  Once the bounded FR-6 split is
-                    # admitted, project that correction only onto the two
+                    # predecessor identity.  Once the bounded source split is
+                    # admitted, project that correction only onto the
                     # source-bound replacement contracts; no other correction
                     # target may be rewritten implicitly.
                     translated = dict(correction["obligation_contracts"])

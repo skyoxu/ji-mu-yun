@@ -65,6 +65,12 @@ def handoff_findings(bundle, workspace=None):
     acceptances = {a['acceptance_id']: a for a in bundle['acceptances']}
     failures = {f['failure_intent_id']: f for f in bundle['failure_intents']}
     contexts = {c['slice_id']: c for c in bundle['agent_contexts']}
+    assertions_by_test = {}
+    for planned_slice in bundle['slices']:
+        for test_path in planned_slice.get('execution_snapshot_paths', []):
+            assertions_by_test.setdefault(test_path, set()).update(
+                assertion for aid in planned_slice['acceptance_ids']
+                for assertion in acceptances[aid]['assertion_ids'])
     for item in bundle['slices']:
         sid = item['slice_id']
         context = contexts.get(sid, {})
@@ -107,13 +113,17 @@ def handoff_findings(bundle, workspace=None):
         for p in paths:
             if any(_inside(p, f) for f in context.get('forbidden_paths', [])):
                 findings.append(f'{sid}:test-entry-forbidden:{p}')
-            # A planned file may legitimately be absent until Quick Dev Q2.
-            # An existing file, however, cannot be relabelled as a new slice:
-            # its literal CER mapping must already contain this slice's exact
-            # Acceptance assertions or VDD must repair the semantic binding.
+            # Q2 can incrementally author a shared planned test module. Existing
+            # markers must all belong to this plan AND this exact test surface.
+            # Unknown/empty/unrelated mappings still require binding repair.
+            # This is authoring admission only, never runtime assertion proof.
+            partial_planned = (p in item.get('planned_new_files', [])
+                               and bool(primary_declared)
+                               and primary_declared <= assertions_by_test.get(p, set()))
             if (workspace is not None and primary_declared is not None
                     and not expected.issubset(primary_declared)
-                    and not expected.issubset(declared_for_slice)):
+                    and not expected.issubset(declared_for_slice)
+                    and not partial_planned):
                 findings.append(f'{sid}:existing-test-assertion-mismatch:{p}')
             if workspace is not None and p.endswith('_cer.py'):
                 sibling = Path(workspace) / (p[:-7] + '.py')
