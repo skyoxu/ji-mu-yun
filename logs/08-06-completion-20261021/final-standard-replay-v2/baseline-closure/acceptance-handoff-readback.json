@@ -1,0 +1,15 @@
+{
+  "schema": "package-a.acceptance-handoff-readback.v1",
+  "status": "verified",
+  "method": "Acceptance-owned verify_current_handoff -> native Q8 read-only replay",
+  "implementation_result": {
+    "path": "logs/08-06-completion-20261021/final-standard-replay-v2/baseline-closure/implementation-complete.json",
+    "sha256": "sha256:4723750a422e95636c3b41c7d5699837ccfa25b08f2c9cfa46b7dd61ac09fb1d"
+  },
+  "source_commit": "10f642762594b9615435ea8671bc1e67d673cdd8",
+  "base_commit": "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+  "slice_count": 31,
+  "closure_tuple_count": 578,
+  "authorizes": [],
+  "acceptance_passed": false
+}

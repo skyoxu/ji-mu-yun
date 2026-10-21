@@ -10,7 +10,7 @@ identity/frontmatter/content/reference checks, examples and public-entry
 contracts, explicit dependencies/fallbacks, capability declarations, strict and
 inventory modes, bounded sanitized results and a fixture-only reference package.
 
-Current ordinary verification: 356 Package A cases and 101 focused VDD/Quick Dev
+Current ordinary verification: 356 Package A cases and 102 focused VDD/Quick Dev
 maintenance cases pass. These counts are verification facts, not Q7/Q8 or
 Acceptance authority. Linux execution does not establish a Windows runtime test.
 
@@ -32,3 +32,25 @@ completion. Active final plan files remain directly available.
 The standard and ADR-0062 remain draft/proposed until the maintainer's real
 adoption decision. Requirements expressly require adoption before final Package A
 Acceptance or Package B consumption. Passing tests cannot grant that decision.
+
+## Final native implementation result
+
+Source commit: 10f642762594b9615435ea8671bc1e67d673cdd8.
+Explicit original baseline: f7ac19dbc1dde82e73f91854b5dc0c157c78703a.
+All 31 current slice-ready/terminal proofs passed. Native Q8 status is pass,
+predicate implementation-complete, profile standard, with 578 closure tuples.
+The full four-module terminal executed 356 cases, exit 0, no timeout.
+Acceptance-owned verify_current_handoff replay verified the same native result;
+that readback grants no acceptance-passed authority.
+
+The active Q8 result and binding are under
+logs/08-06-completion-20261021/final-standard-replay-v2/baseline-closure/.
+Complete records are in artifacts/current-native-evidence.tar.xz with an exact
+path/hash manifest. LOCAL-HANDOFF.md gives the safe extraction command.
+Earlier Q8 results without the explicit original baseline remain history.
+
+Only the real maintainer adoption of ADR-0062 remains before formal Acceptance
+can continue. No approval was fabricated and the standard is still draft.
+The implementing session's bounded self-check is recorded separately; it is
+not an independent third-party review. The unrelated pre-existing 8-18 worktree
+edit was preserved and excluded from these commits and runtime roots.
