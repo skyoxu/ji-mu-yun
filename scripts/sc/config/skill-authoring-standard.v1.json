@@ -1,1 +1,49 @@
-{}
+{
+  "schema": "skill-authoring-standard.v1",
+  "standard_version": "1.0",
+  "standard": "docs/standards/skill-authoring-standard.md",
+  "contract_schema": "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+  "result_schema": "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+  "frontmatter_keys": [
+    "name",
+    "description"
+  ],
+  "rules": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15",
+    "A16",
+    "A17",
+    "A18",
+    "A19",
+    "A20",
+    "A21",
+    "A22",
+    "A23",
+    "A24",
+    "A25"
+  ],
+  "limits": {
+    "skill_logical_lines_exclusive": 500,
+    "diagnostics": 100
+  },
+  "dependencies": [],
+  "official_origins": [
+    "https://docs.python.org",
+    "https://learn.microsoft.com",
+    "https://platform.openai.com",
+    "https://docs.godotengine.org"
+  ]
+}

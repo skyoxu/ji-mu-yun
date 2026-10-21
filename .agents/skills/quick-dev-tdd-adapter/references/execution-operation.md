@@ -171,3 +171,18 @@ commands only for frozen snapshot files; broader agent-context commands remain
 required Q6 regressions. An assertion marker elsewhere in the same file does
 not prove it belongs to a selected node. Full-file selectors subsume duplicate
 node selectors from that file. Case evidence still checks actual selection.
+
+## Literal shared-module selection
+
+Current CER authoring may resolve complete literal assertion markers to exact
+pytest node IDs inside the declared file/node scope, without importing tests.
+All required parameter instances stay included. Unsupported mappings retain the
+original declared selector; they never become inferred case proof. Nonterminal
+stages reuse the frozen probe inputs. Agent-context commands still run as
+required Q6 regressions. Use `--worker-timeout-seconds 300` when the plan requires
+a 300-second targeted descriptor; terminal remains independently bounded.
+
+Q2 recomputes literal case bindings after bounded test authoring and freezes them
+before probe execution. The terminal descriptor retains the full declared module
+selection, including unmarked regression cases; CER narrowing applies only to
+nonterminal stages. This does not replace required Q6 commands.

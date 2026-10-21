@@ -111,6 +111,8 @@ def handoff_findings(bundle, workspace=None):
             if paths:
                 primary_declared = _declared_cer_assertions(Path(workspace) / paths[0])
         for p in paths:
+            path_declared = (_declared_cer_assertions(Path(workspace) / p)
+                             if workspace is not None else None)
             if any(_inside(p, f) for f in context.get('forbidden_paths', [])):
                 findings.append(f'{sid}:test-entry-forbidden:{p}')
             # Q2 can incrementally author a shared planned test module. Existing
@@ -118,10 +120,10 @@ def handoff_findings(bundle, workspace=None):
             # Unknown/empty/unrelated mappings still require binding repair.
             # This is authoring admission only, never runtime assertion proof.
             partial_planned = (p in item.get('planned_new_files', [])
-                               and bool(primary_declared)
-                               and primary_declared <= assertions_by_test.get(p, set()))
-            if (workspace is not None and primary_declared is not None
-                    and not expected.issubset(primary_declared)
+                               and bool(path_declared)
+                               and path_declared <= assertions_by_test.get(p, set()))
+            if (workspace is not None and path_declared is not None
+                    and not expected.issubset(path_declared)
                     and not expected.issubset(declared_for_slice)
                     and not partial_planned):
                 findings.append(f'{sid}:existing-test-assertion-mismatch:{p}')
@@ -348,6 +350,15 @@ def repair_runtime_red_bindings(bundle, test_root, workspace, failure_intent_ids
     selected runtime role.  This keeps the repair execution-only and local to
     the reviewed intent.
     """
+    binding_findings = [finding for finding in handoff_findings(bundle, workspace)
+                        if ':missing-behavior-red-route:' not in finding]
+    if not binding_findings:
+        repaired, delta = repair_runtime_red_roles(bundle, failure_intent_ids)
+        delta['execution_binding_repair'] = {
+            'command_dispositions': [], 'rebound_test_entries': False,
+            'retained_current_bindings': True,
+        }
+        return repaired, delta
     rebound, handoff_delta = repair_bundle(bundle, test_root, workspace=workspace)
     generated = set(handoff_delta['added_expected_red_intents'])
     if generated:
@@ -370,6 +381,7 @@ def repair_runtime_red_bindings(bundle, test_root, workspace, failure_intent_ids
     delta['execution_binding_repair'] = {
         'command_dispositions': handoff_delta['command_dispositions'],
         'rebound_test_entries': True,
+        'retained_current_bindings': False,
     }
     return repaired, delta
 
@@ -406,6 +418,10 @@ def _project_slice_dependencies(bundle):
         deps = set()
         for oid in item.get('obligation_ids', []):
             for dep in obligations.get(oid, {}).get('depends_on', []):
+                # Published source prerequisites can be prose. Preserve them
+                # in obligations; only exact obligation IDs create graph edges.
+                if not dep.startswith('O-'):
+                    continue
                 target = owner.get(dep)
                 if target is None:
                     raise ValueError(f'{item.get("slice_id")}:dependency-target-not-in-plan:{dep}')
@@ -413,6 +429,14 @@ def _project_slice_dependencies(bundle):
                     deps.add(target)
         item['depends_on'] = sorted(deps)
     return bundle
+
+
+def source_index_identity(source):
+    """Hash the producer's exact legacy or case-section identity shape."""
+    import semantic_compiler as sc
+    value = ({'entries': source['entries'], 'companions': source['companions']}
+             if 'companions' in source else source['entries'])
+    return sc.sha256_value(value)
 
 
 def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=()):
@@ -450,7 +474,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     if not valid or not audit_bundle(original)['valid']:
         raise ValueError('handoff predecessor contract invalid: ' + str(errors))
     source = read('source-index.v1.json')
-    if source['sha256'] != sc.sha256_value(source['entries']):
+    if source['sha256'] != source_index_identity(source):
         raise ValueError('handoff source index identity invalid')
     sources = set()
     source_rebindings = []
@@ -474,7 +498,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
             entry['source_sha256'] = actual_hash
     if requirements.resolve() not in sources:
         raise ValueError('handoff requirements not in predecessor source identity')
-    source['sha256'] = sc.sha256_value(source['entries'])
+    source['sha256'] = source_index_identity(source)
     recall_path = sc.published_recall_path(predecessor)
     alignment = read('semantic-alignment.v1.json')
     recall = json.loads(recall_path.read_text(encoding='utf-8'))

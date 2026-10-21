@@ -1,1 +1,146 @@
-{}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "skill-quality-result.v1",
+  "title": "Local non-authorizing Skill quality report",
+  "standard_version": "1.0",
+  "rules": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "A09",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15",
+    "A16",
+    "A17",
+    "A18",
+    "A19",
+    "A20",
+    "A21",
+    "A22",
+    "A23",
+    "A24",
+    "A25"
+  ],
+  "type": "object",
+  "required": [
+    "schema",
+    "package",
+    "mode",
+    "status",
+    "exit_code",
+    "diagnostics",
+    "authorizes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "skill-quality-result.v1"
+    },
+    "package": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "strict",
+        "inventory",
+        null
+      ]
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "fail",
+        "error",
+        "legacy"
+      ]
+    },
+    "exit_code": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "required": [
+          "rule",
+          "code",
+          "path",
+          "message"
+        ],
+        "properties": {
+          "rule": {
+            "type": "string",
+            "enum": [
+              "A01",
+              "A02",
+              "A03",
+              "A04",
+              "A05",
+              "A06",
+              "A07",
+              "A08",
+              "A09",
+              "A10",
+              "A11",
+              "A12",
+              "A13",
+              "A14",
+              "A15",
+              "A16",
+              "A17",
+              "A18",
+              "A19",
+              "A20",
+              "A21",
+              "A22",
+              "A23",
+              "A24",
+              "A25"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 512
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "dependency_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "authorizes": {
+      "type": "array",
+      "maxItems": 0
+    }
+  },
+  "additionalProperties": false
+}

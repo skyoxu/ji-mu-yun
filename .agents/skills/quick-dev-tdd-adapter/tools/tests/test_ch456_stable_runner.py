@@ -297,3 +297,80 @@ def test_descriptor_combines_B_nodes_without_promoting_terminal_regression(tmp_p
     assert snapshot+'::test_first' in argv and snapshot+'::test_second' in argv
     assert 'tests/future_terminal.py' not in argv
     assert targets==[snapshot]
+
+
+def test_routed_stage_retains_frozen_probe_inputs_after_authoring(tmp_path, monkeypatch):
+    """ADR-0041: new CER markers cannot narrow a frozen probe selection."""
+    monkeypatch.setattr(stable_runner, 'ROOT', tmp_path)
+    semantic=tmp_path/'plan.json'
+    semantic.write_text(json.dumps({'behavior_routing': {}}))
+    run=tmp_path/'run';(run/'descriptors').mkdir(parents=True)
+    base={'slice_id':'S1','argv':['python','-m','pytest','tests/a.py','tests/b.py'],
+          'cwd':'.','target_refs':['tests/a.py','tests/b.py'], 'fixture_refs':['tests/helper.py'],
+          'timeout_seconds':300}
+    (run/'descriptors/probe.json').write_text(json.dumps(base))
+    import behavior_routing
+    monkeypatch.setattr(behavior_routing,'read_route',lambda *a,**k:{})
+    monkeypatch.setattr(stable_runner,'_descriptor_inputs',lambda *a,**k:(['python','-m','pytest','tests/a.py'],['tests/a.py'],['tests/b.py']))
+    monkeypatch.setattr(stable_runner,'candidate_identity',lambda *a:{'candidate_hash':'test'})
+    monkeypatch.setattr(stable_runner,'materialize_descriptor',lambda **k:k)
+    output=stable_runner._materialize_named_descriptor(semantic,run,'red')
+    actual=json.loads(output.read_text())
+    for key in ('argv','cwd','target_refs','fixture_refs','timeout_seconds'):
+        assert actual[key]==base[key]
+
+
+def test_literal_case_selection_excludes_unbound_future_parameter(tmp_path, monkeypatch):
+    """ADR-0041: exact markers select every required parameter, not other work."""
+    monkeypatch.setattr(stable_runner,'ROOT',tmp_path)
+    (tmp_path/'tests').mkdir()
+    (tmp_path/'tests/test_shared.py').write_text('''import pytest
+@pytest.mark.parametrize('value', [
+ pytest.param(1, id='required-one', marks=pytest.mark.cer_assertion('CURRENT')),
+ pytest.param(2, id='required-two', marks=pytest.mark.cer_assertion('CURRENT')),
+ pytest.param(3, id='future', marks=pytest.mark.cer_assertion('FUTURE')),
+])
+def test_shared(value): assert value<3
+''')
+    actual=stable_runner._literal_cer_nodes(['tests/test_shared.py'],{'CURRENT'})
+    assert actual==['tests/test_shared.py::test_shared[required-one]',
+                    'tests/test_shared.py::test_shared[required-two]']
+    assert stable_runner._literal_cer_nodes(['tests/test_shared.py'],{'UNKNOWN'}) is None
+
+
+def test_literal_case_selection_keeps_explicit_node_authority(tmp_path,monkeypatch):
+    monkeypatch.setattr(stable_runner,'ROOT',tmp_path)
+    (tmp_path/'test_one.py').write_text('''import pytest
+@pytest.mark.cer_assertion('CURRENT')
+def test_required(): assert True
+''')
+    assert stable_runner._literal_cer_nodes(['test_one.py::test_required'],{'CURRENT'})==['test_one.py::test_required']
+    assert stable_runner._literal_cer_nodes(['test_one.py::another'],{'CURRENT'}) is None
+
+
+def test_terminal_retains_declared_full_module_command(tmp_path, monkeypatch):
+    """ADR-0041: terminal runs the declared suite, beyond slice CER nodes."""
+    from test_ch456_worker_orchestration import _fixture
+    plan, semantic, _ = _fixture(tmp_path)
+    bundle = json.loads(semantic.read_text())
+    bundle['behavior_routing'] = {}
+    snapshot = bundle['slices'][0]['execution_snapshot_paths'][0]
+    (tmp_path/snapshot).write_text("import pytest\n@pytest.mark.cer_assertion('ASSERT-X')\ndef test_current(): pass\ndef test_unmarked_regression(): pass\n")
+    bundle['acceptances'][0]['assertion_ids'] = ['ASSERT-X']
+    semantic.write_text(json.dumps(bundle))
+    context_path = plan/'agent-context/S1/agent-context.json'
+    context = json.loads(context_path.read_text())
+    context['validation_commands'] = [[sys.executable, '-B', '-m', 'pytest', snapshot, '-q']]
+    context_path.write_text(json.dumps(context))
+    run = tmp_path/'terminal-run'; (run/'descriptors').mkdir(parents=True)
+    (run/'descriptors/probe.json').write_text(json.dumps({
+        'slice_id':'S1', 'argv':[sys.executable,'-B','-m','pytest',snapshot+'::test_current','-q'],
+        'cwd':'.', 'target_refs':[snapshot], 'fixture_refs':[snapshot], 'timeout_seconds':300}))
+    monkeypatch.setattr(stable_runner,'ROOT',tmp_path)
+    import behavior_routing
+    monkeypatch.setattr(behavior_routing,'read_route',lambda *a,**k:{})
+    monkeypatch.setattr(stable_runner,'candidate_identity',lambda *a:{'candidate_hash':'test'})
+    monkeypatch.setattr(stable_runner,'materialize_descriptor',lambda **k:k)
+    actual=json.loads(stable_runner._materialize_named_descriptor(semantic,run,'terminal').read_text())
+    assert actual['argv']==context['validation_commands'][0]
+    assert actual['timeout_seconds']==600

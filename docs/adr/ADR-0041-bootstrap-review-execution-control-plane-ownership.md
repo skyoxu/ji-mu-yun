@@ -496,3 +496,44 @@ Published V3 rehydration preserves each Acceptance's own preflight metadata
 through its source-bound hint, instead of recomputing it from the merged slice's
 broader owners. Unselected complexity/context/verification contracts must remain
 unchanged; the final drift gate is retained and semantic edits still fail.
+
+### Narrow Runtime Role Repair (2026-10-21)
+
+An explicit runtime-role repair retains all valid current test paths, snapshots,
+planned files and validation commands. Missing behavior RED roles alone do not
+authorize whole-plan test rebinding. Conflicting execution bindings still use
+the existing bounded repair path and report that disposition. No role is an
+observed failure or human approval. Published handoff source identities use the
+producer's exact shape: entries for legacy sources, or entries plus companions
+when that key exists, including an empty companion list. Both validation and
+republication use the same identity calculation.
+
+### Shared Test Surface Selection (2026-10-21)
+
+Handoff admission checks each existing planned test file against that file's
+own assertion domain; markers in the first file cannot stand in for another
+file. Current CER materialization may narrow a declared pytest file to complete
+literal marker-bound node IDs without importing tests. Every parameter carrying
+a required marker remains selected. Unsupported or incomplete static mappings
+retain the declared selector and all existing runtime gates. The frozen probe's
+argv, cwd, targets, fixtures and timeout remain identical through nonterminal
+stages. Required agent-context regressions remain unchanged and execute through
+the existing regression gate. No unknown failure, deselected required case, or
+other slice's assertion becomes RED authority.
+
+### 2026-10-21 terminal selector correction
+
+Recompute Q2 literal CER bindings after test authoring, before the initial probe
+freeze. Preserve that exact selector through nonterminal stages. Terminal uses
+the original declared frozen module selection, including unmarked regressions,
+with its independent timeout. Exact-marker narrowing cannot silently reduce
+whole-plan terminal coverage. Native evidence writers and Q7/Q8 gates are unchanged.
+
+### 2026-10-21 Package A runtime profile
+
+Package A is an ordinary static-validator implementation, not a promotion of a
+new detached judge. Its final fresh implementation replay selects the standard
+runtime profile at Q1 and retains all process/case, Q6 regression, snapshot, Q7
+and Q8 requirements. VDD plan-shape profiles remain independent. Historical
+self-hosted slice runs are diagnostic/TDD history only; they are not relabelled
+as standard receipts or detached-judge promotion evidence.

@@ -264,6 +264,8 @@ def test_existing_tests_with_new_assertion_ids_route_through_bounded_author(tmp_
         profile="standard",timeout_seconds=10,backend="offline-disabled")
     assert calls==["S1"] and result["required_next_action"]=="run-probe"
     assert (tmp_path/"candidate.py").read_bytes()==before
+    descriptor=json.loads((tmp_path/result["descriptor_ref"]).read_text())
+    assert descriptor["argv"][3:-1]==["tests/test_one.py::test_value_1","tests/test_one.py::test_value_2"]
 
 
 def test_materialized_planned_test_with_required_assertion_does_not_reinvoke_author(tmp_path,monkeypatch):

@@ -113,7 +113,68 @@ def _load_json_object(path: Path, label: str, *, inside_repo: bool = True) -> Ma
     return value
 
 
-def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str) -> tuple[list[str], list[str], list[str]]:
+def _literal_cer_nodes(targets, required):
+    """Resolve complete literal marker bindings without importing test code.
+
+    Unsupported parameterization keeps the original declared selector. Explicit
+    node selectors remain upper bounds; this never expands their test scope.
+    """
+    if not required:return None
+    nodes=[];covered=set()
+    for target in targets:
+        ref,separator,explicit=target.partition('::')
+        path=ROOT/safe_relative(ref)
+        try:tree=ast.parse(path.read_text(encoding='utf-8').lstrip('\ufeff'))
+        except (OSError,SyntaxError,UnicodeError):return None
+        constants={node.targets[0].id:node.value.value for node in tree.body
+                   if isinstance(node,ast.Assign) and len(node.targets)==1
+                   and isinstance(node.targets[0],ast.Name) and isinstance(node.value,ast.Constant)
+                   and isinstance(node.value.value,str)}
+        if any(isinstance(n,ast.ClassDef) and n.name.startswith('Test') for n in tree.body):return None
+        if any(isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='pytestmark' for t in n.targets) for n in tree.body):return None
+        def markers(node):
+            result=set()
+            for child in ast.walk(node):
+                if isinstance(child,ast.Call) and isinstance(child.func,ast.Attribute) and child.func.attr=='cer_assertion':
+                    for arg in child.args:
+                        if isinstance(arg,ast.Constant) and isinstance(arg.value,str):result.add(arg.value)
+                        elif isinstance(arg,ast.Name) and arg.id in constants:result.add(constants[arg.id])
+                        else:return None
+            return result
+        for function in tree.body:
+            if not isinstance(function,(ast.FunctionDef,ast.AsyncFunctionDef)) or not function.name.startswith('test_'):continue
+            base=ref+'::'+function.name
+            function_marks=set();parameters=[]
+            for decorator in function.decorator_list:
+                if isinstance(decorator,ast.Call) and isinstance(decorator.func,ast.Attribute) and decorator.func.attr=='parametrize':parameters.append(decorator)
+                else:
+                    ids=markers(decorator)
+                    if ids is None:return None
+                    function_marks.update(ids)
+            cases=[]
+            if not parameters:cases=[(base,function_marks)]
+            elif len(parameters)==1:
+                parameter=parameters[0]
+                if len(parameter.args)!=2 or parameter.keywords or not isinstance(parameter.args[1],(ast.List,ast.Tuple)):return None
+                for row in parameter.args[1].elts:
+                    if not isinstance(row,ast.Call) or not isinstance(row.func,ast.Attribute) or row.func.attr!='param':return None
+                    marker_ids=markers(row)
+                    if marker_ids is None:return None
+                    name=next((kw.value for kw in row.keywords if kw.arg=='id'),None)
+                    if isinstance(name,ast.Constant) and isinstance(name.value,str):name=name.value
+                    elif name is None and len(row.args)==1 and isinstance(row.args[0],ast.Constant) and isinstance(row.args[0].value,str):name=row.args[0].value
+                    else:return None
+                    cases.append((base+'['+name+']',function_marks|marker_ids))
+            else:return None
+            for node,assertions in cases:
+                if separator and node!=target and not node.startswith(target+'['):continue
+                if assertions & required:
+                    if node not in nodes:nodes.append(node)
+                    covered.update(assertions & required)
+    return nodes if covered==required else None
+
+
+def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True) -> tuple[list[str], list[str], list[str]]:
     selected = _slice(bundle, slice_id)
     context = _agent_context(plan_dir, slice_id)
     commands = context.get("validation_commands")
@@ -205,6 +266,13 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
             full_files = {v for v in selector_items if "::" not in v}
             selector_items = [v for v in selector_items if "::" not in v or v.split("::", 1)[0] not in full_files]
             argv = [*prefix, "-m", "pytest", *selector_items, "-q"]
+    offset=pytest_parts(argv)
+    if resolve_literal and offset is not None and "behavior_routing" in bundle:
+        required={assertion for a in bundle.get("acceptances",[])
+                  if a["acceptance_id"] in selected["acceptance_ids"] for assertion in a["assertion_ids"]}
+        literal=_literal_cer_nodes([part for part in argv[offset+2:] if part!="-q"],required)
+        if literal:
+            argv=[*argv[:offset],"-m","pytest",*literal,"-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
     if not snapshots:
         raise ValueError("slice execution snapshot paths missing")
@@ -404,6 +472,9 @@ def q2_author_red(
             "schema": "quick-dev.worker-result.v1", "stage": "red-author", "status": "worker-not-required",
             "changed_paths": [], "authorizes_evidence": False, "authorizes": [],
         }
+    # Resolve newly authored literal mappings before the first descriptor freeze.
+    # The initial read decides authoring scope, not the final observed selector.
+    argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
     for ref in sorted(set(target_refs + fixture_refs)):
         path = _inside_root(ROOT / ref, "RED target/fixture")
         if not path.is_file() or path.is_symlink():
@@ -696,11 +767,16 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
         slice_id = base["slice_id"]
         from behavior_routing import read_route
         route = read_route(ROOT, bundle, run_dir, slice_id) if routed else None
-        argv, target_refs, fixture_refs = _descriptor_inputs(bundle, semantic.parent, slice_id)
+        argv, target_refs, fixture_refs = _descriptor_inputs(bundle, semantic.parent, slice_id, resolve_literal=stage != "terminal")
+        # ADR-0041: Q2 can add marker mappings after initial selector discovery.
+        # Nonterminal stages must reuse the observed frozen probe selection.
+        if routed and stage != "terminal":
+            argv, target_refs, fixture_refs = base["argv"], base["target_refs"], base["fixture_refs"]
         identity = candidate_identity(ROOT, bundle, slice_id)
         terminal = materialize_descriptor(
             bundle=bundle, slice_id=slice_id, stage=stage, run_id=run_dir.name,
-            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=600,
+            candidate_hash=identity["candidate_hash"], argv=argv, cwd=base["cwd"],
+            timeout_seconds=base["timeout_seconds"] if routed and stage != "terminal" else 600,
             target_refs=target_refs, fixture_refs=fixture_refs, routing_result=route,
         )
         create_json(descriptor, terminal)

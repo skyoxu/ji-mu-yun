@@ -1,3 +1,11 @@
+# Active continuation update: 2026-10-21
+
+Use `package-a-completion-plan/`, not the historical plan named below. Read
+`ONLINE-COMPLETION-2026-10-21.md` and the explicit current native result links
+before continuing. The older handoff below is retained as historical context.
+
+---
+
 # Package A: Active Plan and Quick Dev Continuation
 
 ## Active native plan

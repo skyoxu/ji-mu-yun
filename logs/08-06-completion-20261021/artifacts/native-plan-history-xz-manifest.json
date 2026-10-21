@@ -1,0 +1,2568 @@
+{
+  "schema": "package-a.history-archive.v1",
+  "authorizes": [],
+  "archive": "logs/08-06-completion-20261021/artifacts/native-plan-history.tar.xz",
+  "archive_sha256": "sha256:f4d4f6048ec62a0c4df723832807a38e7a04baf21a35a560b52b4b2b318f2efd",
+  "files": [
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-attempts/v3-execution-preflight-790a8167f569366ed9c09e4f.json",
+      "sha256": "sha256:790a8167f569366ed9c09e4f897b33e9993c3bca4e46527ffd0ad87fd308e4ef"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/candidate-repairs/892f7c028a0b429fd22cf34c43ccca78dd743eaf9c6aee2a6fc29c1ec7a4b923.json",
+      "sha256": "sha256:892f7c028a0b429fd22cf34c43ccca78dd743eaf9c6aee2a6fc29c1ec7a4b923"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:1a0cc46fa05be65891a562f3a3d623ad35aca8c098bf05567eed34a9bdb9035b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/execution-preflight/66b9a28c90b51b1bba6c49d6927e45143a3b54230a4639ccbe3d55ebd8fa09f4.json",
+      "sha256": "sha256:66b9a28c90b51b1bba6c49d6927e45143a3b54230a4639ccbe3d55ebd8fa09f4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:a42fd5986107cb14583fe3bcd46874e64fc58b0e033c2c4f473b2140e2f2c3fc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-attempts/v4-published-recall-e42a2a4fae5eb4ea81540f280e0595ae659742bc420bafeb019ce91557a81562.json",
+      "sha256": "sha256:0faad776da2ba0cc838d5e1050b4388eab714cffd05cbe8625feb91211f0d7fe"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/candidate-repairs/892f7c028a0b429fd22cf34c43ccca78dd743eaf9c6aee2a6fc29c1ec7a4b923.json",
+      "sha256": "sha256:892f7c028a0b429fd22cf34c43ccca78dd743eaf9c6aee2a6fc29c1ec7a4b923"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:422811076fd24b746ac186d53d0072bcaeb47f0f16acf61f920ab137c66efd46"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:b9ce3b53646e90928887e3ace370a27c6d1b0ae2e43a3ffb2df249d53aea41af"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/acceptances.v1.json",
+      "sha256": "sha256:699b57f044f0c43e77803a46b4c60362c788d8a5bd6e0936bb9c40023bc8dec1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S1/agent-context.json",
+      "sha256": "sha256:bc4f3a407434fbe7e1b6406b16c53e271420798ed900f78a616795c002875375"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S10/agent-context.json",
+      "sha256": "sha256:88ef22ac4e8cbd8501c6c32a64072abb54e6143dae185ff2b93e1f7cf9abc739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S11/agent-context.json",
+      "sha256": "sha256:e6aa3b980ebd6d4308bebdf2cd9f93f8dfa52f9f401cbff8468e550a49c635b9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fb647fadd7a566eb7df2e1337d98e97ef52f67757e57da98935e1da6346db042"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:e53488dfaf7e70d9354335146361546844a2e12508d7534eb543fc0809084263"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:1cf7688dddc511727bcc34a704ecb6d46b523bc89b9f20824a9c0e410211e604"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S14/agent-context.json",
+      "sha256": "sha256:d9492d5a855e10139f0ed9788c9459ed9c8346c0974d76d78f593196f89e376c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S15/agent-context.json",
+      "sha256": "sha256:b795f799044bcaf209daa40f31e1ec574ce0f73045371be29f8564f045fab946"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S16/agent-context.json",
+      "sha256": "sha256:c32592a2dcf26044a8616183ece9eaa769236d1384779d9cb0a8c22fefecdaf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S17/agent-context.json",
+      "sha256": "sha256:624f00fa71bd50ca9b8f16326d976fe16864e32be2b0940227dc9c97ba79f878"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S18/agent-context.json",
+      "sha256": "sha256:86116ec08cd3ff62c7168582312badac061348e1e967fa3c89edd7235091b970"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S19/agent-context.json",
+      "sha256": "sha256:f241cb3b946128462a52518c703d67d11e3d0d1e9d34491e98f829468d552871"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S2/agent-context.json",
+      "sha256": "sha256:f64b3a95af46cb92b0d68ed7d23d875b67840509da43c0357ad3ad803947b1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ca3fbe6db82f45b5203c86790b8429d4a3ca6e58540747d66f42ed9925a1ca9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S21/agent-context.json",
+      "sha256": "sha256:b61b0ef6b4d41615c6c2ce57a905f2c23b08f3b322f7414c1540c0e25c860aff"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S22/agent-context.json",
+      "sha256": "sha256:7d243e1765c6df77628d26e6c94dbf2b089be348adcfd2baeb8c16e35968ff43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S23/agent-context.json",
+      "sha256": "sha256:60a2ed2eda06084cc9b82be37cc6407811cf8f8379d4e35cc8a26ed7828ff92d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S24/agent-context.json",
+      "sha256": "sha256:8b3b53a8a969f393317da4227258884ff12801f9bd11145e95a8c593950f66cc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S25/agent-context.json",
+      "sha256": "sha256:7f37f4d4be06e9c1dc9a62c688401af092ca268f5ef9aadd5beec23aacc3d804"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S3/agent-context.json",
+      "sha256": "sha256:678d67f266d1c8ba5ac50e1b87c620c2526fb9b30b0fabdb1d34bd9a2cb4f538"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S4/agent-context.json",
+      "sha256": "sha256:07618a15ce77d43103929dc703bf90248902e02c11ed78b03a3ed088a1231049"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S5/agent-context.json",
+      "sha256": "sha256:819598ce857075eb6f1b99422d7b4ff1b899a5f0b8a7d1549de9269aac3f3ea5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S6/agent-context.json",
+      "sha256": "sha256:67546a6d6d3672d336cd36fb16a5477a4b9e2bd00e2944a8eeae8d7a54884460"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:22ed9733d92808abf132175a2dfc672a2c2b6d4eaba4ab60e493dafb7be1e20b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:e9c4b289ea50980b76cfd5b0db1b34fbbb5182556248b2dfb0e0928086448745"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S8/agent-context.json",
+      "sha256": "sha256:d6b2434c8b304c82f10e7e1a5426c2000f3a492d0239f83d7010460e43591079"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/agent-context/S9/agent-context.json",
+      "sha256": "sha256:5c4d142ebeed531f44fafc797d61c0050e1cc1010afca24886539d634813584e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/compiler-state.v1.json",
+      "sha256": "sha256:5ec72eb1a6bac8981c5f7683b5445e8e137f48f9a2738d4a02427227aacc93a1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/failure-intents.v1.json",
+      "sha256": "sha256:64504658f54435ecf4d1ec3d20dac048c5a70cef4a4923b7ff06f6f822a60552"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/final-plan-coverage.v1.json",
+      "sha256": "sha256:33a43cfd79771dec2a0b7c11b419ed90ff5f140cad5cd5340e77f7e07517992a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/pre-slice-coverage.v1.json",
+      "sha256": "sha256:933a1911ea81ab726c1a906f245c6f3f2fbf3e1c106ca658d71cd86ac915e757"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/semantic-chain-audit.v1.json",
+      "sha256": "sha256:544f41a85bc65b75e6c1587e9fcee76f27e0a89c5856821a2af42df2851258c4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:e42a2a4fae5eb4ea81540f280e0595ae659742bc420bafeb019ce91557a81562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/slices.v1.json",
+      "sha256": "sha256:f3f71613351f9a379703b299cec916e53c6c3e03b4814d85246b968bfcf17a9e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-module-plan-v2/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/acceptances.v1.json",
+      "sha256": "sha256:085cd3b122ba88c88b3402b25f349910cdcfe8a5ef2fa95be5954ce26a3b775d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S1/agent-context.json",
+      "sha256": "sha256:bc4f3a407434fbe7e1b6406b16c53e271420798ed900f78a616795c002875375"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S10/agent-context.json",
+      "sha256": "sha256:88ef22ac4e8cbd8501c6c32a64072abb54e6143dae185ff2b93e1f7cf9abc739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S11/agent-context.json",
+      "sha256": "sha256:e6aa3b980ebd6d4308bebdf2cd9f93f8dfa52f9f401cbff8468e550a49c635b9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fb647fadd7a566eb7df2e1337d98e97ef52f67757e57da98935e1da6346db042"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:e53488dfaf7e70d9354335146361546844a2e12508d7534eb543fc0809084263"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:1cf7688dddc511727bcc34a704ecb6d46b523bc89b9f20824a9c0e410211e604"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S14/agent-context.json",
+      "sha256": "sha256:d9492d5a855e10139f0ed9788c9459ed9c8346c0974d76d78f593196f89e376c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S15/agent-context.json",
+      "sha256": "sha256:b795f799044bcaf209daa40f31e1ec574ce0f73045371be29f8564f045fab946"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S16/agent-context.json",
+      "sha256": "sha256:c32592a2dcf26044a8616183ece9eaa769236d1384779d9cb0a8c22fefecdaf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S17/agent-context.json",
+      "sha256": "sha256:624f00fa71bd50ca9b8f16326d976fe16864e32be2b0940227dc9c97ba79f878"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S18/agent-context.json",
+      "sha256": "sha256:86116ec08cd3ff62c7168582312badac061348e1e967fa3c89edd7235091b970"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S19/agent-context.json",
+      "sha256": "sha256:888f1bc2c7c6ab610e5003cc4e5b3f985577e3fcf9a02918dc4472c26065ca0d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S2/agent-context.json",
+      "sha256": "sha256:f64b3a95af46cb92b0d68ed7d23d875b67840509da43c0357ad3ad803947b1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ca3fbe6db82f45b5203c86790b8429d4a3ca6e58540747d66f42ed9925a1ca9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S21/agent-context.json",
+      "sha256": "sha256:b61b0ef6b4d41615c6c2ce57a905f2c23b08f3b322f7414c1540c0e25c860aff"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S22/agent-context.json",
+      "sha256": "sha256:7d243e1765c6df77628d26e6c94dbf2b089be348adcfd2baeb8c16e35968ff43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S23/agent-context.json",
+      "sha256": "sha256:60a2ed2eda06084cc9b82be37cc6407811cf8f8379d4e35cc8a26ed7828ff92d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S24/agent-context.json",
+      "sha256": "sha256:8b3b53a8a969f393317da4227258884ff12801f9bd11145e95a8c593950f66cc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S25/agent-context.json",
+      "sha256": "sha256:7f37f4d4be06e9c1dc9a62c688401af092ca268f5ef9aadd5beec23aacc3d804"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S3/agent-context.json",
+      "sha256": "sha256:678d67f266d1c8ba5ac50e1b87c620c2526fb9b30b0fabdb1d34bd9a2cb4f538"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S4/agent-context.json",
+      "sha256": "sha256:07618a15ce77d43103929dc703bf90248902e02c11ed78b03a3ed088a1231049"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S5/agent-context.json",
+      "sha256": "sha256:819598ce857075eb6f1b99422d7b4ff1b899a5f0b8a7d1549de9269aac3f3ea5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S6/agent-context.json",
+      "sha256": "sha256:67546a6d6d3672d336cd36fb16a5477a4b9e2bd00e2944a8eeae8d7a54884460"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:22ed9733d92808abf132175a2dfc672a2c2b6d4eaba4ab60e493dafb7be1e20b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:e9c4b289ea50980b76cfd5b0db1b34fbbb5182556248b2dfb0e0928086448745"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S8/agent-context.json",
+      "sha256": "sha256:d6b2434c8b304c82f10e7e1a5426c2000f3a492d0239f83d7010460e43591079"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/agent-context/S9/agent-context.json",
+      "sha256": "sha256:5c4d142ebeed531f44fafc797d61c0050e1cc1010afca24886539d634813584e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/compiler-state.v1.json",
+      "sha256": "sha256:1ef2e7c5473f280a7e9e58011a4f66ad3274c0004aea63fed1bb6092aee7a228"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/failure-intents.v1.json",
+      "sha256": "sha256:9c17b280fbc18fad301c757114d1be2679be3b7f8032990fd02c36d794ed795d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/final-plan-coverage.v1.json",
+      "sha256": "sha256:6ea29ac8cdc9aad73e8398b3564caf78dd63c854903fc1d8bd4c218ca8ce406f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/handoff-repair.v1.json",
+      "sha256": "sha256:7cc4e4ba707b0d0da316517b654e224703ca6410809fd776a957f90f34a302ab"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/pre-slice-coverage.v1.json",
+      "sha256": "sha256:7810b9bec306d00ca4adecc768538102a6182cbeed191b8b776a5fcd245d7cff"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/semantic-chain-audit.v1.json",
+      "sha256": "sha256:133172b004dbdcd24772909258b8449586e24392b994443f3321b285f973a938"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:273fb4c03afe9be9247b160e42195a25c16b7745589f2afc869dce74d7cb171d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/slices.v1.json",
+      "sha256": "sha256:f5a40a71547f078429cc1b35e1c5b42be372281d5a3447a0770e4d851535ef2a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v2/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/acceptances.v1.json",
+      "sha256": "sha256:085cd3b122ba88c88b3402b25f349910cdcfe8a5ef2fa95be5954ce26a3b775d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S1/agent-context.json",
+      "sha256": "sha256:bc4f3a407434fbe7e1b6406b16c53e271420798ed900f78a616795c002875375"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S10/agent-context.json",
+      "sha256": "sha256:88ef22ac4e8cbd8501c6c32a64072abb54e6143dae185ff2b93e1f7cf9abc739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S11/agent-context.json",
+      "sha256": "sha256:e6aa3b980ebd6d4308bebdf2cd9f93f8dfa52f9f401cbff8468e550a49c635b9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fb647fadd7a566eb7df2e1337d98e97ef52f67757e57da98935e1da6346db042"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:e53488dfaf7e70d9354335146361546844a2e12508d7534eb543fc0809084263"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:1cf7688dddc511727bcc34a704ecb6d46b523bc89b9f20824a9c0e410211e604"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S14/agent-context.json",
+      "sha256": "sha256:d9492d5a855e10139f0ed9788c9459ed9c8346c0974d76d78f593196f89e376c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S15/agent-context.json",
+      "sha256": "sha256:b795f799044bcaf209daa40f31e1ec574ce0f73045371be29f8564f045fab946"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S16/agent-context.json",
+      "sha256": "sha256:c32592a2dcf26044a8616183ece9eaa769236d1384779d9cb0a8c22fefecdaf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S17/agent-context.json",
+      "sha256": "sha256:624f00fa71bd50ca9b8f16326d976fe16864e32be2b0940227dc9c97ba79f878"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S18/agent-context.json",
+      "sha256": "sha256:86116ec08cd3ff62c7168582312badac061348e1e967fa3c89edd7235091b970"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S19/agent-context.json",
+      "sha256": "sha256:888f1bc2c7c6ab610e5003cc4e5b3f985577e3fcf9a02918dc4472c26065ca0d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S2/agent-context.json",
+      "sha256": "sha256:f64b3a95af46cb92b0d68ed7d23d875b67840509da43c0357ad3ad803947b1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ca3fbe6db82f45b5203c86790b8429d4a3ca6e58540747d66f42ed9925a1ca9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S21/agent-context.json",
+      "sha256": "sha256:b61b0ef6b4d41615c6c2ce57a905f2c23b08f3b322f7414c1540c0e25c860aff"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S22/agent-context.json",
+      "sha256": "sha256:7d243e1765c6df77628d26e6c94dbf2b089be348adcfd2baeb8c16e35968ff43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S23/agent-context.json",
+      "sha256": "sha256:60a2ed2eda06084cc9b82be37cc6407811cf8f8379d4e35cc8a26ed7828ff92d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S24/agent-context.json",
+      "sha256": "sha256:8b3b53a8a969f393317da4227258884ff12801f9bd11145e95a8c593950f66cc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S25/agent-context.json",
+      "sha256": "sha256:7f37f4d4be06e9c1dc9a62c688401af092ca268f5ef9aadd5beec23aacc3d804"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S3/agent-context.json",
+      "sha256": "sha256:678d67f266d1c8ba5ac50e1b87c620c2526fb9b30b0fabdb1d34bd9a2cb4f538"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S4/agent-context.json",
+      "sha256": "sha256:07618a15ce77d43103929dc703bf90248902e02c11ed78b03a3ed088a1231049"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S5/agent-context.json",
+      "sha256": "sha256:819598ce857075eb6f1b99422d7b4ff1b899a5f0b8a7d1549de9269aac3f3ea5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S6/agent-context.json",
+      "sha256": "sha256:67546a6d6d3672d336cd36fb16a5477a4b9e2bd00e2944a8eeae8d7a54884460"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:22ed9733d92808abf132175a2dfc672a2c2b6d4eaba4ab60e493dafb7be1e20b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:e9c4b289ea50980b76cfd5b0db1b34fbbb5182556248b2dfb0e0928086448745"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S8/agent-context.json",
+      "sha256": "sha256:d6b2434c8b304c82f10e7e1a5426c2000f3a492d0239f83d7010460e43591079"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/agent-context/S9/agent-context.json",
+      "sha256": "sha256:5c4d142ebeed531f44fafc797d61c0050e1cc1010afca24886539d634813584e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/compiler-state.v1.json",
+      "sha256": "sha256:1ef2e7c5473f280a7e9e58011a4f66ad3274c0004aea63fed1bb6092aee7a228"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/failure-intents.v1.json",
+      "sha256": "sha256:9c17b280fbc18fad301c757114d1be2679be3b7f8032990fd02c36d794ed795d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/final-plan-coverage.v1.json",
+      "sha256": "sha256:6ea29ac8cdc9aad73e8398b3564caf78dd63c854903fc1d8bd4c218ca8ce406f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/handoff-repair.v1.json",
+      "sha256": "sha256:7cc4e4ba707b0d0da316517b654e224703ca6410809fd776a957f90f34a302ab"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/pre-slice-coverage.v1.json",
+      "sha256": "sha256:7810b9bec306d00ca4adecc768538102a6182cbeed191b8b776a5fcd245d7cff"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/semantic-chain-audit.v1.json",
+      "sha256": "sha256:133172b004dbdcd24772909258b8449586e24392b994443f3321b285f973a938"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:273fb4c03afe9be9247b160e42195a25c16b7745589f2afc869dce74d7cb171d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/slices.v1.json",
+      "sha256": "sha256:f5a40a71547f078429cc1b35e1c5b42be372281d5a3447a0770e4d851535ef2a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/current-runtime-plan-v3/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/acceptances.v1.json",
+      "sha256": "sha256:7117b8f8274d6a45fa23a8b4be10ddd67f3aa1305fc860e1f95c47ac94e33214"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S1/agent-context.json",
+      "sha256": "sha256:bc4f3a407434fbe7e1b6406b16c53e271420798ed900f78a616795c002875375"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S10/agent-context.json",
+      "sha256": "sha256:88ef22ac4e8cbd8501c6c32a64072abb54e6143dae185ff2b93e1f7cf9abc739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S11/agent-context.json",
+      "sha256": "sha256:e6aa3b980ebd6d4308bebdf2cd9f93f8dfa52f9f401cbff8468e550a49c635b9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S12/agent-context.json",
+      "sha256": "sha256:e4d8616b6f31a6455a53c387927a01aef0a7dfd17cb70e2b644aa566376db941"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:e53488dfaf7e70d9354335146361546844a2e12508d7534eb543fc0809084263"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:1cf7688dddc511727bcc34a704ecb6d46b523bc89b9f20824a9c0e410211e604"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S14/agent-context.json",
+      "sha256": "sha256:d9492d5a855e10139f0ed9788c9459ed9c8346c0974d76d78f593196f89e376c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S15/agent-context.json",
+      "sha256": "sha256:b795f799044bcaf209daa40f31e1ec574ce0f73045371be29f8564f045fab946"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S16/agent-context.json",
+      "sha256": "sha256:c32592a2dcf26044a8616183ece9eaa769236d1384779d9cb0a8c22fefecdaf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S17/agent-context.json",
+      "sha256": "sha256:624f00fa71bd50ca9b8f16326d976fe16864e32be2b0940227dc9c97ba79f878"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S18/agent-context.json",
+      "sha256": "sha256:86116ec08cd3ff62c7168582312badac061348e1e967fa3c89edd7235091b970"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S19/agent-context.json",
+      "sha256": "sha256:888f1bc2c7c6ab610e5003cc4e5b3f985577e3fcf9a02918dc4472c26065ca0d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S2/agent-context.json",
+      "sha256": "sha256:f64b3a95af46cb92b0d68ed7d23d875b67840509da43c0357ad3ad803947b1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ca3fbe6db82f45b5203c86790b8429d4a3ca6e58540747d66f42ed9925a1ca9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S21/agent-context.json",
+      "sha256": "sha256:5beb9a0a773fc591b9b6729aebda396cdbc7584f1e739f7cad100ac871d89499"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S22/agent-context.json",
+      "sha256": "sha256:7d243e1765c6df77628d26e6c94dbf2b089be348adcfd2baeb8c16e35968ff43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S23/agent-context.json",
+      "sha256": "sha256:60a2ed2eda06084cc9b82be37cc6407811cf8f8379d4e35cc8a26ed7828ff92d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S24/agent-context.json",
+      "sha256": "sha256:8b3b53a8a969f393317da4227258884ff12801f9bd11145e95a8c593950f66cc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S25/agent-context.json",
+      "sha256": "sha256:7f37f4d4be06e9c1dc9a62c688401af092ca268f5ef9aadd5beec23aacc3d804"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S3/agent-context.json",
+      "sha256": "sha256:678d67f266d1c8ba5ac50e1b87c620c2526fb9b30b0fabdb1d34bd9a2cb4f538"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S4/agent-context.json",
+      "sha256": "sha256:07618a15ce77d43103929dc703bf90248902e02c11ed78b03a3ed088a1231049"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S5/agent-context.json",
+      "sha256": "sha256:819598ce857075eb6f1b99422d7b4ff1b899a5f0b8a7d1549de9269aac3f3ea5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S6/agent-context.json",
+      "sha256": "sha256:67546a6d6d3672d336cd36fb16a5477a4b9e2bd00e2944a8eeae8d7a54884460"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:22ed9733d92808abf132175a2dfc672a2c2b6d4eaba4ab60e493dafb7be1e20b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:e9c4b289ea50980b76cfd5b0db1b34fbbb5182556248b2dfb0e0928086448745"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S8/agent-context.json",
+      "sha256": "sha256:d6b2434c8b304c82f10e7e1a5426c2000f3a492d0239f83d7010460e43591079"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/agent-context/S9/agent-context.json",
+      "sha256": "sha256:5c4d142ebeed531f44fafc797d61c0050e1cc1010afca24886539d634813584e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/compiler-state.v1.json",
+      "sha256": "sha256:ed695432685703c4d8562165b0da14c3ddb25f13ad11b583312d3f7c4c5614c9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/failure-intents.v1.json",
+      "sha256": "sha256:e5c07f3130cec72e047e3607b78c1dc07719879027a8eee4aadd314600630b6b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/final-plan-coverage.v1.json",
+      "sha256": "sha256:57b264d1d161ff3012f64469f841622a76e4c851b4cc9ef94e35601d7e8f75c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/handoff-repair.v1.json",
+      "sha256": "sha256:04102d3712f53c5a9dbeec33f80363c6709bc710d5a17b1c9787089b22f6c4eb"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/pre-slice-coverage.v1.json",
+      "sha256": "sha256:772daadf5ba7c926501c18fbdd03935cc493ff19185953e10df847c4163232c5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/semantic-chain-audit.v1.json",
+      "sha256": "sha256:b14c9964a96e6e64364b6a733fec9806a0f41a2786365a004cec72060e6f3861"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:38d135d83b5fb2b7f0388bbc30a16dcbb1f97ac9122af661a3b3421d7dd6fbeb"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/slices.v1.json",
+      "sha256": "sha256:743587c7df9094f1781e8eda0856b221a997e50ab87a6ad3a4dce7172b2b6382"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/declaration-hardening-plan/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:ada6bf203645c6101707f554d542e7e44b0da0067d020cf9e1dc879ca2b0b5e3"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:476f961888b6facca1f874fe386e0d20b43133ff6d3cd1b6ad46ce3f2a8e2082"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v2/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:475f183fa9a54eded706a50a8cf7b4583f77e1645d15f075b1ffa98295f85b41"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-attempts/v4-published-recall-0ffb64145658a9988edb24ff3e5f82d565db357d45163f0683465cc92c48e381.json",
+      "sha256": "sha256:72ab02a7c954818ba3d01a8647ffc06bc5d48a9997a85ae03f6c6ae28d490f66"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/candidate-repairs/be75565e78efe51da201b30134585d92c3261c1b350826ea80f1d5697e3b18e4.json",
+      "sha256": "sha256:be75565e78efe51da201b30134585d92c3261c1b350826ea80f1d5697e3b18e4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:92c7ce9ad1d09b097272cd1fed96f18333f0f90021461fb4745ff65f47f40108"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:c837525387beceae5c75735e80a63c022763b5f2af7e31d157a2a50f0f5ab032"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/acceptances.v1.json",
+      "sha256": "sha256:8d7b1987ce785e4dfb31718d410371d4647affb3416e330a75ab32e658e3c23e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S1/agent-context.json",
+      "sha256": "sha256:49aaccd4f7fd76dcd2c222e11a9551ca68806f86ba6f0d78594b772d9d742184"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S10/agent-context.json",
+      "sha256": "sha256:bf87750c61e17111d190a7c92c757d15fc3cc6546bc0ffa34cd9b75568145e79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S11/agent-context.json",
+      "sha256": "sha256:382cfb55d7c10e1a94387bdcc5c572a47cfc3a523289e81288f6e25c40d94c1b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fa8d6be09c510ff6df068ddd8f2b341ed07f1edd35662ab69f4b51e148e7e562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S13/agent-context.json",
+      "sha256": "sha256:bdebdc3674fac8de6fccb45c7971b019a885efa089d08a9da3d6fd613815d3ab"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S14/agent-context.json",
+      "sha256": "sha256:5e27b677db805f3d5ace4a8919f42ef39072820c2656239970cdc542a78ad0ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S15/agent-context.json",
+      "sha256": "sha256:a4bb48842f4bc93b6355d7e2976a481e3d3c8363eca522cdfbbaca9048bd0593"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S16/agent-context.json",
+      "sha256": "sha256:3e2880a3099ddbb819342a3a80d36acd60eaa98230edf6cf2a2ff7ed02591bf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S17/agent-context.json",
+      "sha256": "sha256:82fbd7e07536f1fa440ab76787d916d3ef71237a118aafc207f1fa0b0d76b1e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S18/agent-context.json",
+      "sha256": "sha256:0be22f40f1f3c1288022b554b03d148c95dc085e0f22ad61b6aa35b3ec16067b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S19/agent-context.json",
+      "sha256": "sha256:d1529ff3dfc7e30f01dff28dd4efcb53b2cfc15f898c561b05ffe9aa2963bb7c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S2/agent-context.json",
+      "sha256": "sha256:c228070d11263bcb43e881447a1681d723ad97977f8ce7bd0e38508baa25727a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S20/agent-context.json",
+      "sha256": "sha256:656b718b16beadc3eabecb5b3ec10e5e15409e3e6a82582de352d899f30aeb85"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S21/agent-context.json",
+      "sha256": "sha256:7d060e428bf866edfe048a1b7a14ddfdfa97d42e7cb10311dcc8a174fee46b90"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S22/agent-context.json",
+      "sha256": "sha256:82c233b0cdfe04cb49dea7611aa0a2576920a422567e3318e6b2fb9f6db9b28d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S23/agent-context.json",
+      "sha256": "sha256:8040da3192495d04a4399034150f41a1aed50cdcec3a3ea73328bd06122a2e36"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1046d245c74e2575eefc5910e5ad67ba9d80724f3bd8d65089aa714b8231821d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S25/agent-context.json",
+      "sha256": "sha256:0754bc553c2b3f062735db519e81dbedddf3b752631b01a507f8ad35cf7fd205"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S3/agent-context.json",
+      "sha256": "sha256:b5760fe78a5380a092334ad8fc6d3097c2e6c35a1ef8adc5872fc95ace4d94ea"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S4/agent-context.json",
+      "sha256": "sha256:6401f9fc2f65320e79c8c9fcb08ba47dc4672eb4d1060d2d3fc9d1b01b21dca4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S5/agent-context.json",
+      "sha256": "sha256:08a9abf8f5103a7d993287678e694de5575489e8feffc97ffde2eee2edc23549"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S6/agent-context.json",
+      "sha256": "sha256:7119679108511185f67bc53ede2a287d6c26a67e4b9a5a88e6064516a41281d6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:6579aeba4a85a8cdaa386d3bec07adfcccb437a78f617c91fbbe72d0999a5746"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:09f3602863d47031ff9ea654065ac26ff87dc70eff111d9781f494a7b59ab431"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S8/agent-context.json",
+      "sha256": "sha256:f0124e566c631607fa4094bbdcc601558bc2ce2d54b6c6edbc5a18bd39913991"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8cf400e59a0cf85e9d1684322986de975dfa5cd1452702b3935ecb01ea89a163"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/compiler-state.v1.json",
+      "sha256": "sha256:af9a2c196920a2739b982551ccfa51c6a66646d123e900bcbdeecc239b644015"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/failure-intents.v1.json",
+      "sha256": "sha256:35288d959a92286a421ca53b0717507420458f523b742eb2d2a17387ebe4ce1f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/final-plan-coverage.v1.json",
+      "sha256": "sha256:57a51558031cae381181df6e7d72e1c409c5e766baae54e17d95af49b4aea4b4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/pre-slice-coverage.v1.json",
+      "sha256": "sha256:c21a9e5dfe93d87203d2cddf98a071a8814a8f4c1b6467a6f3acb9c2eff6c508"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/semantic-chain-audit.v1.json",
+      "sha256": "sha256:544f41a85bc65b75e6c1587e9fcee76f27e0a89c5856821a2af42df2851258c4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:0ffb64145658a9988edb24ff3e5f82d565db357d45163f0683465cc92c48e381"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/slices.v1.json",
+      "sha256": "sha256:14ce03a31c8f91da963c87e18c74a761191837366302f929257b19c2bb3fb7d8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-plan-v4/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/acceptances.v1.json",
+      "sha256": "sha256:bce23e0df0a7ae6ea203558d1583ffa35c7841553aa3590beeb6b4d2ad32a99d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S1/agent-context.json",
+      "sha256": "sha256:49aaccd4f7fd76dcd2c222e11a9551ca68806f86ba6f0d78594b772d9d742184"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S10/agent-context.json",
+      "sha256": "sha256:bf87750c61e17111d190a7c92c757d15fc3cc6546bc0ffa34cd9b75568145e79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S11/agent-context.json",
+      "sha256": "sha256:382cfb55d7c10e1a94387bdcc5c572a47cfc3a523289e81288f6e25c40d94c1b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fa8d6be09c510ff6df068ddd8f2b341ed07f1edd35662ab69f4b51e148e7e562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S13/agent-context.json",
+      "sha256": "sha256:bdebdc3674fac8de6fccb45c7971b019a885efa089d08a9da3d6fd613815d3ab"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S14/agent-context.json",
+      "sha256": "sha256:5e27b677db805f3d5ace4a8919f42ef39072820c2656239970cdc542a78ad0ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S15/agent-context.json",
+      "sha256": "sha256:a4bb48842f4bc93b6355d7e2976a481e3d3c8363eca522cdfbbaca9048bd0593"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S16/agent-context.json",
+      "sha256": "sha256:3e2880a3099ddbb819342a3a80d36acd60eaa98230edf6cf2a2ff7ed02591bf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S17/agent-context.json",
+      "sha256": "sha256:82fbd7e07536f1fa440ab76787d916d3ef71237a118aafc207f1fa0b0d76b1e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S18/agent-context.json",
+      "sha256": "sha256:0be22f40f1f3c1288022b554b03d148c95dc085e0f22ad61b6aa35b3ec16067b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S19/agent-context.json",
+      "sha256": "sha256:d1529ff3dfc7e30f01dff28dd4efcb53b2cfc15f898c561b05ffe9aa2963bb7c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S2/agent-context.json",
+      "sha256": "sha256:c228070d11263bcb43e881447a1681d723ad97977f8ce7bd0e38508baa25727a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S20/agent-context.json",
+      "sha256": "sha256:656b718b16beadc3eabecb5b3ec10e5e15409e3e6a82582de352d899f30aeb85"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S21/agent-context.json",
+      "sha256": "sha256:7d060e428bf866edfe048a1b7a14ddfdfa97d42e7cb10311dcc8a174fee46b90"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S22/agent-context.json",
+      "sha256": "sha256:82c233b0cdfe04cb49dea7611aa0a2576920a422567e3318e6b2fb9f6db9b28d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S23/agent-context.json",
+      "sha256": "sha256:8040da3192495d04a4399034150f41a1aed50cdcec3a3ea73328bd06122a2e36"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1046d245c74e2575eefc5910e5ad67ba9d80724f3bd8d65089aa714b8231821d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S25/agent-context.json",
+      "sha256": "sha256:0754bc553c2b3f062735db519e81dbedddf3b752631b01a507f8ad35cf7fd205"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S3/agent-context.json",
+      "sha256": "sha256:b5760fe78a5380a092334ad8fc6d3097c2e6c35a1ef8adc5872fc95ace4d94ea"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S4/agent-context.json",
+      "sha256": "sha256:6401f9fc2f65320e79c8c9fcb08ba47dc4672eb4d1060d2d3fc9d1b01b21dca4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S5/agent-context.json",
+      "sha256": "sha256:08a9abf8f5103a7d993287678e694de5575489e8feffc97ffde2eee2edc23549"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S6/agent-context.json",
+      "sha256": "sha256:7119679108511185f67bc53ede2a287d6c26a67e4b9a5a88e6064516a41281d6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:6579aeba4a85a8cdaa386d3bec07adfcccb437a78f617c91fbbe72d0999a5746"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:c7ca0289320383eb78622dfd9b5c167b65614b1ead03b0f99f97aa2209a732cf"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S8/agent-context.json",
+      "sha256": "sha256:f0124e566c631607fa4094bbdcc601558bc2ce2d54b6c6edbc5a18bd39913991"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8cf400e59a0cf85e9d1684322986de975dfa5cd1452702b3935ecb01ea89a163"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/compiler-state.v1.json",
+      "sha256": "sha256:f035773956dc88f9aaa2da7a30983374bb98ecfa8379e07dd03cc127e2e87fc2"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/failure-intents.v1.json",
+      "sha256": "sha256:e3af656984f4223bacd55146d8e825b7f77e5ae861ab7af79800d3dd05e18d79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/final-plan-coverage.v1.json",
+      "sha256": "sha256:84a782f026a4ccfc0500ba4c4e83f0addd6615a7263115521eaf02c16a3bb2c2"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/handoff-repair.v1.json",
+      "sha256": "sha256:53a39a84c067d85052e06c3c8f7ce072cd09334f0fceada887a81bed40b0d6c1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/pre-slice-coverage.v1.json",
+      "sha256": "sha256:910e4c23f828d7f08ff62682ea8a8cf52decbbbccb4db07e72df00235883a275"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/semantic-chain-audit.v1.json",
+      "sha256": "sha256:c5e8a8eb76ab7a73c7ed92896f91c240f4d40d33faea522242d20165bb0ee126"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:02889fb7210b59a0279781af3745b19e68e1f331dba572be96c7a2aef7e286b7"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/slices.v1.json",
+      "sha256": "sha256:e0b218199633caf5ad8d1038fad24fff6183750b2072d1f40f3bec1d6ec52ddd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/foundation-runtime-plan-v2/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-attempts/v3-execution-preflight-8409aae22a3b0b916b178638.json",
+      "sha256": "sha256:8409aae22a3b0b916b178638f0468e4db8460805f3e3ab202d691b9dcb2540e9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/candidate-repairs/4ed8875465eb3c016a3b556e560814070882a169c2344b45b3ea75cdec74208e.json",
+      "sha256": "sha256:4ed8875465eb3c016a3b556e560814070882a169c2344b45b3ea75cdec74208e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:c82aa0ead5b527a13504b71f3516fd284ba6b05eddabfe4f3d5da33ee542119d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/execution-preflight/638a1cca83d698a8d99544d336a555c63a5ae5b80f83b2b6537e37fdce32dd49.json",
+      "sha256": "sha256:638a1cca83d698a8d99544d336a555c63a5ae5b80f83b2b6537e37fdce32dd49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/group-execution-plan-v2/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:ea3d3a4dc05ee0c84449bce68bb85f02ac171d85c498476755fa373d92533e41"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-attempts/v3-execution-preflight-65744a12397ca83468c78712.json",
+      "sha256": "sha256:65744a12397ca83468c78712fcc01e64ea4abba1f6a96d2bdcc130a9156803e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/candidate-repairs/d23dca1336c4d80263eb9937ce2d5ac600a3a7f7219ba412ec9daf7ed0a04b13.json",
+      "sha256": "sha256:d23dca1336c4d80263eb9937ce2d5ac600a3a7f7219ba412ec9daf7ed0a04b13"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:5c0a4cdab48bff7c865966f7be0fd330be07e20cb3fe8adc5e2c55611877fc61"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/execution-preflight/f31c0c1bad99c3a4624d12b858b43b7318e1433af62e634a928ad1b7117a9633.json",
+      "sha256": "sha256:f31c0c1bad99c3a4624d12b858b43b7318e1433af62e634a928ad1b7117a9633"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/package-a-final-plan/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:61e369a5fdee4d37fd346a965f998b6baf1a2755b4e9560f98d6c37e9e12bffb"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/current-module-commands.json",
+      "sha256": "sha256:dd3e94b48db8521b1a41a97b26cff84c341c475fa5ffccbf0dc86f6d864f1f93"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/final-fixture-and-result-contracts.json",
+      "sha256": "sha256:cac2e7e3eb3d788d1d595bdd6289d3dfa744afa1707e8e9413d75183cecc2f6b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/foundation-v3-v2.json",
+      "sha256": "sha256:b2dbfa4a578c677ff01ed652f2e3dbd2a536058358e3f079c6a87e3af11b9e4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/foundation-v3-v3.json",
+      "sha256": "sha256:3ffee2b5d25fc374f219b0f29fd7f070c4cb43f64529bdc660b329bd457ffd8e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/foundation-v3.json",
+      "sha256": "sha256:97f52f332f4fde8ca4ac3e8779c2c37683790b20b39e95a7be4ee6b4f16a8237"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/group-contracts.json",
+      "sha256": "sha256:c32d99e82786e0d5ad16e3da12708142cad79604e32d5d2fff9ef62eb356da6d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/s13-context.json",
+      "sha256": "sha256:2bda5907ce5fe6712d51e63c3c0a91870b0a831169f4935a49fece007137a722"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/repair/2026-10-21-completion/secret-assertion-identity.json",
+      "sha256": "sha256:efccd31d2420478f3b8d6f93cc1074036eb81a812b9fdcf88d2dcef8b0463733"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/acceptances.v1.json",
+      "sha256": "sha256:0cdc9cdb66eae979475111603b49dd191204e17d1df22b3a9ac1e0b41b371888"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S1/agent-context.json",
+      "sha256": "sha256:66b895431f431793e2183f5a2e98bbe5a726c1bc1b924f5a2538f8461c4d52a7"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S10/agent-context.json",
+      "sha256": "sha256:0bfdfd46033843060460045990a1561b3e2af660fa218d8a8c06177670dedf83"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S11/agent-context.json",
+      "sha256": "sha256:1a289064d4ca206255b67a1f2d42030251adfbf2d263265c3595cd8023a3dd43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S12/agent-context.json",
+      "sha256": "sha256:c62eaf44e84053aebd795ac6df9ddd94fb2f7d72ff91c9dd9804af8c864689f9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:87834646b69f48ced41507f458fb2d321a4cf206859d30119da09d0d49cc864f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:887532dddd89194848809b843fb699065a4800dbfac0a0d397045cef1cd5f9fe"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S14/agent-context.json",
+      "sha256": "sha256:4ef3b5ff6078b884e25e3a9055e11a7b843dfb9c35974f1a7736b98e701d4ed0"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S15/agent-context.json",
+      "sha256": "sha256:f79c9e5187d3d68cce0c6282175605c2b5be8a3150b7dd293aac4620e108ec00"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S16/agent-context.json",
+      "sha256": "sha256:2b70885ebb4261857f34c7624b3fe4191810258c1fbf104e775629f98ccd4193"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S17/agent-context.json",
+      "sha256": "sha256:a05dd10bb39cb8e57c6fe753dc2025258b947e56b8787a50c00d242714a79fa5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S18/agent-context.json",
+      "sha256": "sha256:a2e99919bd97f70a1a7db3658e219a0c57ce43b2a1ab90c1089b17efb9a00ff4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S19/agent-context.json",
+      "sha256": "sha256:2b9f50258656fd7fe991256224625716bd5453fbd5c983a625a0821cc916afed"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S2/agent-context.json",
+      "sha256": "sha256:39f821cb9e1edf69405a8d25d57f69258a27cfb6877ed8120560336275d3a655"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ea4e6e871b2774dedcd93a69242874cd1d0cd41b08e98f26432df2df628678e9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S21/agent-context.json",
+      "sha256": "sha256:8652012ebd729b7e00553fb7392f045a4673eee5cae147eaa37ec5eb7fe77b4c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S22/agent-context.json",
+      "sha256": "sha256:fcffaa56e37c2d621092b85e02173908f2df36d37747e218b0d235f8b58a224c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S23/agent-context.json",
+      "sha256": "sha256:571844281dcc3000b4fbfb40bb7f2d42bfdf9b04b3d3142ab72199ce335e9a87"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1608cc40dbb9207125605695d6004139fbd12fd5ad7799f2ad228a840bf6bd32"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S25/agent-context.json",
+      "sha256": "sha256:f8a3bd487988d3ced79574141433b150ef52bdf2b07d41547b0f2d5ea7a434f9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S3/agent-context.json",
+      "sha256": "sha256:bf196511fa6a1c6c3b4e5ee62538b9b85416a82c06d753934116699d54495a3d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S4/agent-context.json",
+      "sha256": "sha256:1487a5362b9a970e6bc5e0fc7753c747c63a1a6d392407f9e622e181cce30066"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S5/agent-context.json",
+      "sha256": "sha256:f89170170c16cfdb96458d465773c70bd3af9cf2f5944e0aa6ec8d24982ef91e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S6/agent-context.json",
+      "sha256": "sha256:c0dfe2651da55728163b29ea7b64ae6f77627c953c16c80f58aa9240db12ef05"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:e954423896a1eadc998d3f21cc51194e14b58b94639d59432baf25ab39524ea3"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:7a9462c12114abf96da143423386bc85315f592d9afc1976b9032d569f215d44"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S8/agent-context.json",
+      "sha256": "sha256:49e82cbb4701d3ef75e415b557adc823fd14514e43233b71e24b4bc02f9f8b84"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8037ce7e1effd34b7edb7165ee620d9d7a970b1bd1ebd3acd0fa69e304d48e84"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/compiler-state.v1.json",
+      "sha256": "sha256:46ab6b079c64b8fa1de07b5e9c9b46e08c385212519f5dfa90dea42fb18abab1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/failure-intents.v1.json",
+      "sha256": "sha256:91c3bb98ed8e0184b26279b6b7285f1b69c1550c06639fe0954177aec74ef665"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/final-plan-coverage.v1.json",
+      "sha256": "sha256:f3b44ee54f268dc427cf52fc9fd08e6a1c09fe8f6ea462a9369cf3d3ca2140d7"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/handoff-repair.v1.json",
+      "sha256": "sha256:b56d5c18ba6c5c8ae8c3ab0a01240dfdb7db1d4635484df9d954e3d314f4704f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/pre-slice-coverage.v1.json",
+      "sha256": "sha256:d01fd1196b0d30757cf12646c29802e4896c22052bd34afd35cd55d3ad128e1c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/semantic-chain-audit.v1.json",
+      "sha256": "sha256:4bdc99def75b9c105a8fe6310b563d602f9b25ed900f30a7074122d7e97d92d0"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:30fd8d233ba2ed7ab558f2712f1c33c8ff5190b22e65727e8bcdbdb576baf493"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/slices.v1.json",
+      "sha256": "sha256:a93338d9a639436fa74271cb9c6a51e57403d5f50cd4e72841d67ebf928c3e9a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/acceptances.v1.json",
+      "sha256": "sha256:0cdc9cdb66eae979475111603b49dd191204e17d1df22b3a9ac1e0b41b371888"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S1/agent-context.json",
+      "sha256": "sha256:bc4f3a407434fbe7e1b6406b16c53e271420798ed900f78a616795c002875375"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S10/agent-context.json",
+      "sha256": "sha256:88ef22ac4e8cbd8501c6c32a64072abb54e6143dae185ff2b93e1f7cf9abc739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S11/agent-context.json",
+      "sha256": "sha256:e6aa3b980ebd6d4308bebdf2cd9f93f8dfa52f9f401cbff8468e550a49c635b9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S12/agent-context.json",
+      "sha256": "sha256:e4d8616b6f31a6455a53c387927a01aef0a7dfd17cb70e2b644aa566376db941"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:e53488dfaf7e70d9354335146361546844a2e12508d7534eb543fc0809084263"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:1cf7688dddc511727bcc34a704ecb6d46b523bc89b9f20824a9c0e410211e604"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S14/agent-context.json",
+      "sha256": "sha256:d9492d5a855e10139f0ed9788c9459ed9c8346c0974d76d78f593196f89e376c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S15/agent-context.json",
+      "sha256": "sha256:b795f799044bcaf209daa40f31e1ec574ce0f73045371be29f8564f045fab946"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S16/agent-context.json",
+      "sha256": "sha256:c32592a2dcf26044a8616183ece9eaa769236d1384779d9cb0a8c22fefecdaf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S17/agent-context.json",
+      "sha256": "sha256:624f00fa71bd50ca9b8f16326d976fe16864e32be2b0940227dc9c97ba79f878"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S18/agent-context.json",
+      "sha256": "sha256:86116ec08cd3ff62c7168582312badac061348e1e967fa3c89edd7235091b970"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S19/agent-context.json",
+      "sha256": "sha256:888f1bc2c7c6ab610e5003cc4e5b3f985577e3fcf9a02918dc4472c26065ca0d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S2/agent-context.json",
+      "sha256": "sha256:f64b3a95af46cb92b0d68ed7d23d875b67840509da43c0357ad3ad803947b1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ca3fbe6db82f45b5203c86790b8429d4a3ca6e58540747d66f42ed9925a1ca9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S21/agent-context.json",
+      "sha256": "sha256:b61b0ef6b4d41615c6c2ce57a905f2c23b08f3b322f7414c1540c0e25c860aff"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S22/agent-context.json",
+      "sha256": "sha256:7d243e1765c6df77628d26e6c94dbf2b089be348adcfd2baeb8c16e35968ff43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S23/agent-context.json",
+      "sha256": "sha256:60a2ed2eda06084cc9b82be37cc6407811cf8f8379d4e35cc8a26ed7828ff92d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S24/agent-context.json",
+      "sha256": "sha256:8b3b53a8a969f393317da4227258884ff12801f9bd11145e95a8c593950f66cc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S25/agent-context.json",
+      "sha256": "sha256:7f37f4d4be06e9c1dc9a62c688401af092ca268f5ef9aadd5beec23aacc3d804"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S3/agent-context.json",
+      "sha256": "sha256:678d67f266d1c8ba5ac50e1b87c620c2526fb9b30b0fabdb1d34bd9a2cb4f538"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S4/agent-context.json",
+      "sha256": "sha256:07618a15ce77d43103929dc703bf90248902e02c11ed78b03a3ed088a1231049"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S5/agent-context.json",
+      "sha256": "sha256:819598ce857075eb6f1b99422d7b4ff1b899a5f0b8a7d1549de9269aac3f3ea5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S6/agent-context.json",
+      "sha256": "sha256:67546a6d6d3672d336cd36fb16a5477a4b9e2bd00e2944a8eeae8d7a54884460"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:22ed9733d92808abf132175a2dfc672a2c2b6d4eaba4ab60e493dafb7be1e20b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:e9c4b289ea50980b76cfd5b0db1b34fbbb5182556248b2dfb0e0928086448745"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S8/agent-context.json",
+      "sha256": "sha256:d6b2434c8b304c82f10e7e1a5426c2000f3a492d0239f83d7010460e43591079"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/agent-context/S9/agent-context.json",
+      "sha256": "sha256:5c4d142ebeed531f44fafc797d61c0050e1cc1010afca24886539d634813584e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/compiler-state.v1.json",
+      "sha256": "sha256:e204074c56f8b0adffa3b7420d60c27849ca442d7ce8b9abad1dabf1e512e07c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/failure-intents.v1.json",
+      "sha256": "sha256:91c3bb98ed8e0184b26279b6b7285f1b69c1550c06639fe0954177aec74ef665"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/final-plan-coverage.v1.json",
+      "sha256": "sha256:f3b44ee54f268dc427cf52fc9fd08e6a1c09fe8f6ea462a9369cf3d3ca2140d7"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/handoff-repair.v1.json",
+      "sha256": "sha256:2258a5ced0dfbc82cfe87aaa8e256e44b39535d28dce1a46004dad71218c48e9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/pre-slice-coverage.v1.json",
+      "sha256": "sha256:d01fd1196b0d30757cf12646c29802e4896c22052bd34afd35cd55d3ad128e1c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/semantic-chain-audit.v1.json",
+      "sha256": "sha256:4bdc99def75b9c105a8fe6310b563d602f9b25ed900f30a7074122d7e97d92d0"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:e7ad920e414cf52b88b25d4980d5a6e6e6e6caf3623b9101db1f53e8f8ef9b16"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/slices.v1.json",
+      "sha256": "sha256:053f532650deadd5f0c7ce5f180f87818f89eadde86f251af47e42a34b10c951"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/runtime-boundary-plan-v2/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/acceptances.v1.json",
+      "sha256": "sha256:7b664b3087b1232e61507d2d1038f4fc6813fa429c7c42a9e62979e5bc6bec3e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S1/agent-context.json",
+      "sha256": "sha256:bc4f3a407434fbe7e1b6406b16c53e271420798ed900f78a616795c002875375"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S10/agent-context.json",
+      "sha256": "sha256:88ef22ac4e8cbd8501c6c32a64072abb54e6143dae185ff2b93e1f7cf9abc739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S11/agent-context.json",
+      "sha256": "sha256:e6aa3b980ebd6d4308bebdf2cd9f93f8dfa52f9f401cbff8468e550a49c635b9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S12/agent-context.json",
+      "sha256": "sha256:e4d8616b6f31a6455a53c387927a01aef0a7dfd17cb70e2b644aa566376db941"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:e53488dfaf7e70d9354335146361546844a2e12508d7534eb543fc0809084263"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:1cf7688dddc511727bcc34a704ecb6d46b523bc89b9f20824a9c0e410211e604"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S14/agent-context.json",
+      "sha256": "sha256:d9492d5a855e10139f0ed9788c9459ed9c8346c0974d76d78f593196f89e376c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S15/agent-context.json",
+      "sha256": "sha256:b795f799044bcaf209daa40f31e1ec574ce0f73045371be29f8564f045fab946"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S16/agent-context.json",
+      "sha256": "sha256:c32592a2dcf26044a8616183ece9eaa769236d1384779d9cb0a8c22fefecdaf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S17/agent-context.json",
+      "sha256": "sha256:624f00fa71bd50ca9b8f16326d976fe16864e32be2b0940227dc9c97ba79f878"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S18/agent-context.json",
+      "sha256": "sha256:86116ec08cd3ff62c7168582312badac061348e1e967fa3c89edd7235091b970"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S19/agent-context.json",
+      "sha256": "sha256:888f1bc2c7c6ab610e5003cc4e5b3f985577e3fcf9a02918dc4472c26065ca0d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S2/agent-context.json",
+      "sha256": "sha256:f64b3a95af46cb92b0d68ed7d23d875b67840509da43c0357ad3ad803947b1ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S20/agent-context.json",
+      "sha256": "sha256:ca3fbe6db82f45b5203c86790b8429d4a3ca6e58540747d66f42ed9925a1ca9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S21/agent-context.json",
+      "sha256": "sha256:5beb9a0a773fc591b9b6729aebda396cdbc7584f1e739f7cad100ac871d89499"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S22/agent-context.json",
+      "sha256": "sha256:7d243e1765c6df77628d26e6c94dbf2b089be348adcfd2baeb8c16e35968ff43"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S23/agent-context.json",
+      "sha256": "sha256:60a2ed2eda06084cc9b82be37cc6407811cf8f8379d4e35cc8a26ed7828ff92d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S24/agent-context.json",
+      "sha256": "sha256:8b3b53a8a969f393317da4227258884ff12801f9bd11145e95a8c593950f66cc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S25/agent-context.json",
+      "sha256": "sha256:7f37f4d4be06e9c1dc9a62c688401af092ca268f5ef9aadd5beec23aacc3d804"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S3/agent-context.json",
+      "sha256": "sha256:678d67f266d1c8ba5ac50e1b87c620c2526fb9b30b0fabdb1d34bd9a2cb4f538"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S4/agent-context.json",
+      "sha256": "sha256:07618a15ce77d43103929dc703bf90248902e02c11ed78b03a3ed088a1231049"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S5/agent-context.json",
+      "sha256": "sha256:819598ce857075eb6f1b99422d7b4ff1b899a5f0b8a7d1549de9269aac3f3ea5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S6/agent-context.json",
+      "sha256": "sha256:4b6a8ab7fde490392156a743c4f84c604bd5209063eb6c471a13b65d11851b3f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:22ed9733d92808abf132175a2dfc672a2c2b6d4eaba4ab60e493dafb7be1e20b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:e9c4b289ea50980b76cfd5b0db1b34fbbb5182556248b2dfb0e0928086448745"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S8/agent-context.json",
+      "sha256": "sha256:d6b2434c8b304c82f10e7e1a5426c2000f3a492d0239f83d7010460e43591079"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/agent-context/S9/agent-context.json",
+      "sha256": "sha256:5c4d142ebeed531f44fafc797d61c0050e1cc1010afca24886539d634813584e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/compiler-state.v1.json",
+      "sha256": "sha256:f1a6131e75ab23d8dbc24720c5b149a4c7407acf2417a55d2cb821a288ec6a26"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/failure-intents.v1.json",
+      "sha256": "sha256:fb9238a1692fc3bc8af9796d2c5a088f681cefad4c599c1afc9a8ff4379318e6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/final-plan-coverage.v1.json",
+      "sha256": "sha256:695815e3811e673d2157adbbb2ee1d81b53a79c5f4f6460baa521d127a11cfb4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/handoff-repair.v1.json",
+      "sha256": "sha256:c94e08199b0a0de65b41dad712607ed3ac55b0251f148754971a8ef86d164a37"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/pre-slice-coverage.v1.json",
+      "sha256": "sha256:8acff47fabf8f920261e5d1ca26c0c390d161bd4d198217b8b8556069f0b27c9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/semantic-chain-audit.v1.json",
+      "sha256": "sha256:f55fb7fcff3762c984da9dd010065b20752b5e0355f2aa36d3a9f96a9af028c5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:59a444580fddb6d193fb102dda3d9500b85e5dde414ac039bedba2930aed4266"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/slices.v1.json",
+      "sha256": "sha256:68bf9d93c8469409805e66aacfe052c06de93c5d9479ddb6e6c1dc45b5c9992b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/subprocess-location-plan/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-attempts/v4-published-recall-d1d6dc4a6694d42fc6f272250541649ea5ae622567760cfbae1b2edf40b30225.json",
+      "sha256": "sha256:b1493d6e31c799cbbf4476b6e4b4634594e636bb889f16129620faeeca22e03a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/candidate-repairs/5623426c3e08e5e1262bb9a69083839a270688cee2ce3fc81771c092b054f68f.json",
+      "sha256": "sha256:5623426c3e08e5e1262bb9a69083839a270688cee2ce3fc81771c092b054f68f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:ec02647a9715d1a54865457fe16a190a1631f54d78a9b6af45c96f4b208b40f0"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:c056589f35d66300fb544b4f47c11689e7129107dfda3400ce0d6cfab0a4d898"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/acceptances.v1.json",
+      "sha256": "sha256:699b57f044f0c43e77803a46b4c60362c788d8a5bd6e0936bb9c40023bc8dec1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S1/agent-context.json",
+      "sha256": "sha256:49aaccd4f7fd76dcd2c222e11a9551ca68806f86ba6f0d78594b772d9d742184"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S10/agent-context.json",
+      "sha256": "sha256:bf87750c61e17111d190a7c92c757d15fc3cc6546bc0ffa34cd9b75568145e79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S11/agent-context.json",
+      "sha256": "sha256:382cfb55d7c10e1a94387bdcc5c572a47cfc3a523289e81288f6e25c40d94c1b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fa8d6be09c510ff6df068ddd8f2b341ed07f1edd35662ab69f4b51e148e7e562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:667271cd77986b3b9ae91054f82f53a466283cd72615b69b5458d21f029316bc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:493aeccf6c19e95784523a6aa6d7de450fa01fd76e894dbd5207a9891c2ea672"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S14/agent-context.json",
+      "sha256": "sha256:5e27b677db805f3d5ace4a8919f42ef39072820c2656239970cdc542a78ad0ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S15/agent-context.json",
+      "sha256": "sha256:a4bb48842f4bc93b6355d7e2976a481e3d3c8363eca522cdfbbaca9048bd0593"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S16/agent-context.json",
+      "sha256": "sha256:3e2880a3099ddbb819342a3a80d36acd60eaa98230edf6cf2a2ff7ed02591bf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S17/agent-context.json",
+      "sha256": "sha256:82fbd7e07536f1fa440ab76787d916d3ef71237a118aafc207f1fa0b0d76b1e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S18/agent-context.json",
+      "sha256": "sha256:0be22f40f1f3c1288022b554b03d148c95dc085e0f22ad61b6aa35b3ec16067b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S19/agent-context.json",
+      "sha256": "sha256:d1529ff3dfc7e30f01dff28dd4efcb53b2cfc15f898c561b05ffe9aa2963bb7c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S2/agent-context.json",
+      "sha256": "sha256:c228070d11263bcb43e881447a1681d723ad97977f8ce7bd0e38508baa25727a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S20/agent-context.json",
+      "sha256": "sha256:656b718b16beadc3eabecb5b3ec10e5e15409e3e6a82582de352d899f30aeb85"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S21/agent-context.json",
+      "sha256": "sha256:7d060e428bf866edfe048a1b7a14ddfdfa97d42e7cb10311dcc8a174fee46b90"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S22/agent-context.json",
+      "sha256": "sha256:82c233b0cdfe04cb49dea7611aa0a2576920a422567e3318e6b2fb9f6db9b28d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S23/agent-context.json",
+      "sha256": "sha256:8040da3192495d04a4399034150f41a1aed50cdcec3a3ea73328bd06122a2e36"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1046d245c74e2575eefc5910e5ad67ba9d80724f3bd8d65089aa714b8231821d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S25/agent-context.json",
+      "sha256": "sha256:0754bc553c2b3f062735db519e81dbedddf3b752631b01a507f8ad35cf7fd205"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S3/agent-context.json",
+      "sha256": "sha256:b5760fe78a5380a092334ad8fc6d3097c2e6c35a1ef8adc5872fc95ace4d94ea"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S4/agent-context.json",
+      "sha256": "sha256:6401f9fc2f65320e79c8c9fcb08ba47dc4672eb4d1060d2d3fc9d1b01b21dca4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S5/agent-context.json",
+      "sha256": "sha256:08a9abf8f5103a7d993287678e694de5575489e8feffc97ffde2eee2edc23549"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S6/agent-context.json",
+      "sha256": "sha256:7119679108511185f67bc53ede2a287d6c26a67e4b9a5a88e6064516a41281d6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:6579aeba4a85a8cdaa386d3bec07adfcccb437a78f617c91fbbe72d0999a5746"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:09f3602863d47031ff9ea654065ac26ff87dc70eff111d9781f494a7b59ab431"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S8/agent-context.json",
+      "sha256": "sha256:f0124e566c631607fa4094bbdcc601558bc2ce2d54b6c6edbc5a18bd39913991"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8cf400e59a0cf85e9d1684322986de975dfa5cd1452702b3935ecb01ea89a163"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/compiler-state.v1.json",
+      "sha256": "sha256:c4c7a47ba647735814c8ee03c8273b615ed15c350ea932d6bb8e3dbdec357847"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/failure-intents.v1.json",
+      "sha256": "sha256:64504658f54435ecf4d1ec3d20dac048c5a70cef4a4923b7ff06f6f822a60552"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/final-plan-coverage.v1.json",
+      "sha256": "sha256:33a43cfd79771dec2a0b7c11b419ed90ff5f140cad5cd5340e77f7e07517992a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/pre-slice-coverage.v1.json",
+      "sha256": "sha256:933a1911ea81ab726c1a906f245c6f3f2fbf3e1c106ca658d71cd86ac915e757"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/semantic-chain-audit.v1.json",
+      "sha256": "sha256:544f41a85bc65b75e6c1587e9fcee76f27e0a89c5856821a2af42df2851258c4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:d1d6dc4a6694d42fc6f272250541649ea5ae622567760cfbae1b2edf40b30225"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/slices.v1.json",
+      "sha256": "sha256:f3f71613351f9a379703b299cec916e53c6c3e03b4814d85246b968bfcf17a9e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-plan/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/acceptances.v1.json",
+      "sha256": "sha256:edd55065715031e5f05c8bb25387ed8bf9b97007d77aaa9e3c04e47a96808bc5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S1/agent-context.json",
+      "sha256": "sha256:49aaccd4f7fd76dcd2c222e11a9551ca68806f86ba6f0d78594b772d9d742184"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S10/agent-context.json",
+      "sha256": "sha256:bf87750c61e17111d190a7c92c757d15fc3cc6546bc0ffa34cd9b75568145e79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S11/agent-context.json",
+      "sha256": "sha256:382cfb55d7c10e1a94387bdcc5c572a47cfc3a523289e81288f6e25c40d94c1b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fa8d6be09c510ff6df068ddd8f2b341ed07f1edd35662ab69f4b51e148e7e562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S13-R1/agent-context.json",
+      "sha256": "sha256:7caa67c75cbb27d6c614d69dea1b6b7965090e4e829563b129801e428952617d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S13-R2-1/agent-context.json",
+      "sha256": "sha256:493aeccf6c19e95784523a6aa6d7de450fa01fd76e894dbd5207a9891c2ea672"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S14/agent-context.json",
+      "sha256": "sha256:5e27b677db805f3d5ace4a8919f42ef39072820c2656239970cdc542a78ad0ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S15/agent-context.json",
+      "sha256": "sha256:a4bb48842f4bc93b6355d7e2976a481e3d3c8363eca522cdfbbaca9048bd0593"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S16/agent-context.json",
+      "sha256": "sha256:3e2880a3099ddbb819342a3a80d36acd60eaa98230edf6cf2a2ff7ed02591bf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S17/agent-context.json",
+      "sha256": "sha256:82fbd7e07536f1fa440ab76787d916d3ef71237a118aafc207f1fa0b0d76b1e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S18/agent-context.json",
+      "sha256": "sha256:0be22f40f1f3c1288022b554b03d148c95dc085e0f22ad61b6aa35b3ec16067b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S19/agent-context.json",
+      "sha256": "sha256:d1529ff3dfc7e30f01dff28dd4efcb53b2cfc15f898c561b05ffe9aa2963bb7c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S2/agent-context.json",
+      "sha256": "sha256:c228070d11263bcb43e881447a1681d723ad97977f8ce7bd0e38508baa25727a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S20/agent-context.json",
+      "sha256": "sha256:656b718b16beadc3eabecb5b3ec10e5e15409e3e6a82582de352d899f30aeb85"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S21/agent-context.json",
+      "sha256": "sha256:7d060e428bf866edfe048a1b7a14ddfdfa97d42e7cb10311dcc8a174fee46b90"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S22/agent-context.json",
+      "sha256": "sha256:82c233b0cdfe04cb49dea7611aa0a2576920a422567e3318e6b2fb9f6db9b28d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S23/agent-context.json",
+      "sha256": "sha256:8040da3192495d04a4399034150f41a1aed50cdcec3a3ea73328bd06122a2e36"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1046d245c74e2575eefc5910e5ad67ba9d80724f3bd8d65089aa714b8231821d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S25/agent-context.json",
+      "sha256": "sha256:0754bc553c2b3f062735db519e81dbedddf3b752631b01a507f8ad35cf7fd205"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S3/agent-context.json",
+      "sha256": "sha256:b5760fe78a5380a092334ad8fc6d3097c2e6c35a1ef8adc5872fc95ace4d94ea"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S4/agent-context.json",
+      "sha256": "sha256:6401f9fc2f65320e79c8c9fcb08ba47dc4672eb4d1060d2d3fc9d1b01b21dca4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S5/agent-context.json",
+      "sha256": "sha256:08a9abf8f5103a7d993287678e694de5575489e8feffc97ffde2eee2edc23549"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S6/agent-context.json",
+      "sha256": "sha256:7119679108511185f67bc53ede2a287d6c26a67e4b9a5a88e6064516a41281d6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:6579aeba4a85a8cdaa386d3bec07adfcccb437a78f617c91fbbe72d0999a5746"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:09f3602863d47031ff9ea654065ac26ff87dc70eff111d9781f494a7b59ab431"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S8/agent-context.json",
+      "sha256": "sha256:f0124e566c631607fa4094bbdcc601558bc2ce2d54b6c6edbc5a18bd39913991"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8cf400e59a0cf85e9d1684322986de975dfa5cd1452702b3935ecb01ea89a163"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/compiler-state.v1.json",
+      "sha256": "sha256:3834d05187b4c822903868f1b8a0482503c544f0d296bd845dadcc367641640d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/failure-intents.v1.json",
+      "sha256": "sha256:ea79c6ddf6182dd53bacbb549faeedbf2dc7f781d028f10357c76f6b6223e8e9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/final-plan-coverage.v1.json",
+      "sha256": "sha256:89c016eed396ded112e9f3a9ab30fa00d024871a95691ec2ee820c49f94196a0"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/handoff-repair.v1.json",
+      "sha256": "sha256:b04f88b24351fc24ec8c6b4da4a6189cd0cd59e8fc32a3ee02c36909d4cc7cc2"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/pre-slice-coverage.v1.json",
+      "sha256": "sha256:9b560d05d6f8ed2835d0a7b28f70b4b18fd748e1038eccf28b3a7598a5559ba9"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/semantic-chain-audit.v1.json",
+      "sha256": "sha256:32d467ecc142df1cf568be8ef35aec884137a90beef4c3f6525c30bfc02c2109"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:8b8dcc27db17ae8cff880002e32dbbcd262d177ee980f02b93a70d48f744f0db"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/slices.v1.json",
+      "sha256": "sha256:b0afb1ba4fc55d57bd68f1b5a7e3fe8cab8764400ff979b77236afbe7a635114"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-distinct-runtime-plan-v2/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-attempts/v4-published-recall-da909f105136b297ca15fd994b437e1005e105b3950f64b0c3467c238e2c3abc.json",
+      "sha256": "sha256:0139ccd1d56a283de1e6bc46fa4f4848175392858213f0637f8c3602e7785291"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "sha256": "sha256:7e61adc7725fff7709ee44edcd2c2efbd7aecd6f0ce6fe1b7f26b842087b208c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "sha256": "sha256:f7eae5aa60f1a5cd103a3ac25d8486149d274d5429876dbe50d73c9e5aea31c8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "sha256": "sha256:8710c37439312c280f949459b51820a73f47495a594d641cc3bbabf81bc96c4f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "sha256": "sha256:8444661c35bea9fcb6b12f99cfbba9f2f7b6fc5c50c0cb0cc5d5d425ba435739"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/candidate-repairs/35490d9b9c6fdcae4faad3de954648a4c05ebd6412cee3522e02ca97ae618313.json",
+      "sha256": "sha256:35490d9b9c6fdcae4faad3de954648a4c05ebd6412cee3522e02ca97ae618313"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/compiler-progress.jsonl",
+      "sha256": "sha256:881ce2989a227f16cdc0a1ef751e89199df4ada81c4103026da895c849f91e9c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/published-v3-repair-active.json",
+      "sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "sha256": "sha256:7781827e9ec4597bb0cd0bf24285ec1f42f4bba48718653175715eb92821bcbd"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "sha256:528f292e94148812102116e2ac8fa088736d3e9ec51c0d44782ec726c2ee1a49"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "sha256:f80acc752840470730aa557c61c515747c96d4f379c42abe21ff4624fe24b7be"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "sha256": "sha256:eaa0b85bf3d41f796c7bbf8596571c9779c7ed996f7134f464aa00facbaa9138"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "sha256": "sha256:cedb0e42dfd5b83964b463904f7740923e259332e5a3b6f8943ad26dae62cdc8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/acceptances.v1.json",
+      "sha256": "sha256:91ee5ac1cd1cce85f1a71e88d80b1e33e8e0ae52563e8c757b4e008fabe5ce8e"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S1/agent-context.json",
+      "sha256": "sha256:49aaccd4f7fd76dcd2c222e11a9551ca68806f86ba6f0d78594b772d9d742184"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S10/agent-context.json",
+      "sha256": "sha256:bf87750c61e17111d190a7c92c757d15fc3cc6546bc0ffa34cd9b75568145e79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S11/agent-context.json",
+      "sha256": "sha256:382cfb55d7c10e1a94387bdcc5c572a47cfc3a523289e81288f6e25c40d94c1b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fa8d6be09c510ff6df068ddd8f2b341ed07f1edd35662ab69f4b51e148e7e562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S13/agent-context.json",
+      "sha256": "sha256:8c31012c297771a9ecb3b7bd914f6108c3e883f436bd46f1fc53220c6f3225ab"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S14/agent-context.json",
+      "sha256": "sha256:5e27b677db805f3d5ace4a8919f42ef39072820c2656239970cdc542a78ad0ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S15/agent-context.json",
+      "sha256": "sha256:a4bb48842f4bc93b6355d7e2976a481e3d3c8363eca522cdfbbaca9048bd0593"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S16/agent-context.json",
+      "sha256": "sha256:3e2880a3099ddbb819342a3a80d36acd60eaa98230edf6cf2a2ff7ed02591bf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S17/agent-context.json",
+      "sha256": "sha256:82fbd7e07536f1fa440ab76787d916d3ef71237a118aafc207f1fa0b0d76b1e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S18/agent-context.json",
+      "sha256": "sha256:0be22f40f1f3c1288022b554b03d148c95dc085e0f22ad61b6aa35b3ec16067b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S19/agent-context.json",
+      "sha256": "sha256:d1529ff3dfc7e30f01dff28dd4efcb53b2cfc15f898c561b05ffe9aa2963bb7c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S2/agent-context.json",
+      "sha256": "sha256:c228070d11263bcb43e881447a1681d723ad97977f8ce7bd0e38508baa25727a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S20/agent-context.json",
+      "sha256": "sha256:656b718b16beadc3eabecb5b3ec10e5e15409e3e6a82582de352d899f30aeb85"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S21/agent-context.json",
+      "sha256": "sha256:7d060e428bf866edfe048a1b7a14ddfdfa97d42e7cb10311dcc8a174fee46b90"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S22/agent-context.json",
+      "sha256": "sha256:82c233b0cdfe04cb49dea7611aa0a2576920a422567e3318e6b2fb9f6db9b28d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S23/agent-context.json",
+      "sha256": "sha256:8040da3192495d04a4399034150f41a1aed50cdcec3a3ea73328bd06122a2e36"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1046d245c74e2575eefc5910e5ad67ba9d80724f3bd8d65089aa714b8231821d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S25/agent-context.json",
+      "sha256": "sha256:0754bc553c2b3f062735db519e81dbedddf3b752631b01a507f8ad35cf7fd205"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S3/agent-context.json",
+      "sha256": "sha256:b5760fe78a5380a092334ad8fc6d3097c2e6c35a1ef8adc5872fc95ace4d94ea"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S4/agent-context.json",
+      "sha256": "sha256:6401f9fc2f65320e79c8c9fcb08ba47dc4672eb4d1060d2d3fc9d1b01b21dca4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S5/agent-context.json",
+      "sha256": "sha256:08a9abf8f5103a7d993287678e694de5575489e8feffc97ffde2eee2edc23549"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S6/agent-context.json",
+      "sha256": "sha256:7119679108511185f67bc53ede2a287d6c26a67e4b9a5a88e6064516a41281d6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:6579aeba4a85a8cdaa386d3bec07adfcccb437a78f617c91fbbe72d0999a5746"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:09f3602863d47031ff9ea654065ac26ff87dc70eff111d9781f494a7b59ab431"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S8/agent-context.json",
+      "sha256": "sha256:f0124e566c631607fa4094bbdcc601558bc2ce2d54b6c6edbc5a18bd39913991"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8cf400e59a0cf85e9d1684322986de975dfa5cd1452702b3935ecb01ea89a163"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/compiler-state.v1.json",
+      "sha256": "sha256:a67bf3873b507ad302b95e2fa68a43926c5e2cb6a310713ad8f24a052d357124"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/failure-intents.v1.json",
+      "sha256": "sha256:35288d959a92286a421ca53b0717507420458f523b742eb2d2a17387ebe4ce1f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/final-plan-coverage.v1.json",
+      "sha256": "sha256:57a51558031cae381181df6e7d72e1c409c5e766baae54e17d95af49b4aea4b4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/pre-slice-coverage.v1.json",
+      "sha256": "sha256:c21a9e5dfe93d87203d2cddf98a071a8814a8f4c1b6467a6f3acb9c2eff6c508"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/semantic-chain-audit.v1.json",
+      "sha256": "sha256:544f41a85bc65b75e6c1587e9fcee76f27e0a89c5856821a2af42df2851258c4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:da909f105136b297ca15fd994b437e1005e105b3950f64b0c3467c238e2c3abc"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/slices.v1.json",
+      "sha256": "sha256:14ce03a31c8f91da963c87e18c74a761191837366302f929257b19c2bb3fb7d8"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-execution-plan/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/acceptances.v1.json",
+      "sha256": "sha256:72717afa3a465b86b8d3cd74777e1c6df9a73cce7790536783b10d6979cc88a5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S1/agent-context.json",
+      "sha256": "sha256:49aaccd4f7fd76dcd2c222e11a9551ca68806f86ba6f0d78594b772d9d742184"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S10/agent-context.json",
+      "sha256": "sha256:bf87750c61e17111d190a7c92c757d15fc3cc6546bc0ffa34cd9b75568145e79"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S11/agent-context.json",
+      "sha256": "sha256:382cfb55d7c10e1a94387bdcc5c572a47cfc3a523289e81288f6e25c40d94c1b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S12/agent-context.json",
+      "sha256": "sha256:fa8d6be09c510ff6df068ddd8f2b341ed07f1edd35662ab69f4b51e148e7e562"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S13/agent-context.json",
+      "sha256": "sha256:b881c8f9e522ee1250b6fa1599c6026a2ef0be6a51e2b07b279b24e7210bd55c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S14/agent-context.json",
+      "sha256": "sha256:5e27b677db805f3d5ace4a8919f42ef39072820c2656239970cdc542a78ad0ba"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S15/agent-context.json",
+      "sha256": "sha256:a4bb48842f4bc93b6355d7e2976a481e3d3c8363eca522cdfbbaca9048bd0593"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S16/agent-context.json",
+      "sha256": "sha256:3e2880a3099ddbb819342a3a80d36acd60eaa98230edf6cf2a2ff7ed02591bf5"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S17/agent-context.json",
+      "sha256": "sha256:82fbd7e07536f1fa440ab76787d916d3ef71237a118aafc207f1fa0b0d76b1e1"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S18/agent-context.json",
+      "sha256": "sha256:0be22f40f1f3c1288022b554b03d148c95dc085e0f22ad61b6aa35b3ec16067b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S19/agent-context.json",
+      "sha256": "sha256:d1529ff3dfc7e30f01dff28dd4efcb53b2cfc15f898c561b05ffe9aa2963bb7c"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S2/agent-context.json",
+      "sha256": "sha256:c228070d11263bcb43e881447a1681d723ad97977f8ce7bd0e38508baa25727a"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S20/agent-context.json",
+      "sha256": "sha256:656b718b16beadc3eabecb5b3ec10e5e15409e3e6a82582de352d899f30aeb85"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S21/agent-context.json",
+      "sha256": "sha256:7d060e428bf866edfe048a1b7a14ddfdfa97d42e7cb10311dcc8a174fee46b90"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S22/agent-context.json",
+      "sha256": "sha256:82c233b0cdfe04cb49dea7611aa0a2576920a422567e3318e6b2fb9f6db9b28d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S23/agent-context.json",
+      "sha256": "sha256:8040da3192495d04a4399034150f41a1aed50cdcec3a3ea73328bd06122a2e36"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S24/agent-context.json",
+      "sha256": "sha256:1046d245c74e2575eefc5910e5ad67ba9d80724f3bd8d65089aa714b8231821d"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S25/agent-context.json",
+      "sha256": "sha256:0754bc553c2b3f062735db519e81dbedddf3b752631b01a507f8ad35cf7fd205"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S3/agent-context.json",
+      "sha256": "sha256:b5760fe78a5380a092334ad8fc6d3097c2e6c35a1ef8adc5872fc95ace4d94ea"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S4/agent-context.json",
+      "sha256": "sha256:6401f9fc2f65320e79c8c9fcb08ba47dc4672eb4d1060d2d3fc9d1b01b21dca4"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S5/agent-context.json",
+      "sha256": "sha256:08a9abf8f5103a7d993287678e694de5575489e8feffc97ffde2eee2edc23549"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S6/agent-context.json",
+      "sha256": "sha256:7119679108511185f67bc53ede2a287d6c26a67e4b9a5a88e6064516a41281d6"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S7-R1/agent-context.json",
+      "sha256": "sha256:6579aeba4a85a8cdaa386d3bec07adfcccb437a78f617c91fbbe72d0999a5746"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S7-R2/agent-context.json",
+      "sha256": "sha256:09f3602863d47031ff9ea654065ac26ff87dc70eff111d9781f494a7b59ab431"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S8/agent-context.json",
+      "sha256": "sha256:f0124e566c631607fa4094bbdcc601558bc2ce2d54b6c6edbc5a18bd39913991"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/agent-context/S9/agent-context.json",
+      "sha256": "sha256:8cf400e59a0cf85e9d1684322986de975dfa5cd1452702b3935ecb01ea89a163"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/atomic-recall-alignment.v1.json",
+      "sha256": "sha256:5ec6f5264373f2a2ad3c38419474a49d47fc10935bc2f4f729dfe811e5d202df"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/compiler-state.v1.json",
+      "sha256": "sha256:80fdec754353652b20138b49cdaa91d28fcb040c6359d77977680986795dc61b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/failure-intents.v1.json",
+      "sha256": "sha256:48f7eaa8fdc88dd39338edcc316536da57daccc4ad83c3afc8d5eb5e7481e464"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/feasibility.v1.json",
+      "sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/final-plan-coverage.v1.json",
+      "sha256": "sha256:32f60eb2af5e28c7d07b88cc38aa213857cac07589d883f6b0d1d35964634a91"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/handoff-repair.v1.json",
+      "sha256": "sha256:bf3b6d1363fd6e8cbd8c24dad2179558bdfb1eb360e7b78d862e3605623bd6a2"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/obligations.v1.json",
+      "sha256": "sha256:9c8629d0c83e0f54ca62f765ed36bb4ec6d619f184cf178edb106f627af5df74"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/pre-slice-coverage.v1.json",
+      "sha256": "sha256:a45031d68a7e926e79e96b6d896d2d57be5e20f70397514fd9bce14df419d19b"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/semantic-alignment.v1.json",
+      "sha256": "sha256:4a8ce33c6be7df5feb547c4193f9cc649e764e4ef9e849a383993bb9a5899248"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/semantic-chain-audit.v1.json",
+      "sha256": "sha256:32d467ecc142df1cf568be8ef35aec884137a90beef4c3f6525c30bfc02c2109"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:043cfb53273cd3b9fa9a999dd32bf008aead6695fccf606fd2fef8a083b8db35"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/slices.v1.json",
+      "sha256": "sha256:46bc98d0aa9f80ed8ab8c1437dd2ade1875d0fa1d0e49e60ae7ff4231c7e3d6f"
+    },
+    {
+      "path": "execution-plans/2026-08-06-skill-authoring-standard/validator-runtime-plan/source-index.v1.json",
+      "sha256": "sha256:7f501e8abd903f6453e0fd64ee30c976dd7e2a58f8f475502d57a5e9e37cc556"
+    }
+  ]
+}

@@ -206,3 +206,10 @@ For semantically unchanged published plans with execution-only defects, use
 `--repair-quick-dev-handoff-from`. It checks exact semantic projection and
 reuses bound V1/V4 witnesses. Semantic changes still require V4 and complete
 final coverage. This change introduces no new reviewer or review cache.
+
+An explicit runtime-role-only repair keeps already valid execution bindings.
+Whole-plan test rebinding is used only for actual binding conflicts. For a
+shared multi-file test surface, each existing file's markers are checked against
+its own declared domain. Prose source prerequisites remain in obligations and
+are not invented as obligation-ID graph edges. Source-index verification and
+republication retain the producer's entries/companions identity shape.
