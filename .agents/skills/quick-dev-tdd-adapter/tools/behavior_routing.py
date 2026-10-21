@@ -53,7 +53,9 @@ def production_hashes(workspace, bundle, slice_id):
         seen.add(oid)
         paths.update(index[oid]["production_owners"])
         todo.extend(dep for dep in index[oid]["depends_on"] if dep in index)
-    return hash_refs(workspace, sorted(paths))
+    # Documentary/test-only guards have no production dependency to hash.
+    # Their frozen cases and runtime roots remain independently bound.
+    return hash_refs(workspace, sorted(paths)) if paths else {}
 
 
 def derive_dispositions(bundle, descriptor, receipt):

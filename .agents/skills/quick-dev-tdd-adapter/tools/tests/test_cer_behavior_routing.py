@@ -440,3 +440,17 @@ def test_mixed_plan_closes_explicit_slices_without_number_order(tmp_path):
     result=publish_implementation_complete(workspace=tmp_path,semantic_plan=semantic,predecessors=predecessors,
         snapshot_roots=roots,source_commit="TEST",out=tmp_path/"complete.json")
     assert result["status"]=="pass" and len(result["runtime_closure_tuples"])==6
+
+
+def test_test_only_guard_has_empty_production_hash_closure(tmp_path):
+    """ADR-0041: a documentary guard must not invent a production owner."""
+    semantic,_roots=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text())
+    for obligation in bundle['obligations']:
+        obligation.update(obligation_kind='governance',requirement_type='Governance')
+    for item in bundle['slices']:
+        item['production_owners']=[]
+    from semantic_behavior_contract import project_intents
+    bundle['behavior_routing']['intents']=project_intents(bundle)
+    assert production_hashes(tmp_path,bundle,'S1')=={}
+    assert all(intent['production_owners']==[] for intent in bundle['behavior_routing']['intents'])

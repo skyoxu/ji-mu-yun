@@ -537,3 +537,11 @@ runtime profile at Q1 and retains all process/case, Q6 regression, snapshot, Q7
 and Q8 requirements. VDD plan-shape profiles remain independent. Historical
 self-hosted slice runs are diagnostic/TDD history only; they are not relabelled
 as standard receipts or detached-judge promotion evidence.
+
+### 2026-10-21 documentary guard runtime dependency closure
+
+A pure documentary/test-only guard with no production owners has an empty
+production hash map. Its exact frozen tests, fixtures, plan and runtime roots
+remain required. Actual production and transitive owner dependencies still use
+the existing strict hash_refs path. This neither creates an implementation
+owner nor grants production-write or expected-RED authority.
