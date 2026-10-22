@@ -69,6 +69,35 @@ Source-role contract revisions partition affected transport caches; old worker
 judgments are not silently reused as fresh judgments under a changed contract.
 The exact-ID partition, coverage thresholds and single recheck budget remain.
 
+V3 grouped wire, chunk recomposition and cached internal candidates apply the
+same environment-aware execution-hint projection before cache admission and
+execution-contract validation. Declared production owners remain writable;
+missing production owners require the exact planned-file declaration in the
+returned candidate. Exact source-authorized redundant fields may be projected,
+but a validator cannot repair only a private copy and then return different
+bytes. Raw semantic worker output and failed history remain unchanged.
+V1 receives only semantic source and provenance, excluding V3-only
+`execution_context_text`. Existing controller/Q2/RED ownership instructions are
+planning/execution context, not new product features. The original frozen
+context remains available to V3 for path, write and validation contracts;
+independent recall continues to judge the actual product source. No product
+obligation is removed by a keyword filter or replaced by a workflow instruction.
+For table-authored inputs, V3 also receives the explicit file-level authoring
+block from the same V0/V0A-frozen source file. Its source/hash provenance remains
+visible in execution_context_sources; it is not another obligation source.
+This prevents an individual row's V3 request from losing the common path,
+write-set and validation contract stored outside that row. Per-obligation repair
+retains applicable file context without changing source refs or V1 semantics.
+The projection never rereads current files or supplies another file's context
+as authority. Existing candidate validation, independent V4 and current runtime
+production binding still decide admissibility; authoring instructions establish
+no execution result or readiness.
+An explicit empty-owner, all-test envelope retains its verification role across
+schema repair and rollback recovery. A repair-stage label or stale rollback
+field does not authorize promotion to a production writer. These projections
+establish declarations only; current file existence, runtime binding and
+independent V4 semantic alignment retain their existing gates and ownership.
+
 ### Existing Ownership Consequences
 
 Real-semantic evaluation supervises the public compiler CLI with an independent
@@ -346,3 +375,189 @@ successor still requires fresh V4 and every downstream gate. Historical plan,
 cache, Quick Dev evidence, authorization and C3 status remain unchanged. If
 fresh atomic recall discovers a source gap, this successor stops at V4; it
 does not silently expand V1 under an Acceptance-only correction.
+
+### Explicit caller-session transport (2026-10-20)
+
+The maintainer authorized an additional host-session transport for VDD, Quick
+Dev and deterministic Acceptance in online workspaces. The shared backend may
+publish bound pending requests for the trusted current caller and consume its
+actual responses, without requiring a Codex executable or API credentials.
+Requests bind repository/session, nonce, exact prompt, mode and deadline; replies
+are single-use non-authorizing inputs. Native consumers still own schema,
+semantic, write-set, test and lifecycle checks. This is not an adversarial
+sandbox or proof of a separate reviewer process. Local CLI defaults and optional
+Bootstrap/complex-recovery capability policy remain unchanged. See
+`docs/workflows/caller-session-execution.md`.
+
+
+### Execution preflight and transport repair boundaries (2026-10-20)
+
+The maintainer authorized bounded VDD stability repairs after the 08-06 online
+compilation and review of retained 08-05/08-24 evidence. V3 candidates now have
+a non-authorizing projection through existing execution and handoff gates before
+V4 Acceptance alignment. Source recall remains distinct and may precede V3.
+Preview operates on copies, records diagnostics by content hash and never
+changes worker inputs. Final semantic, coverage and publication gates remain
+mandatory; published historical evidence is not rewritten or reclassified.
+
+Ordinary and grouped V3 schemas permit an empty owner array only as a shape.
+The shared semantic rule allows it for bounded test-only governance/constraint
+guards without expected-red or production rollback scope. An ownerless product
+behavior remains invalid. Pytest node selectors retain their identity in argv;
+filesystem checks use the file component. Conditional failure descriptions are
+not unconditional failure programs; static checks do not establish real RED.
+
+Normal/V3-group/V4-domain/V4-source-gap transports share a bounded retry policy.
+Only positively identified transient service failures retry. Environment,
+unknown failures, timeout and cancellation stop without schema repair or group
+fan-out. Successful malformed responses retain one-shot schema repair, and
+successful exact child caches survive interruption. Provider/model defaults
+and shared backend ownership remain unchanged.
+
+Absent declared future production owners are reported as consumer warnings.
+Their first-use protocol belongs to Quick Dev; this change cannot authorize Q2
+production seeding or missing-import RED. Existing exact semantic-projection
+handoff repair remains the reuse route. Semantic changes require fresh V4.
+
+Evidence and limits: `logs/vdd-stability-20261020/README.md`. This maintenance
+does not implement Package A, certify acceptance, enable Bootstrap or change
+Phase runtime behavior.
+
+
+### Explicit new-entry preparation before RED (2026-10-20)
+
+Following the actual blocked 08-06 online trial, the maintainer explicitly
+requested repair of the first-use execution protocol and another online trial.
+This decision narrowly replaces the blanket ban on ALL production file creation
+before RED. It does not permit implementing feature behavior before RED or
+letting the Q2 test author create its own production subject.
+
+The stable Quick Dev CLI owns opt-in `prepare-entry`. It reruns Q1 and consumes
+an explicit plan/slice/HEAD-bound input containing exact missing planned owner
+paths and function signatures. Its deterministic renderer can only create
+Python callables returning None and empty JSON interfaces. It rejects existing
+or tracked-but-deleted paths, test/frozen/forbidden paths, symlinks, unknown
+fields, arbitrary bodies/data and undeclared owners before mutation. The native
+non-authorizing receipt records exact generated bytes; Q2 can revalidate it.
+No worker, model verdict or preparation receipt can grant implementation.
+
+Actual importable production entries therefore exist before tests are frozen,
+without supplying the requested behavior. Controlled probe and formal RED must
+still observe real result-contract AssertionError cases, exact failure IDs and
+nonzero case counts. Missing-import/setup/file-presence failures remain invalid.
+Q2 cannot modify production; Q4 still requires the native expected-red lineage.
+All normal CLI and online transports share this same native opt-in action.
+
+A Python -B invocation and multiple exact selectors must retain the complete
+slice case surface. Broader terminal/regression commands do not become Q2 test
+writers' targets and remain required Q6 checks. Static file-wide marker presence
+cannot substitute for selected-node proof.
+
+This is a bounded repository-maintainer protocol, not sandbox execution or a
+new lifecycle state. Historical failures and 08-06 source/semantic bindings are
+preserved. The entry preparation is not Package A or Skill-standard acceptance.
+See `logs/quick-dev-first-use-20261020/README.md` for tests and actual evidence.
+
+
+### Source-bound atomic repair after a controlled mixed probe (2026-10-20)
+
+The authorized online 08-06 continuation found one published obligation that
+combined three missing dependency diagnostics with an already-present static
+execution boundary. It also misclassified a harness failure as expected RED.
+The current probe correctly stopped; no production implementation is authorized
+by that mixed or invalid proof.
+
+The existing explicit published V1 split route is source-bound rather than
+hard-coded to the historical FR-6 label or exactly two outcomes. A caller may
+replace exactly one active predecessor obligation with two or more distinct
+active outcomes bound to the same exact current source. The route rejects
+unknown/duplicate/inactive targets, cross-source records, collisions with any
+predecessor obligation, stale source bytes and incomplete V3 contracts. It is
+non-authorizing authored input. Independent V4/atomic recall, downstream checks
+and the canonical compiler remain mandatory, and all predecessor evidence is
+immutable. Unrelated obligations/contracts are retained. This is a VDD repair
+capability, not a Package A product feature or permission to bypass RED.
+
+Published predecessor admission also verifies the exact source-index identity
+shape emitted by V0: ordinary indexes hash entries, while case-section indexes
+hash entries plus companions, including an explicitly empty companion list.
+The full declared shape must match; entries-only fallback cannot hide companion
+mutations. Historical index bytes are not rewritten.
+
+When a shared planned pytest module has been partially authored by Q2, a
+published repair may admit its incomplete static mapping only if every existing
+marker belongs to this same plan and exact frozen test surface. Empty mappings,
+unknown markers and markers assigned only to another file remain binding
+errors. This is Q2 authoring admission, not case coverage: native probe/RED,
+frozen selectors, runtime collectors and Q7/Q8 still require every exact case.
+No marker, file or plan string is promoted to execution evidence.
+
+Published V3 rehydration preserves each Acceptance's own preflight metadata
+through its source-bound hint, instead of recomputing it from the merged slice's
+broader owners. Unselected complexity/context/verification contracts must remain
+unchanged; the final drift gate is retained and semantic edits still fail.
+
+### Narrow Runtime Role Repair (2026-10-21)
+
+An explicit runtime-role repair retains all valid current test paths, snapshots,
+planned files and validation commands. Missing behavior RED roles alone do not
+authorize whole-plan test rebinding. Conflicting execution bindings still use
+the existing bounded repair path and report that disposition. No role is an
+observed failure or human approval. Published handoff source identities use the
+producer's exact shape: entries for legacy sources, or entries plus companions
+when that key exists, including an empty companion list. Both validation and
+republication use the same identity calculation.
+
+### Shared Test Surface Selection (2026-10-21)
+
+Handoff admission checks each existing planned test file against that file's
+own assertion domain; markers in the first file cannot stand in for another
+file. Current CER materialization may narrow a declared pytest file to complete
+literal marker-bound node IDs without importing tests. Every parameter carrying
+a required marker remains selected. Unsupported or incomplete static mappings
+retain the declared selector and all existing runtime gates. The frozen probe's
+argv, cwd, targets, fixtures and timeout remain identical through nonterminal
+stages. Required agent-context regressions remain unchanged and execute through
+the existing regression gate. No unknown failure, deselected required case, or
+other slice's assertion becomes RED authority.
+
+### 2026-10-21 terminal selector correction
+
+Recompute Q2 literal CER bindings after test authoring, before the initial probe
+freeze. Preserve that exact selector through nonterminal stages. Terminal uses
+the original declared frozen module selection, including unmarked regressions,
+with its independent timeout. Exact-marker narrowing cannot silently reduce
+whole-plan terminal coverage. Native evidence writers and Q7/Q8 gates are unchanged.
+
+### 2026-10-21 Package A runtime profile
+
+Package A is an ordinary static-validator implementation, not a promotion of a
+new detached judge. Its final fresh implementation replay selects the standard
+runtime profile at Q1 and retains all process/case, Q6 regression, snapshot, Q7
+and Q8 requirements. VDD plan-shape profiles remain independent. Historical
+self-hosted slice runs are diagnostic/TDD history only; they are not relabelled
+as standard receipts or detached-judge promotion evidence.
+
+### 2026-10-21 documentary guard runtime dependency closure
+
+A pure documentary/test-only guard with no production owners has an empty
+production hash map. Its exact frozen tests, fixtures, plan and runtime roots
+remain required. Actual production and transitive owner dependencies still use
+the existing strict hash_refs path. This neither creates an implementation
+owner nor grants production-write or expected-RED authority.
+
+
+### Quick Dev usability maintenance (2026-10-22)
+
+The maintainer authorized the reviewed Quick Dev maintenance improvements.
+A CER obligation with mixed passed and genuine expected-failing cases remains
+missing, with exact per-case RED continuity and full passing successor coverage.
+Read-only session preflight checks explicit source/base, profile, snapshot roots,
+paths and dependency ordering before execution. A bounded deterministic session
+adapter calls native stage/reentry/Q7/Q8 owners and pauses for existing author,
+implementation and refactor workers; it calls no model and gains no Acceptance
+authority. Static selector inspection may narrow complete literal mappings within
+declared scope; full terminal and required Q6 commands remain unchanged.
+Existing local and online caller-session worker routes remain supported. The
+reusable .NET/TRX helper stays deferred to pre-S2. This decision does not adopt
+ADR-0062 or perform Package A Acceptance.

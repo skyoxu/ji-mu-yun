@@ -53,25 +53,29 @@ def production_hashes(workspace, bundle, slice_id):
         seen.add(oid)
         paths.update(index[oid]["production_owners"])
         todo.extend(dep for dep in index[oid]["depends_on"] if dep in index)
-    return hash_refs(workspace, sorted(paths))
+    # Documentary/test-only guards have no production dependency to hash.
+    # Their frozen cases and runtime roots remain independently bound.
+    return hash_refs(workspace, sorted(paths)) if paths else {}
 
 
 def derive_dispositions(bundle, descriptor, receipt):
     """A hypothesis is admitted only by all of the obligation's actual cases."""
-    from case_evidence import assertion_cases
+    from case_evidence import assertion_cases, case_outcomes
     rows = []
     assertions = descriptor["acceptance_assertions"]
     for intent in intents_for(bundle, descriptor["slice_id"]):
         keys = {(a["acceptance_id"], a["assertion_id"]) for a in assertions
                 if a["acceptance_id"] in intent["acceptance_ids"]}
         disposition, reason, cases = "unverifiable", "assertion-binding-gap", {}
+        partial = False
         if keys:
-            for expected, value in (("pass", "present"), ("red", "missing")):
+            for expected, value in (("pass", "present"), ("red", "missing"), ("partial-red", "missing")):
                 try:
                     if receipt.get("exit_code") not in {0, 1} or receipt.get("timed_out") or receipt.get("repo_noise_paths"):
                         raise ValueError("probe-environment-or-process-gap")
                     cases = assertion_cases(descriptor, receipt, keys=keys, expected=expected)
                     disposition, reason = value, "observed-cases"
+                    partial = expected == "partial-red"
                     break
                 except (OSError, ValueError, KeyError, TypeError) as exc:
                     reason = str(exc)
@@ -79,6 +83,8 @@ def derive_dispositions(bundle, descriptor, receipt):
                      "reason": reason, "acceptance_ids": intent["acceptance_ids"],
                      "cases": [{"acceptance_id": a, "assertion_id": s, "case_ids": nodes}
                                for (a, s), nodes in sorted(cases.items())] if disposition != "unverifiable" else []})
+        if partial:
+            rows[-1]["case_outcomes"] = case_outcomes(receipt, cases)
     return rows
 
 
@@ -171,6 +177,19 @@ def verify_case_continuity(descriptor, receipt, route):
         actual = assertion_cases(descriptor, receipt)
         if actual != {k: expected[k] for k in actual}:
             raise ValueError("behavior-routing:probe-case-set-drift")
+        if descriptor["stage"] == "red":
+            from case_evidence import case_outcomes
+            expected_outcomes = []
+            for row in route["behavior_dispositions"]:
+                if row["disposition"] != "missing":
+                    continue
+                expected_outcomes.extend(row.get("case_outcomes", [
+                    {"acceptance_id": c["acceptance_id"], "assertion_id": c["assertion_id"],
+                     "case_id": node, "outcome": "failed"}
+                    for c in row["cases"] for node in c["case_ids"]]))
+            sort_key = lambda r: (r["acceptance_id"], r["assertion_id"], r["case_id"])
+            if sorted(case_outcomes(receipt, actual), key=sort_key) != sorted(expected_outcomes, key=sort_key):
+                raise ValueError("behavior-routing:probe-case-outcome-drift")
 
 
 def current_result(workspace, bundle, slice_id, result):
@@ -199,3 +218,18 @@ def next_action(workspace, bundle, run_root, route):
             except ValueError:
                 return "author-red"  # Fresh run/probe; never overwrite old proof.
     return "validate-slice"
+
+
+def red_failure_ids(descriptor, route):
+    """Passing-only assertions in a partial obligation do not invent RED failures."""
+    failed_keys = set()
+    for row in route["behavior_dispositions"]:
+        if row["disposition"] != "missing":
+            continue
+        if "case_outcomes" in row:
+            failed_keys.update((c["acceptance_id"], c["assertion_id"]) for c in row["case_outcomes"] if c["outcome"] == "failed")
+        else:
+            failed_keys.update((c["acceptance_id"], c["assertion_id"]) for c in row["cases"])
+    return sorted({fid for row in descriptor["case_contract"]["bindings"]
+                   if (row["acceptance_id"], row["assertion_id"]) in failed_keys
+                   for fid in row["expected_failure_ids"]})

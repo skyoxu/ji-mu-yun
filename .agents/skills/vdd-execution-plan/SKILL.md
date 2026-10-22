@@ -86,6 +86,12 @@ Timeout produces `compile-timeout`, never acceptance evidence. Windows process
 cleanup targets only the owned PID tree; inspect `cleanup_error` if termination
 fails. Existing caches and worker outputs remain available for offline diagnosis.
 
+Before V4 Acceptance alignment, the compiler checks the projected execution
+contract and reports bounded diagnostics. Transport failures do not enter schema
+repair; absent planned production owners produce a Quick Dev first-use warning.
+Follow [classified repair guidance](references/planning-operation.md#execution-preflight-and-classified-repair-2026-10-20), preserve unaffected contracts,
+and never treat a diagnostic as plan or implementation authority.
+
 ## Choose The Profile First
 
 Choose the least complex profile that serves a real consumer. Record the selected profile and reason in the plan.
@@ -165,3 +171,11 @@ a reviewed executable assertion to an expected-red role without changing its
 requirement category or existing diagnostic family. This is not automatic
 Governance conversion. See the planning guide and ADR-0041; approval decisions
 can never become runtime implementation authority through this option.
+
+## Online caller-session route
+
+For an online temporary workspace without authenticated Codex CLI, use the
+explicit [caller-session route](../../../docs/workflows/caller-session-execution.md).
+It invokes this Skill's existing native entry and retains its gates and lifecycle
+ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
+execution or acceptance evidence.

@@ -1,0 +1,12 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "resume_20": "Stopped after the source-gap repair request timed out at 180 seconds and immediately retried with the same timeout, despite --repair-timeout-seconds 600. All worker caches retained.",
+  "job_id": "j-s1q1hz",
+  "observed_source_gap_claims": 9,
+  "repair": "Apply the existing configurable repair timeout to exactly v1-source-gap-repair. Keep ordinary V1 extraction timeout and reasoning unchanged.",
+  "red_evidence": "v1-gap-timeout-red.txt",
+  "validation_evidence": "v1-gap-timeout-green.txt",
+  "passed": 18,
+  "readiness": "Not asserted."
+}

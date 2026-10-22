@@ -1,0 +1,99 @@
+{
+  "obligation_contracts": {
+    "O-D85202F9F745": {
+      "acceptance": {
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A25"
+        ],
+        "given": "以冻结的 SM-A25 和同源执行上下文为检查依据，待检查的 Package B 交接表位于 docs/standards/skill-authoring-standard.md；本检查不预设交接表已经存在或内容完整。",
+        "when": "创建或更新交接表后，在兼容的 A4 迁移验证通道中执行 scripts/sc/tests/test_skill_quality_migration.py::test_a25，对实际标准文件中的交接表进行工件检查。",
+        "then": "交接表为 vdd-execution-plan、quick-dev-tdd-adapter、run-phase-bootstrap-review、run-refactor-implementation-acceptance 和 maintain-knowledge-base 分别记录明确的预期迁移触点；这些记录描述后续 Package B 工作，并保留各 Skill 现有的权限、生命周期和证据归属。",
+        "oracle": {
+          "observable": "test_a25 读取实际标准文件，提取 Package B 交接表，并逐行检查五个指定 Skill 的身份和迁移触点单元格；检查实际工件内容，不以 validator 返回 pass 或测试文件存在代替表格完整性证明。",
+          "expected": "五个指定 Skill 均有可辨识的表格记录和非空、具体的迁移触点。各行分别覆盖 VDD 的 create/direct-implementation boundary/invalid input、Quick Dev 的 strict-plan handoff/upgrade classification/invalid contract、Bootstrap 的 clean path/later-round confirmation/failed access or preflight、Acceptance 的 deterministic path/repair route/manual pause or stale input，以及 Knowledge Base 的 existing-only refresh/targeted provisional result/publication or authority failure。交接内容同时指明适用的依赖与类型化错误、公共入口预检、按实际路由需要配置的决策图、低于 500 行及一级本地引用整理、定向验证与测试等迁移触点；不得将尚未执行的迁移写成已通过。",
+          "forbidden": [
+            "缺少任一指定 Skill 的迁移触点记录，或仅用统一占位语句代替各 Skill 的具体触点。",
+            "以 Package A 完成为由要求五个实际 Skill 已迁移或通过新标准。",
+            "将内部 reviewer 或 Bootstrap Review 改为强制完成门槛。",
+            "将被排除的 BMAD、GDS 或 Chapter 2-7 Skills 纳入此次迁移范围。",
+            "通过修改实际 Skill、其生命周期归属或权限边界来满足交接表检查。",
+            "将该工件检查分类为 expected-red 产品运行时观察。"
+          ]
+        },
+        "assertion_ids": [
+          "ASSERT_D85202F9F745_FIVE_SKILL_HANDOFF_ROWS",
+          "ASSERT_D85202F9F745_SKILL_SPECIFIC_MIGRATION_TOUCHPOINTS",
+          "ASSERT_D85202F9F745_HANDOFF_REMAINS_FUTURE_PACKAGE_B_WORK"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "在 scripts/sc/tests/test_skill_quality_migration.py::test_a25 中读取实际 docs/standards/skill-authoring-standard.md，对五个指定 Skill 的表格记录、各自具体迁移触点及未来 Package B 工作表述执行独立断言。表格缺失、漏行、触点空缺或占位、将迁移写成已完成时，应由相关内容断言产生 AssertionError。该检查附着于 A4 迁移通道，承担非 expected-red 工件守卫角色；缺少测试文件、导入失败、环境失败或超时不得充当该断言失败。",
+          "expected_outcome": "fail",
+          "failure_id": "A25_HANDOFF_MIGRATION_TOUCHPOINTS_INCOMPLETE"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "verification_lane": "integration",
+        "behavior_change": "在标准中编写五个指定 Skill 的 Package B 迁移交接表，并将其内容断言附着于现有规划的 A4 兼容与迁移通道。validate_skill_quality.py 是该兼容通道的真实计划生产入口；本义务本身不要求为交接表增加 validator 运行时功能，也不授权改造既有工作流控制器。",
+        "affected_subjects": [
+          "Package B handoff table",
+          "vdd-execution-plan migration touchpoints",
+          "quick-dev-tdd-adapter migration touchpoints",
+          "run-phase-bootstrap-review migration touchpoints",
+          "run-refactor-implementation-acceptance migration touchpoints",
+          "maintain-knowledge-base migration touchpoints"
+        ],
+        "state_transition": "从尚未记录完整预期迁移触点的交接工件，变为逐项记录五个指定 Skill 的后续迁移触点、且通过独立工件断言检查的交接表；此转换不改变五个实际 Skill 的实现或验收状态。",
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "仅回退本兼容通道实际产生的声明内生产变更，并保留既有用户修改与历史证据。交接表不得修改 owner-specific 协议、数据库、运行时状态、权限或生命周期。派生证据不得授予权限，authorizes 必须为 []。"
+        },
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "terminal_predicate": "Q2 仅在声明的测试与 helper 路径内编写并冻结 test_a25 及其精确 assertion 绑定；GREEN/REFACTOR 不修改冻结测试或 fixtures，生产 owner 不得同时成为 execution snapshot。test_a25 的工件断言必须在兼容迁移通道实际执行，目标命令超时上限为 300 秒。此前置通道需要真实生产调用时，必须先由既有协议建立 scripts.sc.validate_skill_quality.validate_package 的真实调用；当前缺失的入口不得用伪实现、捕获 ImportError 后改称 AssertionError 或 Q2 越序写生产来补齐。先稳定适用目标检查和非空前序回归，再由现有 Q7/Q8 执行包含四个声明测试模块的当前全计划 terminal，超时上限为 600 秒；不得提前选择尚未编写的未来用例。pytest 通过不单独构成 acceptance-passed，实施者不得自行验收、commit 或 merge。保留失败证据；共享生产依赖变化必须使受影响旧证明失效，重放前须重建原绑定身份并以同一身份重放。交接表不得成为五个实际 Skill 合规扫描或内部 reviewer 的 Package A 完成门槛；ADR 决策沿用正常维护者流程，不得伪造 Accepted 状态或将缺少人工批准当作产品 RED。",
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ]
+        ]
+      }
+    }
+  }
+}

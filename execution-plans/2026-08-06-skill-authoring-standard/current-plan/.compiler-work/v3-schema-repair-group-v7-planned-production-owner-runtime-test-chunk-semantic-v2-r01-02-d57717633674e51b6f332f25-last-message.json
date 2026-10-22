@@ -1,0 +1,95 @@
+{
+  "obligation_contracts": {
+    "O-C09E6A7DB23F": {
+      "acceptance": {
+        "assertion_ids": [
+          "ASSERT_A25_REAL_SKILL_PASS_NOT_A_COMPLETION_PREREQUISITE"
+        ],
+        "given": "Package A completion criteria and Package B migration guidance are being authored or evaluated.",
+        "oracle": {
+          "expected": "No Package A completion criterion depends on any of the five real Skills passing the new standard; their validation or migration results cannot become Package A completion prerequisites.",
+          "forbidden": [
+            "A direct or indirectly referenced Package A completion criterion requires the five real Skills to pass the new standard.",
+            "A repository-wide scan of real Skills is substituted for the bounded Package A acceptance selection."
+          ],
+          "observable": "During scripts/sc/tests/test_skill_quality_migration.py::test_a25 artifact validation, inspect the standard's completion criteria, handoff guidance and referenced completion conditions, together with the declared terminal selection. Assert the absence of a real-Skill pass prerequisite independently of any validator return value. A disposable artifact mutation introducing that prerequisite must trigger the specific assertion."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A25"
+        ],
+        "then": "Package A completion gates exclude the five real Skills' conformance as a prerequisite.",
+        "when": "Defining or evaluating Package A completion gates, including migration artifact checks and whole-plan terminal validation."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A25_REAL_SKILL_PASS_GATE_LEAK",
+          "selector_intent": "In scripts/sc/tests/test_skill_quality_migration.py::test_a25, bind ASSERT_A25_REAL_SKILL_PASS_NOT_A_COMPLETION_PREREQUISITE to an independent artifact assertion. It must raise AssertionError if completion criteria directly or transitively require the five real Skills to pass. Verify sensitivity with a disposable mutated artifact. This is a non-RED governance guard attached to the migration lane, not runtime missing-behavior evidence. Missing imports, absent planned tests and command timeouts are harness failures, never causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A completion gate"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Within the compatible A4 migration implementation context, document and check that Package A completion does not depend on the five real Skills passing. Add no new validator runtime feature or workflow controller for this guard.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Rollback only affected candidate changes within the shared migration lane. Preserve existing CLI/API compatibility, historical evidence, accepted authority and Phase isolation. No live state or database migration is authorized."
+        },
+        "state_transition": "Completion criteria under definition or evaluation become criteria explicitly independent of the five real Skills' conformance.",
+        "terminal_predicate": "The obligation-specific A25 artifact assertion passes, including its disposable negative control, and one current whole-plan terminal selection passes after all required cases exist and applicable predecessors have been exercised. Targeted commands have a 300-second harness limit; terminal has 600 seconds. Freeze tests/helpers before formal RED; production owners remain outside immutable snapshots. Preserve failures and invalidate affected proofs after shared semantic changes. Do not manufacture RED, approval receipts, internal review or authority from historical reports. Existing ADR-0041 and ADR-0058 boundaries remain binding. No real-Skill scan or five-Skill pass result is a completion prerequisite. This check authorizes no downstream action.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "vdd.local-repair-note.v1",
+  "authority": "ADR-0041",
+  "predecessor_result": "compiler-result-resume-19.json",
+  "predecessor_outcome": "V3 and V3A passed; V4 atomic recall rejected 426 normalized source-gap claims and duplicate claims.",
+  "reproduced_defect": "Nested source-gap partitioning dropped complete_obligation_context and ignored review_source_gaps=false, comparing every source against only one outer classification batch.",
+  "red_evidence": "v4-batch-context-red.txt",
+  "repair": "Retain the complete candidate for source-gap review; perform source-gap review only in its designated batch. Bind corrected batch semantics to a new input contract marker so obsolete merged judgments cannot be reused.",
+  "validation": {
+    "evidence": "v4-batch-context-regression.txt",
+    "passed": 44,
+    "skill_contract_evidence": "v4-batch-context-skill-contract.txt"
+  },
+  "limits": "This deterministic defect does not prove all reported gaps false. Corrected independent recall must still pass. No source obligation or acceptance threshold was removed.",
+  "history": "All earlier cached judgments and result files retained.",
+  "readiness": "Not asserted."
+}

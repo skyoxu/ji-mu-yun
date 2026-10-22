@@ -1,0 +1,111 @@
+{
+  "obligation_contracts": {
+    "O-B9B92B7285B8": {
+      "acceptance": {
+        "assertion_ids": [
+          "A04_BOUNDARY_499_PASS",
+          "A04_BOUNDARY_500_FAIL",
+          "A04_BOUNDARY_501_FAIL",
+          "A04_BOUNDARY_COMPLETE_EXECUTION"
+        ],
+        "given": "Q2 authors test_a04 and its shared helper, generating otherwise-valid disposable packages with independently constructed SKILL.md fixtures containing exactly 499, 500 and 501 logical lines. Fixture counts and expected outcomes are frozen independently of candidate-controlled policy. Actual standard, policy and schema bytes are copied unchanged into an explicit disposable inspection root.",
+        "oracle": {
+          "expected": "During test execution, independently identified parameter cases directly call scripts.sc.validate_skill_quality.validate_package. The 499-line package passes the logical-line gate; the 500-line and 501-line packages fail that gate with structured diagnostics identifying SKILL.md and the applicable line-limit rule. All three parameter instances execute and bind their own assertion IDs. A subsequent coverage check rejects omitted, skipped or unexecuted boundary cases. These checks establish verification coverage only and confer no lifecycle or write authorization.",
+          "forbidden": [
+            "Omitting or skipping any of the 499-, 500- or 501-line cases.",
+            "Treating shared-helper markers as proof that unexecuted parameter cases ran.",
+            "Deriving expected counts, thresholds or outcomes from candidate-controlled production policy.",
+            "Accepting an unconditional-pass validator.",
+            "Treating missing production imports, collection errors, missing tests or timeouts as causal RED.",
+            "Using a mock validator or Q2-created production substitute."
+          ],
+          "observable": "Executed parameter-level assertions and coverage inspection for scripts/sc/tests/test_skill_quality_core.py::test_a04, including independently checked fixture counts, actual validator calls, structured gate outcomes and diagnostics."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A04"
+        ],
+        "then": "Verification covers all three exact boundaries: 499 logical lines pass, while 500 and 501 logical lines fail.",
+        "when": "During targeted A04 verification and subsequent terminal coverage evaluation, execute every boundary parameter through the real validator and inspect parameter-level assertion coverage."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "A04_BOUNDARY_VERIFICATION_INCOMPLETE",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_core.py::test_a04 must independently assert all three boundary outcomes and reject missing, skipped or unexecuted parameters. Expect AssertionError when verification omits a boundary, accepts an incorrect outcome or substitutes unconditional success. Bind the real validate_package callable; import, environment and timeout failures remain blockers rather than accepted RED. Run the targeted argv command with a 300-second harness timeout."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "SKILL.md logical-line boundary verification"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Attach independent exact-boundary verification to the compatible A1 foundation context, retaining its shared production deliverables without introducing a separate governance implementation or expanding runtime scope.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+            "docs/architecture/ADR_INDEX_PHASE.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Rollback only this candidate's foundation changes while preserving unrelated edits and historical evidence. Preserve ADR-0060, ADR-0041/0058 execution boundaries and ADR-0061 Phase isolation. No live database or Hosted workspace migration is authorized."
+        },
+        "state_transition": "Before exact-boundary verification -> frozen, independently counted fixtures -> execution of all three real-validator cases -> coverage evaluation establishing all three outcomes or reporting the precise verification blocker.",
+        "terminal_predicate": "All three boundary cases execute without skips and satisfy their independent assertions; coverage inspection confirms each exact outcome. Q2 authors only declared tests/helpers and disposable fixtures, then freezes them before formal RED; Green/refactor changes only declared production owners. Missing initial validate_package materialization blocks execution under the existing protocol and cannot be repaired by Q2 seeding production. Applicable regression coverage remains nonempty; shared production changes invalidate affected proofs. Whole-plan closure requires the existing workflow's current four-module terminal validation with a 600-second timeout. Preserve historical reports, shared evidence writers, knowledge/Skill-input authority, model-routing policy and other NFR exclusions. Do not manufacture approvals, change draft ADR status to pass checks, or claim completion from assistant text. This contract is derived evidence and authorizes no action.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a04"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

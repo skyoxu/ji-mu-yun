@@ -1,0 +1,15 @@
+{
+  "schema": "vdd.local-recovery-note.v1",
+  "baseline": "9ce5400a",
+  "branch": "fix/08-06-skill-authoring-plan-refresh",
+  "adr": "ADR-0041",
+  "repair": "Bind scanned V3 child contracts to the current narrowed request cache hash before projection, refresh and domain checks. Ignore unrelated historical cache files without mutation.",
+  "regression": "43 passed; v3-exact-cache-regression-v3.txt",
+  "skill_package_tests": "22 passed; v3-cache-package-tests.txt",
+  "skill_contract": "passed; v3-cache-skill-contract.txt",
+  "resume_14": "Foreground FastCtx tool killed the owned process tree at 240 seconds; not a compiler terminal result.",
+  "resume_15_job": "j-0ulqqd",
+  "compiler_result": "compiler-result-resume-15.json",
+  "historical_evidence": "No deletion or relocation performed.",
+  "remaining_execution_blocker": "The first new validator callable baseline and Quick Dev Q2 production-write restriction remain separate; do not treat import failure as RED."
+}

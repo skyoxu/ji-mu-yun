@@ -1,0 +1,113 @@
+{
+  "obligation_contracts": {
+    "O-EB249051B4A8": {
+      "acceptance": {
+        "assertion_ids": [
+          "A10_PUBLIC_ENTRY_OUTPUT_DECLARATION"
+        ],
+        "given": "待核验的公共入口清单及其声明、引用材料；尚未判定各入口是否声明输出。",
+        "oracle": {
+          "expected": "标准明确要求每个公共入口声明其输出；逐一核对入口清单时，每个入口均有可定位、明确的输出声明，包括合法子依赖所在入口的输出声明。",
+          "forbidden": [
+            "任一公共入口缺少输出声明。",
+            "仅凭通用 Output 标题或其他入口的声明推断本入口已声明输出。",
+            "以验证器返回 pass 代替对输出声明的逐入口检查。",
+            "把此声明检查解释为执行授权或运行时验收。"
+          ],
+          "observable": "在 A10 声明契约检查阶段，检查标准中的逐入口输出声明规则，以及测试包入口清单与各入口声明之间的对应关系；显式断言缺失声明的入口不能满足该规则。此检查只证明输出声明完整性。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A10"
+        ],
+        "then": "每个公共入口均有明确、可定位的输出声明。",
+        "when": "定义或核验公共入口时，通过 test_a10 对输出声明执行独立的文档与契约断言。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A10_PUBLIC_ENTRY_OUTPUT_UNDECLARED",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a10 中绑定 A10_PUBLIC_ENTRY_OUTPUT_DECLARATION 的独立检查：核对真实标准及 disposable package 的入口清单和声明；标准未要求逐入口声明输出，或任一入口缺少明确输出声明时，产生可归因的 AssertionError。冻结独立预期，不从候选策略反推要求；不得用导入错误、缺失测试、环境失败或超时充当该失败。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "每个公共入口的输出声明"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json"
+        ],
+        "behavior_change": "在共享 A2 声明实现上下文中落实逐公共入口输出声明要求，并保留此治理义务独立的文档与契约断言；不创建独立文档执行切片，不赋予该检查运行时 RED 权威。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "logs/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "仅回退本切片对声明标准及共享 A2 实现的变更；保留既有 sidecar 协议、历史证据及冻结测试，不触及 Phase 状态或数据库。共享语义变化使受影响证明失效，须按原协议重新建立证明。"
+        },
+        "state_transition": "公共入口输出声明待核验 → 经独立契约检查确认每个公共入口均有明确输出声明。",
+        "terminal_predicate": "A10_PUBLIC_ENTRY_OUTPUT_DECLARATION 的独立断言通过，缺失输出声明的负例确实触发契约断言失败；检查不依赖候选策略生成预期。Q2 仅创作声明的测试与 helper，并在正式检查前冻结；GREEN/REFACTOR 仅修改列出的生产文件，生产文件不得成为不可变执行快照。运行时相关 A2 用例必须绑定真实 validate_package/main，派生验证结果保持 authorizes=[]；首次真实调用无法建立时记录阻塞，不伪造入口或 RED。目标命令限时 300 秒；完成适用前驱回归后，全部四组均完成才执行一次限时 600 秒的当前全计划终验。超时属于 harness failure，历史失败保持不变；此处不宣称检查已执行或计划已发布。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a10"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

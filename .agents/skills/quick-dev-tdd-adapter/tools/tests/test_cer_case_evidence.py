@@ -161,18 +161,29 @@ def test_q8_rechecks_second_assertion_not_only_first_edge(tmp_path):
 
 @pytest.mark.parametrize("contents", [None, "{", '{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}'])
 def test_missing_truncated_or_old_runner_output_blocks(tmp_path, monkeypatch, contents):
-    import case_evidence
-    from types import SimpleNamespace
-    original = case_evidence.subprocess.run
+    # ADR-0041: inject report damage at the actual bounded Popen boundary.
+    # The removed subprocess.run path cannot exercise current report checks.
+    import process_executor_v2 as executor
+    from case_evidence import COLLECTOR
+    original = executor.subprocess.Popen
 
-    def fake_runner(argv, **kwargs):
-        if str(case_evidence.COLLECTOR) not in argv:
-            return original(argv, **kwargs)
-        if contents is not None:
-            Path(argv[3]).write_text(contents, encoding="utf-8")
-        return SimpleNamespace(returncode=0, stdout=b"1 passed", stderr=b"")
+    def damaged_report(argv, **kwargs):
+        process = original(argv, **kwargs)
+        if str(COLLECTOR) not in argv:
+            return process
+        output = Path(argv[argv.index(str(COLLECTOR)) + 2])
+        wait = process.wait
+        def finished(*args, **options):
+            code = wait(*args, **options)
+            if contents is None:
+                output.unlink(missing_ok=True)
+            else:
+                output.write_text(contents, encoding="utf-8")
+            return code
+        process.wait = finished
+        return process
 
-    monkeypatch.setattr(case_evidence.subprocess, "run", fake_runner)
+    monkeypatch.setattr(executor.subprocess, "Popen", damaged_report)
     result, _, receipt = run_task(tmp_path, PASS)
     assert result["predicate_result"] is False
     assert result["runtime_edges"] == []

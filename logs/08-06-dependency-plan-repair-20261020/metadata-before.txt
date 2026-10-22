@@ -1,0 +1,26 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_published_rehydration_preserves_each_acceptance_preflight_metadata ____
+
+    def test_published_rehydration_preserves_each_acceptance_preflight_metadata():
+        import semantic_compiler_gate as gate
+        _, _, bundle = inputs()
+        projected = repair.project_published_v3(bundle)
+        hints = {x['obligation_ids'][0]: x for x in projected['slice_hints']}
+        fields = ('verification_lane', 'complexity_class', 'context_lookup_required',
+                  'context_lookup_reason', 'minimum_red_scope', 'upgrade_conditions')
+        for acceptance in bundle['acceptances']:
+            actual = gate._preflight_contract(hints[acceptance['obligation_ids'][0]])
+>           assert {k: actual[k] for k in fields} == {k: acceptance[k] for k in fields}
+E           AssertionError: assert {'verificatio...context', ...} == {'verificatio...butable', ...}
+E             
+E             Omitting 4 identical items, use -vv to show
+E             Differing items:
+E             {'context_lookup_reason': 'cross-owner or non-unit verification requires implementation context'} != {'context_lookup_reason': 'single-owner unit verification is locally attributable'}
+E             {'context_lookup_required': True} != {'context_lookup_required': False}
+E             Use -v to get more diff
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py:124: AssertionError
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py::test_published_rehydration_preserves_each_acceptance_preflight_metadata
+1 failed in 0.19s

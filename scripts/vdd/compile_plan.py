@@ -16,6 +16,8 @@ sys.path.insert(0, str(SCRIPTS))
 import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
 from semantic_compiler_authority import compile_plan
 import semantic_compiler as semantic_compiler
+from semantic_worker_transport_patch import HostWorkerStopped
+from semantic_worker_errors import WorkerTransportError
 
 
 def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
@@ -194,8 +196,8 @@ def main() -> int:
                 split_old = str(split["replaced_obligation_id"])
                 if split_old in correction["obligation_contracts"]:
                     # The reviewed S34 correction was authored against the
-                    # predecessor identity.  Once the bounded FR-6 split is
-                    # admitted, project that correction only onto the two
+                    # predecessor identity.  Once the bounded source split is
+                    # admitted, project that correction only onto the
                     # source-bound replacement contracts; no other correction
                     # target may be rewritten implicitly.
                     translated = dict(correction["obligation_contracts"])
@@ -285,6 +287,7 @@ def main() -> int:
             recommendation_only=args.recommendation_only,
             resume_from=args.resume_from,
             published_v3_repair=published is not None,
+            candidate_v3_repair=args.v3_contract_repair is not None,
         )
         if published is not None and result.get("status") == "plan-ready":
             current = json.loads((args.out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
@@ -297,6 +300,13 @@ def main() -> int:
                     **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
                        if split else {}),
                 })
+    except WorkerTransportError as exc:
+        result = {"status": "repair-vdd", "stage": exc.stage, "repair_class": "transport",
+                  "transport_category": exc.category, "attempts": exc.attempts,
+                  "reason": str(exc), "authorizes": []}
+    except HostWorkerStopped as exc:
+        result = {"status": "repair-vdd", "stage": exc.stage, "reason": str(exc),
+                  "transport_exit_code": exc.code, "authorizes": []}
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
         if published is not None and (args.out_dir / "compiler-state.v1.json").is_file():
             from semantic_compiler_authority import _archive_repair_publications
@@ -306,7 +316,7 @@ def main() -> int:
         args.result_json.parent.mkdir(parents=True, exist_ok=True)
         args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result, sort_keys=True))
-    return 0 if result.get("status") in {"plan-ready", "recommendation-only"} else 1
+    return result.get("transport_exit_code", 0 if result.get("status") in {"plan-ready", "recommendation-only"} else 1)
 
 
 if __name__ == "__main__":

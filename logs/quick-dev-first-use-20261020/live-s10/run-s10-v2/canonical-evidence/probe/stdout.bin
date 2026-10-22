@@ -1,0 +1,106 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_________________ test_strict_mode_rejects_prestandard_fixture _________________
+
+legacy_package = (PosixPath('/tmp/pytest-of-root/pytest-4/test_strict_mode_rejects_prest0/inspection'), PosixPath('/tmp/pytest-of-root/pytest-4/test_strict_mode_rejects_prest0/inspection/legacy-skill'))
+
+    @pytest.mark.cer_assertion('A22_STRICT_REJECTS_PRESTANDARD')
+    def test_strict_mode_rejects_prestandard_fixture(legacy_package):
+        inspection, package = legacy_package
+        before = _files(inspection)
+        result = validate_package(inspection, package, mode='strict')
+>       _check(result, 'fail', 1, 'STRICT_PRESTANDARD_ACCEPTED')
+
+scripts/sc/tests/test_skill_quality_migration.py:39: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = None, expected_status = 'fail', expected_exit = 1
+failure_id = 'STRICT_PRESTANDARD_ACCEPTED'
+
+    def _check(result, expected_status, expected_exit, failure_id):
+        valid = (isinstance(result, dict) and result.get('status') == expected_status
+                 and result.get('exit_code') == expected_exit and result.get('authorizes') == [])
+        if not valid:
+            print('FAILURE_ID:' + failure_id)
+>       assert valid, 'Actual validator result does not satisfy the declared mode outcome'
+E       AssertionError: Actual validator result does not satisfy the declared mode outcome
+E       assert False
+
+scripts/sc/tests/test_skill_quality_migration.py:31: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:STRICT_PRESTANDARD_ACCEPTED
+__________________________ test_a22[inventory-legacy] __________________________
+
+legacy_package = (PosixPath('/tmp/pytest-of-root/pytest-4/test_a22_inventory_legacy_0/inspection'), PosixPath('/tmp/pytest-of-root/pytest-4/test_a22_inventory_legacy_0/inspection/legacy-skill'))
+mode = 'inventory', status = 'legacy', exit_code = 3
+
+    @pytest.mark.parametrize('mode,status,exit_code', [
+        pytest.param('inventory', 'legacy', 3, id='inventory-legacy',
+                     marks=pytest.mark.cer_assertion('ASSERT-O-CDE014A7614A-INVENTORY-LEGACY')),
+        pytest.param('strict', 'fail', 1, id='strict-fail',
+                     marks=pytest.mark.cer_assertion('ASSERT-O-CDE014A7614A-STRICT-FAIL')),
+    ])
+    def test_a22(legacy_package, mode, status, exit_code):
+        inspection, package = legacy_package
+        before = _files(inspection)
+        result = validate_package(inspection, package, mode=mode)
+>       _check(result, status, exit_code, 'MISSING_SIDECAR_MODE_OUTCOME_RED')
+
+scripts/sc/tests/test_skill_quality_migration.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = None, expected_status = 'legacy', expected_exit = 3
+failure_id = 'MISSING_SIDECAR_MODE_OUTCOME_RED'
+
+    def _check(result, expected_status, expected_exit, failure_id):
+        valid = (isinstance(result, dict) and result.get('status') == expected_status
+                 and result.get('exit_code') == expected_exit and result.get('authorizes') == [])
+        if not valid:
+            print('FAILURE_ID:' + failure_id)
+>       assert valid, 'Actual validator result does not satisfy the declared mode outcome'
+E       AssertionError: Actual validator result does not satisfy the declared mode outcome
+E       assert False
+
+scripts/sc/tests/test_skill_quality_migration.py:31: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:MISSING_SIDECAR_MODE_OUTCOME_RED
+____________________________ test_a22[strict-fail] _____________________________
+
+legacy_package = (PosixPath('/tmp/pytest-of-root/pytest-4/test_a22_strict_fail_0/inspection'), PosixPath('/tmp/pytest-of-root/pytest-4/test_a22_strict_fail_0/inspection/legacy-skill'))
+mode = 'strict', status = 'fail', exit_code = 1
+
+    @pytest.mark.parametrize('mode,status,exit_code', [
+        pytest.param('inventory', 'legacy', 3, id='inventory-legacy',
+                     marks=pytest.mark.cer_assertion('ASSERT-O-CDE014A7614A-INVENTORY-LEGACY')),
+        pytest.param('strict', 'fail', 1, id='strict-fail',
+                     marks=pytest.mark.cer_assertion('ASSERT-O-CDE014A7614A-STRICT-FAIL')),
+    ])
+    def test_a22(legacy_package, mode, status, exit_code):
+        inspection, package = legacy_package
+        before = _files(inspection)
+        result = validate_package(inspection, package, mode=mode)
+>       _check(result, status, exit_code, 'MISSING_SIDECAR_MODE_OUTCOME_RED')
+
+scripts/sc/tests/test_skill_quality_migration.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+result = None, expected_status = 'fail', expected_exit = 1
+failure_id = 'MISSING_SIDECAR_MODE_OUTCOME_RED'
+
+    def _check(result, expected_status, expected_exit, failure_id):
+        valid = (isinstance(result, dict) and result.get('status') == expected_status
+                 and result.get('exit_code') == expected_exit and result.get('authorizes') == [])
+        if not valid:
+            print('FAILURE_ID:' + failure_id)
+>       assert valid, 'Actual validator result does not satisfy the declared mode outcome'
+E       AssertionError: Actual validator result does not satisfy the declared mode outcome
+E       assert False
+
+scripts/sc/tests/test_skill_quality_migration.py:31: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:MISSING_SIDECAR_MODE_OUTCOME_RED
+=========================== short test summary info ============================
+FAILED scripts/sc/tests/test_skill_quality_migration.py::test_strict_mode_rejects_prestandard_fixture
+FAILED scripts/sc/tests/test_skill_quality_migration.py::test_a22[inventory-legacy]
+FAILED scripts/sc/tests/test_skill_quality_migration.py::test_a22[strict-fail]
+3 failed in 0.08s

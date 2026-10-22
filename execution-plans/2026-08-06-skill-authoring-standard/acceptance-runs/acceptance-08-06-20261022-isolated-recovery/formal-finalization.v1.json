@@ -1,0 +1,14 @@
+{
+  "authorizes": [
+    "acceptance-passed"
+  ],
+  "final": {
+    "path": "finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:1ba15775136d80dd5fb4e55602e0e671df311dc95106164ae76f18eda30b498a"
+  },
+  "status": "acceptance-passed",
+  "wrapper": {
+    "path": "finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:6225d2e81f2ba8d31da860bd2bf0ce4a0f37a9ed19347c6fc11b91cc30a2a88a"
+  }
+}

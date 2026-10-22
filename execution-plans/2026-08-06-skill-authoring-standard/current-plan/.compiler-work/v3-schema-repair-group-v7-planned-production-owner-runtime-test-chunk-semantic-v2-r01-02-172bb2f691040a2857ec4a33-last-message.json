@@ -1,0 +1,116 @@
+{
+  "obligation_contracts": {
+    "O-FC4F16B48E21": {
+      "acceptance": {
+        "assertion_ids": [
+          "CER-SM-A06-DIAGNOSTICS-FINITE-BOUND",
+          "CER-SM-A06-DIAGNOSTICS-ENTRY-FIELDS"
+        ],
+        "given": "Disposable, contained package variants constructed to produce one diagnostic and progressively more diagnostic-producing defects, with an independent finite diagnostics limit frozen before formal RED rather than read from candidate-controlled policy.",
+        "oracle": {
+          "expected": "Both entrypoints return a diagnostics list whose length never exceeds the independently frozen finite limit, including when additional defects exceed that limit. Every returned diagnostic contains rule, path, and message fields. The single-defect variant produces a nonempty list, preventing an unconditional empty result from satisfying the checks.",
+          "forbidden": [
+            "The diagnostics list grows beyond the frozen finite limit.",
+            "Any returned diagnostic lacks rule, path, or message.",
+            "An unconditional pass or empty diagnostics result satisfies the diagnostic-producing cases.",
+            "The test derives its expected limit or required fields from candidate-controlled production policy.",
+            "A missing production import, absent test, timeout, or environment failure is classified as causal RED."
+          ],
+          "observable": "During execution of test_a06, inspect the diagnostics list in the actual validate_package return value and parsed JSON from the actual public CLI. Check list length against the independently frozen limit and inspect every returned entry for rule, path, and message; runtime result inspection is the evaluation phase for this output-structure constraint."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A06"
+        ],
+        "then": "Each public result exposes a bounded diagnostics list with field-complete entries.",
+        "when": "The planned test_a06 directly calls scripts.sc.validate_skill_quality.validate_package and invokes the real CLI with subprocess argv on the diagnostic-producing variants, including variants exceeding the frozen diagnostics limit."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "task-implementation-failure",
+          "failure_id": "DIAGNOSTICS_BOUND_OR_FIELDS_VIOLATION",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_core.py::test_a06 must raise an observable AssertionError when the actual validator API or CLI exceeds the independently frozen diagnostics limit or returns a diagnostic missing rule, path, or message. Bind the two obligation-specific assertion IDs to their exact executing parameter cases. Run the targeted command with a 300-second harness timeout. This constraint uses a non-expected-red failure role; import, fixture, invocation, and timeout failures do not establish the intended assertion failure."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Public CLI and Python entry diagnostics list",
+          "Diagnostic entry rule, path, and message fields",
+          "Versioned structured-result definition"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Within the shared A1 foundation context, define and enforce a finite diagnostics-list bound and field-complete diagnostic entries in the real validator's Python and CLI results. This obligation adds no controller, evidence writer, runtime enforcement service, or separate documentation-only executable slice.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+            "docs/architecture/ADR_INDEX_PHASE.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Roll back only the bounded A1 production changes while preserving user changes, frozen tests, and historical evidence. Preserve ADR-0060 and existing replay/isolation boundaries. No live database or runtime-state migration is authorized. Shared validator, policy, or schema changes invalidate affected proofs before replay."
+        },
+        "state_transition": "A diagnostic-producing invocation is evaluated through the real Python and CLI entrypoints; the resulting list is checked for its finite cap and each retained entry's required fields.",
+        "terminal_predicate": "The obligation-specific test_a06 parameter cases execute without skips or harness errors and establish both independent assertions through the actual production entry and CLI. Freeze tests, helpers, expected values, and selector before formal RED; Q2 authors only the declared test/helper paths, and implementation cannot change those snapshots or synthetic fixture bytes. A missing real validator entry remains a first-use blocker under the existing protocol, never a manufactured AssertionError or authorization for Q2 production writes. Use only applicable current/predecessor selectors for targeted regression; run the whole A1 module after A1 completion. Whole-plan closure additionally requires the existing workflow's current four-module terminal validation with a 600-second timeout, retained failure history, and invalidation/rebuilding of affected binding identity before replay with that same rebuilt identity. Derived evidence authorizes=[] and cannot establish readiness by itself. ADR-0041 governs development; ADR-0062 acceptance remains a maintainer decision before final Package A acceptance or Package B consumption.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a06",
+            "-q"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

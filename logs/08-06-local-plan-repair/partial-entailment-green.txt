@@ -1,0 +1,42 @@
+.......F                                                                 [100%]
+================================== FAILURES ===================================
+___ test_partial_entailment_recheck_preserves_exact_remaining_repair_domain ___
+
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-481/test_partial_entailment_rechec0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000028B22FC3350>
+
+    def test_partial_entailment_recheck_preserves_exact_remaining_repair_domain(tmp_path, monkeypatch):
+        """ADR-0041: diagnostics must identify the same disputed IDs as the current judgment."""
+        from semantic_obligation_gap_repair_patch import _exact_invented_partition
+    
+        obligations = [{"obligation_id": oid, "status": "active", "source_refs": ["req#FR-1"]}
+                       for oid in ("O-1", "O-2", "O-3")]
+        initial = {
+            "valid": False,
+            "findings": ["atomic-recall:invented-obligation:O-1,O-2", "other-blocker"],
+            "source_gap_claims": [],
+            "worker": {"supported_obligation_ids": ["O-3"], "invented_obligation_ids": ["O-1", "O-2"]},
+        }
+        monkeypatch.setattr(gate.sc, "invoke_worker", lambda **kwargs: {
+            "supported_obligation_ids": ["O-1"], "invented_obligation_ids": ["O-2"], "source_gap_claims": []
+        })
+        result = atomic_result._recheck_invented(
+            root=tmp_path, out_dir=tmp_path / "plan",
+            source_index={"entries": [{"source_ref": "req#FR-1", "source_text": "Required behavior."}]},
+            obligations=obligations, result=initial, worker_cache=None,
+        )
+        assert result["findings"] == ["atomic-recall:invented-obligation:O-2", "other-blocker"]
+        assert not result["valid"]
+        assert _exact_invented_partition(result, obligations) == set()
+        result["findings"].remove("other-blocker")
+>       assert _exact_invented_partition(result, obligations) == {"O-2"}
+E       AssertionError: assert set() == {'O-2'}
+E         
+E         Extra items in the right set:
+E         'O-2'
+E         Use -v to get more diff
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_resolved_atomic_recall.py:145: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_resolved_atomic_recall.py::test_partial_entailment_recheck_preserves_exact_remaining_repair_domain
+1 failed, 7 passed in 0.22s

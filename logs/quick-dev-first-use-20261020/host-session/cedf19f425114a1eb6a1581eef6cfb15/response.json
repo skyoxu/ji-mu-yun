@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "93abeaeab1374716be203b7816125dce",
+  "request_id": "cedf19f425114a1eb6a1581eef6cfb15",
+  "request_sha256": "sha256:fc88006d1fae3fa29a96eb7bda56738a34e1adc8858111116165da5ee4eadddf",
+  "output_text": "Authored only the declared migration test module. Three independently marked cases call the real validate_package entry for strict rejection and inventory/strict status plus exit semantics, checking inspected bytes remain unchanged. Production, plan, descriptors and evidence were not modified. No tests have been classified by this response.\n",
+  "authorizes": []
+}

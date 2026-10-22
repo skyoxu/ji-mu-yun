@@ -55,6 +55,22 @@ class CandidateRepairTests(unittest.TestCase):
         self.assertEqual(result['failure_intents'][-1]['failure_id'], 'CURRENT_RED')
         self.assertEqual(repair.apply_repair(result, self.payload, self.value, self.root), result)
 
+    def test_candidate_repair_survives_authority_initialization(self):
+        """ADR-0041: initialization must retain the explicit CLI correction."""
+        import semantic_compiler_authority as authority
+        self.install_fixture()
+        installed = repair.group.sc.invoke_worker
+        with mock.patch.object(authority.gate.sc, 'repository_root', return_value=self.root), \
+             mock.patch.object(authority.gate.sc, 'build_source_index', return_value={}), \
+             mock.patch.object(authority, 'stage_call', side_effect=RuntimeError('stop before workers')):
+            with self.assertRaisesRegex(RuntimeError, 'stop before workers'):
+                authority.compile_plan(requirements=self.requirements, out_dir=self.root / 'plan',
+                                       candidate_v3_repair=True)
+        self.assertIs(repair.group.sc.invoke_worker, installed)
+        repaired = repair.group.sc.invoke_worker(root=self.root, out_dir=self.root / 'plan',
+            stage='v3', payload=self.payload['input'], prompt='')
+        self.assertEqual(repaired['acceptances'][-1]['assertion_ids'], ['CURRENT-ASSERTION'])
+
     def test_stale_source_and_authorizing_input_are_rejected(self):
         self.requirements.write_text('changed', encoding='utf-8')
         with self.assertRaisesRegex(ValueError, 'stale'):

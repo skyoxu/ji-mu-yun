@@ -94,7 +94,16 @@ def _normalize_hint(root: Path, raw: Mapping[str, Any]) -> dict[str, Any]:
     owners = _strings(hint.get("production_owners"))
     real_owners = [owner for owner in owners if _real_file(root, owner)]
 
-    if not real_owners:
+    # An explicit empty owner plus a bounded all-test write envelope is a
+    # verification role. A stale rollback field cannot promote it to product.
+    allowed = _strings(hint.get("allowed_write_paths"))
+    snapshots = _strings(hint.get("execution_snapshot_paths"))
+    test_only = (
+        hint.get("production_owners") == [] and bool(allowed) and bool(snapshots)
+        and all("/tests/" in "/" + path or path.startswith("tests/") for path in allowed)
+        and all("/tests/" in "/" + path or path.startswith("tests/") for path in snapshots)
+    )
+    if not real_owners and not test_only:
         rollback = hint.get("rollback_scope")
         production_paths = _strings(rollback.get("production_paths")) if isinstance(rollback, Mapping) else []
         rollback_real = [path for path in production_paths if _real_file(root, path)]

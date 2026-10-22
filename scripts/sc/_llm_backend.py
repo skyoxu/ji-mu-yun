@@ -20,7 +20,7 @@ from pathlib import Path
 
 from model_config import load_model
 
-KNOWN_LLM_BACKENDS = ("codex-cli", "openai-api")
+KNOWN_LLM_BACKENDS = ("codex-cli", "openai-api", "host-session")
 TRANSIENT_RETRY_LIMIT = 5
 _TRANSIENT_FAILURE_MARKERS = (
     "429 too many requests",
@@ -137,6 +137,14 @@ def inspect_llm_backend(backend: str | None) -> dict[str, object]:
         "available": False,
         "blocking_errors": [],
     }
+    if backend_name == "host-session":
+        from host_session import ENV, session
+        try:
+            _, data = session(os.environ.get(ENV, ""))
+            payload.update(available=True, caller=data["caller"])
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            payload["blocking_errors"] = [f"host session unavailable: {exc}"]
+        return payload
     if backend_name == "codex-cli":
         executable = shutil.which("codex")
         payload["executable"] = executable or ""
@@ -232,6 +240,10 @@ def run_llm_exec(
     codex_extra_args: list[str] | None = None,
 ) -> tuple[int, str, list[str]]:
     backend_name = resolve_llm_backend(backend)
+    if backend_name == "host-session":
+        from host_session import execute
+        return execute(root=root, prompt=prompt, output_last_message=output_last_message,
+                       timeout_sec=timeout_sec, mode=codex_sandbox)
     if backend_name == "openai-api":
         info = inspect_llm_backend(backend_name)
         blocking_errors = [str(item).strip() for item in list(info.get("blocking_errors") or []) if str(item).strip()]

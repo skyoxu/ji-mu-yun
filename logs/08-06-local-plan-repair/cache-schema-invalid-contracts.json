@@ -1,0 +1,655 @@
+[
+  {
+    "hint": {
+      "affected_subjects": [
+        "Phase isolation and recovery ownership"
+      ],
+      "allowed_write_paths": [],
+      "behavior_change": "Add or preserve an observable structural contract asserting that Phase's existing isolation and recovery entrypoints remain authoritative and that Package A does not implement or invoke them.",
+      "execution_snapshot_paths": [
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "forbidden_paths": [
+        ".agents/skills/**",
+        "PhaseA.Platform.Tests/**",
+        "PhaseA.Platform/**",
+        "logs/phase-a-innernet/**",
+        "runtime/**",
+        "scripts/quick_dev/**",
+        "scripts/sc/_llm_backend.py",
+        "scripts/vdd/**"
+      ],
+      "planned_new_files": [
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "No production state or schema changes; remove only the structural test contract if rolled back."
+      },
+      "state_transition": "Unspecified Package A authority boundary -> validated boundary preserving Phase-owned isolation and recovery authority.",
+      "terminal_predicate": "The targeted migration artifact test and the whole Package A terminal validation both confirm the authority statement and detect forbidden implementation or invocation scope.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-107D78EE1AAD"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-O107-ISOLATION-RECOVERY-AUTHORITY",
+        "A-O107-PACKAGE-A-NO-IMPLEMENTATION",
+        "A-O107-PACKAGE-A-NO-INVOCATION"
+      ],
+      "given": "Package A standard and validator artifacts are inspected for declarations about Phase isolation or recovery.",
+      "oracle": {
+        "expected": "The published contract identifies Phase's existing isolation and recovery entrypoints as the authorities, and the Package A standard, validator, tests, and fixtures contain no implementation or invocation of those Phase entrypoints.",
+        "forbidden": [
+          "Package A reimplements Phase isolation or recovery.",
+          "Package A invokes Phase isolation or recovery entrypoints.",
+          "A Package A artifact claims authority to enforce Phase isolation or recovery."
+        ],
+        "observable": "During the structural and artifact validation phase, the standard/ADR/config/schema/validator artifacts and declared Package A test scope are checked for authority references, forbidden Phase implementation or invocation paths, and boundary claims."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The validation result records that Phase retains isolation and recovery ownership and that Package A neither implements nor invokes those capabilities.",
+      "when": "The Package A artifact and scope validation executes against the frozen production and test boundaries.",
+      "obligation_ids": [
+        "O-107D78EE1AAD"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "Historical Bootstrap, TDD, acceptance, freeze, and implementation reports"
+      ],
+      "allowed_write_paths": [],
+      "behavior_change": "No production behavior change; preserve historical reports as immutable inputs.",
+      "execution_snapshot_paths": [],
+      "forbidden_paths": [
+        "PhaseA.Platform.Tests/**",
+        "PhaseA.Platform/**",
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+        "logs/phase-a-innernet/**",
+        "runtime/**",
+        "scripts/quick_dev/**",
+        "scripts/vdd/**"
+      ],
+      "planned_new_files": [],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "No production or schema changes; restore any unauthorized historical-report edits to their original bytes."
+      },
+      "state_transition": "Historical reports remain unchanged before and after Package A validation.",
+      "terminal_predicate": "The preservation check exits successfully with zero modified, deleted, or rewritten historical report paths.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ]
+      ],
+      "verification_lane": "integration",
+      "obligation_ids": [
+        "O-41AF04A36DD9"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-O41AF04A36DD9-REPORT-PRESERVED"
+      ],
+      "given": "Package A validation runs with historical Bootstrap, TDD, acceptance, freeze, and implementation reports present as read-only inputs outside the authorized write set.",
+      "oracle": {
+        "expected": "A post-run repository diff or hash comparison over the frozen historical report paths shows every report unchanged.",
+        "forbidden": [
+          "Any Package A change rewrites, deletes, or alters a named historical report."
+        ],
+        "observable": "Historical-report diff or hash comparison during Package A terminal validation."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The preservation check reports zero modified, deleted, or rewritten historical report paths.",
+      "when": "During Package A terminal validation, execute the repository-owned preservation check against the frozen historical report set.",
+      "obligation_ids": [
+        "O-41AF04A36DD9"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "Phase and runtime scope boundary"
+      ],
+      "allowed_write_paths": [
+        "scripts/sc/_change_scope.py"
+      ],
+      "behavior_change": "Verify that Package A implementation and test changes remain outside all named Phase service, runtime, live workspace, authentication/authorization, and Runner boundaries.",
+      "execution_snapshot_paths": [
+        ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py"
+      ],
+      "forbidden_paths": [
+        ".agents/skills/**",
+        "PhaseA.Platform.Tests/**",
+        "PhaseA.Platform/**",
+        "logs/phase-a-innernet/**",
+        "runtime/**",
+        "scripts/quick_dev/**",
+        "scripts/sc/_llm_backend.py",
+        "scripts/vdd/**"
+      ],
+      "planned_new_files": [],
+      "production_owners": [
+        "scripts/sc/_change_scope.py"
+      ],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "No Phase service, runtime, live workspace, authentication, authorization, or Runner state or schema may change; remove only any out-of-scope Package A edits if detected."
+      },
+      "state_transition": "Package A change set transitions from unverified scope to scope-validated with forbidden boundaries untouched.",
+      "terminal_predicate": "Boundary validation passes and the changed-path inventory contains no forbidden boundary path.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_change_scope.py"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-71344B69C453"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-SCOPE-BOUNDARY"
+      ],
+      "given": "Package A implementation and test changes are prepared within the declared Toolchain scope.",
+      "oracle": {
+        "expected": "The changed-path inventory and scope-boundary check show no modifications under PhaseA.Platform/**, PhaseA.Platform.Tests/**, runtime/**, live metadata or hosted workspaces, Phase authentication/authorization, or the Runner.",
+        "forbidden": [
+          "Any changed file under PhaseA.Platform/** or PhaseA.Platform.Tests/**",
+          "Any changed file under runtime/**, live metadata, or hosted workspaces",
+          "Any change to Phase authentication/authorization or the Runner"
+        ],
+        "observable": "Repository changed-path inventory and boundary-validator result evaluated after assembling the Package A change set"
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The scope-boundary check reports all named Phase, runtime, live-workspace, authentication/authorization, and Runner boundaries untouched.",
+      "when": "After assembling the Package A change set, run the repository scope-boundary validation against changed paths.",
+      "obligation_ids": [
+        "O-71344B69C453"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "CER assertion and parameter coverage"
+      ],
+      "allowed_write_paths": [
+        "scripts/sc/tests/skill_quality_support.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "behavior_change": "Bind each declared case and parameter variant to exact CER assertion IDs with execution evidence.",
+      "execution_snapshot_paths": [
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "forbidden_paths": [
+        "PhaseA.Platform/**",
+        "runtime/**",
+        "scripts/sc/validate_skill_quality.py"
+      ],
+      "planned_new_files": [
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_migration.py",
+        "scripts/sc/tests/skill_quality_support.py"
+      ],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "Test-only governance metadata; no production state or schema impact."
+      },
+      "state_transition": "Coverage metadata moves from unbound declarations to exact per-case execution records.",
+      "terminal_predicate": "Coverage inspection confirms exact binding and execution for every case and parameter instance.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-7CA86ADDE5A3"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A7CA_CER_BINDINGS"
+      ],
+      "given": "Declared Package A test cases and parameterized variants have compiler-assigned CER assertion identities.",
+      "oracle": {
+        "expected": "Every case is bound to exact CER assertion IDs and every parameter instance executes.",
+        "forbidden": [
+          "A case lacks exact CER bindings.",
+          "A parameter instance is omitted.",
+          "A shared-helper marker claims unexecuted coverage."
+        ],
+        "observable": "Per-case CER binding metadata and test execution report."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "CER case and parameter coverage is explicit and complete.",
+      "when": "During governance coverage validation of the frozen Package A test suite.",
+      "obligation_ids": [
+        "O-7CA86ADDE5A3"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "Per-intent pytest selectors"
+      ],
+      "allowed_write_paths": [
+        "scripts/sc/tests/fixtures/skill-quality",
+        "scripts/sc/tests/skill_quality_support.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "behavior_change": "Author and verify the frozen per-intent pytest selectors test_a01 through test_a25 and explicit parameter IDs for boundary variants.",
+      "execution_snapshot_paths": [
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "forbidden_paths": [
+        ".agents/skills/**",
+        "PhaseA.Platform.Tests/**",
+        "PhaseA.Platform/**",
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+        "runtime/**",
+        "scripts/quick_dev/**",
+        "scripts/sc/_llm_backend.py",
+        "scripts/vdd/**"
+      ],
+      "planned_new_files": [
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_migration.py",
+        "scripts/sc/tests/skill_quality_support.py"
+      ],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "Remove only newly authored selector tests and helper fixtures; no production or schema state changes are involved."
+      },
+      "state_transition": "Declared test modules move from unauthored selectors to collected per-intent selectors with explicit boundary parameter IDs.",
+      "terminal_predicate": "The four declared Package A pytest modules collect all required test_a01 through test_a25 selectors and explicit parameter IDs.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_core.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_examples.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_capabilities.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-99885339CA1A"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-O99885339CA1A-SELECTOR",
+        "A-O99885339CA1A-PARAM-ID"
+      ],
+      "given": "The declared Package A pytest modules and their test cases are authored according to the frozen SM-REPAIR-CONSTRAINTS test-authoring rule.",
+      "oracle": {
+        "expected": "Repository inspection and targeted pytest collection find one primary test named test_a01 through test_a25 for each intent, including the corresponding case for this obligation, and boundary variants expose explicit nonempty pytest parameter IDs.",
+        "forbidden": [
+          "Any declared intent lacks its named primary test case.",
+          "Any boundary variant is collected without an explicit parameter ID."
+        ],
+        "observable": "Pytest collection output and source inspection show the required per-intent test names and explicit parameter IDs."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The per-intent selectors and boundary parameter IDs are mechanically discoverable in the authored test modules.",
+      "when": "Run selector and collection checks against the authored Package A test modules, evaluating test names and parameter IDs before implementation acceptance.",
+      "obligation_ids": [
+        "O-99885339CA1A"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "Q2 authoring allowlist"
+      ],
+      "allowed_write_paths": [
+        "scripts/sc/tests/fixtures/skill-quality/**",
+        "scripts/sc/tests/skill_quality_support.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "behavior_change": "Enforce the frozen Q2 authoring boundary and fixture-class allowance.",
+      "execution_snapshot_paths": [
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "forbidden_paths": [
+        "PhaseA.Platform/**",
+        "docs/standards/skill-authoring-standard.md",
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+        "runtime/phase-a/**",
+        "scripts/sc/validate_skill_quality.py"
+      ],
+      "planned_new_files": [
+        "scripts/sc/tests/test_skill_quality_core.py",
+        "scripts/sc/tests/test_skill_quality_examples.py",
+        "scripts/sc/tests/test_skill_quality_capabilities.py",
+        "scripts/sc/tests/test_skill_quality_migration.py",
+        "scripts/sc/tests/skill_quality_support.py"
+      ],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "Remove only out-of-scope Q2 edits; production and requirements inputs remain unchanged."
+      },
+      "state_transition": "Q2 authoring scope moves from declared allowlist to validated changed-path set.",
+      "terminal_predicate": "Scope validation passes only when every Q2 change is within the exact allowlist.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_core.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_examples.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_capabilities.py"
+        ],
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-C373F27257F7"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-C373-SCOPE"
+      ],
+      "given": "Q2 authoring is active under the frozen Package A allowlist.",
+      "oracle": {
+        "expected": "A repository diff or scope manifest shows changes only in the four declared test modules, scripts/sc/tests/skill_quality_support.py, and scripts/sc/tests/fixtures/skill-quality/**, with no production or requirements-input changes.",
+        "forbidden": [
+          "Any changed path outside the declared Q2 allowlist.",
+          "Any changed production file or requirements input."
+        ],
+        "observable": "The Q2 scope check evaluates the changed-path set against the exact allowlist and records the allowed fixture classes."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The scope validator reports only allowlisted test/helper/fixture paths and accepts positive, boundary, negative, legacy, or migrated fixture content.",
+      "when": "After Q2 test, helper, and fixture authoring, run the repository-owned scope validation.",
+      "obligation_ids": [
+        "O-C373F27257F7"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "Negative test data boundary",
+        "Disposable negative-test fixtures"
+      ],
+      "allowed_write_paths": [
+        "scripts/sc/tests/fixtures/skill-quality",
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "behavior_change": "Add an explicit migration-test boundary check proving intentional corruptions and synthetic credentials remain test-only.",
+      "execution_snapshot_paths": [
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "forbidden_paths": [
+        ".agents/skills/**",
+        "PhaseA.Platform.Tests/**",
+        "PhaseA.Platform/**",
+        "logs/phase-a-innernet/**",
+        "runtime/**",
+        "scripts/quick_dev/**",
+        "scripts/sc/_llm_backend.py",
+        "scripts/vdd/**"
+      ],
+      "planned_new_files": [
+        "scripts/sc/tests/test_skill_quality_migration.py"
+      ],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "No production or schema state changes; remove the added test and fixture assertions to roll back."
+      },
+      "state_transition": "Test fixtures and negative inputs are classified and verified as test-only before terminal validation.",
+      "terminal_predicate": "The targeted migration test passes only when all intentional corruptions and synthetic credentials resolve under disposable test-data or fixture paths.",
+      "validation_commands": [
+        [
+          "python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "scripts/sc/tests/test_skill_quality_migration.py::test_negative_test_data_boundary"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-C9996DAA7A90"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-O-C9996DAA7A90-NEGATIVE-DATA-BOUNDARY"
+      ],
+      "given": "The Package A test suite defines intentional corruptions and synthetic credentials for negative cases.",
+      "oracle": {
+        "expected": "A targeted test inspection confirms every intentional corruption and synthetic credential is located only in disposable test data or fixture paths, with no production-data or real-credential use.",
+        "forbidden": [
+          "Any intentional corruption is used as production data.",
+          "Any synthetic credential is treated as a real credential.",
+          "The test data boundary is inferred solely from a passing process exit code."
+        ],
+        "observable": "The targeted pytest assertion inspects the declared test and fixture paths and fails when a corruption or synthetic credential is outside the test-only boundary."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The test-only boundary is enforced by an explicit artifact/path assertion.",
+      "when": "During the targeted migration and negative-fixture validation phase, execute the planned pytest selector against disposable fixture roots.",
+      "obligation_ids": [
+        "O-C9996DAA7A90"
+      ]
+    }
+  },
+  {
+    "hint": {
+      "affected_subjects": [
+        "Toolchain and Skill migration scope boundary"
+      ],
+      "allowed_write_paths": [],
+      "behavior_change": "Validate that Package A implementation scope excludes the frozen Package B migration areas and shared toolchain runtime/evidence writers.",
+      "execution_snapshot_paths": [
+        ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py"
+      ],
+      "forbidden_paths": [
+        ".agents/skills/**",
+        "PhaseA.Platform.Tests/**",
+        "PhaseA.Platform/**",
+        "runtime/**",
+        "scripts/quick_dev/**",
+        "scripts/sc/_llm_backend.py",
+        "scripts/vdd/**"
+      ],
+      "planned_new_files": [],
+      "production_owners": [],
+      "rollback_scope": {
+        "production_paths": [],
+        "state_or_schema_compatibility": "No production or persisted-state change is authorized; removing the scope audit leaves implementation behavior unchanged."
+      },
+      "state_transition": "From an unaudited Package A change set to a terminal scope-audit result with protected paths and migration ownership checked.",
+      "terminal_predicate": "The terminal scope audit reports no Package A modifications in forbidden paths and no Package B migration ownership claim.",
+      "validation_commands": [
+        [
+          "python",
+          ".agents/skills/vdd-execution-plan/tests/validators/scope_boundary_negative.py"
+        ]
+      ],
+      "verification_lane": "unit",
+      "obligation_ids": [
+        "O-EFB8826CEE9A"
+      ]
+    },
+    "acceptance": {
+      "assertion_ids": [
+        "A-O-EFB8826CEE9A-SCOPE-BOUNDARY"
+      ],
+      "given": "Package A implementation work is prepared against the frozen skill-authoring requirements.",
+      "oracle": {
+        "expected": "A terminal scope audit finds no Package A changes under .agents/skills/**, scripts/quick_dev/**, scripts/vdd/**, or shared toolchain runtime/evidence-writer files, and records Package B as owner of later Skill migration.",
+        "forbidden": [
+          "Package A changes code or tests under .agents/skills/**.",
+          "Package A changes code or tests under scripts/quick_dev/**.",
+          "Package A changes code or tests under scripts/vdd/**.",
+          "Package A changes shared toolchain runtime or evidence writers.",
+          "Package A claims ownership of Package B's later Skill migration."
+        ],
+        "observable": "The terminal scope-audit artifact lists changed repository paths and migration ownership declarations."
+      },
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "then": "The scope audit passes only when all named protected paths and shared writers remain outside Package A changes and migration ownership remains assigned to Package B.",
+      "when": "During terminal validation, after collecting the repository diff and evaluating declared write boundaries.",
+      "obligation_ids": [
+        "O-EFB8826CEE9A"
+      ]
+    }
+  }
+]

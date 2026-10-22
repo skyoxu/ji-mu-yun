@@ -133,6 +133,9 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     if routed and production_before != production_hashes(workspace, bundle, descriptor["slice_id"]):
         raise ValueError("behavior-routing:production-changed-during-test")
     dispositions = derive_dispositions(bundle, descriptor, receipt) if descriptor["stage"] == "probe" else None
+    if route and descriptor["stage"] == "red":
+        from behavior_routing import red_failure_ids
+        expected_failures = red_failure_ids(descriptor, route)
     observation=judge_receipt(run_dir,descriptor["stage"],descriptor,receipt,expected_failure_ids=expected_failures if descriptor["stage"]=="red" else (), probe_dispositions=dispositions, behavior_route=route)
 
     regression_binding=None

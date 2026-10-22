@@ -1,0 +1,12 @@
+{
+  "authority": {
+    "requirements": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+    "requirements_sha256": "sha256:220398488db6b9334321bbdba3b159e221b9be63b56453faa99eaa7ea4baec18",
+    "semantic_plan": "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/semantic-plan-bundle.v1.json",
+    "semantic_plan_sha256": "sha256:35e43f85da4a14b5c8554be8b66d9977d4356b664f04dc77c6685ffb5ee1e6f5"
+  },
+  "authorizes": [],
+  "schema": "acceptance-bounded-target.v1",
+  "scope": "Package A only; 289 obligations, 289 atomic acceptances, 300 coverage edges, 31 slices. Full source and plan remain authority; this projection is navigation only.",
+  "targetPlan": "execution-plans/2026-08-06-skill-authoring-standard"
+}

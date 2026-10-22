@@ -6,8 +6,9 @@ fixtures, planned files, and validation commands. Those values are often stated
 explicitly only in the canonical requirement text.
 
 This patch captures the exact source-index.v1 value produced by V0, marks it
-usable only after V0A succeeds, and adds only the source entries referenced by
-the frozen obligations to the V3 worker payload. The one-shot
+usable only after V0A succeeds, and adds the source entries referenced by the
+frozen obligations to V3. Same-file table authoring blocks travel separately as
+execution context, without expanding the obligation source set. The one-shot
 v3-schema-repair inherits the same enriched payload through its existing nested
 `input` field. No source file is reread and no model output can mutate the
 frozen source projection. The context is consumed by the next V3 call and then
@@ -119,6 +120,39 @@ def _source_contracts(root, payload: Mapping[str, Any]) -> tuple[str, list[dict[
     return source_sha, selected
 
 
+def _execution_context_sources(contracts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """ADR-0041: carry same-file table authoring rules without expanding V1."""
+    context = _FROZEN_SOURCE_CONTEXT.get()
+    if not isinstance(context, Mapping) or context.get("validated") is not True:
+        return []
+    index = context.get("source_index")
+    if not isinstance(index, Mapping):
+        return []
+    paths = {item["repository_relative_source_path"] for item in contracts}
+    result: list[dict[str, Any]] = []
+    for entry in index.get("entries", []):
+        if not isinstance(entry, Mapping) or entry.get("requirement_id") != "SM-REPAIR-CONSTRAINTS":
+            continue
+        if entry.get("repository_relative_source_path") not in paths:
+            continue
+        text = entry.get("execution_context_text", "")
+        if not isinstance(text, str):
+            continue
+        _before, marker, after = text.partition(sc._EXECUTION_CONTEXT_START)
+        if not marker:
+            continue
+        body, end, _tail = after.partition(sc._EXECUTION_CONTEXT_END)
+        if not end:
+            raise ValueError("frozen file-level execution context is unterminated")
+        result.append({
+            "source_ref": entry["source_ref"],
+            "repository_relative_source_path": entry["repository_relative_source_path"],
+            "source_sha256": entry["source_sha256"],
+            "execution_context_text": marker + body + end,
+        })
+    return sorted(result, key=lambda item: item["source_ref"])
+
+
 def normative_invoke_worker_with_source_projection(
     *,
     root,
@@ -155,6 +189,9 @@ def normative_invoke_worker_with_source_projection(
         enriched = dict(payload)
         enriched["frozen_source_index_sha256"] = source_sha
         enriched["source_contracts"] = contracts
+        contexts = _execution_context_sources(contracts)
+        if contexts:
+            enriched["execution_context_sources"] = contexts
         enriched = enrich_repository_context(root, enriched)
         augmented_prompt = prompt + (
             "\n\nFROZEN SOURCE CONTRACTS: source_contracts are the exact V0/V0A-validated canonical "
@@ -163,7 +200,12 @@ def normative_invoke_worker_with_source_projection(
             "sections as authority. Do not guess a production owner from a fixture path. A missing selector/fixture that the "
             "frozen source explicitly requires to be authored must be listed verbatim in planned_new_files. A production "
             "owner must name a real implementation file when the source identifies one, must be writable, and must not be "
-            "repeated in forbidden_paths. Do not invent paths not supported by the frozen source or repository reality."
+            "repeated in forbidden_paths. Do not invent paths not supported by the frozen source or repository reality. "
+            "execution_context_sources, when present, contain the exact frozen file-level authoring block for "
+            "these same source files. Apply a context only to obligations whose frozen source file matches "
+            "its repository_relative_source_path. Retain its shared production/test/planned paths, write "
+            "boundaries and validation rules in those row contracts. This is execution context only: do not add obligations, "
+            "change their source_refs, import runtime facts or claim readiness from those instructions."
         )
         return _BASE_NORMATIVE_INVOKE(
             root=root,

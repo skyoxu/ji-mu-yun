@@ -1,0 +1,6 @@
+warning: in the working copy of 'execution-plans/2026-08-06-skill-authoring-standard/current-plan/.compiler-work/compiler-progress.jsonl', CRLF will be replaced by LF the next time Git touches it
+.......................................
+----------------------------------------------------------------------
+Ran 39 tests in 0.720s
+
+OK

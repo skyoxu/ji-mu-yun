@@ -1,0 +1,66 @@
+{
+  "authorizes": [],
+  "commandId": "adoption-and-source-binding",
+  "commandRegistryHash": "sha256:06babdca486f0ab7ec63066114a211feb54ee8edcf83bf813a9010df6eaad637",
+  "environmentIdentity": {
+    "hash": "sha256:c722e93949e144d3d3f717c276ade642b857575c8358fbcd964a050f8848e159",
+    "names": [
+      "HOME",
+      "PATH"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "-c",
+      "import json,hashlib; from pathlib import Path; a=Path('docs/adr/ADR-0062-repository-skill-authoring-contract.md').read_text(); s=Path('docs/standards/skill-authoring-standard.md').read_text(); assert 'Status: Accepted.' in a and '2026-10-22' in a; assert 'Status: Adopted normative contract' in s; c=json.loads(Path('scripts/sc/config/skill-authoring-standard.v1.json').read_text()); assert c['standard_version']=='1.0'; p=json.loads(Path('execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/acceptance-08-06-20261022-prerequisites/implementation-target.v1.json').read_text())['authority']; assert all('sha256:'+hashlib.sha256(Path(p[k]).read_bytes()).hexdigest()==p[k+'_sha256'] for k in ['requirements','semantic_plan']); print(json.dumps({'status':'pass','adopted':'ADR-0062 / standard 1.0','source_binding':'current','authorizes':[]}))"
+    ],
+    "commandId": "adoption-and-source-binding",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/scratch/e4e648ddd442/acceptance-0806-env/bin/python",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:fc3133119e3ebfee4a265abad6dba802582bf9efbe69b1e4625f4b85472f42c2",
+  "processResult": {
+    "commandId": "adoption-and-source-binding",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"status\": \"pass\", \"adopted\": \"ADR-0062 / standard 1.0\", \"source_binding\": \"current\", \"authorizes\": []}\n",
+    "stdoutSha256": "sha256:d2f8208e41b7b89e775108fb0293a0b4a62a31dc9846f515663d87b3eab0685d"
+  },
+  "processResultHash": "sha256:e15567ce52ea52b77cd91305c7b6b0dc97bdba6671d0ebac6979f1a565c83dfc",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

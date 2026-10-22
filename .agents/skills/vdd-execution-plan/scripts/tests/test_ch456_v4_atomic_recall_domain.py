@@ -296,6 +296,45 @@ def test_source_gap_chunk_sees_cross_source_obligations() -> None:
     assert [item["source_ref"] for item in selected["source_index"]["entries"]] == ["req#FR-1"]
 
 
+def test_source_gap_chunk_preserves_complete_outer_batch_context() -> None:
+    """ADR-0041: classification batches must not narrow source-gap coverage."""
+    payload = {
+        "source_index": {"entries": [{"source_ref": "req#FR-1"}]},
+        "obligations": [{"obligation_id": "O-1", "status": "active"}],
+        "complete_obligation_context": [
+            {"obligation_id": "O-1", "expected_behavior": "Declare inputs"},
+            {"obligation_id": "O-2", "expected_behavior": "Declare outputs"},
+        ],
+    }
+    selected = v4_domain._source_recall_payload(payload, ["req#FR-1"])
+    assert selected["obligations"] == payload["complete_obligation_context"]
+
+
+@pytest.mark.parametrize('stage', ['v4-atomic-recall', 'v4-atomic-recall-schema-repair'])
+def test_classification_only_batch_does_not_repeat_source_gap_review(tmp_path, monkeypatch, stage):
+    payload = {
+        "source_index": {"entries": [{"source_ref": "req#FR-1"}]},
+        "obligations": [{"obligation_id": f"O-{i:02d}", "status": "active"} for i in range(25)],
+        "review_source_gaps": False,
+    }
+    worker_cache = {
+        f"v4-atomic-recall-chunk-{index:03d}": {
+            "supported_obligation_ids": [f"O-{i:02d}" for i in range(start, min(start + 20, 25))],
+            "invented_obligation_ids": [], "source_gap_claims": [],
+        }
+        for index, start in enumerate(range(0, 25, 20), 1)
+    }
+    def unexpected(**kwargs):
+        raise AssertionError("classification-only batch repeated source-gap review")
+    monkeypatch.setattr(v4_domain, '_invoke_source_gap_chunk', unexpected)
+    result = v4_domain.v4_transport_invoke_worker(
+        root=tmp_path, out_dir=tmp_path / 'plan', stage=stage,
+        payload=({'input': payload, 'validator_findings': ['missing IDs']}
+                 if stage.endswith('-schema-repair') else payload),
+        prompt='Classify.', worker_cache=worker_cache)
+    assert result['source_gap_claims'] == []
+
+
 def test_chunk_merge_rejects_missing_and_unknown_ids() -> None:
     payload = {
         "source_index": {"entries": [{"source_ref": "req#FR-1"}]},

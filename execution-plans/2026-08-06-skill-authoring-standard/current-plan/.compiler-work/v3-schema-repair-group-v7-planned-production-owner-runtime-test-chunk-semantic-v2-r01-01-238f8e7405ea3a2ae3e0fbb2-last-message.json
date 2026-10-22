@@ -1,0 +1,129 @@
+{
+  "obligation_contracts": {
+    "O-69E07DB584F7": {
+      "acceptance": {
+        "assertion_ids": [
+          "A17_DB_WRITE_TRANSACTION_HANDLING_REQUIRED",
+          "A17_DB_WRITE_FAILURE_HANDLING_REQUIRED",
+          "A17_DB_WRITE_HANDLING_COMPLETE_DECLARATION_ACCEPTED"
+        ],
+        "given": "Disposable packages declare database-write capabilities. Independently authored variants retain all other required declarations and respectively specify both handling policies, omit transaction handling, omit failure handling, or omit both.",
+        "oracle": {
+          "expected": "The complete declaration specifies transaction handling and failure handling for every database-write capability and passes this check. Each omission variant fails with an applicable rule ID, capability-relative path and diagnostic code identifying the missing handling declaration. Results retain authorizes=[].",
+          "forbidden": [
+            "A database-write capability passes while omitting transaction handling or failure handling.",
+            "Handling declared for one capability masks missing handling for another database-write capability.",
+            "Static declaration validation is presented as transaction execution, database recovery verification or authorization.",
+            "An unconditional-pass replacement satisfies the assertions."
+          ],
+          "observable": "During test_a17 execution, inspect each database-write declaration and the structured result returned by the actual scripts.sc.validate_skill_quality.validate_package entry for the complete and independently mutated packages."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A17"
+        ],
+        "then": "Every database-write capability must declare both transaction handling and failure handling; validation must reject either omission independently.",
+        "when": "The authored A17 parameter cases directly call validate_package in strict mode against disposable inspection roots containing unchanged copies of the actual standard, policy and schemas, and evaluate the transaction/failure declarations and returned diagnostics."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "A17_DB_WRITE_HANDLING_OMISSION",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a17 with explicit parameter identities for complete handling, missing transaction handling, missing failure handling and both missing, including multiple database-write capabilities. Bind only the matching compiler-assigned assertions to each parameter. Directly import and call scripts.sc.validate_skill_quality.validate_package. Within the 300-second targeted command, an observable AssertionError must identify acceptance of an omitted handling declaration or rejection of the complete declaration. Missing imports/files, fixture defects and timeouts are harness blockers, never causal RED; do not materialize production out of order to bypass the first-use limitation."
+        },
+        {
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "A17_DB_WRITE_HANDLING_ORACLE_INTEGRITY",
+          "selector_intent": "For the same test_a17 unit-lane invocation, check before formal RED that frozen tests use independent expected handling requirements, invoke the real callable, execute every required parameter and reject an unconditional-pass implementation. Freeze tests/helper bytes before RED; prohibit production writes during Q2 and frozen-test changes during GREEN/refactor. Missing real-entry execution, invalid fixtures, imported candidate-controlled expectations or a 300-second timeout must fail harness validation without emitting accepted runtime RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Database-write capability declaration"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Within the cohesive A3 capability-check implementation context, require transaction handling and failure handling on every database-write declaration and reject each omission independently. Use the real validator and normative policy/schema; add no database executor, backup system, runtime controller or evidence writer.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/skill_replay_runtime.py",
+          "scripts/sc/skill_replay_observer.py",
+          "scripts/sc/skill_replay_windows_job.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Rollback only this declaration-check change within the listed production files, preserving other capability checks and existing owner-specific protocols. No database, runtime state or inspected package is mutated. Shared validator/policy/schema changes invalidate affected proofs; preserve historical evidence."
+        },
+        "state_transition": "A database-write declaration without explicit transaction or failure handling becomes a noncompliant declaration with structured diagnostics; a declaration specifying both handling policies satisfies this obligation.",
+        "terminal_predicate": "After authorized Q2 authoring and establishment of the real callable under the existing protocol, every A17 parameter executes without skips and proves this obligation's independent assertions; missing callable/import support remains a blocker. Q6 includes nonempty applicable predecessor/current regressions and excludes future unimplemented cases. Once complete, validate the full capability module; Q8 runs all four declared modules once against the current candidate with a 600-second limit. Shared dependency changes invalidate affected earlier proofs before terminal replay. Tests/helpers remain immutable during implementation, expectations remain independent of candidate policy, results have authorizes=[], and no backup/restore execution or authority grant is inferred. At boundary evaluation, inspect the candidate diff for the exact production write set and prohibited paths; preserve historical evidence and existing workflow ownership. ADR-0041 governs development; maintainer acceptance of ADR-0062 remains required before Package A final acceptance without fabricating approval or an initial RED blocker.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a17"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

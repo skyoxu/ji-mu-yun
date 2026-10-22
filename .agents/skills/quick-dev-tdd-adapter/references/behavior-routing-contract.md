@@ -105,3 +105,14 @@ and Skill package checks. Representative tests cover all-present, mixed,
 regressed-present, stale evidence, environment failures and Deferred escapes.
 Windows confirmation and later ordinary-task experience are recorded separately;
 this increment does not require repeating historical CH456 live acceptance.
+
+## Partial obligation outcomes (2026-10-22)
+
+A single obligation may contain passing cases and expected failing AssertionError
+cases. Classify it as `missing` only when every case is admissible. Its route row
+adds `case_outcomes` with acceptance ID, assertion ID, case ID and observed outcome;
+uniform historical rows keep their existing shape. Formal RED must preserve the
+probe's exact case outcomes, including the passing cases. Passing-only assertions
+inside that obligation contribute no invented failure ID. GREEN, REFACTOR and
+terminal require all cases to pass. Skips, harness failures, undeclared failure IDs
+and stale case evidence remain blocking; no case or obligation is removed.

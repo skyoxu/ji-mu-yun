@@ -1,0 +1,111 @@
+{
+  "obligation_contracts": {
+    "O-6324AB9F297C": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-O-6324AB9F297C-SCOPE-DECLARATION-ARTIFACT"
+        ],
+        "given": "A disposable Skill package is being authored with a destructive-operation declaration; its declaration artifacts and the candidate standard, policy and schema are available for inspection.",
+        "oracle": {
+          "expected": "The inspected destructive-operation declaration explicitly identifies its affected scope, and the authoring standard and declaration contract require that scope. The check establishes declaration completeness only; it grants no execution permission.",
+          "forbidden": [
+            "A destructive operation is defined or exposed without an explicit affected-scope declaration.",
+            "A generic destructive-operation flag or heading is treated as an affected-scope declaration.",
+            "Static declaration inspection is represented as authorization or runtime enforcement."
+          ],
+          "observable": "During A16 artifact/contract verification, an assertion inspects the actual destructive-operation declaration and its affected-scope value, together with the corresponding normative standard and policy/schema requirement. Validator status alone does not establish this declaration constraint."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A16"
+        ],
+        "then": "The destructive operation has an explicit affected-scope declaration supported by the authoring contract.",
+        "when": "The A16 declaration-artifact check evaluates a destructive operation being defined or exposed, before any execution."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "DESTRUCTIVE_SCOPE_DECLARATION_GAP",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a16 with an independently bound assertion for O-6324AB9F297C. Inspect the destructive-operation declaration and the actual standard/policy/schema bytes; raise AssertionError when affected scope is absent or the normative declaration requirement is missing. Keep this artifact guard distinct from the validator's missing-scope rejection obligation. Use the real validate_package entry for the shared A16 validator context, never a product mock. Missing imports, missing planned tests, environment failures and timeouts are harness blockers, not this failure observation."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Destructive-operation affected-scope declaration",
+          "A16 authoring standard and declaration contract"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Require an explicit affected-scope declaration for each destructive operation in the standard and declaration contract, within the cohesive A3 capability-check context. Preserve existing authorization policy and avoid introducing execution enforcement or redundant confirmation.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Rollback only affected Package A candidate changes while preserving user changes, historical evidence and frozen tests. No live metadata or database migration is authorized. Shared policy/schema/validator changes invalidate affected proofs and require revalidation."
+        },
+        "state_transition": "A destructive operation being defined or exposed becomes an operation with an explicit affected-scope declaration; declaration completeness does not authorize execution.",
+        "terminal_predicate": "The independently bound A16 artifact assertion verifies the explicit affected scope and normative declaration requirement. Tests/helpers freeze before formal verification; production owners remain outside immutable snapshots. Targeted validation has a 300-second limit and uses applicable predecessor regression cases. Whole-plan terminal validation selects all four authored test modules with a 600-second limit after required behaviors have been exercised. Missing first-use validator imports block the owning workflow rather than count as causal RED. Preserve ADR-0041/ADR-0058 execution boundaries and ADR-0061 isolation; do not fabricate acceptance, review receipts or historical outcomes.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a16"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

@@ -16,6 +16,7 @@ Read only the guide selected by the actual input and operation. On a transition 
 | Current plan preflight, recommendation or execution | [Execution](references/execution-operation.md); recommendation-only remains side-effect free |
 | Existing stage, failed attempt or explicit recovery | [Recovery](references/recovery-operation.md), then execution guidance for the selected next stage |
 | Historical v1 input or explicitly adopted Skill-input route | [Compatibility](references/compatibility-operation.md); never use legacy evidence as current completion authority |
+| Explicit whole-plan preflight and bounded native progression | [Session](references/session-operation.md), then execution/recovery guides at worker handoff |
 | Skill maintenance | Affected guides and their existing contract tests; no live run by default |
 
 ## Current And Legacy Plan Routes
@@ -82,3 +83,23 @@ Completion remains Q7 exact case/assertion coverage plus Q8 whole-plan terminal 
 Historical v1 plans are read-only compatibility inputs. The legacy combined receipt/observation fields cannot become current completion authority. The historical replay harness never authorizes current evidence. Read the compatibility guide only when handling those inputs.
 
 Q6 uses `tools/regression_gate.py`. `standard` and `self-hosted` must consume the slice `agent-context.validation_commands`; missing context, an empty required command set, timeout, nonzero exit, or zero-case pytest regression blocks publication before REFACTOR runtime edges/stage result. `fast-ship` may omit extra regressions but never the primary selector truth floor. Read the execution guide before running stages.
+
+## Online caller-session route
+
+For an online temporary workspace without authenticated Codex CLI, use the
+explicit [caller-session route](../../../docs/workflows/caller-session-execution.md).
+It invokes this Skill's existing native entry and retains its gates and lifecycle
+ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
+execution or acceptance evidence.
+
+
+## Explicit first-use entry preparation
+
+For a genuinely absent planned production entry, use the deterministic
+`prepare-entry` action before Q2, with the hash-bound first-use input described
+in [execution guidance](references/execution-operation.md#first-use-entry-preparation).
+It can create only missing Python interfaces returning None and empty JSON
+interfaces inside the exact declared new production boundary. It cannot accept
+model-authored function bodies or data. It is not implementation, RED or
+completion authority. Existing local and online Q2/Q4 routes remain unchanged;
+Q2 still cannot write production, and Q4 still requires observed behavioral RED.

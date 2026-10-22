@@ -1,0 +1,22 @@
+{
+  "actionId": "acceptance-acceptance-finalization-regressions",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "acceptance-finalization-regressions",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:14abc0348135432081caac24bd62cef82aeaa6ec422074854704fc44e24abd00",
+    "knowledgeContextHash": "sha256:2b5c125e93cbe24d076cef778e42204a0c0cb0bcb74b0ad2a871190290e950da",
+    "runInputHash": "sha256:c6f3738cc47695982291f1a6cfb9d6429533a393c91cb3f777fdb5c8bbf4b895",
+    "skillInputBindingHash": "sha256:56ec0542df409d65c3467213606be07ef8a47930ea9d7f6816309994ce1f939c",
+    "skillInputContextHash": "sha256:532b95d53a047cb89ef1376e8c6fd3c26aa85a36c822b70dee63812d296bac2f"
+  },
+  "ownerToken": "owner-acceptance-08-06-20261022-isolated-recovery",
+  "processId": 448,
+  "recordedUtc": "2026-10-22T03:51:00.347676Z",
+  "runId": "acceptance-08-06-20261022-isolated-recovery",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 13
+}

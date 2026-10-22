@@ -144,3 +144,15 @@ def test_group_repair_does_not_guess_owner_when_rollback_scope_has_no_real_file(
         },
     )
     assert any("no-real-production-entry" in finding for finding in findings)
+
+
+def test_group_cache_preflight_allows_exact_planned_package_a_owner(tmp_path: Path) -> None:
+    owner = "scripts/sc/validate_skill_quality.py"
+    hint = {"production_owners": [owner], "allowed_write_paths": [owner], "planned_new_files": [owner]}
+    assert grouped._cached_owner_is_admissible(tmp_path, owner, hint)
+
+
+def test_group_cache_preflight_rejects_unknown_missing_owner(tmp_path: Path) -> None:
+    owner = "scripts/sc/unknown_validator.py"
+    hint = {"production_owners": [owner], "allowed_write_paths": [owner], "planned_new_files": []}
+    assert not grouped._cached_owner_is_admissible(tmp_path, owner, hint)

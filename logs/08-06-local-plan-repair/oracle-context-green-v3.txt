@@ -1,0 +1,40 @@
+..........F................................................          [100%]
+================================== FAILURES ===================================
+_ SelectiveCacheRepairTests.test_parent_merge_passes_only_conflicting_peers_to_worker _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_parent_merge_passes_only_conflicting_peers_to_worker>
+
+    def test_parent_merge_passes_only_conflicting_peers_to_worker(self):
+        obligations = [dict(obligation_id=f'O-{i}', status='active', source_refs=['req.md#FR-1'],
+                            expected_behavior=f'behavior {i}') for i in range(5)]
+        forced = []
+        def worker(**kwargs):
+            payload = kwargs['payload']
+            values = {}
+            for item in payload['input']['obligations']:
+                oid = item['obligation_id']
+                value = contract('tests/test_real.py')
+                if oid not in ('O-0', 'O-4') or payload.get('_force_semantic_repair'):
+                    value['acceptance']['oracle']['expected'] = oid
+                values[oid] = value
+            if payload.get('_force_semantic_repair'):
+                forced.append(kwargs['prompt'])
+                assert '"O-1"' not in kwargs['prompt']
+                assert '"O-2"' not in kwargs['prompt']
+                assert '"O-3"' not in kwargs['prompt']
+            return repair._project({'obligation_contracts': values})
+        self.enterContext(mock.patch.object(repair, '_live_group_repair_one', worker))
+        payload = {'input': {'obligations': obligations}}
+        result = repair._live_group_repair(
+            root=self.root, out_dir=self.root / 'plan', payload=payload, prompt='Repair.')
+        assert len(forced) == 2
+>       assert repair.v3_domain._domain_findings('v3-schema-repair', payload, result) == []
+E       AssertionError: assert ['v3-expected...missing-type'] == []
+E         
+E         Left contains 5 more items, first extra item: 'v3-expected-red:failure_intents[0]:runtime-marker-ineligible:O-1=missing-kind/missing-type'
+E         Use -v to get more diff
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:103: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_parent_merge_passes_only_conflicting_peers_to_worker
+1 failed, 58 passed, 4 subtests passed in 1.08s

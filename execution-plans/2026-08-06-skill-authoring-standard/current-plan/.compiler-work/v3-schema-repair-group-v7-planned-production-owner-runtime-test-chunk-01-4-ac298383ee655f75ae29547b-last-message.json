@@ -1,0 +1,122 @@
+{
+  "obligation_contracts": {
+    "O-411ABA40790C": {
+      "acceptance": {
+        "assertion_ids": [
+          "ASSERT_INTERNAL_REVIEW_NOT_REQUIRED"
+        ],
+        "given": "The candidate Package A standard, policy, schemas and validator are available for inspection alongside a disposable package without internal-review signatures or receipts.",
+        "oracle": {
+          "expected": "The standard explicitly states that no internal reviewer is required. Conformance prerequisites in the normative artifacts contain no mandatory internal-review signature, receipt, Bootstrap run or reviewer enablement. An otherwise compliant package is not rejected for lacking these items. External normative review and normal maintainer ADR decisions remain distinct requirements; validator evidence retains authorizes=[].",
+          "forbidden": [
+            "Making an internal reviewer a conformance or Package A completion prerequisite.",
+            "Requiring reviewer signatures, internal Bootstrap receipts or reviewer enablement.",
+            "Treating absent human approval as causal product RED.",
+            "Using a successful validator return alone to prove the normative prerequisite boundary.",
+            "Fabricating review evidence or marking a draft ADR Accepted to satisfy this check."
+          ],
+          "observable": "During A25 migration/handoff artifact verification and whole-plan terminal validation, inspect the actual standard and applicable policy/schema prerequisites, and compare the real validator's structured outcome for a compliant disposable package with no internal-review evidence. Explicit artifact assertions establish the prerequisite boundary independently of runtime status."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "Internal review is not a conformance prerequisite.",
+        "when": "The planned test_a25 checks the candidate review prerequisites as an artifact guard attached to the compatible A4 integration lane, with targeted execution bounded to 300 seconds and whole-plan terminal execution bounded to 600 seconds."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "INTERNAL_REVIEW_PREREQUISITE",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_migration.py::test_a25 must raise AssertionError if the actual standard or applicable policy/schema makes internal review mandatory, or if scripts.sc.validate_skill_quality.validate_package rejects an otherwise compliant disposable package because internal-review evidence is absent. Assert this obligation independently within A25. Use the targeted argv command with a caller-enforced 300-second timeout. This is an artifact/prerequisite guard, not expected-red; missing imports, missing authored tests, unavailable production entry and timeouts are harness or first-use blockers, never this causal failure."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Internal reviewer requirement"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Preserve the absence of a mandatory internal reviewer in the standard and applicable conformance prerequisites. Attach this artifact guard to the compatible A4 migration/terminal implementation context rather than creating a separate governance runtime feature.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "knowledge/**",
+          "_bmad-output/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Revert only candidate changes in these bounded owners, preserving existing owner-specific Skill protocols, Phase state, historical evidence and maintainer decision authority. No database migration or runtime-controller change is authorized."
+        },
+        "state_transition": "Unspecified reviewer prerequisites become an explicit normative boundary: internal review is optional and is not required for conformance.",
+        "terminal_predicate": "The obligation-specific A25 artifact assertions pass and the current whole-plan terminal selection passes after all four modules are authored and required behaviors exercised. Q2 freezes tests/helpers before formal execution; implementation cannot alter frozen snapshots. Required regression coverage remains nonempty, shared production changes invalidate affected proofs, and replay rebuilds the original binding identity before using that same identity. Missing real-entry materialization blocks the owning workflow rather than authorizing Q2 production writes. No internal reviewer receipt, approval absence, historical status or assistant statement substitutes for current checks. Targeted commands have 300-second caller timeouts; terminal has 600 seconds. Historical failures remain intact, and derived evidence authorizes=[].",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

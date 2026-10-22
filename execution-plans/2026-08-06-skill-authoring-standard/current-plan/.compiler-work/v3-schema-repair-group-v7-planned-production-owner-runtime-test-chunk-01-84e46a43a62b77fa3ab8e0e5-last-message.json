@@ -1,0 +1,127 @@
+{
+  "obligation_contracts": {
+    "O-C0F95921DA31": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-C0F95921DA31-DECLARATION-REMOVAL-EXERCISED",
+          "A-C0F95921DA31-REFERENCED-SECTION-REMOVAL-EXERCISED",
+          "A-C0F95921DA31-INDEPENDENT-REJECTION-CHECKS"
+        ],
+        "given": "A governed disposable package can be constructed from frozen test code, with a required declaration and its substantive referenced section. The real validator entry must be available before controlled execution; its absence is a first-use blocker, not causal RED.",
+        "oracle": {
+          "expected": "Both removal variants execute independently through the real validate_package entry. Each parameter checks status=fail, the applicable violated rule, package-relative diagnostic location and authorizes=[]. The referenced-section variant cannot satisfy the requirement by retaining only its heading. Parameter-specific assertion bindings establish that neither removal check was omitted or masked by the other. Derived verification evidence has authorizes=[].",
+          "forbidden": [
+            "Either required removal parameter is absent, unexecuted, skipped, deselected or xfailed while coverage is accepted.",
+            "One variant's rejection substitutes for checking the other variant.",
+            "An overall pass status, shared helper marker or CLI-only observation substitutes for parameter-level assertions.",
+            "Expected outcomes are derived from candidate-controlled policy.",
+            "Missing imports, absent planned tests, environment errors or timeouts are classified as causal RED.",
+            "A mock validator or unconditional-pass implementation satisfies verification.",
+            "Tests or fixtures are changed after freeze without native invalidation and re-authoring."
+          ],
+          "observable": "During A01 verification-coverage evaluation in scripts/sc/tests/test_skill_quality_core.py::test_a01, inspect collected and executed parameter identities, their exact assertion bindings, direct calls to scripts.sc.validate_skill_quality.validate_package, and independently evaluated rejection assertions for declaration removal and referenced-section removal. Evaluate execution closure through existing CER/Q7/Q8 mechanisms."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A01"
+        ],
+        "then": "Verification establishes execution and rule/location rejection checks for both independent removal cases.",
+        "when": "The A01 targeted selection runs both frozen removal parameters, followed by verification of their individual execution and assertion coverage."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "F_C0F95921DA31_REMOVAL_COVERAGE",
+          "selector_intent": "Bind scripts/sc/tests/test_skill_quality_core.py::test_a01 to independently identified declaration-removal and referenced-section-removal parameters. Coverage evaluation must fail if either parameter or its rule/location rejection assertion is omitted or unexecuted. This is a verification guard in the unit behavior lane, not an expected-red runtime marker. Use the targeted argv with a caller-enforced 300-second timeout; import, environment and timeout failures remain harness blockers."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "A01 removal-based validator verification",
+          "Parameter-level assertion and execution coverage",
+          "Required declarations and substantive referenced sections"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Attach independent removal-verification coverage to the cohesive A1 foundation context. Q2 authors only the declared test module and support helper; this guard creates no separate production feature or evidence writer. The foundation validator rejects incomplete declarations and referenced content through its real entry.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "docs/adr/ADR-0060*",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+            "docs/architecture/ADR_INDEX_PHASE.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Rollback only the bounded foundation candidate changes while preserving user changes and historical evidence. Do not mutate inspected packages, live state or existing owner-specific protocols. Shared validator/policy/schema changes invalidate affected proofs. ADR-0041 and ADR-0058 retain execution/evidence authority; ADR-0061 retains Phase isolation/recovery authority. Draft ADR acceptance is a maintainer decision, never fabricated or used as initial runtime RED."
+        },
+        "state_transition": "A governed fixture with two planned removal checks becomes a frozen, independently executed two-parameter verification set whose rejection assertions and execution closure are inspectable.",
+        "terminal_predicate": "Both removal parameters have executed with their own assertion bindings and checked fail status, violated rule, relative location and empty authorizes. An unconditional-pass validator cannot satisfy either rejection check. Q6 runs a nonempty applicable current/predecessor selection, excluding future unauthored cases; completed groups may use whole-module regression. Q8 runs one current whole-plan terminal selection of all four declared modules with a caller-enforced 600-second timeout after all required cases exist and have been exercised. No result is claimed from filenames or assistant text. Preserve historical evidence and existing CER/Q7/Q8 ownership; append execution evidence only through those owners under logs. Do not introduce repository-wide scans, new runtime/evidence infrastructure, knowledge publication, Skill migration or internal-review prerequisites.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a01"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

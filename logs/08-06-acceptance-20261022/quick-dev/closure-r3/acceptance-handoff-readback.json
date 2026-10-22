@@ -1,0 +1,9 @@
+{
+  "status": "pass",
+  "predicate": "implementation-complete",
+  "slice_count": 31,
+  "runtime_tuple_count": 578,
+  "sourceCommit": "a2de7182f3fda40bedf9edd1aadc50133a23a401",
+  "baseCommit": "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+  "authorizes": []
+}

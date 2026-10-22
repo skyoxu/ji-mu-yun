@@ -1,0 +1,179 @@
+{
+  "authorizes": [],
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "a1f256a4be6f8ba14b8ec85ff1f4476f5cbc16da",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "input": {
+    "adapter_hash": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+    "adapter_id": "run-refactor-implementation-acceptance",
+    "adapter_version": "compact-vdd-projection.v1",
+    "affected_consumer_refs": [
+      ".agents/skills/quick-dev-tdd-adapter",
+      ".agents/skills/run-refactor-implementation-acceptance",
+      "scripts/sc/validate_skill_quality.py"
+    ],
+    "allowed_write_roots": [],
+    "baseline_content_manifest_hash": "sha256:c15be79ada1fe189482cb9fd103e5e0cc7d872d74f158d92c845356f148adb89",
+    "baseline_content_manifest_path": "acceptance-inputs/acceptance-08-06-20261022-r4/baseline-content-manifest.v1.json",
+    "baseline_revision": "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+    "candidate_content_manifest_hash": "sha256:405ad50727b902fe82b8226d97af2fd26f8859130c6396a49fcc02113a367de7",
+    "candidate_content_manifest_path": "acceptance-inputs/acceptance-08-06-20261022-r4/candidate-content-manifest.v1.json",
+    "candidate_mode": "commit",
+    "candidate_revision": "a1f256a4be6f8ba14b8ec85ff1f4476f5cbc16da",
+    "candidate_scope_manifest": {
+      "candidate_source_root": "sha256:4058a7ccdda51bbc353ea78021d5e907494f9a7c11b4b2a5d27df7ee898db02f",
+      "path": "acceptance-inputs/acceptance-08-06-20261022-r4/candidate-source-manifest.v1.json",
+      "sha256": "sha256:967f7f2d62a1a4b7cf095f167247e7dd33cebbd00157e0719572094db991684f"
+    },
+    "change_id": "08-06-package-a-isolated-test-fixture-recovery",
+    "changed_paths": [
+      "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+      "docs/architecture/ADR_INDEX_PHASE.md",
+      "docs/standards/skill-authoring-standard.md",
+      "execution-plans/2026-08-06-skill-authoring-standard/00-index.md",
+      "execution-plans/2026-08-06-skill-authoring-standard/LOCAL-HANDOFF.md",
+      "execution-plans/2026-08-06-skill-authoring-standard/ONLINE-COMPLETION-2026-10-21.md",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-attempts/v4-published-recall-35e43f85da4a14b5c8554be8b66d9977d4356b664f04dc77c6685ffb5ee1e6f5.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-cache/v4-atomic-recall-a1391987f96f7050f10f7186.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-cache/v4-atomic-recall-chunk-001-47474acfe950be21cdf159a5.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-cache/v4-atomic-recall-chunk-002-f94fff6675ea61929614acb9.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-cache/v4-atomic-recall-chunk-003-b00c29327e71440275f71476.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/candidate-repairs/d23dca1336c4d80263eb9937ce2d5ac600a3a7f7219ba412ec9daf7ed0a04b13.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/compiler-progress.jsonl",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/published-v3-repair-active.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/resolved-atomic-recall/5f6eb3d40e8dc420202c0571e01aef632aaec4d5e882e527257cffc42e73c928.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/.compiler-work/worker-receipts/v4-atomic-recall-a1391987f96f-c15598ac4842.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/acceptances.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S10/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S11/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S12/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S13-R1-R1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S13-R1-R2/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S13-R2-1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S14/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S15/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S16/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S17/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S18/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S19/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S2/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S20/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S21-R1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S21-R2/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S22/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S23/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S24/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S25-R1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S25-R2-1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S3/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S4/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S5/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S6-R1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S6-R2/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S7-R1/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S7-R2/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S8/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/agent-context/S9/agent-context.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/atomic-recall-alignment.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/compiler-state.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/failure-intents.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/feasibility.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/final-plan-coverage.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/obligations.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/pre-slice-coverage.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/semantic-alignment.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/semantic-chain-audit.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/semantic-plan-bundle.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/slices.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/package-a-completion-plan/source-index.v1.json",
+      "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+      "scripts/sc/config/skill-authoring-standard.v1.json",
+      "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+      "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+      "scripts/sc/skill_quality_examples.py",
+      "scripts/sc/tests/fixtures/skill-quality/reference-skill/SKILL.md",
+      "scripts/sc/tests/fixtures/skill-quality/reference-skill/references/parser.json",
+      "scripts/sc/tests/fixtures/skill-quality/reference-skill/skill-quality.v1.json",
+      "scripts/sc/tests/skill_quality_support.py",
+      "scripts/sc/tests/test_skill_quality_capabilities.py",
+      "scripts/sc/tests/test_skill_quality_core.py",
+      "scripts/sc/tests/test_skill_quality_examples.py",
+      "scripts/sc/tests/test_skill_quality_migration.py",
+      "scripts/sc/validate_skill_quality.py"
+    ],
+    "code_review_domain": "toolchain",
+    "code_review_policy_hash": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4",
+    "code_review_policy_path": "acceptance-inputs/acceptance-08-06-20261022-r4/toolchain-code-review.v1.json",
+    "created_utc": "2026-08-01T00:00:00Z",
+    "execution_mode": "evidence_only",
+    "forbidden_write_roots": [
+      "logs/phase-a-innernet/",
+      "runtime/phase-a/"
+    ],
+    "run_id": "acceptance-08-06-20261022-r4",
+    "target": "execution-plans/2026-08-06-skill-authoring-standard",
+    "target_plan_hash": "sha256:35e43f85da4a14b5c8554be8b66d9977d4356b664f04dc77c6685ffb5ee1e6f5",
+    "target_plan_paths": [
+      "package-a-completion-plan/semantic-plan-bundle.v1.json",
+      "requirements.md"
+    ],
+    "validator_hash": "sha256:e65422e73fad02f98a2cf00ba6401d4920f9c20cfd38a43dbeda818fd2993d9c"
+  },
+  "inputHash": "sha256:c6f3738cc47695982291f1a6cfb9d6429533a393c91cb3f777fdb5c8bbf4b895",
+  "knowledgeContext": {
+    "acceptedDecisions": [
+      {
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "a59041c2dd6a171169fa6653ab19df98bdb8ca7ab9623fd8c1f5a81d1ce58545"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      },
+      {
+        "candidate": {
+          "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+          "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+        },
+        "decision": "accepted",
+        "owner": "adapter",
+        "rejection_reason": null,
+        "satisfies": [
+          "acceptance-scope"
+        ]
+      }
+    ],
+    "authorizes": [],
+    "contextHash": "sha256:674da76c43255b3fc471447e8dccecebc1e19baa8383593c36bc162bc4b7d510",
+    "path": "knowledge-context.refactor-acceptance-20261022.v1.json",
+    "requestHash": "sha256:3700590ea4768736b249af51199348fd7d04fb6188e12b548013ae18a43f2784",
+    "resultHash": "sha256:1a8cc75c48998868d727eaea3d09f1114a94c6462eaf3afbe4daa77461a098e3",
+    "sha256": "sha256:2b5c125e93cbe24d076cef778e42204a0c0cb0bcb74b0ad2a871190290e950da",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:b0aa333ac115609aaea2e9459b617473d67cfc42f63f88d7fdfbb0a4212faf7f",
+    "implementationReceipt": {
+      "path": "logs/08-06-acceptance-20261022/quick-dev/closure-r3/implementation-complete.json",
+      "sha256": "sha256:1582f205c829bd8d0101ba11c70a5455033d785a0d62d46b3c0e14a01ab45340",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-08-06-20261022-r4/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:a7e7ba1595f1f7c5af8cbad914c200ac9304b21bc1f1a04af57143d225a6eb6e"
+  },
+  "schemaVersion": "acceptance-run-input.v1"
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "targetPlan": "execution-plans/2026-08-06-skill-authoring-standard",
+  "preparedRunInput": {
+    "path": "prepared-run-input.v1.json",
+    "sha256": "sha256:8eff2e390649dd19a2d4014efe540fd560fc938b64052b8ae64bdbb0aee343b7"
+  },
+  "skillInputReceipt": {
+    "path": "skill-input-v2/acceptance/current.v1.json",
+    "sha256": "sha256:6a459efcbe48788f035b7b8321feb491f45868a7aeab127f5de04bdde59a1a5d"
+  },
+  "skillInputContract": {
+    "path": "skill-input-contract.v1.json",
+    "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+  },
+  "authorizes": []
+}

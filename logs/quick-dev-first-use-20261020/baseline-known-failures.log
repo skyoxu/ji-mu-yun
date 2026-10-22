@@ -1,0 +1,112 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+___________ test_missing_truncated_or_old_runner_output_blocks[None] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_missing_truncated_or_old_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f29e61dff50>
+contents = None
+
+    @pytest.mark.parametrize("contents", [None, "{", '{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}'])
+    def test_missing_truncated_or_old_runner_output_blocks(tmp_path, monkeypatch, contents):
+        import case_evidence
+        from types import SimpleNamespace
+        original = case_evidence.subprocess.run
+    
+        def fake_runner(argv, **kwargs):
+            if str(case_evidence.COLLECTOR) not in argv:
+                return original(argv, **kwargs)
+            if contents is not None:
+                Path(argv[3]).write_text(contents, encoding="utf-8")
+            return SimpleNamespace(returncode=0, stdout=b"1 passed", stderr=b"")
+    
+        monkeypatch.setattr(case_evidence.subprocess, "run", fake_runner)
+        result, _, receipt = run_task(tmp_path, PASS)
+>       assert result["predicate_result"] is False
+E       assert True is False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:177: AssertionError
+____________ test_missing_truncated_or_old_runner_output_blocks[{] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_missing_truncated_or_old_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f29e60598e0>
+contents = '{'
+
+    @pytest.mark.parametrize("contents", [None, "{", '{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}'])
+    def test_missing_truncated_or_old_runner_output_blocks(tmp_path, monkeypatch, contents):
+        import case_evidence
+        from types import SimpleNamespace
+        original = case_evidence.subprocess.run
+    
+        def fake_runner(argv, **kwargs):
+            if str(case_evidence.COLLECTOR) not in argv:
+                return original(argv, **kwargs)
+            if contents is not None:
+                Path(argv[3]).write_text(contents, encoding="utf-8")
+            return SimpleNamespace(returncode=0, stdout=b"1 passed", stderr=b"")
+    
+        monkeypatch.setattr(case_evidence.subprocess, "run", fake_runner)
+        result, _, receipt = run_task(tmp_path, PASS)
+>       assert result["predicate_result"] is False
+E       assert True is False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:177: AssertionError
+_ test_missing_truncated_or_old_runner_output_blocks[{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}] _
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_missing_truncated_or_old_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f29e60a6510>
+contents = '{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}'
+
+    @pytest.mark.parametrize("contents", [None, "{", '{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}'])
+    def test_missing_truncated_or_old_runner_output_blocks(tmp_path, monkeypatch, contents):
+        import case_evidence
+        from types import SimpleNamespace
+        original = case_evidence.subprocess.run
+    
+        def fake_runner(argv, **kwargs):
+            if str(case_evidence.COLLECTOR) not in argv:
+                return original(argv, **kwargs)
+            if contents is not None:
+                Path(argv[3]).write_text(contents, encoding="utf-8")
+            return SimpleNamespace(returncode=0, stdout=b"1 passed", stderr=b"")
+    
+        monkeypatch.setattr(case_evidence.subprocess, "run", fake_runner)
+        result, _, receipt = run_task(tmp_path, PASS)
+>       assert result["predicate_result"] is False
+E       assert True is False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:177: AssertionError
+_____________ test_unsupported_command_cannot_fall_back_to_summary _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_unsupported_command_canno0')
+
+    def test_unsupported_command_cannot_fall_back_to_summary(tmp_path):
+        result, _, receipt = run_task(tmp_path, PASS, binding=lambda d: d.update(argv=[sys.executable, "-c", "print('1 passed')"]))
+        assert result["predicate_result"] is False
+>       assert "case-adapter-gap" in receipt["case_report_error"]
+E       assert 'case-adapter-gap' in "'-m' is not in list"
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py:185: AssertionError
+__________ test_complete_probe_and_regression_reuse_without_execution __________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-8/test_complete_probe_and_regres0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f29e60a5400>
+
+    def test_complete_probe_and_regression_reuse_without_execution(tmp_path, monkeypatch):
+        semantic, _ = fixture(tmp_path)
+        calls = counter(monkeypatch)
+        probe = execute(tmp_path, semantic, 'probe')
+        assert execute(tmp_path, semantic, 'probe') == probe
+        regression = execute(tmp_path, semantic, 'regression', probe)
+        assert execute(tmp_path, semantic, 'regression', probe) == regression
+>       assert len(calls) == 2
+E       assert 0 == 2
+E        +  where 0 = len([])
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py:28: AssertionError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_truncated_or_old_runner_output_blocks[None]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_truncated_or_old_runner_output_blocks[{]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_truncated_or_old_runner_output_blocks[{"schema":"quick-dev.pytest-case-report.v1","run_id":"RUN-OLD"}]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_unsupported_command_cannot_fall_back_to_summary
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution
+5 failed in 1.44s

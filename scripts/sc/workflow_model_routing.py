@@ -57,20 +57,20 @@ def canonical_hash(value: Any) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
-def load_policy(path: Path | None = None) -> dict[str, Any]:
+def load_policy(path: Path | None = None, *, resolve_models: bool = True) -> dict[str, Any]:
     policy_path = path or DEFAULT_POLICY_PATH
     try:
         policy = json.loads(policy_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise RoutingError("workflow model routing policy is unreadable") from exc
     for entry in policy.get("models", {}).values() if isinstance(policy, dict) else ():
-        if isinstance(entry, dict) and entry.get("modelId") == f"${MODEL_CONFIG_KEY}":
+        if resolve_models and isinstance(entry, dict) and entry.get("modelId") == f"${MODEL_CONFIG_KEY}":
             entry["modelId"] = load_model()
-    validate_policy(policy)
+    validate_policy(policy, allow_model_reference=not resolve_models)
     return policy
 
 
-def validate_policy(policy: Any) -> None:
+def validate_policy(policy: Any, *, allow_model_reference: bool = False) -> None:
     if not isinstance(policy, dict) or policy.get("schemaVersion") != "jimuyun.workflow-model-routing-policy.v1":
         raise RoutingError("workflow model routing policy schema is invalid")
     if policy.get("rolloutMode") not in {"observe_only", "active", "disabled"}:
@@ -105,7 +105,8 @@ def validate_policy(policy: Any) -> None:
         if not isinstance(model, dict) or not isinstance(model.get("modelId"), str):
             raise RoutingError(f"model registry entry is invalid: {alias}")
         model_id = model["modelId"]
-        if not is_valid_model_id(model_id) or model_id in models or model_id in model_ids:
+        is_reference = allow_model_reference and model_id == f"${MODEL_CONFIG_KEY}"
+        if (not is_valid_model_id(model_id) and not is_reference) or model_id in models or model_id in model_ids:
             raise RoutingError(f"model registry must use unique full model IDs: {alias}")
         model_ids.add(model_id)
         if model.get("activationState") not in {"active", "shadow_candidate"}:
@@ -400,7 +401,9 @@ def _route_decision(
     blocking_reasons: list[str],
     override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    validate_policy(policy)
+    # ADR-0041: a deterministic Acceptance route binds the canonical policy
+    # template but has no model identity to resolve or permission to launch.
+    validate_policy(policy, allow_model_reference=route_id == "refactor_acceptance.deterministic")
     route = policy["routes"].get(route_id)
     if not isinstance(route, dict) or route.get("consumer") != consumer:
         raise RoutingError("workflow route does not belong to the requested consumer")
@@ -511,10 +514,12 @@ def refactor_acceptance_decision(
     complex_recovery_trigger: str | None = None,
     policy: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    current = policy or load_policy()
+    current = policy or load_policy(resolve_models=False)
     allowed = current.get("refactorAcceptanceComplexRecoveryTriggers", [])
     if complex_recovery_trigger is not None and complex_recovery_trigger not in allowed:
         raise RoutingError("Refactor Acceptance complex recovery trigger is invalid")
+    if complex_recovery_trigger is not None and policy is None:
+        current = load_policy()
     route_id = (
         "refactor_acceptance.complex_recovery"
         if complex_recovery_trigger is not None
@@ -557,7 +562,7 @@ def execute_decision(
     policy: dict[str, Any] | None = None,
     runner: Any = None,
 ) -> dict[str, Any]:
-    current = load_policy()
+    current = load_policy(resolve_models=decision.get("routeId") != "refactor_acceptance.deterministic")
     if policy is not None and canonical_hash(policy) != canonical_hash(current):
         raise RoutingError("workflow model execution requires the canonical policy")
     validate_decision(decision, current)
@@ -635,7 +640,7 @@ def validate_decision(decision: Any, policy: dict[str, Any] | None = None) -> No
     }
     if set(decision) != required or decision.get("authorizes") != []:
         raise RoutingError("workflow model route decision shape is invalid")
-    current = policy or load_policy()
+    current = policy or load_policy(resolve_models=decision.get("routeId") != "refactor_acceptance.deterministic")
     if decision.get("policyRevision") != current["policyRevision"] or decision.get("policyHash") != canonical_hash(current):
         raise RoutingError("workflow model route decision policy binding is stale")
     unsigned = {key: value for key, value in decision.items() if key != "decisionId"}
@@ -653,5 +658,10 @@ def validate_decision(decision: Any, policy: dict[str, Any] | None = None) -> No
     requested = decision.get("requestedExecution")
     if not isinstance(requested, dict) or set(requested) != {"launchMode", "backend", "model", "effort", "sandbox"}:
         raise RoutingError("workflow model requested execution identity is invalid")
+    if decision.get("routeId") == "refactor_acceptance.deterministic":
+        if current["routes"][decision["routeId"]].get("launchMode") != "none" or requested != {
+            "launchMode": "none", "backend": None, "model": None, "effort": None, "sandbox": None,
+        }:
+            raise RoutingError("deterministic Acceptance cannot request model execution")
     if requested["model"] is not None and not is_valid_model_id(requested["model"]):
         raise RoutingError("workflow model route decision must use a full model ID")

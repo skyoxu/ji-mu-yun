@@ -16,6 +16,7 @@ from pathlib import Path
 import time
 
 import semantic_compiler_gate as gate
+from semantic_progress import emit
 import semantic_atomic_recall_result_patch  # noqa: F401  # exact recall diagnostics first
 
 sc = gate.sc
@@ -344,6 +345,21 @@ def _additional_obligations(
         ),
     )
     items = raw.get("obligations")
+    if isinstance(items, list) and any(
+        isinstance(item, Mapping) and (
+            not isinstance(item.get("source_refs"), list) or len(item["source_refs"]) != 1)
+        for item in items
+    ):
+        raw = gate._ORIGINAL_INVOKE_WORKER(
+            root=root, out_dir=out_dir, stage="v1-source-gap-repair-schema-repair",
+            payload={"input": payload, "rejected_output": raw,
+                     "validator_findings": ["Each added obligation must bind exactly one affected source_ref."]},
+            worker_cache=worker_cache,
+            prompt=("Return corrected obligations JSON only. Each addition must bind exactly one affected source_ref "
+                    "and address only a proven source_gap_claim. Do not combine source references, repeat existing "
+                    "obligations, or promote execution-authoring context into new product requirements."),
+        )
+        items = raw.get("obligations")
     if not isinstance(items, list) or not items:
         raise ValueError("V1 source-gap repair returned no obligations")
     by_ref = _source_entry_by_ref(source_index)
@@ -412,6 +428,9 @@ def compile_obligations_with_gap_repair(
         obligations=obligations,
         worker_cache=worker_cache,
     )
+    emit(out_dir, "V1-gap-repair", "candidate-recall-returned", "candidate",
+         obligation_count=len(obligations), findings=recall.get("findings", []),
+         metrics=recall.get("metrics", {}))
     mixed = _exact_mixed_reconciliation(recall, obligations)
     if mixed is not None:
         invented_ids, gaps = mixed
@@ -525,6 +544,19 @@ def compile_obligations_with_gap_repair(
         )
         if current_recall.get("valid"):
             return repaired
+        invented_ids = _exact_invented_partition(current_recall, repaired)
+        if invented_ids:
+            # ADR-0041: an addition can be independently rejected just like an
+            # initial candidate. Apply the same bounded transaction before V3,
+            # retaining the old candidate unless V2 and fresh recall both pass.
+            projected = _project_invented_candidates(
+                repaired, invented_ids, preserve_requirement_coverage=False)
+            if projected is None or not sc.guard_obligations(source_index, projected).get("valid"):
+                return repaired
+            recheck = gate.atomic_recall_alignment(
+                root=root, out_dir=out_dir, source_index=source_index,
+                obligations=projected, worker_cache=worker_cache)
+            return projected if recheck.get("valid") else repaired
         if not _only_source_gaps(current_recall):
             return repaired
     # Fail closed after the bounded repair budget; the stable authority will

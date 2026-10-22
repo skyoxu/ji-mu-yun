@@ -14,6 +14,22 @@ from semantic_worker_contract_patch import _augment_prompt
 from semantic_worker_relational_patch import _augment_prompt as _augment_relational_prompt
 
 
+def test_current_repair_failure_does_not_report_historical_receipt(tmp_path, monkeypatch):
+    """ADR-0041: immutable history cannot replace the current rejection."""
+    import pytest
+    import semantic_worker_contract_patch as contract
+    monkeypatch.setattr(gate, "_ORIGINAL_INVOKE_WORKER", lambda **kwargs: {})
+    monkeypatch.setattr(gate, "_worker_schema_findings", lambda *args: ["CURRENT_REJECTION"])
+    monkeypatch.setattr(gate, "_source_binding_findings", lambda *args: [])
+    monkeypatch.setattr(contract, "_repair_diagnostics", lambda **kwargs: ["STALE_REJECTION"])
+    with pytest.raises(RuntimeError) as caught:
+        contract.normative_invoke_worker(
+            root=tmp_path, out_dir=tmp_path / "plan", stage="v1-FR-1",
+            payload={"source": "current"}, prompt="Extract.")
+    assert "CURRENT_REJECTION" in str(caught.value)
+    assert "STALE_REJECTION" not in str(caught.value)
+
+
 def _obligation(oid: str) -> dict:
     return {
         "obligation_id": oid,

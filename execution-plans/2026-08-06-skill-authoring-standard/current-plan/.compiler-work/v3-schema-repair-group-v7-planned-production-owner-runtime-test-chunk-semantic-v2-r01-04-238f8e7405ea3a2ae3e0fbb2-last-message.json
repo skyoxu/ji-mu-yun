@@ -1,0 +1,116 @@
+{
+  "obligation_contracts": {
+    "O-B7451BC5651B": {
+      "acceptance": {
+        "assertion_ids": [
+          "A17_EACH_DB_WRITE_DECLARES_BACKUP_PREREQUISITES",
+          "A17_EACH_DB_WRITE_DECLARES_RECOVERY_PREREQUISITES",
+          "A17_PREREQUISITE_OMISSIONS_REJECTED_INDEPENDENTLY"
+        ],
+        "given": "Disposable packages declare database-write capabilities. Independently authored variants supply both prerequisite declarations, omit backup prerequisites, omit recovery prerequisites, or omit prerequisites on a second database-write capability while retaining them on the first.",
+        "oracle": {
+          "expected": "Every database-write capability explicitly declares both backup and recovery prerequisites. The complete variant passes this prerequisite check; each omission variant returns fail with the applicable rule ID, capability-relative diagnostic path and code identifying the missing prerequisite. Derived results retain authorizes=[].",
+          "forbidden": [
+            "A database-write capability passes with either prerequisite declaration missing.",
+            "Prerequisites declared for one capability satisfy another capability's missing declaration.",
+            "Static prerequisite validation is represented as a completed backup, restore drill or execution authorization.",
+            "An unconditional-pass validator satisfies the assertions."
+          ],
+          "observable": "During independently assertion-bound parameter cases in scripts/sc/tests/test_skill_quality_capabilities.py::test_a17, inspect each capability's explicit prerequisite declarations and compare structured results from direct calls to scripts.sc.validate_skill_quality.validate_package against frozen expectations independent of candidate policy."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A17"
+        ],
+        "then": "Require explicit backup and recovery prerequisite declarations for every database-write capability and reject each independently missing declaration.",
+        "when": "The real validator statically inspects each disposable package under an explicitly supplied repository inspection root."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "A17_DB_WRITE_PREREQUISITES_NOT_ENFORCED",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a17 with independently marked omission parameters and direct validate_package calls. Expect an observable AssertionError when a database-write declaration missing backup or recovery prerequisites is accepted, or when another capability's declaration masks that omission. Use the targeted argv command with a 300-second caller timeout. Missing production imports, absent tests, invocation errors and timeouts are blockers or harness failures, never causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Database-write capability declaration"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Within the cohesive A3 capability-check context, validate explicit backup and recovery prerequisites separately for every database-write capability. Reuse A1/A2 foundation deliverables; do not implement database infrastructure, execute recovery operations or grant authority.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Revert only this bounded prerequisite-check change through the owning workflow. Preserve existing quality and owner-specific protocols, database state, historical evidence and capability authority. Shared validator/policy/schema changes invalidate affected proofs."
+        },
+        "state_transition": "A database-write capability with incomplete prerequisite declarations becomes either explicitly complete or deterministically rejected for each missing prerequisite.",
+        "terminal_predicate": "Each prerequisite parameter executes through the real callable with its own assertion bindings; complete declarations pass and independent omissions fail. Freeze tests/helpers and independent expectations before formal RED; production owners remain outside immutable snapshots, and Green/refactor cannot edit frozen tests. Q2 authors only the declared test/helper paths and disposable fixture variants. The currently absent callable must become executable under the existing owning protocol before controlled RED; report first-use blocking rather than seed production, fake an import or fabricate RED. Enforce the production write allowlist and NFR exclusions without new controllers, runtime infrastructure, knowledge publication or historical-evidence rewrites. Retain nonempty applicable regression coverage, invalidate affected shared proofs after production changes, and perform one current whole-plan terminal validation after all four modules and behaviors are available. Targeted commands have a 300-second caller timeout; terminal validation has 600 seconds. Timeouts never establish RED. Static results retain authorizes=[] and establish no restore-drill result. ADR-0041/0058 execution boundaries and ADR-0061 isolation remain intact; normal maintainer acceptance of ADR-0062 precedes Package A final acceptance or Package B consumption.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a17"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

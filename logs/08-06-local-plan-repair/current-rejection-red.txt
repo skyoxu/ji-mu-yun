@@ -1,0 +1,28 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_______ test_current_repair_failure_does_not_report_historical_receipt ________
+
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-468/test_current_repair_failure_do0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000021E1BDD3560>
+
+    def test_current_repair_failure_does_not_report_historical_receipt(tmp_path, monkeypatch):
+        """ADR-0041: immutable history cannot replace the current rejection."""
+        import pytest
+        import semantic_worker_contract_patch as contract
+        monkeypatch.setattr(gate, "_ORIGINAL_INVOKE_WORKER", lambda **kwargs: {})
+        monkeypatch.setattr(gate, "_worker_schema_findings", lambda *args: ["CURRENT_REJECTION"])
+        monkeypatch.setattr(gate, "_source_binding_findings", lambda *args: [])
+        monkeypatch.setattr(contract, "_repair_diagnostics", lambda **kwargs: ["STALE_REJECTION"])
+        with pytest.raises(RuntimeError) as caught:
+            contract.normative_invoke_worker(
+                root=tmp_path, out_dir=tmp_path / "plan", stage="v1-FR-1",
+                payload={"source": "current"}, prompt="Extract.")
+>       assert "CURRENT_REJECTION" in str(caught.value)
+E       assert 'CURRENT_REJECTION' in 'repeated deterministic semantic worker failure; stop and repair VDD: ["STALE_REJECTION"]'
+E        +  where 'repeated deterministic semantic worker failure; stop and repair VDD: ["STALE_REJECTION"]' = str(RuntimeError('repeated deterministic semantic worker failure; stop and repair VDD: ["STALE_REJECTION"]'))
+E        +    where RuntimeError('repeated deterministic semantic worker failure; stop and repair VDD: ["STALE_REJECTION"]') = <ExceptionInfo RuntimeError('repeated deterministic semantic worker failure; stop and repair VDD: ["STALE_REJECTION"]') tblen=2>.value
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_live_v3_worker_contract.py:29: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_live_v3_worker_contract.py::test_current_repair_failure_does_not_report_historical_receipt
+1 failed, 9 deselected in 0.21s

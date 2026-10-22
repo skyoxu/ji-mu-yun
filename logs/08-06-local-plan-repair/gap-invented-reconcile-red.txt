@@ -1,0 +1,11 @@
+
+=================================== ERRORS ====================================
+_ ERROR collecting .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_grouped_v3_and_obligation_gap_repair.py _
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_grouped_v3_and_obligation_gap_repair.py:279: in <module>
+    @pytest.mark.parametrize('clean_recheck', [True, False])
+     ^^^^^^
+E   NameError: name 'pytest' is not defined
+=========================== short test summary info ===========================
+ERROR .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_grouped_v3_and_obligation_gap_repair.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.25s

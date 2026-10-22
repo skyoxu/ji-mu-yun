@@ -1,0 +1,116 @@
+{
+  "obligation_contracts": {
+    "O-FC4F16B48E21": {
+      "acceptance": {
+        "assertion_ids": [
+          "ASSERT_FC4F16B48E21_DIAGNOSTIC_BOUND",
+          "ASSERT_FC4F16B48E21_DIAGNOSTIC_FIELDS"
+        ],
+        "given": "Disposable contained packages generate diagnostic-producing defects, including enough independent defects to exceed the finite diagnostic limit agreed and independently frozen during Q2. Fixture roots contain unchanged copies of the actual policy and schemas; production is imported from the repository.",
+        "oracle": {
+          "expected": "For both public entries, diagnostics is a nonempty JSON-compatible list with length no greater than the independently frozen finite policy limit, including under excess-defect input. Every returned entry contains rule, path and message information. Check the policy and result-schema artifacts during contract evaluation for a finite bound and required diagnostic fields; do not derive expected limits or required fields from candidate-controlled bytes at test time.",
+          "forbidden": [
+            "An unbounded diagnostics list or a returned count exceeding the frozen limit.",
+            "A diagnostic entry missing rule, path or message information.",
+            "Passing an empty diagnostics list for every defective input.",
+            "Treating a missing production import, absent test file, timeout or environment failure as causal RED."
+          ],
+          "observable": "During scripts/sc/tests/test_skill_quality_core.py::test_a06, inspect diagnostics returned by scripts.sc.validate_skill_quality.validate_package and decoded from the actual CLI subprocess output. Evaluate the corresponding policy/result-schema artifacts in the same integration check."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A06"
+        ],
+        "then": "Both public entries expose bounded diagnostics whose entries provide rule, path and message information.",
+        "when": "The frozen A06 parameter cases invoke the real Python callable and public CLI on diagnostic-producing packages and inspect their structured results and diagnostic contract artifacts."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "DIAGNOSTIC_BOUND_CONTRACT_VIOLATION",
+          "selector_intent": "Use scripts/sc/tests/test_skill_quality_core.py::test_a06 with explicit parameter-level assertion binding for ASSERT_FC4F16B48E21_DIAGNOSTIC_BOUND. Directly call scripts.sc.validate_skill_quality.validate_package and additionally exercise its actual CLI using subprocess argv. An excess-defect package must expose an AssertionError if diagnostics exceeds the independently frozen finite limit or the governing artifacts leave that limit unbounded. Run the targeted pytest argv with a 300-second caller timeout. This constraint is not an expected-red runtime role."
+        },
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "DIAGNOSTIC_REQUIRED_FIELDS_MISSING",
+          "selector_intent": "Use scripts/sc/tests/test_skill_quality_core.py::test_a06 with explicit parameter-level assertion binding for ASSERT_FC4F16B48E21_DIAGNOSTIC_FIELDS. Check actual callable and CLI diagnostic entries against independently frozen rule/path/message requirements and check their schema declaration. A missing field or absent diagnostics for known defects must raise AssertionError. Use the same targeted integration command and 300-second timeout; do not classify import or harness failures as this failure."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Public CLI and Python entry diagnostic list",
+          "Diagnostic limit policy",
+          "Diagnostic entry result schema"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "behavior_change": "Implement bounded diagnostic accumulation and rule/path/message completeness through the real validator's shared API/CLI result construction, with the actual policy and result schema declaring the diagnostic contract. Keep this constraint in the cohesive A1 foundation context.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only the candidate production changes while preserving inspected packages, frozen tests and historical evidence. No live database, Phase runtime or existing Skill protocol changes are authorized. Shared policy/schema/validator changes invalidate affected proofs and require dependency-scoped revalidation."
+        },
+        "state_transition": "A diagnostic-producing invocation transitions to a structured result whose diagnostic list respects the frozen finite limit and whose entries contain rule, path and message.",
+        "terminal_predicate": "The bound A06 integration cases must execute against the real callable and CLI and satisfy both independent assertions; an unconditional-pass replacement must fail the oracle. Q2 alone authors and freezes declared tests/helpers before formal RED; implementation cannot alter those snapshots or inspected packages. Missing first-use production entry must be reported as a protocol blocker before TDD, never replaced with a fake implementation or Q2 production write. Apply a 300-second targeted timeout and retain failures; timeouts are harness failures. Q6 includes nonempty applicable predecessor regression coverage, expanding to the whole foundation module only when complete. Q8 requires current whole-plan validation of all four declared test modules with a 600-second timeout after all required cases exist and execute. Completion remains owned by existing CER/Q7/Q8 workflows, not assistant text or fabricated receipts. Preserve authorizes=[] on derived results and evidence; no new evidence writer, internal review receipt or out-of-scope controller changes are authorized.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a06"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

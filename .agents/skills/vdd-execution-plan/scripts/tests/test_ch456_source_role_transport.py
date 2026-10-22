@@ -58,3 +58,22 @@ def test_unrelated_v3_cache_and_injected_fixture_are_not_reclassified(tmp_path):
     historical = {"invented_obligation_ids": [], "supported_obligation_ids": ["O-1"], "source_gap_claims": []}
     assert transport.transport_invoke_worker(root=tmp_path, out_dir=out_dir, stage="v4-atomic-recall",
         payload=payload, prompt="Replay.", worker_cache={"v4-atomic-recall": historical}) == historical
+
+
+@pytest.mark.parametrize('code', [124, 130])
+def test_explicit_host_stop_never_retries_or_enters_semantic_repair(tmp_path, monkeypatch, code):
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / 'scripts/sc'))
+    import _llm_backend
+    calls = []
+    monkeypatch.setattr(_llm_backend, 'resolve_llm_backend', lambda _: 'host-session')
+    def stopped(**kwargs):
+        calls.append(kwargs)
+        return code, 'stopped', ['host-session']
+    monkeypatch.setattr(_llm_backend, 'run_llm_exec', stopped)
+    with pytest.raises(transport.HostWorkerStopped) as caught:
+        transport.transport_invoke_worker(root=tmp_path, out_dir=tmp_path / 'plan',
+            stage='v3', payload={'obligations': []}, prompt='Compile.')
+    assert caught.value.code == code
+    assert len(calls) == 1
+    assert not issubclass(transport.HostWorkerStopped, Exception)
+    assert not list((tmp_path / 'plan').glob('.compiler-cache/*.json'))

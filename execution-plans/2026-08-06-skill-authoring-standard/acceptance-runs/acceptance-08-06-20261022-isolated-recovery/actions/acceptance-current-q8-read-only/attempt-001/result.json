@@ -1,0 +1,66 @@
+{
+  "authorizes": [],
+  "commandId": "current-q8-read-only",
+  "commandRegistryHash": "sha256:06babdca486f0ab7ec63066114a211feb54ee8edcf83bf813a9010df6eaad637",
+  "environmentIdentity": {
+    "hash": "sha256:c722e93949e144d3d3f717c276ade642b857575c8358fbcd964a050f8848e159",
+    "names": [
+      "HOME",
+      "PATH"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "-c",
+      "import json,sys; from pathlib import Path; sys.path.insert(0,'.agents/skills/run-refactor-implementation-acceptance/scripts'); from current_quick_dev_handoff import verify_current_handoff; b=json.loads(Path('logs/08-06-acceptance-20261022/quick-dev/closure-r3/acceptance-current-quick-dev-binding.json').read_text()); v=verify_current_handoff(Path('.').resolve(),b); print(json.dumps({'status':v['status'],'predicate':v['predicate'],'slice_count':len(v['predecessors']),'runtime_tuple_count':len(v['runtime_closure_tuples']),'authorizes':v['authorizes']},sort_keys=True))"
+    ],
+    "commandId": "current-q8-read-only",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/scratch/e4e648ddd442/acceptance-0806-env/bin/python",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:d78273813cb3909ec62c8691332fd6f9e41df7f735cebce5bfbf907f7bc31b63",
+  "processResult": {
+    "commandId": "current-q8-read-only",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authorizes\": [], \"predicate\": \"implementation-complete\", \"runtime_tuple_count\": 578, \"slice_count\": 31, \"status\": \"pass\"}\n",
+    "stdoutSha256": "sha256:9d1677bf4cca388e5a82b9688cfea340a929b788cf481ab69b50d6592c76084d"
+  },
+  "processResultHash": "sha256:a32cc6b190955a1ef7fd62dbdaf805a73eb80a56f0233cc8a8c1c95a1721444c",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

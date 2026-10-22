@@ -1,0 +1,103 @@
+{
+  "obligation_contracts": {
+    "O-576DC6FA5C58": {
+      "acceptance": {
+        "assertion_ids": [
+          "CLI_RESULT_JSON_ALL_OUTCOMES",
+          "CLI_ARGUMENT_ERROR_JSON",
+          "CLI_RESULT_NO_USAGE_OR_TRACEBACK",
+          "CLI_RESULT_AUTHORIZES_EMPTY"
+        ],
+        "given": "待由 Q2 编写并冻结的 test_a06 使用独立预期值、可处置的显式检查根和真实生产入口；覆盖正常、包不合规、调用或检查错误及 inventory legacy 输入，不预设验证结果。",
+        "oracle": {
+          "expected": "每次调用均输出恰好一个符合版本化结果契约的 JSON 对象，包含包身份、status、有序 diagnostics 和 authorizes=[]。未知选项、未知 mode、缺失必需参数和无效参数值也必须返回 JSON error/2。其他已声明结果仍采用相同 JSON 契约；不得以 argparse usage 或 traceback 替代结果。",
+          "forbidden": [
+            "以 argparse usage 文本代替结果 JSON",
+            "以 traceback 代替结果 JSON",
+            "JSON 前后混入非 JSON 输出或输出多个结果对象",
+            "参数错误绕过版本化结果结构",
+            "结果声明非空 authorizes",
+            "将缺失模块、导入失败、缺失测试或超时当作约束违反的有效证明"
+          ],
+          "observable": "集成验证阶段，test_a06 直接调用 scripts.sc.validate_skill_quality.main，并以 literal argv、shell=False、仓库 cwd 和有限超时运行公开 CLI；逐参数检查新鲜 stdout 的完整 JSON 解码、独立冻结的字段预期、退出码及 stdout/stderr 中是否出现 usage 或 traceback。实际结果 schema 用于一致性检查，不能充当唯一预期来源。"
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "所有已声明的 CLI 结果路径，包括 argparse 参数拒绝路径，均保持结果 JSON 契约。",
+        "when": "在冻结后的集成测试阶段，经真实 main 和公开 CLI 执行各结果分支及参数错误变体，并在进程结束后检查完整输出与退出码。"
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "CLI_ERROR_RESULT_NOT_JSON",
+          "selector_intent": "在 scripts/sc/tests/test_skill_quality_core.py::test_a06 中为本义务绑定明确的参数级 assertion IDs；直接调用 scripts.sc.validate_skill_quality.main，并补充真实 CLI 子进程检查。若任一结果分支，尤其未知选项、未知 mode 或缺失必需参数，输出 usage、traceback、不可完整解码的 JSON、多个对象或缺少约定结果字段，则产生可观察 AssertionError。使用 python -B -m pytest -q scripts/sc/tests/test_skill_quality_core.py::test_a06，调用方限时 300 秒。本义务为 constraint，不使用 expected-red；缺失生产入口或环境失败须报告阻塞，不得伪装为该断言失败。"
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "CLI error result contract"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "在真实 argparse main 中统一正常与异常出口的 JSON 序列化，确保参数解析错误也使用已有结果契约；不新增验证执行器、证据写入器或权限授予机制。",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/**",
+          "scripts/sc/_llm_backend.py",
+          "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "仅回滚验证器的 CLI 输出实现；保持既定 API、版本化结果字段及退出码语义，不迁移数据库，不改变既有 sidecar 协议，不修改冻结测试或历史证据。"
+        },
+        "state_transition": "CLI 错误输出未指定，转为所有公开结果路径均通过同一 JSON 结果边界；是否已经具备该行为由后续真实调用判定。",
+        "terminal_predicate": "test_a06 的全部适用参数实例执行且通过，参数错误输出经完整 JSON 解析和独立字段断言确认，没有 usage/traceback 替代结果。Q2 仅编写声明测试和 helper，正式验证前冻结；GREEN/refactor 仅修改声明生产文件。当前缺失的真实入口不得由 Q2 种入或伪造，不能按现有协议建立真实调用时先报告阻塞。目标命令限时 300 秒，超时属于 harness failure。共享验证器、policy 或 schema 变化使受影响证明失效，须保留原始失败并重建原绑定身份后以相同身份重放。Q6 保持非空适用回归集；待四组测试均完成且全部产品行为已执行后，以 600 秒上限运行一次当前全计划终验。最终完成依赖机器证据，不由本契约宣告就绪；遵守 ADR-0041、ADR-0058 和既有 Phase 隔离边界，不修改共享工作流或历史报告。",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a06"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

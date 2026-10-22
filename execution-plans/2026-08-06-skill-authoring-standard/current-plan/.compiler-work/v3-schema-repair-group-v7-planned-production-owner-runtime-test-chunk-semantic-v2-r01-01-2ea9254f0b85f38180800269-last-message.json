@@ -1,0 +1,105 @@
+{
+  "obligation_contracts": {
+    "O-A19BF1AD20E4": {
+      "acceptance": {
+        "assertion_ids": [
+          "A20-SUBPROCESS-TIMEOUT-FINITE",
+          "A20-SUBPROCESS-TIMEOUT-MISSING-REJECTED",
+          "A20-SUBPROCESS-TIMEOUT-NONFINITE-REJECTED"
+        ],
+        "given": "Disposable packages declare subprocess capabilities, with all unrelated declarations held valid and timeout variants independently defined in frozen test code.",
+        "oracle": {
+          "expected": "An explicit finite timeout satisfies the subprocess-timeout declaration check. An omitted or non-finite timeout causes rejection with structured diagnostics identifying the timeout defect and affected declaration path. Validation does not execute the declared subprocess.",
+          "forbidden": [
+            "A subprocess capability without a timeout passes validation.",
+            "A subprocess capability with a non-finite timeout passes validation.",
+            "A finite timeout is rejected as missing or non-finite.",
+            "The validator executes the declared subprocess to determine timeout validity.",
+            "A missing production import, collection error, environment failure or harness timeout is reported as causal RED."
+          ],
+          "observable": "Parameter-specific assertions in scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 inspect the declaration timeout and the structured status, timeout-related rule ID, code and diagnostic path returned by the real scripts.sc.validate_skill_quality.validate_package entry. A subprocess-execution sentinel detects any attempt to run the inspected command."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A20"
+        ],
+        "then": "Each subprocess capability must explicitly declare a finite timeout; missing and non-finite timeout declarations fail static validation.",
+        "when": "The frozen A20 timeout parameter cases call the real validator during controlled behavior probing, regression and terminal verification."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "A20_SUBPROCESS_TIMEOUT_DECLARATION_DEFECT",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a20 with independently marked finite, missing and non-finite timeout parameters. Directly call scripts.sc.validate_skill_quality.validate_package and raise an observable AssertionError when a finite timeout fails its declaration check or a missing/non-finite timeout is accepted. Use the targeted argv command with a caller-enforced 300-second limit. Import, fixture, collection and environment failures are not this observation."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A subprocess capability timeout declarations",
+          "Static subprocess timeout validation"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Require an explicit finite timeout for each declared subprocess capability and reject missing or non-finite timeout values through the real static validator. Consume normative policy/schema inputs without executing subprocesses or introducing timeout infrastructure.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "knowledge/**",
+          "_bmad-output/**",
+          "logs/**"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Rollback only the affected Package A timeout-validation changes while preserving unrelated public CLI/API and schema behavior. No live data migration, Runner replacement or runtime timeout engine is authorized. Preserve historical failure evidence and invalidate affected proofs after shared policy/schema/validator changes."
+        },
+        "state_transition": "Subprocess timeout declarations under inspection become either compliant explicit finite declarations or rejected declarations with a localized timeout diagnostic; this establishes declaration validation, not runtime timeout enforcement.",
+        "terminal_predicate": "Every frozen A20 timeout parameter executes through the real validator with its own assertion binding and independently frozen expectations; finite declarations satisfy the timeout rule and missing/non-finite declarations are rejected. Tests detect unconditional-pass substitution and attempted subprocess execution. Q2 authors only the declared test module/helper and disposable package variants, freezes them before formal RED, and never seeds production. Production owners remain outside immutable snapshots; GREEN/refactor cannot alter frozen tests. The absent initial callable is a first-use blocker until the existing owning protocol establishes a real production call, never a fabricated RED. Apply Accepted ADR-0041 and preserve ADR-0058 replay boundaries: rebuild the original binding identity before replay with that same identity. Derived evidence authorizes nothing. Q6 includes applicable nonempty predecessor regression coverage, with earlier groups checked before dependents; targeted commands have a 300-second limit. Whole-plan acceptance additionally requires one current selection of all four authorized test modules after their authoring and behavior execution, with a 600-second limit. Timeouts are harness failures. Keep shared runtime/evidence writers, knowledge publication, model routing, Hosted authority and historical reports outside production writes; append required execution evidence only through existing workflows. No new subprocess controller, installation flow, review receipt or isolation suite is introduced.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a20"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

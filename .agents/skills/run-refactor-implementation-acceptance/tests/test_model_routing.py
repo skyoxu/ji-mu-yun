@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import sys
+import tempfile
+from unittest.mock import patch, Mock
 import unittest
 from pathlib import Path
 
@@ -14,6 +16,12 @@ import model_routing  # noqa: E402
 
 
 class RefactorAcceptanceModelRoutingTests(unittest.TestCase):
+    def setUp(self) -> None:
+        # A configured child route is a unit-test fixture, never a runtime fallback.
+        fixture = patch.object(model_routing.routing, "load_model", return_value="fixture-model")
+        fixture.start()
+        self.addCleanup(fixture.stop)
+
     def test_ordinary_orchestration_has_no_model_execution(self) -> None:
         decision = model_routing.build_route_decision()
         self.assertEqual("refactor_acceptance.deterministic", decision["routeId"])
@@ -21,6 +29,39 @@ class RefactorAcceptanceModelRoutingTests(unittest.TestCase):
         self.assertIsNone(decision["requestedExecution"]["model"])
         self.assertEqual("disabled", decision["status"])
         self.assertEqual([], decision["authorizes"])
+
+    def test_no_launch_without_codex_configuration_replays_without_a_model(self) -> None:
+        # ADR-0041: deterministic online operation has no Codex configuration dependency.
+        with patch.object(model_routing.routing, "load_model", side_effect=ValueError("configuration missing")) as configured:
+            decision = model_routing.build_route_decision()
+            model_routing.routing.validate_decision(decision)
+            runner = Mock()
+            with tempfile.TemporaryDirectory() as raw:
+                result = model_routing.routing.execute_decision(
+                    decision, root=Path(raw), prompt="unused", output_last_message=Path(raw) / "unused.txt",
+                    timeout_sec=1, runner=runner,
+                )
+            configured.assert_not_called()
+            runner.assert_not_called()
+            self.assertIsNone(result["actualExecution"])
+            self.assertEqual("blocked", result["status"])
+            self.assertEqual([], result["authorizes"])
+
+    def test_recovery_still_requires_real_model_configuration(self) -> None:
+        with patch.object(model_routing.routing, "load_model", side_effect=ValueError("configuration missing")):
+            with self.assertRaisesRegex(ValueError, "configuration missing"):
+                model_routing.build_route_decision(complex_recovery_trigger="candidate_binding_recovery_failed")
+
+    def test_no_launch_policy_tamper_and_child_identity_fail_closed(self) -> None:
+        decision = model_routing.build_route_decision()
+        policy = model_routing.routing.load_policy(resolve_models=False)
+        policy["consumerControls"]["refactor_acceptance"] = "disabled"
+        with self.assertRaisesRegex(model_routing.routing.RoutingError, "policy binding is stale"):
+            model_routing.routing.validate_decision(decision, policy)
+        decision["requestedExecution"].update(launchMode="child", model="fixture-model")
+        decision["decisionId"] = model_routing.routing.canonical_hash({k: v for k, v in decision.items() if k != "decisionId"})
+        with self.assertRaisesRegex(model_routing.routing.RoutingError, "cannot request model execution"):
+            model_routing.routing.validate_decision(decision)
 
     def test_closed_complex_recovery_requests_sol_high_observe_only(self) -> None:
         for trigger in model_routing.routing.load_policy()[

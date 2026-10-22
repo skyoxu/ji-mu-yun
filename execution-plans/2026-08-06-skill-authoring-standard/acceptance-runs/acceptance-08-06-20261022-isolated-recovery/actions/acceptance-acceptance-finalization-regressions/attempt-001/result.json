@@ -1,0 +1,74 @@
+{
+  "authorizes": [],
+  "commandId": "acceptance-finalization-regressions",
+  "commandRegistryHash": "sha256:06babdca486f0ab7ec63066114a211feb54ee8edcf83bf813a9010df6eaad637",
+  "environmentIdentity": {
+    "hash": "sha256:c722e93949e144d3d3f717c276ade642b857575c8358fbcd964a050f8848e159",
+    "names": [
+      "HOME",
+      "PATH"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_deterministic_finalization.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_skill_replay_contract.py",
+      "--basetemp",
+      "/workspace/scratch/e4e648ddd442/acceptance-isolated-fixtures/acceptance-finalization-regressions-r4"
+    ],
+    "commandId": "acceptance-finalization-regressions",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/scratch/e4e648ddd442/acceptance-0806-env/bin/python",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:41465038696337eceda88627770972f4720b3a36eb402474329e04d8c361e0ef",
+  "processResult": {
+    "commandId": "acceptance-finalization-regressions",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": ".....................                                                    [100%]\n21 passed in 21.31s\n",
+    "stdoutSha256": "sha256:49e6c2a53d9c87fc612c8ee1176b2d1003fccd5954a0c3b8d491d57f4b2e655b"
+  },
+  "processResultHash": "sha256:92c75b6f09b005a8a3aa04d51fbc28a399b7c59b36f17861b70ae73337b1a1c4",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

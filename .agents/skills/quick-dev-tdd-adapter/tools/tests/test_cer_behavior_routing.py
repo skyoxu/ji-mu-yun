@@ -137,14 +137,14 @@ def test_stale_regression_cannot_close_after_production_change(tmp_path):
             snapshot_roots=roots,source_commit="TEST",out=tmp_path/"RUN-1/ready.json")
 
 
-@pytest.mark.parametrize("failure",["setup", "skip", "mixed-cases"])
+@pytest.mark.parametrize("failure",["setup", "skip", "wrong-failure-id"])
 def test_unverifiable_probe_never_authorizes_implementation(tmp_path,failure):
     semantic,_=fixture(tmp_path)
     path=tmp_path/"tests/test_one.py"
     s=path.read_text()
     if failure=="setup": s="raise ImportError('environment')\n"+s
     elif failure=="skip": s=s.replace("def test_value_1", "@pytest.mark.skip(reason='not observed')\ndef test_value_1")
-    else: s += "@pytest.mark.cer_assertion('AS-1')\ndef test_extra():\n print('FAILURE_ID:FAIL-1')\n assert False\n"
+    else: s += "@pytest.mark.cer_assertion('AS-1')\ndef test_extra():\n print('FAILURE_ID:UNDECLARED')\n assert False\n"
     path.write_text(s,encoding="utf-8")
     route=execute(tmp_path,semantic,"probe")
     assert not route["predicate_result"]
@@ -264,6 +264,8 @@ def test_existing_tests_with_new_assertion_ids_route_through_bounded_author(tmp_
         profile="standard",timeout_seconds=10,backend="offline-disabled")
     assert calls==["S1"] and result["required_next_action"]=="run-probe"
     assert (tmp_path/"candidate.py").read_bytes()==before
+    descriptor=json.loads((tmp_path/result["descriptor_ref"]).read_text())
+    assert descriptor["argv"][3:-1]==["tests/test_one.py::test_value_1","tests/test_one.py::test_value_2"]
 
 
 def test_materialized_planned_test_with_required_assertion_does_not_reinvoke_author(tmp_path,monkeypatch):
@@ -438,3 +440,17 @@ def test_mixed_plan_closes_explicit_slices_without_number_order(tmp_path):
     result=publish_implementation_complete(workspace=tmp_path,semantic_plan=semantic,predecessors=predecessors,
         snapshot_roots=roots,source_commit="TEST",out=tmp_path/"complete.json")
     assert result["status"]=="pass" and len(result["runtime_closure_tuples"])==6
+
+
+def test_test_only_guard_has_empty_production_hash_closure(tmp_path):
+    """ADR-0041: a documentary guard must not invent a production owner."""
+    semantic,_roots=fixture(tmp_path)
+    bundle=json.loads(semantic.read_text())
+    for obligation in bundle['obligations']:
+        obligation.update(obligation_kind='governance',requirement_type='Governance')
+    for item in bundle['slices']:
+        item['production_owners']=[]
+    from semantic_behavior_contract import project_intents
+    bundle['behavior_routing']['intents']=project_intents(bundle)
+    assert production_hashes(tmp_path,bundle,'S1')=={}
+    assert all(intent['production_owners']==[] for intent in bundle['behavior_routing']['intents'])

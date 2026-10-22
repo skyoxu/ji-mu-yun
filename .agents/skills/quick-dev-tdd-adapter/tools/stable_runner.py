@@ -113,7 +113,12 @@ def _load_json_object(path: Path, label: str, *, inside_repo: bool = True) -> Ma
     return value
 
 
-def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str) -> tuple[list[str], list[str], list[str]]:
+def _literal_cer_nodes(targets, required):
+    from case_selection import literal_nodes
+    return literal_nodes(ROOT, targets, required)[0]
+
+
+def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True) -> tuple[list[str], list[str], list[str]]:
     selected = _slice(bundle, slice_id)
     context = _agent_context(plan_dir, slice_id)
     commands = context.get("validation_commands")
@@ -130,15 +135,27 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
     normalized = [[str(item) for item in command] for command in commands]
     def pytest_parts(command: list[str]):
         offset = 2 if command[:2] == ["py", "-3"] else 1
+        while command[offset:offset + 1] == ["-B"]:
+            offset += 1
         return offset if (len(command) >= offset + 3 and command[offset:offset + 2] == ["-m", "pytest"]
                           and all(item == "-q" or not item.startswith("-") for item in command[offset + 2:])) else None
+    # Only declared frozen test files belong to this stage selector. Broader
+    # agent-context commands remain required Q6 regressions, never Q2 targets.
+    snapshot_set = set(selected.get("execution_snapshot_paths", []))
+    scoped = []
+    for index, command in enumerate(normalized):
+        offset = pytest_parts(command)
+        paths = [v.split("::", 1)[0] for v in command[offset + 2:] if v != "-q"] if offset is not None else []
+        if index == 0 or (paths and set(paths) <= snapshot_set):
+            scoped.append(command)
+    normalized = scoped
     pytest_offsets = [pytest_parts(command) for command in normalized]
     pytest_commands = (
         len(normalized) > 1
         and all(offset is not None for offset in pytest_offsets)
     )
     primary_covers_assertions = False
-    if pytest_commands:
+    if pytest_commands and not any("::" in part for part in normalized[0][pytest_offsets[0] + 2:]):
         required = {
             assertion_id
             for acceptance in bundle.get("acceptances", [])
@@ -190,7 +207,16 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str)
                 for item in command[offset + 2:]:
                     if item != "-q" and item not in selector_items:
                         selector_items.append(item)
+            full_files = {v for v in selector_items if "::" not in v}
+            selector_items = [v for v in selector_items if "::" not in v or v.split("::", 1)[0] not in full_files]
             argv = [*prefix, "-m", "pytest", *selector_items, "-q"]
+    offset=pytest_parts(argv)
+    if resolve_literal and offset is not None and "behavior_routing" in bundle:
+        required={assertion for a in bundle.get("acceptances",[])
+                  if a["acceptance_id"] in selected["acceptance_ids"] for assertion in a["assertion_ids"]}
+        literal=_literal_cer_nodes([part for part in argv[offset+2:] if part!="-q"],required)
+        if literal:
+            argv=[*argv[:offset],"-m","pytest",*literal,"-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
     if not snapshots:
         raise ValueError("slice execution snapshot paths missing")
@@ -319,6 +345,7 @@ def q2_author_red(
     profile: str,
     timeout_seconds: int,
     backend: str | None,
+    allow_worker: bool = True,
 ) -> dict[str, Any]:
     run_dir = _inside_root(run_dir, "run-dir")
     plan_dir = semantic.parent
@@ -361,6 +388,8 @@ def q2_author_red(
                 "authorizes_evidence": False,
                 "authorizes": [],
             }
+        if not allow_worker:
+            return {"status": "worker-required", "required_next_action": "author-red", "authorizes": []}
         worker = run_red_author(
             workspace=ROOT,
             plan_dir=plan_dir,
@@ -390,6 +419,9 @@ def q2_author_red(
             "schema": "quick-dev.worker-result.v1", "stage": "red-author", "status": "worker-not-required",
             "changed_paths": [], "authorizes_evidence": False, "authorizes": [],
         }
+    # Resolve newly authored literal mappings before the first descriptor freeze.
+    # The initial read decides authoring scope, not the final observed selector.
+    argv, target_refs, fixture_refs = _descriptor_inputs(bundle, plan_dir, slice_id)
     for ref in sorted(set(target_refs + fixture_refs)):
         path = _inside_root(ROOT / ref, "RED target/fixture")
         if not path.is_file() or path.is_symlink():
@@ -682,11 +714,16 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
         slice_id = base["slice_id"]
         from behavior_routing import read_route
         route = read_route(ROOT, bundle, run_dir, slice_id) if routed else None
-        argv, target_refs, fixture_refs = _descriptor_inputs(bundle, semantic.parent, slice_id)
+        argv, target_refs, fixture_refs = _descriptor_inputs(bundle, semantic.parent, slice_id, resolve_literal=stage != "terminal")
+        # ADR-0041: Q2 can add marker mappings after initial selector discovery.
+        # Nonterminal stages must reuse the observed frozen probe selection.
+        if routed and stage != "terminal":
+            argv, target_refs, fixture_refs = base["argv"], base["target_refs"], base["fixture_refs"]
         identity = candidate_identity(ROOT, bundle, slice_id)
         terminal = materialize_descriptor(
             bundle=bundle, slice_id=slice_id, stage=stage, run_id=run_dir.name,
-            candidate_hash=identity["candidate_hash"], argv=argv, cwd=".", timeout_seconds=600,
+            candidate_hash=identity["candidate_hash"], argv=argv, cwd=base["cwd"],
+            timeout_seconds=base["timeout_seconds"] if routed and stage != "terminal" else 600,
             target_refs=target_refs, fixture_refs=fixture_refs, routing_result=route,
         )
         create_json(descriptor, terminal)
@@ -708,18 +745,22 @@ def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", type=Path, required=True)
-    parser.add_argument("--slice", dest="slice_id", required=True)
+    parser.add_argument("--slice", dest="slice_id")
     parser.add_argument("--profile", default="standard")
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument(
         "--action",
         choices=(
-            "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
+            "preflight-session", "advance-session", "inspect-selection", "prepare-entry", "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
             "run-refactor", "execute-stage", "implementation-handoff", "implementation-finish", "slice-ready",
             "validate-slice", "run-terminal", "implementation-complete", "recover",
         ),
         default="preflight",
     )
+    parser.add_argument("--execution-request", type=Path)
+    parser.add_argument("--max-steps", type=int, default=8)
+    parser.add_argument("--first-use-contract", type=Path)
+    parser.add_argument("--first-use-receipt", type=Path)
     parser.add_argument("--failure-history", type=Path)
     parser.add_argument("--state", type=Path)
     parser.add_argument("--changed-path", action="append", default=[])
@@ -745,7 +786,20 @@ def main() -> int:
         semantic = _semantic_plan(args.plan)
         snapshot_roots = _load_json_list(args.snapshot_roots, "snapshot-roots") if args.snapshot_roots else None
         observations = _load_json_list(args.observation_index, "observation-index") if args.observation_index else []
-        if args.recommendation_only or args.action == "recommendation":
+        if args.action not in {"preflight-session", "advance-session"} and args.slice_id is None:
+            raise ValueError("this action requires --slice")
+        if args.action in {"preflight-session", "advance-session"}:
+            if args.execution_request is None:
+                raise ValueError("session action requires --execution-request")
+            from execution_session import preflight_session, advance_session
+            request = _load_json_object(args.execution_request, "execution-request")
+            api = sys.modules[__name__]
+            result = (preflight_session(api, semantic, request) if args.recommendation_only or args.action == "preflight-session"
+                      else advance_session(api, semantic, request, max_steps=args.max_steps))
+        elif args.action == "inspect-selection":
+            from case_selection import selection_report
+            result = selection_report(sys.modules[__name__], semantic, args.slice_id)
+        elif args.recommendation_only or args.action == "recommendation":
             result = q0_recommendation(
                 semantic=semantic,
                 slice_id=args.slice_id,
@@ -760,9 +814,22 @@ def main() -> int:
             )
         elif args.action in {"preflight", "run-preflight"}:
             result = q1_preflight(semantic=semantic, slice_id=args.slice_id, profile=args.profile)
+        elif args.action == "prepare-entry":
+            if args.first_use_contract is None or args.out is None:
+                raise ValueError("prepare-entry requires --first-use-contract --out")
+            if q1_preflight(semantic=semantic, slice_id=args.slice_id, profile=args.profile).get("status") != "preflight-passed":
+                raise ValueError("prepare-entry requires current Q1 preflight")
+            from first_use_entry import prepare_entry
+            result = prepare_entry(workspace=ROOT, bundle=load_json(semantic), slice_id=args.slice_id,
+                contract=_load_json_object(args.first_use_contract, "first-use-contract"),
+                out=_inside_root(args.out, "first-use out"))
         elif args.action == "author-red":
             if args.run_dir is None:
                 raise ValueError("author-red requires --run-dir")
+            if args.first_use_receipt is not None:
+                from first_use_entry import validate_prepared_entry
+                validate_prepared_entry(workspace=ROOT, bundle=load_json(semantic), slice_id=args.slice_id,
+                    receipt=_load_json_object(args.first_use_receipt, "first-use-receipt"))
             result = q2_author_red(
                 semantic=semantic, slice_id=args.slice_id, run_dir=args.run_dir, profile=args.profile,
                 timeout_seconds=args.worker_timeout_seconds, backend=args.llm_backend,
@@ -875,7 +942,9 @@ def main() -> int:
         print(json.dumps({"status": "blocked", "recommended_action": "repair-vdd", "reason": str(exc)}, sort_keys=True))
         return 1
     print(json.dumps(result, sort_keys=True))
-    return 1 if result.get("status") == "task-implementation-failure" else 0
+    failed = result.get("status") == "task-implementation-failure"
+    session_blocked = args.action in {"preflight-session", "advance-session"} and result.get("status") in {"blocked", "stage-reentry-blocked"}
+    return 1 if failed or session_blocked else 0
 
 
 if __name__ == "__main__":

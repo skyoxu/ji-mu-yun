@@ -1,0 +1,65 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+________ test_source_gap_chunk_preserves_complete_outer_batch_context _________
+
+    def test_source_gap_chunk_preserves_complete_outer_batch_context() -> None:
+        """ADR-0041: classification batches must not narrow source-gap coverage."""
+        payload = {
+            "source_index": {"entries": [{"source_ref": "req#FR-1"}]},
+            "obligations": [{"obligation_id": "O-1", "status": "active"}],
+            "complete_obligation_context": [
+                {"obligation_id": "O-1", "expected_behavior": "Declare inputs"},
+                {"obligation_id": "O-2", "expected_behavior": "Declare outputs"},
+            ],
+        }
+        selected = v4_domain._source_recall_payload(payload, ["req#FR-1"])
+>       assert selected["obligations"] == payload["complete_obligation_context"]
+E       AssertionError: assert [{'obligation...s': 'active'}] == [{'obligation...are outputs'}]
+E         
+E         At index 0 diff: {'obligation_id': 'O-1', 'status': 'active'} != {'obligation_id': 'O-1', 'expected_behavior': 'Declare inputs'}
+E         Right contains one more item: {'obligation_id': 'O-2', 'expected_behavior': 'Declare outputs'}
+E         Use -v to get more diff
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_v4_atomic_recall_domain.py:310: AssertionError
+______ test_classification_only_batch_does_not_repeat_source_gap_review _______
+
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-471/test_classification_only_batch0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002C3199B2360>
+
+    def test_classification_only_batch_does_not_repeat_source_gap_review(tmp_path, monkeypatch):
+        payload = {
+            "source_index": {"entries": [{"source_ref": "req#FR-1"}]},
+            "obligations": [{"obligation_id": f"O-{i:02d}", "status": "active"} for i in range(25)],
+            "review_source_gaps": False,
+        }
+        worker_cache = {
+            f"v4-atomic-recall-chunk-{index:03d}": {
+                "supported_obligation_ids": [f"O-{i:02d}" for i in range(start, min(start + 20, 25))],
+                "invented_obligation_ids": [], "source_gap_claims": [],
+            }
+            for index, start in enumerate(range(0, 25, 20), 1)
+        }
+        def unexpected(**kwargs):
+            raise AssertionError("classification-only batch repeated source-gap review")
+        monkeypatch.setattr(v4_domain, '_invoke_source_gap_chunk', unexpected)
+>       result = v4_domain.v4_transport_invoke_worker(
+            root=tmp_path, out_dir=tmp_path / 'plan', stage='v4-atomic-recall',
+            payload=payload, prompt='Classify.', worker_cache=worker_cache)
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_v4_atomic_recall_domain.py:329: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v4_domain_patch.py:492: in v4_transport_invoke_worker
+    source_result = _invoke_source_gap_chunk(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+kwargs = {'root': WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-471/test_classification_only_batch0'), 'out_dir...tion_id': 'O-04', 'status': 'active'}, {'obligation_id': 'O-05', 'status': 'active'}, ...]}, 'refs': ['req#FR-1'], ...}
+
+    def unexpected(**kwargs):
+>       raise AssertionError("classification-only batch repeated source-gap review")
+E       AssertionError: classification-only batch repeated source-gap review
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_v4_atomic_recall_domain.py:327: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_source_gap_chunk_preserves_complete_outer_batch_context
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_classification_only_batch_does_not_repeat_source_gap_review
+2 failed, 16 deselected in 0.19s

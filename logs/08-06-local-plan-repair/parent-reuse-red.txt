@@ -1,0 +1,52 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ SelectiveCacheRepairTests.test_parent_reuses_repaired_peers_only_after_complete_domain_validation _
+
+self = <test_v3_selective_cache_repair.SelectiveCacheRepairTests testMethod=test_parent_reuses_repaired_peers_only_after_complete_domain_validation>
+
+    def test_parent_reuses_repaired_peers_only_after_complete_domain_validation(self):
+        """ADR-0041: completed singleton repairs survive stale positional child caches."""
+        payload, _, _, out, calls = setup_run(self.root, self, bad=False)
+        payload['input']['obligations'] = [
+            dict(payload['input']['obligations'][0], obligation_id=f'O-{i}', expected_behavior=f'behavior {i}')
+            for i in range(5)
+        ]
+        repaired = {}
+        for item in payload['input']['obligations']:
+            oid = item['obligation_id']
+            value = contract('tests/test_real.py')
+            value['acceptance']['oracle']['expected'] = oid
+            repaired[oid] = value
+        repair.sc.atomic_json(out / '.compiler-cache' / (repair._GROUP_STAGE + '-repaired-peers.json'),
+                              {'obligation_contracts': repaired})
+    
+        def stale_child(**kwargs):
+            assert not kwargs['payload'].get('_force_semantic_repair'), 'validated repairs must be reused'
+            return repair._project({'obligation_contracts': {
+                item['obligation_id']: contract('tests/test_real.py')
+                for item in kwargs['payload']['input']['obligations']
+            }})
+    
+        self.enterContext(mock.patch.object(repair, '_live_group_repair_one', stale_child))
+>       result = repair._live_group_repair(root=self.root, out_dir=out, payload=payload, prompt='Repair.')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:141: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_repair_patch.py:887: in _live_group_repair
+    repaired = _live_group_repair_one(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+kwargs = {'root': WindowsPath('C:/Windows/TEMP/2/tmp4zifmzym'), 'out_dir': WindowsPath('C:/Windows/TEMP/2/tmp4zifmzym/plan'), '...sertion_ids": ["ASSERT-REJECT"], "oracle": {"expected": "reject", "forbidden": ["accept"], "observable": "verdict"}}}'}
+
+    def stale_child(**kwargs):
+>       assert not kwargs['payload'].get('_force_semantic_repair'), 'validated repairs must be reused'
+E       AssertionError: validated repairs must be reused
+E       assert not True
+E        +  where True = <built-in method get of dict object at 0x000001A839045FC0>('_force_semantic_repair')
+E        +    where <built-in method get of dict object at 0x000001A839045FC0> = {'original_stage': 'v3', 'input': {'obligations': [{'obligation_id': 'O-0', 'source_refs': ['req.md#FR-1'], 'status': .....}], 'relational_repair_round': 1}, 'validator_findings': ['selector target missing'], '_force_semantic_repair': True}.get
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_v3_selective_cache_repair.py:134: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_parent_reuses_repaired_peers_only_after_complete_domain_validation
+1 failed, 18 deselected in 0.19s

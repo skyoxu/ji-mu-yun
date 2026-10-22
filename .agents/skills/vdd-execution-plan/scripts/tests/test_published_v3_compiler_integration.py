@@ -119,6 +119,7 @@ def test_published_v3_repair_stops_at_new_v4_source_gap() -> None:
             "V2": {"valid": True},
             "V3": ([], [], []),
             "V3A": {"valid": True},
+            "V3-execution-preflight": {"valid": True},
             "V4-atomic-recall": {
                 "valid": False, "findings": ["atomic-recall:source-gap-count:2"],
                 "metrics": {}, "source_gap_claims": [{"source_ref": "req.md#FR-1"}],
@@ -241,5 +242,5 @@ def test_published_v1_split_rejects_wrong_source_binding() -> None:
     with tempfile.TemporaryDirectory(dir=ROOT / "logs") as location:
         path = Path(location) / "split.json"
         path.write_text(json.dumps(value), encoding="utf-8")
-        with __import__("pytest").raises(ValueError, match="current FR-6"):
+        with __import__("pytest").raises(ValueError, match="target current source"):
             repair.load_v1_split(path, REQUIREMENTS, source, bundle)

@@ -11,6 +11,7 @@ at most three times. It never guesses or rewrites malformed JSON locally.
 from __future__ import annotations
 
 from semantic_progress import worker_call, stage_call
+from semantic_worker_errors import WorkerTransportError
 
 import json
 import os
@@ -28,6 +29,16 @@ _NORMAL_TIMEOUT_SECONDS = 180
 _REPAIR_TIMEOUT_SECONDS = 300
 _MAX_TRANSPORT_ATTEMPTS = 3  # user-approved automatic retry budget
 _TRACE_LIMIT = 500
+
+
+class HostWorkerStopped(BaseException):
+    """Explicit host stop bypasses semantic/schema repair retries."""
+
+    def __init__(self, code: int, stage: str):
+        self.code = code
+        self.stage = stage
+        super().__init__(f"host-session {stage} {'cancelled' if code == 130 else 'timed out'}")
+
 
 
 def _codex_config_path() -> Path:
@@ -182,7 +193,7 @@ def _worker_output_schema(stage: str) -> dict[str, Any] | None:
             "additionalProperties": False,
             "properties": {
                 "obligation_ids": {**_string_array(nonempty=True), "maxItems": 1},
-                "production_owners": _string_array(nonempty=True),
+                "production_owners": _string_array(),
                 "verification_lane": {"type": "string", "enum": sorted(sc.LANES)},
                 "behavior_change": {"type": "string", "minLength": 1},
                 "affected_subjects": _string_array(nonempty=True),
@@ -191,7 +202,7 @@ def _worker_output_schema(stage: str) -> dict[str, Any] | None:
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
-                        "production_paths": _string_array(nonempty=True),
+                        "production_paths": _string_array(),
                         "state_or_schema_compatibility": {"type": "string", "minLength": 1},
                     },
                     "required": ["production_paths", "state_or_schema_compatibility"],
@@ -236,6 +247,50 @@ def _unsupported_output_schema(trace: str) -> bool:
         token in lowered
         for token in ("unexpected argument", "unrecognized option", "unknown option", "unknown argument")
     )
+
+
+def _transport_category(code: int, trace: str) -> str:
+    """Retry positively identified transient failures, never environment errors."""
+    text = trace.casefold()
+    if code in {124, 130}:
+        return "cancelled" if code == 130 else "timeout"
+    if any(token in text for token in ("error loading config", "invalid transport", "unauthorized",
+           "authentication", "invalid api key", "unsupported_country_region", "request_forbidden",
+           "permission denied", "command not found", "not recognized as", "error code: 401", "error code: 403")):
+        return "environment"
+    if any(token in text for token in ("rate limit", "rate_limit", "error code: 429", "connection reset",
+           "temporarily unavailable", "service unavailable", "error code: 502", "error code: 503",
+           "error code: 504", "server overloaded")):
+        return "transient"
+    return "no-output" if code == 0 else "unknown"
+
+
+def execute_transport(execute, *, backend, stage, output, extra_args, max_attempts=None):
+    """One bounded policy for normal workers, V3 chunks and frozen-domain V4."""
+    traces = []
+    budget = max(1, min(max_attempts or _MAX_TRANSPORT_ATTEMPTS, _MAX_TRANSPORT_ATTEMPTS))
+    for attempt in range(1, budget + 1):
+        _preserve_prior_output(output)
+        try:
+            code, trace, _argv = execute(extra_args)
+        except (OSError, RuntimeError) as exc:
+            raise WorkerTransportError(stage, "environment", attempt, _bounded_trace(str(exc))) from exc
+        if backend == "host-session" and code in {124, 130}:
+            raise HostWorkerStopped(code, stage)
+        if code != 0 and extra_args and _unsupported_output_schema(trace):
+            # Native output-schema compatibility fallback, within this attempt.
+            _preserve_prior_output(output)
+            try:
+                code, trace, _argv = execute([])
+            except (OSError, RuntimeError) as exc:
+                raise WorkerTransportError(stage, "environment", attempt, _bounded_trace(str(exc))) from exc
+        if code == 0 and output.is_file():
+            return
+        traces.append(f"attempt {attempt}: {_bounded_trace(trace)}")
+        category = _transport_category(code, trace)
+        if category != "transient":
+            raise WorkerTransportError(stage, category, attempt, "\n".join(traces))
+    raise WorkerTransportError(stage, "transient-exhausted", budget, "\n".join(traces))
 
 
 def _source_role_contract(stage: str) -> str:
@@ -297,7 +352,7 @@ def transport_invoke_worker(
     try:
         from _llm_backend import run_llm_exec, resolve_llm_backend
     except ImportError as exc:
-        raise RuntimeError("shared LLM backend is unavailable") from exc
+        raise WorkerTransportError(stage, "environment", 0, "shared LLM backend is unavailable") from exc
 
     work = out_dir / ".compiler-work"
     # Output messages are diagnostics, not cache authority.  Bind the filename
@@ -315,14 +370,18 @@ def transport_invoke_worker(
         + "\n\nINPUT:\n"
         + json.dumps(payload, ensure_ascii=False, sort_keys=True)
     )
-    backend = resolve_llm_backend(None)
+    try:
+        backend = resolve_llm_backend(None)
+    except (OSError, ValueError, RuntimeError) as exc:
+        raise WorkerTransportError(stage, "environment", 0, _bounded_trace(str(exc))) from exc
     # V4 and its independent repair/recheck lanes operate on the full
     # semantic bundle and can be larger than the normal 180-second worker
     # budget. An explicit repair timeout must cover them as well; otherwise a
     # valid bounded repair is lost to an unconfigurable transport timeout.
     is_schema_repair = stage.endswith("-schema-repair")
     is_v4_repair = stage in {"v4", "v4-atomic-recall", "v4-recheck"}
-    timeout_sec = _REPAIR_TIMEOUT_SECONDS if (is_schema_repair or is_v4_repair) else _NORMAL_TIMEOUT_SECONDS
+    is_source_gap_repair = stage == "v1-source-gap-repair"
+    timeout_sec = _REPAIR_TIMEOUT_SECONDS if (is_schema_repair or is_v4_repair or is_source_gap_repair) else _NORMAL_TIMEOUT_SECONDS
     reasoning = "medium" if is_schema_repair else "high"
     schema = _worker_output_schema(stage)
     extra_args: list[str] = []
@@ -341,23 +400,7 @@ def transport_invoke_worker(
             codex_extra_args=[*codex_worker_isolation_args(), *extra],
         )
 
-    traces: list[str] = []
-    code = 1
-    trace = ""
-    argv: list[str] = []
-    for attempt in range(1, _MAX_TRANSPORT_ATTEMPTS + 1):
-        _preserve_prior_output(output)
-        code, trace, argv = execute(extra_args)
-        if code != 0 and extra_args and _unsupported_output_schema(trace):
-            # Compatibility fallback for an older Codex CLI. This remains a
-            # transport fallback inside the same attempt.
-            _preserve_prior_output(output)
-            code, trace, argv = execute([])
-        if code == 0 and output.is_file():
-            break
-        traces.append(f"attempt {attempt}: {_bounded_trace(trace)}")
-    if code != 0 or not output.is_file():
-        raise RuntimeError(f"semantic worker {stage} failed after {_MAX_TRANSPORT_ATTEMPTS} attempts: " + "\n".join(traces))
+    execute_transport(execute, backend=backend, stage=stage, output=output, extra_args=extra_args)
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     sc.atomic_json(cache_path, value)

@@ -1,0 +1,35 @@
+{
+  "schema": "quick-dev.first-use-contract.v1",
+  "plan_sha256": "sha256:c647f2711e31dde964c81efa466cd9ec5235998b0c63fecc4e64dad55ff6b057",
+  "slice_id": "S10",
+  "source_commit": "4abd8d613977fb4081286a9af2161009c31d9254",
+  "entries": [
+    {
+      "path": "scripts/sc/config/skill-authoring-standard.v1.json",
+      "exports": []
+    },
+    {
+      "path": "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+      "exports": []
+    },
+    {
+      "path": "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+      "exports": []
+    },
+    {
+      "path": "scripts/sc/validate_skill_quality.py",
+      "exports": [
+        {
+          "name": "validate_package",
+          "parameters": [
+            "inspection_root",
+            "package_root"
+          ],
+          "keyword_parameters": [
+            "mode"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -59,3 +59,5 @@ Create or update a Phase ADR before changing any of these boundaries:
 Proposed ADRs are planning baselines, not implementation authority. Before code relies on a Proposed ADR, accept that ADR or create a narrower Accepted ADR for the implemented decision.
 
 Update the lightweight architecture notes when implementation shape changes but the decision remains the same. Update `AGENTS.md` only for concise non-negotiable agent rules and route deeper rationale here.
+
+- [ADR-0062: Repository Skill Authoring Contract](../adr/ADR-0062-repository-skill-authoring-contract.md) — Accepted (2026-10-22); Package A static standard, no runtime authority.

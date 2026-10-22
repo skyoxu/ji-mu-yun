@@ -1,0 +1,60 @@
+F............F                                                           [100%]
+=================================== FAILURES ===================================
+________ test_0806_splits_independent_outcomes_without_changing_source _________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-1/test_0806_splits_independent_o0')
+
+    def test_0806_splits_independent_outcomes_without_changing_source(tmp_path):
+        value, source, bundle = inputs()
+>       result = load(tmp_path, value, source, bundle)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py:28: in load
+    return repair.load_v1_split(path, BASE / 'requirements.md', source, bundle)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+path = PosixPath('/tmp/pytest-of-root/pytest-1/test_0806_splits_independent_o0/split.json')
+requirements = PosixPath('/workspace/scratch/e4e648ddd442/skill-authoring-next-20261020/execution-plans/2026-08-06-skill-authoring-standard/requirements.md')
+source_index = {'companions': [], 'entries': [{'anchor': 'SM-A01', 'execution_context_text': '| A01 | The standard defines one primar......], 'schema': 'source-index.v1', 'sha256': 'sha256:d5b0cae6fc37111ab88883b2b2470a1bd48f85a1f840592726b236f5bad1aae8'}
+predecessor = {'acceptances': [{'acceptance_id': 'A-0031AE0B3D64', 'assertion_ids': ['A-SM-A01-TRIGGER-DEFINITION'], 'complexity_cla...ure_family': 'semantic-contract-gap', 'failure_id': 'A17_B06_UNREFERENCED_VERIFICATION_FLAG_ACCEPTED', ...}, ...], ...}
+
+    def load_v1_split(path: Path, requirements: Path, source_index: Mapping[str, Any],
+                      predecessor: Mapping[str, Any]) -> dict[str, Any]:
+        """Validate a reviewed source-bound split of one FR-6 atomic obligation."""
+        value = json.loads(path.read_text(encoding="utf-8"))
+        required = {"schema", "requirements_sha256", "authorizes", "source_ref", "replaced_obligation_id", "obligations", "v3_contracts"}
+        if not isinstance(value, dict) or set(value) != required:
+            raise ValueError("published V1 split fields are invalid")
+        if value["schema"] != "vdd.published-v1-split.v1" or value["authorizes"] != []:
+            raise ValueError("published V1 split is non-authorizing input only")
+        digest = "sha256:" + hashlib.sha256(requirements.read_bytes()).hexdigest()
+        if value["requirements_sha256"] != digest:
+            raise ValueError("published V1 split requirements identity is stale")
+        entries = [item for item in source_index["entries"] if item.get("source_ref") == value["source_ref"]]
+        if len(entries) != 1 or entries[0].get("requirement_id") != "FR-6":
+>           raise ValueError("published V1 split must bind the current FR-6 source")
+E           ValueError: published V1 split must bind the current FR-6 source
+
+.agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py:580: ValueError
+________________ test_split_cannot_duplicate_an_unselected_peer ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-1/test_split_cannot_duplicate_an0')
+
+    def test_split_cannot_duplicate_an_unselected_peer(tmp_path):
+        value, source, bundle = inputs()
+        peer = next(x for x in bundle['obligations'] if x['requirement_id'] == 'SM-REPAIR-CONSTRAINTS' and x['obligation_id'] != value['replaced_obligation_id'])
+        value['obligations'][0] = deepcopy(peer)
+>       with pytest.raises(ValueError, match='IDs'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'IDs'
+E         Actual message: 'published V1 split must bind the current FR-6 source'
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py:70: AssertionError
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py::test_0806_splits_independent_outcomes_without_changing_source
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py::test_split_cannot_duplicate_an_unselected_peer
+2 failed, 12 passed in 1.07s

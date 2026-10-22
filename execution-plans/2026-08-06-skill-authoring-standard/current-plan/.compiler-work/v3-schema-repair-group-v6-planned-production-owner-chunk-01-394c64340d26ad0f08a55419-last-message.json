@@ -1,0 +1,316 @@
+{
+  "obligation_contracts": {
+    "O-5680EF630EE0": {
+      "acceptance": {
+        "assertion_ids": ["A-5680-CLI-INVOCATION"],
+        "given": "The terminal integration test is authored to exercise the published skill-quality CLI.",
+        "oracle": {
+          "expected": "The test invokes the CLI with a literal argv list, shell=False, repository-root cwd, and a finite positive timeout.",
+          "forbidden": [
+            "The invocation uses a shell command string.",
+            "The invocation omits the finite positive timeout."
+          ],
+          "observable": "Inspect the test's subprocess invocation arguments and verify the CLI process is launched with the declared invocation contract."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "The test source contains the required bounded, shell-free CLI invocation.",
+        "when": "Inspect the authored terminal integration test and its subprocess call before running the test."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "CLI_INVOCATION_CONTRACT",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_migration.py::test_a25; bind the CLI invocation assertion to the real published CLI entry and report an AssertionError if argv, shell=False, repository cwd, or finite timeout is absent."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": ["Terminal CLI process invocation"],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ],
+        "behavior_change": "The terminal integration test invokes the published CLI using literal argv, shell=False, repository cwd, and a finite timeout.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py"
+        ],
+        "planned_new_files": ["scripts/sc/tests/test_skill_quality_migration.py"],
+        "production_owners": ["scripts/sc/validate_skill_quality.py"],
+        "rollback_scope": {
+          "production_paths": ["scripts/sc/validate_skill_quality.py"],
+          "state_or_schema_compatibility": "No persisted state or schema changes; revert the declared test and any associated CLI invocation change."
+        },
+        "state_transition": "The terminal integration test moves from an unauthored state to a test source containing the bounded shell-free CLI invocation.",
+        "terminal_predicate": "The terminal integration test source uses a literal argv list, shell=False, repository-root cwd, and a finite positive timeout for the published CLI.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    },
+    "O-5ABF5067DF6E": {
+      "acceptance": {
+        "assertion_ids": ["A-5ABF-SCOPE-BOUNDARY"],
+        "given": "Package A changes are prepared within the declared Package A scope.",
+        "oracle": {
+          "expected": "A scoped change review finds no changes to knowledge publication, Skill-input authority or generation stores, 7-31, TC-D2--TC-D6, BMAD/VDD knowledge-query behavior, S1/S2/S3, or app-server/SDK.",
+          "forbidden": [
+            "A Package A change modifies any named out-of-scope area."
+          ],
+          "observable": "Compare the Package A change file set against the explicitly named excluded paths and authorities during scope validation."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "The scoped change set excludes each named knowledge, Skill-input, workflow, test-case, and app-server/SDK area.",
+        "when": "During terminal scope validation, inspect the complete Package A change set and compare it with the frozen exclusions."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "PACKAGE_A_SCOPE_BOUNDARY",
+          "selector_intent": "Use the terminal contract/scope check over the Package A change set; fail with an AssertionError identifying any changed excluded authority or path."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": ["Knowledge and workflow scope boundary"],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py",
+          "scripts/sc/tests/fixtures/skill-quality/**"
+        ],
+        "behavior_change": "Package A scope checks explicitly reject changes to the frozen excluded knowledge, Skill-input, workflow, test-case, and app-server/SDK authorities.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_migration.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/skill-contract.json",
+          "references/skill-input-contract.v1.json"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "No persisted state or schema changes; revert the scoped Package A contract and implementation changes while retaining unrelated repository content."
+        },
+        "state_transition": "Package A scope is checked against its frozen allowlist and exclusions before terminal acceptance.",
+        "terminal_predicate": "The complete Package A change set contains no modifications to any named excluded authority or path.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    },
+    "O-5E2D1E86FDBD": {
+      "acceptance": {
+        "assertion_ids": ["A-5E2D-ADR-DOCUMENT", "A-5E2D-ADR-INDEX"],
+        "given": "ADR-0062 is available for authoring and ADR-0060 retains its existing Skill-input selection identity.",
+        "oracle": {
+          "expected": "The ADR-0062 document exists at its declared path and an entry for ADR-0062 appears in the Phase ADR index; ADR-0060 is neither reused nor overwritten.",
+          "forbidden": [
+            "ADR-0060 is reused or overwritten.",
+            "The ADR-0062 index entry is absent."
+          ],
+          "observable": "Inspect the ADR document and Phase ADR index for the ADR-0062 identity and entry, and verify ADR-0060 remains distinct."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "ADR-0062 is documented and indexed under its own identity without changing ADR-0060.",
+        "when": "During artifact validation after ADR authoring, inspect the declared document and index paths and compare the ADR-0060 identity."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "ADR_0062_DOCUMENT_INDEX",
+          "selector_intent": "Use a documentary artifact check for the ADR-0062 document and index entry; fail with an AssertionError if the document, correct identity, or index entry is missing or ADR-0060 is reused."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": ["ADR-0062 document and index entry"],
+        "allowed_write_paths": [
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md"
+        ],
+        "behavior_change": "Author ADR-0062 at its declared path and register it in the Phase ADR index while preserving ADR-0060's existing identity and content.",
+        "execution_snapshot_paths": ["docs/architecture/ADR_INDEX_PHASE.md"],
+        "forbidden_paths": [
+          "docs/adr/ADR-0060*",
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**"
+        ],
+        "planned_new_files": [
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md"
+        ],
+        "production_owners": [
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+            "docs/architecture/ADR_INDEX_PHASE.md"
+          ],
+          "state_or_schema_compatibility": "No persisted state or schema changes; remove the new ADR-0062 entry and document together if the change is rolled back, preserving ADR-0060."
+        },
+        "state_transition": "ADR-0062 moves from unavailable/unindexed to authored and indexed under its own identifier.",
+        "terminal_predicate": "The ADR-0062 document exists at the declared path, the Phase ADR index links it, and ADR-0060 remains distinct and unchanged.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a04"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    },
+    "O-68E7D7885B89": {
+      "acceptance": {
+        "assertion_ids": ["A-68E7-ADR-OWNERSHIP"],
+        "given": "Package A defines its authority and execution/evidence boundaries.",
+        "oracle": {
+          "expected": "The Package A contract preserves ADR-0041 and ADR-0058 as owners of toolchain replay execution/evidence boundaries and ADR-0061 as owner of the unchanged Phase isolation/recovery boundary.",
+          "forbidden": [
+            "Package A changes or displaces any of the named ADR-owned boundaries."
+          ],
+          "observable": "Inspect the Package A contract's boundary statements and compare them with the ownership statements in ADR-0041, ADR-0058, and ADR-0061."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "The Package A contract retains the three existing ADR ownership boundaries without claiming or changing their authority.",
+        "when": "During documentary contract validation, inspect the authored authority-boundary text and the named ADR ownership statements."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "EXISTING_ADR_BOUNDARY_OWNERSHIP",
+          "selector_intent": "Use a documentary boundary check over the Package A contract and the three existing ADRs; fail with an AssertionError if replay execution/evidence ownership or Phase isolation/recovery ownership is omitted or displaced."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": ["Existing ADR boundary ownership"],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+          "docs/architecture/ADR_INDEX_PHASE.md"
+        ],
+        "behavior_change": "The Package A contract states and preserves ADR-0041 and ADR-0058 replay execution/evidence ownership and ADR-0061 Phase isolation/recovery ownership.",
+        "execution_snapshot_paths": [
+          "docs/adr/ADR-0041-toolchain-execution-and-evidence.md",
+          "docs/adr/ADR-0058-toolchain-replay-evidence.md",
+          "docs/adr/ADR-0061-phase-isolation-and-recovery.md"
+        ],
+        "forbidden_paths": [
+          "docs/adr/ADR-0041*",
+          "docs/adr/ADR-0058*",
+          "docs/adr/ADR-0061*",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "docs/adr/ADR-0062-repository-skill-authoring-contract.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "docs/adr/ADR-0062-repository-skill-authoring-contract.md"
+          ],
+          "state_or_schema_compatibility": "No persisted state or schema changes; revert only the Package A contract statements that define these boundaries."
+        },
+        "state_transition": "Package A authority text is authored with the existing ADR ownership boundaries explicitly preserved.",
+        "terminal_predicate": "The Package A contract retains the stated ownership of ADR-0041, ADR-0058, and ADR-0061 without asserting authority over their boundaries.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py::test_a04"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

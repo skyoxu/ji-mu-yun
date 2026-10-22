@@ -1,0 +1,127 @@
+{
+  "obligation_contracts": {
+    "O-BDA22E9FF164": {
+      "acceptance": {
+        "assertion_ids": [
+          "A_BDA22E9FF164_FRESH_JSON",
+          "A_BDA22E9FF164_RESULT_SCHEMA",
+          "A_BDA22E9FF164_REFERENCE_PASS",
+          "A_BDA22E9FF164_MUTATION_REJECTED"
+        ],
+        "given": "Q2 has authored and frozen test_a24 and its helper, with independently specified expected results, a reference package and a deliberately noncompliant disposable variant. The actual validator entry, published policy and declared schemas are available; their availability is a prerequisite, not an assumed successful validation result.",
+        "oracle": {
+          "expected": "During test_a24, both results are parsed exclusively from stdout captured from their respective current published-CLI invocations and validated against the actual declared result schema. The reference result has status pass and exit code 0. The mutated package result has status fail and exit code 1, with the independently expected diagnostic rule and relative location. Both results contain authorizes=[]. The test also directly calls the real validate_package entry. Its negative assertion would reject an unconditional-pass validator.",
+          "forbidden": [
+            "Reading cached, historical or pre-created JSON as the current CLI result.",
+            "Skipping result-schema validation for either invocation.",
+            "Accepting exit code alone, an ID substring, file existence or plan status as proof.",
+            "Omitting either the reference-pass or mutated-package-rejection assertion.",
+            "Deriving expected status or required diagnostic values from candidate-controlled policy.",
+            "Treating an import error, missing file, environment failure or timeout as causal RED.",
+            "Treating derived validation output as execution authorization."
+          ],
+          "observable": "During terminal integration assertion evaluation, inspect test_a24's binding of each captured subprocess stdout to its JSON parse, declared-schema check and independent outcome assertions; execute those assertions against the real validator and inspect both structured results and process exit codes."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "Terminal integration establishes reference-package acceptance and mutated-package rejection from fresh, schema-checked CLI output.",
+        "when": "The planned scripts/sc/tests/test_skill_quality_migration.py::test_a24 runs in the integration lane, first as an applicable targeted check and subsequently within the whole-plan terminal selection after all required cases have been authored and exercised."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "test-harness-failure",
+          "failure_id": "F_BDA22E9FF164_TERMINAL_ASSERTION_GAP",
+          "selector_intent": "Bind scripts/sc/tests/test_skill_quality_migration.py::test_a24 to scripts.sc.validate_skill_quality.validate_package and the published CLI. Under the targeted pytest argv with a 300-second caller timeout, require an observable AssertionError if fresh-stdout provenance, either declared-schema check, reference pass/0, mutated fail/1 or authorizes=[] assertions are absent or contradicted. This is an integration assertion guard, not an expected-red runtime marker. Missing production imports or planned tests block execution rather than satisfying this intent."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Terminal integration assertions",
+          "Fresh reference and mutated package CLI results"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Attach this independent assertion guard to the cohesive A4 validator compatibility lane. Verify fresh schema-checked positive and negative CLI outcomes without implementing another runner, evidence writer or production feature for the guard.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Rollback only affected Package A candidate changes. Preserve existing Skill contract protocols, Phase state and historical evidence. Shared policy/schema/validator changes invalidate affected proofs; rebuild the original binding identity before replaying with that same identity."
+        },
+        "state_transition": "Unspecified terminal assertions become an independently checked integration contract for fresh schema-valid reference-pass and mutation-fail results; no readiness or execution outcome is presumed.",
+        "terminal_predicate": "After Q2 freezes declared tests/helpers and earlier groups are exercised, test_a24 and the current four-module terminal selection must pass without skipped required cases. Targeted commands have a 300-second caller timeout; terminal has 600 seconds. CLI calls use literal argv, shell=False, repository cwd and finite positive timeouts. Tests directly bind the actual Python entry and use disposable contained inspection roots with unchanged copies of published policy/schema bytes. Missing first-use production entry blocks the owning protocol rather than permitting Q2 production writes. Green/refactor modifies only declared production owners, never frozen snapshots. Preserve failure history, invalidate affected shared-dependency proofs, stabilize applicable targeted regression before terminal replay, and leave acceptance to the existing Q7/Q8 owners under ADR-0041/ADR-0058. No shared runtime/evidence-writer, model-routing, Skill-input authority, historical report or Phase boundary changes are authorized.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a24"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

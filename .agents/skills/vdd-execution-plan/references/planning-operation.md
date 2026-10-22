@@ -118,6 +118,14 @@ obligation ID. Replacement is limited to explicitly named obligations;
 unselected V1/V3 peers remain semantically stable. An input without complete
 contracts fails closed, and no historical worker output is promoted.
 
+For an observed mixed result inside one published obligation, use the explicit
+`--published-v1-split <json>` together with published V3 repair. Replace exactly
+one active predecessor obligation by at least two distinct active outcomes bound
+to the same exact source. Supply complete per-outcome V3 contracts. Source drift,
+cross-source children, predecessor-ID collisions, missing contracts and inactive
+targets fail closed. This does not relax V4, atomic recall or downstream gates,
+and cannot turn a harness failure into expected RED.
+
 ## Execution-only handoff repair
 
 Use the public compiler's `--repair-quick-dev-handoff-from` only for a
@@ -157,3 +165,51 @@ changes only selected slice contexts. It does not re-author other selectors
 or rerun semantic workers. Never use it for a missing human approval, Trust
 Approval, Consumer exception, setup failure or invalid execution evidence.
 Only fresh controlled probe/RED case evidence can authorize implementation.
+
+
+## Execution preflight and classified repair (2026-10-20)
+
+The public compiler projects the V3 candidate through the existing exact-cover,
+slice partition, feasibility, final structural and Quick Dev handoff checks
+before V4 Acceptance alignment. V1 source recall may run earlier to stabilize
+the obligation domain; it is not an Acceptance review. Final gates still run
+on the actual candidate after semantic repair.
+
+An execution failure returns `stage=V3-execution-preflight` and
+`repair_class=execution-contract`. Its content-addressed diagnostic under
+`.compiler-work/execution-preflight/` retains obligations, Acceptances, failures,
+hints, findings and `authorizes=[]`. Correct the named contract through the
+existing source-bound V3 repair input. Do not keep rerunning V4, change unrelated
+contracts, or infer owners from test filenames. Empty production-owner arrays
+are structurally representable in ordinary and grouped V3 output, but only a
+bounded test-only governance/constraint guard without expected-red or production
+rollback scope passes the shared semantic rule.
+
+`consumer_warnings` with `code=planned-production-first-use` identify slices
+whose declared future production owners are absent. This is a conservative
+handoff warning, not proof that every slice is blocked: a predecessor may create
+the owner, or an existing executable may support a legitimate behavioral RED.
+Quick Dev must confirm that route before implementation. VDD never seeds
+production in Q2 or treats ImportError as behavioral RED. These warnings do not
+change historical publications or grant execution authority.
+
+Normal workers, V3 grouped repair, V4 domain recall and source-gap chunks share
+one transport policy. Only positively identified transient service errors
+receive bounded retries (at most three, or a smaller caller budget).
+Configuration/auth/unknown failures, timeout and cancellation stop without
+schema repair or timeout-driven group fan-out. Explicit host stops preserve
+exit 124/130. Failed output remains diagnostic; successful parsed child caches
+remain reusable on resume. Successful but malformed responses retain the
+existing one-shot schema repair; semantic gaps retain bounded semantic repair.
+
+For semantically unchanged published plans with execution-only defects, use
+`--repair-quick-dev-handoff-from`. It checks exact semantic projection and
+reuses bound V1/V4 witnesses. Semantic changes still require V4 and complete
+final coverage. This change introduces no new reviewer or review cache.
+
+An explicit runtime-role-only repair keeps already valid execution bindings.
+Whole-plan test rebinding is used only for actual binding conflicts. For a
+shared multi-file test surface, each existing file's markers are checked against
+its own declared domain. Prose source prerequisites remain in obligations and
+are not invented as obligation-ID graph edges. Source-index verification and
+republication retain the producer's entries/companions identity shape.

@@ -1,0 +1,22 @@
+.........................................................F           [100%]
+================================== FAILURES ===================================
+_____________ test_cloned_repair_is_terminal_and_never_reaches_v4 _____________
+
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-476/test_cloned_repair_is_terminal0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x00000216FF6D21B0>
+
+    def test_cloned_repair_is_terminal_and_never_reaches_v4(tmp_path, monkeypatch):
+        raw = _repair()
+        raw["obligation_contracts"]["O-2"] = deepcopy(raw["obligation_contracts"]["O-1"])
+        payload = {"obligations": [_obligation("O-1"), _obligation("O-2")]}
+        # A rejected supplied repair must propagate; no extra repair/recheck budget.
+>       with pytest.raises(ValueError, match="cloned-oracle-across-obligations"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'cloned-oracle-across-obligations'
+E         Actual message: "V3 execution-contract validation failed: v3-contract:slice_hints[0]:no-real-production-entry:obligations=['O-1']:owners=['src/ledger.py']:allowed=['src/ledger.py', 'tests/test_ledger.py']:snapshots=['tests/test_ledger.py']; v3-contract:slice_hints[1]:no-real-production-entry:obligations=['O-2']:owners=['src/ledger.py']:allowed=['src/ledger.py', 'tests/test_ledger.py']:snapshots=['tests/test_ledger.py']"
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_v3_per_obligation_contract.py:137: AssertionError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_per_obligation_contract.py::test_cloned_repair_is_terminal_and_never_reaches_v4
+1 failed, 57 passed, 4 subtests passed in 1.09s

@@ -1,0 +1,118 @@
+{
+  "obligation_contracts": {
+    "O-D67B6024B775": {
+      "acceptance": {
+        "assertion_ids": [
+          "DEPENDENCY_RECORD_IDENTITY",
+          "DEPENDENCY_RECORD_VERSION_AUTHORITY",
+          "DEPENDENCY_RECORD_MISSING_MISMATCH",
+          "DEPENDENCY_RECORD_NO_INVOCATION"
+        ],
+        "given": "A disposable inspection root containing actual policy/schema bytes and package variants with complete dependency records, omitted identities, incompatible versions, unresolved local authority references, and missing or inconsistent missing/mismatch declarations. Expected outcomes are frozen independently of candidate policy.",
+        "oracle": {
+          "expected": "Complete compatible dependency records pass this check. Missing identity, invalid version/authority records, unresolved authority, and absent or inconsistent missing/mismatch declarations produce typed blocking package diagnostics with the expected rule ID, relative path and code. Results retain authorizes=[]. During every validation call, observed dependency invocation attempts remain zero; validation inspects declarations rather than testing dependency availability by execution.",
+          "forbidden": [
+            "Invoking, importing for execution, installing or contacting a declared dependency.",
+            "Accepting a dependency record while omitting identity, version/authority or missing/mismatch checks.",
+            "Treating an unresolved required record or incompatible version as compliant.",
+            "Inferring non-invocation solely from stdout or absence of a generated file.",
+            "Claiming runtime authorization or enforcement from a static result."
+          ],
+          "observable": "At static-validation execution time, compare validate_package's structured results for each independently parameterized dependency-record mutation and observe dependency execution/network boundaries directly without replacing the real validator."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ],
+        "then": "Each dependency record receives identity, version/authority and missing/mismatch validation, with compliant and defective records distinguished without dependency invocation.",
+        "when": "The planned test_a09 parameter cases directly call scripts.sc.validate_skill_quality.validate_package against each package variant, with invocation-boundary observers active throughout each call."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "expected-red",
+          "failure_id": "DEPENDENCY_RECORD_STATIC_CHECK_FAILURE",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_examples.py::test_a09 with explicit parameter IDs and parameter-level bindings for this obligation's assertions. Directly call scripts.sc.validate_skill_quality.validate_package. Expect an observable AssertionError if a record's identity, version/authority or missing/mismatch defect is accepted, a compatible record is rejected, or a dependency invocation is attempted. Run the targeted argv command with a caller-enforced 300-second timeout. Missing production imports, absent tests and environment failures are not causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Dependency record validation"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Implement read-only dependency-record validation through the real callable validator, consuming local policy/schema declarations and checking identity, compatible version or repository-owned authority, and deterministic missing/mismatch behavior without executing dependencies. Keep the compatible A2 examples helper and declaration refinements in the same bounded implementation context.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Rollback only this bounded production change; preserve existing Skill contract protocols, live state and historical evidence. Shared validator/policy/schema changes invalidate affected proofs and require revalidation under ADR-0041 and ADR-0058; Phase isolation/recovery remains owned by ADR-0061."
+        },
+        "state_transition": "Dependency validation is unspecified -> dependency records are statically checked for identity, version/authority and missing/mismatch behavior without invocation.",
+        "terminal_predicate": "Every applicable test_a09 parameter executes against the real production entry and satisfies its independently frozen assertions, including zero dependency invocation attempts and authorizes=[]. Q2 authors only the declared test/helper files and disposable variants, then freezes tests, selectors and assertions before formal RED; GREEN/refactor modifies only declared production owners. Production owners remain outside execution snapshots. If the first real callable cannot be established through the existing protocol, report a blocker rather than seed production during Q2 or fabricate RED. Targeted commands have a 300-second timeout, nonempty applicable predecessor regression coverage is required, and one current whole-plan validation of all four declared modules runs with a 600-second timeout only after their tests and behaviors exist. Timeouts are harness failures. Preserve failures, invalidate affected shared-dependency proofs, and rebuild the original binding identity before replaying with that same identity. Do not modify shared runtime/evidence writers, routing authority, Skill-input stores or historical reports, fabricate review receipts, or claim plan-ready or maintainer acceptance. ADR-0062 follows normal maintainer acceptance before final Package A acceptance or Package B consumption.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

@@ -202,3 +202,143 @@ def test_rollback_owner_recovery_removes_only_recovered_owner_from_forbidden(tmp
     assert normalized["production_owners"] == ["src/owner.py"]
     assert normalized["allowed_write_paths"] == ["src/owner.py"]
     assert normalized["forbidden_paths"] == ["src/unrelated.py"]
+
+
+# ADR-0041: implementation instructions are V3 context, not V1 feature scope.
+def test_v1_does_not_receive_v3_only_execution_context(tmp_path: Path, monkeypatch) -> None:
+    sc = projection.sc
+    source = _source_index()
+    source["entries"][0]["execution_context_text"] = (
+        source["entries"][0]["source_text"] + "\nQ2 must not modify the existing Runner.")
+    captured = []
+
+    def worker(**kwargs):
+        captured.append(kwargs["payload"]["source"])
+        return {"obligations": [{
+            "source_refs": [source["entries"][0]["source_ref"]],
+            "subject": "package validation", "trigger": "validation",
+            "state_before": "unchecked", "state_after": "checked",
+            "expected_behavior": "validate the package", "observable_result": "typed result",
+            "forbidden_result": [], "requirement_type": "Product", "obligation_kind": "behavior",
+            "unresolved_fragments": [], "status": "active", "depends_on": [],
+        }]}
+
+    monkeypatch.setattr(sc, "invoke_worker", worker)
+    # Exercise the real V1 producer without starting the independent recall worker.
+    from semantic_obligation_gap_repair_patch import _BASE_COMPILE_OBLIGATIONS
+    assert len(_BASE_COMPILE_OBLIGATIONS(root=tmp_path, out_dir=tmp_path / "plan",
+        source_index=source, worker_cache=None)) == 1
+    assert "execution_context_text" not in captured[0]
+    assert captured[0]["source_text"] == source["entries"][0]["source_text"]
+    assert "execution_context_text" in source["entries"][0]
+
+
+def test_package_a_controls_remain_in_v3_context_without_becoming_product_source() -> None:
+    root = SCRIPTS.parents[3]
+    requirements = root / "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+    try:
+        source = projection.sc.build_source_index(root, requirements)
+        assert projection.sc.source_preflight(root, source)["valid"]
+        ids = {entry["requirement_id"] for entry in source["entries"]}
+        assert {f"SM-A{i:02d}" for i in range(1, 26)} <= ids
+        entry = next(item for item in source["entries"] if item["requirement_id"] == "SM-REPAIR-CONSTRAINTS")
+        payload = {"obligations": [{"source_refs": [entry["source_ref"]]}]}
+        _, contracts = projection._source_contracts(root, payload)
+        contract = contracts[0]
+        assert "## NFR-1:" not in contract["source_text"]
+        assert "## NFR-2:" not in contract["source_text"]
+        assert "## NFR-1:" in contract["execution_context_text"]
+        assert "## NFR-2:" in contract["execution_context_text"]
+        assert "Q2 may author positive" in contract["execution_context_text"]
+        assert "scripts/sc/_llm_backend.py" in contract["execution_context_text"]
+    finally:
+        projection._FROZEN_SOURCE_CONTEXT.set(None)
+
+
+def test_package_a_row_worker_receives_frozen_file_level_authoring_context(monkeypatch) -> None:
+    """ADR-0041: a row is not the complete file-level execution contract."""
+    root = SCRIPTS.parents[3]
+    requirements = root / "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+    source = projection.sc.build_source_index(root, requirements)
+    assert projection.sc.source_preflight(root, source)["valid"]
+    row = next(item for item in source["entries"] if item["requirement_id"] == "SM-A04")
+    captured = {}
+
+    def capture(**kwargs):
+        captured.update(kwargs)
+        return {}
+
+    monkeypatch.setattr(projection, "_BASE_NORMATIVE_INVOKE", capture)
+    payload = {"obligations": [{"obligation_id": "O-LINES", "source_refs": [row["source_ref"]]}]}
+    projection.normative_invoke_worker_with_source_projection(
+        root=root, out_dir=root / "unused-test-output", stage="v3",
+        payload=payload, prompt="compile", worker_cache=None,
+    )
+    contracts = captured["payload"]["source_contracts"]
+    assert [item["source_ref"] for item in contracts] == [row["source_ref"]]
+    contexts = captured["payload"].get("execution_context_sources", [])
+    assert len(contexts) == 1
+    assert contexts[0]["source_sha256"] == row["source_sha256"]
+    text = contexts[0]["execution_context_text"]
+    assert "scripts/sc/validate_skill_quality.py" in text
+    assert "scripts/sc/tests/test_skill_quality_core.py" in text
+    assert "scripts/sc/_llm_backend.py" in text
+    assert "selector-repair-binding-start" in text
+    assert "| A04 |" not in text  # Product rows are not duplicated as authoring input.
+    assert captured["payload"]["obligations"] == payload["obligations"]
+    assert "execution_context_sources" in captured["prompt"]
+    assert projection._FROZEN_SOURCE_CONTEXT.get() is None
+
+
+def test_shared_execution_context_is_file_scoped_and_survives_narrow_repair(tmp_path, monkeypatch) -> None:
+    from copy import deepcopy
+    import semantic_worker_v3_group_repair_patch as grouped
+
+    frozen = deepcopy(_source_index())
+    marker = "<!-- selector-repair-binding-start -->"
+    end = "<!-- selector-repair-binding-end -->"
+    for path, rule in (("requirements.md", "KEEP-LOCAL"), ("other.md", "REJECT-FOREIGN")):
+        frozen["entries"].append({
+            **frozen["entries"][0],
+            "requirement_id": "SM-REPAIR-CONSTRAINTS",
+            "source_ref": path + "#SM-REPAIR-CONSTRAINTS",
+            "repository_relative_source_path": path,
+            "execution_context_text": f"{marker}\n{rule}\n{end}",
+        })
+    projection._FROZEN_SOURCE_CONTEXT.set(_validated_context(tmp_path, frozen))
+    captured = {}
+    monkeypatch.setattr(projection, "_BASE_NORMATIVE_INVOKE", lambda **kwargs: captured.update(kwargs) or {})
+    payload = {"obligations": [{"obligation_id": "O-1", "source_refs": ["requirements.md#FR-1"]}]}
+    projection.normative_invoke_worker_with_source_projection(
+        root=tmp_path, out_dir=tmp_path / "plan", stage="v3",
+        payload=payload, prompt="compile", worker_cache=None,
+    )
+    contexts = captured["payload"].get("execution_context_sources", [])
+    assert len(contexts) == 1
+    assert "KEEP-LOCAL" in contexts[0]["execution_context_text"]
+    assert "REJECT-FOREIGN" not in str(contexts)
+    narrowed = grouped._narrow_repair_payload({"input": captured["payload"]}, ["O-1"])
+    assert narrowed["input"]["execution_context_sources"] == contexts
+    assert narrowed["input"]["obligations"] == payload["obligations"]
+
+
+def test_narrow_repair_does_not_keep_another_source_files_execution_context() -> None:
+    import semantic_worker_v3_group_repair_patch as grouped
+
+    payload = {"input": {
+        "obligations": [
+            {"obligation_id": "O-1", "source_refs": ["one.md#FR-1"]},
+            {"obligation_id": "O-2", "source_refs": ["two.md#FR-1"]},
+        ],
+        "source_contracts": [
+            {"source_ref": "one.md#FR-1", "repository_relative_source_path": "one.md"},
+            {"source_ref": "two.md#FR-1", "repository_relative_source_path": "two.md"},
+        ],
+        "execution_context_sources": [
+            {"repository_relative_source_path": "one.md", "execution_context_text": "LOCAL"},
+            {"repository_relative_source_path": "two.md", "execution_context_text": "FOREIGN"},
+        ],
+    }}
+    narrowed = grouped._narrow_repair_payload(payload, ["O-1"])
+    assert narrowed["input"]["execution_context_sources"] == payload["input"]["execution_context_sources"][:1]
+    assert len(payload["input"]["execution_context_sources"]) == 2

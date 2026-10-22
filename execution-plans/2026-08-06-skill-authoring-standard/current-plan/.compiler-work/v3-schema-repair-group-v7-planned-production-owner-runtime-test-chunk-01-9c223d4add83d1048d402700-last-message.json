@@ -1,0 +1,117 @@
+{
+  "obligation_contracts": {
+    "O-D6B50D3C7AAD": {
+      "acceptance": {
+        "assertion_ids": [
+          "A25_HANDOFF_FIVE_SKILL_CLI_COVERAGE",
+          "A25_HANDOFF_CLI_ARGV_ALIGNMENT"
+        ],
+        "given": "Package A's standard and public CLI specification are available for preparation of the Package B handoff; the handoff table's completeness has not been established.",
+        "oracle": {
+          "expected": "The handoff table in docs/standards/skill-authoring-standard.md records the accepted CLI for each of vdd-execution-plan, quick-dev-tdd-adapter, run-phase-bootstrap-review, run-refactor-implementation-acceptance, and maintain-knowledge-base. Each row explicitly supplies, or unambiguously references a shared command with, argv equivalent to ['python', '-B', 'scripts/sc/validate_skill_quality.py', '--repository-root', '.', '--policy', 'scripts/sc/config/skill-authoring-standard.v1.json', '--skill-root', '.agents/skills/<that-skill>', '--mode', 'strict']. These are future Package B migration commands, without requiring the five installed Skills to pass during Package A acceptance.",
+          "forbidden": [
+            "A missing Skill row or an absent or ambiguous accepted CLI binding.",
+            "A command targeting a different Skill or an unpublished validator entry.",
+            "Treating recorded commands as proof that the five real Skills have passed.",
+            "Executing or migrating installed Skills as a prerequisite for this artifact assertion.",
+            "Requiring internal Bootstrap Review to establish CLI acceptance."
+          ],
+          "observable": "During the planned test_a25 artifact check, extract the five handoff rows and their resolved CLI argv from the actual standard, and compare them against independently frozen Skill identities and the published invocation specification."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A25"
+        ],
+        "then": "The Package B handoff table records the accepted CLI for all five Skills.",
+        "when": "After creating or updating the Package B handoff table, evaluate its CLI coverage through scripts/sc/tests/test_skill_quality_migration.py::test_a25 before compatible migration-lane closure."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "A25_HANDOFF_CLI_INCOMPLETE",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_migration.py::test_a25 must raise AssertionError when the actual standard's handoff table omits any of the five Skill CLI bindings or resolves a binding to argv inconsistent with the frozen public invocation. Use independent expected Skill names and argv, not candidate-controlled policy values. This is an artifact guard attached to the migration lane, not an expected-red runtime marker. Missing tests, missing imports, and environment failures are harness blockers rather than causal evidence for this failure."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package B handoff table",
+          "Accepted CLI bindings for the five Package B Skills"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "behavior_change": "Within the compatible A4 migration/terminal context, document the accepted validator CLI for every Package B Skill and add an independent artifact assertion. This obligation does not introduce validator runtime behavior or authorize Skill migration.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Revert only attributable candidate changes within the compatible migration context; preserve unrelated changes, frozen tests, historical evidence, existing Skill protocols, and installed Skills. No live-state or database migration is authorized. Shared validator, policy, or schema changes invalidate affected proofs and require applicable revalidation."
+        },
+        "state_transition": "The handoff table progresses from unverified CLI coverage to an artifact-checked accepted CLI binding for each of the five Skills.",
+        "terminal_predicate": "The authored and frozen test_a25 independently verifies all five handoff CLI bindings, with this obligation's assertions bound precisely. The artifact guard remains in the compatible migration lane with a non-expected-red role. Q6 retains applicable predecessor regression coverage; Q8 runs one current whole-plan terminal selection only after all four modules and required behaviors are available. Targeted commands have a 300-second caller timeout and terminal validation a 600-second caller timeout; timeout is a harness failure. Q2 authors only declared tests/helpers in disposable roots; implementation does not alter frozen snapshots. No missing production entry may be disguised as causal RED or materialized outside the owning protocol. No installed-Skill pass gate, mandatory internal reviewer, new evidence writer, or authority expansion is introduced; derived evidence authorizes nothing.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

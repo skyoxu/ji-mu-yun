@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import Any, Mapping, Sequence
 
 import semantic_compiler as sc
+from execution_contract import selector_file_path
 import semantic_worker_transport_patch  # noqa: F401  # structured JSON + bounded repair transport
 import semantic_worker_v3_domain_patch  # noqa: F401  # frozen obligation/source domain for V3
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe one-shot V3 repair
@@ -27,12 +28,12 @@ import semantic_worker_v3_group_prompt_patch  # noqa: F401  # explicit grouped r
 import semantic_worker_v3_write_set_projection_patch  # noqa: F401  # owner/write-set identity in repaired groups
 import semantic_worker_v3_group_safety_patch  # noqa: F401  # single-subject groups + rollback owner recovery
 import semantic_worker_v3_explicit_path_contract_patch  # noqa: F401  # explicit frozen source path authority
-import semantic_worker_v3_execution_contract_patch  # noqa: F401  # V3A/V7 facts at worker boundary
 import semantic_worker_v3_path_grounding_patch  # noqa: F401  # finite stale-path grounding before V3 contract checks
 import semantic_worker_contract_patch  # noqa: F401  # stable live worker field contract
 import semantic_worker_relational_patch  # noqa: F401  # stable live V3 relational contract
 import semantic_worker_v3_expected_red_eligibility_patch  # noqa: F401  # runtime marker vs guard role
 import semantic_worker_v3_source_projection_patch  # noqa: F401  # V0-frozen source contracts available to V3/repair
+import semantic_worker_v3_execution_contract_patch  # noqa: F401  # V3A/V7 facts at outer worker boundary
 import semantic_worker_v4_domain_patch  # noqa: F401  # frozen-id V4 atomic-recall contract
 import semantic_worker_v3_total_coverage_patch  # noqa: F401  # bounded missing-only V3 completion before hard reject
 import semantic_slice_cohesion_patch  # noqa: F401  # semantic compatibility grouping instead of exact path-set identity
@@ -62,7 +63,7 @@ def feasibility_with_planned_red_files(
         parts = finding.split(":", 2)
         if len(parts) == 3 and parts[1] == "selector-target-missing":
             slice_id, missing_path = parts[0], parts[2]
-            if missing_path in planned_by_slice.get(slice_id, set()):
+            if selector_file_path(missing_path) in planned_by_slice.get(slice_id, set()):
                 continue
         findings.append(finding)
     return {

@@ -1,0 +1,98 @@
+{
+  "obligation_contracts": {
+    "O-016095AFE52A": {
+      "acceptance": {
+        "assertion_ids": [
+          "A17_DATABASE_SYSTEM_REQUIREMENT_EXPLICIT",
+          "A17_DATABASE_NO_SYSTEM_DECLARATION_REJECTED"
+        ],
+        "given": "A disposable inspection root containing the actual standard, policy and schema bytes, with capability declarations classified as database capabilities and variants that identify, omit or explicitly disclaim a required database/backup system.",
+        "oracle": {
+          "expected": "The normative declaration contract requires every database-classified capability to identify a required database/backup system. A declaration identifying that requirement satisfies this specific check; omission or an explicit claim that no database/backup system is required produces a structured validation failure with the applicable rule identifier, diagnostic code and declaration path.",
+          "forbidden": [
+            "A database-classified capability is compliant while declaring that no database/backup system is required.",
+            "A missing database/backup system requirement is silently accepted.",
+            "A passing runtime result substitutes for inspecting the normative declaration requirement.",
+            "Static declaration validation is represented as a completed backup or restore drill."
+          ],
+          "observable": "During A17 artifact-contract evaluation, assertions inspect the standard, policy and schema requirement for database-classified declarations. During the same targeted case, direct calls to scripts.sc.validate_skill_quality.validate_package inspect structured outcomes for explicit-system, missing-system and no-system variants."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A17"
+        ],
+        "then": "Every database-classified capability must explicitly identify its required database/backup system, and declarations omitting or disclaiming that requirement fail this check.",
+        "when": "The planned A17 case evaluates the authored declaration contract and invokes the real validator on each disposable capability variant."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A17_DATABASE_SYSTEM_REQUIREMENT_GAP",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a17 with independently bound assertions for this obligation. Inspect the normative database-system requirement and directly invoke scripts.sc.validate_skill_quality.validate_package on disposable explicit-system, omitted-system and no-system declarations. Raise AssertionError if the requirement is absent or the validator accepts an omitted/disclaimed requirement. Use a 300-second targeted command limit. Missing production imports, absent tests, invalid fixtures and timeout are blockers or harness failures, never causal RED; this constraint does not receive an expected-red runtime-marker role."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Database capability declaration"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Require an explicit database/backup system requirement for every database-classified capability in the normative declaration contract and its static validator. Reuse the cohesive A3 capability-check context without implementing database infrastructure or restore execution.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "knowledge/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Revert only this requirement's bounded production changes while preserving unrelated declaration semantics and historical evidence. No live database, Hosted workspace or Phase schema migration is authorized. Shared policy/schema/validator changes invalidate affected case proofs."
+        },
+        "state_transition": "A database capability declaration that could omit or disclaim its database/backup system requirement becomes subject to an explicit normative requirement and corresponding static rejection check.",
+        "terminal_predicate": "The frozen A17 obligation-specific artifact assertions and real-validator checks pass, including rejection variants that defeat an unconditional-pass validator. Tests use independent frozen expectations and disposable inspection roots; production owners remain outside immutable execution snapshots. Establish the first real callable through the existing owning protocol before entering TDD; missing imports cannot establish RED. Preserve Accepted ADR-0041/ADR-0058 execution boundaries and ADR-0061 Phase isolation. Q6 includes applicable nonempty predecessor regression coverage; shared changes invalidate affected proofs. Q8 runs all four authored group modules once with a 600-second limit after required behavior coverage exists. Tests/helpers freeze before formal RED and remain unchanged during Green/refactor. Historical evidence remains intact, and no implementation worker self-acceptance, maintainer commit/merge, new review receipt or expanded platform authority is implied.",
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a17"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

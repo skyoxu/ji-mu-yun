@@ -1,0 +1,12 @@
+{
+  "baseline-suite.txt": "9e240f4af78f70b8c3ec327722bd03b0a8d48682c55445a17e2dc67e07a6768d",
+  "candidate-suite.txt": "5de298f1c29941226ab8c98bf3af19f1b7b250db3f7d0ece72b89982b4bd77c9",
+  "partial-after.txt": "89a5d38c58db4117acf24c88d358cdaa97d674addf31a4d8c8c292d0b09db6ea",
+  "partial-before.txt": "15d712f8efce60bb0e9909c221445f323ba7874a6b68dd6b8051e6d96324f6cd",
+  "selection.txt": "4bbbea14cfc50d2894261d3da37a303fa8652c601770771fd7835b04e50b9f86",
+  "session-first.txt": "d2edb13889b475134e8f7e3e03140c84dd889db5fb40b33a9911a86ff64c6d50",
+  "session-partial.txt": "5dc5a67d680ddd8659a31657de44f827e0d8829a49d7d6e06b866fcd5e0d6262",
+  "skill-validation.txt": "db349825903d66adffea3ecf1bd8e1803043e8a71cf1a051235dabc5371f5bb0",
+  "targeted-final.txt": "c3aa3e2dd9b7f09c86a31395f8b84aa508a9252fce11a1bb3849f68e65d9fc55",
+  "targeted.txt": "6045e5406aa24e7f7e5907630b080aeab6433d5524adfe2739071ed01e3fe5ba"
+}

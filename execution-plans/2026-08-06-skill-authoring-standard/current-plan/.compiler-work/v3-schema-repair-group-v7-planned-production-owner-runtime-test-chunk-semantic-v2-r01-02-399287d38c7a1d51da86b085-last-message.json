@@ -1,0 +1,97 @@
+{
+  "obligation_contracts": {
+    "O-C7ED3C10864B": {
+      "acceptance": {
+        "assertion_ids": [
+          "ASSERT_A25_FIVE_SKILL_LEGACY_BEHAVIOR_RECORDS"
+        ],
+        "given": "The Package B handoff table is being authored in the standard; the five target Skills are vdd-execution-plan, quick-dev-tdd-adapter, run-phase-bootstrap-review, run-refactor-implementation-acceptance, and maintain-knowledge-base.",
+        "oracle": {
+          "expected": "Each of the five named Skills has an individually attributable, substantive description of its pre-migration behavior. These descriptions distinguish existing behavior from proposed migration work and preserve existing authority. Recording them does not require migrating, executing, or passing the five real Skills against the new standard.",
+          "forbidden": [
+            "A target Skill is missing or lacks a substantive legacy-behavior description.",
+            "A migration proposal, placeholder, or validator result substitutes for a description of existing behavior.",
+            "Recording legacy behavior changes Skill authority, mandates Bootstrap Review, enables an internal reviewer, or includes excluded BMAD/GDS/Chapter 2-7 Skills."
+          ],
+          "observable": "During contract and terminal artifact validation, test_a25 reads the standard's Package B handoff table and checks the legacy-behavior field separately for each of the five named Skills against independently frozen authoring expectations."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A25"
+        ],
+        "then": "The Package B handoff table records the legacy behavior of all five Skills.",
+        "when": "The handoff table is created or updated and its A25 artifact assertions are evaluated in the compatible migration/foundation validation lane."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "artifact-integrity",
+          "failure_id": "A25_LEGACY_BEHAVIOR_RECORD_MISSING",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_migration.py::test_a25 with obligation-specific artifact assertions and explicit per-Skill coverage. Raise AssertionError when any named Skill lacks its independently expected legacy-behavior record or substitutes migration-only text. This is an artifact guard, not an expected-red runtime observation; missing tests, imports, environment failures, and timeouts cannot satisfy it."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package B handoff table",
+          "Legacy-behavior records for the five named Skills"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "behavior_change": "Add individually attributable legacy-behavior records for all five Skills to the standard's Package B handoff table. Attach this artifact guard to compatible A4 migration/foundation work without creating a separate executable feature or fake Python owner.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md"
+          ],
+          "state_or_schema_compatibility": "Revert only the affected handoff documentation; preserve Skill implementations, lifecycle authority, schemas, live state, and historical evidence. Draft content does not authorize Package B consumption."
+        },
+        "state_transition": "The handoff table lacks complete legacy-behavior records -> the table contains a substantive, separately checked legacy-behavior record for each of the five Skills.",
+        "terminal_predicate": "The frozen test_a25 artifact assertions establish all five legacy-behavior records without requiring real-Skill migration or validation, mandatory Bootstrap Review, or an internal reviewer. Q2 authors and freezes only declared tests/helpers in disposable roots; implementation changes only the declared production owner. Preserve Accepted ADR-0041/0058/0061 boundaries and historical evidence. The standard ADR follows normal maintainer acceptance before final acceptance or Package B consumption; approval absence is not product RED. Run targeted validation with a 300-second limit, then one current whole-plan terminal validation with a 600-second limit after all required tests and behaviors are ready. Timeout is a harness failure. Shared semantic changes invalidate affected proof; completion requires current machine evidence, not historical statuses or assistant text.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

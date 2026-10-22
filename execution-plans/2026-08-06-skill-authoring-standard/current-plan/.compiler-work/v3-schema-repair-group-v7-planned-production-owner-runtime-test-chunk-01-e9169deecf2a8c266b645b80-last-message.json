@@ -1,0 +1,122 @@
+{
+  "obligation_contracts": {
+    "O-B79C08AE62CA": {
+      "acceptance": {
+        "assertion_ids": [
+          "ASSERT_A25_COMPLETION_GATE_HAS_NO_REVIEWER_ENABLEMENT"
+        ],
+        "given": "Package A completion criteria and handoff guidance are available for artifact inspection.",
+        "oracle": {
+          "expected": "Every Package A completion criterion preserves the prohibition on enabling an internal reviewer. Neither successful completion nor any conditional completion branch activates, provisions, authorizes or requires an internal reviewer. Derived validation evidence retains authorizes=[].",
+          "forbidden": [
+            "A completion criterion or linked completion instruction enables an internal reviewer.",
+            "An optional or conditional completion branch enables an internal reviewer.",
+            "A successful artifact check is treated as authorization to enable an internal reviewer."
+          ],
+          "observable": "At contract validation and whole-plan terminal validation, test_a25 inspects the actual standard's completion criteria and their local handoff references, checking each completion branch for reviewer-enablement instructions. Its obligation-specific assertion rejects an enabling criterion with AssertionError; validator return values alone do not establish this boundary."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A25"
+        ],
+        "then": "Package A completion gates contain no mechanism that enables an internal reviewer.",
+        "when": "Defining or evaluating Package A completion gates, including contract inspection and the current whole-plan terminal check."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A25_COMPLETION_GATE_REVIEWER_ENABLEMENT",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_migration.py::test_a25 must bind ASSERT_A25_COMPLETION_GATE_HAS_NO_REVIEWER_ENABLEMENT to explicit inspection of completion criteria and referenced handoff instructions. A criterion enabling an internal reviewer must produce an observable AssertionError. This is an artifact boundary guard, not an expected-red runtime role; missing files, import errors, timeouts or unavailable inspection cannot substitute for that assertion."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Package A completion gate"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "behavior_change": "Within the compatible A4 migration/terminal implementation context, define completion criteria that cannot enable an internal reviewer. Attach this obligation's independent artifact assertion to test_a25 without introducing reviewer infrastructure, a new evidence system or a separate documentation-only executable slice. The shared validator owner supplies the real A4 callable context, not runtime proof of this constraint.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "knowledge/**",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md",
+          "docs/adr/ADR-0060*",
+          "logs/**",
+          "_bmad-output/**"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_core.py",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/test_skill_quality_migration.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only declared candidate production changes; preserve historical failures and frozen execution inputs. Preserve existing Skill contracts, authority, optional Bootstrap Review, Phase isolation and recovery, and Quick Dev evidence ownership. No live state or database migration is authorized. Shared policy/schema/validator changes invalidate affected proofs; replay must first rebuild the original binding identity and then use that same identity."
+        },
+        "state_transition": "Completion criteria being defined or evaluated become criteria whose inspected branches preserve the prohibition on internal-reviewer enablement; inspection does not grant execution or review authority.",
+        "terminal_predicate": "The obligation-specific test_a25 artifact assertion passes against current production artifacts, and one current whole-plan validation passes all four required modules after their tests are authored and product behaviors exercised. Use a 300-second targeted timeout and 600-second terminal timeout; timeout is harness failure, never accepted RED. Freeze tests/helpers before formal execution; implementation cannot edit them. Maintain nonempty applicable regression coverage, invalidate affected proofs after shared semantic changes, and preserve historical evidence. Do not manufacture RED from missing production imports or absent tests; report the first-use callable limitation through its existing owner. ADR-0041 governs development; the standard ADR requires normal maintainer acceptance before final Package A acceptance, without treating missing approval as product RED or self-accepting a draft. This guard neither enables internal review nor authorizes changes to existing workflow controllers.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py::test_a25"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_core.py",
+            "scripts/sc/tests/test_skill_quality_examples.py",
+            "scripts/sc/tests/test_skill_quality_capabilities.py",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

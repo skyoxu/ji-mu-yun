@@ -1,0 +1,99 @@
+{
+  "obligation_contracts": {
+    "O-6F40EB7D4B77": {
+      "acceptance": {
+        "assertion_ids": [
+          "A18-DATA-ROLE-STANDARD-REQUIREMENT",
+          "A18-DATA-ROLE-DECLARATION-CHECK"
+        ],
+        "given": "A disposable package declares consumption of untrusted content. Paired package variants differ only in whether they explicitly declare that content's data-only role.",
+        "oracle": {
+          "expected": "The standard requires consuming Skills to explicitly declare untrusted content as data only. The validator accepts the otherwise-valid declaration-bearing variant and rejects the declaration-omitting variant with a structured diagnostic identifying the declaration rule and relative location. Derived results retain authorizes=[].",
+          "forbidden": [
+            "A consuming package passes without explicitly declaring the data-only role.",
+            "A generic mention of untrusted content substitutes for the data-only declaration.",
+            "Artifact assertions infer the standard's requirement solely from validator output.",
+            "The check claims semantic injection-proofness of arbitrary prose.",
+            "Derived validation results grant execution authority."
+          ],
+          "observable": "During test_a18, independent artifact assertions inspect the actual standard and normative declaration requirements; calls to scripts.sc.validate_skill_quality.validate_package compare paired package results, including status, diagnostic rule/path/code and authorizes. Only assertions for the data-only declaration bind this obligation."
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-A18"
+        ],
+        "then": "The data-only role is an explicit required declaration for Skills consuming untrusted content.",
+        "when": "The planned A18 unit selector evaluates the standard's declaration requirement and validates both disposable package variants through the real Python entry."
+      },
+      "failure_intents": [
+        {
+          "expected_outcome": "fail",
+          "failure_family": "semantic-contract-gap",
+          "failure_id": "A18_DATA_ROLE_DECLARATION_GAP",
+          "selector_intent": "Author scripts/sc/tests/test_skill_quality_capabilities.py::test_a18 with separately bound data-role assertions. Assert the standard requires the explicit declaration, then directly call scripts.sc.validate_skill_quality.validate_package for declaration-bearing and declaration-omitting variants. Raise AssertionError if the requirement is absent or the omitted declaration is accepted. This governance declaration check does not borrow the peer authority-expansion oracle. Missing production imports, absent tests, invalid fixtures and environment failures are blockers, never causal RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Skills that consume untrusted content"
+        ],
+        "allowed_write_paths": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Specify the explicit data-only declaration requirement and implement its deterministic declaration validation in the shared A18 capability-check context.",
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "logs/phase-a-innernet/**",
+          "scripts/sc/_llm_backend.py",
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md"
+        ],
+        "planned_new_files": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/tests/test_skill_quality_capabilities.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "docs/standards/skill-authoring-standard.md",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "docs/standards/skill-authoring-standard.md",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/validate_skill_quality.py"
+          ],
+          "state_or_schema_compatibility": "Rollback only the bounded declaration requirement and its implementation, preserving existing sidecar protocols and package bytes. No database, Phase runtime or permission migration is authorized; retain historical evidence."
+        },
+        "state_transition": "A Skill declares consumption of untrusted content -> its explicit data-only declaration is checked against the standard and normative quality declaration contract.",
+        "terminal_predicate": "The frozen A18 selector establishes this obligation's artifact and declaration assertions through the real validator, including rejection of the missing declaration and authorizes=[]. Q2 authors only declared tests/helpers and disposable package variants; production owners are not execution snapshots. Freeze independent expected values, test bytes and assertion bindings before formal RED. The absent first callable remains a first-use blocker until the existing execution protocol permits a real call; do not seed production during Q2. Run the targeted command with a 300-second caller timeout; timeout is a harness failure. Preserve applicable predecessor regression coverage and require current whole-plan terminal validation over all four source-declared test modules with a 600-second timeout after authoring and exercising all required cases. Shared production changes invalidate affected proofs. No Skill execution, arbitrary-prose security claim, protected-tree write or fabricated approval/evidence is permitted.",
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_capabilities.py::test_a18"
+          ]
+        ],
+        "verification_lane": "unit"
+      }
+    }
+  }
+}

@@ -1,0 +1,547 @@
+{
+  "schema": "vdd.published-v1-split.v1",
+  "requirements_sha256": "sha256:220398488db6b9334321bbdba3b159e221b9be63b56453faa99eaa7ea4baec18",
+  "authorizes": [],
+  "source_ref": "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS",
+  "replaced_obligation_id": "O-668FC5F50610",
+  "obligations": [
+    {
+      "depends_on": [],
+      "expected_behavior": "A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic.",
+      "forbidden_result": [
+        "The required dependency outcome is absent or unrelated diagnostics substitute for it."
+      ],
+      "obligation_kind": "behavior",
+      "observable_result": "The actual result and side-effect observers establish: A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic.",
+      "requirement_type": "Platform",
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "state_after": "A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic.",
+      "state_before": "This independently observable dependency outcome is unspecified.",
+      "status": "active",
+      "subject": "Missing required dependency record diagnostic",
+      "trigger": "The real validator inspects the missing-record dependency fixture.",
+      "unresolved_fragments": []
+    },
+    {
+      "depends_on": [],
+      "expected_behavior": "An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic.",
+      "forbidden_result": [
+        "The required dependency outcome is absent or unrelated diagnostics substitute for it."
+      ],
+      "obligation_kind": "behavior",
+      "observable_result": "The actual result and side-effect observers establish: An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic.",
+      "requirement_type": "Platform",
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "state_after": "An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic.",
+      "state_before": "This independently observable dependency outcome is unspecified.",
+      "status": "active",
+      "subject": "Unresolved local dependency authority diagnostic",
+      "trigger": "The real validator inspects the unresolved-authority dependency fixture.",
+      "unresolved_fragments": []
+    },
+    {
+      "depends_on": [],
+      "expected_behavior": "An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic.",
+      "forbidden_result": [
+        "The required dependency outcome is absent or unrelated diagnostics substitute for it."
+      ],
+      "obligation_kind": "behavior",
+      "observable_result": "The actual result and side-effect observers establish: An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic.",
+      "requirement_type": "Platform",
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "state_after": "An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic.",
+      "state_before": "This independently observable dependency outcome is unspecified.",
+      "status": "active",
+      "subject": "Incompatible local dependency version diagnostic",
+      "trigger": "The real validator inspects the version-conflict dependency fixture.",
+      "unresolved_fragments": []
+    },
+    {
+      "depends_on": [],
+      "expected_behavior": "Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority.",
+      "forbidden_result": [
+        "The required dependency outcome is absent or unrelated diagnostics substitute for it."
+      ],
+      "obligation_kind": "behavior",
+      "observable_result": "The actual result and side-effect observers establish: Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority.",
+      "requirement_type": "Platform",
+      "source_refs": [
+        "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+      ],
+      "state_after": "Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority.",
+      "state_before": "This independently observable dependency outcome is unspecified.",
+      "status": "active",
+      "subject": "Dependency declarations remain static data",
+      "trigger": "The real validator inspects the no-execution dependency fixture.",
+      "unresolved_fragments": []
+    }
+  ],
+  "v3_contracts": {
+    "O-49A57C216496": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-668FC5F50610-MISSING-RECORD"
+        ],
+        "given": "A disposable contained package with explicit local dependency declarations and copied actual policy/schema bytes, varied only for missing-record. Expected diagnostics and observer results are fixed independently of candidate policy.",
+        "when": "The exact test_a09[missing-record] parameter directly calls the real validate_package entry.",
+        "then": "A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic.",
+        "oracle": {
+          "expected": "A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic. The repaired control removes only the corresponding dependency diagnostic.",
+          "observable": "Structured status, rule, code, package-relative field path, dependency identity and actual side-effect observers for this parameter.",
+          "forbidden": [
+            "An unrelated defect, fixture/import failure, missing test, timeout or arbitrary model claim substitutes for the outcome.",
+            "Inspected content or absolute paths leak into diagnostics."
+          ]
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "failure_id": "DEPENDENCY_DIAGNOSTIC_OUTCOME_MISSING",
+          "expected_outcome": "fail",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09[missing-record] directly invokes validate_package and raises AssertionError only when its frozen dependency outcome or side-effect boundary is violated. Import/setup/fixture errors are harness failures, never expected RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Missing required dependency record diagnostic"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic.",
+        "complexity_class": "complex",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/config/skill-package-validator-capability.v1.json",
+          "scripts/sc/config/skill-package-validator-source.v1.json",
+          "docs/adr/ADR-0060-skill-input-selection-authority.md"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only this candidate's declared production changes; preserve existing owner-specific Skill protocols, read-only inspection, authorizes=[] and historical evidence. No database, hosted-state or runtime migration is authorized."
+        },
+        "state_transition": "Unspecified outcome -> A missing local-parser record produces the typed A09 DEPENDENCY_MISSING_RECORD package diagnostic.",
+        "terminal_predicate": "All four independent A09 parameters and existing migration cases execute with exact assertion mappings. Q6 uses these applicable current cases; Q8 retains the original whole-plan four-module terminal command after all required tests exist. Preserve frozen fixtures, actual policy/schema copies, non-authorizing static inspection and ADR-0041/0058 boundaries.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    },
+    "O-E6038B3F5C2C": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-668FC5F50610-UNRESOLVED-AUTHORITY"
+        ],
+        "given": "A disposable contained package with explicit local dependency declarations and copied actual policy/schema bytes, varied only for unresolved-authority. Expected diagnostics and observer results are fixed independently of candidate policy.",
+        "when": "The exact test_a09[unresolved-authority] parameter directly calls the real validate_package entry.",
+        "then": "An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic.",
+        "oracle": {
+          "expected": "An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic. The repaired control removes only the corresponding dependency diagnostic.",
+          "observable": "Structured status, rule, code, package-relative field path, dependency identity and actual side-effect observers for this parameter.",
+          "forbidden": [
+            "An unrelated defect, fixture/import failure, missing test, timeout or arbitrary model claim substitutes for the outcome.",
+            "Inspected content or absolute paths leak into diagnostics."
+          ]
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "failure_id": "DEPENDENCY_DIAGNOSTIC_OUTCOME_MISSING",
+          "expected_outcome": "fail",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09[unresolved-authority] directly invokes validate_package and raises AssertionError only when its frozen dependency outcome or side-effect boundary is violated. Import/setup/fixture errors are harness failures, never expected RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Unresolved local dependency authority diagnostic"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic.",
+        "complexity_class": "complex",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/config/skill-package-validator-capability.v1.json",
+          "scripts/sc/config/skill-package-validator-source.v1.json",
+          "docs/adr/ADR-0060-skill-input-selection-authority.md"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only this candidate's declared production changes; preserve existing owner-specific Skill protocols, read-only inspection, authorizes=[] and historical evidence. No database, hosted-state or runtime migration is authorized."
+        },
+        "state_transition": "Unspecified outcome -> An unresolved local-parser authority produces the typed A09 DEPENDENCY_UNRESOLVED_AUTHORITY package diagnostic.",
+        "terminal_predicate": "All four independent A09 parameters and existing migration cases execute with exact assertion mappings. Q6 uses these applicable current cases; Q8 retains the original whole-plan four-module terminal command after all required tests exist. Preserve frozen fixtures, actual policy/schema copies, non-authorizing static inspection and ADR-0041/0058 boundaries.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    },
+    "O-9C4013167E28": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-668FC5F50610-VERSION-CONFLICT"
+        ],
+        "given": "A disposable contained package with explicit local dependency declarations and copied actual policy/schema bytes, varied only for version-conflict. Expected diagnostics and observer results are fixed independently of candidate policy.",
+        "when": "The exact test_a09[version-conflict] parameter directly calls the real validate_package entry.",
+        "then": "An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic.",
+        "oracle": {
+          "expected": "An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic. The repaired control removes only the corresponding dependency diagnostic.",
+          "observable": "Structured status, rule, code, package-relative field path, dependency identity and actual side-effect observers for this parameter.",
+          "forbidden": [
+            "An unrelated defect, fixture/import failure, missing test, timeout or arbitrary model claim substitutes for the outcome.",
+            "Inspected content or absolute paths leak into diagnostics."
+          ]
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "failure_id": "DEPENDENCY_DIAGNOSTIC_OUTCOME_MISSING",
+          "expected_outcome": "fail",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09[version-conflict] directly invokes validate_package and raises AssertionError only when its frozen dependency outcome or side-effect boundary is violated. Import/setup/fixture errors are harness failures, never expected RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Incompatible local dependency version diagnostic"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic.",
+        "complexity_class": "complex",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/config/skill-package-validator-capability.v1.json",
+          "scripts/sc/config/skill-package-validator-source.v1.json",
+          "docs/adr/ADR-0060-skill-input-selection-authority.md"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only this candidate's declared production changes; preserve existing owner-specific Skill protocols, read-only inspection, authorizes=[] and historical evidence. No database, hosted-state or runtime migration is authorized."
+        },
+        "state_transition": "Unspecified outcome -> An incompatible local-parser version produces the typed A09 DEPENDENCY_VERSION_CONFLICT package diagnostic.",
+        "terminal_predicate": "All four independent A09 parameters and existing migration cases execute with exact assertion mappings. Q6 uses these applicable current cases; Q8 retains the original whole-plan four-module terminal command after all required tests exist. Preserve frozen fixtures, actual policy/schema copies, non-authorizing static inspection and ADR-0041/0058 boundaries.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    },
+    "O-972B87665F90": {
+      "acceptance": {
+        "assertion_ids": [
+          "A-668FC5F50610-NO-DEPENDENCY-EXECUTION"
+        ],
+        "given": "A disposable contained package with explicit local dependency declarations and copied actual policy/schema bytes, varied only for no-execution. Expected diagnostics and observer results are fixed independently of candidate policy.",
+        "when": "The exact test_a09[no-execution] parameter directly calls the real validate_package entry.",
+        "then": "Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority.",
+        "oracle": {
+          "expected": "Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority. The repaired control removes only the corresponding dependency diagnostic.",
+          "observable": "Structured status, rule, code, package-relative field path, dependency identity and actual side-effect observers for this parameter.",
+          "forbidden": [
+            "An unrelated defect, fixture/import failure, missing test, timeout or arbitrary model claim substitutes for the outcome.",
+            "Inspected content or absolute paths leak into diagnostics."
+          ]
+        },
+        "source_refs": [
+          "execution-plans/2026-08-06-skill-authoring-standard/requirements.md#SM-REPAIR-CONSTRAINTS"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "failure_id": "DEPENDENCY_DIAGNOSTIC_OUTCOME_MISSING",
+          "expected_outcome": "fail",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_examples.py::test_a09[no-execution] directly invokes validate_package and raises AssertionError only when its frozen dependency outcome or side-effect boundary is violated. Import/setup/fixture errors are harness failures, never expected RED."
+        }
+      ],
+      "slice_hint": {
+        "affected_subjects": [
+          "Dependency declarations remain static data"
+        ],
+        "allowed_write_paths": [
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py"
+        ],
+        "behavior_change": "Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority.",
+        "complexity_class": "complex",
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "context_lookup_required": true,
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "forbidden_paths": [
+          ".agents/skills/**",
+          "scripts/quick_dev/**",
+          "scripts/vdd/**",
+          "PhaseA.Platform/**",
+          "PhaseA.Platform.Tests/**",
+          "runtime/**",
+          "scripts/sc/_llm_backend.py",
+          "scripts/sc/skill_package_replay.py",
+          "scripts/sc/config/skill-package-validator-capability.v1.json",
+          "scripts/sc/config/skill-package-validator-source.v1.json",
+          "docs/adr/ADR-0060-skill-input-selection-authority.md"
+        ],
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "planned_new_files": [
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+          "scripts/sc/tests/test_skill_quality_examples.py",
+          "scripts/sc/tests/skill_quality_support.py"
+        ],
+        "production_owners": [
+          "scripts/sc/skill_quality_examples.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+        ],
+        "rollback_scope": {
+          "production_paths": [
+            "scripts/sc/validate_skill_quality.py",
+            "scripts/sc/skill_quality_examples.py",
+            "scripts/sc/config/skill-authoring-standard.v1.json",
+            "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+            "scripts/sc/schemas/skill-quality-result.v1.schema.json"
+          ],
+          "state_or_schema_compatibility": "Rollback only this candidate's declared production changes; preserve existing owner-specific Skill protocols, read-only inspection, authorizes=[] and historical evidence. No database, hosted-state or runtime migration is authorized."
+        },
+        "state_transition": "Unspecified outcome -> Inspecting dependency declarations causes zero dependency execution, installation, network fetch or package writes and grants no authority.",
+        "terminal_predicate": "All four independent A09 parameters and existing migration cases execute with exact assertion mappings. Q6 uses these applicable current cases; Q8 retains the original whole-plan four-module terminal command after all required tests exist. Preserve frozen fixtures, actual policy/schema copies, non-authorizing static inspection and ADR-0041/0058 boundaries.",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_examples.py::test_a09"
+          ],
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "scripts/sc/tests/test_skill_quality_migration.py"
+          ]
+        ],
+        "verification_lane": "integration"
+      }
+    }
+  }
+}

@@ -1,0 +1,262 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+___ test_unrelated_chunk_cache_is_not_a_response_to_current_request[False] ____
+
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-455/test_unrelated_chunk_cache_is_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001ED1D3C2750>
+overlapping_id = False
+
+    @pytest.mark.parametrize("overlapping_id", [False, True])
+    def test_unrelated_chunk_cache_is_not_a_response_to_current_request(tmp_path, monkeypatch, overlapping_id):
+        """ADR-0041: historical chunks cannot block or supply an unrelated request."""
+        monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+        import _llm_backend
+    
+        raw = _inline(1)
+        historical = _inline(2)
+        if not overlapping_id:
+            del historical["obligation_contracts"]["O-000"]
+        else:
+            historical["obligation_contracts"]["O-000"]["acceptance"]["oracle"]["observable"] = "stale unrelated oracle"
+        cache_dir = tmp_path / "plan/.compiler-cache"
+        cache_dir.mkdir(parents=True)
+        historical_path = cache_dir / f"{grouped._GROUP_STAGE}-chunk-unrelated.json"
+        historical_text = json.dumps(historical)
+        historical_path.write_text(historical_text, encoding="utf-8")
+        calls = []
+    
+        def fake_exec(**kwargs):
+            calls.append(kwargs)
+            kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
+            return 0, "OK", []
+    
+        monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+        monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+>       result = grouped._live_group_repair(
+            root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
+            payload={"input": {"obligations": [_obligation("O-000")]}},
+        )
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_v3_inline_context_repair.py:322: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_prompt_patch.py:52: in _live_group_repair
+    return _BASE_LIVE_GROUP_REPAIR(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_repair_patch.py:883: in _live_group_repair
+    return _live_group_repair_one(root=root, out_dir=out_dir, payload=payload, prompt=prompt)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-455/test_unrelated_chunk_cache_is_0')
+out_dir = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-455/test_unrelated_chunk_cache_is_0/plan')
+payload = {'input': {'obligations': [{'obligation_id': 'O-000', 'requirement_id': 'FR-1', 'source_refs': ['req.md#FR-1'], 'subje...xt': {'schema': 'vdd.repository-path-context.v1', 'authority': 'discovery-only', 'complete': False, 'files': [], ...}}}
+prompt = 'Repair.\n\nV3 REPAIR INVARIANTS: obligation_contracts must contain every active frozen obligation as a required key e...les, or infer proof from a filename. Keep all frozen obligation semantics and existing path/coverage checks unchanged.'
+max_attempts = None
+
+    def _live_group_repair_one(
+        *, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str,
+        max_attempts: int | None = None,
+    ) -> Mapping[str, Any]:
+        force_semantic_repair = bool(payload.get("_force_semantic_repair"))
+    
+        # Cache hits need current path/domain checks, but not model discovery context
+        # or backend initialization. Successful child caches also survive a restart.
+        cached = None if force_semantic_repair else _cached_split_result(
+            root=root, out_dir=out_dir, payload=payload)
+        if cached is not None:
+            return cached
+        payload = enrich_repository_context(root, payload)
+        prompt += PATH_CONTEXT_PROMPT
+        scripts = root / "scripts" / "sc"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        try:
+            from _llm_backend import run_llm_exec, resolve_llm_backend
+        except ImportError as exc:
+            raise RuntimeError("shared LLM backend is unavailable") from exc
+    
+        cache_dir = out_dir / ".compiler-cache"
+        cache_identity = group_cache_identity_payload(payload)
+        call_suffix = sc._worker_cache_key(_GROUP_STAGE, cache_identity).rsplit("-", 1)[-1].removesuffix(".json")
+        cache_path = cache_dir / sc._worker_cache_key(_GROUP_STAGE, cache_identity)
+        refs_by_oid = _obligation_refs(payload)
+        if cache_path.is_file() and not force_semantic_repair:
+            cached = json.loads(cache_path.read_text(encoding="utf-8"))
+            if not isinstance(cached, Mapping):
+                raise ValueError("V3 group repair cache is malformed")
+            projected = _project_execution_output(root, payload, cached)
+            contracts = cached.get("obligation_contracts")
+            if (isinstance(contracts, Mapping)
+                    and not sc._v3_cache_requires_contract_refresh(projected, root, payload)
+                    and not _invalid_contract_ids(payload, contracts)):
+                return projected
+    
+        complete = None if force_semantic_repair else _reusable_prior_complete_contracts(
+            root=root, cache_dir=cache_dir, payload=payload, ids=sorted(refs_by_oid))
+        if complete is not None:
+            _write_refreshable_json(cache_path, complete)
+            return _project_execution_output(root, payload, complete)
+    
+        # Recompose a complete parent directly from successful child caches. A
+        # forced relational repair must bypass this replay path entirely: sibling
+        # caches may contain the very clone being repaired.
+        if not force_semantic_repair:
+            wanted = set(refs_by_oid)
+            recomposed: dict[str, Any] = {}
+            domain = set(payload.get("_repair_domain_ids", wanted))
+            foreign: set[str] = set()
+            for child_path in cache_dir.glob(_GROUP_STAGE + "-chunk-*.json"):
+                try:
+                    child = json.loads(child_path.read_text(encoding="utf-8"))
+                    contracts = child.get("obligation_contracts") if isinstance(child, Mapping) else None
+                    if isinstance(contracts, Mapping):
+                        foreign.update(set(contracts) - domain)
+                        for oid, contract in contracts.items():
+                            # Parallel/split peers share this directory. Only this
+                            # chunk's frozen IDs are candidates for reuse; other
+                            # cached peers are not a response to the current request.
+                            if oid not in wanted or not isinstance(contract, Mapping):
+                                continue
+                            single_payload = _narrow_repair_payload(payload, [oid])
+                            single = {"obligation_contracts": {oid: contract}}
+                            projected = _project_execution_output(root, single_payload, single)
+                            if not sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
+                                recomposed[oid] = contract
+                except (OSError, UnicodeError, json.JSONDecodeError):
+                    continue
+            if foreign:
+>               raise ValueError("V3 cache contains unknown obligation IDs: " + ",".join(sorted(foreign)))
+E               ValueError: V3 cache contains unknown obligation IDs: O-001
+
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_repair_patch.py:1008: ValueError
+____ test_unrelated_chunk_cache_is_not_a_response_to_current_request[True] ____
+
+tmp_path = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-455/test_unrelated_chunk_cache_is_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001ED1D47AE40>
+overlapping_id = True
+
+    @pytest.mark.parametrize("overlapping_id", [False, True])
+    def test_unrelated_chunk_cache_is_not_a_response_to_current_request(tmp_path, monkeypatch, overlapping_id):
+        """ADR-0041: historical chunks cannot block or supply an unrelated request."""
+        monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+        import _llm_backend
+    
+        raw = _inline(1)
+        historical = _inline(2)
+        if not overlapping_id:
+            del historical["obligation_contracts"]["O-000"]
+        else:
+            historical["obligation_contracts"]["O-000"]["acceptance"]["oracle"]["observable"] = "stale unrelated oracle"
+        cache_dir = tmp_path / "plan/.compiler-cache"
+        cache_dir.mkdir(parents=True)
+        historical_path = cache_dir / f"{grouped._GROUP_STAGE}-chunk-unrelated.json"
+        historical_text = json.dumps(historical)
+        historical_path.write_text(historical_text, encoding="utf-8")
+        calls = []
+    
+        def fake_exec(**kwargs):
+            calls.append(kwargs)
+            kwargs["output_last_message"].write_text(json.dumps(raw), encoding="utf-8")
+            return 0, "OK", []
+    
+        monkeypatch.setattr(_llm_backend, "resolve_llm_backend", lambda _: "codex-cli")
+        monkeypatch.setattr(_llm_backend, "run_llm_exec", fake_exec)
+>       result = grouped._live_group_repair(
+            root=tmp_path, out_dir=tmp_path / "plan", prompt="Repair.",
+            payload={"input": {"obligations": [_obligation("O-000")]}},
+        )
+
+.agents\skills\vdd-execution-plan\scripts\tests\test_ch456_v3_inline_context_repair.py:322: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_prompt_patch.py:52: in _live_group_repair
+    return _BASE_LIVE_GROUP_REPAIR(
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_repair_patch.py:883: in _live_group_repair
+    return _live_group_repair_one(root=root, out_dir=out_dir, payload=payload, prompt=prompt)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-455/test_unrelated_chunk_cache_is_1')
+out_dir = WindowsPath('C:/Windows/Temp/2/pytest-of-Administrator/pytest-455/test_unrelated_chunk_cache_is_1/plan')
+payload = {'input': {'obligations': [{'obligation_id': 'O-000', 'requirement_id': 'FR-1', 'source_refs': ['req.md#FR-1'], 'subje...xt': {'schema': 'vdd.repository-path-context.v1', 'authority': 'discovery-only', 'complete': False, 'files': [], ...}}}
+prompt = 'Repair.\n\nV3 REPAIR INVARIANTS: obligation_contracts must contain every active frozen obligation as a required key e...les, or infer proof from a filename. Keep all frozen obligation semantics and existing path/coverage checks unchanged.'
+max_attempts = None
+
+    def _live_group_repair_one(
+        *, root: Path, out_dir: Path, payload: Mapping[str, Any], prompt: str,
+        max_attempts: int | None = None,
+    ) -> Mapping[str, Any]:
+        force_semantic_repair = bool(payload.get("_force_semantic_repair"))
+    
+        # Cache hits need current path/domain checks, but not model discovery context
+        # or backend initialization. Successful child caches also survive a restart.
+        cached = None if force_semantic_repair else _cached_split_result(
+            root=root, out_dir=out_dir, payload=payload)
+        if cached is not None:
+            return cached
+        payload = enrich_repository_context(root, payload)
+        prompt += PATH_CONTEXT_PROMPT
+        scripts = root / "scripts" / "sc"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        try:
+            from _llm_backend import run_llm_exec, resolve_llm_backend
+        except ImportError as exc:
+            raise RuntimeError("shared LLM backend is unavailable") from exc
+    
+        cache_dir = out_dir / ".compiler-cache"
+        cache_identity = group_cache_identity_payload(payload)
+        call_suffix = sc._worker_cache_key(_GROUP_STAGE, cache_identity).rsplit("-", 1)[-1].removesuffix(".json")
+        cache_path = cache_dir / sc._worker_cache_key(_GROUP_STAGE, cache_identity)
+        refs_by_oid = _obligation_refs(payload)
+        if cache_path.is_file() and not force_semantic_repair:
+            cached = json.loads(cache_path.read_text(encoding="utf-8"))
+            if not isinstance(cached, Mapping):
+                raise ValueError("V3 group repair cache is malformed")
+            projected = _project_execution_output(root, payload, cached)
+            contracts = cached.get("obligation_contracts")
+            if (isinstance(contracts, Mapping)
+                    and not sc._v3_cache_requires_contract_refresh(projected, root, payload)
+                    and not _invalid_contract_ids(payload, contracts)):
+                return projected
+    
+        complete = None if force_semantic_repair else _reusable_prior_complete_contracts(
+            root=root, cache_dir=cache_dir, payload=payload, ids=sorted(refs_by_oid))
+        if complete is not None:
+            _write_refreshable_json(cache_path, complete)
+            return _project_execution_output(root, payload, complete)
+    
+        # Recompose a complete parent directly from successful child caches. A
+        # forced relational repair must bypass this replay path entirely: sibling
+        # caches may contain the very clone being repaired.
+        if not force_semantic_repair:
+            wanted = set(refs_by_oid)
+            recomposed: dict[str, Any] = {}
+            domain = set(payload.get("_repair_domain_ids", wanted))
+            foreign: set[str] = set()
+            for child_path in cache_dir.glob(_GROUP_STAGE + "-chunk-*.json"):
+                try:
+                    child = json.loads(child_path.read_text(encoding="utf-8"))
+                    contracts = child.get("obligation_contracts") if isinstance(child, Mapping) else None
+                    if isinstance(contracts, Mapping):
+                        foreign.update(set(contracts) - domain)
+                        for oid, contract in contracts.items():
+                            # Parallel/split peers share this directory. Only this
+                            # chunk's frozen IDs are candidates for reuse; other
+                            # cached peers are not a response to the current request.
+                            if oid not in wanted or not isinstance(contract, Mapping):
+                                continue
+                            single_payload = _narrow_repair_payload(payload, [oid])
+                            single = {"obligation_contracts": {oid: contract}}
+                            projected = _project_execution_output(root, single_payload, single)
+                            if not sc._v3_cache_requires_contract_refresh(projected, root, single_payload):
+                                recomposed[oid] = contract
+                except (OSError, UnicodeError, json.JSONDecodeError):
+                    continue
+            if foreign:
+>               raise ValueError("V3 cache contains unknown obligation IDs: " + ",".join(sorted(foreign)))
+E               ValueError: V3 cache contains unknown obligation IDs: O-001
+
+.agents\skills\vdd-execution-plan\scripts\semantic_worker_v3_group_repair_patch.py:1008: ValueError
+=========================== short test summary info ===========================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_inline_context_repair.py::test_unrelated_chunk_cache_is_not_a_response_to_current_request[False]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_inline_context_repair.py::test_unrelated_chunk_cache_is_not_a_response_to_current_request[True]
+2 failed, 28 deselected in 0.34s

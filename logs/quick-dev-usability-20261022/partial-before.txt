@@ -1,0 +1,164 @@
+F...FFF                                                                  [100%]
+=================================== FAILURES ===================================
+_______________ test_partial_obligation_closes_native_lifecycle ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_partial_obligation_closes0')
+
+    def test_partial_obligation_closes_native_lifecycle(tmp_path):
+        semantic, roots = partial(tmp_path)
+        route = execute(tmp_path, semantic, 'probe')
+>       assert route['predicate_result']
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py:19: AssertionError
+_____________________ test_passing_case_must_remain_green ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_passing_case_must_remain_0')
+
+    def test_passing_case_must_remain_green(tmp_path):
+        semantic, _ = partial(tmp_path)
+        route = execute(tmp_path, semantic, 'probe')
+>       assert execute(tmp_path, semantic, 'red', route)['predicate_result']
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py:68: in execute
+    descriptor = materialize_descriptor(bundle=bundle, slice_id="S1", stage=stage, run_id=run.name,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = {'schema_version': 'vdd.semantic-plan-bundle.v1', 'plan_id': 'P1', 'obligations': [{'obligation_id': 'O-1', 'requireme..._id': 'A-2', 'obligation_ids': ['O-2'], 'source_refs': ['source.txt#FR-1'], 'given': 'a current candidate', ...}], ...}
+slice_id = 'S1', stage = 'red', run_id = 'RUN-1'
+candidate_hash = 'sha256:ea8fe014f532cca76f2b7eb02979dd5e40feefa2d363dd778d9ca65c9598c43d'
+argv = ['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3', '-m', 'pytest', 'tests/test_one.py', '-q']
+cwd = '.', timeout_seconds = 10, target_refs = ['tests/test_one.py']
+fixture_refs = ['fixture.txt']
+routing_result = {'schema': 'quick-dev.stage-result.v2', 'plan_hash': 'sha256:a60dd97edd2fdec859239a230212a17be9b386826a904e0896ed5b17d3947237', 'plan_id': 'P1', 'slice_id': 'S1', ...}
+
+    def materialize_descriptor(*, bundle: Mapping[str, Any], slice_id: str, stage: str, run_id: str, candidate_hash: str, argv: Sequence[str], cwd: str, timeout_seconds: int, target_refs: Sequence[str], fixture_refs: Sequence[str], routing_result: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        _assert_hash(candidate_hash, "candidate_hash")
+        selected = _slice(bundle, slice_id)
+        if stage not in {"red", "green", "refactor", "terminal", "probe", "regression"}:
+            raise ValueError("stage invalid")
+        if not argv or any(not isinstance(x, str) or not x for x in argv):
+            raise ValueError("argv invalid")
+        if not target_refs or not fixture_refs:
+            raise ValueError("target/fixture refs required")
+        if cwd != ".":
+            safe_relative(cwd)
+        snapshots = set(selected.get("execution_snapshot_paths", []))
+        for ref in [*target_refs, *fixture_refs]:
+            safe_relative(ref)
+            if ref not in snapshots:
+                raise ValueError(f"target/fixture outside execution snapshot: {ref}")
+        amap = {x.get("acceptance_id"): x for x in bundle.get("acceptances", []) if isinstance(x, Mapping)}
+        assertions = []
+        for aid in selected.get("acceptance_ids", []):
+            item = amap.get(aid)
+            if not isinstance(item, Mapping):
+                raise ValueError("Acceptance missing")
+            for assertion_id in item.get("assertion_ids", []):
+                assertions.append({"acceptance_id": aid, "assertion_id": assertion_id, "case_source_ref": target_refs[0], "target_ref": target_refs[0], "fixture_ref": fixture_refs[0]})
+        descriptor = {"run_id": run_id, "plan_id": bundle["plan_id"], "slice_id": slice_id, "stage": stage, "candidate_hash": candidate_hash, "argv": list(argv), "cwd": cwd, "shell": False, "timeout_seconds": timeout_seconds, "target_refs": list(target_refs), "fixture_refs": list(fixture_refs), "acceptance_assertions": assertions}
+        if "behavior_routing" in bundle:
+            from behavior_routing import SCHEMA, stage_assertions, validate_plan
+            validate_plan(bundle)
+            expected = stage_assertions(bundle, slice_id, stage, routing_result)
+            assertions = [a for a in assertions if (a["acceptance_id"], a["assertion_id"]) in expected]
+            if not assertions:
+>               raise ValueError("behavior-routing:no-obligations-for-stage")
+E               ValueError: behavior-routing:no-obligations-for-stage
+
+.agents/skills/quick-dev-tdd-adapter/tools/current_router.py:270: ValueError
+_______________ test_formal_red_preserves_partial_case_outcomes ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_formal_red_preserves_part0')
+
+    def test_formal_red_preserves_partial_case_outcomes(tmp_path):
+        semantic, _ = partial(tmp_path)
+        route = execute(tmp_path, semantic, 'probe')
+>       descriptor = execute(tmp_path, semantic, 'red', route, materialize_only=True)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py:68: in execute
+    descriptor = materialize_descriptor(bundle=bundle, slice_id="S1", stage=stage, run_id=run.name,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = {'schema_version': 'vdd.semantic-plan-bundle.v1', 'plan_id': 'P1', 'obligations': [{'obligation_id': 'O-1', 'requireme..._id': 'A-2', 'obligation_ids': ['O-2'], 'source_refs': ['source.txt#FR-1'], 'given': 'a current candidate', ...}], ...}
+slice_id = 'S1', stage = 'red', run_id = 'RUN-1'
+candidate_hash = 'sha256:ea8fe014f532cca76f2b7eb02979dd5e40feefa2d363dd778d9ca65c9598c43d'
+argv = ['/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3', '-m', 'pytest', 'tests/test_one.py', '-q']
+cwd = '.', timeout_seconds = 10, target_refs = ['tests/test_one.py']
+fixture_refs = ['fixture.txt']
+routing_result = {'schema': 'quick-dev.stage-result.v2', 'plan_hash': 'sha256:a60dd97edd2fdec859239a230212a17be9b386826a904e0896ed5b17d3947237', 'plan_id': 'P1', 'slice_id': 'S1', ...}
+
+    def materialize_descriptor(*, bundle: Mapping[str, Any], slice_id: str, stage: str, run_id: str, candidate_hash: str, argv: Sequence[str], cwd: str, timeout_seconds: int, target_refs: Sequence[str], fixture_refs: Sequence[str], routing_result: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        _assert_hash(candidate_hash, "candidate_hash")
+        selected = _slice(bundle, slice_id)
+        if stage not in {"red", "green", "refactor", "terminal", "probe", "regression"}:
+            raise ValueError("stage invalid")
+        if not argv or any(not isinstance(x, str) or not x for x in argv):
+            raise ValueError("argv invalid")
+        if not target_refs or not fixture_refs:
+            raise ValueError("target/fixture refs required")
+        if cwd != ".":
+            safe_relative(cwd)
+        snapshots = set(selected.get("execution_snapshot_paths", []))
+        for ref in [*target_refs, *fixture_refs]:
+            safe_relative(ref)
+            if ref not in snapshots:
+                raise ValueError(f"target/fixture outside execution snapshot: {ref}")
+        amap = {x.get("acceptance_id"): x for x in bundle.get("acceptances", []) if isinstance(x, Mapping)}
+        assertions = []
+        for aid in selected.get("acceptance_ids", []):
+            item = amap.get(aid)
+            if not isinstance(item, Mapping):
+                raise ValueError("Acceptance missing")
+            for assertion_id in item.get("assertion_ids", []):
+                assertions.append({"acceptance_id": aid, "assertion_id": assertion_id, "case_source_ref": target_refs[0], "target_ref": target_refs[0], "fixture_ref": fixture_refs[0]})
+        descriptor = {"run_id": run_id, "plan_id": bundle["plan_id"], "slice_id": slice_id, "stage": stage, "candidate_hash": candidate_hash, "argv": list(argv), "cwd": cwd, "shell": False, "timeout_seconds": timeout_seconds, "target_refs": list(target_refs), "fixture_refs": list(fixture_refs), "acceptance_assertions": assertions}
+        if "behavior_routing" in bundle:
+            from behavior_routing import SCHEMA, stage_assertions, validate_plan
+            validate_plan(bundle)
+            expected = stage_assertions(bundle, slice_id, stage, routing_result)
+            assertions = [a for a in assertions if (a["acceptance_id"], a["assertion_id"]) in expected]
+            if not assertions:
+>               raise ValueError("behavior-routing:no-obligations-for-stage")
+E               ValueError: behavior-routing:no-obligations-for-stage
+
+.agents/skills/quick-dev-tdd-adapter/tools/current_router.py:270: ValueError
+_________________ test_uniform_probe_cannot_become_partial_red _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_uniform_probe_cannot_beco0')
+
+    def test_uniform_probe_cannot_become_partial_red(tmp_path):
+        semantic, _ = fixture(tmp_path, (False, True))
+        path = tmp_path/'tests/test_one.py'
+        path.write_text(path.read_text()+"@pytest.mark.cer_assertion('AS-1')\ndef test_extra():\n print('FAILURE_ID:FAIL-1')\n assert False\n",encoding='utf-8')
+        route=execute(tmp_path,semantic,'probe')
+        assert 'case_outcomes' not in route['behavior_dispositions'][0]
+        descriptor=execute(tmp_path,semantic,'red',route,materialize_only=True)
+        from case_evidence import run_cases
+        from behavior_routing import verify_case_continuity
+        from runtime_evidence import sha256_bytes
+        process,report,error,_=run_cases(descriptor,tmp_path)
+        receipt={'case_report':report,'case_report_error':error,'exit_code':process.returncode,
+          'case_report_sha256':sha256_value(report),'target_hashes':{'tests/test_one.py':sha256_bytes(path.read_bytes())}}
+        call=next(e for e in report['events'] if e['phase']=='call' and 'test_extra' in e['node_id'])
+        call.update(outcome='passed',failure_ids=[],assertion_failure=False)
+        receipt['case_report_sha256']=sha256_value(report)
+>       with pytest.raises(ValueError,match='outcome-drift'):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'outcome-drift'
+E         Actual message: 'case-unexpected-red:tests/test_one.py::test_extra'
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py:92: AssertionError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_partial_obligation_closes_native_lifecycle
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_passing_case_must_remain_green
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_formal_red_preserves_partial_case_outcomes
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_uniform_probe_cannot_become_partial_red
+4 failed, 3 passed in 1.74s

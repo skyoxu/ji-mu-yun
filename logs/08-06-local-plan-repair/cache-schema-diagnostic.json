@@ -1,0 +1,22 @@
+{
+  "diagnostic_only": true,
+  "cached_contracts": 568,
+  "findings": [
+    "worker-output:slice_hints[37]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[37]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[139]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[139]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[139]:execution_snapshot_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[245]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[274]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[274]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[342]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[342]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[430]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[430]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[449]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[449]:rollback_scope.production_paths:nonempty-string-list-required",
+    "worker-output:slice_hints[534]:production_owners:nonempty-string-list-required",
+    "worker-output:slice_hints[534]:rollback_scope.production_paths:nonempty-string-list-required"
+  ]
+}
