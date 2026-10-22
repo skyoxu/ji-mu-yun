@@ -126,3 +126,29 @@ docs/know116.txt
 
 # ADR-0060: leased ephemeral Skill-input attempts; persistent generations stay explicit.
 .skill-input-work/
+
+# Source-audited BMAD distribution and retired compatibility packages: local installs only.
+/.agents/skills/bmad-advanced-elicitation/**
+/.agents/skills/bmad-architecture/**
+/.agents/skills/bmad-brainstorming/**
+/.agents/skills/bmad-check-implementation-readiness/**
+/.agents/skills/bmad-code-review/**
+/.agents/skills/bmad-create-epics-and-stories/**
+/.agents/skills/bmad-create-story/**
+/.agents/skills/bmad-dev-auto/**
+/.agents/skills/bmad-dev-story/**
+/.agents/skills/bmad-editorial-review-structure/**
+/.agents/skills/bmad-forge-idea/**
+/.agents/skills/bmad-help/**
+/.agents/skills/bmad-index-docs/**
+/.agents/skills/bmad-prd/**
+/.agents/skills/bmad-product-brief/**
+/.agents/skills/bmad-quick-dev/**
+/.agents/skills/bmad-review-adversarial-general/**
+/.agents/skills/bmad-review-edge-case-hunter/**
+/.agents/skills/bmad-spec/**
+/.agents/skills/bmad-technical-research/**
+/.agents/skills/gds-agent-game-designer/**
+/.agents/skills/gds-gdd/**
+/.agents/skills/bmad-agent-game-designer/**
+/.agents/skills/gds-create-gdd/**

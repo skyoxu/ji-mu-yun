@@ -1,0 +1,17 @@
+ .agents/skills/bmad-advanced-elicitation/SKILL.md  | 142 ------
+ .../bmad-check-implementation-readiness/SKILL.md   |  91 ----
+ .../steps/step-06-final-assessment.md              | 132 ------
+ .agents/skills/bmad-code-review/SKILL.md           |  92 ----
+ .../bmad-code-review/steps/step-04-present.md      | 132 ------
+ .../skills/bmad-create-epics-and-stories/SKILL.md  |  93 ----
+ .../steps/step-04-final-validation.md              | 143 ------
+ .agents/skills/bmad-create-story/SKILL.md          | 432 ------------------
+ .agents/skills/bmad-dev-auto/SKILL.md              | 102 -----
+ .agents/skills/bmad-dev-story/SKILL.md             | 500 ---------------------
+ .agents/skills/bmad-prd/references/validate.md     |  97 ----
+ .agents/skills/bmad-technical-research/SKILL.md    |  96 ----
+ .../technical-steps/step-06-research-synthesis.md  | 493 --------------------
+ .gitignore                                         |  24 +-
+ docs/workflows/bmad-native-wrappers.md             |  43 +-
+ .../bmad_native/distribution-inventory.json        | 114 +++--
+ 16 files changed, 97 insertions(+), 2629 deletions(-)

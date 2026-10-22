@@ -1,0 +1,23 @@
+{
+  "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+  "files": {
+    ".agents/skills/bmad-architecture/SKILL.md": "a56c7a0abc45e1dba719ae5e66b7169a1098b403e7fd69b30c19f16c12cddc6a",
+    ".agents/skills/bmad-architecture/assets/spine-template.md": "ef4ff795624eb5439fae54a06edb389feb5a0cf79cb01ae007af51109335d198",
+    ".agents/skills/bmad-architecture/customize.toml": "137b418e1bb940411a6e77460a7c74af66a6ad732edcc7c7363746995b89e65d",
+    ".agents/skills/bmad-architecture/references/headless.md": "4db2708f335c94cb024b5eba022b1e3d88b1ec61c94c4716626d9b89684f5833",
+    ".agents/skills/bmad-architecture/references/reviewer-gate.md": "d32e32a3c1d59b5612b947004f3f6fef1117a13ce9f1ffa428d616e0b5d4db69",
+    ".agents/skills/bmad-architecture/scripts/lint_spine.py": "040e0f1c13d31e6a21c518df943d1d7de7b75d8d98a07603b0983f3f3fb500db",
+    ".agents/skills/bmad-architecture/scripts/tests/test_lint_spine.py": "e86bb9a62c5cca74ddc89c843386f2b992610fcc1792d40e03bc9cd445b77681",
+    ".agents/skills/bmad-spec/SKILL.md": "a2baaf6b6bf000403a3b309b3dae48d328ece922e726541924585afbaf131b16",
+    ".agents/skills/bmad-spec/assets/headless-schemas.md": "83afb3614716db2347d83586a67b9c524492dd50db5282436ccb35c99fb5f08a",
+    ".agents/skills/bmad-spec/assets/spec-template.md": "94ef029b842dfa7f296dab4ccf830f0b813af9995bf8bbdcdfc0783a60ee5ffe",
+    ".agents/skills/bmad-spec/customize.toml": "b0181ba5d4038feb779a7a082a265df753220f868b66b5adb0fb2ed18401c763"
+  },
+  "runtime": {
+    "_bmad/scripts/memlog.py": "3b00f82ca33dc4227f715123b939514ee35c4f9c71150c894c3d8185df1b48df",
+    "_bmad/scripts/resolve_config.py": "f41149160898aea80a12861d149b10dc6b2d2b69d7d97eb65cad01f368adac03",
+    "_bmad/scripts/resolve_customization.py": "23fb9040b08c7eb975aeabc4245ef50e158516f5082eebc9ae41700641338498"
+  },
+  "source": "https://github.com/bmad-code-org/BMAD-METHOD",
+  "version": "6.10.0"
+}

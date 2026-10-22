@@ -1,0 +1,1618 @@
+{
+  "baseline": "5b3a6067082423348066a7ce760eca44ed880789",
+  "policy": "All 178 source-audited distribution and retired compatibility candidates are untracked. Official installations remain local and unmodified; repository adapters, locks, documentation and immutable evidence remain tracked.",
+  "files": [
+    {
+      "path": ".agents/skills/bmad-advanced-elicitation/SKILL.md",
+      "baseline_sha256": "d6abafe2f250f012765dc63602c0cc3ad77ba693eb06d2f8520dc759f192f7f2",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-advanced-elicitation/methods.csv",
+      "baseline_sha256": "d110ff5f076fb9421552b83692fde2c2d367734049169c7a55f7267a3dc7ef89",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-advanced-elicitation/methods.csv"
+    },
+    {
+      "path": ".agents/skills/bmad-agent-game-designer/SKILL.md",
+      "baseline_sha256": "d14acf1f30961e20929c85411986d367ff7d8ad9d5a4bb5e8074b8e98938d855",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/SKILL.md",
+      "baseline_sha256": "a56c7a0abc45e1dba719ae5e66b7169a1098b403e7fd69b30c19f16c12cddc6a",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/assets/spine-template.md",
+      "baseline_sha256": "ef4ff795624eb5439fae54a06edb389feb5a0cf79cb01ae007af51109335d198",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/assets/spine-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/customize.toml",
+      "baseline_sha256": "137b418e1bb940411a6e77460a7c74af66a6ad732edcc7c7363746995b89e65d",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/references/headless.md",
+      "baseline_sha256": "4db2708f335c94cb024b5eba022b1e3d88b1ec61c94c4716626d9b89684f5833",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/references/headless.md"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/references/reviewer-gate.md",
+      "baseline_sha256": "d32e32a3c1d59b5612b947004f3f6fef1117a13ce9f1ffa428d616e0b5d4db69",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/references/reviewer-gate.md"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/scripts/lint_spine.py",
+      "baseline_sha256": "040e0f1c13d31e6a21c518df943d1d7de7b75d8d98a07603b0983f3f3fb500db",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/scripts/lint_spine.py"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/scripts/tests/test_lint_spine.py",
+      "baseline_sha256": "e86bb9a62c5cca74ddc89c843386f2b992610fcc1792d40e03bc9cd445b77681",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-architecture/scripts/tests/test_lint_spine.py"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/SKILL.md",
+      "baseline_sha256": "399ddc752fc786b501ba07fb4b4b038b3d2bb076d36496b6384ef85cf922dd59",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/analysis/catalog-analysis.md",
+      "baseline_sha256": "d4e742da964674549c7f0c64db82c4e1938f8521e5cf0034c103fd08022e515c",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/analysis/catalog-analysis.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/analysis/method-matrix.csv",
+      "baseline_sha256": "e6755bc1ef2aa92328d4facb6b12975b3ffb320e0c215a5a078e951692b012a4",
+      "action": "untrack",
+      "reason": "official distribution; normalized line endings only",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/analysis/method-matrix.csv"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/assets/brain-icons.json",
+      "baseline_sha256": "a101c56e89f1d0f9e4131dfdfc19e10c746e3a61c3f92537d04a6f4897b7d331",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/assets/brain-icons.json"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/assets/brain-methods.csv",
+      "baseline_sha256": "150536f3f3d56e08262b27a2abd6b36f266538e2c929ef4aaf183491da33f0eb",
+      "action": "untrack",
+      "reason": "official distribution; normalized line endings only",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/assets/brain-methods.csv"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/assets/brain-selector.html",
+      "baseline_sha256": "798f27c743b853424aa00d4e41af5c3b515b7a329d6806b5d0a5ebe15e0fbf4e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/assets/brain-selector.html"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/customize.toml",
+      "baseline_sha256": "21fcbc60c78db99ca0424da192ba0942dce2189f350f77838e4d3ecd501edd1c",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/converge.md",
+      "baseline_sha256": "1528c32ddc64f8061fec663306f7208d2fd4d4a90e660552b8138bda7e452dc0",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/converge.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/finalize.md",
+      "baseline_sha256": "b6074e7fb4d86ffcf899abc50b9049b4a1f6fe550917f4be7a1c7a888477e07e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/finalize.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/headless.md",
+      "baseline_sha256": "b8ea5951199cff7e4813e06aef35683ca0658230fa015e358cacc466b1138a42",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/headless.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/in-chat-techniques.md",
+      "baseline_sha256": "18239464e3e4f00ea9063d015d26d6b0a696b72e7e3c5be92352da6db9a3f244",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/in-chat-techniques.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/mode-autonomous.md",
+      "baseline_sha256": "79fba5391ef293cebdbbdc765c7edeb3ccf60c04317fef964a4ea64d6b13f260",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/mode-autonomous.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/mode-facilitator.md",
+      "baseline_sha256": "1b908498d285d190859aed00c3ba5b399d7f6aa8e94d54e95456d15cd6fe6073",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/mode-facilitator.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/mode-partner.md",
+      "baseline_sha256": "caa0ed378c116def4de382f4e5a95173c6ae6cc5464f1792e7d8196360f79c8a",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/mode-partner.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/resume.md",
+      "baseline_sha256": "0f79535d72eefe6c55bd5ae47fe4753de8d27235cf129f10b2c596a124c26526",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/references/resume.md"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/scripts/brain.py",
+      "baseline_sha256": "b84770d5d55fa17bd99a2ab9076130874dfb7f8cd9b4283cd6413df097bc72b6",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/scripts/brain.py"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/scripts/tests/test_brain.py",
+      "baseline_sha256": "5f150395d5aa95526eb1ded5b7a8bd624a577dd25ff060ac082db3cbb5cc0f77",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-brainstorming/scripts/tests/test_brain.py"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/SKILL.md",
+      "baseline_sha256": "075850d1482ec548f268bcdcf2cb05755e6007c605a601a0b2090da18bd8b750",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/customize.toml",
+      "baseline_sha256": "571d81087b7a6d914cf7c2f21aa26354eac385bb2f5cfeabc591892cbb98d036",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-01-document-discovery.md",
+      "baseline_sha256": "c763b512d55906122433cb65c1bcd5b5b283e45eacdc07281c8ec7596b6b3980",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-01-document-discovery.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md",
+      "baseline_sha256": "38be2bf4b924c0b5b395b57d68f685d790ade7b1a6c10993d3c550675f87d954",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-03-epic-coverage-validation.md",
+      "baseline_sha256": "7b187f03a47cba0325fcfd10240410db9c59d93768342fc2dd3de2a01ec23356",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-03-epic-coverage-validation.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md",
+      "baseline_sha256": "f71e5f0d77615e885ae40fdee6b04c1dd6e472c871f87b515fe869cb5f6966fb",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md",
+      "baseline_sha256": "d8a84e57f4e3a321734b5b5d093458ceb1e338744f18954c5a204f5ce3576185",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "baseline_sha256": "614a9dfa81beec079314bc187bc33cfd5f28eff5276a65b4d9a4ba8921a90e45",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/templates/readiness-report-template.md",
+      "baseline_sha256": "0da97ab1e38818e642f36dc0ef24d2dae69fc6e0be59924dc2dbf44329738ff6",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/templates/readiness-report-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/SKILL.md",
+      "baseline_sha256": "32ed3ecc29e34e221280e7ba1d1e787c36b5fad225ec3bd66ac787bc0efcea2c",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/customize.toml",
+      "baseline_sha256": "94ad662fdf3fda372c6e24b2cbda629d0b2aa851097d02afb5905c768b1a1cde",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-code-review/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-01-gather-context.md",
+      "baseline_sha256": "d0ee7558605e9d48b5b6f15d9b535542eb6d922613f529bb520326eacade4171",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-01-gather-context.md"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-02-review.md",
+      "baseline_sha256": "950a900442975ed6a47c3def55a1ffa377864f789524d476b4bf377ed8058733",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-02-review.md"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-03-triage.md",
+      "baseline_sha256": "8be59185422340843a262ae277332b64ba969fb477c5a8f47624ab58bda3c6f4",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-03-triage.md"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-04-present.md",
+      "baseline_sha256": "b60f96c4e675ae03f52dea53d9b58a2346a8193b79033028b85c7c55adfa9661",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/SKILL.md",
+      "baseline_sha256": "da5e882eeefe998ec4d5e6aee7f1b0717cf1235df2767106ab458a92d91adf1a",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/customize.toml",
+      "baseline_sha256": "da9e43605bc6aec83173050b5d37ede6aebfa9a17c5959a5029681d73e744ba3",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md",
+      "baseline_sha256": "7181608c1ee4e55c084c6627d68fc55a8a0b6917e489f8ac77531a0530428a30",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-02-design-epics.md",
+      "baseline_sha256": "7c66987808c1f84e853fe54b7aff26d209196d450b5644704110f124a15179bc",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-02-design-epics.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-03-create-stories.md",
+      "baseline_sha256": "c5b787a82e4e49ed9cd9c028321ee1689f32b8cd69d89eea609b37cd3d481afc",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-03-create-stories.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-04-final-validation.md",
+      "baseline_sha256": "b13ccfa85e525559ff0dde5fe76a75334340f256984cff122ae17591019b72e3",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/templates/epics-template.md",
+      "baseline_sha256": "a804f740155156d89661fa04e7a4264a8f712c4dc227c44fd8ae804a9b0f6b72",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/templates/epics-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/SKILL.md",
+      "baseline_sha256": "0f086c101465d3fa45a9eeb64475c7c23ba9ed28b09a6c7dda28f74e7bcd1459",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/checklist.md",
+      "baseline_sha256": "b94e28e774c3be0288f04ea163424bece4ddead5cd3f3680d1603ed07383323a",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-create-story/checklist.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/customize.toml",
+      "baseline_sha256": "1204f6de064436922f2813069778eb4eaa5f1f945aa8ea5a5ffb87897a2ba8fe",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-create-story/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/discover-inputs.md",
+      "baseline_sha256": "dfedba6a8ea05c9a91c6d202c4b29ee3ea793d8ef77575034787ae0fef280507",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-create-story/discover-inputs.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/template.md",
+      "baseline_sha256": "29ba697368d77e88e88d0e7ac78caf7a78785a7dcfc291082aa96a62948afb67",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-create-story/template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/SKILL.md",
+      "baseline_sha256": "97c893fc36726e8ca10f9121aaf761daa12fd42f6125310bcde942699c421ded",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/compile-epic-context.md",
+      "baseline_sha256": "fa300a04e9b1f494314ddde443678affb2ac1965e2ac07dc4d6bb64316998466",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/compile-epic-context.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/customize.toml",
+      "baseline_sha256": "bd4302195867ac47dd6bff16761ce1562cf2e480f52265cbf277877b316966da",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/spec-template.md",
+      "baseline_sha256": "7c340be50e2a460b91c6148ef05c85a2f012462a0b91fcd7bf1b66bf2373c96c",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/spec-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-01-clarify-and-route.md",
+      "baseline_sha256": "53298afe9de0bc9d4fa14dec8d867c7f17b0de649cbcec9a22a2f6b0b44c1c49",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-01-clarify-and-route.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-02-plan.md",
+      "baseline_sha256": "a3e67ddd96216ea79a14a7bdef63f2acec0b6fae6d22eaa7a53163440900f443",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-02-plan.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-03-implement.md",
+      "baseline_sha256": "814893db2ca997d82ef5298d83f85b697d19203b9be755837e56af51d9565a2e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-03-implement.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-04-review.md",
+      "baseline_sha256": "d7742250a55139fbd4a8221e5cad7d6b9a5de20b6c034b3619541d0b89698371",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-auto/step-04-review.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/SKILL.md",
+      "baseline_sha256": "93c9ff14d425baf6181c7e0dfa24bad565e45cda18dbfe4eacb6ec7708492064",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/checklist.md",
+      "baseline_sha256": "630b68c6824a8785003a65553c1f335222b17be93b1bd80524c23b38bde1d8af",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-story/checklist.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/customize.toml",
+      "baseline_sha256": "592fa7948c4614609a59b152518f518d35e0178d6aa7c22e169d78157fd9f5aa",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-dev-story/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-editorial-review-structure/SKILL.md",
+      "baseline_sha256": "164444359d74f695a84faf7ea558d0eef39c75561e6b26669f97a165c6f75538",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-editorial-review-structure/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/SKILL.md",
+      "baseline_sha256": "c62ac3a30a4c7a32e3ffd28881d0e9128fc22de1570884d6572c8bfbb7d7db0e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-forge-idea/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/customize.toml",
+      "baseline_sha256": "ef5fadd1df3550cae00b1b442606bf84d187bfd55397563f143e1057430df45c",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-forge-idea/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/scripts/resolve_personas.py",
+      "baseline_sha256": "3da694c23e5fb29fe25963e2ea0509e1dd6d8c9f70ac54b00d98044052fd1c6e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-forge-idea/scripts/resolve_personas.py"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/scripts/tests/test_resolve_personas.py",
+      "baseline_sha256": "1c4fa4b1d68bfbd10e4b38cad3c8286dad62345cebd08fe94a6862351b02855e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-forge-idea/scripts/tests/test_resolve_personas.py"
+    },
+    {
+      "path": ".agents/skills/bmad-help/SKILL.md",
+      "baseline_sha256": "718077d741e20d9c94f3c2b7827047f2d18a90b85c3cc2eecd449e28b7b0d642",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-help/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-index-docs/SKILL.md",
+      "baseline_sha256": "a855d7060414e73ca4fe8e1a3e1cc4d0f2ce394846e52340bdf5a1317e0d234a",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-index-docs/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/SKILL.md",
+      "baseline_sha256": "85f0a3ea5fee06fcaef5ff34d6b194b265fe0d31ffd7610a9c9a0134bf0b21ce",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/headless-schemas.md",
+      "baseline_sha256": "8d3621333a72400512bd62511bc4c73fc745711505e1f852c697ff8c5fa2de93",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/headless-schemas.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/prd-template.md",
+      "baseline_sha256": "41e77bd5c4ee81c3f383b55d6f515147afc9c4bd1a3317ddf55a9282deae495c",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/prd-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/prd-validation-checklist.md",
+      "baseline_sha256": "41d9f09064772a92ec908d970618e47ba63dc86b5c5a1a21d5a2c676d3ba8e3f",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/prd-validation-checklist.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/validation-report-template.html",
+      "baseline_sha256": "a80becdd8205d2d7c18738855830b096172a496b96b5ca8a0820ec55c9bb8bf9",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/assets/validation-report-template.html"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/customize.toml",
+      "baseline_sha256": "5da1c87df2022c3e31f2c8e343dbead23356fbc5f5e9169eccd3102577ba295f",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/references/headless.md",
+      "baseline_sha256": "4dad58ebee63933a53179016513ff94d143ce9f68e226489d390e2c36bf1d848",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/2-plan-workflows/bmad-prd/references/headless.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/references/validate.md",
+      "baseline_sha256": "ca2a89e3ecac40da08f17efcb4ebf468d6684c4344a8029aae798fd5b1e80610",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-product-brief/SKILL.md",
+      "baseline_sha256": "0d569d109cd61a8056374d1f3f3980188407983772544ab81f4ff6b18e798508",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/bmad-product-brief/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-product-brief/assets/brief-template.md",
+      "baseline_sha256": "bb28edf75d023067551c8d417b19b8803324e7acfb2ad0c80f882e9134f4c1f1",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/bmad-product-brief/assets/brief-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-product-brief/customize.toml",
+      "baseline_sha256": "cdd7b417de5b280ab5bd3af65f69654b05980b5efb48077563827c16391f42d6",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/bmad-product-brief/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "baseline_sha256": "26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/compile-epic-context.md",
+      "baseline_sha256": "5cfda02f252941e415b80c57b4528f46226b3cbf456ad45d78fcb5a7ef4816e2",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/compile-epic-context.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/customize.toml",
+      "baseline_sha256": "ebb082e10f887a68f78ff7dbb000c4f0c71edd528a66eb651f988b9b0c35a372",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/_schema_runtime.py",
+      "baseline_sha256": "2cdcc28388c4b92529e4db7fd1bd7335d5212386054edef7e4bb323f7f1a90d5",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "baseline_sha256": "5e02e02d80fe9539a8b754ba7134c7dad6e74973991ee7fe330b510c7ee2cae4",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/spec-template.md",
+      "baseline_sha256": "68d0e3b9acaa0c22ab3b0dd1dbce9d8ef9b4d16637ed5e6fbd5244528732943e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/spec-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-01-clarify-and-route.md",
+      "baseline_sha256": "c6066ba0d4fd6cb9e3876acf85053f3168973a94c5476d5eab618c6f4d23825a",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-01-clarify-and-route.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-02-plan.md",
+      "baseline_sha256": "66576a0b14f77d59bf09f550297260ddc175d9181d8d9733fa0ea9c274724955",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-02-plan.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-03-implement.md",
+      "baseline_sha256": "207e8a1238d725bbbb6068009bb9fa435cb098ee63ded5621e3af2d32f724464",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-03-implement.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-04-review.md",
+      "baseline_sha256": "9db75caff2e22c61bd2239c1f75557fb2a91f82057b41187f2f8aed97c3fe0c8",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/step-04-review.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-05-present.md",
+      "baseline_sha256": "235f80431704dc89142d759847aa0f9875d5bf76aaa7f308472524fdf215ae18",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-oneshot.md",
+      "baseline_sha256": "4a52d263134d6dde777c7fcd9a78063319f7255f763b75182a8d855e7d6fd02f",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/sync-sprint-status.md",
+      "baseline_sha256": "c0f2fdb940984206a4b7aa2467fbcb7c4811f648634e43a488593974e9efff5e",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/4-implementation/bmad-quick-dev/sync-sprint-status.md"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "baseline_sha256": "fb447809c6fdca93d75d5c539c0c71f97a027431080a56043d92c3c9c3c2a9e9",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-review-adversarial-general/SKILL.md",
+      "baseline_sha256": "3b70b004b662c3a094328a8666e0084a94cb6de2e2a7336f23d31c65bca084e7",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-review-adversarial-general/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-review-edge-case-hunter/SKILL.md",
+      "baseline_sha256": "03087a3f1e935f7a111bc2c8e1b44c2cf2cc05d9843e5af3c913a148c70d8c96",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-review-edge-case-hunter/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-review-edge-case-hunter/references/deletion-check.md",
+      "baseline_sha256": "0f1f124e4e957147e89164a272b10bedc694ad0d9ad2618c8610ac74ee9cb0da",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-review-edge-case-hunter/references/deletion-check.md"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/SKILL.md",
+      "baseline_sha256": "a2baaf6b6bf000403a3b309b3dae48d328ece922e726541924585afbaf131b16",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-spec/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/assets/headless-schemas.md",
+      "baseline_sha256": "83afb3614716db2347d83586a67b9c524492dd50db5282436ccb35c99fb5f08a",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-spec/assets/headless-schemas.md"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/assets/spec-template.md",
+      "baseline_sha256": "94ef029b842dfa7f296dab4ccf830f0b813af9995bf8bbdcdfc0783a60ee5ffe",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-spec/assets/spec-template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/customize.toml",
+      "baseline_sha256": "b0181ba5d4038feb779a7a082a265df753220f868b66b5adb0fb2ed18401c763",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/core-skills/bmad-spec/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/SKILL.md",
+      "baseline_sha256": "9424edfd72d1c3c66971ca48c0b62410ae1ba1d8e1aa43b598d72d9580a3bb94",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/customize.toml",
+      "baseline_sha256": "7f567fddb04674f817398addbc06e6d1620883d89dcc7ac643c5a56eef5ac337",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/customize.toml"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/research.template.md",
+      "baseline_sha256": "507bb6729476246b1ca2fca4693986d286a33af5529b6cd5cb1b0bb5ea9926ce",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/research.template.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-01-init.md",
+      "baseline_sha256": "c9a1627ecd26227e944375eb691e7ee6bc9f5db29a428a5d53e5d6aef8bb9697",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/technical-steps/step-01-init.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-02-technical-overview.md",
+      "baseline_sha256": "9c7582241038b16280cddce86f2943216541275daf0a935dcab78f362904b305",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/technical-steps/step-02-technical-overview.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-03-integration-patterns.md",
+      "baseline_sha256": "005d517a2f962e2172e26b23d10d5e6684c7736c0d3982e27b2e72d905814ad9",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/technical-steps/step-03-integration-patterns.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-04-architectural-patterns.md",
+      "baseline_sha256": "4636f23e9c585a7a0c90437a660609d913f16362c3557fc2e71d408d6b9f46ce",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/technical-steps/step-04-architectural-patterns.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-05-implementation-research.md",
+      "baseline_sha256": "e2b8a2c79bcebadc85f3823145980fa47d7e7be8d1c112f686c6223c8c138608",
+      "action": "untrack",
+      "reason": "official distribution",
+      "source": "BMAD-METHOD",
+      "commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "source_path": "src/bmm-skills/1-analysis/research/bmad-technical-research/technical-steps/step-05-implementation-research.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-06-research-synthesis.md",
+      "baseline_sha256": "3655cae65ed362721eda04ccacd7d6eeefebaae246ffd65b07c82c7bd04ea5dd",
+      "action": "untrack",
+      "reason": "Maintainer-authorized retirement of launcher-only patch; future official installations stay unmodified",
+      "prior_action": "retain",
+      "retirement_group": "retired_windows_launcher_patch",
+      "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855"
+    },
+    {
+      "path": ".agents/skills/gds-agent-game-designer/SKILL.md",
+      "baseline_sha256": "8c897715a3ef8ba165d8ff61409e7f7f913f32453f694779b331fae76f1feca2",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-agent-game-designer/customize.toml",
+      "baseline_sha256": "da5c61b00560271fbb0f545aa54a25f50b88545a0646704cfe893d88fffe62c6",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "bc64332b1841bef31cbcdffbf81de52ecba60c7f",
+      "source_path": "src/agents/gds-agent-game-designer/customize.toml"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/SKILL.md",
+      "baseline_sha256": "2c3d01c584fc88a3a5e9a8280a108d17a5b0f91d9485e660f679860ec78c6450",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types.csv",
+      "baseline_sha256": "a44c04d09432c886a7a5a8112474bd32540d8e84de25b308dca0f96e570651fd",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/action-platformer.md",
+      "baseline_sha256": "f1cbe9e9a52acd01ff120d05ce22fa81b30500933f62a3c6c36642280244057c",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/adventure.md",
+      "baseline_sha256": "06aa57786c2e7ebc7580d501fcdefaabb28933c7b5785d6643bf643f58ae13e7",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/card-game.md",
+      "baseline_sha256": "6b9298ace2607c8e93d64533e6406828053234282e4977e4407faa2e9302fd0a",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/fighting.md",
+      "baseline_sha256": "52e5a142aac496ae7154fc0829bfbce1ef22296f0a464cf8e595aa14ca02eb86",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/horror.md",
+      "baseline_sha256": "7ff7599d5701bb7a8ef0e14f3ba614626cdd0d8960a8e880fc1cd41c5f508f75",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/idle-incremental.md",
+      "baseline_sha256": "515b52bb301e467c1f096cc55abde47159bb0b0d87157b9fa565973b48601ddf",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/metroidvania.md",
+      "baseline_sha256": "2a8c101dda7911d1cd1d9c66d1be86af3725832f5dcc7fab71e95204f45614ea",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/moba.md",
+      "baseline_sha256": "92d0ba9f7508a38d5bfeac1651c6aee8a1a58c54659ad3f0e0d1fd678a1ef498",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/party-game.md",
+      "baseline_sha256": "0cc50b3aede0c45c94cdff743cdac2d8ad67421ea80497a29d2300a1744ea703",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/puzzle.md",
+      "baseline_sha256": "f9c08b6f087bfaa41ea08c9dfa78aa034f5ae46b627b9f476bdf8b4f5c3389ed",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/racing.md",
+      "baseline_sha256": "085ea5d0914d7bc6a233c479d0ad6288a575ad1c8b9a8a85881e779fac0e60fc",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/rhythm.md",
+      "baseline_sha256": "83bbf1761fdc604b8c2b50ed86c5874cce331417e1b3a46c65cb6c4c1a7c8db2",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/roguelike.md",
+      "baseline_sha256": "fb1ebc838011020a6f740e6fb4f2ceb81be8477f9c67bc7ae3a8e34dfe548f00",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/rpg.md",
+      "baseline_sha256": "5aa57ecefb448a0507ee0c8d503b43bd34d0c612ba130240d1af9842b80cba50",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/sandbox.md",
+      "baseline_sha256": "836f656bbaae549f31ac574c0865a61de451c08ab8c561db2c93398e147ece85",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/shooter.md",
+      "baseline_sha256": "2452850295ac2b9fac04ce2d6126bfc19bb7dccbb04c40e7f89c801aecc5555d",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/simulation.md",
+      "baseline_sha256": "fd74a7d21243f8d9827fe6a99263579309bc0aabd9e56261d3dd4eb5cfc75ad5",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/sports.md",
+      "baseline_sha256": "2247ea87dbca74e879f8c686d9e80434618e9e61bd3572739274c1af64cb0bb8",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/strategy.md",
+      "baseline_sha256": "997380919f6c1b408906c364f74e728b9c6b45bf2960d1f0bfe8b0def594735e",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/survival.md",
+      "baseline_sha256": "3647795ee0073a85217633412a41a938e51a553776acbe9ac953fb403e3437f9",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/text-based.md",
+      "baseline_sha256": "5895ca65dc93f676bb33b754f2c6be85d5d9b651df87d8431d404dc9bb736ee7",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/tower-defense.md",
+      "baseline_sha256": "03a2cc577fdd1a183ba04409b01b22f2f38713d28f1278481b0f221858f97ec8",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/turn-based-tactics.md",
+      "baseline_sha256": "30a150d8a0ab746f0c67d414be79e7e421fff1b8b7a1b716e64800df72bdb6c2",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/visual-novel.md",
+      "baseline_sha256": "2d98f4c682f0abbd6330ac1bad04600c596e6b27302adbe9510fc0c0bf53052c",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/SKILL.md",
+      "baseline_sha256": "d551e9af059efd88eeea490ed2e7cd209741eedfcd9ac5bf94c4a6ba13fe2300",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types.csv",
+      "baseline_sha256": "a44c04d09432c886a7a5a8112474bd32540d8e84de25b308dca0f96e570651fd",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types.csv"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/action-platformer.md",
+      "baseline_sha256": "f1cbe9e9a52acd01ff120d05ce22fa81b30500933f62a3c6c36642280244057c",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/action-platformer.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/adventure.md",
+      "baseline_sha256": "06aa57786c2e7ebc7580d501fcdefaabb28933c7b5785d6643bf643f58ae13e7",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/adventure.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/card-game.md",
+      "baseline_sha256": "6b9298ace2607c8e93d64533e6406828053234282e4977e4407faa2e9302fd0a",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/card-game.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/fighting.md",
+      "baseline_sha256": "52e5a142aac496ae7154fc0829bfbce1ef22296f0a464cf8e595aa14ca02eb86",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/fighting.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/horror.md",
+      "baseline_sha256": "7ff7599d5701bb7a8ef0e14f3ba614626cdd0d8960a8e880fc1cd41c5f508f75",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/horror.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/idle-incremental.md",
+      "baseline_sha256": "515b52bb301e467c1f096cc55abde47159bb0b0d87157b9fa565973b48601ddf",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/idle-incremental.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/metroidvania.md",
+      "baseline_sha256": "2a8c101dda7911d1cd1d9c66d1be86af3725832f5dcc7fab71e95204f45614ea",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/metroidvania.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/moba.md",
+      "baseline_sha256": "92d0ba9f7508a38d5bfeac1651c6aee8a1a58c54659ad3f0e0d1fd678a1ef498",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/moba.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/party-game.md",
+      "baseline_sha256": "0cc50b3aede0c45c94cdff743cdac2d8ad67421ea80497a29d2300a1744ea703",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/party-game.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/puzzle.md",
+      "baseline_sha256": "f9c08b6f087bfaa41ea08c9dfa78aa034f5ae46b627b9f476bdf8b4f5c3389ed",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/puzzle.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/racing.md",
+      "baseline_sha256": "085ea5d0914d7bc6a233c479d0ad6288a575ad1c8b9a8a85881e779fac0e60fc",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/racing.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/rhythm.md",
+      "baseline_sha256": "83bbf1761fdc604b8c2b50ed86c5874cce331417e1b3a46c65cb6c4c1a7c8db2",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/rhythm.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/roguelike.md",
+      "baseline_sha256": "fb1ebc838011020a6f740e6fb4f2ceb81be8477f9c67bc7ae3a8e34dfe548f00",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/roguelike.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/rpg.md",
+      "baseline_sha256": "5aa57ecefb448a0507ee0c8d503b43bd34d0c612ba130240d1af9842b80cba50",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/rpg.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/sandbox.md",
+      "baseline_sha256": "836f656bbaae549f31ac574c0865a61de451c08ab8c561db2c93398e147ece85",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/sandbox.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/shooter.md",
+      "baseline_sha256": "2452850295ac2b9fac04ce2d6126bfc19bb7dccbb04c40e7f89c801aecc5555d",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/shooter.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/simulation.md",
+      "baseline_sha256": "fd74a7d21243f8d9827fe6a99263579309bc0aabd9e56261d3dd4eb5cfc75ad5",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/simulation.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/sports.md",
+      "baseline_sha256": "2247ea87dbca74e879f8c686d9e80434618e9e61bd3572739274c1af64cb0bb8",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/sports.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/strategy.md",
+      "baseline_sha256": "997380919f6c1b408906c364f74e728b9c6b45bf2960d1f0bfe8b0def594735e",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/strategy.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/survival.md",
+      "baseline_sha256": "3647795ee0073a85217633412a41a938e51a553776acbe9ac953fb403e3437f9",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/survival.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/text-based.md",
+      "baseline_sha256": "5895ca65dc93f676bb33b754f2c6be85d5d9b651df87d8431d404dc9bb736ee7",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/text-based.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/tower-defense.md",
+      "baseline_sha256": "03a2cc577fdd1a183ba04409b01b22f2f38713d28f1278481b0f221858f97ec8",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/tower-defense.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/turn-based-tactics.md",
+      "baseline_sha256": "30a150d8a0ab746f0c67d414be79e7e421fff1b8b7a1b716e64800df72bdb6c2",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/turn-based-tactics.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/visual-novel.md",
+      "baseline_sha256": "2d98f4c682f0abbd6330ac1bad04600c596e6b27302adbe9510fc0c0bf53052c",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/game-types/visual-novel.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/gdd-template.md",
+      "baseline_sha256": "070ccbb7f491dc1b1d126245c2e4db4a55dbc5a7ee6a6df4be521ca70e3c9ea6",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/gdd-template.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/gdd-validation-checklist.md",
+      "baseline_sha256": "d54f803a44a158259487d619cc542c4de311dd213c079d6cdce7ddfb20c4aa0b",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/gdd-validation-checklist.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/genre-complexity.csv",
+      "baseline_sha256": "eecea9633da780aab181f8e439bd5229be4794f26d5ccab7c433ee4865eee1f5",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/genre-complexity.csv"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/headless-schemas.md",
+      "baseline_sha256": "71b52f33a1fd1d1a003221ad5eda56146f09cff8e1bbd2afcbc321042c2fa0b5",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/headless-schemas.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/validation-report-template.html",
+      "baseline_sha256": "c0a5b68ef9352f7c9929ccdb0b06621e421cbf0f2d8d54f3feb3bd84f37e7925",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/assets/validation-report-template.html"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/customize.toml",
+      "baseline_sha256": "ffd23ab5fea8c512d988127007fa365545be560e6f9571eea3d05e495d40c177",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "bc64332b1841bef31cbcdffbf81de52ecba60c7f",
+      "source_path": "src/workflows/2-design/gds-gdd/customize.toml"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/facilitation-guide.md",
+      "baseline_sha256": "2768ba0f624c0cc3ffb410eb57eb56a3919852248d7d7afd07cb66368f4e2aef",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/references/facilitation-guide.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/gdd-purpose.md",
+      "baseline_sha256": "a46b9801158f2acbccd0784b8924438c7720799d18bd7c65f62f8a37cd4cb5ac",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/references/gdd-purpose.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/headless.md",
+      "baseline_sha256": "20d1c915efcf40d98197f96f9ff6cbda1f586110605a53246f8953842ffee404",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/references/headless.md"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/validation-render.md",
+      "baseline_sha256": "c7816e410e1e980bdc5d1dd157f2d146c82df39c5a16fbe8bceb1930fa4d0f5b",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/scripts/render-validation-html.py",
+      "baseline_sha256": "f723253b15798fed70bd047985671049fd176836d7381904c34dab6ac40d8150",
+      "action": "untrack",
+      "reason": "official GDS distribution",
+      "source": "bmad-module-game-dev-studio",
+      "commit": "2486f5f5f3b8870baa6cee4615a870c0330f441c",
+      "source_path": "src/workflows/2-design/gds-gdd/scripts/render-validation-html.py"
+    }
+  ],
+  "current_disposition": {
+    "decision_base": "fbd94e5145442cfb9490057252f08aaebd9fe855",
+    "source_proven_untracked": 129,
+    "additional_authorized_retirements": 49,
+    "game_related": 30,
+    "stock_quick_dev": 6,
+    "remaining_tracked_launcher_files": 0,
+    "retired_launcher_files": 13,
+    "total_untracked": 178
+  }
+}

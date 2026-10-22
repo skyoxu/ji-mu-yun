@@ -63,7 +63,7 @@ RPG/JRPG 现在是 capability-driven：默认只保留 opening context、field n
 
 ## BMAD/GDS 24 Upstream Types Plus 1 Repository Extension
 
-BMAD/GDS game-type templates are design semantics, not Phase A executable routes. The runtime catalog first reads `docs/game-type-guides/game-types.csv` and `docs/game-type-guides/<game-type>.md`; if those repository guides are missing, it falls back to canonical `.agents/skills/gds-gdd/assets/game-types.csv` and matching fragments, then to the legacy `.agents/skills/gds-create-gdd/game-types*` compatibility mirror.
+BMAD/GDS game-type templates are design semantics, not Phase A executable routes. The runtime catalog reads all present catalogs from `docs/game-type-guides`, canonical `.agents/skills/gds-gdd/assets`, and legacy `.agents/skills/gds-create-gdd`. It merges entries with docs preference and retains source entries for content fingerprints; this is not a missing-only fallback. The canonical installation and retired compatibility mirror are absent from a clean clone. Repository guides remain tracked. Old designer/GDS capabilities are intentionally deferred to the future sandbox rebuild; this does not disable existing Phase registrations automatically. See [installation and retirement limits](bmad-native-wrappers.md#untracking-inventory-and-retained-customization).
 
 Use boundaries:
 

@@ -60,7 +60,7 @@ def contained_path(root: Path, raw_path: object, label: str) -> Path:
 
 
 def _canonical_package_module(root: Path):
-    path = root / ".agents/skills/bmad-spec/scripts/canonical_package.py"
+    path = root / ".agents/skills/jimuyun-spec/scripts/canonical_package.py"
     spec = importlib.util.spec_from_file_location("vdd_canonical_package", path)
     if spec is None or spec.loader is None:
         raise ValueError("canonical package validator is unavailable")

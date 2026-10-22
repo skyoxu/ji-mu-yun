@@ -1,0 +1,1 @@
+A single-user offline desktop notes prototype. Users create a named plain-text note, edit its text, close the app and reopen the saved note. Empty titles are rejected without saving. A failed save reports failure and retains unsaved edits so the user can retry. No accounts, network sync, attachments, sharing or billing.

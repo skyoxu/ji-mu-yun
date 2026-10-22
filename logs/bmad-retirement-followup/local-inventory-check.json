@@ -1,0 +1,14 @@
+{
+  "base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670",
+  "additional_untracked": 36,
+  "games": 30,
+  "stock_quick_dev": 6,
+  "retained_launcher_only": 13,
+  "total_untracked_candidates": 165,
+  "all_retired_local_bytes_preserved": true,
+  "exact_ignore_coverage": true,
+  "independent_tdd_vdd_and_gds_tests_retained": true,
+  "phase_registrations_and_runtime_unchanged": true,
+  "historical_evidence_untouched": true,
+  "native_lock_files_verified": 16
+}

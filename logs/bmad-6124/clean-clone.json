@@ -1,0 +1,186 @@
+{
+  "code_commit": "7a8cdaf160355b61ba1087c0147735a3c72aaecc",
+  "clone_mode": "actual local Git clone using shared object store; clean tracked checkout, no installed native bytes copied",
+  "checks": "missing fails before writes; explicit official installation; verify; clean status; no official files tracked",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "clone",
+        "--shared",
+        "--no-checkout",
+        "--branch",
+        "refactor/bmad-6-native-wrappers",
+        "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-final",
+        "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-final",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "Cloning into '/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone'...\ndone.\n"
+    },
+    {
+      "argv": [
+        "git",
+        "sparse-checkout",
+        "init",
+        "--cone"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "sparse-checkout",
+        "set",
+        ".agents",
+        "scripts",
+        "docs",
+        "knowledge",
+        "tests",
+        "_bmad"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "checkout",
+        "refactor/bmad-6-native-wrappers"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "Your branch is up to date with 'origin/refactor/bmad-6-native-wrappers'.\n",
+      "stderr": "error: invalid object 100644 d9eacc0cea938781b59e6ccdac34ca74ad0412d8 for '.claude/agents/README.md'\nerror: invalid object 100644 d9eacc0cea938781b59e6ccdac34ca74ad0412d8 for '.claude/agents/README.md'\nAlready on 'refactor/bmad-6-native-wrappers'\n"
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "7a8cdaf160355b61ba1087c0147735a3c72aaecc\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        ".agents/skills/jimuyun-spec/scripts/bridge.py",
+        "prepare",
+        "--repo-root",
+        ".",
+        "--spec",
+        "_bmad-output/specs/spec-test/SPEC.md",
+        "--package-id",
+        "SPEC-test",
+        "--run",
+        "logs/bmad-wrappers/missing"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 2,
+      "stdout": "{\"ok\": false, \"error\": \"NATIVE_INSTALLATION_MISSING\", \"message\": \"Project-local BMAD is missing. Install official BMAD 6.12.4 for these wrappers; a global CLI is not a project installation.\", \"supported_version\": \"6.12.4\", \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        ".agents/skills/jimuyun-architecture/scripts/invoke.py",
+        "prepare",
+        "--repo-root",
+        ".",
+        "--run",
+        "logs/bmad-wrappers/missing"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 2,
+      "stdout": "{\"ok\": false, \"error\": \"NATIVE_INSTALLATION_MISSING\", \"message\": \"Project-local BMAD is missing. Install official BMAD 6.12.4 for these wrappers; a global CLI is not a project installation.\", \"supported_version\": \"6.12.4\", \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "-m",
+        "scripts.toolchain.bmad_native",
+        "install-from-source",
+        "--source-root",
+        "/workspace/scratch/6e089e29b8e4/bmad-upstream-6.12.4"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "{\"ok\": true, \"version\": \"6.12.4\", \"source_commit\": \"bab9082c3e884e0d72c759bcd1a6d90bcc01be84\", \"backup\": null, \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "-m",
+        "scripts.toolchain.bmad_native",
+        "verify"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "{\"ok\": true, \"version\": \"6.12.4\", \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-files",
+        ".agents/skills/bmad-spec",
+        ".agents/skills/bmad-architecture",
+        "_bmad/scripts"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "check-ignore",
+        ".agents/skills/bmad-spec/SKILL.md",
+        ".agents/skills/bmad-spec/assets/stories-schema.md",
+        "_bmad/scripts/config_utils.py"
+      ],
+      "cwd": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-6124-clean-clone",
+      "exit_code": 0,
+      "stdout": ".agents/skills/bmad-spec/SKILL.md\n.agents/skills/bmad-spec/assets/stories-schema.md\n_bmad/scripts/config_utils.py\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -21,6 +21,7 @@ This file indexes the current `docs/workflows/` root documents and records how t
 
 | File | Created | Modified | Main Content | Unfinished Work |
 | --- | --- | --- | --- | --- |
+| `bmad-native-wrappers.md` | `2026-10-22` | `2026-10-22` | Untracked native BMAD 6.12.4, repository SPEC/architecture adapters, explicit installation and historical replay. | Native Windows verification remains external to the Linux Work run. |
 | `acceptance-check-and-llm-review.md` | `2025-12-20 18:03:39` | `2026-02-22 16:29:51` | Acceptance gate and optional LLM review responsibilities, usage, and stop-loss boundaries. | No explicit unfinished work. |
 | `acceptance-semantics-methodology.md` | `2026-01-07 12:12:59` | `2026-02-22 16:29:51` | Acceptance semantics governance: obligations, refs, anchors, evidence chains, and weak-clause rules. | No explicit unfinished work. |
 | `build_taskmaster_tasks.md` | `2025-12-20 01:00:55` | `2025-12-20 19:24:44` | Taskmaster task construction, dependency closure, and tag handling. | No explicit unfinished work. |

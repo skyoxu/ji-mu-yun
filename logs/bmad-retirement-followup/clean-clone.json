@@ -1,0 +1,60 @@
+{
+  "clone_kind": "new local shared-object sparse clone; no ignored source files copied",
+  "code_commit": "8b5dcec074791f55995340d93d0950c2f5816358",
+  "retired_files_absent": 36,
+  "retained_launchers_present": 13,
+  "gds_tests_preserved": true,
+  "independent_tdd_and_wrappers_preserved": true,
+  "scope": "targeted checkout/install verification; not a full non-sparse clone or GDS acceptance run",
+  "checkout_warning": "Initial sparse setup reported one unavailable out-of-scope .claude/agents/README.md object in the source partial clone; final checkout/status and relevant files verified.",
+  "steps": [
+    {
+      "command": [
+        "python",
+        "-B",
+        "-m",
+        "scripts.toolchain.bmad_native",
+        "verify"
+      ],
+      "returncode": 2,
+      "stdout": "{\"ok\": false, \"error\": \"NATIVE_INSTALLATION_MISSING\", \"message\": \"Project-local BMAD is missing. Install official BMAD 6.12.4 for these wrappers; a global CLI is not a project installation.\", \"supported_version\": \"6.12.4\", \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "-B",
+        "-m",
+        "scripts.toolchain.bmad_native",
+        "install-from-source",
+        "--source-root",
+        "/workspace/scratch/6e089e29b8e4/bmad-upstream-6.12.4"
+      ],
+      "returncode": 0,
+      "stdout": "{\"ok\": true, \"version\": \"6.12.4\", \"source_commit\": \"bab9082c3e884e0d72c759bcd1a6d90bcc01be84\", \"backup\": null, \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "-B",
+        "-m",
+        "scripts.toolchain.bmad_native",
+        "verify"
+      ],
+      "returncode": 0,
+      "stdout": "{\"ok\": true, \"version\": \"6.12.4\", \"authorizes\": []}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

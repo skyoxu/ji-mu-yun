@@ -1,0 +1,43 @@
+{
+  "schema_version": "vdd-source-freeze-manifest.v1",
+  "run_id": "6124-native-spec-consumer",
+  "target_root": "execution-plans/sample-consumer",
+  "package_root": "_bmad-output/specs/spec-local-notes",
+  "selection_hash": "sha256:c50b06350b8f545edaddbbd0a952e46563300fb873ccd9009997b1df83e7ddaf",
+  "selection_record_path": "_bmad-output/specs/canonical-spec-package-selections/sha256-c50b06350b8f545edaddbbd0a952e46563300fb873ccd9009997b1df83e7ddaf.json",
+  "selection_pointer_path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-local-notes.json",
+  "sources": [
+    {
+      "path": "_bmad-output/specs/spec-local-notes/SPEC.md",
+      "role": "canonical",
+      "sha256": "sha256:a24f628bd63a5669c35c23c0e4a2ba78e0d6ef94a0f487c1ce416d1290d8ad84",
+      "relationship": "canonical_package_root"
+    },
+    {
+      "path": "docs/intent.md",
+      "role": "provenance",
+      "sha256": "sha256:d1c3c385837f5d2d4134c381aa42e547fb5a89bd9d4459a58b08c4b642bf01e7",
+      "relationship": "package_provenance"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:77d62e7d72e852fb780fa98cf5922b531bc39a73158b95b862fbf3305e375fa8",
+      "relationship": "applicable_repository_rule",
+      "role": "repository_authority"
+    }
+  ],
+  "repository_rules": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "sha256:77d62e7d72e852fb780fa98cf5922b531bc39a73158b95b862fbf3305e375fa8",
+      "relationship": "applicable_repository_rule"
+    }
+  ],
+  "knowledge_bindings": [],
+  "unresolved_inputs": [],
+  "repair_input": null,
+  "repair_lineage_successor": null,
+  "requirements_manifest": null,
+  "authorizes": [],
+  "canonical_hash": "sha256:2a46bda3d51e3c6bea94f22f988144e714fe4121cac4ead778b90e17fbd2b62c"
+}

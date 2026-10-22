@@ -17,7 +17,7 @@ def load(name: str, relative: str):
 
 class CoreConsumerMigrationTests(unittest.TestCase):
     def test_bmad_spec_uses_the_shared_canonical_primitive(self):
-        module = load("canonical_package", ".agents/skills/bmad-spec/scripts/canonical_package.py")
+        module = load("canonical_package", ".agents/skills/jimuyun-spec/scripts/canonical_package.py")
         self.assertIs(canonical_bytes, module.canonical_bytes)
         self.assertEqual(
             domain_hash("jimuyun.canonical-spec-package.descriptor.v1", {"id": "x"}),

@@ -1,0 +1,20 @@
+{
+  "status": "partial",
+  "intent": "create",
+  "altitude": "feature",
+  "purpose": "build-substrate",
+  "doc_workspace": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-final/logs/bmad-6124/architecture-project/logs/bmad-wrappers/create/native/_bmad-output/architecture",
+  "spine": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-final/logs/bmad-6124/architecture-project/logs/bmad-wrappers/create/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md",
+  "memlog": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-final/logs/bmad-6124/architecture-project/logs/bmad-wrappers/create/native/_bmad-output/architecture/.memlog.md",
+  "companions": [],
+  "assumptions": [
+    "AD-2 semantic shared snapshot contract is proposed; concrete representation requires existing code.",
+    "AD-4 one in-flight attempt and edit-retention policy is proposed, not observed."
+  ],
+  "open_questions": [
+    "Bind the concrete shared note identity, title, editable fields and error representation before independent implementation.",
+    "Confirm actual local-file durability, persistence confirmation and old-note preservation guarantees; crash/power-loss behavior is unverified.",
+    "Confirm the proposed one-in-flight attempt and edit-retention policy against existing UI behavior."
+  ],
+  "conflicts_with_prior_decisions": []
+}

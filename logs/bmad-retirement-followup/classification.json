@@ -1,0 +1,706 @@
+{
+  "base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670",
+  "windows": [
+    {
+      "path": ".agents/skills/bmad-advanced-elicitation/SKILL.md",
+      "old_source": "src/core-skills/bmad-advanced-elicitation/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -41 +41 @@\n",
+        "-python3 {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key agents",
+        "+py -3 {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key agents"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/core-skills/bmad-advanced-elicitation/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 17,
+          "text": "1. Resolve customization: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow`. On failure, read `{skill-root}/customize.toml` directly and use defaults."
+        },
+        {
+          "line": 25,
+          "text": "uv run {skill-root}/scripts/pick_methods.py --file {workflow.methods_file} <command>"
+        },
+        {
+          "line": 64,
+          "text": "When a method casts personas (round tables, panels, debates), reuse party members already in the session if party mode is active; otherwise resolve installed agents on demand via `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root} --key agents` (a four-layer merge of `_bmad/config.toml`, `config.user.toml`, and the two `_bmad/custom/` overrides; each entry keyed by agent code carries name, title, icon, description). If neither yields a fit, invent named viewpoints suited to the content."
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/SKILL.md",
+      "old_source": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -52 +52 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`"
+      ],
+      "v6_12_4_same_path_source": [],
+      "v6_12_4_relevant_lines": []
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "old_source": "src/bmm-skills/3-solutioning/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -130 +130 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`"
+      ],
+      "v6_12_4_same_path_source": [],
+      "v6_12_4_relevant_lines": []
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/SKILL.md",
+      "old_source": "src/bmm-skills/4-implementation/bmad-code-review/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -26 +26 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/ship/bmad-code-review/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 24,
+          "text": "Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow`"
+        },
+        {
+          "line": 44,
+          "text": "Run `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root}` and resolve:"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-04-present.md",
+      "old_source": "src/bmm-skills/4-implementation/bmad-code-review/steps/step-04-present.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -130 +130 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/ship/bmad-code-review/steps/step-04-present.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 132,
+          "text": "Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow.on_complete`"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/SKILL.md",
+      "old_source": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -54 +54 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/plan/bmad-create-epics-and-stories/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 54,
+          "text": "Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow`"
+        },
+        {
+          "line": 74,
+          "text": "Run `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root}` and use:"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-04-final-validation.md",
+      "old_source": "src/bmm-skills/3-solutioning/bmad-create-epics-and-stories/steps/step-04-final-validation.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -141 +141 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/plan/bmad-create-epics-and-stories/steps/step-04-final-validation.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 139,
+          "text": "Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow.on_complete`"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/SKILL.md",
+      "old_source": "src/bmm-skills/4-implementation/bmad-create-story/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -33 +33 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "@@ -429 +429 @@\n",
+        "-  <action>Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` \u2014 if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>",
+        "+  <action>Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` \u2014 if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/v6-shims/bmad-create-story/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 3,
+          "text": "description: \"Deprecated: `bmad-build` is now the official implementation method. Only use this when explicitly invoked by name\""
+        },
+        {
+          "line": 35,
+          "text": "Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow`"
+        },
+        {
+          "line": 55,
+          "text": "Run `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root}` and resolve:"
+        },
+        {
+          "line": 67,
+          "text": "<output>Deprecated: `bmad-build` is now the official implementation method. Only use this when explicitly invoked by name.</output>"
+        },
+        {
+          "line": 433,
+          "text": "  <action>Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow.on_complete` \u2014 if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/SKILL.md",
+      "old_source": "src/bmm-skills/4-implementation/bmad-dev-auto/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -28 +28 @@\n",
+        "-3. Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`",
+        "+3. Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`",
+        "@@ -60 +60 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/v6-shims/bmad-dev-auto/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 3,
+          "text": "description: \"Deprecated: forwards to bmad-build-auto. Do not use unless invoked by name\""
+        },
+        {
+          "line": 8,
+          "text": "# Deprecated Build Auto Alias"
+        },
+        {
+          "line": 15,
+          "text": "2. If neither legacy file exists, output exactly `bmad-dev-auto is deprecated. Redirecting to bmad-build-auto. Please use bmad-build-auto in the future.`, invoke `bmad-build-auto` exactly once with the user's original input verbatim, then execute no further steps in this shim."
+        },
+        {
+          "line": 19,
+          "text": "4. If the matching new file does not exist, tell the user that the customization file uses the deprecated name and offer to rename it. Rename it only after explicit approval. If approval is declined or unavailable, or the rename fails, HALT and do not invoke any skill."
+        },
+        {
+          "line": 21,
+          "text": "6. After every detected legacy file has been migrated successfully and no legacy file remains, output exactly `bmad-dev-auto is deprecated. Redirecting to bmad-build-auto. Please use bmad-build-auto in the future.`, invoke `bmad-build-auto` exactly once with the user's original input verbatim, then execute no further steps in this shim."
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/SKILL.md",
+      "old_source": "src/bmm-skills/4-implementation/bmad-dev-story/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -30 +30 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "@@ -497 +497 @@\n",
+        "-  <action>Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` \u2014 if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>",
+        "+  <action>Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete` \u2014 if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/v6-shims/bmad-dev-story/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 3,
+          "text": "description: \"Deprecated: `bmad-build` is now the official implementation method. Only use this when explicitly invoked by name\""
+        },
+        {
+          "line": 32,
+          "text": "Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow`"
+        },
+        {
+          "line": 52,
+          "text": "Run `uv run {project-root}/_bmad/scripts/resolve_config.py --project-root {project-root}` and resolve:"
+        },
+        {
+          "line": 65,
+          "text": "<output>Deprecated: `bmad-build` is now the official implementation method. Only use this when explicitly invoked by name.</output>"
+        },
+        {
+          "line": 501,
+          "text": "  <action>Run: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow.on_complete` \u2014 if the resolved value is non-empty, follow it as the final terminal instruction before exiting.</action>"
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-prd/references/validate.md",
+      "old_source": "src/bmm-skills/2-plan-workflows/bmad-prd/references/validate.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -46 +46 @@\n",
+        "-   python3 -c \"import webbrowser, pathlib; webbrowser.open(pathlib.Path('{doc_workspace}/validation-report.html').resolve().as_uri())\"",
+        "+   py -3 -c \"import webbrowser, pathlib; webbrowser.open(pathlib.Path('{doc_workspace}/validation-report.html').resolve().as_uri())\""
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/plan/bmad-prd/references/validate.md"
+      ],
+      "v6_12_4_relevant_lines": []
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/SKILL.md",
+      "old_source": "src/bmm-skills/1-analysis/research/bmad-technical-research/SKILL.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -27 +27 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow`"
+      ],
+      "v6_12_4_same_path_source": [
+        "src/bmm-skills/v6-shims/bmad-technical-research/SKILL.md"
+      ],
+      "v6_12_4_relevant_lines": [
+        {
+          "line": 3,
+          "text": "description: 'Deprecated \u2014 forwards to bmad-deep-recon (technical type)'"
+        },
+        {
+          "line": 14,
+          "text": "1. Resolve customization: `uv run {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --project-root {project-root} --key workflow`. This picks up any `{project-root}/_bmad/custom/bmad-technical-research.toml` and `bmad-technical-research.user.toml` overrides for the legacy fields (`activation_steps_prepend`, `activation_steps_append`, `persistent_facts`, `on_complete`)."
+        },
+        {
+          "line": 15,
+          "text": "2. Emit a deprecation notice to the user (in their configured communication language): `bmad-technical-research` is deprecated and forwards to `bmad-deep-recon` with the technical type. To silence this notice and access the full new surface (draft/process/run modes, research types, verification levels, HTML briefing, handoffs), migrate `_bmad/custom/bmad-technical-research.toml` to `_bmad/custom/bmad-deep-recon.toml` and invoke `bmad-deep-recon` directly."
+        }
+      ]
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-06-research-synthesis.md",
+      "old_source": "src/bmm-skills/1-analysis/research/bmad-technical-research/technical-steps/step-06-research-synthesis.md",
+      "old_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+      "only_change": "python3 -> py -3",
+      "other_content_changes": false,
+      "diff": [
+        "--- \n",
+        "+++ \n",
+        "@@ -489 +489 @@\n",
+        "-Run: `python3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`",
+        "+Run: `py -3 {project-root}/_bmad/scripts/resolve_customization.py --skill {skill-root} --key workflow.on_complete`"
+      ],
+      "v6_12_4_same_path_source": [],
+      "v6_12_4_relevant_lines": []
+    }
+  ],
+  "retirements": [
+    {
+      "path": ".agents/skills/bmad-agent-game-designer/SKILL.md",
+      "baseline_sha256": "d14acf1f30961e20929c85411986d367ff7d8ad9d5a4bb5e8074b8e98938d855",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "baseline_sha256": "26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/_schema_runtime.py",
+      "baseline_sha256": "2cdcc28388c4b92529e4db7fd1bd7335d5212386054edef7e4bb323f7f1a90d5",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "baseline_sha256": "5e02e02d80fe9539a8b754ba7134c7dad6e74973991ee7fe330b510c7ee2cae4",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-05-present.md",
+      "baseline_sha256": "235f80431704dc89142d759847aa0f9875d5bf76aaa7f308472524fdf215ae18",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-oneshot.md",
+      "baseline_sha256": "4a52d263134d6dde777c7fcd9a78063319f7255f763b75182a8d855e7d6fd02f",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "baseline_sha256": "fb447809c6fdca93d75d5c539c0c71f97a027431080a56043d92c3c9c3c2a9e9",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "retired_stock_quick_dev",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-agent-game-designer/SKILL.md",
+      "baseline_sha256": "8c897715a3ef8ba165d8ff61409e7f7f913f32453f694779b331fae76f1feca2",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/SKILL.md",
+      "baseline_sha256": "2c3d01c584fc88a3a5e9a8280a108d17a5b0f91d9485e660f679860ec78c6450",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types.csv",
+      "baseline_sha256": "a44c04d09432c886a7a5a8112474bd32540d8e84de25b308dca0f96e570651fd",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/action-platformer.md",
+      "baseline_sha256": "f1cbe9e9a52acd01ff120d05ce22fa81b30500933f62a3c6c36642280244057c",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/adventure.md",
+      "baseline_sha256": "06aa57786c2e7ebc7580d501fcdefaabb28933c7b5785d6643bf643f58ae13e7",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/card-game.md",
+      "baseline_sha256": "6b9298ace2607c8e93d64533e6406828053234282e4977e4407faa2e9302fd0a",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/fighting.md",
+      "baseline_sha256": "52e5a142aac496ae7154fc0829bfbce1ef22296f0a464cf8e595aa14ca02eb86",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/horror.md",
+      "baseline_sha256": "7ff7599d5701bb7a8ef0e14f3ba614626cdd0d8960a8e880fc1cd41c5f508f75",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/idle-incremental.md",
+      "baseline_sha256": "515b52bb301e467c1f096cc55abde47159bb0b0d87157b9fa565973b48601ddf",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/metroidvania.md",
+      "baseline_sha256": "2a8c101dda7911d1cd1d9c66d1be86af3725832f5dcc7fab71e95204f45614ea",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/moba.md",
+      "baseline_sha256": "92d0ba9f7508a38d5bfeac1651c6aee8a1a58c54659ad3f0e0d1fd678a1ef498",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/party-game.md",
+      "baseline_sha256": "0cc50b3aede0c45c94cdff743cdac2d8ad67421ea80497a29d2300a1744ea703",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/puzzle.md",
+      "baseline_sha256": "f9c08b6f087bfaa41ea08c9dfa78aa034f5ae46b627b9f476bdf8b4f5c3389ed",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/racing.md",
+      "baseline_sha256": "085ea5d0914d7bc6a233c479d0ad6288a575ad1c8b9a8a85881e779fac0e60fc",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/rhythm.md",
+      "baseline_sha256": "83bbf1761fdc604b8c2b50ed86c5874cce331417e1b3a46c65cb6c4c1a7c8db2",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/roguelike.md",
+      "baseline_sha256": "fb1ebc838011020a6f740e6fb4f2ceb81be8477f9c67bc7ae3a8e34dfe548f00",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/rpg.md",
+      "baseline_sha256": "5aa57ecefb448a0507ee0c8d503b43bd34d0c612ba130240d1af9842b80cba50",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/sandbox.md",
+      "baseline_sha256": "836f656bbaae549f31ac574c0865a61de451c08ab8c561db2c93398e147ece85",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/shooter.md",
+      "baseline_sha256": "2452850295ac2b9fac04ce2d6126bfc19bb7dccbb04c40e7f89c801aecc5555d",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/simulation.md",
+      "baseline_sha256": "fd74a7d21243f8d9827fe6a99263579309bc0aabd9e56261d3dd4eb5cfc75ad5",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/sports.md",
+      "baseline_sha256": "2247ea87dbca74e879f8c686d9e80434618e9e61bd3572739274c1af64cb0bb8",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/strategy.md",
+      "baseline_sha256": "997380919f6c1b408906c364f74e728b9c6b45bf2960d1f0bfe8b0def594735e",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/survival.md",
+      "baseline_sha256": "3647795ee0073a85217633412a41a938e51a553776acbe9ac953fb403e3437f9",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/text-based.md",
+      "baseline_sha256": "5895ca65dc93f676bb33b754f2c6be85d5d9b651df87d8431d404dc9bb736ee7",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/tower-defense.md",
+      "baseline_sha256": "03a2cc577fdd1a183ba04409b01b22f2f38713d28f1278481b0f221858f97ec8",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/turn-based-tactics.md",
+      "baseline_sha256": "30a150d8a0ab746f0c67d414be79e7e421fff1b8b7a1b716e64800df72bdb6c2",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/visual-novel.md",
+      "baseline_sha256": "2d98f4c682f0abbd6330ac1bad04600c596e6b27302adbe9510fc0c0bf53052c",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/SKILL.md",
+      "baseline_sha256": "d551e9af059efd88eeea490ed2e7cd209741eedfcd9ac5bf94c4a6ba13fe2300",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/validation-render.md",
+      "baseline_sha256": "c7816e410e1e980bdc5d1dd157f2d146c82df39c5a16fbe8bceb1930fa4d0f5b",
+      "action": "untrack",
+      "reason": "maintainer-authorized retirement; preserve local bytes and historical evidence",
+      "prior_action": "retain",
+      "retirement_group": "deferred_game_sandbox_capability",
+      "decision_base": "1a2684dc42cb63d1a4f575ee5e66047fd26d5670"
+    }
+  ],
+  "quick_dev_dependency_decision": {
+    "active_phase_runtime_and_ci_callers_found": false,
+    "phase_runtime_ci_source_files_searched": 318,
+    "active_toolchain_callers_found": false,
+    "manual_recommendation": "knowledge/toolchain-workflow-index.md:65; remove obsolete recommendation without migrating routing",
+    "dedicated_test": "bmad-quick-dev/tests/test_quick_dev_input_router.py imports its own router only",
+    "negative_caller_test": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py:332 invokes route_plan_directory.py with a rejected caller string, not the retired Skill",
+    "exclusivity_labels": "run-phase-bootstrap-review scripts/profile references are exclusion labels, not execution",
+    "current_runtime": "scripts/quick_dev/run.py:12-13 -> quick-dev-tdd-adapter/tools/stable_runner.py; unchanged",
+    "historical_references": "frozen plans, command registries, receipts and knowledge generations remain untouched"
+  },
+  "game_impact": {
+    "active_alias_calls": [
+      "PhaseA.Platform/Skills/SkillActionCatalog.cs:9",
+      "PhaseA.Platform/Runs/GameDesignDocumentService.cs:1376"
+    ],
+    "mirror_loader": "PhaseA.Platform/Prototypes/BmadGameTypeDesignCatalog.cs:33-107 reads all present catalogs and records source entries",
+    "source_guard_consumer": "PhaseA.Platform/Runs/GameDesignDocumentService.cs:2095-2117",
+    "tests_retained": "scripts/python/tests/test_game_type_guides_module_matrix.py:122,136,166,197 require canonical assets/mirror/aliases; not removed or weakened",
+    "authorization": "Old game capabilities may be unavailable in clean clones pending future sandbox rebuild. No registration, service route or contract rewritten."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bmad-spec": {
+    "files": 4,
+    "git_tree": "ed1f7c24d848d493ac131064392e8ef7cc86615e",
+    "full_byte_inventory_matches_official_v610": true
+  },
+  "bmad-architecture": {
+    "files": 7,
+    "git_tree": "402b1adbc4aee309b8fcfe14d56055c5d3990a78",
+    "full_byte_inventory_matches_official_v610": true
+  }
+}
