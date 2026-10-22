@@ -1,0 +1,18 @@
+{
+  "authorizes": [],
+  "automatic_publication_allowed": false,
+  "failure_code": "catalog_invalid",
+  "next_action": "knowledge-context-repair-required",
+  "request_sha256": "sha256:3700590ea4768736b249af51199348fd7d04fb6188e12b548013ae18a43f2784",
+  "requires_explicit_maintainer_confirmation": false,
+  "result_sha256": "sha256:b82e29dea4d40e6657ad40d6638bff5c1fc9fd764d5b44452acca9bda105f857",
+  "route_output": "execution-plans/2026-08-06-skill-authoring-standard/knowledge-context-routes/eb335d41e1cee0bca3b8de053b7b3e87f911af309e322f4d40b0e2a197335d29.json",
+  "route_sha256": "sha256:2d76fdec0933dfccc20c2a016154f51163b054d7e131e0f8c56a0c38f2a31f08",
+  "schema_version": "jimuyun.acceptance-knowledge-maintenance-route.v1",
+  "snapshot": {
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+    "ref": "refs/heads/main"
+  },
+  "status": "blocked",
+  "target_plan": "execution-plans/2026-08-06-skill-authoring-standard"
+}
