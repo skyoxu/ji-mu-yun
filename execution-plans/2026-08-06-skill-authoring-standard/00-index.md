@@ -3,8 +3,10 @@
 Current VDD state: **plan-ready**, native compiler publication for the complete
 Package A scope. The prior native Quick Dev run completed all 31 slices and
 published implementation-complete/pass. ADR-0062 and standard version 1.0 were
-formally adopted by the maintainer on 2026-10-22. Current-runtime evidence refresh
-and formal Acceptance are in progress; see the current handoff for exact proof.
+formally adopted by the maintainer on 2026-10-22. Current-runtime evidence refresh is complete: 31 slices and 578 closure tuples
+passed native Q7/Q8 and Acceptance handoff readback on 2026-10-22. Formal
+Acceptance is owned by [the current pointer](acceptance-current.v1.json); its
+absence or a non-passed result is not acceptance-passed.
 
 - Branch: `fix/08-06-skill-authoring-plan-refresh`.
 - Current plan: `package-a-completion-plan/semantic-plan-bundle.v1.json`.
