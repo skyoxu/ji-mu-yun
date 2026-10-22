@@ -91,15 +91,18 @@ def _dependency_diagnostics(package, contract, repository_root=None, policy_reco
             authority=_read_object(authority_path)
             if authority.get('id')!=identity or not isinstance(authority.get('version'),str) or not authority['version']:
                 raise ValueError('Unresolved authority')
-        except (OSError,ValueError,TypeError,RuntimeError,UnicodeError):
+        except FileNotFoundError:
             if not (record.get('required') is False and fallback_ok):emit('DEPENDENCY_UNRESOLVED_AUTHORITY',pointer+'/authority',identity)
+            continue
+        except (OSError,ValueError,TypeError,RuntimeError,UnicodeError):
+            emit('DEPENDENCY_UNRESOLVED_AUTHORITY',pointer+'/authority',identity)
             continue
         requested=record.get('version',authority['version'])
         if not isinstance(requested,str) or requested!=authority['version'] or (identity in policy_versions and requested!=policy_versions[identity]):
             emit('DEPENDENCY_VERSION_CONFLICT',pointer+'/version',identity)
         if policy_owned:policy_versions[identity]=authority['version']
     for entry_index,entry in enumerate(entries):
-        if not isinstance(entry,dict) or not isinstance(entry.get('dependencies',[]),list):
+        if not isinstance(entry,dict) or not isinstance(entry.get('dependencies'),list):
             emit('DEPENDENCY_INVALID_RECORD','/entrypoints/'+str(entry_index));continue
         for dep_index,identity in enumerate(entry.get('dependencies',[])):
             if not isinstance(identity,str) or identity not in by_id:
@@ -343,7 +346,10 @@ def _schema_preflight(schema, root=None, depth=0, visiting=()):
     if 'pattern' in schema:
         if not isinstance(schema['pattern'],str) or len(schema['pattern'])>256:
             raise ValueError('Invalid schema pattern')
-        re.compile(schema['pattern'])
+        try:
+            re.compile(schema['pattern'])
+        except re.error as exc:
+            raise ValueError('Invalid schema pattern') from exc
     for key in ('properties','$defs'):
         if key in schema:
             if not isinstance(schema[key],dict):raise ValueError('Invalid schema map')
@@ -465,7 +471,7 @@ def _frontmatter(text, allowed):
         elif value.startswith('"'):
             value=json.loads(value)
         elif value.startswith("'"):
-            if not value.endswith("'"):raise ValueError('Malformed quoted value')
+            if re.fullmatch(r"'(?:[^']|'')*'",value) is None:raise ValueError('Malformed quoted value')
             value=value[1:-1].replace("''", "'")
         elif (value.startswith(('[','{','!','&','*')) or ': ' in value
               or value.lower() in {'true','false','yes','no','on','off','null','~'}
@@ -552,6 +558,8 @@ def _capability_diagnostics(package, contract, policy):
             value=control.get(field)
             if field in {'shell','internal_exceptions'}:
                 if field not in control:bad(rule,'controls/'+name+'/'+field)
+            elif field=='owner':
+                if not _substantive(value):bad(rule,'controls/'+name+'/'+field)
             elif not value:bad(rule,'controls/'+name+'/'+field)
         if name=='secrets':
             if control.get('output_policy')!='redacted' or any(k in control for k in ('literal','password','token','secret','api_key')) or 'SYNTHETIC_SECRET' in json.dumps(control):bad(rule,'controls/secrets/output_policy')

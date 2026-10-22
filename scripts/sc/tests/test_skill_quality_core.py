@@ -645,3 +645,147 @@ def test_a02_actual_version_and_rule_vocabulary_alignment(tmp_path):
     assert value['standard_version']=='1.0'
     standard=(REPOSITORY/'docs/standards/skill-authoring-standard.md').read_text()
     assert 'Standard version: 1.0' in standard and all('| '+rule+' |' in standard for rule in expected)
+
+
+# ADR-0062: bounded counterexamples for the accepted Package A result contract.
+# Existing A06 assertions own these API/CLI outcomes; domain rules are checked.
+@pytest.mark.cer_assertion('A-DC9328497131-FAIL-STATUS')
+@pytest.mark.parametrize('defect,mode', [
+    ('entry-missing', 'strict'),
+    ('entry-missing', 'inventory'),
+    ('entry-null', 'strict'),
+    ('entry-null', 'inventory'),
+    ('entry-unknown', 'strict'),
+    ('entry-unknown', 'inventory'),
+    ('optional-traversal', 'strict'),
+    ('optional-traversal', 'inventory'),
+    ('optional-absolute', 'strict'),
+    ('optional-absolute', 'inventory'),
+    ('optional-symlink', 'strict'),
+    ('optional-symlink', 'inventory'),
+    ('optional-malformed', 'strict'),
+    ('optional-malformed', 'inventory'),
+    ('optional-wrong-identity', 'strict'),
+    ('optional-wrong-identity', 'inventory'),
+    ('optional-directory', 'strict'),
+    ('optional-directory', 'inventory'),
+    ('owner-secrets', 'strict'),
+    ('owner-secrets', 'inventory'),
+    ('owner-destructive', 'strict'),
+    ('owner-destructive', 'inventory'),
+    ('owner-database_write', 'strict'),
+    ('owner-database_write', 'inventory'),
+    ('owner-untrusted_content', 'strict'),
+    ('owner-untrusted_content', 'inventory'),
+    ('owner-filesystem', 'strict'),
+    ('owner-filesystem', 'inventory'),
+    ('owner-subprocess', 'strict'),
+    ('owner-subprocess', 'inventory'),
+    ('owner-network', 'strict'),
+    ('owner-network', 'inventory'),
+    ('quote-interior', 'strict'),
+    ('quote-interior', 'inventory'),
+    ('quote-trailing', 'strict'),
+    ('quote-trailing', 'inventory'),
+    ('quote-unclosed', 'strict'),
+    ('quote-unclosed', 'inventory'),
+], ids=['entry-missing-strict', 'entry-missing-inventory', 'entry-null-strict', 'entry-null-inventory', 'entry-unknown-strict', 'entry-unknown-inventory', 'optional-traversal-strict', 'optional-traversal-inventory', 'optional-absolute-strict', 'optional-absolute-inventory', 'optional-symlink-strict', 'optional-symlink-inventory', 'optional-malformed-strict', 'optional-malformed-inventory', 'optional-wrong-identity-strict', 'optional-wrong-identity-inventory', 'optional-directory-strict', 'optional-directory-inventory', 'owner-secrets-strict', 'owner-secrets-inventory', 'owner-destructive-strict', 'owner-destructive-inventory', 'owner-database_write-strict', 'owner-database_write-inventory', 'owner-untrusted_content-strict', 'owner-untrusted_content-inventory', 'owner-filesystem-strict', 'owner-filesystem-inventory', 'owner-subprocess-strict', 'owner-subprocess-inventory', 'owner-network-strict', 'owner-network-inventory', 'quote-interior-strict', 'quote-interior-inventory', 'quote-trailing-strict', 'quote-trailing-inventory', 'quote-unclosed-strict', 'quote-unclosed-inventory'])
+def test_a06_p2_defective_declaration_result(tmp_path, monkeypatch, defect, mode):
+    from copy import deepcopy
+    from scripts.sc.tests.skill_quality_support import CONTROL_FIXTURES
+    root, package, value = dependency_package(tmp_path)
+    rule = 'A09'
+    (package/'references/fallback.md').write_text('# Fallback\nReturn an unavailable report.\n', encoding='utf-8')
+    outside = root/'outside.json'
+    outside.write_text('{"id":"local-parser","version":"1.2.3","sentinel":"FORBIDDEN_P2_READ"}', encoding='utf-8')
+    outside_before = outside.read_bytes()
+    if defect.startswith('entry-'):
+        value['entrypoints'][0]['dependencies'] = []
+    elif defect.startswith('optional-'):
+        value['dependencies'][0].update(required=False, authority='references/absent.json', when_missing='fallback',
+            fallback={'ref':'references/fallback.md','authorizes':[]})
+    elif defect.startswith('owner-'):
+        kind = defect.removeprefix('owner-')
+        value['capabilities'][kind] = True
+        value['controls'][kind] = deepcopy(CONTROL_FIXTURES[kind])
+        (package/'references/backup.md').write_text('# Results\nThe owning workflow records actual recovery.\n', encoding='utf-8')
+        rule = {'secrets':'A15','destructive':'A16','database_write':'A17','untrusted_content':'A18',
+                'filesystem':'A19','subprocess':'A20','network':'A21'}[kind]
+    else:
+        rule = 'A03'
+        (package/'SKILL.md').write_text("---\nname: reference-skill\ndescription: 'inspect''quoted input'\n---\n# Skill\nInspect local input.\n", encoding='utf-8')
+    write_contract(package, value)
+    control = validate_package(repository_root=root, package_root=package, policy_path=POLICY, mode=mode)
+    assert control['status'] == 'pass' and control['exit_code'] == 0, 'The independent valid control must pass'
+    if defect == 'entry-missing': value['entrypoints'][0].pop('dependencies')
+    elif defect == 'entry-null': value['entrypoints'][0]['dependencies'] = None
+    elif defect == 'entry-unknown': value['entrypoints'][0]['dependencies'] = ['undeclared-child']
+    elif defect == 'optional-traversal': value['dependencies'][0]['authority'] = '../../outside.json'
+    elif defect == 'optional-absolute': value['dependencies'][0]['authority'] = str(outside)
+    elif defect == 'optional-symlink':
+        (package/'references/linked.json').symlink_to(outside)
+        value['dependencies'][0]['authority'] = 'references/linked.json'
+    elif defect in {'optional-malformed','optional-wrong-identity'}:
+        path = package/'references/broken.json'
+        path.write_text('{' if defect == 'optional-malformed' else '{"id":"another","version":"1.2.3"}', encoding='utf-8')
+        value['dependencies'][0]['authority'] = 'references/broken.json'
+    elif defect == 'optional-directory': value['dependencies'][0]['authority'] = 'references'
+    elif defect.startswith('owner-'): value['controls'][kind]['owner'] = ' \t\n '
+    else:
+        raw = {'quote-interior':"'inspect'broken'",'quote-trailing':"'inspect' tail 'text'",'quote-unclosed':"'inspect"}[defect]
+        (package/'SKILL.md').write_text('---\nname: reference-skill\ndescription: '+raw+'\n---\n# Skill\nInspect local input.\n', encoding='utf-8')
+    write_contract(package, value)
+    forbidden_reads = []
+    original_read = Path.read_text
+    def observed_read(path, *args, **kwargs):
+        if path.resolve() == outside.resolve():
+            forbidden_reads.append(True)
+            raise AssertionError('Inspection attempted a forbidden authority read')
+        return original_read(path, *args, **kwargs)
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, 'read_text', observed_read)
+        result = validate_package(repository_root=root, package_root=package, policy_path=POLICY, mode=mode)
+    process = subprocess.run([sys.executable, '-B', str(REPOSITORY/'scripts/sc/validate_skill_quality.py'),
+        '--repository-root', str(root), '--policy', POLICY, '--skill-root', str(package), '--mode', mode],
+        cwd=REPOSITORY, shell=False, capture_output=True, text=True, timeout=30)
+    cli = json.loads(process.stdout)
+    allowed_rules = {'A09','A10'} if defect.startswith('entry-') else {rule}
+    valid = (result['status']=='fail' and result['exit_code']==1 and result['authorizes']==[]
+             and any(d['rule'] in allowed_rules for d in result['diagnostics'])
+             and cli==result and process.returncode==1 and not process.stderr
+             and not forbidden_reads and outside.read_bytes()==outside_before
+             and 'FORBIDDEN_P2_READ' not in process.stdout and str(root) not in process.stdout)
+    require(valid, 'FAIL_INSPECTABLE_DEFECT_PASS')
+
+
+@pytest.mark.cer_assertion('A-A9A489B8935D-1')
+@pytest.mark.parametrize('schema_kind,mode', [
+    ('contract_schema','strict'), ('contract_schema','inventory'),
+    ('result_schema','strict'), ('result_schema','inventory'),
+], ids=['contract-strict','contract-inventory','result-strict','result-inventory'])
+def test_a06_p2_invalid_schema_regex_result(tmp_path, schema_kind, mode):
+    import re
+    root, package, _ = dependency_package(tmp_path)
+    policy = json.loads((root/POLICY).read_text(encoding='utf-8'))
+    path = root/policy[schema_kind]
+    schema = json.loads(path.read_text(encoding='utf-8'))
+    schema['properties']['schema']['pattern'] = '^[a-z][a-z0-9.-]+$'
+    path.write_text(json.dumps(schema), encoding='utf-8')
+    assert validate_package(repository_root=root, package_root=package, policy_path=POLICY, mode=mode)['status']=='pass'
+    schema['properties']['schema']['pattern'] = '['
+    path.write_text(json.dumps(schema), encoding='utf-8')
+    try:
+        result = validate_package(repository_root=root, package_root=package, policy_path=POLICY, mode=mode)
+    except re.error:
+        # An observed product parser exception violates its structured API;
+        # imports, setup failures and unrelated exceptions are never relabeled.
+        result = None
+    process = subprocess.run([sys.executable, '-B', str(REPOSITORY/'scripts/sc/validate_skill_quality.py'),
+        '--repository-root', str(root), '--policy', POLICY, '--skill-root', str(package), '--mode', mode],
+        cwd=REPOSITORY, shell=False, capture_output=True, text=True, timeout=30)
+    try: cli = json.loads(process.stdout)
+    except json.JSONDecodeError: cli = None
+    valid = (isinstance(result,dict) and result['status']=='error' and result['exit_code']==2
+             and result['authorizes']==[] and result['diagnostics'] and cli==result
+             and process.returncode==2 and not process.stderr and str(root) not in process.stdout)
+    require(valid, 'F-A9A489B8935D')
