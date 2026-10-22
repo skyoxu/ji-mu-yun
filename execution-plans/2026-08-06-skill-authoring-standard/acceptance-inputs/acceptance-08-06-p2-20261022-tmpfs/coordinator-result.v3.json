@@ -1,0 +1,129 @@
+{
+  "actionDag": {
+    "actions": [
+      {
+        "actionId": "acceptance-adoption-and-source-binding",
+        "activation": true,
+        "commandId": "adoption-and-source-binding",
+        "dependsOn": [],
+        "order": 1
+      },
+      {
+        "actionId": "acceptance-package-a-terminal",
+        "activation": true,
+        "commandId": "package-a-terminal",
+        "dependsOn": [
+          "acceptance-adoption-and-source-binding"
+        ],
+        "order": 2
+      },
+      {
+        "actionId": "acceptance-package-a-public-cli",
+        "activation": true,
+        "commandId": "package-a-public-cli",
+        "dependsOn": [
+          "acceptance-package-a-terminal"
+        ],
+        "order": 3
+      },
+      {
+        "actionId": "acceptance-acceptance-package-validation",
+        "activation": true,
+        "commandId": "acceptance-package-validation",
+        "dependsOn": [
+          "acceptance-package-a-public-cli"
+        ],
+        "order": 4
+      },
+      {
+        "actionId": "acceptance-acceptance-finalization-regressions",
+        "activation": true,
+        "commandId": "acceptance-finalization-regressions",
+        "dependsOn": [
+          "acceptance-acceptance-package-validation"
+        ],
+        "order": 5
+      },
+      {
+        "actionId": "acceptance-current-q8-read-only",
+        "activation": true,
+        "commandId": "current-q8-read-only",
+        "dependsOn": [
+          "acceptance-acceptance-finalization-regressions"
+        ],
+        "order": 6
+      }
+    ]
+  },
+  "actionDagHash": "sha256:a249795d543bf8970a9c0136018ffe18caf75778374c627a903d5403a5d8e35a",
+  "authorizes": [],
+  "bootstrapInvoked": false,
+  "executedActionCount": 6,
+  "finalization": {
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "final": {
+      "path": "finalization/acceptance-passed.v1.json",
+      "sha256": "sha256:abde65f703b0acfbee7bcd176522980e9c5ad28abe3fb2a523e0da125b879ba0"
+    },
+    "status": "acceptance-passed",
+    "wrapper": {
+      "path": "finalization/acceptance-result-final.v1.json",
+      "sha256": "sha256:7d6e0a7aba9fcdbb531570a10887b609a33f135cd7867c2a258b976518acc18f"
+    }
+  },
+  "persistedActionState": {
+    "actionStates": {
+      "acceptance-acceptance-finalization-regressions": "completed",
+      "acceptance-acceptance-package-validation": "completed",
+      "acceptance-adoption-and-source-binding": "completed",
+      "acceptance-current-q8-read-only": "completed",
+      "acceptance-package-a-public-cli": "completed",
+      "acceptance-package-a-terminal": "completed"
+    },
+    "authorizes": [],
+    "dependencyClosed": {
+      "acceptance-acceptance-finalization-regressions": true,
+      "acceptance-acceptance-package-validation": true,
+      "acceptance-adoption-and-source-binding": true,
+      "acceptance-current-q8-read-only": true,
+      "acceptance-package-a-public-cli": true,
+      "acceptance-package-a-terminal": true
+    },
+    "missingDependencies": {
+      "acceptance-acceptance-finalization-regressions": [],
+      "acceptance-acceptance-package-validation": [],
+      "acceptance-adoption-and-source-binding": [],
+      "acceptance-current-q8-read-only": [],
+      "acceptance-package-a-public-cli": [],
+      "acceptance-package-a-terminal": []
+    },
+    "nextAction": null,
+    "readyActionIds": [],
+    "runId": "acceptance-2677f519e0491a3c",
+    "schemaVersion": "acceptance-run-inspection.v1",
+    "sortingBasis": "dependency-topology,action-order,command-registry-order,command-id"
+  },
+  "requestAuthority": "none",
+  "route": "deterministic_only",
+  "runBinding": {
+    "actionDagHash": "sha256:a249795d543bf8970a9c0136018ffe18caf75778374c627a903d5403a5d8e35a",
+    "contractHash": "sha256:4931380542fea83587f14c540bff029ebcd0cf0c97f4610435106067f91fab83",
+    "knowledgeContextHash": "sha256:f2e7810a06c9f9228e971cb3301f2b033dbefd3cc9c34312b6ff7b2c78e6420c",
+    "runDirectory": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-2677f519e0491a3c",
+    "runId": "acceptance-2677f519e0491a3c",
+    "runInputHash": "sha256:3d534794446b214555129a6b481e53594f3815f0a015e08eff84bec5fda8d55c"
+  },
+  "runBindingHash": "sha256:79c363701434d9a423a0ce6c997a31306ab1ec2dbaeb65647c34736e3ac618db",
+  "runDirectory": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-2677f519e0491a3c",
+  "runId": "acceptance-2677f519e0491a3c",
+  "runInputHash": "sha256:3d534794446b214555129a6b481e53594f3815f0a015e08eff84bec5fda8d55c",
+  "schemaVersion": "acceptance-coordinator-result.v4",
+  "status": "completed",
+  "telemetry": {
+    "path": "coordinator-telemetry.jsonl",
+    "schemaVersion": "acceptance-coordinator-telemetry.v1"
+  },
+  "typedHandoff": null
+}

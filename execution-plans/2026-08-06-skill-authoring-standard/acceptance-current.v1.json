@@ -1,13 +1,13 @@
 {
   "authorizes": [],
-  "currentRun": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-08-06-20261022-isolated-recovery",
+  "currentRun": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-2677f519e0491a3c",
   "finalResult": {
-    "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-08-06-20261022-isolated-recovery/finalization/acceptance-passed.v1.json",
-    "sha256": "sha256:1ba15775136d80dd5fb4e55602e0e671df311dc95106164ae76f18eda30b498a"
+    "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-2677f519e0491a3c/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:abde65f703b0acfbee7bcd176522980e9c5ad28abe3fb2a523e0da125b879ba0"
   },
   "finalWrapper": {
-    "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-08-06-20261022-isolated-recovery/finalization/acceptance-result-final.v1.json",
-    "sha256": "sha256:6225d2e81f2ba8d31da860bd2bf0ce4a0f37a9ed19347c6fc11b91cc30a2a88a"
+    "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-2677f519e0491a3c/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:7d6e0a7aba9fcdbb531570a10887b609a33f135cd7867c2a258b976518acc18f"
   },
   "schemaVersion": "acceptance-current.v1"
 }
