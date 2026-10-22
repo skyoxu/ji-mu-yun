@@ -1,0 +1,18 @@
+{
+  "schema": "acceptance-explicit-recovery-link.v1",
+  "predecessorRunId": "acceptance-08-06-20261022-observed-recovery",
+  "predecessorResult": {
+    "path": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-inputs/acceptance-08-06-20261022-r4/coordinator-result.v3.json",
+    "sha256": "sha256:494a6819b27142ba11bcf2024ea329106d0dd3413bb265bdf86485f6e113695d"
+  },
+  "reason": "Prior observed run failed when a released prior-action claim reappeared during a controlled subprocess. This explicit successor uses an isolated tmpfs worktree with identical inputs and unchanged read-only validation. Preserve all predecessor runs.",
+  "inputs": {
+    "actionDagHash": "sha256:c34767c5fa5fa67e9238f89b5c5239a4f2e2f14719ffc9f2b254eed1a701c99e",
+    "contractHash": "sha256:14abc0348135432081caac24bd62cef82aeaa6ec422074854704fc44e24abd00",
+    "knowledgeContextHash": "sha256:2b5c125e93cbe24d076cef778e42204a0c0cb0bcb74b0ad2a871190290e950da",
+    "runDirectory": "execution-plans/2026-08-06-skill-authoring-standard/acceptance-runs/acceptance-337ecf28ebeeaa59",
+    "runId": "acceptance-337ecf28ebeeaa59",
+    "runInputHash": "sha256:c6f3738cc47695982291f1a6cfb9d6429533a393c91cb3f777fdb5c8bbf4b895"
+  },
+  "authorizes": []
+}

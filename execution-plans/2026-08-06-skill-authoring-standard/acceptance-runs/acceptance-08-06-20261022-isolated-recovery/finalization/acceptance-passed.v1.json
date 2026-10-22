@@ -1,0 +1,11 @@
+{
+  "acceptanceMode": "unattended",
+  "authorizes": [
+    "acceptance-passed"
+  ],
+  "identityHash": "sha256:82eb80e110c3e41cf1df83ae248fcac5633fd8a469629e3b557e5d1939ed6ef1",
+  "lifecycleTransition": "acceptance-passed",
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-passed.v1",
+  "triggerIds": []
+}

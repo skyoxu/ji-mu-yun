@@ -1,0 +1,73 @@
+{
+  "authorizes": [],
+  "commandId": "package-a-public-cli",
+  "commandRegistryHash": "sha256:06babdca486f0ab7ec63066114a211feb54ee8edcf83bf813a9010df6eaad637",
+  "environmentIdentity": {
+    "hash": "sha256:c722e93949e144d3d3f717c276ade642b857575c8358fbcd964a050f8848e159",
+    "names": [
+      "HOME",
+      "PATH"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "scripts/sc/validate_skill_quality.py",
+      "--repository-root",
+      ".",
+      "--policy",
+      "scripts/sc/config/skill-authoring-standard.v1.json",
+      "--skill-root",
+      "scripts/sc/tests/fixtures/skill-quality/reference-skill",
+      "--mode",
+      "strict"
+    ],
+    "commandId": "package-a-public-cli",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/scratch/e4e648ddd442/acceptance-0806-env/bin/python",
+    "shell": false,
+    "timeoutSeconds": 900
+  },
+  "invocationHash": "sha256:18d228f3683bdc3776de4e12faeb74efb3d26edad2af400ed5fef7d1b025bcc8",
+  "processResult": {
+    "commandId": "package-a-public-cli",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authorizes\": [], \"diagnostics\": [], \"exit_code\": 0, \"mode\": \"strict\", \"package\": \"scripts/sc/tests/fixtures/skill-quality/reference-skill\", \"schema\": \"skill-quality-result.v1\", \"status\": \"pass\"}\n",
+    "stdoutSha256": "sha256:7229490b0251073011833466077d4cdbf65d6bcd4bba0ca0bc15f51110aa7c59"
+  },
+  "processResultHash": "sha256:03a4ead776d70edc328101827469cef0f0b66dd191be3ecc7d80767ebd2f0767",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}
