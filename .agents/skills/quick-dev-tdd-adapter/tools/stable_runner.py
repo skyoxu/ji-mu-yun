@@ -114,64 +114,8 @@ def _load_json_object(path: Path, label: str, *, inside_repo: bool = True) -> Ma
 
 
 def _literal_cer_nodes(targets, required):
-    """Resolve complete literal marker bindings without importing test code.
-
-    Unsupported parameterization keeps the original declared selector. Explicit
-    node selectors remain upper bounds; this never expands their test scope.
-    """
-    if not required:return None
-    nodes=[];covered=set()
-    for target in targets:
-        ref,separator,explicit=target.partition('::')
-        path=ROOT/safe_relative(ref)
-        try:tree=ast.parse(path.read_text(encoding='utf-8').lstrip('\ufeff'))
-        except (OSError,SyntaxError,UnicodeError):return None
-        constants={node.targets[0].id:node.value.value for node in tree.body
-                   if isinstance(node,ast.Assign) and len(node.targets)==1
-                   and isinstance(node.targets[0],ast.Name) and isinstance(node.value,ast.Constant)
-                   and isinstance(node.value.value,str)}
-        if any(isinstance(n,ast.ClassDef) and n.name.startswith('Test') for n in tree.body):return None
-        if any(isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='pytestmark' for t in n.targets) for n in tree.body):return None
-        def markers(node):
-            result=set()
-            for child in ast.walk(node):
-                if isinstance(child,ast.Call) and isinstance(child.func,ast.Attribute) and child.func.attr=='cer_assertion':
-                    for arg in child.args:
-                        if isinstance(arg,ast.Constant) and isinstance(arg.value,str):result.add(arg.value)
-                        elif isinstance(arg,ast.Name) and arg.id in constants:result.add(constants[arg.id])
-                        else:return None
-            return result
-        for function in tree.body:
-            if not isinstance(function,(ast.FunctionDef,ast.AsyncFunctionDef)) or not function.name.startswith('test_'):continue
-            base=ref+'::'+function.name
-            function_marks=set();parameters=[]
-            for decorator in function.decorator_list:
-                if isinstance(decorator,ast.Call) and isinstance(decorator.func,ast.Attribute) and decorator.func.attr=='parametrize':parameters.append(decorator)
-                else:
-                    ids=markers(decorator)
-                    if ids is None:return None
-                    function_marks.update(ids)
-            cases=[]
-            if not parameters:cases=[(base,function_marks)]
-            elif len(parameters)==1:
-                parameter=parameters[0]
-                if len(parameter.args)!=2 or parameter.keywords or not isinstance(parameter.args[1],(ast.List,ast.Tuple)):return None
-                for row in parameter.args[1].elts:
-                    if not isinstance(row,ast.Call) or not isinstance(row.func,ast.Attribute) or row.func.attr!='param':return None
-                    marker_ids=markers(row)
-                    if marker_ids is None:return None
-                    name=next((kw.value for kw in row.keywords if kw.arg=='id'),None)
-                    if isinstance(name,ast.Constant) and isinstance(name.value,str):name=name.value
-                    elif name is None and len(row.args)==1 and isinstance(row.args[0],ast.Constant) and isinstance(row.args[0].value,str):name=row.args[0].value
-                    else:return None
-                    cases.append((base+'['+name+']',function_marks|marker_ids))
-            else:return None
-            for node,assertions in cases:
-                if separator and node!=target and not node.startswith(target+'['):continue
-                if assertions & required:
-                    if node not in nodes:nodes.append(node)
-                    covered.update(assertions & required)
-    return nodes if covered==required else None
+    from case_selection import literal_nodes
+    return literal_nodes(ROOT, targets, required)[0]
 
 
 def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True) -> tuple[list[str], list[str], list[str]]:
@@ -401,6 +345,7 @@ def q2_author_red(
     profile: str,
     timeout_seconds: int,
     backend: str | None,
+    allow_worker: bool = True,
 ) -> dict[str, Any]:
     run_dir = _inside_root(run_dir, "run-dir")
     plan_dir = semantic.parent
@@ -443,6 +388,8 @@ def q2_author_red(
                 "authorizes_evidence": False,
                 "authorizes": [],
             }
+        if not allow_worker:
+            return {"status": "worker-required", "required_next_action": "author-red", "authorizes": []}
         worker = run_red_author(
             workspace=ROOT,
             plan_dir=plan_dir,
@@ -798,18 +745,20 @@ def _execute_named_stage(semantic: Path, run_dir: Path, stage: str, profile: str
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", type=Path, required=True)
-    parser.add_argument("--slice", dest="slice_id", required=True)
+    parser.add_argument("--slice", dest="slice_id")
     parser.add_argument("--profile", default="standard")
     parser.add_argument("--recommendation-only", action="store_true")
     parser.add_argument(
         "--action",
         choices=(
-            "prepare-entry", "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
+            "preflight-session", "advance-session", "inspect-selection", "prepare-entry", "run-probe", "run-regression", "route-behaviors", "preflight", "run-preflight", "recommendation", "author-red", "run-red", "implement", "run-green",
             "run-refactor", "execute-stage", "implementation-handoff", "implementation-finish", "slice-ready",
             "validate-slice", "run-terminal", "implementation-complete", "recover",
         ),
         default="preflight",
     )
+    parser.add_argument("--execution-request", type=Path)
+    parser.add_argument("--max-steps", type=int, default=8)
     parser.add_argument("--first-use-contract", type=Path)
     parser.add_argument("--first-use-receipt", type=Path)
     parser.add_argument("--failure-history", type=Path)
@@ -837,7 +786,20 @@ def main() -> int:
         semantic = _semantic_plan(args.plan)
         snapshot_roots = _load_json_list(args.snapshot_roots, "snapshot-roots") if args.snapshot_roots else None
         observations = _load_json_list(args.observation_index, "observation-index") if args.observation_index else []
-        if args.recommendation_only or args.action == "recommendation":
+        if args.action not in {"preflight-session", "advance-session"} and args.slice_id is None:
+            raise ValueError("this action requires --slice")
+        if args.action in {"preflight-session", "advance-session"}:
+            if args.execution_request is None:
+                raise ValueError("session action requires --execution-request")
+            from execution_session import preflight_session, advance_session
+            request = _load_json_object(args.execution_request, "execution-request")
+            api = sys.modules[__name__]
+            result = (preflight_session(api, semantic, request) if args.recommendation_only or args.action == "preflight-session"
+                      else advance_session(api, semantic, request, max_steps=args.max_steps))
+        elif args.action == "inspect-selection":
+            from case_selection import selection_report
+            result = selection_report(sys.modules[__name__], semantic, args.slice_id)
+        elif args.recommendation_only or args.action == "recommendation":
             result = q0_recommendation(
                 semantic=semantic,
                 slice_id=args.slice_id,
@@ -980,7 +942,9 @@ def main() -> int:
         print(json.dumps({"status": "blocked", "recommended_action": "repair-vdd", "reason": str(exc)}, sort_keys=True))
         return 1
     print(json.dumps(result, sort_keys=True))
-    return 1 if result.get("status") == "task-implementation-failure" else 0
+    failed = result.get("status") == "task-implementation-failure"
+    session_blocked = args.action in {"preflight-session", "advance-session"} and result.get("status") in {"blocked", "stage-reentry-blocked"}
+    return 1 if failed or session_blocked else 0
 
 
 if __name__ == "__main__":

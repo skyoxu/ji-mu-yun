@@ -137,14 +137,14 @@ def test_stale_regression_cannot_close_after_production_change(tmp_path):
             snapshot_roots=roots,source_commit="TEST",out=tmp_path/"RUN-1/ready.json")
 
 
-@pytest.mark.parametrize("failure",["setup", "skip", "mixed-cases"])
+@pytest.mark.parametrize("failure",["setup", "skip", "wrong-failure-id"])
 def test_unverifiable_probe_never_authorizes_implementation(tmp_path,failure):
     semantic,_=fixture(tmp_path)
     path=tmp_path/"tests/test_one.py"
     s=path.read_text()
     if failure=="setup": s="raise ImportError('environment')\n"+s
     elif failure=="skip": s=s.replace("def test_value_1", "@pytest.mark.skip(reason='not observed')\ndef test_value_1")
-    else: s += "@pytest.mark.cer_assertion('AS-1')\ndef test_extra():\n print('FAILURE_ID:FAIL-1')\n assert False\n"
+    else: s += "@pytest.mark.cer_assertion('AS-1')\ndef test_extra():\n print('FAILURE_ID:UNDECLARED')\n assert False\n"
     path.write_text(s,encoding="utf-8")
     route=execute(tmp_path,semantic,"probe")
     assert not route["predicate_result"]

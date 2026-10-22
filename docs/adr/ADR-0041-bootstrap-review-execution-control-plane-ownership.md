@@ -545,3 +545,19 @@ production hash map. Its exact frozen tests, fixtures, plan and runtime roots
 remain required. Actual production and transitive owner dependencies still use
 the existing strict hash_refs path. This neither creates an implementation
 owner nor grants production-write or expected-RED authority.
+
+
+### Quick Dev usability maintenance (2026-10-22)
+
+The maintainer authorized the reviewed Quick Dev maintenance improvements.
+A CER obligation with mixed passed and genuine expected-failing cases remains
+missing, with exact per-case RED continuity and full passing successor coverage.
+Read-only session preflight checks explicit source/base, profile, snapshot roots,
+paths and dependency ordering before execution. A bounded deterministic session
+adapter calls native stage/reentry/Q7/Q8 owners and pauses for existing author,
+implementation and refactor workers; it calls no model and gains no Acceptance
+authority. Static selector inspection may narrow complete literal mappings within
+declared scope; full terminal and required Q6 commands remain unchanged.
+Existing local and online caller-session worker routes remain supported. The
+reusable .NET/TRX helper stays deferred to pre-S2. This decision does not adopt
+ADR-0062 or perform Package A Acceptance.

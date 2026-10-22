@@ -135,6 +135,9 @@ def assertion_cases(descriptor, receipt, *, keys=None, expected=None):
             raise ValueError("case-attempt-ambiguous:" + node)
         phases[key] = event
     result = {}
+    mode = expected or ("partial-red" if descriptor["stage"] == "red" and "behavior_route" in descriptor
+                        else "red" if descriptor["stage"] == "red" else "pass")
+    failed = False
     for row in descriptor["case_contract"]["bindings"]:
         if keys is not None and (row["acceptance_id"], row["assertion_id"]) not in keys:
             continue
@@ -162,17 +165,29 @@ def assertion_cases(descriptor, receipt, *, keys=None, expected=None):
                 raise ValueError("case-setup-or-teardown-error:" + node)
             if call.get("outcome") == "skipped":
                 raise ValueError("case-skipped:" + node)
-            if expected == "red" or (expected is None and descriptor["stage"] == "red"):
+            if mode == "partial-red" and call.get("outcome") == "passed":
+                continue
+            if mode in {"red", "partial-red"}:
                 required = row["expected_failure_ids"]
                 if not isinstance(call.get("failure_ids"), list):
                     raise ValueError("case-failure-identity-invalid:" + node)
                 if (call.get("outcome") != "failed" or call.get("assertion_failure") is not True
                         or not required or not set(required) <= set(call.get("failure_ids", []))):
                     raise ValueError("case-unexpected-red:" + node)
+                failed = True
             elif call.get("outcome") != "passed":
                 raise ValueError("case-unexpected-outcome:" + node)
         result[(row["acceptance_id"], row["assertion_id"])] = sorted(nodes)
+    if mode == "partial-red" and not failed:
+        raise ValueError("case-unexpected-green")
     return result
+
+
+def case_outcomes(receipt, cases):
+    """Project call outcomes only after assertion_cases validated the receipt."""
+    calls = {e["node_id"]: e["outcome"] for e in receipt["case_report"]["events"] if e["phase"] == "call"}
+    return [{"acceptance_id": a, "assertion_id": s, "case_id": node, "outcome": calls[node]}
+            for (a, s), nodes in sorted(cases.items()) for node in nodes]
 
 
 def reread_stage_cases(run_root, stage):

@@ -186,3 +186,18 @@ Q2 recomputes literal case bindings after bounded test authoring and freezes the
 before probe execution. The terminal descriptor retains the full declared module
 selection, including unmarked regression cases; CER narrowing applies only to
 nonterminal stages. This does not replace required Q6 commands.
+
+## Session preparation and selection diagnostics
+
+Use `preflight-session` before a long sequential run and `advance-session` for
+bounded deterministic progression; see [Session](session-operation.md). Worker
+implementation and refactoring keep their existing local/caller-session routes.
+Use `inspect-selection` to see narrowed argv, full terminal argv, required Q6
+commands, repeated declarations and the static selection/fallback reason.
+Literal explicit parameter IDs and simple test classes are supported; dynamic
+IDs, inherited test classes and unsupported mappings preserve declared selectors.
+No candidate test is imported for this inspection.
+
+For a partially implemented obligation, the probe may contain passing and bound
+expected-failing cases. Formal RED preserves that exact outcome pattern. All
+cases must pass after implementation; see the behavior routing contract.

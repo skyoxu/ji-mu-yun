@@ -56,3 +56,13 @@ Older handoffs and failed attempts are retained in Git history and the hash-
 indexed history archives. Do not restart a published predecessor as a failed
 compiler directory. Read `ONLINE-COMPLETION-2026-10-21.md` for scope and proof
 interpretation.
+
+
+## Quick Dev maintenance follow-up (2026-10-22)
+
+The subsequent Quick Dev usability change modifies runtime evidence readers and
+adds explicit session progression. Prior Q8 evidence remains intact and bound to
+its original source/runtime bytes. Do not relabel that proof as a run of the newer
+runtime. Before formal Acceptance after actual ADR-0062 adoption, refresh affected
+native execution/closure evidence under normal invalidation and recovery rules.
+This maintenance does not itself publish Package A acceptance-passed.

@@ -16,6 +16,7 @@ Read only the guide selected by the actual input and operation. On a transition 
 | Current plan preflight, recommendation or execution | [Execution](references/execution-operation.md); recommendation-only remains side-effect free |
 | Existing stage, failed attempt or explicit recovery | [Recovery](references/recovery-operation.md), then execution guidance for the selected next stage |
 | Historical v1 input or explicitly adopted Skill-input route | [Compatibility](references/compatibility-operation.md); never use legacy evidence as current completion authority |
+| Explicit whole-plan preflight and bounded native progression | [Session](references/session-operation.md), then execution/recovery guides at worker handoff |
 | Skill maintenance | Affected guides and their existing contract tests; no live run by default |
 
 ## Current And Legacy Plan Routes

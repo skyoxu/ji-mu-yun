@@ -86,7 +86,12 @@ def validate_planned_preflight(
     allowed = _string_list(selected.get("allowed_write_paths"), "production write set")
     planned = _string_list(selected.get("planned_new_files", []), "planned new files", nonempty=False)
     snapshots = _string_list(selected.get("execution_snapshot_paths"), "execution snapshot paths")
-    owners = _string_list(selected.get("production_owners"), "production owners")
+    owners = _string_list(selected.get("production_owners"), "production owners", nonempty=False)
+    if not owners:
+        if "behavior_routing" not in bundle:
+            raise ValueError("production owners missing")
+        from behavior_routing import validate_plan
+        validate_plan(bundle)
     for raw in [*allowed, *planned, *snapshots, *owners]:
         safe_relative(raw)
     if any(owner not in set(allowed) and owner not in set(planned) for owner in owners):
