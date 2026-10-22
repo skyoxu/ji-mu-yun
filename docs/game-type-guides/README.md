@@ -1,6 +1,12 @@
 # Game Type Guides
 
-Canonical upstream source: `.agents/skills/gds-gdd/assets/game-types/` and `.agents/skills/gds-gdd/assets/game-types.csv`. The legacy `.agents/skills/gds-create-gdd/game-types*` paths are compatibility mirrors only.
+Canonical upstream source: `.agents/skills/gds-gdd/assets/game-types/` and `.agents/skills/gds-gdd/assets/game-types.csv`. These are provenance paths in an explicit local GDS installation, not files supplied by a clean clone. The legacy `.agents/skills/gds-create-gdd/game-types*` compatibility mirror has been retired from Git tracking.
+
+The maintainer deferred the old designer/GDS game capabilities to the future
+user-sandbox rebuild. These repository guides remain available, but they do not
+restore the retired Skills. Existing Phase registrations and installation/mirror
+tests have not been rewritten. See [BMAD adapter installation and retirement
+limits](../workflows/bmad-native-wrappers.md#untracking-inventory-and-retained-customization).
 
 This directory exposes 25 runtime-effective guides: 24 upstream GDS game types plus the Ji Mu Yun `survivorslike` extension. The upstream-derived guides preserve their canonical GDS base text and add repository-owned prototype contracts, module matrices, and expanded genre tags. They provide docs-side reference material for the prototype lane and project-health metadata; they do not replace the formal Chapter 3 through Chapter 7 workflow.
 

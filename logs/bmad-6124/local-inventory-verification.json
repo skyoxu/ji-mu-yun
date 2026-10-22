@@ -1,0 +1,29 @@
+{
+  "official_files_untracked": 129,
+  "by_source": {
+    "BMAD-METHOD": 93,
+    "bmad-module-game-dev-studio": 36
+  },
+  "retained_unchanged": 49,
+  "all_untracked_files_locally_present": true,
+  "required_native_bytes_verified": 16,
+  "historical_evidence_changed": false,
+  "native_sha256": {
+    ".agents/skills/bmad-spec/SKILL.md": "46a2c3d5541d63af1520fac6b7abfff161a94b52fed51df6454115e3da5639c7",
+    ".agents/skills/bmad-spec/assets/headless-schemas.md": "83afb3614716db2347d83586a67b9c524492dd50db5282436ccb35c99fb5f08a",
+    ".agents/skills/bmad-spec/assets/spec-template.md": "4b3a032c045fdd0903933446fc07f93e879997f28a0294ed4344da71192b20ee",
+    ".agents/skills/bmad-spec/assets/stories-schema.md": "4f8137c00e2710288354a4466d1cfb90704f4b2a04bd3b63924218fd589cc6a9",
+    ".agents/skills/bmad-spec/customize.toml": "d0f1f926bed79d514f8fdbc458a1883167fb64663bf2464c40e3c50dc2dcdbea",
+    ".agents/skills/bmad-architecture/SKILL.md": "4a256afa9c725e0bf5b55961d21774f1eb00011dbe31509e280a955bdb1a5c09",
+    ".agents/skills/bmad-architecture/assets/spine-template.md": "ef4ff795624eb5439fae54a06edb389feb5a0cf79cb01ae007af51109335d198",
+    ".agents/skills/bmad-architecture/customize.toml": "e9c5f75bd6605199f3908d6a1f013d6b42fb12b6f35c9a5e13a44f7f872b7b79",
+    ".agents/skills/bmad-architecture/references/headless.md": "4db2708f335c94cb024b5eba022b1e3d88b1ec61c94c4716626d9b89684f5833",
+    ".agents/skills/bmad-architecture/references/reviewer-gate.md": "d32e32a3c1d59b5612b947004f3f6fef1117a13ce9f1ffa428d616e0b5d4db69",
+    ".agents/skills/bmad-architecture/scripts/lint_spine.py": "dd48be20384adfa281d295e34a39c1ae55727af7e98efe42525be31d1c5c001e",
+    ".agents/skills/bmad-architecture/scripts/tests/test_lint_spine.py": "e86bb9a62c5cca74ddc89c843386f2b992610fcc1792d40e03bc9cd445b77681",
+    "_bmad/scripts/memlog.py": "4916a9c63ec164568cf428ce27b44d6657933f098ee3ae3970b25f0f9d8f9240",
+    "_bmad/scripts/resolve_config.py": "70d7577396ed40ab9462ab75dce51f852bc2e094b2d1a054214f1b30c8789768",
+    "_bmad/scripts/resolve_customization.py": "c95aab9f2dc500d6ab7db77d6a7860028701ce414e03690613a282cc3659d284",
+    "_bmad/scripts/config_utils.py": "48afe2bc18a29201e343cce3703be1e70df9c83ee74eeb68e57ef8ef42e8c651"
+  }
+}

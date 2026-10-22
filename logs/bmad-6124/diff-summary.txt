@@ -1,0 +1,660 @@
+Implementation delta from preserved local base 5b3a6067082423348066a7ce760eca44ed880789
+
+ .../skills/bmad-advanced-elicitation/methods.csv   |   72 -
+ .agents/skills/bmad-architecture/SKILL.md          |   85 --
+ .../bmad-architecture/assets/spine-template.md     |   79 --
+ .agents/skills/bmad-architecture/customize.toml    |  100 --
+ .../bmad-architecture/references/headless.md       |   26 -
+ .../bmad-architecture/references/reviewer-gate.md  |   13 -
+ .../skills/bmad-architecture/scripts/lint_spine.py |  257 ----
+ .../scripts/tests/test_lint_spine.py               |  270 ----
+ .agents/skills/bmad-brainstorming/SKILL.md         |   80 --
+ .../analysis/catalog-analysis.md                   |  239 ----
+ .../bmad-brainstorming/analysis/method-matrix.csv  |  109 --
+ .../bmad-brainstorming/assets/brain-icons.json     |  166 ---
+ .../bmad-brainstorming/assets/brain-methods.csv    |  109 --
+ .../bmad-brainstorming/assets/brain-selector.html  |  326 -----
+ .agents/skills/bmad-brainstorming/customize.toml   |   84 --
+ .../bmad-brainstorming/references/converge.md      |   24 -
+ .../bmad-brainstorming/references/finalize.md      |   26 -
+ .../bmad-brainstorming/references/headless.md      |   54 -
+ .../references/in-chat-techniques.md               |   18 -
+ .../references/mode-autonomous.md                  |   10 -
+ .../references/mode-facilitator.md                 |   11 -
+ .../bmad-brainstorming/references/mode-partner.md  |   16 -
+ .../skills/bmad-brainstorming/references/resume.md |    5 -
+ .agents/skills/bmad-brainstorming/scripts/brain.py |  740 ----------
+ .../bmad-brainstorming/scripts/tests/test_brain.py |  217 ---
+ .../customize.toml                                 |   41 -
+ .../steps/step-01-document-discovery.md            |  179 ---
+ .../steps/step-02-prd-analysis.md                  |  168 ---
+ .../steps/step-03-epic-coverage-validation.md      |  169 ---
+ .../steps/step-04-ux-alignment.md                  |  129 --
+ .../steps/step-05-epic-quality-review.md           |  241 ----
+ .../templates/readiness-report-template.md         |    4 -
+ .agents/skills/bmad-code-review/customize.toml     |   41 -
+ .../steps/step-01-gather-context.md                |   85 --
+ .../bmad-code-review/steps/step-02-review.md       |   41 -
+ .../bmad-code-review/steps/step-03-triage.md       |   56 -
+ .../bmad-create-epics-and-stories/customize.toml   |   41 -
+ .../steps/step-01-validate-prerequisites.md        |  263 ----
+ .../steps/step-02-design-epics.md                  |  242 ----
+ .../steps/step-03-create-stories.md                |  255 ----
+ .../templates/epics-template.md                    |   61 -
+ .agents/skills/bmad-create-story/checklist.md      |  357 -----
+ .agents/skills/bmad-create-story/customize.toml    |   41 -
+ .../skills/bmad-create-story/discover-inputs.md    |   88 --
+ .agents/skills/bmad-create-story/template.md       |   49 -
+ .../skills/bmad-dev-auto/compile-epic-context.md   |   62 -
+ .agents/skills/bmad-dev-auto/customize.toml        |   33 -
+ .agents/skills/bmad-dev-auto/spec-template.md      |   98 --
+ .../bmad-dev-auto/step-01-clarify-and-route.md     |   66 -
+ .agents/skills/bmad-dev-auto/step-02-plan.md       |   32 -
+ .agents/skills/bmad-dev-auto/step-03-implement.md  |   38 -
+ .agents/skills/bmad-dev-auto/step-04-review.md     |   97 --
+ .agents/skills/bmad-dev-story/checklist.md         |   80 --
+ .agents/skills/bmad-dev-story/customize.toml       |   41 -
+ .../bmad-editorial-review-structure/SKILL.md       |  179 ---
+ .agents/skills/bmad-forge-idea/SKILL.md            |  107 --
+ .agents/skills/bmad-forge-idea/customize.toml      |   42 -
+ .../bmad-forge-idea/scripts/resolve_personas.py    |  270 ----
+ .../scripts/tests/test_resolve_personas.py         |  138 --
+ .agents/skills/bmad-help/SKILL.md                  |   75 -
+ .agents/skills/bmad-index-docs/SKILL.md            |   66 -
+ .agents/skills/bmad-prd/SKILL.md                   |   92 --
+ .agents/skills/bmad-prd/assets/headless-schemas.md |   76 -
+ .agents/skills/bmad-prd/assets/prd-template.md     |  165 ---
+ .../bmad-prd/assets/prd-validation-checklist.md    |  135 --
+ .../assets/validation-report-template.html         |  325 -----
+ .agents/skills/bmad-prd/customize.toml             |  147 --
+ .agents/skills/bmad-prd/references/headless.md     |   39 -
+ .agents/skills/bmad-product-brief/SKILL.md         |   91 --
+ .../bmad-product-brief/assets/brief-template.md    |   41 -
+ .agents/skills/bmad-product-brief/customize.toml   |   99 --
+ .../skills/bmad-quick-dev/compile-epic-context.md  |   62 -
+ .agents/skills/bmad-quick-dev/customize.toml       |   33 -
+ .agents/skills/bmad-quick-dev/spec-template.md     |   89 --
+ .../bmad-quick-dev/step-01-clarify-and-route.md    |  105 --
+ .agents/skills/bmad-quick-dev/step-02-plan.md      |   52 -
+ .agents/skills/bmad-quick-dev/step-03-implement.md |   41 -
+ .agents/skills/bmad-quick-dev/step-04-review.md    |   63 -
+ .../skills/bmad-quick-dev/sync-sprint-status.md    |   19 -
+ .../bmad-review-adversarial-general/SKILL.md       |   37 -
+ .../skills/bmad-review-edge-case-hunter/SKILL.md   |   73 -
+ .../references/deletion-check.md                   |   14 -
+ .agents/skills/bmad-spec/SKILL.md                  |  145 --
+ .../skills/bmad-spec/assets/headless-schemas.md    |   33 -
+ .agents/skills/bmad-spec/assets/spec-template.md   |   49 -
+ .agents/skills/bmad-spec/customize.toml            |   53 -
+ .../skills/bmad-technical-research/customize.toml  |   41 -
+ .../bmad-technical-research/research.template.md   |   29 -
+ .../technical-steps/step-01-init.md                |  137 --
+ .../technical-steps/step-02-technical-overview.md  |  239 ----
+ .../step-03-integration-patterns.md                |  248 ----
+ .../step-04-architectural-patterns.md              |  202 ---
+ .../step-05-implementation-research.md             |  233 ----
+ .../skills/gds-agent-game-designer/customize.toml  |   59 -
+ .agents/skills/gds-gdd/assets/game-types.csv       |   25 -
+ .../gds-gdd/assets/game-types/action-platformer.md |   45 -
+ .../skills/gds-gdd/assets/game-types/adventure.md  |   84 --
+ .../skills/gds-gdd/assets/game-types/card-game.md  |   76 -
+ .../skills/gds-gdd/assets/game-types/fighting.md   |   89 --
+ .agents/skills/gds-gdd/assets/game-types/horror.md |   86 --
+ .../gds-gdd/assets/game-types/idle-incremental.md  |   78 --
+ .../gds-gdd/assets/game-types/metroidvania.md      |   87 --
+ .agents/skills/gds-gdd/assets/game-types/moba.md   |   74 -
+ .../skills/gds-gdd/assets/game-types/party-game.md |   79 --
+ .agents/skills/gds-gdd/assets/game-types/puzzle.md |   58 -
+ .agents/skills/gds-gdd/assets/game-types/racing.md |   88 --
+ .agents/skills/gds-gdd/assets/game-types/rhythm.md |   79 --
+ .../skills/gds-gdd/assets/game-types/roguelike.md  |   69 -
+ .agents/skills/gds-gdd/assets/game-types/rpg.md    |   70 -
+ .../skills/gds-gdd/assets/game-types/sandbox.md    |   79 --
+ .../skills/gds-gdd/assets/game-types/shooter.md    |   62 -
+ .../skills/gds-gdd/assets/game-types/simulation.md |   73 -
+ .agents/skills/gds-gdd/assets/game-types/sports.md |   75 -
+ .../skills/gds-gdd/assets/game-types/strategy.md   |   71 -
+ .../skills/gds-gdd/assets/game-types/survival.md   |   79 --
+ .../skills/gds-gdd/assets/game-types/text-based.md |   91 --
+ .../gds-gdd/assets/game-types/tower-defense.md     |   79 --
+ .../assets/game-types/turn-based-tactics.md        |   88 --
+ .../gds-gdd/assets/game-types/visual-novel.md      |   89 --
+ .agents/skills/gds-gdd/assets/gdd-template.md      |  153 --
+ .../gds-gdd/assets/gdd-validation-checklist.md     |   38 -
+ .agents/skills/gds-gdd/assets/genre-complexity.csv |   26 -
+ .agents/skills/gds-gdd/assets/headless-schemas.md  |   81 --
+ .../gds-gdd/assets/validation-report-template.html |  190 ---
+ .agents/skills/gds-gdd/customize.toml              |   99 --
+ .../gds-gdd/references/facilitation-guide.md       |   93 --
+ .agents/skills/gds-gdd/references/gdd-purpose.md   |  224 ---
+ .agents/skills/gds-gdd/references/headless.md      |   26 -
+ .../gds-gdd/scripts/render-validation-html.py      |  290 ----
+ .agents/skills/jimuyun-architecture/SKILL.md       |    2 +-
+ .../references/native-version.json                 |    6 +-
+ .../jimuyun-architecture/references/operation.md   |   31 +-
+ .../skills/jimuyun-architecture/scripts/invoke.py  |    6 +-
+ .../scripts/tests/test_invoke.py                   |    4 +-
+ .../jimuyun-architecture/skill-quality.v1.json     |   11 +-
+ .agents/skills/jimuyun-spec/SKILL.md               |    2 +-
+ .../jimuyun-spec/references/native-version.json    |    6 +-
+ .../skills/jimuyun-spec/references/operation.md    |   39 +-
+ .agents/skills/jimuyun-spec/scripts/bridge.py      |    9 +-
+ .../jimuyun-spec/scripts/canonical_package.py      |    8 +
+ .agents/skills/jimuyun-spec/skill-quality.v1.json  |   11 +-
+ .gitignore                                         |   58 +
+ docs/workflows/README.md                           |    2 +-
+ docs/workflows/bmad-native-wrappers.md             |  242 ++--
+ scripts/toolchain/bmad_native/__init__.py          |  192 ++-
+ scripts/toolchain/bmad_native/__main__.py          |   23 +-
+ .../bmad_native/distribution-inventory.json        | 1461 ++++++++++++++++++++
+ scripts/toolchain/bmad_native/install.py           |   71 +
+ scripts/toolchain/bmad_native/test_preflight.py    |  161 +++
+ scripts/toolchain/bmad_native/testing.py           |    6 +-
+ scripts/toolchain/bmad_native/v6.12.4.json         |   42 +
+ 151 files changed, 2218 insertions(+), 13645 deletions(-)
+
+D	.agents/skills/bmad-advanced-elicitation/methods.csv
+D	.agents/skills/bmad-architecture/SKILL.md
+D	.agents/skills/bmad-architecture/assets/spine-template.md
+D	.agents/skills/bmad-architecture/customize.toml
+D	.agents/skills/bmad-architecture/references/headless.md
+D	.agents/skills/bmad-architecture/references/reviewer-gate.md
+D	.agents/skills/bmad-architecture/scripts/lint_spine.py
+D	.agents/skills/bmad-architecture/scripts/tests/test_lint_spine.py
+D	.agents/skills/bmad-brainstorming/SKILL.md
+D	.agents/skills/bmad-brainstorming/analysis/catalog-analysis.md
+D	.agents/skills/bmad-brainstorming/analysis/method-matrix.csv
+D	.agents/skills/bmad-brainstorming/assets/brain-icons.json
+D	.agents/skills/bmad-brainstorming/assets/brain-methods.csv
+D	.agents/skills/bmad-brainstorming/assets/brain-selector.html
+D	.agents/skills/bmad-brainstorming/customize.toml
+D	.agents/skills/bmad-brainstorming/references/converge.md
+D	.agents/skills/bmad-brainstorming/references/finalize.md
+D	.agents/skills/bmad-brainstorming/references/headless.md
+D	.agents/skills/bmad-brainstorming/references/in-chat-techniques.md
+D	.agents/skills/bmad-brainstorming/references/mode-autonomous.md
+D	.agents/skills/bmad-brainstorming/references/mode-facilitator.md
+D	.agents/skills/bmad-brainstorming/references/mode-partner.md
+D	.agents/skills/bmad-brainstorming/references/resume.md
+D	.agents/skills/bmad-brainstorming/scripts/brain.py
+D	.agents/skills/bmad-brainstorming/scripts/tests/test_brain.py
+D	.agents/skills/bmad-check-implementation-readiness/customize.toml
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-01-document-discovery.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-03-epic-coverage-validation.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md
+D	.agents/skills/bmad-check-implementation-readiness/templates/readiness-report-template.md
+D	.agents/skills/bmad-code-review/customize.toml
+D	.agents/skills/bmad-code-review/steps/step-01-gather-context.md
+D	.agents/skills/bmad-code-review/steps/step-02-review.md
+D	.agents/skills/bmad-code-review/steps/step-03-triage.md
+D	.agents/skills/bmad-create-epics-and-stories/customize.toml
+D	.agents/skills/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md
+D	.agents/skills/bmad-create-epics-and-stories/steps/step-02-design-epics.md
+D	.agents/skills/bmad-create-epics-and-stories/steps/step-03-create-stories.md
+D	.agents/skills/bmad-create-epics-and-stories/templates/epics-template.md
+D	.agents/skills/bmad-create-story/checklist.md
+D	.agents/skills/bmad-create-story/customize.toml
+D	.agents/skills/bmad-create-story/discover-inputs.md
+D	.agents/skills/bmad-create-story/template.md
+D	.agents/skills/bmad-dev-auto/compile-epic-context.md
+D	.agents/skills/bmad-dev-auto/customize.toml
+D	.agents/skills/bmad-dev-auto/spec-template.md
+D	.agents/skills/bmad-dev-auto/step-01-clarify-and-route.md
+D	.agents/skills/bmad-dev-auto/step-02-plan.md
+D	.agents/skills/bmad-dev-auto/step-03-implement.md
+D	.agents/skills/bmad-dev-auto/step-04-review.md
+D	.agents/skills/bmad-dev-story/checklist.md
+D	.agents/skills/bmad-dev-story/customize.toml
+D	.agents/skills/bmad-editorial-review-structure/SKILL.md
+D	.agents/skills/bmad-forge-idea/SKILL.md
+D	.agents/skills/bmad-forge-idea/customize.toml
+D	.agents/skills/bmad-forge-idea/scripts/resolve_personas.py
+D	.agents/skills/bmad-forge-idea/scripts/tests/test_resolve_personas.py
+D	.agents/skills/bmad-help/SKILL.md
+D	.agents/skills/bmad-index-docs/SKILL.md
+D	.agents/skills/bmad-prd/SKILL.md
+D	.agents/skills/bmad-prd/assets/headless-schemas.md
+D	.agents/skills/bmad-prd/assets/prd-template.md
+D	.agents/skills/bmad-prd/assets/prd-validation-checklist.md
+D	.agents/skills/bmad-prd/assets/validation-report-template.html
+D	.agents/skills/bmad-prd/customize.toml
+D	.agents/skills/bmad-prd/references/headless.md
+D	.agents/skills/bmad-product-brief/SKILL.md
+D	.agents/skills/bmad-product-brief/assets/brief-template.md
+D	.agents/skills/bmad-product-brief/customize.toml
+D	.agents/skills/bmad-quick-dev/compile-epic-context.md
+D	.agents/skills/bmad-quick-dev/customize.toml
+D	.agents/skills/bmad-quick-dev/spec-template.md
+D	.agents/skills/bmad-quick-dev/step-01-clarify-and-route.md
+D	.agents/skills/bmad-quick-dev/step-02-plan.md
+D	.agents/skills/bmad-quick-dev/step-03-implement.md
+D	.agents/skills/bmad-quick-dev/step-04-review.md
+D	.agents/skills/bmad-quick-dev/sync-sprint-status.md
+D	.agents/skills/bmad-review-adversarial-general/SKILL.md
+D	.agents/skills/bmad-review-edge-case-hunter/SKILL.md
+D	.agents/skills/bmad-review-edge-case-hunter/references/deletion-check.md
+D	.agents/skills/bmad-spec/SKILL.md
+D	.agents/skills/bmad-spec/assets/headless-schemas.md
+D	.agents/skills/bmad-spec/assets/spec-template.md
+D	.agents/skills/bmad-spec/customize.toml
+D	.agents/skills/bmad-technical-research/customize.toml
+D	.agents/skills/bmad-technical-research/research.template.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-01-init.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-02-technical-overview.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-03-integration-patterns.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-04-architectural-patterns.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-05-implementation-research.md
+D	.agents/skills/gds-agent-game-designer/customize.toml
+D	.agents/skills/gds-gdd/assets/game-types.csv
+D	.agents/skills/gds-gdd/assets/game-types/action-platformer.md
+D	.agents/skills/gds-gdd/assets/game-types/adventure.md
+D	.agents/skills/gds-gdd/assets/game-types/card-game.md
+D	.agents/skills/gds-gdd/assets/game-types/fighting.md
+D	.agents/skills/gds-gdd/assets/game-types/horror.md
+D	.agents/skills/gds-gdd/assets/game-types/idle-incremental.md
+D	.agents/skills/gds-gdd/assets/game-types/metroidvania.md
+D	.agents/skills/gds-gdd/assets/game-types/moba.md
+D	.agents/skills/gds-gdd/assets/game-types/party-game.md
+D	.agents/skills/gds-gdd/assets/game-types/puzzle.md
+D	.agents/skills/gds-gdd/assets/game-types/racing.md
+D	.agents/skills/gds-gdd/assets/game-types/rhythm.md
+D	.agents/skills/gds-gdd/assets/game-types/roguelike.md
+D	.agents/skills/gds-gdd/assets/game-types/rpg.md
+D	.agents/skills/gds-gdd/assets/game-types/sandbox.md
+D	.agents/skills/gds-gdd/assets/game-types/shooter.md
+D	.agents/skills/gds-gdd/assets/game-types/simulation.md
+D	.agents/skills/gds-gdd/assets/game-types/sports.md
+D	.agents/skills/gds-gdd/assets/game-types/strategy.md
+D	.agents/skills/gds-gdd/assets/game-types/survival.md
+D	.agents/skills/gds-gdd/assets/game-types/text-based.md
+D	.agents/skills/gds-gdd/assets/game-types/tower-defense.md
+D	.agents/skills/gds-gdd/assets/game-types/turn-based-tactics.md
+D	.agents/skills/gds-gdd/assets/game-types/visual-novel.md
+D	.agents/skills/gds-gdd/assets/gdd-template.md
+D	.agents/skills/gds-gdd/assets/gdd-validation-checklist.md
+D	.agents/skills/gds-gdd/assets/genre-complexity.csv
+D	.agents/skills/gds-gdd/assets/headless-schemas.md
+D	.agents/skills/gds-gdd/assets/validation-report-template.html
+D	.agents/skills/gds-gdd/customize.toml
+D	.agents/skills/gds-gdd/references/facilitation-guide.md
+D	.agents/skills/gds-gdd/references/gdd-purpose.md
+D	.agents/skills/gds-gdd/references/headless.md
+D	.agents/skills/gds-gdd/scripts/render-validation-html.py
+M	.agents/skills/jimuyun-architecture/SKILL.md
+M	.agents/skills/jimuyun-architecture/references/native-version.json
+M	.agents/skills/jimuyun-architecture/references/operation.md
+M	.agents/skills/jimuyun-architecture/scripts/invoke.py
+M	.agents/skills/jimuyun-architecture/scripts/tests/test_invoke.py
+M	.agents/skills/jimuyun-architecture/skill-quality.v1.json
+M	.agents/skills/jimuyun-spec/SKILL.md
+M	.agents/skills/jimuyun-spec/references/native-version.json
+M	.agents/skills/jimuyun-spec/references/operation.md
+M	.agents/skills/jimuyun-spec/scripts/bridge.py
+M	.agents/skills/jimuyun-spec/scripts/canonical_package.py
+M	.agents/skills/jimuyun-spec/skill-quality.v1.json
+M	.gitignore
+M	docs/workflows/README.md
+M	docs/workflows/bmad-native-wrappers.md
+M	scripts/toolchain/bmad_native/__init__.py
+M	scripts/toolchain/bmad_native/__main__.py
+A	scripts/toolchain/bmad_native/distribution-inventory.json
+A	scripts/toolchain/bmad_native/install.py
+A	scripts/toolchain/bmad_native/test_preflight.py
+M	scripts/toolchain/bmad_native/testing.py
+A	scripts/toolchain/bmad_native/v6.12.4.json
+
+
+Complete branch code delta from freshly fetched remote main bf78bb43c5583571eab9ec4001fb3c3a913c0708
+
+ .../skills/bmad-advanced-elicitation/methods.csv   |   72 -
+ .agents/skills/bmad-architecture/SKILL.md          |   85 --
+ .../bmad-architecture/assets/spine-template.md     |   79 --
+ .agents/skills/bmad-architecture/customize.toml    |  100 --
+ .../bmad-architecture/references/headless.md       |   26 -
+ .../bmad-architecture/references/reviewer-gate.md  |   15 -
+ .../skills/bmad-architecture/scripts/lint_spine.py |  257 ----
+ .../scripts/tests/test_lint_spine.py               |  270 ----
+ .agents/skills/bmad-brainstorming/SKILL.md         |   80 --
+ .../analysis/catalog-analysis.md                   |  239 ----
+ .../bmad-brainstorming/analysis/method-matrix.csv  |  109 --
+ .../bmad-brainstorming/assets/brain-icons.json     |  166 ---
+ .../bmad-brainstorming/assets/brain-methods.csv    |  109 --
+ .../bmad-brainstorming/assets/brain-selector.html  |  326 -----
+ .agents/skills/bmad-brainstorming/customize.toml   |   84 --
+ .../bmad-brainstorming/references/converge.md      |   24 -
+ .../bmad-brainstorming/references/finalize.md      |   26 -
+ .../bmad-brainstorming/references/headless.md      |   54 -
+ .../references/in-chat-techniques.md               |   18 -
+ .../references/mode-autonomous.md                  |   10 -
+ .../references/mode-facilitator.md                 |   11 -
+ .../bmad-brainstorming/references/mode-partner.md  |   16 -
+ .../skills/bmad-brainstorming/references/resume.md |    5 -
+ .agents/skills/bmad-brainstorming/scripts/brain.py |  740 ----------
+ .../bmad-brainstorming/scripts/tests/test_brain.py |  217 ---
+ .../customize.toml                                 |   41 -
+ .../steps/step-01-document-discovery.md            |  179 ---
+ .../steps/step-02-prd-analysis.md                  |  168 ---
+ .../steps/step-03-epic-coverage-validation.md      |  169 ---
+ .../steps/step-04-ux-alignment.md                  |  129 --
+ .../steps/step-05-epic-quality-review.md           |  241 ----
+ .../templates/readiness-report-template.md         |    4 -
+ .agents/skills/bmad-code-review/customize.toml     |   41 -
+ .../steps/step-01-gather-context.md                |   85 --
+ .../bmad-code-review/steps/step-02-review.md       |   41 -
+ .../bmad-code-review/steps/step-03-triage.md       |   56 -
+ .../bmad-create-epics-and-stories/customize.toml   |   41 -
+ .../steps/step-01-validate-prerequisites.md        |  263 ----
+ .../steps/step-02-design-epics.md                  |  242 ----
+ .../steps/step-03-create-stories.md                |  255 ----
+ .../templates/epics-template.md                    |   61 -
+ .agents/skills/bmad-create-story/checklist.md      |  357 -----
+ .agents/skills/bmad-create-story/customize.toml    |   41 -
+ .../skills/bmad-create-story/discover-inputs.md    |   88 --
+ .agents/skills/bmad-create-story/template.md       |   49 -
+ .../skills/bmad-dev-auto/compile-epic-context.md   |   62 -
+ .agents/skills/bmad-dev-auto/customize.toml        |   33 -
+ .agents/skills/bmad-dev-auto/spec-template.md      |   98 --
+ .../bmad-dev-auto/step-01-clarify-and-route.md     |   66 -
+ .agents/skills/bmad-dev-auto/step-02-plan.md       |   32 -
+ .agents/skills/bmad-dev-auto/step-03-implement.md  |   38 -
+ .agents/skills/bmad-dev-auto/step-04-review.md     |   97 --
+ .agents/skills/bmad-dev-story/checklist.md         |   80 --
+ .agents/skills/bmad-dev-story/customize.toml       |   41 -
+ .../bmad-editorial-review-structure/SKILL.md       |  179 ---
+ .agents/skills/bmad-forge-idea/SKILL.md            |  107 --
+ .agents/skills/bmad-forge-idea/customize.toml      |   42 -
+ .../bmad-forge-idea/scripts/resolve_personas.py    |  270 ----
+ .../scripts/tests/test_resolve_personas.py         |  138 --
+ .agents/skills/bmad-help/SKILL.md                  |   75 -
+ .agents/skills/bmad-index-docs/SKILL.md            |   66 -
+ .agents/skills/bmad-prd/SKILL.md                   |   92 --
+ .agents/skills/bmad-prd/assets/headless-schemas.md |   76 -
+ .agents/skills/bmad-prd/assets/prd-template.md     |  165 ---
+ .../bmad-prd/assets/prd-validation-checklist.md    |  135 --
+ .../assets/validation-report-template.html         |  325 -----
+ .agents/skills/bmad-prd/customize.toml             |  147 --
+ .agents/skills/bmad-prd/references/headless.md     |   39 -
+ .agents/skills/bmad-product-brief/SKILL.md         |   91 --
+ .../bmad-product-brief/assets/brief-template.md    |   41 -
+ .agents/skills/bmad-product-brief/customize.toml   |   99 --
+ .../skills/bmad-quick-dev/compile-epic-context.md  |   62 -
+ .agents/skills/bmad-quick-dev/customize.toml       |   33 -
+ .agents/skills/bmad-quick-dev/spec-template.md     |   89 --
+ .../bmad-quick-dev/step-01-clarify-and-route.md    |  105 --
+ .agents/skills/bmad-quick-dev/step-02-plan.md      |   52 -
+ .agents/skills/bmad-quick-dev/step-03-implement.md |   41 -
+ .agents/skills/bmad-quick-dev/step-04-review.md    |   63 -
+ .../skills/bmad-quick-dev/sync-sprint-status.md    |   19 -
+ .../bmad-review-adversarial-general/SKILL.md       |   37 -
+ .../skills/bmad-review-edge-case-hunter/SKILL.md   |   73 -
+ .../references/deletion-check.md                   |   14 -
+ .agents/skills/bmad-spec/SKILL.md                  |  161 ---
+ .../skills/bmad-spec/assets/headless-schemas.md    |   33 -
+ .agents/skills/bmad-spec/assets/spec-template.md   |   50 -
+ .agents/skills/bmad-spec/customize.toml            |   53 -
+ .../skills/bmad-technical-research/customize.toml  |   41 -
+ .../bmad-technical-research/research.template.md   |   29 -
+ .../technical-steps/step-01-init.md                |  137 --
+ .../technical-steps/step-02-technical-overview.md  |  239 ----
+ .../step-03-integration-patterns.md                |  248 ----
+ .../step-04-architectural-patterns.md              |  202 ---
+ .../step-05-implementation-research.md             |  233 ----
+ .../skills/gds-agent-game-designer/customize.toml  |   59 -
+ .agents/skills/gds-gdd/assets/game-types.csv       |   25 -
+ .../gds-gdd/assets/game-types/action-platformer.md |   45 -
+ .../skills/gds-gdd/assets/game-types/adventure.md  |   84 --
+ .../skills/gds-gdd/assets/game-types/card-game.md  |   76 -
+ .../skills/gds-gdd/assets/game-types/fighting.md   |   89 --
+ .agents/skills/gds-gdd/assets/game-types/horror.md |   86 --
+ .../gds-gdd/assets/game-types/idle-incremental.md  |   78 --
+ .../gds-gdd/assets/game-types/metroidvania.md      |   87 --
+ .agents/skills/gds-gdd/assets/game-types/moba.md   |   74 -
+ .../skills/gds-gdd/assets/game-types/party-game.md |   79 --
+ .agents/skills/gds-gdd/assets/game-types/puzzle.md |   58 -
+ .agents/skills/gds-gdd/assets/game-types/racing.md |   88 --
+ .agents/skills/gds-gdd/assets/game-types/rhythm.md |   79 --
+ .../skills/gds-gdd/assets/game-types/roguelike.md  |   69 -
+ .agents/skills/gds-gdd/assets/game-types/rpg.md    |   70 -
+ .../skills/gds-gdd/assets/game-types/sandbox.md    |   79 --
+ .../skills/gds-gdd/assets/game-types/shooter.md    |   62 -
+ .../skills/gds-gdd/assets/game-types/simulation.md |   73 -
+ .agents/skills/gds-gdd/assets/game-types/sports.md |   75 -
+ .../skills/gds-gdd/assets/game-types/strategy.md   |   71 -
+ .../skills/gds-gdd/assets/game-types/survival.md   |   79 --
+ .../skills/gds-gdd/assets/game-types/text-based.md |   91 --
+ .../gds-gdd/assets/game-types/tower-defense.md     |   79 --
+ .../assets/game-types/turn-based-tactics.md        |   88 --
+ .../gds-gdd/assets/game-types/visual-novel.md      |   89 --
+ .agents/skills/gds-gdd/assets/gdd-template.md      |  153 --
+ .../gds-gdd/assets/gdd-validation-checklist.md     |   38 -
+ .agents/skills/gds-gdd/assets/genre-complexity.csv |   26 -
+ .agents/skills/gds-gdd/assets/headless-schemas.md  |   81 --
+ .../gds-gdd/assets/validation-report-template.html |  190 ---
+ .agents/skills/gds-gdd/customize.toml              |   99 --
+ .../gds-gdd/references/facilitation-guide.md       |   93 --
+ .agents/skills/gds-gdd/references/gdd-purpose.md   |  224 ---
+ .agents/skills/gds-gdd/references/headless.md      |   26 -
+ .../gds-gdd/scripts/render-validation-html.py      |  290 ----
+ .agents/skills/jimuyun-architecture/SKILL.md       |   32 +
+ .../skills/jimuyun-architecture/agents/openai.yaml |    3 +
+ .../references/native-version.json                 |    6 +
+ .../jimuyun-architecture/references/operation.md   |   77 ++
+ .../references/reviewer-lifecycle.md               |   33 +
+ .../skills/jimuyun-architecture/scripts/invoke.py  |   84 ++
+ .../scripts/tests/test_invoke.py                   |   61 +
+ .../jimuyun-architecture/skill-quality.v1.json     |  195 +++
+ .agents/skills/jimuyun-spec/SKILL.md               |   30 +
+ .agents/skills/jimuyun-spec/agents/openai.yaml     |    3 +
+ .../references/canonical-package-contract.md       |    6 +-
+ .../jimuyun-spec/references/native-version.json    |    6 +
+ .../skills/jimuyun-spec/references/operation.md    |  102 ++
+ .agents/skills/jimuyun-spec/scripts/bridge.py      |  311 +++++
+ .../scripts/canonical_package.py                   |    8 +
+ .../jimuyun-spec/scripts/tests/test_bridge.py      |  168 +++
+ .../scripts/tests/test_canonical_package.py        |    0
+ .agents/skills/jimuyun-spec/skill-quality.v1.json  |  195 +++
+ .../tests/fixtures/selection_registry_negative.py  |    0
+ .../vdd-execution-plan/scripts/source_freeze.py    |    2 +-
+ .../tests/validators/source_freeze.py              |    2 +-
+ .gitignore                                         |   58 +
+ docs/workflows/README.md                           |    1 +
+ docs/workflows/bmad-native-wrappers.md             |  161 +++
+ knowledge/toolchain-workflow-index.md              |    7 +
+ .../clean-checkout-tests.log                       |    3 +
+ .../final-native-inventory.json                    |   12 +
+ .../lifecycle-scenario-responses.json              |   94 ++
+ .../quality-architecture.json                      |    1 +
+ logs/bmad-wrapper-implementation/quality-spec.json |    1 +
+ .../bmad-wrappers/create/execution-evidence.json   |  219 +++
+ .../bmad-wrappers/create/execution-evidence.json   |  146 ++
+ .../final-refresh/consumer-source-manifest.json    |   43 +
+ .../final-refresh/execution-evidence.json          |   69 +
+ .../update-title-limit/execution-evidence.json     |  138 ++
+ logs/bmad-wrapper-implementation/verification.md   |  254 ++++
+ scripts/toolchain/bmad_native/__init__.py          |  231 ++++
+ scripts/toolchain/bmad_native/__main__.py          |   35 +
+ .../bmad_native/distribution-inventory.json        | 1461 ++++++++++++++++++++
+ scripts/toolchain/bmad_native/install.py           |   71 +
+ scripts/toolchain/bmad_native/test_preflight.py    |  161 +++
+ scripts/toolchain/bmad_native/testing.py           |   39 +
+ scripts/toolchain/bmad_native/v6.10.0.json         |   23 +
+ scripts/toolchain/bmad_native/v6.12.4.json         |   42 +
+ .../tests/test_consumer_migrations.py              |    2 +-
+ 174 files changed, 4590 insertions(+), 13495 deletions(-)
+
+D	.agents/skills/bmad-advanced-elicitation/methods.csv
+D	.agents/skills/bmad-architecture/SKILL.md
+D	.agents/skills/bmad-architecture/assets/spine-template.md
+D	.agents/skills/bmad-architecture/customize.toml
+D	.agents/skills/bmad-architecture/references/headless.md
+D	.agents/skills/bmad-architecture/references/reviewer-gate.md
+D	.agents/skills/bmad-architecture/scripts/lint_spine.py
+D	.agents/skills/bmad-architecture/scripts/tests/test_lint_spine.py
+D	.agents/skills/bmad-brainstorming/SKILL.md
+D	.agents/skills/bmad-brainstorming/analysis/catalog-analysis.md
+D	.agents/skills/bmad-brainstorming/analysis/method-matrix.csv
+D	.agents/skills/bmad-brainstorming/assets/brain-icons.json
+D	.agents/skills/bmad-brainstorming/assets/brain-methods.csv
+D	.agents/skills/bmad-brainstorming/assets/brain-selector.html
+D	.agents/skills/bmad-brainstorming/customize.toml
+D	.agents/skills/bmad-brainstorming/references/converge.md
+D	.agents/skills/bmad-brainstorming/references/finalize.md
+D	.agents/skills/bmad-brainstorming/references/headless.md
+D	.agents/skills/bmad-brainstorming/references/in-chat-techniques.md
+D	.agents/skills/bmad-brainstorming/references/mode-autonomous.md
+D	.agents/skills/bmad-brainstorming/references/mode-facilitator.md
+D	.agents/skills/bmad-brainstorming/references/mode-partner.md
+D	.agents/skills/bmad-brainstorming/references/resume.md
+D	.agents/skills/bmad-brainstorming/scripts/brain.py
+D	.agents/skills/bmad-brainstorming/scripts/tests/test_brain.py
+D	.agents/skills/bmad-check-implementation-readiness/customize.toml
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-01-document-discovery.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-03-epic-coverage-validation.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md
+D	.agents/skills/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md
+D	.agents/skills/bmad-check-implementation-readiness/templates/readiness-report-template.md
+D	.agents/skills/bmad-code-review/customize.toml
+D	.agents/skills/bmad-code-review/steps/step-01-gather-context.md
+D	.agents/skills/bmad-code-review/steps/step-02-review.md
+D	.agents/skills/bmad-code-review/steps/step-03-triage.md
+D	.agents/skills/bmad-create-epics-and-stories/customize.toml
+D	.agents/skills/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md
+D	.agents/skills/bmad-create-epics-and-stories/steps/step-02-design-epics.md
+D	.agents/skills/bmad-create-epics-and-stories/steps/step-03-create-stories.md
+D	.agents/skills/bmad-create-epics-and-stories/templates/epics-template.md
+D	.agents/skills/bmad-create-story/checklist.md
+D	.agents/skills/bmad-create-story/customize.toml
+D	.agents/skills/bmad-create-story/discover-inputs.md
+D	.agents/skills/bmad-create-story/template.md
+D	.agents/skills/bmad-dev-auto/compile-epic-context.md
+D	.agents/skills/bmad-dev-auto/customize.toml
+D	.agents/skills/bmad-dev-auto/spec-template.md
+D	.agents/skills/bmad-dev-auto/step-01-clarify-and-route.md
+D	.agents/skills/bmad-dev-auto/step-02-plan.md
+D	.agents/skills/bmad-dev-auto/step-03-implement.md
+D	.agents/skills/bmad-dev-auto/step-04-review.md
+D	.agents/skills/bmad-dev-story/checklist.md
+D	.agents/skills/bmad-dev-story/customize.toml
+D	.agents/skills/bmad-editorial-review-structure/SKILL.md
+D	.agents/skills/bmad-forge-idea/SKILL.md
+D	.agents/skills/bmad-forge-idea/customize.toml
+D	.agents/skills/bmad-forge-idea/scripts/resolve_personas.py
+D	.agents/skills/bmad-forge-idea/scripts/tests/test_resolve_personas.py
+D	.agents/skills/bmad-help/SKILL.md
+D	.agents/skills/bmad-index-docs/SKILL.md
+D	.agents/skills/bmad-prd/SKILL.md
+D	.agents/skills/bmad-prd/assets/headless-schemas.md
+D	.agents/skills/bmad-prd/assets/prd-template.md
+D	.agents/skills/bmad-prd/assets/prd-validation-checklist.md
+D	.agents/skills/bmad-prd/assets/validation-report-template.html
+D	.agents/skills/bmad-prd/customize.toml
+D	.agents/skills/bmad-prd/references/headless.md
+D	.agents/skills/bmad-product-brief/SKILL.md
+D	.agents/skills/bmad-product-brief/assets/brief-template.md
+D	.agents/skills/bmad-product-brief/customize.toml
+D	.agents/skills/bmad-quick-dev/compile-epic-context.md
+D	.agents/skills/bmad-quick-dev/customize.toml
+D	.agents/skills/bmad-quick-dev/spec-template.md
+D	.agents/skills/bmad-quick-dev/step-01-clarify-and-route.md
+D	.agents/skills/bmad-quick-dev/step-02-plan.md
+D	.agents/skills/bmad-quick-dev/step-03-implement.md
+D	.agents/skills/bmad-quick-dev/step-04-review.md
+D	.agents/skills/bmad-quick-dev/sync-sprint-status.md
+D	.agents/skills/bmad-review-adversarial-general/SKILL.md
+D	.agents/skills/bmad-review-edge-case-hunter/SKILL.md
+D	.agents/skills/bmad-review-edge-case-hunter/references/deletion-check.md
+D	.agents/skills/bmad-spec/SKILL.md
+D	.agents/skills/bmad-spec/assets/headless-schemas.md
+D	.agents/skills/bmad-spec/assets/spec-template.md
+D	.agents/skills/bmad-spec/customize.toml
+D	.agents/skills/bmad-technical-research/customize.toml
+D	.agents/skills/bmad-technical-research/research.template.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-01-init.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-02-technical-overview.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-03-integration-patterns.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-04-architectural-patterns.md
+D	.agents/skills/bmad-technical-research/technical-steps/step-05-implementation-research.md
+D	.agents/skills/gds-agent-game-designer/customize.toml
+D	.agents/skills/gds-gdd/assets/game-types.csv
+D	.agents/skills/gds-gdd/assets/game-types/action-platformer.md
+D	.agents/skills/gds-gdd/assets/game-types/adventure.md
+D	.agents/skills/gds-gdd/assets/game-types/card-game.md
+D	.agents/skills/gds-gdd/assets/game-types/fighting.md
+D	.agents/skills/gds-gdd/assets/game-types/horror.md
+D	.agents/skills/gds-gdd/assets/game-types/idle-incremental.md
+D	.agents/skills/gds-gdd/assets/game-types/metroidvania.md
+D	.agents/skills/gds-gdd/assets/game-types/moba.md
+D	.agents/skills/gds-gdd/assets/game-types/party-game.md
+D	.agents/skills/gds-gdd/assets/game-types/puzzle.md
+D	.agents/skills/gds-gdd/assets/game-types/racing.md
+D	.agents/skills/gds-gdd/assets/game-types/rhythm.md
+D	.agents/skills/gds-gdd/assets/game-types/roguelike.md
+D	.agents/skills/gds-gdd/assets/game-types/rpg.md
+D	.agents/skills/gds-gdd/assets/game-types/sandbox.md
+D	.agents/skills/gds-gdd/assets/game-types/shooter.md
+D	.agents/skills/gds-gdd/assets/game-types/simulation.md
+D	.agents/skills/gds-gdd/assets/game-types/sports.md
+D	.agents/skills/gds-gdd/assets/game-types/strategy.md
+D	.agents/skills/gds-gdd/assets/game-types/survival.md
+D	.agents/skills/gds-gdd/assets/game-types/text-based.md
+D	.agents/skills/gds-gdd/assets/game-types/tower-defense.md
+D	.agents/skills/gds-gdd/assets/game-types/turn-based-tactics.md
+D	.agents/skills/gds-gdd/assets/game-types/visual-novel.md
+D	.agents/skills/gds-gdd/assets/gdd-template.md
+D	.agents/skills/gds-gdd/assets/gdd-validation-checklist.md
+D	.agents/skills/gds-gdd/assets/genre-complexity.csv
+D	.agents/skills/gds-gdd/assets/headless-schemas.md
+D	.agents/skills/gds-gdd/assets/validation-report-template.html
+D	.agents/skills/gds-gdd/customize.toml
+D	.agents/skills/gds-gdd/references/facilitation-guide.md
+D	.agents/skills/gds-gdd/references/gdd-purpose.md
+D	.agents/skills/gds-gdd/references/headless.md
+D	.agents/skills/gds-gdd/scripts/render-validation-html.py
+A	.agents/skills/jimuyun-architecture/SKILL.md
+A	.agents/skills/jimuyun-architecture/agents/openai.yaml
+A	.agents/skills/jimuyun-architecture/references/native-version.json
+A	.agents/skills/jimuyun-architecture/references/operation.md
+A	.agents/skills/jimuyun-architecture/references/reviewer-lifecycle.md
+A	.agents/skills/jimuyun-architecture/scripts/invoke.py
+A	.agents/skills/jimuyun-architecture/scripts/tests/test_invoke.py
+A	.agents/skills/jimuyun-architecture/skill-quality.v1.json
+A	.agents/skills/jimuyun-spec/SKILL.md
+A	.agents/skills/jimuyun-spec/agents/openai.yaml
+R093	.agents/skills/bmad-spec/references/canonical-package-contract.md	.agents/skills/jimuyun-spec/references/canonical-package-contract.md
+A	.agents/skills/jimuyun-spec/references/native-version.json
+A	.agents/skills/jimuyun-spec/references/operation.md
+A	.agents/skills/jimuyun-spec/scripts/bridge.py
+R096	.agents/skills/bmad-spec/scripts/canonical_package.py	.agents/skills/jimuyun-spec/scripts/canonical_package.py
+A	.agents/skills/jimuyun-spec/scripts/tests/test_bridge.py
+R100	.agents/skills/bmad-spec/scripts/tests/test_canonical_package.py	.agents/skills/jimuyun-spec/scripts/tests/test_canonical_package.py
+A	.agents/skills/jimuyun-spec/skill-quality.v1.json
+R100	.agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py	.agents/skills/jimuyun-spec/tests/fixtures/selection_registry_negative.py
+M	.agents/skills/vdd-execution-plan/scripts/source_freeze.py
+M	.agents/skills/vdd-execution-plan/tests/validators/source_freeze.py
+M	.gitignore
+M	docs/workflows/README.md
+A	docs/workflows/bmad-native-wrappers.md
+M	knowledge/toolchain-workflow-index.md
+A	logs/bmad-wrapper-implementation/clean-checkout-tests.log
+A	logs/bmad-wrapper-implementation/final-native-inventory.json
+A	logs/bmad-wrapper-implementation/lifecycle-scenario-responses.json
+A	logs/bmad-wrapper-implementation/quality-architecture.json
+A	logs/bmad-wrapper-implementation/quality-spec.json
+A	logs/bmad-wrapper-implementation/semantic-architecture-project/logs/bmad-wrappers/create/execution-evidence.json
+A	logs/bmad-wrapper-implementation/semantic-spec-project/logs/bmad-wrappers/create/execution-evidence.json
+A	logs/bmad-wrapper-implementation/semantic-spec-project/logs/bmad-wrappers/final-refresh/consumer-source-manifest.json
+A	logs/bmad-wrapper-implementation/semantic-spec-project/logs/bmad-wrappers/final-refresh/execution-evidence.json
+A	logs/bmad-wrapper-implementation/semantic-spec-project/logs/bmad-wrappers/update-title-limit/execution-evidence.json
+A	logs/bmad-wrapper-implementation/verification.md
+A	scripts/toolchain/bmad_native/__init__.py
+A	scripts/toolchain/bmad_native/__main__.py
+A	scripts/toolchain/bmad_native/distribution-inventory.json
+A	scripts/toolchain/bmad_native/install.py
+A	scripts/toolchain/bmad_native/test_preflight.py
+A	scripts/toolchain/bmad_native/testing.py
+A	scripts/toolchain/bmad_native/v6.10.0.json
+A	scripts/toolchain/bmad_native/v6.12.4.json
+M	scripts/toolchain/canonical_evidence/tests/test_consumer_migrations.py

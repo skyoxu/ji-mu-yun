@@ -1,0 +1,72 @@
+{
+  "base": "fbd94e5145442cfb9490057252f08aaebd9fe855",
+  "files": [
+    {
+      "path": ".agents/skills/bmad-advanced-elicitation/SKILL.md",
+      "sha256": "d6abafe2f250f012765dc63602c0cc3ad77ba693eb06d2f8520dc759f192f7f2",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-advanced-elicitation/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/SKILL.md",
+      "sha256": "075850d1482ec548f268bcdcf2cb05755e6007c605a601a0b2090da18bd8b750",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-check-implementation-readiness/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "sha256": "614a9dfa81beec079314bc187bc33cfd5f28eff5276a65b4d9a4ba8921a90e45",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-check-implementation-readiness/steps/step-06-final-assessment.md"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/SKILL.md",
+      "sha256": "32ed3ecc29e34e221280e7ba1d1e787c36b5fad225ec3bd66ac787bc0efcea2c",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-code-review/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-04-present.md",
+      "sha256": "b60f96c4e675ae03f52dea53d9b58a2346a8193b79033028b85c7c55adfa9661",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-code-review/steps/step-04-present.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/SKILL.md",
+      "sha256": "da5e882eeefe998ec4d5e6aee7f1b0717cf1235df2767106ab458a92d91adf1a",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-create-epics-and-stories/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-04-final-validation.md",
+      "sha256": "b13ccfa85e525559ff0dde5fe76a75334340f256984cff122ae17591019b72e3",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-create-epics-and-stories/steps/step-04-final-validation.md"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/SKILL.md",
+      "sha256": "0f086c101465d3fa45a9eeb64475c7c23ba9ed28b09a6c7dda28f74e7bcd1459",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-create-story/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/SKILL.md",
+      "sha256": "97c893fc36726e8ca10f9121aaf761daa12fd42f6125310bcde942699c421ded",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-dev-auto/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/SKILL.md",
+      "sha256": "93c9ff14d425baf6181c7e0dfa24bad565e45cda18dbfe4eacb6ec7708492064",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-dev-story/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/references/validate.md",
+      "sha256": "ca2a89e3ecac40da08f17efcb4ebf468d6684c4344a8029aae798fd5b1e80610",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-prd/references/validate.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/SKILL.md",
+      "sha256": "9424edfd72d1c3c66971ca48c0b62410ae1ba1d8e1aa43b598d72d9580a3bb94",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-technical-research/SKILL.md"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-06-research-synthesis.md",
+      "sha256": "3655cae65ed362721eda04ccacd7d6eeefebaae246ffd65b07c82c7bd04ea5dd",
+      "recovery": "logs/bmad-final-retirement/recovery/.agents/skills/bmad-technical-research/technical-steps/step-06-research-synthesis.md"
+    }
+  ],
+  "local_files_preserved": true,
+  "reapply_old_launcher_patch": false
+}

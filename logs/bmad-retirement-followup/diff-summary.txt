@@ -1,0 +1,88 @@
+ .agents/skills/bmad-agent-game-designer/SKILL.md   |  12 -
+ .agents/skills/bmad-quick-dev/SKILL.md             | 150 ----------
+ .../bmad-quick-dev/scripts/_schema_runtime.py      |  82 -----
+ .../scripts/quick_dev_input_router.py              | 314 --------------------
+ .agents/skills/bmad-quick-dev/step-05-present.md   |  78 -----
+ .agents/skills/bmad-quick-dev/step-oneshot.md      |  79 -----
+ .../tests/test_quick_dev_input_router.py           | 330 ---------------------
+ .agents/skills/gds-agent-game-designer/SKILL.md    |  72 -----
+ .agents/skills/gds-create-gdd/SKILL.md             |  12 -
+ .agents/skills/gds-create-gdd/game-types.csv       |  25 --
+ .../gds-create-gdd/game-types/action-platformer.md |  45 ---
+ .../skills/gds-create-gdd/game-types/adventure.md  |  84 ------
+ .../skills/gds-create-gdd/game-types/card-game.md  |  76 -----
+ .../skills/gds-create-gdd/game-types/fighting.md   |  89 ------
+ .agents/skills/gds-create-gdd/game-types/horror.md |  86 ------
+ .../gds-create-gdd/game-types/idle-incremental.md  |  78 -----
+ .../gds-create-gdd/game-types/metroidvania.md      |  87 ------
+ .agents/skills/gds-create-gdd/game-types/moba.md   |  74 -----
+ .../skills/gds-create-gdd/game-types/party-game.md |  79 -----
+ .agents/skills/gds-create-gdd/game-types/puzzle.md |  58 ----
+ .agents/skills/gds-create-gdd/game-types/racing.md |  88 ------
+ .agents/skills/gds-create-gdd/game-types/rhythm.md |  79 -----
+ .../skills/gds-create-gdd/game-types/roguelike.md  |  69 -----
+ .agents/skills/gds-create-gdd/game-types/rpg.md    |  70 -----
+ .../skills/gds-create-gdd/game-types/sandbox.md    |  79 -----
+ .../skills/gds-create-gdd/game-types/shooter.md    |  62 ----
+ .../skills/gds-create-gdd/game-types/simulation.md |  73 -----
+ .agents/skills/gds-create-gdd/game-types/sports.md |  75 -----
+ .../skills/gds-create-gdd/game-types/strategy.md   |  71 -----
+ .../skills/gds-create-gdd/game-types/survival.md   |  79 -----
+ .../skills/gds-create-gdd/game-types/text-based.md |  91 ------
+ .../gds-create-gdd/game-types/tower-defense.md     |  79 -----
+ .../game-types/turn-based-tactics.md               |  88 ------
+ .../gds-create-gdd/game-types/visual-novel.md      |  89 ------
+ .agents/skills/gds-gdd/SKILL.md                    | 100 -------
+ .../skills/gds-gdd/references/validation-render.md |  58 ----
+ .gitignore                                         |  14 +-
+ docs/game-type-guides/README.md                    |   8 +-
+ docs/workflows/bmad-native-wrappers.md             |  69 ++++-
+ docs/workflows/game-type-route-profile-guide.md    |   2 +-
+ docs/workflows/prototype-7day-playable-godot-zh.md |   4 +-
+ knowledge/toolchain-workflow-index.md              |   8 +-
+ .../bmad_native/distribution-inventory.json        | 303 +++++++++++++------
+ 43 files changed, 286 insertions(+), 3282 deletions(-)
+
+D	.agents/skills/bmad-agent-game-designer/SKILL.md
+D	.agents/skills/bmad-quick-dev/SKILL.md
+D	.agents/skills/bmad-quick-dev/scripts/_schema_runtime.py
+D	.agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py
+D	.agents/skills/bmad-quick-dev/step-05-present.md
+D	.agents/skills/bmad-quick-dev/step-oneshot.md
+D	.agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py
+D	.agents/skills/gds-agent-game-designer/SKILL.md
+D	.agents/skills/gds-create-gdd/SKILL.md
+D	.agents/skills/gds-create-gdd/game-types.csv
+D	.agents/skills/gds-create-gdd/game-types/action-platformer.md
+D	.agents/skills/gds-create-gdd/game-types/adventure.md
+D	.agents/skills/gds-create-gdd/game-types/card-game.md
+D	.agents/skills/gds-create-gdd/game-types/fighting.md
+D	.agents/skills/gds-create-gdd/game-types/horror.md
+D	.agents/skills/gds-create-gdd/game-types/idle-incremental.md
+D	.agents/skills/gds-create-gdd/game-types/metroidvania.md
+D	.agents/skills/gds-create-gdd/game-types/moba.md
+D	.agents/skills/gds-create-gdd/game-types/party-game.md
+D	.agents/skills/gds-create-gdd/game-types/puzzle.md
+D	.agents/skills/gds-create-gdd/game-types/racing.md
+D	.agents/skills/gds-create-gdd/game-types/rhythm.md
+D	.agents/skills/gds-create-gdd/game-types/roguelike.md
+D	.agents/skills/gds-create-gdd/game-types/rpg.md
+D	.agents/skills/gds-create-gdd/game-types/sandbox.md
+D	.agents/skills/gds-create-gdd/game-types/shooter.md
+D	.agents/skills/gds-create-gdd/game-types/simulation.md
+D	.agents/skills/gds-create-gdd/game-types/sports.md
+D	.agents/skills/gds-create-gdd/game-types/strategy.md
+D	.agents/skills/gds-create-gdd/game-types/survival.md
+D	.agents/skills/gds-create-gdd/game-types/text-based.md
+D	.agents/skills/gds-create-gdd/game-types/tower-defense.md
+D	.agents/skills/gds-create-gdd/game-types/turn-based-tactics.md
+D	.agents/skills/gds-create-gdd/game-types/visual-novel.md
+D	.agents/skills/gds-gdd/SKILL.md
+D	.agents/skills/gds-gdd/references/validation-render.md
+M	.gitignore
+M	docs/game-type-guides/README.md
+M	docs/workflows/bmad-native-wrappers.md
+M	docs/workflows/game-type-route-profile-guide.md
+M	docs/workflows/prototype-7day-playable-godot-zh.md
+M	knowledge/toolchain-workflow-index.md
+M	scripts/toolchain/bmad_native/distribution-inventory.json

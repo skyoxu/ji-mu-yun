@@ -1,0 +1,42 @@
+{
+  "checks": [
+    {
+      "root": ".",
+      "verified_files": 16,
+      "exact_file_inventory": true
+    },
+    {
+      "root": "logs/bmad-6124/spec-project",
+      "verified_files": 16,
+      "exact_file_inventory": true
+    },
+    {
+      "root": "logs/bmad-6124/spec-project/logs/bmad-wrappers/create/native",
+      "verified_files": 16,
+      "exact_file_inventory": true
+    },
+    {
+      "root": "logs/bmad-6124/spec-project/logs/bmad-wrappers/refresh/native",
+      "verified_files": 16,
+      "exact_file_inventory": true
+    },
+    {
+      "root": "logs/bmad-6124/architecture-project",
+      "verified_files": 16,
+      "exact_file_inventory": true
+    },
+    {
+      "root": "logs/bmad-6124/architecture-project/logs/bmad-wrappers/create/native",
+      "verified_files": 16,
+      "exact_file_inventory": true
+    }
+  ],
+  "unchanged_official_architecture_references_since_610": {
+    "references/reviewer-gate.md": true,
+    "references/headless.md": true,
+    "assets/spine-template.md": true
+  },
+  "repository_lifecycle_policy_unchanged": true,
+  "official_source_commit": "bab9082c3e884e0d72c759bcd1a6d90bcc01be84",
+  "version_lock_sha256": "25eff629efa8dae95c0126247f608250f57182d93d17f8ed80fb3b1961de9f95"
+}

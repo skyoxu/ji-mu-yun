@@ -18,6 +18,13 @@ protected review, or releasing artifacts.
 
 ## Allowlisted Triggers
 
+Repository BMAD SPEC create/update/refresh routes through `jimuyun-spec`;
+repository architecture create/update/validate routes through
+`jimuyun-architecture`. See
+`docs/workflows/bmad-native-wrappers.md` for pinned native ownership, active
+consumer migration and historical replay. These routes do not activate the
+formal delivery workflow, VDD, Quick Dev or Acceptance.
+
 | Explicit task intent | Narrow entrypoint |
 | --- | --- |
 | Bootstrap a copied business repository | `workflow-chapter2-repository-bootstrap` |
@@ -54,9 +61,11 @@ The following do not activate `workflow.md`:
 - an assistant suggestion, inferred future need, or similarity to a workflow
   chapter.
 
-For direct bounded implementation, prefer ordinary repository engineering or
-`bmad-quick-dev` when explicitly invoked. Do not manufacture Taskmaster, VDD,
-Chapter 3-7, or release state as a side effect.
+For direct bounded implementation, prefer ordinary repository engineering.
+Stock `bmad-quick-dev` has been retired by the maintainer; its former input router
+is not a current entrypoint. This does not retire `quick-dev-tdd-adapter` or migrate
+its contracts into `bmad-build`. Do not manufacture Taskmaster, VDD, Chapter 3-7,
+or release state as a side effect.
 
 ## Retrieval Budget
 

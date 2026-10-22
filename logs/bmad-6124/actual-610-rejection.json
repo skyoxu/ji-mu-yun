@@ -1,0 +1,21 @@
+{
+  "official_source_commit": "081e64ee5aab2316b912883f7bee528ee143ce36",
+  "files": 15,
+  "no_changes": true,
+  "results": [
+    {
+      "ok": false,
+      "error": "NATIVE_VERSION_OLD",
+      "message": "Upgrade the project-local native installation to official BMAD 6.12.4, then retry. No automatic upgrade was performed.",
+      "supported_version": "6.12.4",
+      "authorizes": []
+    },
+    {
+      "ok": false,
+      "error": "NATIVE_VERSION_OLD",
+      "message": "Upgrade the project-local native installation to official BMAD 6.12.4, then retry. No automatic upgrade was performed.",
+      "supported_version": "6.12.4",
+      "authorizes": []
+    }
+  ]
+}

@@ -1,0 +1,1301 @@
+{
+  "checked_at_utc": "2026-10-22T14:48:46.011193+00:00",
+  "remote_main_sha": "bf78bb43c5583571eab9ec4001fb3c3a913c0708",
+  "remote_main_tree": "e1a48456837237707ad68c39713c355233b7be9e",
+  "full_remote_tree_entries": 39821,
+  "full_remote_ls_tree_sha256": "b2e807c536446fce53c6aac57e03b664f68b1fb800d1a63ab60bc74f049b50ce",
+  "method": "Fresh fetch origin main; ls-remote agrees with FETCH_HEAD; full tree scanned; all previously source-classified blobs verified unchanged. Local main not used.",
+  "remote_counts": {
+    "retained_custom_or_repository_binding": 49,
+    "official_distribution_residual": 125,
+    "legacy_repository_customization": 8
+  },
+  "remote_candidates": [
+    {
+      "path": ".agents/skills/bmad-advanced-elicitation/SKILL.md",
+      "git_blob": "fa14ee28a1cbdc25550b5e9ca10352820130bc26",
+      "sha256": "d6abafe2f250f012765dc63602c0cc3ad77ba693eb06d2f8520dc759f192f7f2",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-advanced-elicitation/methods.csv",
+      "git_blob": "cb9621bb7c72b88722c3458443d0883e362ea996",
+      "sha256": "d110ff5f076fb9421552b83692fde2c2d367734049169c7a55f7267a3dc7ef89",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-agent-game-designer/SKILL.md",
+      "git_blob": "390d8aeb76ff8ec87bcf141a61cabbd57df85910",
+      "sha256": "d14acf1f30961e20929c85411986d367ff7d8ad9d5a4bb5e8074b8e98938d855",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/SKILL.md",
+      "git_blob": "dc57f80557494325cb9c7edaecd4414df9308676",
+      "sha256": "84f052b0e8041b61f5dc0698e14f5bc7027b9f64abafefbf029f0cea8ba67f30",
+      "classification": "legacy_repository_customization",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/assets/spine-template.md",
+      "git_blob": "56329f4838e97adce4c8971d8e53e25e8df18892",
+      "sha256": "ef4ff795624eb5439fae54a06edb389feb5a0cf79cb01ae007af51109335d198",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/customize.toml",
+      "git_blob": "3c4e50d0e61c93f5d4bb648a26ea8d431695e53b",
+      "sha256": "137b418e1bb940411a6e77460a7c74af66a6ad732edcc7c7363746995b89e65d",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/references/headless.md",
+      "git_blob": "bd4d20be107309edcfa8b138757b24a4221496a1",
+      "sha256": "4db2708f335c94cb024b5eba022b1e3d88b1ec61c94c4716626d9b89684f5833",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/references/reviewer-gate.md",
+      "git_blob": "cb94efd214b568901e523a45d457ef6c3dca74ca",
+      "sha256": "7c7b560741cbaf95bd9982e1230076c39b88439f3618207d683b9eac474ce290",
+      "classification": "legacy_repository_customization",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/scripts/lint_spine.py",
+      "git_blob": "d583a528d1de2b3cbc4c45fcface8104298dc8ff",
+      "sha256": "040e0f1c13d31e6a21c518df943d1d7de7b75d8d98a07603b0983f3f3fb500db",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-architecture/scripts/tests/test_lint_spine.py",
+      "git_blob": "55cf7482dbf61407adeaa8af9f8e19d0bd7e99e6",
+      "sha256": "e86bb9a62c5cca74ddc89c843386f2b992610fcc1792d40e03bc9cd445b77681",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/SKILL.md",
+      "git_blob": "f3878f6fe05b886e70b28e65ddd5e640a184bf4a",
+      "sha256": "399ddc752fc786b501ba07fb4b4b038b3d2bb076d36496b6384ef85cf922dd59",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/analysis/catalog-analysis.md",
+      "git_blob": "48371aa61ae83ba9b1310d03e20a25705f61fbe9",
+      "sha256": "d4e742da964674549c7f0c64db82c4e1938f8521e5cf0034c103fd08022e515c",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/analysis/method-matrix.csv",
+      "git_blob": "4298bf6de3b1c0b82009d332d11e02aad7b9d523",
+      "sha256": "e6755bc1ef2aa92328d4facb6b12975b3ffb320e0c215a5a078e951692b012a4",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/assets/brain-icons.json",
+      "git_blob": "9a979d8d9affc33916c46b77643f534814b0b30a",
+      "sha256": "a101c56e89f1d0f9e4131dfdfc19e10c746e3a61c3f92537d04a6f4897b7d331",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/assets/brain-methods.csv",
+      "git_blob": "32790e0ff141b622c7ff364c3e385eb9392d4082",
+      "sha256": "150536f3f3d56e08262b27a2abd6b36f266538e2c929ef4aaf183491da33f0eb",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/assets/brain-selector.html",
+      "git_blob": "8a0f34931abc774ccf772636177a565d21531c24",
+      "sha256": "798f27c743b853424aa00d4e41af5c3b515b7a329d6806b5d0a5ebe15e0fbf4e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/customize.toml",
+      "git_blob": "a68c34217cb7c2b2f38fcf10fa3867ea5cee9141",
+      "sha256": "21fcbc60c78db99ca0424da192ba0942dce2189f350f77838e4d3ecd501edd1c",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/converge.md",
+      "git_blob": "ac1786e67ef6a5df1e75de23dfbe9177fb8c0795",
+      "sha256": "1528c32ddc64f8061fec663306f7208d2fd4d4a90e660552b8138bda7e452dc0",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/finalize.md",
+      "git_blob": "2a4b6d25f2e6c572ebbd5454037ccadfc5d9c69b",
+      "sha256": "b6074e7fb4d86ffcf899abc50b9049b4a1f6fe550917f4be7a1c7a888477e07e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/headless.md",
+      "git_blob": "5da9a25b2d711e1dec0a9718f985ac5bdde42b3f",
+      "sha256": "b8ea5951199cff7e4813e06aef35683ca0658230fa015e358cacc466b1138a42",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/in-chat-techniques.md",
+      "git_blob": "4e0e02a7b6ecd0be982737525a2fbf9c90e239ae",
+      "sha256": "18239464e3e4f00ea9063d015d26d6b0a696b72e7e3c5be92352da6db9a3f244",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/mode-autonomous.md",
+      "git_blob": "646ef616ef1a7de1c0b470795f4977f7879eb6dd",
+      "sha256": "79fba5391ef293cebdbbdc765c7edeb3ccf60c04317fef964a4ea64d6b13f260",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/mode-facilitator.md",
+      "git_blob": "1bee2205f26664770eab4ec520242554a8fa61ae",
+      "sha256": "1b908498d285d190859aed00c3ba5b399d7f6aa8e94d54e95456d15cd6fe6073",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/mode-partner.md",
+      "git_blob": "847740010ab1aad2f1762ab9d9956ca3a11d315c",
+      "sha256": "caa0ed378c116def4de382f4e5a95173c6ae6cc5464f1792e7d8196360f79c8a",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/references/resume.md",
+      "git_blob": "48ff453ec215395c00814a75c5789de2e792d2b9",
+      "sha256": "0f79535d72eefe6c55bd5ae47fe4753de8d27235cf129f10b2c596a124c26526",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/scripts/brain.py",
+      "git_blob": "720aa2d689f288b5b2903959f022b78e376cf0d6",
+      "sha256": "b84770d5d55fa17bd99a2ab9076130874dfb7f8cd9b4283cd6413df097bc72b6",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-brainstorming/scripts/tests/test_brain.py",
+      "git_blob": "951bd4e77eac6b616978fe0beff5160326c6c260",
+      "sha256": "5f150395d5aa95526eb1ded5b7a8bd624a577dd25ff060ac082db3cbb5cc0f77",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/SKILL.md",
+      "git_blob": "5101f541b7ba73b60264c2a704f0872080b67cf1",
+      "sha256": "075850d1482ec548f268bcdcf2cb05755e6007c605a601a0b2090da18bd8b750",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/customize.toml",
+      "git_blob": "c2301a31019516c88305374b8aaaf186c50b2b81",
+      "sha256": "571d81087b7a6d914cf7c2f21aa26354eac385bb2f5cfeabc591892cbb98d036",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-01-document-discovery.md",
+      "git_blob": "8b96d332ac5668cf4b1432c71ec5b58948800e0b",
+      "sha256": "c763b512d55906122433cb65c1bcd5b5b283e45eacdc07281c8ec7596b6b3980",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md",
+      "git_blob": "7aa77de9a4c36c6a7df12b8411cd3e92ce90e64d",
+      "sha256": "38be2bf4b924c0b5b395b57d68f685d790ade7b1a6c10993d3c550675f87d954",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-03-epic-coverage-validation.md",
+      "git_blob": "2641532d73892cf22cdf24843bffbd2aa9fd5e98",
+      "sha256": "7b187f03a47cba0325fcfd10240410db9c59d93768342fc2dd3de2a01ec23356",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md",
+      "git_blob": "05718abe4270d58b805a0324558d7e8f32a0994d",
+      "sha256": "f71e5f0d77615e885ae40fdee6b04c1dd6e472c871f87b515fe869cb5f6966fb",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md",
+      "git_blob": "2e088f9b11d8ab213e60fbc0e3841c9a9ab1459d",
+      "sha256": "d8a84e57f4e3a321734b5b5d093458ceb1e338744f18954c5a204f5ce3576185",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "git_blob": "1b3af8a9491b978cfb0fb294b0251a652541458a",
+      "sha256": "614a9dfa81beec079314bc187bc33cfd5f28eff5276a65b4d9a4ba8921a90e45",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-check-implementation-readiness/templates/readiness-report-template.md",
+      "git_blob": "972988ca2de18e01d3bba8ee767d51e7f51702f4",
+      "sha256": "0da97ab1e38818e642f36dc0ef24d2dae69fc6e0be59924dc2dbf44329738ff6",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/SKILL.md",
+      "git_blob": "175b0b9303ffbef4359a21c8e709a569071cc59c",
+      "sha256": "32ed3ecc29e34e221280e7ba1d1e787c36b5fad225ec3bd66ac787bc0efcea2c",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/customize.toml",
+      "git_blob": "26ba792f9a9d3cb7316a0c621186f510be143b81",
+      "sha256": "94ad662fdf3fda372c6e24b2cbda629d0b2aa851097d02afb5905c768b1a1cde",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-01-gather-context.md",
+      "git_blob": "22b9fbd3d18f62b2e2161a840d9693b4a2039c52",
+      "sha256": "d0ee7558605e9d48b5b6f15d9b535542eb6d922613f529bb520326eacade4171",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-02-review.md",
+      "git_blob": "d7e1183cda4c46eddde045e5d867cf7b58680a52",
+      "sha256": "950a900442975ed6a47c3def55a1ffa377864f789524d476b4bf377ed8058733",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-03-triage.md",
+      "git_blob": "704347e4aa87a97d80fd6bf9250fd7a3bcbdf86a",
+      "sha256": "8be59185422340843a262ae277332b64ba969fb477c5a8f47624ab58bda3c6f4",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-code-review/steps/step-04-present.md",
+      "git_blob": "6f901ddb7c0ab6dd4fab487333661343e0a9ccaf",
+      "sha256": "b60f96c4e675ae03f52dea53d9b58a2346a8193b79033028b85c7c55adfa9661",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/SKILL.md",
+      "git_blob": "427509493de3fbb50cb506a74c5998dfafb90a95",
+      "sha256": "da5e882eeefe998ec4d5e6aee7f1b0717cf1235df2767106ab458a92d91adf1a",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/customize.toml",
+      "git_blob": "fb05efaf727c3f9c92215ffb76176054019e9c6e",
+      "sha256": "da9e43605bc6aec83173050b5d37ede6aebfa9a17c5959a5029681d73e744ba3",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-01-validate-prerequisites.md",
+      "git_blob": "5930a77386e8a17ea125ca533e92ad67d0153f97",
+      "sha256": "7181608c1ee4e55c084c6627d68fc55a8a0b6917e489f8ac77531a0530428a30",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-02-design-epics.md",
+      "git_blob": "937f2df2274af18f5acc3950a157c0347d7de7af",
+      "sha256": "7c66987808c1f84e853fe54b7aff26d209196d450b5644704110f124a15179bc",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-03-create-stories.md",
+      "git_blob": "14caafeb357282a102025cca248a1bce0e74f33a",
+      "sha256": "c5b787a82e4e49ed9cd9c028321ee1689f32b8cd69d89eea609b37cd3d481afc",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/steps/step-04-final-validation.md",
+      "git_blob": "3ccc2cbd4ce16d814ef2cc091acab247f166bd2a",
+      "sha256": "b13ccfa85e525559ff0dde5fe76a75334340f256984cff122ae17591019b72e3",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-create-epics-and-stories/templates/epics-template.md",
+      "git_blob": "bf80c7fbac159f1db5254b729b6b2a8a02063208",
+      "sha256": "a804f740155156d89661fa04e7a4264a8f712c4dc227c44fd8ae804a9b0f6b72",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/SKILL.md",
+      "git_blob": "4a2add5aa51c1c9511ed8a75aff1292be2538508",
+      "sha256": "0f086c101465d3fa45a9eeb64475c7c23ba9ed28b09a6c7dda28f74e7bcd1459",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/checklist.md",
+      "git_blob": "e47cc0f490e7339cd6c29cd55e81bd9ce500de00",
+      "sha256": "b94e28e774c3be0288f04ea163424bece4ddead5cd3f3680d1603ed07383323a",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/customize.toml",
+      "git_blob": "fbd4a789af59136ede34f2f91ee34ee14082f076",
+      "sha256": "1204f6de064436922f2813069778eb4eaa5f1f945aa8ea5a5ffb87897a2ba8fe",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/discover-inputs.md",
+      "git_blob": "2c313db3de4fc54e1924fba4372a9fe52eb49567",
+      "sha256": "dfedba6a8ea05c9a91c6d202c4b29ee3ea793d8ef77575034787ae0fef280507",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-create-story/template.md",
+      "git_blob": "c4e129f5f38c4f9df4f55e43455371a32f81628b",
+      "sha256": "29ba697368d77e88e88d0e7ac78caf7a78785a7dcfc291082aa96a62948afb67",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/SKILL.md",
+      "git_blob": "eff83d8b0fe648bc1d4be146963124cfae3919f9",
+      "sha256": "97c893fc36726e8ca10f9121aaf761daa12fd42f6125310bcde942699c421ded",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/compile-epic-context.md",
+      "git_blob": "5bdcc2641c22a8de3f1a8bec513e949917ba0553",
+      "sha256": "fa300a04e9b1f494314ddde443678affb2ac1965e2ac07dc4d6bb64316998466",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/customize.toml",
+      "git_blob": "d23d3d8eecaa54cea0bcf3f4ffbb3d5ba16c0d49",
+      "sha256": "bd4302195867ac47dd6bff16761ce1562cf2e480f52265cbf277877b316966da",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/spec-template.md",
+      "git_blob": "3fe40617f370ea6459ea1a64d6164fc5c7b1bb09",
+      "sha256": "7c340be50e2a460b91c6148ef05c85a2f012462a0b91fcd7bf1b66bf2373c96c",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-01-clarify-and-route.md",
+      "git_blob": "5ca649c4046907bd584d658b3bb45dc66cfc6f87",
+      "sha256": "53298afe9de0bc9d4fa14dec8d867c7f17b0de649cbcec9a22a2f6b0b44c1c49",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-02-plan.md",
+      "git_blob": "460b11b8e8c71c576e9a0b33b2ec6bf7d87dc454",
+      "sha256": "a3e67ddd96216ea79a14a7bdef63f2acec0b6fae6d22eaa7a53163440900f443",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-03-implement.md",
+      "git_blob": "d235441fed4c7e96d8d8a0f8e050c48225ff5715",
+      "sha256": "814893db2ca997d82ef5298d83f85b697d19203b9be755837e56af51d9565a2e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-auto/step-04-review.md",
+      "git_blob": "be69e1002985ab92f137782ee38a61706163a758",
+      "sha256": "d7742250a55139fbd4a8221e5cad7d6b9a5de20b6c034b3619541d0b89698371",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/SKILL.md",
+      "git_blob": "af906225322313bfb280b43e04d396deb9d1a748",
+      "sha256": "93c9ff14d425baf6181c7e0dfa24bad565e45cda18dbfe4eacb6ec7708492064",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/checklist.md",
+      "git_blob": "86d6e9be5fa717d5f9cfc94fec230d8d2ab494f7",
+      "sha256": "630b68c6824a8785003a65553c1f335222b17be93b1bd80524c23b38bde1d8af",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-dev-story/customize.toml",
+      "git_blob": "84f5dcbe4fba4712afcac9dbef07ddb4cb79af6a",
+      "sha256": "592fa7948c4614609a59b152518f518d35e0178d6aa7c22e169d78157fd9f5aa",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-editorial-review-structure/SKILL.md",
+      "git_blob": "c9318314804797d205c491c42f5aae40efd2478c",
+      "sha256": "164444359d74f695a84faf7ea558d0eef39c75561e6b26669f97a165c6f75538",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/SKILL.md",
+      "git_blob": "cc7f515e49061e1887b99f74a4d350847c3bf0c9",
+      "sha256": "c62ac3a30a4c7a32e3ffd28881d0e9128fc22de1570884d6572c8bfbb7d7db0e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/customize.toml",
+      "git_blob": "98949e26a3b08b655f73ebf3b1f6728494bd0bcd",
+      "sha256": "ef5fadd1df3550cae00b1b442606bf84d187bfd55397563f143e1057430df45c",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/scripts/resolve_personas.py",
+      "git_blob": "f1d5d5cd6559d34e5032be03fb756f0af5d92751",
+      "sha256": "3da694c23e5fb29fe25963e2ea0509e1dd6d8c9f70ac54b00d98044052fd1c6e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-forge-idea/scripts/tests/test_resolve_personas.py",
+      "git_blob": "4867b0dca4f247aafd59b4adf933cbe745d7b17d",
+      "sha256": "1c4fa4b1d68bfbd10e4b38cad3c8286dad62345cebd08fe94a6862351b02855e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-help/SKILL.md",
+      "git_blob": "de8ad68fd68cd97c6d71b32c16db7af19666b3a3",
+      "sha256": "718077d741e20d9c94f3c2b7827047f2d18a90b85c3cc2eecd449e28b7b0d642",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-index-docs/SKILL.md",
+      "git_blob": "c92935b71ae84ee6e415c1b6fb340a82bc3958ae",
+      "sha256": "a855d7060414e73ca4fe8e1a3e1cc4d0f2ce394846e52340bdf5a1317e0d234a",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/SKILL.md",
+      "git_blob": "6ebfeab3f84bb3b13365426bd119c3b84b671b66",
+      "sha256": "85f0a3ea5fee06fcaef5ff34d6b194b265fe0d31ffd7610a9c9a0134bf0b21ce",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/headless-schemas.md",
+      "git_blob": "89d5b6c1550bd556d30e3b82798b9df9b0dff28d",
+      "sha256": "8d3621333a72400512bd62511bc4c73fc745711505e1f852c697ff8c5fa2de93",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/prd-template.md",
+      "git_blob": "a7a4ad72166921ca8c97b11f1c88aa3db54ff005",
+      "sha256": "41e77bd5c4ee81c3f383b55d6f515147afc9c4bd1a3317ddf55a9282deae495c",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/prd-validation-checklist.md",
+      "git_blob": "f52c43b350d886f5c0e8c44e55265c3bb7e52841",
+      "sha256": "41d9f09064772a92ec908d970618e47ba63dc86b5c5a1a21d5a2c676d3ba8e3f",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/assets/validation-report-template.html",
+      "git_blob": "72e7271628574fa34d8c54ddd10967377c24a27d",
+      "sha256": "a80becdd8205d2d7c18738855830b096172a496b96b5ca8a0820ec55c9bb8bf9",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/customize.toml",
+      "git_blob": "77515bd278ed830ac0cb55b37738b18f53fb8c52",
+      "sha256": "5da1c87df2022c3e31f2c8e343dbead23356fbc5f5e9169eccd3102577ba295f",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/references/headless.md",
+      "git_blob": "2f5a168a0df0af1b9b482c57801a3fd69ce62610",
+      "sha256": "4dad58ebee63933a53179016513ff94d143ce9f68e226489d390e2c36bf1d848",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-prd/references/validate.md",
+      "git_blob": "840a9307f87dcee0e6a0b252a1f8be9b85181704",
+      "sha256": "ca2a89e3ecac40da08f17efcb4ebf468d6684c4344a8029aae798fd5b1e80610",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-product-brief/SKILL.md",
+      "git_blob": "ad40bf72c2e02dd77ce2c6dd79c687096effc2ff",
+      "sha256": "0d569d109cd61a8056374d1f3f3980188407983772544ab81f4ff6b18e798508",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-product-brief/assets/brief-template.md",
+      "git_blob": "152f98ff094cdf779c239ae2832bd2061b27baa7",
+      "sha256": "bb28edf75d023067551c8d417b19b8803324e7acfb2ad0c80f882e9134f4c1f1",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-product-brief/customize.toml",
+      "git_blob": "d495c59318cf9c54d969321a4b04205420086f5b",
+      "sha256": "cdd7b417de5b280ab5bd3af65f69654b05980b5efb48077563827c16391f42d6",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/SKILL.md",
+      "git_blob": "b0884ca0eb5415917e6d58cff38a08a041c1f255",
+      "sha256": "26928e0a5126cc64be950b0aaf240dfe9226f35b48ff2246b85e47a1af29a0f9",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/compile-epic-context.md",
+      "git_blob": "03034770b1ce28e9fe43b3d1b44df1d403068839",
+      "sha256": "5cfda02f252941e415b80c57b4528f46226b3cbf456ad45d78fcb5a7ef4816e2",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/customize.toml",
+      "git_blob": "4f6a4e8687db1fc4314686f5952b6dcc20dcd551",
+      "sha256": "ebb082e10f887a68f78ff7dbb000c4f0c71edd528a66eb651f988b9b0c35a372",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/_schema_runtime.py",
+      "git_blob": "8dcdeba841462d4e33e4030089812ec23d5ef767",
+      "sha256": "2cdcc28388c4b92529e4db7fd1bd7335d5212386054edef7e4bb323f7f1a90d5",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/scripts/quick_dev_input_router.py",
+      "git_blob": "8a9a970e1b5941ded278d83fcaad62675fc917a2",
+      "sha256": "5e02e02d80fe9539a8b754ba7134c7dad6e74973991ee7fe330b510c7ee2cae4",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/spec-template.md",
+      "git_blob": "7849094bac78f6abd4684564f14f02ec4504e141",
+      "sha256": "68d0e3b9acaa0c22ab3b0dd1dbce9d8ef9b4d16637ed5e6fbd5244528732943e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-01-clarify-and-route.md",
+      "git_blob": "910a933818c993fa9ea52faff445f7f6e18fb44f",
+      "sha256": "c6066ba0d4fd6cb9e3876acf85053f3168973a94c5476d5eab618c6f4d23825a",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-02-plan.md",
+      "git_blob": "90b96a12387309fc3c08ef9c668043ac300d537e",
+      "sha256": "66576a0b14f77d59bf09f550297260ddc175d9181d8d9733fa0ea9c274724955",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-03-implement.md",
+      "git_blob": "dae76bb264e6ff7d700f04e7a18518ff9f41e43a",
+      "sha256": "207e8a1238d725bbbb6068009bb9fa435cb098ee63ded5621e3af2d32f724464",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-04-review.md",
+      "git_blob": "430eddcb58a3f1e7d4254b7788edb1282e548358",
+      "sha256": "9db75caff2e22c61bd2239c1f75557fb2a91f82057b41187f2f8aed97c3fe0c8",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-05-present.md",
+      "git_blob": "a773bd96c40e97dd004b6d49762e901d0ea1536f",
+      "sha256": "235f80431704dc89142d759847aa0f9875d5bf76aaa7f308472524fdf215ae18",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/step-oneshot.md",
+      "git_blob": "db8c3ba6380d7915c0f53fcbd0676bf246ac821d",
+      "sha256": "4a52d263134d6dde777c7fcd9a78063319f7255f763b75182a8d855e7d6fd02f",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/sync-sprint-status.md",
+      "git_blob": "2ee1651a03c935f37acf71131afc97a0e2af0f69",
+      "sha256": "c0f2fdb940984206a4b7aa2467fbcb7c4811f648634e43a488593974e9efff5e",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-quick-dev/tests/test_quick_dev_input_router.py",
+      "git_blob": "0296a19f202b7b858828c6f42cad7c1a329150ce",
+      "sha256": "fb447809c6fdca93d75d5c539c0c71f97a027431080a56043d92c3c9c3c2a9e9",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-review-adversarial-general/SKILL.md",
+      "git_blob": "e30702f65a99528b7244622dfaf87d07b35f0321",
+      "sha256": "3b70b004b662c3a094328a8666e0084a94cb6de2e2a7336f23d31c65bca084e7",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-review-edge-case-hunter/SKILL.md",
+      "git_blob": "57fc67b3154d679d8a0adde2cc61b0bb6bb52e4a",
+      "sha256": "03087a3f1e935f7a111bc2c8e1b44c2cf2cc05d9843e5af3c913a148c70d8c96",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-review-edge-case-hunter/references/deletion-check.md",
+      "git_blob": "5cc3d771aabef26e88f20c06ab87bdbd3c182ada",
+      "sha256": "0f1f124e4e957147e89164a272b10bedc694ad0d9ad2618c8610ac74ee9cb0da",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/SKILL.md",
+      "git_blob": "845007617ea44699ede63a9f3a3b06f83bbf0b7f",
+      "sha256": "16f822a4bce1d37de18982caff580f535f41cf1c82aa3813e10bb9b1e1639257",
+      "classification": "legacy_repository_customization",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/assets/headless-schemas.md",
+      "git_blob": "8e2093bec61139fc61229e166fb75b0a7cc03d88",
+      "sha256": "83afb3614716db2347d83586a67b9c524492dd50db5282436ccb35c99fb5f08a",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/assets/spec-template.md",
+      "git_blob": "e5cc4682eab2e9bd9815b05a1d58d24fe42ba1ae",
+      "sha256": "1dc56ac6392096d37ddbf07a0e097341eba72633e26925bd51fb9c11282d218b",
+      "classification": "legacy_repository_customization",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/customize.toml",
+      "git_blob": "c3cd7c0feef9b79508803c5935cac08ce139de6f",
+      "sha256": "b0181ba5d4038feb779a7a082a265df753220f868b66b5adb0fb2ed18401c763",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-spec/references/canonical-package-contract.md",
+      "git_blob": "41c7f30834f12dc4da3e619beacb25e9898fca24",
+      "sha256": "22885a9c753baf6aef968492705027238b902f1ee3c16af28c5cac669cf6f033",
+      "classification": "legacy_repository_customization",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-spec/scripts/canonical_package.py",
+      "git_blob": "e738d501380770bae490a294cd85124837c3de94",
+      "sha256": "295a5aac5bfc676132a8fb4396438780f2645e4893a022ec3a7ae1a8e7394fdd",
+      "classification": "legacy_repository_customization",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-spec/scripts/tests/test_canonical_package.py",
+      "git_blob": "c12460215f7d6d173d20354f02decb6ab8ad71fc",
+      "sha256": "237ba44606bc1318e5599d4d3338fb64046e0d5aeb31ddc388bab369774bced3",
+      "classification": "legacy_repository_customization",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-spec/tests/fixtures/selection_registry_negative.py",
+      "git_blob": "992198333d8557e9a41ca646f0549a865e215de5",
+      "sha256": "078a15dd4e42e11b903983ce0fe413e8dcac0ffdc54e9885e1fe91e88668eb19",
+      "classification": "legacy_repository_customization",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/SKILL.md",
+      "git_blob": "2876a321a91427f40b50a8eebe66166add2192a6",
+      "sha256": "9424edfd72d1c3c66971ca48c0b62410ae1ba1d8e1aa43b598d72d9580a3bb94",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/customize.toml",
+      "git_blob": "9c65ca531d1ec6eff394eb6a37a777624fd97da5",
+      "sha256": "7f567fddb04674f817398addbc06e6d1620883d89dcc7ac643c5a56eef5ac337",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/research.template.md",
+      "git_blob": "1d9952470c03530393a58caeb13f6fdef17ad096",
+      "sha256": "507bb6729476246b1ca2fca4693986d286a33af5529b6cd5cb1b0bb5ea9926ce",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-01-init.md",
+      "git_blob": "b286822dc95b732ad108899e9bec029dce6c15a0",
+      "sha256": "c9a1627ecd26227e944375eb691e7ee6bc9f5db29a428a5d53e5d6aef8bb9697",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-02-technical-overview.md",
+      "git_blob": "78151eb0d7d4a13945f0172323d13ba2a9fdf08e",
+      "sha256": "9c7582241038b16280cddce86f2943216541275daf0a935dcab78f362904b305",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-03-integration-patterns.md",
+      "git_blob": "68e2b70f908040580d562e24aab3c60151024182",
+      "sha256": "005d517a2f962e2172e26b23d10d5e6684c7736c0d3982e27b2e72d905814ad9",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-04-architectural-patterns.md",
+      "git_blob": "3d0e66ab33d4a835040db3b3282dc8f35d63612c",
+      "sha256": "4636f23e9c585a7a0c90437a660609d913f16362c3557fc2e71d408d6b9f46ce",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-05-implementation-research.md",
+      "git_blob": "99453735654f3257fc06e22303a5983cad5a9653",
+      "sha256": "e2b8a2c79bcebadc85f3823145980fa47d7e7be8d1c112f686c6223c8c138608",
+      "classification": "official_distribution_residual",
+      "source": "BMAD-METHOD"
+    },
+    {
+      "path": ".agents/skills/bmad-technical-research/technical-steps/step-06-research-synthesis.md",
+      "git_blob": "2476fda1fe4af4c7cc4e7171150fffcec124242a",
+      "sha256": "3655cae65ed362721eda04ccacd7d6eeefebaae246ffd65b07c82c7bd04ea5dd",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-agent-game-designer/SKILL.md",
+      "git_blob": "890fe5a57d4d380eb23a83784938c165cadb31d7",
+      "sha256": "8c897715a3ef8ba165d8ff61409e7f7f913f32453f694779b331fae76f1feca2",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-agent-game-designer/customize.toml",
+      "git_blob": "ffda0a4c950795af30e17107bcc1d5adf4c969b1",
+      "sha256": "da5c61b00560271fbb0f545aa54a25f50b88545a0646704cfe893d88fffe62c6",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/SKILL.md",
+      "git_blob": "8fdf6799c225d9da0b723a628b9a14332929e948",
+      "sha256": "2c3d01c584fc88a3a5e9a8280a108d17a5b0f91d9485e660f679860ec78c6450",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types.csv",
+      "git_blob": "9d61c4623382b9e8594b92825d01680f9e2dcecf",
+      "sha256": "a44c04d09432c886a7a5a8112474bd32540d8e84de25b308dca0f96e570651fd",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/action-platformer.md",
+      "git_blob": "9305f8abf0dce37f0c51e983e8a2ee14483e8886",
+      "sha256": "f1cbe9e9a52acd01ff120d05ce22fa81b30500933f62a3c6c36642280244057c",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/adventure.md",
+      "git_blob": "2de824a5b5b1798769dc72796cb7f838c017ce60",
+      "sha256": "06aa57786c2e7ebc7580d501fcdefaabb28933c7b5785d6643bf643f58ae13e7",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/card-game.md",
+      "git_blob": "24dacd7f4b17c3d17acba8b7dd22fc9f6b875c10",
+      "sha256": "6b9298ace2607c8e93d64533e6406828053234282e4977e4407faa2e9302fd0a",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/fighting.md",
+      "git_blob": "d2158493c19bb1df518bb8085c3b4856c4648354",
+      "sha256": "52e5a142aac496ae7154fc0829bfbce1ef22296f0a464cf8e595aa14ca02eb86",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/horror.md",
+      "git_blob": "a525cbd21d7e0da705fa31bf0d927573d0434a84",
+      "sha256": "7ff7599d5701bb7a8ef0e14f3ba614626cdd0d8960a8e880fc1cd41c5f508f75",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/idle-incremental.md",
+      "git_blob": "afade143310bf864e9fd0c70d863cdae39af9930",
+      "sha256": "515b52bb301e467c1f096cc55abde47159bb0b0d87157b9fa565973b48601ddf",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/metroidvania.md",
+      "git_blob": "71d59a0b54e347159bceccd475a2e4d28b92bcff",
+      "sha256": "2a8c101dda7911d1cd1d9c66d1be86af3725832f5dcc7fab71e95204f45614ea",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/moba.md",
+      "git_blob": "9eb49b74ccf847df7e88ffb48bc89fbf54b20ddf",
+      "sha256": "92d0ba9f7508a38d5bfeac1651c6aee8a1a58c54659ad3f0e0d1fd678a1ef498",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/party-game.md",
+      "git_blob": "f17490881fbf80580744cb7c1a02b33a6ff1bedc",
+      "sha256": "0cc50b3aede0c45c94cdff743cdac2d8ad67421ea80497a29d2300a1744ea703",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/puzzle.md",
+      "git_blob": "e10fada124a63563c2b35d5ce4183bceebc92fbf",
+      "sha256": "f9c08b6f087bfaa41ea08c9dfa78aa034f5ae46b627b9f476bdf8b4f5c3389ed",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/racing.md",
+      "git_blob": "667684c87515474ca94a5acca0d51b43adaa89bf",
+      "sha256": "085ea5d0914d7bc6a233c479d0ad6288a575ad1c8b9a8a85881e779fac0e60fc",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/rhythm.md",
+      "git_blob": "f173ec1ec4dd0a660763cc7b7d59acb73fae6586",
+      "sha256": "83bbf1761fdc604b8c2b50ed86c5874cce331417e1b3a46c65cb6c4c1a7c8db2",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/roguelike.md",
+      "git_blob": "b42210662b604320d767449a4f05f183df7c6e5b",
+      "sha256": "fb1ebc838011020a6f740e6fb4f2ceb81be8477f9c67bc7ae3a8e34dfe548f00",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/rpg.md",
+      "git_blob": "1b856205d042adf6629e7e2f421cedefa416247d",
+      "sha256": "5aa57ecefb448a0507ee0c8d503b43bd34d0c612ba130240d1af9842b80cba50",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/sandbox.md",
+      "git_blob": "98c1568526d03d4941e9a3fc253e145758506833",
+      "sha256": "836f656bbaae549f31ac574c0865a61de451c08ab8c561db2c93398e147ece85",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/shooter.md",
+      "git_blob": "20ca0a6e0c942f0d214ec0297ab9b71aa9710dcc",
+      "sha256": "2452850295ac2b9fac04ce2d6126bfc19bb7dccbb04c40e7f89c801aecc5555d",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/simulation.md",
+      "git_blob": "efb5f78c22ca4b928477e7fdd5c216a65a79384b",
+      "sha256": "fd74a7d21243f8d9827fe6a99263579309bc0aabd9e56261d3dd4eb5cfc75ad5",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/sports.md",
+      "git_blob": "47cc414c2a5536854a96be5a6d3903350d8f734e",
+      "sha256": "2247ea87dbca74e879f8c686d9e80434618e9e61bd3572739274c1af64cb0bb8",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/strategy.md",
+      "git_blob": "5f7e04a3fc70ad2d587e19ec3f38c4314c7f9b97",
+      "sha256": "997380919f6c1b408906c364f74e728b9c6b45bf2960d1f0bfe8b0def594735e",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/survival.md",
+      "git_blob": "b83773ce07f55e2e294f35d4922b336855f7bf32",
+      "sha256": "3647795ee0073a85217633412a41a938e51a553776acbe9ac953fb403e3437f9",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/text-based.md",
+      "git_blob": "f2d086b97df0c7721bad06bdefebc19c08887faa",
+      "sha256": "5895ca65dc93f676bb33b754f2c6be85d5d9b651df87d8431d404dc9bb736ee7",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/tower-defense.md",
+      "git_blob": "98f85daa73ef7f7aa9cffbb3edb64c5cc57fb0a4",
+      "sha256": "03a2cc577fdd1a183ba04409b01b22f2f38713d28f1278481b0f221858f97ec8",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/turn-based-tactics.md",
+      "git_blob": "52d2effbea8d76fb5f4ead5e30f59bca881ab1b9",
+      "sha256": "30a150d8a0ab746f0c67d414be79e7e421fff1b8b7a1b716e64800df72bdb6c2",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-create-gdd/game-types/visual-novel.md",
+      "git_blob": "9221e1bfbbb2224d8bb877e4590cc047d720d5db",
+      "sha256": "2d98f4c682f0abbd6330ac1bad04600c596e6b27302adbe9510fc0c0bf53052c",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-gdd/SKILL.md",
+      "git_blob": "4c8070ed1229e9b2192a94fe0cf873b40f953373",
+      "sha256": "d551e9af059efd88eeea490ed2e7cd209741eedfcd9ac5bf94c4a6ba13fe2300",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types.csv",
+      "git_blob": "9d61c4623382b9e8594b92825d01680f9e2dcecf",
+      "sha256": "a44c04d09432c886a7a5a8112474bd32540d8e84de25b308dca0f96e570651fd",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/action-platformer.md",
+      "git_blob": "9305f8abf0dce37f0c51e983e8a2ee14483e8886",
+      "sha256": "f1cbe9e9a52acd01ff120d05ce22fa81b30500933f62a3c6c36642280244057c",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/adventure.md",
+      "git_blob": "2de824a5b5b1798769dc72796cb7f838c017ce60",
+      "sha256": "06aa57786c2e7ebc7580d501fcdefaabb28933c7b5785d6643bf643f58ae13e7",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/card-game.md",
+      "git_blob": "24dacd7f4b17c3d17acba8b7dd22fc9f6b875c10",
+      "sha256": "6b9298ace2607c8e93d64533e6406828053234282e4977e4407faa2e9302fd0a",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/fighting.md",
+      "git_blob": "d2158493c19bb1df518bb8085c3b4856c4648354",
+      "sha256": "52e5a142aac496ae7154fc0829bfbce1ef22296f0a464cf8e595aa14ca02eb86",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/horror.md",
+      "git_blob": "a525cbd21d7e0da705fa31bf0d927573d0434a84",
+      "sha256": "7ff7599d5701bb7a8ef0e14f3ba614626cdd0d8960a8e880fc1cd41c5f508f75",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/idle-incremental.md",
+      "git_blob": "afade143310bf864e9fd0c70d863cdae39af9930",
+      "sha256": "515b52bb301e467c1f096cc55abde47159bb0b0d87157b9fa565973b48601ddf",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/metroidvania.md",
+      "git_blob": "71d59a0b54e347159bceccd475a2e4d28b92bcff",
+      "sha256": "2a8c101dda7911d1cd1d9c66d1be86af3725832f5dcc7fab71e95204f45614ea",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/moba.md",
+      "git_blob": "9eb49b74ccf847df7e88ffb48bc89fbf54b20ddf",
+      "sha256": "92d0ba9f7508a38d5bfeac1651c6aee8a1a58c54659ad3f0e0d1fd678a1ef498",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/party-game.md",
+      "git_blob": "f17490881fbf80580744cb7c1a02b33a6ff1bedc",
+      "sha256": "0cc50b3aede0c45c94cdff743cdac2d8ad67421ea80497a29d2300a1744ea703",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/puzzle.md",
+      "git_blob": "e10fada124a63563c2b35d5ce4183bceebc92fbf",
+      "sha256": "f9c08b6f087bfaa41ea08c9dfa78aa034f5ae46b627b9f476bdf8b4f5c3389ed",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/racing.md",
+      "git_blob": "667684c87515474ca94a5acca0d51b43adaa89bf",
+      "sha256": "085ea5d0914d7bc6a233c479d0ad6288a575ad1c8b9a8a85881e779fac0e60fc",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/rhythm.md",
+      "git_blob": "f173ec1ec4dd0a660763cc7b7d59acb73fae6586",
+      "sha256": "83bbf1761fdc604b8c2b50ed86c5874cce331417e1b3a46c65cb6c4c1a7c8db2",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/roguelike.md",
+      "git_blob": "b42210662b604320d767449a4f05f183df7c6e5b",
+      "sha256": "fb1ebc838011020a6f740e6fb4f2ceb81be8477f9c67bc7ae3a8e34dfe548f00",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/rpg.md",
+      "git_blob": "1b856205d042adf6629e7e2f421cedefa416247d",
+      "sha256": "5aa57ecefb448a0507ee0c8d503b43bd34d0c612ba130240d1af9842b80cba50",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/sandbox.md",
+      "git_blob": "98c1568526d03d4941e9a3fc253e145758506833",
+      "sha256": "836f656bbaae549f31ac574c0865a61de451c08ab8c561db2c93398e147ece85",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/shooter.md",
+      "git_blob": "20ca0a6e0c942f0d214ec0297ab9b71aa9710dcc",
+      "sha256": "2452850295ac2b9fac04ce2d6126bfc19bb7dccbb04c40e7f89c801aecc5555d",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/simulation.md",
+      "git_blob": "efb5f78c22ca4b928477e7fdd5c216a65a79384b",
+      "sha256": "fd74a7d21243f8d9827fe6a99263579309bc0aabd9e56261d3dd4eb5cfc75ad5",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/sports.md",
+      "git_blob": "47cc414c2a5536854a96be5a6d3903350d8f734e",
+      "sha256": "2247ea87dbca74e879f8c686d9e80434618e9e61bd3572739274c1af64cb0bb8",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/strategy.md",
+      "git_blob": "5f7e04a3fc70ad2d587e19ec3f38c4314c7f9b97",
+      "sha256": "997380919f6c1b408906c364f74e728b9c6b45bf2960d1f0bfe8b0def594735e",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/survival.md",
+      "git_blob": "b83773ce07f55e2e294f35d4922b336855f7bf32",
+      "sha256": "3647795ee0073a85217633412a41a938e51a553776acbe9ac953fb403e3437f9",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/text-based.md",
+      "git_blob": "f2d086b97df0c7721bad06bdefebc19c08887faa",
+      "sha256": "5895ca65dc93f676bb33b754f2c6be85d5d9b651df87d8431d404dc9bb736ee7",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/tower-defense.md",
+      "git_blob": "98f85daa73ef7f7aa9cffbb3edb64c5cc57fb0a4",
+      "sha256": "03a2cc577fdd1a183ba04409b01b22f2f38713d28f1278481b0f221858f97ec8",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/turn-based-tactics.md",
+      "git_blob": "52d2effbea8d76fb5f4ead5e30f59bca881ab1b9",
+      "sha256": "30a150d8a0ab746f0c67d414be79e7e421fff1b8b7a1b716e64800df72bdb6c2",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/game-types/visual-novel.md",
+      "git_blob": "9221e1bfbbb2224d8bb877e4590cc047d720d5db",
+      "sha256": "2d98f4c682f0abbd6330ac1bad04600c596e6b27302adbe9510fc0c0bf53052c",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/gdd-template.md",
+      "git_blob": "a0a20ef94f0c4a33fc20d36b5763f106ec93deb0",
+      "sha256": "070ccbb7f491dc1b1d126245c2e4db4a55dbc5a7ee6a6df4be521ca70e3c9ea6",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/gdd-validation-checklist.md",
+      "git_blob": "1c7a21ce08e33c6650699267260f0ffca0fbd2e3",
+      "sha256": "d54f803a44a158259487d619cc542c4de311dd213c079d6cdce7ddfb20c4aa0b",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/genre-complexity.csv",
+      "git_blob": "7b19febc50f42ad27fb5e12dd4eef023ea025248",
+      "sha256": "eecea9633da780aab181f8e439bd5229be4794f26d5ccab7c433ee4865eee1f5",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/headless-schemas.md",
+      "git_blob": "b990be712b69783b8bb7820ab942ddcabe7d796b",
+      "sha256": "71b52f33a1fd1d1a003221ad5eda56146f09cff8e1bbd2afcbc321042c2fa0b5",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/assets/validation-report-template.html",
+      "git_blob": "63d2214a1f67f245171166ee83df7ef0c52d52ee",
+      "sha256": "c0a5b68ef9352f7c9929ccdb0b06621e421cbf0f2d8d54f3feb3bd84f37e7925",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/customize.toml",
+      "git_blob": "982a5ac369851cde884561466a51a8aa3245c6ee",
+      "sha256": "ffd23ab5fea8c512d988127007fa365545be560e6f9571eea3d05e495d40c177",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/facilitation-guide.md",
+      "git_blob": "503e1336a0d7e5f3c71e0bcc1f4b2737bdd73d4c",
+      "sha256": "2768ba0f624c0cc3ffb410eb57eb56a3919852248d7d7afd07cb66368f4e2aef",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/gdd-purpose.md",
+      "git_blob": "0a6f4aab6d1eeedb1f9970fd0be2fdc28d8bcab6",
+      "sha256": "a46b9801158f2acbccd0784b8924438c7720799d18bd7c65f62f8a37cd4cb5ac",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/headless.md",
+      "git_blob": "2a93f07e68ee2d24d2220fd5097d27bcc53498e5",
+      "sha256": "20d1c915efcf40d98197f96f9ff6cbda1f586110605a53246f8953842ffee404",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    },
+    {
+      "path": ".agents/skills/gds-gdd/references/validation-render.md",
+      "git_blob": "cd77c3e52b6e1b48776a9c9448712c32a5b77a08",
+      "sha256": "c7816e410e1e980bdc5d1dd157f2d146c82df39c5a16fbe8bceb1930fa4d0f5b",
+      "classification": "retained_custom_or_repository_binding",
+      "source": null
+    },
+    {
+      "path": ".agents/skills/gds-gdd/scripts/render-validation-html.py",
+      "git_blob": "802f9b5112c8c65376d343c986c853b0546fac22",
+      "sha256": "f723253b15798fed70bd047985671049fd176836d7381904c34dab6ac40d8150",
+      "classification": "official_distribution_residual",
+      "source": "bmad-module-game-dev-studio"
+    }
+  ],
+  "additional_bmad_named_paths": [
+    "_bmad/.gdignore"
+  ],
+  "local_code_commit": "8b5dcec074791f55995340d93d0950c2f5816358",
+  "local_candidate_counts": {
+    "untracked": 165,
+    "retained_launcher_only": 13
+  },
+  "no_push_or_merge": true,
+  "additional_path_classification": {
+    "_bmad/.gdignore": "repository Godot exclusion marker; not official BMAD distribution"
+  }
+}

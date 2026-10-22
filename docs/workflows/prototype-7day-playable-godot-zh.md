@@ -59,11 +59,11 @@ py -3 scripts/python/dev_cli.py run-prototype-workflow --set slug=combat-loop --
 
 ### 0.2.1 BMAD/GDS Game Type Guide Integration
 
-The top-level router absorbs the useful game-type intake and focus-area semantics from canonical BMAD/GDS `gds-gdd` (with `gds-create-gdd` retained only as a compatibility alias), but only for prototype lane intake. It does not enter the full GDD workflow.
+The top-level router uses game-type intake and focus-area semantics derived from BMAD/GDS through the repository guides, only for prototype lane intake. It does not enter the full GDD workflow. The old `gds-gdd` installation and `gds-create-gdd` compatibility package are no longer supplied by Git; the maintainer deferred those game capabilities to a future sandbox rebuild. See [current installation limits](bmad-native-wrappers.md#untracking-inventory-and-retained-customization).
 
 - Step 2 reuse: load the matching game type guide from known `Game Type` metadata and use it to capture the core game concept.
 - Step 7 reuse: each game type has different design focus areas; prototype lane only uses the parts relevant to the minimum playable loop.
-- Canonical template source: `.agents/skills/gds-gdd/assets/game-types/`, extended into `docs/game-type-guides/`; `.agents/skills/gds-create-gdd/game-types*` is a compatibility mirror only.
+- Upstream provenance: `.agents/skills/gds-gdd/assets/game-types/`, extended into tracked `docs/game-type-guides/`; the former `.agents/skills/gds-create-gdd/game-types*` mirror is retired from Git.
 - Index source: `docs/game-type-guides/game-types.csv`, with 25 runtime-effective ids: 24 upstream GDS types plus the Ji Mu Yun `survivorslike` extension.
 
 When `AGENTS.md` or `README.md` contains `## Game Project Metadata`, load `docs/game-type-guides/<canonical-id>.md` as question and scoring context. Do not copy the full guide into the prototype record.

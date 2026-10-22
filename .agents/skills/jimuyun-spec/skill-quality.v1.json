@@ -1,0 +1,195 @@
+{
+  "authorizes": [],
+  "capabilities": {
+    "database_write": false,
+    "destructive": false,
+    "filesystem": true,
+    "network": false,
+    "routing": true,
+    "secrets": false,
+    "subprocess": true,
+    "untrusted_content": true,
+    "version_lookup": false
+  },
+  "controls": {
+    "filesystem": {
+      "owner": "Repository SPEC adapter",
+      "roots": [
+        "."
+      ],
+      "read": [
+        "."
+      ],
+      "write": [
+        "logs",
+        "_bmad-output"
+      ],
+      "delete": [
+        "logs/bmad-wrappers"
+      ],
+      "traversal": "reject",
+      "symlinks": "reject"
+    },
+    "subprocess": {
+      "owner": "Current caller tool runtime",
+      "argv": [
+        "python",
+        "-B",
+        "scripts/bridge.py",
+        "--help"
+      ],
+      "shell": false,
+      "cwd": ".",
+      "timeout": 30,
+      "output_limit": 4096,
+      "cancellation_owner": "Current caller process tree owner"
+    },
+    "untrusted_content": {
+      "owner": "Repository SPEC adapter",
+      "role": "data-only",
+      "prohibit_expansion": [
+        "targets",
+        "commands",
+        "tools",
+        "authority"
+      ]
+    }
+  },
+  "dependencies": [
+    {
+      "id": "bmad-native",
+      "version": "6.12.4",
+      "required": true,
+      "authority": "references/native-version.json",
+      "when_missing": "block",
+      "when_mismatch": "block"
+    }
+  ],
+  "entrypoints": [
+    {
+      "id": "prepare",
+      "inputs": [
+        "Explicit contained caller paths and operation intent."
+      ],
+      "outputs": [
+        "JSON result without lifecycle authorization."
+      ],
+      "preflight": "Verify pinned native trees, official runtime dependencies and caller scope.",
+      "standalone": true,
+      "dependencies": [
+        "bmad-native"
+      ],
+      "caller_setup": "Python 3.11+, uv and explicitly provisioned official runtime; never silently install."
+    },
+    {
+      "id": "publish",
+      "inputs": [
+        "Explicit contained caller paths and operation intent."
+      ],
+      "outputs": [
+        "JSON result without lifecycle authorization."
+      ],
+      "preflight": "Verify pinned native trees, official runtime dependencies and caller scope.",
+      "standalone": true,
+      "dependencies": [
+        "bmad-native"
+      ],
+      "caller_setup": "Python 3.11+, uv and explicitly provisioned official runtime; never silently install."
+    }
+  ],
+  "error_ids": [
+    "NATIVE_INSTALLATION_MISSING",
+    "NATIVE_VERSION_OLD",
+    "NATIVE_VERSION_NEWER",
+    "NATIVE_TREE_DRIFT",
+    "NATIVE_RUNTIME_MISSING",
+    "NATIVE_RUNTIME_DRIFT",
+    "NATIVE_CONFIG_INVALID"
+  ],
+  "evidence": "Actual caller/tool observations and regression logs under logs; no simulated semantic completion.",
+  "examples": [
+    {
+      "outcome": "typical",
+      "branch": "typical",
+      "input": "Generate from the explicitly supplied repository source.",
+      "output": "An actual native invocation and reviewable artifacts.",
+      "expected_result": "pass"
+    },
+    {
+      "outcome": "boundary",
+      "branch": "boundary",
+      "input": "Refresh a package with an adopted companion inside its folder.",
+      "output": "Preserved adopted role and original selection hash when descriptor is unchanged.",
+      "expected_result": "pass"
+    },
+    {
+      "outcome": "error",
+      "branch": "error",
+      "input": "Required native runtime is missing or native bytes changed.",
+      "output": "Block with no canonical publication or claimed semantic run.",
+      "expected_result": "fail"
+    }
+  ],
+  "inputs": [
+    "Explicit contained source and unique run paths."
+  ],
+  "lifecycle": {
+    "owner": "repository-maintainer",
+    "completion_owner": "native workflow and existing downstream lifecycle owners"
+  },
+  "lookup": {
+    "kind": "not-applicable"
+  },
+  "name": "jimuyun-spec",
+  "non_goals": [
+    "No native edits, workflow upgrades, historical rewrites or lifecycle authorization."
+  ],
+  "outcomes": [
+    "typical",
+    "boundary",
+    "error"
+  ],
+  "outputs": [
+    "Verified native invocation, isolated artifacts and structured check results."
+  ],
+  "references": [
+    {
+      "ref": "references/operation.md#entrypoints"
+    }
+  ],
+  "responsibility": "Repository SPEC adapter around unchanged BMAD v6.12.4.",
+  "routing": {
+    "kind": "conditional",
+    "entry": "start",
+    "branches": [
+      "typical",
+      "boundary",
+      "error"
+    ],
+    "diagram": {
+      "ref": "references/operation.md#routing"
+    }
+  },
+  "schema": "skill-quality.v1",
+  "standard_version": "1.0",
+  "tests": [
+    "scripts/tests/test_bridge.py"
+  ],
+  "triggers": [
+    "The maintainer requests repository SPEC creation or refresh."
+  ],
+  "invocation": {
+    "script": "scripts/bridge.py",
+    "tests": "scripts/tests/test_bridge.py",
+    "argv": [
+      "python",
+      "-B",
+      "scripts/bridge.py",
+      "--help"
+    ],
+    "shell": false,
+    "cwd": ".",
+    "timeout": 30,
+    "result_type": "JSON pass or blocked/error; help only documents CLI."
+  }
+}

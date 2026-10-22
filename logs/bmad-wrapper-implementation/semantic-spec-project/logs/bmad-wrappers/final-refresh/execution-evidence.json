@@ -1,0 +1,69 @@
+{
+  "task": "Actual native no-scope-change refresh with final wrapper code",
+  "environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUTF8": "1",
+    "UV_OFFLINE": "1"
+  },
+  "selection_record_before": {
+    "mtime_ns": 1792669636593415231,
+    "sha256": "ce0287983e091e986083d9c909ca231f4c2af1b176726f535dfc2fe0b65cebbe"
+  },
+  "selection_record_after": {
+    "mtime_ns": 1792669636593415231,
+    "sha256": "ce0287983e091e986083d9c909ca231f4c2af1b176726f535dfc2fe0b65cebbe"
+  },
+  "selection_hash": "sha256:c9af0ac0f47e492d688df66b0abd9e63824ee6ca78b183869597bc71f85dd944",
+  "checks": {
+    "selection_record_mtime_unchanged": true,
+    "selection_record_byte_hash_unchanged": true,
+    "selection_hash_unchanged": true,
+    "spec_bytes_unchanged": true,
+    "source_bytes_unchanged": true,
+    "cap_ids_preserved": true,
+    "source_role_preserved": true,
+    "role_order_preserved": true,
+    "prior_memlog_entries_preserved": true,
+    "six_entries_appended": true,
+    "before_publish_snapshot_present": true
+  },
+  "old_memlog_entry_count": 26,
+  "new_memlog_entry_count": 32,
+  "commands": [
+    {
+      "command": "python -B -m scripts.toolchain.bmad_native verify --repository-root <project>",
+      "exit_code": 0
+    },
+    {
+      "command": "python -B .agents/skills/jimuyun-spec/scripts/bridge.py prepare --repo-root <project> --spec _bmad-output/specs/spec-notes/SPEC.md --run logs/bmad-wrappers/final-refresh",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run _bmad/scripts/resolve_customization.py --skill .agents/skills/bmad-spec --key workflow",
+      "cwd": "<project>/logs/bmad-wrappers/final-refresh/native",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run _bmad/scripts/memlog.py append --workspace _bmad-output/specs/spec-notes --type <kind> --text <recorded entry>",
+      "count": 6,
+      "exit_code": 0,
+      "details": "Six sequential official calls using subprocess.run argv, check=True and timeout=30; full entry content in memlog. Complete SPEC re-rendered from retained and appended decisions before validation verdicts."
+    },
+    {
+      "command": "python -B .agents/skills/jimuyun-spec/scripts/bridge.py publish --repo-root <project> --run logs/bmad-wrappers/final-refresh",
+      "exit_code": 0
+    }
+  ],
+  "project": "/workspace/scratch/6e089e29b8e4/ji-mu-yun-bmad-wrappers/logs/bmad-wrapper-implementation/semantic-spec-project",
+  "published": {
+    "authorizes": [],
+    "ok": true,
+    "selection_hash": "sha256:c9af0ac0f47e492d688df66b0abd9e63824ee6ca78b183869597bc71f85dd944",
+    "spec": "_bmad-output/specs/spec-notes/SPEC.md"
+  },
+  "limitations": [
+    "This live native refresh verifies successful preservation for a single provenance input; it does not independently exercise multi-input ordering or candidate failure paths.",
+    "No application implementation, VDD, QuickDev, Acceptance or other workflow executed.",
+    "Existing save-trigger and whitespace-title questions remain unresolved."
+  ]
+}

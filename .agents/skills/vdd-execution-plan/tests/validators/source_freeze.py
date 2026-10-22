@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[5]
-sys.path.insert(0, str(ROOT / ".agents/skills/bmad-spec/scripts"))
+sys.path.insert(0, str(ROOT / ".agents/skills/jimuyun-spec/scripts"))
 from canonical_package import build_contract  # noqa: E402
 sys.path.insert(0, str(ROOT / ".agents/skills/vdd-execution-plan/scripts"))
 from source_freeze import build_manifest, validate_manifest  # noqa: E402

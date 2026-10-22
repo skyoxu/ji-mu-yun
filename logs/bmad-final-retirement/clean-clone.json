@@ -1,0 +1,58 @@
+{
+  "code_commit": "0f2c9043a4c120d9533241531fc4528eea660438",
+  "clone_kind": "fresh local shared-object sparse clone; no ignored files copied",
+  "absent_inventory_files_before_install": 178,
+  "missing_install_wrapper_errors": [
+    {
+      "ok": false,
+      "error": "NATIVE_INSTALLATION_MISSING",
+      "message": "Project-local BMAD is missing. Install official BMAD 6.12.4 for these wrappers; a global CLI is not a project installation.",
+      "supported_version": "6.12.4",
+      "authorizes": []
+    },
+    {
+      "ok": false,
+      "error": "NATIVE_INSTALLATION_MISSING",
+      "message": "Project-local BMAD is missing. Install official BMAD 6.12.4 for these wrappers; a global CLI is not a project installation.",
+      "supported_version": "6.12.4",
+      "authorizes": []
+    }
+  ],
+  "failure_snapshot_unchanged": true,
+  "install_command": [
+    "python",
+    "-B",
+    "-m",
+    "scripts.toolchain.bmad_native",
+    "install-from-source",
+    "--source-root",
+    "/workspace/scratch/6e089e29b8e4/bmad-upstream-6.12.4"
+  ],
+  "install_result": {
+    "ok": true,
+    "version": "6.12.4",
+    "source_commit": "bab9082c3e884e0d72c759bcd1a6d90bcc01be84",
+    "backup": null,
+    "authorizes": []
+  },
+  "spec_prepare": {
+    "ok": true,
+    "invocation": "logs/bmad-wrappers/spec-clean/invocation.md",
+    "native_spec": "logs/bmad-wrappers/spec-clean/native/_bmad-output/specs/spec-clean/SPEC.md",
+    "authorizes": []
+  },
+  "architecture_prepare": {
+    "ok": true,
+    "invocation": "logs/bmad-wrappers/arch-clean/invocation.md",
+    "doc_workspace": "logs/bmad-wrappers/arch-clean/native/_bmad-output/architecture",
+    "authorizes": []
+  },
+  "native_hashes_before_and_after_prepare": "passed in project and both private native directories",
+  "git_status_after_install_and_prepare": "",
+  "no_native_workflow_semantic_rerun": true,
+  "limitations": [
+    "Linux only; no Windows host",
+    "Targeted sparse checkout, not full network clone",
+    "Initial sparse setup warned about unavailable out-of-scope .claude README blob; targeted files and final status verified"
+  ]
+}
