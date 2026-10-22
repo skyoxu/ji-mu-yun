@@ -1,6 +1,6 @@
 # ADR-0062: Repository Skill Authoring Contract
 
-Status: Proposed; maintainer adoption is required before final acceptance.
+Status: Accepted. Maintainer adoption recorded on 2026-10-22.
 Date: 2026-10-21. Governing accepted decision: ADR-0041.
 
 ## Context
@@ -9,7 +9,7 @@ Package A needs one deterministic, capability-aware local declaration standard.
 The completed 8-05/8-24 owners already enforce execution/evidence and platform
 isolation; static package declarations cannot replace those owners.
 
-## Proposed decision
+## Decision
 
 Adopt docs/standards/skill-authoring-standard.md version 1.0, the policy and
 versioned contract/result schemas, and the read-only validate_skill_quality.py
@@ -31,10 +31,12 @@ Static checks prove declarations and controlled fixture outcomes only. They do
 not establish OS/network/restore enforcement or arbitrary prose semantics.
 Verify the real Python entry and public CLI with the four Package A test modules,
 including boundary, mutation, no-side-effect, migration and parity cases. Native
-Quick Dev Q7/Q8 and Acceptance retain completion authority. Existing accepted
-ADR-0041 governs development while this decision remains proposed.
+Quick Dev Q7/Q8 and Acceptance retain completion authority. ADR-0041 and this adopted decision govern the current Package A contract.
 
 ## Adoption
 
-No accepted status or maintainer approval is inferred from passing tests. Record
-the actual maintainer adoption decision here before final Package A acceptance.
+On 2026-10-22 the repository maintainer explicitly instructed the online caller
+to formally adopt ADR-0062 and standard version 1.0, refresh affected native
+Quick Dev evidence and binding, then run implementation Acceptance. This records
+that actual decision; passing tests alone did not grant adoption. Scope remains
+Package A. Package B migration and internal Bootstrap review are not activated.

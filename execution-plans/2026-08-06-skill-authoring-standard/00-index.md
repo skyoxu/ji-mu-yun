@@ -1,28 +1,27 @@
 # Skill Authoring Standard: Package A
 
-Current VDD state: **plan-ready** (native compiler publication, 2026-10-20).
-Implementation has started through the native online Quick Dev route. S3 has
-current slice-ready evidence; Package A implementation and Acceptance remain
-incomplete. First-use entry preparation is available under ADR-0041.
+Current VDD state: **plan-ready**, native compiler publication for the complete
+Package A scope. The prior native Quick Dev run completed all 31 slices and
+published implementation-complete/pass. ADR-0062 and standard version 1.0 were
+formally adopted by the maintainer on 2026-10-22. Current-runtime evidence refresh
+and formal Acceptance are in progress; see the current handoff for exact proof.
 
 - Branch: `fix/08-06-skill-authoring-plan-refresh`.
-- Current plan: `dependency-atomic-plan-03/semantic-plan-bundle.v1.json`.
-  `current-plan/` is the immutable published predecessor, not the current entry.
+- Current plan: `package-a-completion-plan/semantic-plan-bundle.v1.json`.
 - Plan ID: `PLAN-D6248F18A869`.
-- Plan semantic SHA-256: `7d90d6df1513cc4a6b232493e7da06e69151266a0202c91cf850e1141cdd7af0`.
-- Coverage: 289 active obligations, 289 Acceptances, 299 exact coverage edges,
-  25 slices; zero source gaps or invented obligations.
-- Source bytes and all 25 product intent rows remain unchanged by this online repair.
+- Plan semantic SHA-256: `35e43f85da4a14b5c8554be8b66d9977d4356b664f04dc77c6685ffb5ee1e6f5`.
+- Coverage: 289 active obligations, 289 Acceptances, 300 exact coverage edges,
+  31 slices. Requirement source bytes remain unchanged.
 
 ## Start here
 
 1. [requirements.md](requirements.md): authoritative Package A source.
 2. [LOCAL-HANDOFF.md](LOCAL-HANDOFF.md): current compilation result, local/online
    routes, completed slice boundaries and next action.
-3. [Online repair report](repair/2026-10-20/online-repair.md): changes, verification
-   and exact evidence paths.
-4. [Dependency atomic repair](repair/2026-10-20-dependency-atomic/README.md):
-   source-bound split, compiler fixes, current S3 evidence and limits.
+3. [Completion handoff](ONLINE-COMPLETION-2026-10-21.md): full-scope implementation
+   evidence and refresh status.
+4. [Historical dependency atomic repair](repair/2026-10-20-dependency-atomic/README.md):
+   earlier split, compiler fixes, historical S3 evidence and limits.
 5. [Earlier reconciliation](repair/2026-10-18/reconciliation.md): original SAS
    coverage and exclusions.
 
@@ -44,4 +43,5 @@ feasibility, chain and handoff gates decided publication.
 Historical v1 contracts, plan-local tools, old statuses and earlier repair records
 are not current execution authority. The previous navigation and handoff text
 are retained under `repair/2026-10-20/`. Earlier failed compiler attempts remain
-historical. Use `dependency-atomic-plan-03/`, never the root historical implementation contract.
+historical. Use `package-a-completion-plan/`, never the root historical implementation contract.
+`dependency-atomic-plan-03/` and earlier completion descriptions are historical.

@@ -36,14 +36,13 @@ Python 3.12+ supports this safe extraction filter. Extraction restores evidence;
 it does not run tests, execute inspected Skills or grant lifecycle authority.
 Do not replace the native proof with the archive manifest or a test count.
 
-## Remaining maintainer decision
+## Current maintainer decision and next action
 
-ADR-0062 and the normative standard remain Proposed/Draft. The original
-requirements explicitly require real maintainer adoption before final Package A
-Acceptance or Package B consumption. Passing tests and Q8 do not grant adoption.
-After the maintainer adopts the decision, record that actual decision, refresh
-affected current proof through the native entries, then continue the existing
-Acceptance workflow. Do not invent approval or enable Bootstrap Review.
+On 2026-10-22 the maintainer formally adopted ADR-0062 and standard version 1.0,
+and authorized current-runtime evidence refresh followed by formal Acceptance.
+The adopted decision is recorded in ADR-0062. Refresh is in progress; prior Q8
+remains historical until the current native run and consumer readback complete.
+Bootstrap Review is not requested or enabled.
 
 The implementation self-check is recorded under
 `logs/08-06-completion-20261021/implementation-self-check.md`; it is not an

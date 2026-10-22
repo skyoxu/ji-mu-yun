@@ -1,7 +1,7 @@
 # Repository Skill Authoring Standard
 
-Status: Draft normative contract for the authorized Package A implementation.
-Decision: ADR-0041; proposed ADR-0062 records final adoption.
+Status: Adopted normative contract, maintainer-approved on 2026-10-22.
+Decision: Accepted ADR-0041 and ADR-0062; standard version 1.0 is adopted.
 Standard version: 1.0. Rules: A01 through A25.
 
 ## Responsibility and lifecycle
