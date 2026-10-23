@@ -1,7 +1,8 @@
-"""ADR-0041: explicit, deterministic Python entry preparation before behavioral RED.
+"""ADR-0041: explicit, deterministic entry preparation before behavioral RED.
 
 Only missing planned production files can be created: Python callables return
-None and JSON interfaces begin as empty objects. No model-authored body, feature implementation, import, test,
+None, JSON interfaces begin as empty objects, and TOML interfaces are empty bytes.
+No model-authored body, feature implementation, import, test,
 observation, or completion proof is generated. Existing Q2/Q4 gates stay intact.
 """
 from __future__ import annotations
@@ -84,7 +85,7 @@ def _outputs(workspace, bundle, slice_id, contract):
         if not isinstance(entry, dict) or set(entry) != {'path', 'exports'}:
             raise ValueError('first-use entry shape invalid')
         ref, path = _safe_path(workspace, entry['path'])
-        if (ref.startswith('logs/') or ref not in allowed or ref in snapshots or not ref.endswith(('.py', '.json')) or '/tests/' in ref or ref.startswith('tests/')
+        if (ref.startswith('logs/') or ref not in allowed or ref in snapshots or not ref.endswith(('.py', '.json', '.toml')) or '/tests/' in ref or ref.startswith('tests/')
                 or any(fnmatch.fnmatchcase(ref, f) or ref == f or ref.startswith(f.rstrip('/') + '/') for f in forbidden)):
             raise ValueError('first-use owner outside declared new production boundary')
         if ref in outputs:
@@ -95,6 +96,10 @@ def _outputs(workspace, bundle, slice_id, contract):
             if entry['exports'] != []:
                 raise ValueError('first-use JSON interface cannot declare behavior or data')
             content = b'{}\n'
+        elif ref.endswith('.toml'):
+            if entry['exports'] != []:
+                raise ValueError('first-use TOML interface cannot declare behavior or data')
+            content = b''
         else:
             content = _render(entry['exports'])
         outputs[ref] = (path, content)

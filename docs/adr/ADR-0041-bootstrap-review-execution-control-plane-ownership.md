@@ -591,3 +591,22 @@ IDs and duplicate membership fail closed. Prose and successor-authored edges
 are not dependency authority. Existing semantic-scope and historical-intent
 checks remain mandatory. No replay of extraction, source rewrite, implementation
 or stable-host replacement is authorized by an isolated successful handoff.
+
+
+### Deterministic empty TOML first-use extension (2026-10-23)
+
+After the S7 public probe rejected its absent declared TOML production owner,
+independent A/B review confirmed no supported preparation route. The maintainer
+explicitly approved this limited extension on 2026-10-23. `prepare-entry` may
+now prepare a `.toml` entry only with `exports=[]`, emitting exactly zero bytes,
+a syntactically valid empty TOML document with no keys, values or defaults.
+Unknown input fields, supplied content and nonempty exports remain rejected;
+other file types remain unsupported. This extends only the file-type exception
+in the 2026-10-20 decision, not production implementation authority.
+
+Q1, plan/slice/actual HEAD binding, the owner/write/planned-new intersection,
+frozen/forbidden/path/symlink checks, no-overwrite and tracked-deleted protection
+remain unchanged. The native receipt binds the generated empty bytes and is
+revalidated before use. Empty TOML is not configured behavior, observed RED,
+or completion; Q2 remains test-only and Q4 requires actual behavioral RED.
+No current business plan, historical evidence or running host is rewritten.

@@ -98,8 +98,8 @@ execution or acceptance evidence.
 For a genuinely absent planned production entry, use the deterministic
 `prepare-entry` action before Q2, with the hash-bound first-use input described
 in [execution guidance](references/execution-operation.md#first-use-entry-preparation).
-It can create only missing Python interfaces returning None and empty JSON
-interfaces inside the exact declared new production boundary. It cannot accept
+It can create only missing Python interfaces returning None, empty JSON
+interfaces and zero-byte TOML interfaces (exports=[]; no keys or defaults) inside the exact declared new production boundary. It cannot accept
 model-authored function bodies or data. It is not implementation, RED or
 completion authority. Existing local and online Q2/Q4 routes remain unchanged;
 Q2 still cannot write production, and Q4 still requires observed behavioral RED.
