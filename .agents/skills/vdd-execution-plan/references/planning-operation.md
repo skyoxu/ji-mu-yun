@@ -167,6 +167,15 @@ meaning or dropped text requires ordinary recompilation. New deterministic
 source, semantic preflight, exact cover, feasibility and handoff checks must
 pass. The predecessor, caches, prior failures and C3 approvals stay unchanged.
 
+Slice dependencies are derived from exact V1 obligation IDs and the original
+slice membership. V6 emits this projection. For historical predecessors only,
+handoff may fill an omitted `depends_on` field using that immutable graph;
+an explicit field (including `[]`) must already match. Successor-authored
+edges, prose prerequisites, and shared-owner guesses cannot become authority.
+Dangling edges and obligation or slice cycles fail closed. Scope comparison
+still protects all obligations, oracles, owners, membership and terminal
+predicates; this compatibility rule grants no additional semantic repair.
+
 Publication and current consumption reject production/snapshot overlap, missing
 primary authorable pytest entry, and missing RED roles for eligible behavior.
 A constraints/governance failure still blocks; never manufacture expected RED

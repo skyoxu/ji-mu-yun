@@ -147,6 +147,11 @@ def cohesive_partition_slices(obligations: Sequence[Mapping[str, Any]], acceptan
             "planned_new_files": planned_new_files,
             "terminal_predicate": _conjunction(terminals, "all bound Acceptance predicates pass"),
         })
+    # ADR-0041: the installed producer must retain V1 dependency projection.
+    from execution_contract import derive_slice_dependencies, bind_slice_dependencies
+    bind_slice_dependencies(slices, derive_slice_dependencies(obligations, slices))
+    for item in slices:
+        item["slice_input_hash"] = sc.sha256_value({k: v for k, v in item.items() if k != "slice_input_hash"})
     return slices, hint_by_acceptance
 
 
