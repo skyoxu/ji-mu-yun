@@ -82,8 +82,27 @@ checks normal V3 execution contracts, and requires independent V4 and all
 downstream gates before publication. Missing final targets or unconsumed
 corrections fail closed. Projection sidecars preserve the exact correction
 input without rewriting old worker output. Do not combine this option with
-worker fixtures, companions, recommendation-only or execution-only handoff
+worker fixtures, recommendation-only or execution-only handoff
 repair. It does not extend repair budgets or permit skipping a failed V4.
+
+For an ordinary failed/unpublished candidate, the bounded test-path form adds
+`source_index_sha256` and `test_path_replacements` (an exact old-to-new path
+map) to the same JSON object. Pass every original `--companion` explicitly;
+there is no automatic recovery of omitted inputs. The compiler rebuilds the
+source index and checks its complete identity before any worker. Every supplied
+companion must have its complete byte hash bound in that index; an input format
+that drops a companion is rejected, not silently summarized.
+
+This form applies only ownerless constraint/governance test-path corrections
+before the first V3 execution-contract gate, including cached schema-repair
+results. Only selector file prefixes, allowed/snapshot/planned test paths and
+exact validation argv path tokens may change. All other fields must match the
+original candidate; changing an oracle, kind, owner or production scope fails.
+The normal domain, path, ownerless, execution, V4 and publication checks still
+run. Append-only receipts record the projected inputs; old caches are not
+rewritten. This form cannot be combined with fixtures or recommendation-only.
+The legacy four-field correction retains its prior behavior without companions.
+This is ADR-0041 authoring input, never permission to replace a stable host.
 
 For a published plan-ready predecessor, add `--repair-published-v3-from` and
 use a distinct empty sibling successor with the predecessor profile. The

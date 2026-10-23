@@ -261,14 +261,17 @@ def main() -> int:
     import semantic_alignment_repair_patch as alignment
     alignment.configure_approved_v4_repair_cycles(args.approved_v4_repair_cycles)
     if args.v3_contract_repair and not args.repair_published_v3_from:
-        if args.worker_cache or args.recommendation_only or args.companion:
-            parser.error("V3 candidate repair cannot combine fixtures, recommendation-only or companions")
+        if args.worker_cache or args.recommendation_only:
+            parser.error("V3 candidate repair cannot combine fixtures or recommendation-only")
         import semantic_v3_contract_repair as candidate_repair
         try:
             state_path = args.out_dir / "compiler-state.v1.json"
             if state_path.exists() and json.loads(state_path.read_text(encoding="utf-8")).get("state") == "plan-ready":
                 raise ValueError("V3 candidate repair requires a failed or unpublished output directory")
-            candidate_repair.install(candidate_repair.load_repair(args.v3_contract_repair, args.requirements))
+            correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
+            if args.companion and "source_index_sha256" not in correction:
+                raise ValueError("V3 companion repair requires complete source-index identity and test path scope")
+            candidate_repair.install(correction)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             parser.error(str(exc))
     cache = None

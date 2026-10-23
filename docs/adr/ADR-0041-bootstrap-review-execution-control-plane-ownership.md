@@ -561,3 +561,20 @@ declared scope; full terminal and required Q6 commands remain unchanged.
 Existing local and online caller-session worker routes remain supported. The
 reusable .NET/TRX helper stays deferred to pre-S2. This decision does not adopt
 ADR-0062 or perform Package A Acceptance.
+
+### Isolated VDD repair intake maintenance (2026-10-23)
+
+The maintainer authorized a separate repair branch for the failed candidate
+intake, subject to isolated regressions and independent A/B stabilization before
+any replacement of the hosting toolchain. Ordinary candidate repair can carry
+its original companions only with a complete source-index identity. Every
+companion byte hash must be represented; omitted or changed input fails before
+workers. No automatic companion discovery or cache authority is introduced.
+
+A bounded test-path mapping may be applied before the first execution-contract
+validation for ownerless constraint/governance contracts. Acceptance, oracle,
+kind, owner and other semantics cannot change through this form. Existing path,
+ownerless, fixture, execution, V4 and publication gates remain authoritative.
+Raw caches and failed history remain immutable; derived projection receipts are
+append-only. This maintenance does not authorize original requirement recovery,
+implementation, Acceptance, publication, or replacement of the stable host.
