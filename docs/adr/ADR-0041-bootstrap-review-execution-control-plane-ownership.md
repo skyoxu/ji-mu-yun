@@ -561,3 +561,52 @@ declared scope; full terminal and required Q6 commands remain unchanged.
 Existing local and online caller-session worker routes remain supported. The
 reusable .NET/TRX helper stays deferred to pre-S2. This decision does not adopt
 ADR-0062 or perform Package A Acceptance.
+
+### Isolated VDD repair intake maintenance (2026-10-23)
+
+The maintainer authorized a separate repair branch for the failed candidate
+intake, subject to isolated regressions and independent A/B stabilization before
+any replacement of the hosting toolchain. Ordinary candidate repair can carry
+its original companions only with a complete source-index identity. Every
+companion byte hash must be represented; omitted or changed input fails before
+workers. No automatic companion discovery or cache authority is introduced.
+
+A bounded test-path mapping may be applied before the first execution-contract
+validation for ownerless constraint/governance contracts. Acceptance, oracle,
+kind, owner and other semantics cannot change through this form. Existing path,
+ownerless, fixture, execution, V4 and publication gates remain authoritative.
+Raw caches and failed history remain immutable; derived projection receipts are
+append-only. This maintenance does not authorize original requirement recovery,
+implementation, Acceptance, publication, or replacement of the stable host.
+
+### Isolated slice-dependency maintenance (2026-10-23)
+
+The maintainer authorized a second isolated fix, based on the reviewed intake
+repair, subject to independent A/B review before stable-host adoption. V6
+cohesion projects exact V1 dependency IDs through slice membership. Handoff
+derives the expected graph from the immutable predecessor before any repair.
+Only historical missing fields may be filled; explicit empty or wrong edges
+must reject without being overwritten. Obligation and slice cycles, dangling
+IDs and duplicate membership fail closed. Prose and successor-authored edges
+are not dependency authority. Existing semantic-scope and historical-intent
+checks remain mandatory. No replay of extraction, source rewrite, implementation
+or stable-host replacement is authorized by an isolated successful handoff.
+
+
+### Deterministic empty TOML first-use extension (2026-10-23)
+
+After the S7 public probe rejected its absent declared TOML production owner,
+independent A/B review confirmed no supported preparation route. The maintainer
+explicitly approved this limited extension on 2026-10-23. `prepare-entry` may
+now prepare a `.toml` entry only with `exports=[]`, emitting exactly zero bytes,
+a syntactically valid empty TOML document with no keys, values or defaults.
+Unknown input fields, supplied content and nonempty exports remain rejected;
+other file types remain unsupported. This extends only the file-type exception
+in the 2026-10-20 decision, not production implementation authority.
+
+Q1, plan/slice/actual HEAD binding, the owner/write/planned-new intersection,
+frozen/forbidden/path/symlink checks, no-overwrite and tracked-deleted protection
+remain unchanged. The native receipt binds the generated empty bytes and is
+revalidated before use. Empty TOML is not configured behavior, observed RED,
+or completion; Q2 remains test-only and Q4 requires actual behavioral RED.
+No current business plan, historical evidence or running host is rewritten.

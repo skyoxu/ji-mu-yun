@@ -400,34 +400,17 @@ def semantic_projection(bundle):
     }
 
 
-def _project_slice_dependencies(bundle):
-    """Materialize source obligation dependencies without inventing ordering.
-
-    Older reviewed bundles omitted the executable projection. Treat a missing
-    field as an empty list for scope comparison, then publish the derived
-    cross-slice edges in the successor. Shared owners and numeric slice order
-    are deliberately not converted into dependencies.
-    """
-    obligations = {item['obligation_id']: item for item in bundle.get('obligations', [])}
-    owner = {
-        oid: item['slice_id']
-        for item in bundle.get('slices', [])
-        for oid in item.get('obligation_ids', [])
-    }
-    for item in bundle.get('slices', []):
-        deps = set()
-        for oid in item.get('obligation_ids', []):
-            for dep in obligations.get(oid, {}).get('depends_on', []):
-                # Published source prerequisites can be prose. Preserve them
-                # in obligations; only exact obligation IDs create graph edges.
-                if not dep.startswith('O-'):
-                    continue
-                target = owner.get(dep)
-                if target is None:
-                    raise ValueError(f'{item.get("slice_id")}:dependency-target-not-in-plan:{dep}')
-                if target != item.get('slice_id'):
-                    deps.add(target)
-        item['depends_on'] = sorted(deps)
+def _project_slice_dependencies(bundle, expected=None):
+    """ADR-0041: preserve explicit fields; fill only verified legacy omissions."""
+    from execution_contract import derive_slice_dependencies, bind_slice_dependencies
+    if expected is None:
+        expected = derive_slice_dependencies(bundle['obligations'], bundle['slices'])
+    missing = {s['slice_id'] for s in bundle['slices'] if 'depends_on' not in s}
+    bind_slice_dependencies(bundle['slices'], expected)
+    import semantic_compiler as sc
+    for item in bundle['slices']:
+        if item['slice_id'] in missing:
+            item['slice_input_hash'] = sc.sha256_value({k: v for k, v in item.items() if k != 'slice_input_hash'})
     return bundle
 
 
@@ -505,14 +488,19 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     active = {o['obligation_id'] for o in original['obligations'] if o.get('status') == 'active'}
     if alignment.get('valid') is not True or recall.get('valid') is not True or set(recall['worker']['supported_obligation_ids']) != active:
         raise ValueError('handoff predecessor lacks complete independent semantic review')
+    # Bind expected edges to the immutable predecessor BEFORE any repair.
+    # Successor-written edges are never used as the expected graph.
+    from execution_contract import derive_slice_dependencies
+    expected_dependencies = derive_slice_dependencies(original['obligations'], original['slices'])
+    expected_original = _project_slice_dependencies(deepcopy(original), expected_dependencies)
     if runtime_red_intents and windows_launcher_slices:
         raise ValueError('runtime RED role repair cannot combine Windows launcher repair')
     repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
                        if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
                                                                  windows_launcher_slices=windows_launcher_slices))
-    repaired = _project_slice_dependencies(repaired)
+    repaired = _project_slice_dependencies(repaired, expected_dependencies)
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
-    if semantic_projection(original) != semantic_projection(repaired):
+    if semantic_projection(expected_original) != semantic_projection(repaired):
         raise ValueError('handoff repair changed semantic scope')
     if not all(f in repaired['failure_intents'] for f in original['failure_intents']):
         raise ValueError('handoff repair changed historical failure intent')

@@ -4,10 +4,13 @@ from __future__ import annotations
 from copy import deepcopy
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping
 
 import semantic_worker_v3_group_repair_patch as group
+
+_ACTIVE_PATH_REPAIR = None
 
 _BASE_COMPILE_OBLIGATIONS = group.sc.compile_obligations
 _BASE_PARTITION_SLICES = group.sc.partition_slices
@@ -16,6 +19,8 @@ _BASE_INVOKE_WORKER = group.sc.invoke_worker
 
 def reset_published_overlays() -> None:
     """Remove process-local published-repair overlays before ordinary compiles."""
+    global _ACTIVE_PATH_REPAIR
+    _ACTIVE_PATH_REPAIR = None
     group.sc.compile_obligations = _BASE_COMPILE_OBLIGATIONS
     group.sc.partition_slices = _BASE_PARTITION_SLICES
     group.sc.invoke_worker = _BASE_INVOKE_WORKER
@@ -733,15 +738,31 @@ def check_unaffected_published_semantics(predecessor: Mapping[str, Any],
 
 def load_repair(path: Path, requirements: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict) or set(value) != {
-        "schema", "requirements_sha256", "authorizes", "obligation_contracts"
-    }:
+    if not isinstance(value, dict) or set(value) not in (
+        {"schema", "requirements_sha256", "authorizes", "obligation_contracts"},
+        {"schema", "requirements_sha256", "authorizes", "obligation_contracts",
+         "source_index_sha256", "test_path_replacements"},
+    ):
         raise ValueError("V3 candidate repair fields are invalid")
     if value["schema"] != "vdd.v3-candidate-repair.v1" or value["authorizes"] != []:
         raise ValueError("V3 candidate repair is non-authorizing input only")
     digest = "sha256:" + hashlib.sha256(requirements.read_bytes()).hexdigest()
     if value["requirements_sha256"] != digest:
         raise ValueError("V3 candidate repair requirements identity is stale")
+    if "source_index_sha256" in value:
+        from execution_contract import is_test_path
+        from pathlib import PurePosixPath
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(value["source_index_sha256"])):
+            raise ValueError("V3 repair full input identity is invalid")
+        paths = value["test_path_replacements"]
+        if not isinstance(paths, dict) or not paths:
+            raise ValueError("V3 repair test path replacements are required")
+        for old, new in paths.items():
+            if (not isinstance(old, str) or "\\" in old or ":" in old
+                    or PurePosixPath(old).is_absolute() or ".." in PurePosixPath(old).parts
+                    or "tests" not in PurePosixPath(old).parts
+                    or not is_test_path(new) or old == new):
+                raise ValueError("V3 repair test path replacement is invalid")
     contracts = value["obligation_contracts"]
     if not isinstance(contracts, dict) or not contracts:
         raise ValueError("V3 candidate repair has no contracts")
@@ -816,6 +837,8 @@ def install(repair: Mapping[str, Any]) -> None:
     deterministic ID construction, V4 independent review and downstream gates.
     Source-gap expansion may revisit V3; the same bounded overlay is idempotent.
     """
+    global _ACTIVE_PATH_REPAIR
+    _ACTIVE_PATH_REPAIR = repair if "source_index_sha256" in repair else None
     original_invoke = group.sc.invoke_worker
     original_align = group.sc.semantic_align
 
@@ -825,7 +848,9 @@ def install(repair: Mapping[str, Any]) -> None:
         if stage != "v3":
             return value
         payload = {"original_stage": "v3", "input": payload}
-        merged = apply_repair(value, payload, repair, Path(root))
+        merged = (apply_early_test_paths(root, out_dir, stage, payload, value)
+                  if _ACTIVE_PATH_REPAIR is not None
+                  else apply_repair(value, payload, repair, Path(root)))
         receipt = {
             "schema": "vdd.v3-candidate-repair-projection.v1",
             "authorizes": [], "candidate_sha256": group.sc.sha256_value(merged),
@@ -856,3 +881,84 @@ def install(repair: Mapping[str, Any]) -> None:
 
     group.sc.invoke_worker = repaired_worker
     group.sc.semantic_align = checked_alignment
+
+
+def validate_active_input(source_index, *, root=None, companions=()):
+    """ADR-0041: bind all entries and companions before any semantic worker."""
+    if _ACTIVE_PATH_REPAIR is not None and companions:
+        bound = {(entry.get("repository_relative_source_path"), entry.get("source_sha256"))
+                 for entry in [*source_index.get("entries", []), *source_index.get("companions", [])]}
+        for companion in companions:
+            path = Path(companion).resolve()
+            identity = (path.relative_to(Path(root).resolve()).as_posix(),
+                        group.sc.sha256_bytes(path.read_bytes()))
+            if identity not in bound:
+                raise ValueError("V3 repair source-index does not bind complete companion bytes")
+    if (_ACTIVE_PATH_REPAIR is not None
+            and source_index.get("sha256") != _ACTIVE_PATH_REPAIR["source_index_sha256"]):
+        raise ValueError("V3 repair complete source-index identity mismatch")
+
+
+def apply_early_test_paths(root, out_dir, stage, payload, value):
+    """Apply only reviewed ownerless test-path changes, then retain every gate."""
+    repair = _ACTIVE_PATH_REPAIR
+    if repair is None or (stage != "v3" and not stage.startswith("v3-schema-repair")):
+        return value
+    from execution_contract import ownerless_guard
+    source = payload.get("input", payload)
+    refs = group._obligation_refs({"input": source})
+    targets = set(refs) & set(repair["obligation_contracts"])
+    if not targets:
+        return value
+    if "obligation_contracts" in value:
+        value = group._project_current_output(value, refs)
+    replacements = group._project_current_output(
+        {"obligation_contracts": {oid: repair["obligation_contracts"][oid] for oid in targets}},
+        {oid: refs[oid] for oid in targets})
+    paths = repair["test_path_replacements"]
+    def path(value):
+        return paths.get(value, value)
+    expected = deepcopy(dict(value))
+    for field in ("acceptances", "failure_intents", "slice_hints"):
+        for row in expected[field]:
+            ids = set(row.get("obligation_ids", []))
+            if not ids & targets:
+                continue
+            if len(ids) != 1:
+                raise ValueError("V3 test path repair cannot split a shared contract")
+            if field == "failure_intents":
+                text = row["selector_intent"]
+                for old, new in paths.items():
+                    if text == old or text.startswith(old + "::"):
+                        text = new + text[len(old):]
+                        break
+                row["selector_intent"] = text
+            elif field == "slice_hints":
+                for name in ("allowed_write_paths", "execution_snapshot_paths", "planned_new_files"):
+                    row[name] = [path(p) for p in row[name]]
+                row["validation_commands"] = [[path(p) for p in argv] for argv in row["validation_commands"]]
+        actual = [row for row in expected[field] if set(row.get("obligation_ids", [])) & targets]
+        key = lambda row: group.sc.sha256_value(row)
+        if sorted(actual, key=key) != sorted(replacements[field], key=key):
+            raise ValueError("V3 early repair exceeds test path scope: " + field)
+    by_id = {o["obligation_id"]: o for o in source.get("obligations", [])}
+    for hint in replacements["slice_hints"]:
+        ids = hint["obligation_ids"]
+        failures = [f for f in replacements["failure_intents"] if f["obligation_ids"] == ids]
+        if not ownerless_guard(hint, [by_id.get(oid, {}) for oid in ids], failures):
+            raise ValueError("V3 early repair is not an ownerless constraint guard")
+    # Source refs, schemas, paths and semantic gates remain enforced below and
+    # by the caller's unchanged normal execution-contract pipeline.
+    result = apply_repair(value, {"input": source}, repair, Path(root))
+    receipt = {"schema": "vdd.v3-test-path-repair-projection.v1", "authorizes": [],
+               "stage": stage, "source_index_sha256": repair["source_index_sha256"],
+               "input_sha256": group.sc.sha256_value(value),
+               "output_sha256": group.sc.sha256_value(result),
+               "applied_obligation_ids": sorted(targets)}
+    target = Path(out_dir) / ".compiler-work/test-path-repairs" / (group.sc.sha256_value(receipt)[7:] + ".json")
+    if target.exists():
+        if json.loads(target.read_text(encoding="utf-8")) != receipt:
+            raise ValueError("V3 test path repair receipt is not append-only")
+    else:
+        group.sc.atomic_json(target, receipt)
+    return result

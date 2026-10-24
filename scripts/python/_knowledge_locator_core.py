@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -413,3 +414,211 @@ def require_fresh_catalog(catalog: dict[str, Any], current_sources: dict[str, st
             if not isinstance(resource_path, str) or _hard_excluded(resource_path) or expected.get(resource_path) != resource.get("source_sha256"):
                 return {"status": "knowledge_refresh_required"}
     return {"status": "current"}
+
+
+def _canonical_hash(value: Any) -> str:
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _current_main_commit(repository_root: Path) -> str | None:
+    current = subprocess.run(
+        ["git", "-C", str(repository_root), "rev-parse", "refs/heads/main"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    if current.returncode:
+        return None
+    commit = current.stdout.strip()
+    return commit if len(commit) == 40 else None
+
+
+def _main_source_hashes(
+    repository_root: Path,
+    catalog: dict[str, Any],
+    current_commit: str | None = None,
+) -> dict[str, str]:
+    snapshot = catalog_source_snapshot(catalog)
+    if snapshot is None:
+        return {}
+    current_commit = current_commit or _current_main_commit(repository_root)
+    if current_commit is None:
+        return {}
+    ancestry = subprocess.run(
+        ["git", "-C", str(repository_root), "merge-base", "--is-ancestor", snapshot["commit"], current_commit],
+        capture_output=True,
+        check=False,
+    )
+    if ancestry.returncode:
+        return {}
+    paths = [item.get("path") for item in snapshot["sources"] if isinstance(item, dict) and isinstance(item.get("path"), str)]
+    if not paths:
+        return {}
+    request_bytes = "".join(f"{current_commit}:{path}\n" for path in paths).encode("utf-8")
+    completed = subprocess.run(
+        ["git", "-C", str(repository_root), "cat-file", "--batch"],
+        input=request_bytes,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode:
+        return {}
+    output = completed.stdout
+    offset = 0
+    hashes: dict[str, str] = {}
+    for path in paths:
+        newline = output.find(b"\n", offset)
+        if newline < 0:
+            return {}
+        header = output[offset:newline].decode("ascii", errors="replace")
+        offset = newline + 1
+        parts = header.rsplit(" ", 2)
+        if len(parts) != 3 or parts[1] != "blob" or not parts[2].isdigit():
+            return {}
+        size = int(parts[2])
+        blob = output[offset : offset + size]
+        offset += size
+        if output[offset : offset + 1] != b"\n":
+            return {}
+        offset += 1
+        hashes[path] = hashlib.sha256(blob).hexdigest()
+    return hashes
+
+
+def _policy_for(request: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any] | None:
+    if request.get("policy_revision") != registry.get("policy_revision"):
+        return None
+    consumer = request.get("consumer")
+    return next((item for item in registry.get("policies", []) if isinstance(item, dict) and item.get("consumer") == consumer), None)
+
+
+def _projection_for(
+    request: dict[str, Any],
+    catalog: dict[str, Any],
+    policies: dict[str, Any],
+    projections: dict[str, Any] | None,
+) -> set[str] | None:
+    if not isinstance(catalog.get("modules"), list):
+        return None
+    if projections is None:
+        raise ValueError("consumer_projection_missing")
+    snapshot = catalog_source_snapshot(catalog)
+    if (
+        snapshot is None
+        or projections.get("source_snapshot_id") != snapshot.get("snapshot_id")
+        or projections.get("catalog_sha256") != _canonical_hash(catalog)
+        or projections.get("policy_revision") != policies.get("policy_revision")
+        or projections.get("policy_sha256") != _canonical_hash(policies)
+    ):
+        raise ValueError("consumer_projection_stale")
+    projection = next(
+        (
+            item
+            for item in projections.get("projections", [])
+            if isinstance(item, dict) and item.get("consumer") == request.get("consumer")
+        ),
+        None,
+    )
+    if projection is None or not isinstance(projection.get("eligible_module_ids"), list):
+        raise ValueError("consumer_projection_missing")
+    return set(projection["eligible_module_ids"])
+
+
+def query_with_diagnostics(request: dict[str, Any], repository_root: Path, *,
+                           catalog_path: Path = Path("knowledge/catalogs/repository-knowledge-catalog.v2.json"),
+                           policies_path: Path | None = None,
+                           projections_path: Path = Path("knowledge/projections/consumer-projections.v1.json"),
+                           max_candidates: int = 12,
+                           allow_unpublished_inputs: bool = False,
+                           allow_stale_catalog: bool = False) -> dict[str, Any]:
+    """ADR-0048: one read-only preflight for legacy CLI and diagnostic consumers.
+
+    The result is the unchanged legacy wire object. Diagnostics explain gates;
+    they do not authorize policy bypass, publication or downstream completion.
+    File/JSON errors retain the legacy exception boundary for caller handling.
+    """
+    repository_root = Path(repository_root).resolve()
+
+    def rooted(path: Path) -> Path:
+        return path if path.is_absolute() else repository_root / path
+
+    catalog_path = rooted(catalog_path)
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    policy_path = policies_path
+    if policy_path is None:
+        revision = request.get("policy_revision")
+        filename = "consumer-policies.v1.json" if revision == "knowledge-consumer-policies.v1" else "consumer-policies.v2.json"
+        policy_path = Path("knowledge/policies") / filename
+    policies = json.loads(rooted(policy_path).read_text(encoding="utf-8"))
+    projection_document = None
+    if isinstance(catalog.get("modules"), list):
+        projection_document = json.loads(rooted(projections_path).read_text(encoding="utf-8"))
+    snapshot = catalog_source_snapshot(catalog)
+    current_main_commit = _current_main_commit(repository_root)
+    fresh = require_fresh_catalog(catalog, _main_source_hashes(repository_root, catalog, current_main_commit))
+    policy = _policy_for(request, policies)
+    canonical_paths = (
+        catalog_path == repository_root / "knowledge" / "catalogs" / "repository-knowledge-catalog.v2.json"
+        and rooted(policy_path) == repository_root / "knowledge" / "policies" / "consumer-policies.v2.json"
+        and rooted(projections_path) == repository_root / "knowledge" / "projections" / "consumer-projections.v1.json"
+    )
+    publication_valid = (
+        allow_unpublished_inputs
+        or not canonical_paths
+        or verify_current_publication(
+            repository_root,
+            catalog_path=catalog_path,
+            policy_path=rooted(policy_path),
+            projections_path=rooted(projections_path),
+        )
+    )
+    try:
+        eligible_module_ids = _projection_for(request, catalog, policies, projection_document)
+    except ValueError:
+        eligible_module_ids = None
+        projection_valid = False
+    else:
+        projection_valid = True
+    stale_allowed = allow_stale_catalog and fresh.get("status") != "current"
+    if (
+        snapshot is None
+        # ADR-0050 permits a generation source commit to precede main only
+        # while the complete source read-set still matches current main.
+        # A published derived catalog is committed after its source snapshot.
+        # Freshness is established by the complete read-set above, so require
+        # the caller to bind that catalog snapshot rather than the later HEAD.
+        or request.get("snapshot") != {"ref": snapshot["ref"], "commit": snapshot["commit"]}
+        or (fresh["status"] != "current" and not stale_allowed)
+        or policy is None
+        or not projection_valid
+        or not publication_valid
+    ):
+        core_result = {"status": "blocked", "candidates": []}
+    else:
+        policy_max = policy.get("max_candidates", max_candidates)
+        maximum = min(max_candidates, policy_max) if isinstance(policy_max, int) else max_candidates
+        core_result = locate(
+            request,
+            catalog,
+            max_candidates=maximum,
+            policy=policy,
+            eligible_module_ids=eligible_module_ids,
+        )
+        core_result["freshness"] = fresh.get("status", "unknown")
+    result = bind_result_to_request(request, core_result)
+
+    diagnostics = []
+    checks = [
+        (snapshot is None, "snapshot_missing"),
+        (snapshot is not None and request.get("snapshot") != {"ref": snapshot["ref"], "commit": snapshot["commit"]}, "snapshot_mismatch"),
+        (fresh.get("status") != "current" and not stale_allowed, "stale"),
+        (policy is None, "policy_missing"),
+        (not projection_valid, "projection_invalid"),
+        (not publication_valid, "publication_invalid"),
+    ]
+    for failed, code in checks:
+        if failed:
+            diagnostics.append({"code": code})
+    return {"result": result, "diagnostics": diagnostics}

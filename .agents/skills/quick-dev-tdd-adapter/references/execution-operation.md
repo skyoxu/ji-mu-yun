@@ -135,7 +135,11 @@ After Q1, author `quick-dev.first-use-contract.v1` with exactly `schema`,
 Each entry has `path` and `exports`. A Python export has `name`, `parameters`
 (required positional names) and `keyword_parameters` (names defaulting to None).
 Only deterministic `def name(...): return None` bodies are generated. A JSON
-entry has `exports=[]` and always generates `{}`. These are deliberately
+entry has `exports=[]` and always generates `{}`. The maintainer-approved
+2026-10-23 extension allows a TOML entry only with `exports=[]`, generating
+exactly zero bytes (a valid empty TOML document). It accepts no content, keys,
+values, sections or defaults; it is not an arbitrary-file preparation route.
+These are deliberately
 unimplemented interfaces, not accepted policy/schema or product behavior.
 
 ```text

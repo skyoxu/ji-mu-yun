@@ -293,6 +293,9 @@ def compile_plan(
         raise ValueError("recommendation-only cannot be combined with resume")
     root = gate.sc.repository_root(requirements.parent)
     source_index = gate.sc.build_source_index(root, requirements, companions)
+    if candidate_v3_repair:
+        from semantic_v3_contract_repair import validate_active_input
+        validate_active_input(source_index, root=root, companions=companions)
 
     if resume_from == "first-failed-stage":
         completed = gate._completed_resume(

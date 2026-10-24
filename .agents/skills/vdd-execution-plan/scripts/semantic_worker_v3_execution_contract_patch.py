@@ -883,6 +883,8 @@ def normalize_v3_cached_result(
     successor.  That path must not bypass the same owner/write-set, grounding,
     selector, and planned-test checks used by the normal transport.
     """
+    from semantic_v3_contract_repair import apply_early_test_paths
+    value = apply_early_test_paths(root, out_dir, stage, payload, value)
     value = _atomicize_initial_candidate(stage, payload, value)
     if stage == "v3" or stage.startswith("v3-schema-repair"):
         value = total_coverage.complete_total_coverage(

@@ -192,9 +192,11 @@ def _visibility(primary_domain: str, *, dependencies: Iterable[str] = ()) -> dic
 
 
 def _consumer_ids(primary_domain: str) -> list[str]:
-    if primary_domain == "marketplace":
-        return ["vdd", "bootstrap", "refactor-acceptance"]
-    return ["vdd", "bootstrap", "refactor-acceptance"]
+    # ADR-0048: adding an eligible consumer never publishes or admits a generation.
+    consumers = ["vdd", "bootstrap", "refactor-acceptance"]
+    if primary_domain in {"toolchain", "phase"}:
+        consumers.append("bmad-planning")
+    return consumers
 
 
 def _domain_for_adr(identifier: str, title: str) -> tuple[str, tuple[str, ...]]:
@@ -636,7 +638,7 @@ class CatalogBuilder:
                         else ()
                     ),
                 ),
-                consumer_ids=("vdd", "bootstrap", "refactor-acceptance"),
+                consumer_ids=_consumer_ids("toolchain"),
             )
             if module is None:
                 continue

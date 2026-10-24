@@ -1,287 +1,41 @@
 name: Windows CI (Manual)
-
 on:
   workflow_dispatch:
-    inputs:
-      delivery_profile:
-        description: 'Delivery profile (playable-ea | fast-ship | standard). Default: fast-ship.'
-        required: false
-        default: 'fast-ship'
-      acceptance_task_id:
-        description: 'Task id for acceptance post-evidence gate (default: 1)'
-        required: false
-        default: '1'
-
+  push:
+    branches: [verify/bmad-vdd-knowledge-query-windows]
 jobs:
-  build-test-export:
-    runs-on: windows-latest
+  knowledge-query-platform:
+    runs-on: windows-2022
+    permissions:
+      contents: read
     env:
-      GODOT_VERSION: '4.5.1'
-      EXPORT_SIZE_MAX_MB: '150'
-      PYTHONIOENCODING: 'utf-8'
       PYTHONUTF8: '1'
-      DELIVERY_PROFILE: ${{ inputs.delivery_profile || 'fast-ship' }}
-      SC_ACCEPTANCE_TASK_ID: ${{ inputs.acceptance_task_id }}
-      WHITELIST_WARN_DAYS: '90'
-      CI_DOTNET_STAGE_TIMEOUT_MS: '4200000'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Resolve delivery/security profile
-        shell: pwsh
-        run: |
-          $delivery = "$env:DELIVERY_PROFILE".Trim()
-          if ([string]::IsNullOrWhiteSpace($delivery)) { $delivery = 'fast-ship' }
-          $security = if ($delivery -eq 'standard') { 'strict' } else { 'host-safe' }
-          $taskLinksWarnings = switch ($delivery) {
-            'playable-ea' { '300' }
-            'standard' { '100' }
-            default { '200' }
-          }
-          "DELIVERY_PROFILE=$delivery" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "SECURITY_PROFILE=$security" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "TASK_LINKS_MAX_WARNINGS=$taskLinksWarnings" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          if ($env:GITHUB_STEP_SUMMARY) {
-            "DeliveryProfile: $delivery`nSecurityProfile: $security" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
-          }
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          dotnet-version: '8.0.x'
-
-      - name: Download Godot .NET (GitHub Releases)
+          python-version: '3.12'
+      - name: Install test runner
+        shell: pwsh
+        run: python -m pip install pytest==8.3.5
+      - name: Record actual platform and source identity
         shell: pwsh
         run: |
-          ./scripts/ci/download_godot_release.ps1 -Version "$env:GODOT_VERSION" -PreferConsole
-
-      - name: Setup Python 3
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: VDD Skill package and unit tests (hard gate)
+          New-Item -ItemType Directory -Force logs/windows-query-verification | Out-Null
+          python -c "import sys,platform,json; print(json.dumps({'platform':sys.platform,'version':sys.version,'system':platform.platform()}))" > logs/windows-query-verification/platform.json
+          git rev-parse HEAD > logs/windows-query-verification/commit.txt
+          git status --porcelain > logs/windows-query-verification/status-before.txt
+          Get-FileHash scripts/toolchain/knowledge_query/adapter.py,scripts/toolchain/knowledge_query/tests/test_planning_query.py,scripts/python/knowledge_locator.py,scripts/python/_knowledge_locator_core.py,knowledge/planning-query.toml -Algorithm SHA256 | ConvertTo-Json > logs/windows-query-verification/source-hashes.json
+      - name: Execute actual Windows cases
         shell: pwsh
         run: |
-          py -3 -B .agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py --skill-root .agents/skills/vdd-execution-plan
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          py -3 -B -m unittest discover -s .agents/skills/vdd-execution-plan/scripts/tests -p "test_*.py" -v
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Hard gates bundle (Python)
-        shell: pwsh
-        run: |
-          py -3 scripts/python/run_gate_bundle.py --mode hard --delivery-profile "$env:DELIVERY_PROFILE" --task-files .taskmaster/tasks/tasks_back.json .taskmaster/tasks/tasks_gameplay.json
-
-      - name: Ensure GdUnit4 plugin
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Continue'
-          $date = Get-Date -Format 'yyyy-MM-dd'
-          $ciDir = "logs/ci/$date"
-          New-Item -ItemType Directory -Force -Path $ciDir | Out-Null
-          $diag = Join-Path $ciDir 'ensure-gdunit4-diag.txt'
-          "CWD=$(Get-Location)" | Out-File -FilePath $diag -Encoding utf8
-          $pyv = (& py -3 -V 2>&1)
-          "PY3=$pyv" | Out-File -FilePath $diag -Append -Encoding utf8
-          $pyinfo = (& py -3 -c "import sys,os; print(sys.executable); print(os.getcwd())" 2>&1)
-          "PYINFO=$pyinfo" | Out-File -FilePath $diag -Append -Encoding utf8
-          if (-not (Test-Path 'scripts/python/ensure_gdunit_plugin.py')) {
-            'MISSING scripts/python/ensure_gdunit_plugin.py' | Out-File -FilePath $diag -Append -Encoding utf8
-            Get-ChildItem -Recurse scripts/python -ErrorAction SilentlyContinue | Select-Object -First 100 FullName | Out-File -FilePath $diag -Append -Encoding utf8
-            Write-Error 'ensure_gdunit_plugin.py missing'; exit 1
-          }
-          & py -3 scripts/python/ensure_gdunit_plugin.py --project Tests.Godot --version v6.0.0 *>&1 | Tee-Object -FilePath (Join-Path $ciDir 'ensure-gdunit4-stdout.txt') | Out-Null
-          if (Test-Path 'Tests.Godot/addons/gdUnit4/bin/GdUnitCmdTool.gd') {
-            'GDUNIT_PLUGIN_READY' | Out-File -FilePath $diag -Append -Encoding utf8
-          }
-          else {
-            'GDUNIT_PLUGIN_MISSING after ensure' | Out-File -FilePath $diag -Append -Encoding utf8
-            'Tree addons/gdUnit4:' | Out-File -FilePath $diag -Append -Encoding utf8
-            Get-ChildItem -Recurse 'Tests.Godot/addons/gdUnit4' -ErrorAction SilentlyContinue | Select-Object -First 200 FullName | Out-File -FilePath $diag -Append -Encoding utf8
-            'Tree Tests.Godot (first 200):' | Out-File -FilePath $diag -Append -Encoding utf8
-            Get-ChildItem -Recurse 'Tests.Godot' -ErrorAction SilentlyContinue | Select-Object -First 200 FullName, Length | Out-File -FilePath $diag -Append -Encoding utf8
-            Write-Error 'GDUNIT_PLUGIN_MISSING after ensure'; exit 1
-          }
-
-      - name: Install Export Templates (GitHub Releases)
-        shell: pwsh
-        run: |
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          $tpz = "godot/export_templates.tpz"
-          $version = "${env:GODOT_VERSION}"
-          $urls = @(
-            "https://github.com/godotengine/godot/releases/download/${version}-stable/Godot_v${version}-stable_export_templates.tpz",
-            "https://downloads.tuxfamily.org/godotengine/${version}/Godot_v${version}-stable_export_templates.tpz"
-          )
-
-          $downloaded = $false
-          foreach ($u in $urls) {
-            for ($attempt = 1; $attempt -le 3; $attempt++) {
-              try {
-                Write-Host "Download templates attempt=$attempt url=$u"
-                Invoke-WebRequest -UseBasicParsing -Uri $u -OutFile $tpz -TimeoutSec 600
-                if (-not (Test-Path $tpz)) { throw "Download target not found: $tpz" }
-                $fi = Get-Item $tpz
-                if ($fi.Length -lt 1048576) { throw "Downloaded file too small: $($fi.Length) bytes" }
-                $stream = [System.IO.File]::OpenRead($tpz)
-                try {
-                  $b0 = $stream.ReadByte()
-                  $b1 = $stream.ReadByte()
-                } finally {
-                  $stream.Dispose()
-                }
-                if ($b0 -ne 0x50 -or $b1 -ne 0x4B) {
-                  throw "Downloaded file is not a zip/tpz archive."
-                }
-                $downloaded = $true
-                break
-              } catch {
-                Write-Warning "Download failed attempt=$attempt url=$u err=$($_.Exception.Message)"
-                if (Test-Path $tpz) { Remove-Item -Force $tpz -ErrorAction SilentlyContinue }
-                if ($attempt -lt 3) { Start-Sleep -Seconds (5 * $attempt) }
-              }
-            }
-            if ($downloaded) { break }
-          }
-
-          if (-not $downloaded) {
-            throw "Unable to download export templates from known mirrors."
-          }
-
-          $temp = "godot/templates_unpacked"
-          Expand-Archive $tpz -DestinationPath $temp -Force
-          $src = Join-Path $temp 'templates'
-          if (Test-Path $src) { $copyFrom = $src } else { $copyFrom = $temp }
-          $verMono = "${env:GODOT_VERSION}.stable.mono"
-          $ver = "${env:GODOT_VERSION}.stable"
-          $dsts = @(
-            (Join-Path $env:APPDATA ("Godot/templates/$verMono")),
-            (Join-Path $env:APPDATA ("Godot/templates/$ver")),
-            (Join-Path $env:APPDATA ("Godot/export_templates/$verMono")),
-            (Join-Path $env:APPDATA ("Godot/export_templates/$ver"))
-          )
-          New-Item -ItemType Directory -Force -Path $dsts | Out-Null
-          foreach ($d in $dsts) { Copy-Item -Recurse -Force "$copyFrom/*" $d }
-          Write-Host ("Templates installed: " + ($dsts -join ', '))
-
-      - name: Prewarm & Build Solutions
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $env:Path = "$HOME\.dotnet;" + $env:Path
-          $env:GODOT_DOTNET_CLI = (Get-Command dotnet).Path
-          dotnet restore Game.sln
-          dotnet build Game.sln -c Release -v minimal
-
-          $prewarm = Start-Process -FilePath "$env:GODOT_BIN" -ArgumentList "--headless", "--path", ".", "--quit" -Wait -PassThru -NoNewWindow
-          if ($prewarm.ExitCode -ne 0) {
-            Write-Warning "Godot prewarm exited with code $($prewarm.ExitCode); continue because this step is non-blocking."
-          }
-
-      - name: CI pipeline (Python)
-        shell: pwsh
-        run: |
-          py -3 scripts/python/ci_pipeline.py all --solution Game.sln --configuration Debug --godot-bin "$env:GODOT_BIN" --build-solutions
-
-      - name: Acceptance check post-evidence gate (layer2)
-        shell: pwsh
-        run: |
-          if (-not (Test-Path ".taskmaster/tasks/tasks.json") -or -not (Test-Path ".taskmaster/tasks/tasks_back.json") -or -not (Test-Path ".taskmaster/tasks/tasks_gameplay.json")) {
-            Write-Host "SKIP: Taskmaster triplet not found; template repo keeps this gate dormant until real tasks are added."
-            exit 0
-          }
-          $taskId = "$env:SC_ACCEPTANCE_TASK_ID".Trim()
-          if ([string]::IsNullOrWhiteSpace($taskId)) { $taskId = '1' }
-          if ($taskId -notmatch '^\d+(\.\d+)?$') {
-            throw "Invalid SC_ACCEPTANCE_TASK_ID='$taskId'. Expected numeric task id like 1 or 1.2."
-          }
-          Write-Host "SC_ACCEPTANCE_TASK_ID=$taskId"
-          py -3 scripts/sc/acceptance_check.py --task-id "$taskId" --delivery-profile "$env:DELIVERY_PROFILE" --only tests --require-headless-e2e --godot-bin "$env:GODOT_BIN"
-
-      - name: Upload CI logs (always)
+          python -B -m pytest scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_windows_planning_query_runtime scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99 scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3 scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline -q --junitxml=logs/windows-query-verification/junit.xml *> logs/windows-query-verification/pytest.txt
+          $testExit = $LASTEXITCODE
+          $testExit | Out-File logs/windows-query-verification/pytest-exit.txt -Encoding utf8
+          exit $testExit
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: ci-logs
-          path: logs/ci/**
-          if-no-files-found: ignore
-
-      - name: Soft gates bundle (Python)
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          py -3 scripts/python/run_gate_bundle.py --mode soft --delivery-profile "$env:DELIVERY_PROFILE" --task-files .taskmaster/tasks/tasks_back.json .taskmaster/tasks/tasks_gameplay.json
-
-      - name: Dotnet coverage (soft gate via Python, optional thresholds)
-        shell: pwsh
-        continue-on-error: true
-        env:
-          COVERAGE_LINES_MIN: '75'
-          COVERAGE_BRANCHES_MIN: '70'
-        run: |
-          py -3 scripts/python/run_dotnet.py --solution Game.sln --configuration Debug
-          if ($LASTEXITCODE -ne 0) { Write-Warning 'Coverage soft gate failed'; exit 0 }
-
-      - name: Prepare test project link
-        shell: pwsh
-        run: |
-          ./scripts/ci/prepare_gd_tests.ps1 -ProjectPath 'Tests.Godot' -RuntimeDir 'Game.Godot'
-
-      - name: Upload self-check logs (always)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: selfcheck-logs
-          path: logs/e2e/**
-          if-no-files-found: ignore
-
-      - name: GdUnit4 tests (Python, hard gate)
-        shell: pwsh
-        run: |
-          py -3 scripts/python/run_gdunit.py --prewarm --godot-bin "$env:GODOT_BIN" --project Tests.Godot `
-            --add tests/Adapters/Config `
-            --add tests/Security/Hard `
-            --timeout-sec 300 --rd "logs/e2e/${{ github.run_id }}/gdunit-reports/adapters-security"
-
-      - name: GdUnit4 integration tests (Python, soft gate)
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          py -3 scripts/python/run_gdunit.py --prewarm --godot-bin "$env:GODOT_BIN" --project Tests.Godot --add tests/Integration --add tests/Adapters/Db --timeout-sec 480 --rd "logs/e2e/${{ github.run_id }}/gdunit-reports/integration"
-
-      - name: GdUnit4 UI tests (Python, soft gate)
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          py -3 scripts/python/run_gdunit.py --prewarm --godot-bin "$env:GODOT_BIN" --project Tests.Godot --add tests/UI --timeout-sec 480 --rd "logs/e2e/${{ github.run_id }}/gdunit-reports/ui"
-
-      - name: GdUnit4 a11y tests (Python, soft gate)
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          py -3 scripts/python/run_gdunit.py --prewarm --godot-bin "$env:GODOT_BIN" --project Tests.Godot --add tests/UI/A11y --timeout-sec 300 --rd "logs/e2e/${{ github.run_id }}/gdunit-reports/a11y"
-
-      - name: A11y static check (soft)
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          py -3 scripts/python/check_a11y.py --out "logs/ci/${{ github.run_id }}/a11y/summary.json"
-
-      - name: Upload GdUnit reports (always)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gdunit-reports
-          path: logs/e2e/**/gdunit-reports/**
-          if-no-files-found: ignore
-
-      - name: Schema dump (soft)
-        shell: pwsh
-        continue-on-error: true
-        run: |
-          $date = Get-Date -Format 'yyyy-MM-dd'
-          $out = "logs/ci/${{ github.run_id }}/schema-dump.json"
-          py -3 scripts/python/db_schema_dump.py --glob "$env:APPDATA\Godot\app_userdata\*\*.db" --out "$out"
-          Write-Host "SCHEMA_DUMP_OUT=$out"
+          name: windows-query-verification
+          path: logs/windows-query-verification

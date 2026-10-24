@@ -62,3 +62,41 @@ This ADR **does not supersede** ADR-0037, ADR-0041, ADR-0043, or ADR-0044.
 - `docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md`
 - `docs/adr/ADR-0043-vdd-solo-maintainer-clarification-recovery.md`
 - `execution-plans/2026-07-26-knowledge-locator-workflow-integration/`
+
+
+## Applicability amendment: ordinary planning advice (2026-10-23)
+
+This repository-owner entry records the applicability distinction in the
+approved BMAD/VDD knowledge-query architecture, AD-9, before implementing its
+new ordinary-planning integration. It does not assert that the integration,
+Windows verification, or implementation Acceptance has completed.
+
+- Ordinary PRD, SPEC, Architecture and VDD planning may use bounded, read-only
+  Locator advice independently of formal knowledge governance. Query results
+  remain locations and diagnostics; callers verify actual source bytes and
+  own their consumption decisions.
+- Preserve explicit governance option > environment > phase precedence.
+  An absent phase remains development, and auto remains off in development.
+  Ordinary advice creates no frozen knowledge, Skill-input attestation,
+  authorization, review lineage or governance package.
+- When formal governance is enabled, the original required-module, source
+  integrity, freeze and authorization gates still apply. An advisory hit,
+  fallback source read or new diagnostic never satisfies or waives them.
+  Quick Dev's existing frozen-context consumption boundary is unchanged.
+- Only positively identified absence, timeout, inconclusive matching or
+  permitted source drift may use the approved independent-source-check path.
+  Invalid requests/configuration, damaged publication bindings, denied paths
+  or policy, and unidentified failures remain fail-closed. Necessary facts
+  that remain unverified block the dependent judgment.
+- Keep ADR-0044, ADR-0050, ADR-0057 and ADR-0059 permission, publication and
+  self-change rules. Neither querying nor recovery publishes a generation.
+  First publication for the new consumer remains a separate maintainer action
+  through the existing owner after implementation verification and main merge.
+- The planning-query interface is external adaptation. Existing Locator
+  fields, status meanings and exit semantics remain unchanged; native BMAD
+  files, typed SPEC ownership and formal Acceptance ownership remain intact.
+
+The normative detail is the approved canonical SPEC's behavior-contracts.md
+and failure-modes.md, with its adopted architecture AD-6 through AD-10. Future
+budget or authority changes must return to their existing owners; this entry
+adds no new freeze, service, permission or completion authority.
