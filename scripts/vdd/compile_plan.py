@@ -281,6 +281,28 @@ def main() -> int:
             raise SystemExit("worker cache must be a JSON object")
         cache = value
     try:
+        # ADR-0048/AD-5: read-only advice precedes semantic scope, independent of governance.
+        # Recommendation-only retains its existing side-effect-free contract.
+        previous_worker = semantic_compiler.invoke_worker
+        if not args.recommendation_only and not args.worker_cache:
+            sys.path.insert(0, str(ROOT))
+            from scripts.toolchain.knowledge_query import adapter
+            inputs = [p.resolve().relative_to(ROOT.resolve()).as_posix()
+                      for p in [args.requirements, *(args.companion or [])]]
+            prepared_query = adapter.prepare_consumption({
+                "stage": "vdd-repair" if args.resume_from or args.v3_contract_repair or published else "vdd-create",
+                "operation": "repair" if args.resume_from or args.v3_contract_repair or published else "create",
+                "task_id": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix(),
+                "inputs": inputs, "scope": inputs,
+                "query": "current source callers tests contracts " + " ".join(inputs),
+                "record_path": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix() + "/execution-record.md"}, ROOT)
+            if prepared_query["status"] == "blocked":
+                raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
+            def with_planning_context(**kwargs):
+                kwargs["payload"] = {**kwargs["payload"], "planning_source_observations": prepared_query}
+                kwargs["prompt"] += adapter.consumption_instructions(prepared_query)
+                return previous_worker(**kwargs)
+            semantic_compiler.invoke_worker = with_planning_context
         result = compile_plan(
             requirements=args.requirements,
             out_dir=args.out_dir,
@@ -315,6 +337,7 @@ def main() -> int:
             from semantic_compiler_authority import _archive_repair_publications
             _archive_repair_publications(args.out_dir)
         result = {"status": "repair-vdd", "reason": str(exc)}
+    semantic_compiler.invoke_worker = previous_worker
     if args.result_json:
         args.result_json.parent.mkdir(parents=True, exist_ok=True)
         args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")

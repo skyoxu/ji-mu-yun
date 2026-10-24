@@ -610,3 +610,122 @@ def diagnose(request, repository_root, catalog_path, policies_path, projections_
     if delivery is not None:
         delivery.write(data)
     return output
+
+
+# ADR-0048 / AD-5: caller integration is advice, never a source of decisions.
+def prepare_consumption(payload, repository_root):
+    """Prepare bounded verified context after the caller identifies its task."""
+    root = Path(repository_root).resolve()
+    if not isinstance(payload, dict):
+        raise ValueError('invalid_consumption_request')
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+    allowed = {'stage', 'operation', 'task_id', 'mode', 'inputs', 'query',
+               'scope', 'record_path', 'supplement_reason', 'narrow_overrides'}
+    if set(payload) - allowed or payload.get('stage') not in _STAGES:
+        raise ValueError('invalid_consumption_request')
+    if payload.get('mode', 'headless') not in {'headless', 'interactive'}:
+        raise ValueError('invalid_consumption_mode')
+    if not payload.get('task_id'):
+        return {'status': 'awaiting-input', 'queried': False, 'authorizes': []}
+    inputs = payload.get('inputs', [])
+    if not isinstance(inputs, list) or not inputs:
+        raise ValueError('consumption_inputs_required')
+    scope = payload.get('scope', inputs)
+    if not isinstance(scope, list) or not scope or len(scope) > 64:
+        raise ValueError('invalid_consumption_scope')
+    scope = list(dict.fromkeys(scope))
+    # Discover only explicit local references from selected inputs, not a repo scan.
+    for name in inputs:
+        path = _path(root, name)
+        if path.stat().st_size > 262144:
+            raise ValueError('consumption_input_too_large')
+        content = path.read_text(encoding='utf-8')
+        for reference in re.findall(r'`([^`\s]+)`', content):
+            relative = reference.split('::', 1)[0]
+            if '/' not in relative or relative in scope:
+                continue
+            try:
+                _path(root, relative)
+            except _Stop:
+                raise ValueError('consumption_reference_denied') from None
+            scope.append(relative)
+            if len(scope) > 64:
+                raise ValueError('consumption_scope_exhausted')
+    for name in scope:
+        _path(root, name)
+    paths = [root / p for p in _CANONICAL]
+    if any(not p.is_file() for p in paths):
+        return {'status': 'prepared', 'queried': False, 'authorizes': [],
+                'availability': 'not_installed', 'requires_direct_source_check': True}
+    catalog = json.loads(paths[0].read_text(encoding='utf-8'))
+    policy = json.loads(paths[1].read_text(encoding='utf-8'))
+    snapshot = core.catalog_source_snapshot(catalog) or {}
+    commit = snapshot.get('commit') or snapshot.get('main_commit')
+    if not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit):
+        raise ValueError('consumption_snapshot_missing')
+    stage = payload['stage']
+    request = {'schema_version': 'jimuyun.knowledge-locator-request.v1',
+        'request_id': 'planning-' + _hash(_wire([stage, payload['task_id']]))[:24],
+        'consumer': _STAGES[stage], 'stage': stage,
+        'operation': payload.get('operation', 'create'), 'task_id': payload['task_id'],
+        'query': payload.get('query') or ' '.join(inputs), 'scope': scope,
+        'snapshot': {'ref': 'refs/heads/main', 'commit': commit},
+        'policy_revision': policy['policy_revision']}
+    for key in ('supplement_reason', 'narrow_overrides'):
+        if key in payload:
+            request[key] = payload[key]
+    record = payload.get('record_path')
+    if record is not None:
+        # A query can append only to an explicit caller record, never source code.
+        from scripts.toolchain.bmad_native import contained
+        target = contained(root, record)
+        if target.suffix != '.md' or not (record.startswith(('logs/', 'execution-plans/'))
+                                         or target.name == '.memlog.md'):
+            raise ValueError('consumption_record_denied')
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.exists():
+            with target.open('xb') as stream:
+                stream.write(b'# Planning execution record\n')
+        request['record_path'] = record
+    result = diagnose(request, root, *paths)
+    stopped = result['outcome'] in {'blocked', 'cancelled', 'budget_exhausted'}
+    return {'status': 'blocked' if stopped else 'prepared',
+        'queried': result['budget_usage']['calls'] > 0, 'query_result': result,
+        'authorizes': []}
+
+
+def consumption_instructions(prepared):
+    """Forward observations without relabeling provenance or adopting facts."""
+    return ('\nPlanning source observations (advisory, not requirement authority):\n'
+        + json.dumps(prepared, ensure_ascii=False, sort_keys=True) + '\n'
+        'Before factual scope decisions, read the verified sources and current callers, tests and contracts. '
+        'Distinguish implemented facts, historical plans, exclusions, proposed additions and unverified claims. '
+        'Compare upstream adopted conclusions with actual current sources and record conflicts. '
+        'In your existing native memlog or execution record, record your own accepted/rejected decision, '
+        'reason and actual use, query topic/consumer/raw status, source path/hash/read identity. '
+        'The adapter never adopts a candidate. Keep provenance distinct from normative companions. '
+        'For degraded/no-match/unavailable results independently inspect direct sources; stop any judgment '
+        'whose necessary facts remain unknown. Never bypass required gates, publish knowledge, '
+        'rewrite history or infer completion from planning records.\n')
+
+
+def _consumption_main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('action', choices=['prepare-consumption'])
+    parser.add_argument('--repository-root', required=True, type=Path)
+    args = parser.parse_args()
+    try:
+        raw = sys.stdin.buffer.read(65537)
+        if len(raw) > 65536:
+            raise ValueError('consumption_input_too_large')
+        result = prepare_consumption(json.loads(raw.decode('utf-8')), args.repository_root)
+        print(json.dumps(result, ensure_ascii=False))
+        return 2 if result['status'] == 'blocked' else 0
+    except (ValueError, OSError, _Stop) as exc:
+        print(json.dumps({'status': 'blocked', 'reason': str(exc), 'authorizes': []}))
+        return 2
+
+
+if __name__ == '__main__':
+    raise SystemExit(_consumption_main())
