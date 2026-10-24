@@ -265,17 +265,23 @@ def _source_hash_transport(timeout, cancel):
         core._main_source_hashes = original
 
 
-def _path(root, relative):
+def _path(root, relative, *, allow_missing=False):
     if not isinstance(relative, str) or not relative or '\\' in relative:
         raise _Stop('path_denied')
     path = Path(relative)
     if path.is_absolute() or '..' in path.parts or ':' in relative:
         raise _Stop('path_denied')
     target = root / path
-    if not target.resolve().is_relative_to(root) or not target.is_file():
+    if not target.resolve().is_relative_to(root):
         raise _Stop('path_denied')
     # Do not open repository credential stores as source evidence.
     if path.parts[0] in {'.git', '.aws', '.ssh'} or path.name.startswith('.env'):
+        raise _Stop('path_denied')
+    # AD-5: a proposed filename in a document is not existing source evidence.
+    # Only discovery may omit safe absent references; explicit scope stays strict.
+    if allow_missing and not target.exists() and not target.is_symlink():
+        return None
+    if not target.is_file():
         raise _Stop('path_denied')
     return target
 
@@ -645,9 +651,11 @@ def prepare_consumption(payload, repository_root):
             if '/' not in relative or relative in scope:
                 continue
             try:
-                _path(root, relative)
+                referenced = _path(root, relative, allow_missing=True)
             except _Stop:
                 raise ValueError('consumption_reference_denied') from None
+            if referenced is None:
+                continue
             scope.append(relative)
             if len(scope) > 64:
                 raise ValueError('consumption_scope_exhausted')

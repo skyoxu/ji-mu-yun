@@ -6,6 +6,7 @@ on:
 jobs:
   knowledge-query-platform:
     runs-on: windows-2022
+    timeout-minutes: 40
     permissions:
       contents: read
     env:
@@ -32,9 +33,65 @@ jobs:
           git status --porcelain > logs/windows-query-verification/status-before.txt
           Get-FileHash scripts/toolchain/knowledge_query/adapter.py,scripts/toolchain/knowledge_query/tests/test_planning_query.py,scripts/python/knowledge_locator.py,scripts/python/_knowledge_locator_core.py,knowledge/planning-query.toml -Algorithm SHA256 | ConvertTo-Json > logs/windows-query-verification/source-hashes.json
       - name: Execute actual Windows cases
+        timeout-minutes: 31
         shell: pwsh
         run: |
-          python -B -m pytest scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_windows_planning_query_runtime scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99 scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3 scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline -q --junitxml=logs/windows-query-verification/junit.xml *> logs/windows-query-verification/pytest.txt
+          $supervisorPath = Join-Path $env:RUNNER_TEMP 'knowledge-query-bounded.py'
+          @'
+          import json, os, queue, signal, subprocess, sys, threading, time
+          from pathlib import Path
+          out = Path('logs/windows-query-verification')
+          args = [sys.executable, '-B', '-m', 'pytest',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_windows_planning_query_runtime',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_fd756962a671',
+              '-vv', '-s', '--junitxml=logs/windows-query-verification/junit.xml']
+          started = last = time.monotonic()
+          child = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+              bufsize=0, shell=False, env={**os.environ, 'PYTHONUNBUFFERED': '1'},
+              creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0,
+              start_new_session=os.name != 'nt')
+          chunks = queue.Queue()
+          def read_output():
+              try:
+                  while data := child.stdout.read(4096):
+                      chunks.put(data)
+              finally:
+                  chunks.put(None)
+          threading.Thread(target=read_output, daemon=True).start()
+          reason = None
+          with (out/'pytest.txt').open('wb') as log:
+              while True:
+                  now = time.monotonic()
+                  reason = 'total-timeout' if now-started >= 1800 else 'silence-timeout' if now-last >= 600 else None
+                  if reason:
+                      if os.name == 'nt':
+                          subprocess.run(['taskkill', '/PID', str(child.pid), '/T', '/F'], shell=False, timeout=15)
+                      else:
+                          os.killpg(child.pid, signal.SIGKILL)
+                      child.wait(timeout=15)
+                      break
+                  try:
+                      data = chunks.get(timeout=0.5)
+                  except queue.Empty:
+                      continue
+                  if data is None:
+                      child.wait(timeout=15)
+                      break
+                  last = time.monotonic()
+                  log.write(data); log.flush()
+                  sys.stdout.buffer.write(data); sys.stdout.buffer.flush()
+          code = 124 if reason else child.returncode
+          (out/'supervision.json').write_text(json.dumps({'command': args,
+              'total_seconds': 1800, 'silence_seconds': 600, 'elapsed_seconds': time.monotonic()-started,
+              'exit_code': code, 'termination': reason, 'progress': 'actual child stdout/stderr bytes only',
+              'authorizes': []}, indent=2)+'\n', encoding='utf-8')
+          raise SystemExit(code)
+          '@ | Set-Content -Path $supervisorPath -Encoding utf8
+          python -u $supervisorPath
           $testExit = $LASTEXITCODE
           $testExit | Out-File logs/windows-query-verification/pytest-exit.txt -Encoding utf8
           exit $testExit

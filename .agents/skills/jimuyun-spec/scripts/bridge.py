@@ -173,6 +173,10 @@ def prepare(root, spec, run, identity=None, roles=()):
         for line in prior.splitlines()) for path in provenance)
     if inherited:
         policy += "\nReuse inherited source decisions: current provenance bytes match recorded path/hash; no factual input change, so no supplemental query. Preserve open questions and exclusions.\n"
+        # ADR-0048 / AD-5: forward the verified identity, not a new adoption claim.
+        policy += "Verified inherited provenance: " + json.dumps(
+            [{"path": path, "sha256": snapshots[path]} for path in provenance],
+            ensure_ascii=False, sort_keys=True) + "\n"
     elif selected:
         prepared_query = adapter.prepare_consumption({
             "stage": "spec", "operation": "update" if original else "create",
