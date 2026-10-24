@@ -138,11 +138,11 @@ legacy path to manufacture a missing RED. Legacy RED import remains a
 read-only compatibility path for already-versioned historical plans, never an
 artifact that a newly created or repaired VDD plan may publish.
 
-During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
+During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline content identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
 ## Candidate, Review, And Reports
 
-Use current scoped Git identity for TDD freshness and preserve invalidated evidence as historical. Only when governance is enabled, read [governance operations](references/governance-operation.md) before freezing inputs or preparing review/report artifacts. That guide preserves a stable `lineageFamilyId` derived from the original plan target. A successor does not reset that budget; require a hash-bound `inspect-lineage` projection even when it reports zero rounds and a root-cause callsite inventory before review re-entry.
+Use current scoped Git identity for provenance and content-bound execution inputs for TDD freshness; preserve invalidated evidence as historical. Only when governance is enabled, read [governance operations](references/governance-operation.md) before freezing inputs or preparing review/report artifacts. That guide preserves a stable `lineageFamilyId` derived from the original plan target. A successor does not reset that budget; require a hash-bound `inspect-lineage` projection even when it reports zero rounds and a root-cause callsite inventory before review re-entry.
 
 Bootstrap history indexes, cost-calibration candidates, and synthetic shadow
 corpora are non-authorizing operational inputs. VDD may use their cost signal
@@ -179,3 +179,17 @@ explicit [caller-session route](../../../docs/workflows/caller-session-execution
 It invokes this Skill's existing native entry and retains its gates and lifecycle
 ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
 execution or acceptance evidence.
+
+## Shared test coverage and execution dependencies
+
+Declare complete assertion/case coverage, actual validation argv, production
+owners and execution_snapshot_paths in the existing semantic projection. Shared
+modules may cover multiple slices; do not duplicate a test execution declaration
+as if it were separate execution proof. Include test helpers, fixtures, imported
+production dependencies and tool/configuration inputs in the appropriate scope.
+Quick Dev additionally inventories repository and environment content rather
+than trusting hand-filled path lists alone. VDD does not emit, import or relabel
+execution receipts. See the consuming [shared execution contract](../quick-dev-tdd-adapter/references/shared-execution.md).
+The terminal full validation requirement may be satisfied by a currently valid
+shared original only after Quick Dev rechecks actual terminal case coverage and
+all Q8 predicates. An unchanged slice hash alone is never enough.

@@ -103,3 +103,12 @@ interfaces and zero-byte TOML interfaces (exports=[]; no keys or defaults) insid
 model-authored function bodies or data. It is not implementation, RED or
 completion authority. Existing local and online Q2/Q4 routes remain unchanged;
 Q2 still cannot write production, and Q4 still requires observed behavioral RED.
+
+## Content-bound shared execution
+
+For maintenance or reuse diagnostics, read [shared execution](references/shared-execution.md).
+Successful compatible Python pytest executions are shared by content across
+slices, Q6 and terminal. Uses reference immutable originals with zero new
+process attempts. Q7/Q8 reread originals and exact case coverage; Git provenance
+alone does not invalidate an otherwise identical execution. Legacy receipts
+without the shared input/original bindings are not upgraded or relabeled.

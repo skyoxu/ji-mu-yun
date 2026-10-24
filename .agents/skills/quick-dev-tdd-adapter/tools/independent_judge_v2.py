@@ -75,6 +75,8 @@ def judge_receipt(run_dir: Path, stage: str, descriptor: Mapping[str, Any], rece
     elif stage=="red": outcome,family,predicate="fail","semantic-contract-gap",False
     elif exit_code==0: outcome,family,predicate="pass",None,True
     else: outcome,family,predicate="fail","task-implementation-failure",False
+    if predicate and receipt.get("execution_kind") == "reference":
+        evidence_state = "reused-execution"
     failure_fingerprint=None if family is None else normalized_failure_fingerprint(descriptor=descriptor,receipt=receipt,family=family,observed_failure_ids=observed,expected_failure_ids=declared)
     failure_id=None if family is None else f"QD-{family.upper().replace('_','-')}-{failure_fingerprint[7:23].upper()}"
     observation={

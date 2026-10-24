@@ -36,3 +36,7 @@ For the bounded 8-17 closeout, run the test files listed in
 `logs/quick-dev-stage-recovery-closeout-23cf4937/validation.json`, including
 `test_stage_reentry.py`, `test_ch456_recovery_mutations.py` and
 `test_ch456_public_repeat_guard.py`. No live CH456 run is required.
+
+For cross-slice successful execution reuse, follow [shared execution](shared-execution.md).
+The shared content index is an explicit keyed registry, not a latest-run scan.
+Same-run reentry still validates its immutable descriptor and stage lineage.

@@ -12,7 +12,7 @@ def input_binding(workspace, bundle, descriptor, profile):
     if 'behavior_routing' in bundle:
         from behavior_routing import production_hashes
         hashes.update(production_hashes(workspace, bundle, descriptor['slice_id']))
-    engine = {name: sha256_bytes(Path(__file__).with_name(name).read_bytes()) for name in ('stage_reentry.py', 'stage_pipeline.py', 'independent_judge_v2.py', 'case_evidence.py', 'pytest_case_collector.py', 'regression_gate.py')}
+    engine = {name: sha256_bytes(Path(__file__).with_name(name).read_bytes()) for name in ('stage_reentry.py', 'stage_pipeline.py', 'independent_judge_v2.py', 'case_evidence.py', 'pytest_case_collector.py', 'regression_gate.py', 'shared_execution.py', 'process_executor_v2.py')}
     return {'engine_sha256': engine, 'plan_sha256': sha256_value(bundle), 'descriptor_sha256': sha256_value(descriptor),
             'profile': profile, 'candidate_paths': hashes,
             'targets': hash_refs(workspace, descriptor['target_refs']),
@@ -30,6 +30,8 @@ def existing_result(workspace, bundle, run_dir, descriptor, profile):
         if binding != input_binding(workspace, bundle, descriptor, profile):
             raise ValueError('execution input changed')
         receipt = load_json(evidence / 'process-receipt.v2.json')
+        from shared_execution import validate_saved_request
+        validate_saved_request(workspace, evidence, descriptor, receipt)
         observation = load_json(evidence / 'observation.v2.json')
         for key, value in [('descriptor_sha256', sha256_value(descriptor)), ('receipt_sha256', sha256_value(receipt)), ('observation_sha256', sha256_value(observation))]:
             if result.get(key) != value:
@@ -53,6 +55,9 @@ def existing_result(workspace, bundle, run_dir, descriptor, profile):
         gate = result.get('regression_gate')
         if gate and sha256_value(load_json(resolve_file(run_dir, gate['ref']))) != gate['sha256']:
             raise ValueError('regression gate changed')
+        if gate:
+            from regression_gate import validate_regression_references
+            validate_regression_references(workspace, load_json(resolve_file(run_dir, gate['ref'])))
         seal = load_json(evidence / 'execution-complete.v1.json')
         if seal != {'result_sha256': sha256_value(result), 'input_sha256': sha256_value(binding)}:
             raise ValueError('completion binding changed')

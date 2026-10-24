@@ -90,6 +90,14 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
         raise ValueError("runtime edge identity stale")
     observation = load_json(resolve_file(run_root, edge["observation_ref"]))
     receipt = load_json(resolve_file(run_root, edge["receipt_ref"]))
+    result = load_json(run_root / "canonical-evidence" / stage / "stage-result.v2.json")
+    gate = result.get("regression_gate")
+    if gate:
+        from regression_gate import validate_regression_references
+        gate_value = load_json(resolve_file(run_root, gate["ref"]))
+        if sha256_value(gate_value) != gate["sha256"]:
+            raise ValueError("Q6 regression gate changed")
+        validate_regression_references(workspace, gate_value)
     if sha256_value(observation) != edge.get("observation_sha256"):
         raise ValueError("observation hash stale")
     if sha256_value(receipt) != edge.get("receipt_sha256") or observation.get("receipt_sha256") != edge.get("receipt_sha256"):
@@ -100,6 +108,8 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
     descriptor = load_json(descriptor_path)
     if sha256_value(descriptor) != edge.get("descriptor_sha256"):
         raise ValueError("descriptor hash stale")
+    from shared_execution import validate_saved_request
+    validate_saved_request(workspace, run_root / "canonical-evidence" / stage, descriptor, receipt)
     from case_evidence import assertion_cases, reread_stage_cases, VERSION
     cases = assertion_cases(descriptor, receipt)
     if stage in {"green", "refactor"} and cases != reread_stage_cases(run_root, "red"):

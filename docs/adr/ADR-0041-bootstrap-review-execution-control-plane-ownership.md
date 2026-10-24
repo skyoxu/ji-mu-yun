@@ -610,3 +610,21 @@ remain unchanged. The native receipt binds the generated empty bytes and is
 revalidated before use. Empty TOML is not configured behavior, observed RED,
 or completion; Q2 remains test-only and Q4 requires actual behavioral RED.
 No current business plan, historical evidence or running host is rewritten.
+
+## Content-bound Quick Dev execution reuse (2026-10-24)
+
+The maintainer-authorized cross-slice repair separates semantic slice identity
+from actual execution inputs. Git commit provenance alone does not invalidate
+unchanged execution content. Quick Dev may reuse a successful controlled pytest
+original across slice/Q6/terminal consumers by explicit content-bound reference;
+it must retain the original process/report identity and record zero new process
+attempts for each use. VDD owns coverage and dependency declarations, augmented
+by the consumer's conservative repository/environment inventory.
+
+This narrowly supersedes mandatory duplicate process execution for an identical
+successful input. It does not remove RED causality, case/assertion coverage,
+Q6 required commands, Q7/Q8 snapshots or terminal exact cover. Readers revalidate
+original bytes and current execution inputs at closure. Failed, timed-out,
+missing, tampered or identity-incomplete proof cannot become reusable success.
+Historical receipts are never relabeled. See the Quick Dev shared-execution
+reference for bounded discovery, compatibility and rejection rules.
