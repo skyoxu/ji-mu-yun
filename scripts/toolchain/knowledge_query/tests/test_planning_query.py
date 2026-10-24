@@ -3618,8 +3618,8 @@ def observe(frame, event, arg):
                               'scripts/python/_knowledge_locator_core.py',
                               'scripts/sc/host_session.py')):
         return
-    filename = frame.f_code.co_filename
-    prefix = str(root) + '/'
+    # Keep the same POSIX representation for containment and event identity.
+    prefix = root.as_posix() + '/'
     if not filename.startswith(prefix):
         return
     relative = filename[len(prefix):]
