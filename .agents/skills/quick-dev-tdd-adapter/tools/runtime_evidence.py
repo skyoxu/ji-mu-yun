@@ -346,7 +346,7 @@ def build_runtime_edges(*, plan_id: str, plan_hash: str, slice_id: str, run_id: 
             "receipt_ref": f"canonical-evidence/{stage}/process-receipt.v2.json", "receipt_sha256": sha256_value(dict(receipt)),
             "observation_ref": f"canonical-evidence/{stage}/observation.v2.json", "observation_sha256": sha256_value(dict(observation)),
             "descriptor_sha256": sha256_value(dict(descriptor)), "target_sha256": targets[target_ref], "fixture_sha256": fixtures[fixture_ref],
-            "observed": observation.get("evidence_state") == "observed-run", "expected_stage_outcome": expected_stage_outcome,
+            "observed": observation.get("evidence_state") in {"observed-run", "reused-execution"}, "expected_stage_outcome": expected_stage_outcome,
             "actual_stage_outcome": actual_stage_outcome, "predicate_result": observation.get("predicate_result") is True,
             "verification_outcome": observation.get("verification_outcome"), "failure_family": observation.get("failure_family"),
             "failure_id": observation.get("failure_id"), "target_ref": target_ref, "fixture_ref": fixture_ref,

@@ -561,3 +561,21 @@ declared scope; full terminal and required Q6 commands remain unchanged.
 Existing local and online caller-session worker routes remain supported. The
 reusable .NET/TRX helper stays deferred to pre-S2. This decision does not adopt
 ADR-0062 or perform Package A Acceptance.
+
+## Content-bound Quick Dev execution reuse (2026-10-24)
+
+The maintainer-authorized cross-slice repair separates semantic slice identity
+from actual execution inputs. Git commit provenance alone does not invalidate
+unchanged execution content. Quick Dev may reuse a successful controlled pytest
+original across slice/Q6/terminal consumers by explicit content-bound reference;
+it must retain the original process/report identity and record zero new process
+attempts for each use. VDD owns coverage and dependency declarations, augmented
+by the consumer's conservative repository/environment inventory.
+
+This narrowly supersedes mandatory duplicate process execution for an identical
+successful input. It does not remove RED causality, case/assertion coverage,
+Q6 required commands, Q7/Q8 snapshots or terminal exact cover. Readers revalidate
+original bytes and current execution inputs at closure. Failed, timed-out,
+missing, tampered or identity-incomplete proof cannot become reusable success.
+Historical receipts are never relabeled. See the Quick Dev shared-execution
+reference for bounded discovery, compatibility and rejection rules.

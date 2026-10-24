@@ -201,3 +201,7 @@ No candidate test is imported for this inspection.
 For a partially implemented obligation, the probe may contain passing and bound
 expected-failing cases. Formal RED preserves that exact outcome pattern. All
 cases must pass after implementation; see the behavior routing contract.
+
+For cross-slice successful execution reuse, follow [shared execution](shared-execution.md).
+The shared content index is an explicit keyed registry, not a latest-run scan.
+Same-run reentry still validates its immutable descriptor and stage lineage.
