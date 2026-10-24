@@ -193,3 +193,13 @@ execution receipts. See the consuming [shared execution contract](../quick-dev-t
 The terminal full validation requirement may be satisfied by a currently valid
 shared original only after Quick Dev rechecks actual terminal case coverage and
 all Q8 predicates. An unchanged slice hash alone is never enough.
+
+## Delivered upstream inputs
+
+Consume delivered BMAD artifacts directly as inputs. Do not determine whether
+they need upstream review, require BMAD reviewer reports or approval evidence,
+or launch/repeat BMAD generation or review. Keep readability, format/schema,
+reference and input-content identity checks, plus this workflow's own contract
+and implementation checks. These checks must not become an upstream quality
+review gate. Explicit user-requested stage-end external A/B remains separate
+and is neither launched nor removed by this rule.

@@ -112,3 +112,13 @@ slices, Q6 and terminal. Uses reference immutable originals with zero new
 process attempts. Q7/Q8 reread originals and exact case coverage; Git provenance
 alone does not invalidate an otherwise identical execution. Legacy receipts
 without the shared input/original bindings are not upgraded or relabeled.
+
+## Delivered upstream inputs
+
+Consume delivered BMAD artifacts directly as inputs. Do not determine whether
+they need upstream review, require BMAD reviewer reports or approval evidence,
+or launch/repeat BMAD generation or review. Keep readability, format/schema,
+reference and input-content identity checks, plus this workflow's own contract
+and implementation checks. These checks must not become an upstream quality
+review gate. Explicit user-requested stage-end external A/B remains separate
+and is neither launched nor removed by this rule.
