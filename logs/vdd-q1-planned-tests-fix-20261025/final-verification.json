@@ -1,0 +1,24 @@
+{
+  "status": "production-self-check-passed",
+  "baseline_commit": "dadd5ea869108893bdfe014c75a06c363b720cc9",
+  "final_successor": "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final",
+  "semantic_plan_sha256": "sha256:955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c",
+  "formal_q1_passed": 12,
+  "original_q1_negative_results_reused": 12,
+  "predecessor_all_files_unchanged": true,
+  "q1_code_unchanged": true,
+  "obligations_full_fields_unchanged": 305,
+  "acceptances_full_fields_unchanged": 305,
+  "failure_intents_unchanged": 305,
+  "all_non_slice_bundle_fields_unchanged": true,
+  "slice_changed_fields": [
+    "planned_new_files",
+    "slice_input_hash"
+  ],
+  "contexts_commands_owners_membership_dependencies_roles_unchanged": true,
+  "created_test_files": 0,
+  "model_calls": 0,
+  "pushed": false,
+  "external_review_run": false,
+  "authorizes": []
+}

@@ -1,0 +1,101 @@
+{
+  "baseline_commit": "dadd5ea869108893bdfe014c75a06c363b720cc9",
+  "workspace": "/workspace/ji-mu-yun-review-publication",
+  "source_bundle_file_sha256": "7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7",
+  "missing_paths": [
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+  ],
+  "original_rejected": 12,
+  "diagnostic_planned_positive": 12,
+  "formal_contract_modified": false,
+  "tests_executed": false,
+  "model_called": false,
+  "cases": [
+    {
+      "slice_id": "S1",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S2",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: tests/toolchain/knowledge_query/test_planning_boundaries.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S3",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S4",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S5",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: tests/toolchain/knowledge_query/test_planning_boundaries.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S6",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S7",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S8",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S9",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S10",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S11",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    },
+    {
+      "slice_id": "S12",
+      "original_status": "rejected",
+      "reason": "planned target/fixture is neither materialized nor declared planned: scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "planned_new_files": [],
+      "diagnostic_planned_positive": "planned-contract-valid"
+    }
+  ],
+  "authorizes": []
+}

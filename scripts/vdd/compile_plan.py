@@ -100,6 +100,8 @@ def main() -> int:
     parser.add_argument("--repair-quick-dev-handoff-from", type=Path,
                         help="Repair execution bindings of a reviewed plan into a distinct successor")
     parser.add_argument("--handoff-test-root", default="scripts/sc/tests/tc_d1_cer")
+    parser.add_argument("--handoff-planned-test", action="append", default=[],
+                        help="Declare an already-bound absent Q2 test only; requires handoff repair")
     parser.add_argument("--runtime-red-intent", action="append", default=[],
                         help="Explicit reviewed runtime intent to bind as expected RED; requires handoff repair")
     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
@@ -125,6 +127,11 @@ def main() -> int:
         parser.error("--v3-contract-repair-addendum requires --v3-contract-repair")
     if (args.runtime_red_intent or args.handoff_windows_launcher_slice) and not args.repair_quick_dev_handoff_from:
         parser.error("handoff runtime options require --repair-quick-dev-handoff-from")
+    if args.handoff_planned_test and not args.repair_quick_dev_handoff_from:
+        parser.error('--handoff-planned-test requires --repair-quick-dev-handoff-from')
+    if args.handoff_planned_test and (args.runtime_red_intent or args.handoff_windows_launcher_slice
+            or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
+        parser.error('planned-test declarations cannot combine role, launcher or test-root repair')
     if args.repair_quick_dev_handoff_from:
         if any((args.companion, args.worker_cache, args.recommendation_only, args.resume_from,
                 args.v1_reuse_from_git_ref, args.v1_reuse_from_plan, args.repair_timeout_seconds,
@@ -139,7 +146,8 @@ def main() -> int:
             result = publish_repair(root=ROOT, requirements=args.requirements,
                 predecessor=args.repair_quick_dev_handoff_from, out_dir=args.out_dir,
                 test_root=args.handoff_test_root, runtime_red_intents=args.runtime_red_intent,
-                windows_launcher_slices=args.handoff_windows_launcher_slice)
+                windows_launcher_slices=args.handoff_windows_launcher_slice,
+                planned_tests=args.handoff_planned_test)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             result = {"status": "repair-vdd", "reason": str(exc)}
         if args.result_json:

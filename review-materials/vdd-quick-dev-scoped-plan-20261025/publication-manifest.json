@@ -3,9 +3,9 @@
   "repository": "skyoxu/ji-mu-yun",
   "branch": "review/vdd-quick-dev-scoped-plan-20261025",
   "base_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
-  "source_repository_head": "f57c2998f83f12dfc98afe11816a4827fffd0228",
+  "source_repository_head": "dadd5ea869108893bdfe014c75a06c363b720cc9",
   "source_head_is_not_publication_snapshot": true,
-  "authorization_message": "Sentinel_633cb6caf32c8191a98a6cb4e0697e16",
+  "authorization_message": "Sentinel_4c4f0b485abc8191bcd74de8335f9332",
   "files": {
     ".agents/skills/quick-dev-tdd-adapter/SKILL.md": {
       "role": "workflow-code-doc-test",
@@ -98,14 +98,14 @@
       "sha256": "3ad22a97a5d7e568283514adcc91368ac5ad48c14524dc4d3ded04384f07955e"
     },
     ".agents/skills/vdd-execution-plan/SKILL.md": {
-      "role": "workflow-code-doc-test",
-      "size": 19043,
-      "sha256": "077007630285dc136f410c518c97e69af605ac32f320e594806fe816dfd90633"
+      "role": "p1-planned-test-repair-code-doc-test",
+      "size": 19663,
+      "sha256": "4a8bd4df51fffc5eed5e9295ebe5c10b383e80d1447bcc8db52467bf773133c4"
     },
     ".agents/skills/vdd-execution-plan/references/planning-operation.md": {
-      "role": "workflow-code-doc-test",
-      "size": 20766,
-      "sha256": "984db0b9713e10a1a69ab3ecdfac6ec916a8295fb01226b12b986097ff092e75"
+      "role": "p1-planned-test-repair-code-doc-test",
+      "size": 22576,
+      "sha256": "80faae5f0caf73e7a831c0d2569159aaf2af39e2c6a5df98cd1cfa5f3d7213ed"
     },
     ".agents/skills/vdd-execution-plan/scripts/execution_contract.py": {
       "role": "workflow-code-doc-test",
@@ -113,9 +113,9 @@
       "sha256": "45c811b6f1625db94b9631bc3ae1250f0b60bd511db77bb704229465d8a1f0ad"
     },
     ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py": {
-      "role": "workflow-code-doc-test",
-      "size": 34679,
-      "sha256": "f8c8544c492c27cdbcfbcf06c32781e1703548b31aee46a7c3591ad5a2c262ca"
+      "role": "p1-planned-test-repair-code-doc-test",
+      "size": 39902,
+      "sha256": "799517132dfca12903c79a3935a4363ff9d84e4bbbe058ca6580d20e146c022d"
     },
     ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py": {
       "role": "workflow-code-doc-test",
@@ -153,14 +153,14 @@
       "sha256": "723c08e089d3346aae5229c7cba7729cd32c9d7d9bc66d0932b83881468b652b"
     },
     "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": {
-      "role": "workflow-code-doc-test",
-      "size": 44130,
-      "sha256": "4b9d62818dd520ac6c8c9f6866e90a3957466aa0b015b4c4b2b7f03498ca559f"
+      "role": "p1-planned-test-repair-code-doc-test",
+      "size": 44881,
+      "sha256": "dac68be0b622299e349d059329c84ca0c9413140d8b8c1fdb8f48c01c5190701"
     },
     "scripts/vdd/compile_plan.py": {
-      "role": "workflow-code-doc-test",
-      "size": 23368,
-      "sha256": "d6698e72fe40027c10c224c8d7120d99443748240bd2a7845857186310acb9ba"
+      "role": "p1-planned-test-repair-code-doc-test",
+      "size": 24044,
+      "sha256": "4bcaacc2bc58b307e829cbc2cb7e0cfac4404d0836f27d7814d04768eb434183"
     },
     ".agents/skills/quick-dev-tdd-adapter/references/session-operation.md": {
       "role": "workflow-code-doc-test",
@@ -278,132 +278,132 @@
       "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/acceptances.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 1111331,
       "sha256": "892a41b2d8a21749cd28696cfa1cad81209e64115e314e6988b772d94c9f3dc3"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S1/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 7435,
       "sha256": "1680003ae4c86caf5e4c29ce392730d0741dbb0c45f57a8010e82abf356fc17e"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S10/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 23906,
       "sha256": "f910833444dc1f006c7bb79b18df6ec67da52ed2c580691e64c99c2c3990a09d"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S11/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 11300,
       "sha256": "d0adfbcdf76c2366f1d85ebbb1400d77444ed790513b1da1aac869a67fbacb4e"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S12/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 90910,
       "sha256": "9ff247d3a33d0296055f97953f75152ff5ebd9e027a12651c881c230361b4a18"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S2/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 55692,
       "sha256": "30a89481d2cb520b71811c2e355a8c6704ef92ad2121313461edc9a58497a223"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S3/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 7273,
       "sha256": "c182a77785bde2b07f12b5624e95ac83bda72fa1eb234976f54fba198f9ec5ba"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S4/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 7242,
       "sha256": "f34e49a1e28b2723eebfadb214197b0de5891b3b8947d496aaa5725c0a3c0827"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S5/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 5656,
       "sha256": "14c106fe65bc20cdb9f3e025dc645630ef7e5179b94d32fc697de7804b672c87"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S6/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 7292,
       "sha256": "97962806f34e95c23aad4cc0480df098e14d9feb0e58a885efa7a84f43882320"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S7/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 8273,
       "sha256": "1252eada8447e82941c580dd9e0da5daa333fefd3634366bdfdf0d46baba4af2"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S8/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 7262,
       "sha256": "579224a8e977751fa32d2ffbe1d8c4cf72240254b9301801eb0e879bc7ff0d9c"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S9/agent-context.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 9583,
       "sha256": "ddafb5463d2d75242288dd7b3344ac8f6293a02db00032f5fa526263c37c1fba"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/atomic-recall-alignment.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 5672,
       "sha256": "d5e364bc4a0f0ddf80846042419f6060dedacf4558b8326ec4469600f85ccb33"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/compiler-state.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 262,
       "sha256": "2073190cbe9a21eea68d17f1b49c6b2312c8e7595b2b0cff54cfbc12725756b0"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/execution-record.md": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 61023,
       "sha256": "bed748f8b833784b921768e20fdf02901ee69694154f017cf0a1767a068182e1"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/failure-intents.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 185507,
       "sha256": "33e49613855954517c169bc0c45560a3044c12048b9286c5433661859ce28df4"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/feasibility.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 63,
       "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/final-plan-coverage.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 189436,
       "sha256": "e392f4942db158313ac77b8fb94ddb11a78ba89fa0b3694ef7a9383e037b040a"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/obligations.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 743583,
       "sha256": "790065c97f7c16370e8919c399d14b15d08d34598ef44f305c3f4f5a0b5c1742"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/pre-slice-coverage.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 68959,
       "sha256": "ff7c207467afa846f3746d21f62709e1abfaf124810679ab750835219e40d6f1"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/semantic-alignment.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 5402,
       "sha256": "68b2b9a8a3f533f20a2d9073880ac96e29ddb1d7c830d41be1111ebf8524f0aa"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/semantic-chain-audit.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 368,
       "sha256": "42fef784ac9371541bfecace6604a6f9343061e06de06c34be88004d010b8edd"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/semantic-plan-bundle.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 16850753,
       "sha256": "7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/slices.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 593544,
       "sha256": "f21d74c0e5ccb301b7225f7e1dee946965bb5e2842fe6b0796643ef30fe151bb"
     },
     "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/source-index.v1.json": {
-      "role": "native-final-plan",
+      "role": "frozen-predecessor-plan-q1-p1-not-current",
       "size": 1624837,
       "sha256": "b1410bb27c8a53641e80d34c9219f22256ddbf7a0148d282504e1063ed92efbc"
     },
@@ -771,6 +771,216 @@
       "role": "workflow-validation-or-native-receipt",
       "size": 6952,
       "sha256": "e0fe90e33ba26f1fa5d248e67fb9bd1f1747865526e70bfe4c7db092f546e721"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py": {
+      "role": "p1-planned-test-repair-code-doc-test",
+      "size": 7881,
+      "sha256": "ec82a1f072807031fad4bc9a6dfd7fec3f1ef021bda78fe96e17730b3001dd09"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/acceptances.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 1111331,
+      "sha256": "892a41b2d8a21749cd28696cfa1cad81209e64115e314e6988b772d94c9f3dc3"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S1/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 7435,
+      "sha256": "1680003ae4c86caf5e4c29ce392730d0741dbb0c45f57a8010e82abf356fc17e"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S10/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 23906,
+      "sha256": "f910833444dc1f006c7bb79b18df6ec67da52ed2c580691e64c99c2c3990a09d"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S11/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 11300,
+      "sha256": "d0adfbcdf76c2366f1d85ebbb1400d77444ed790513b1da1aac869a67fbacb4e"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S12/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 90910,
+      "sha256": "9ff247d3a33d0296055f97953f75152ff5ebd9e027a12651c881c230361b4a18"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S2/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 55692,
+      "sha256": "30a89481d2cb520b71811c2e355a8c6704ef92ad2121313461edc9a58497a223"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S3/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 7273,
+      "sha256": "c182a77785bde2b07f12b5624e95ac83bda72fa1eb234976f54fba198f9ec5ba"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S4/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 7242,
+      "sha256": "f34e49a1e28b2723eebfadb214197b0de5891b3b8947d496aaa5725c0a3c0827"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S5/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 5656,
+      "sha256": "14c106fe65bc20cdb9f3e025dc645630ef7e5179b94d32fc697de7804b672c87"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S6/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 7292,
+      "sha256": "97962806f34e95c23aad4cc0480df098e14d9feb0e58a885efa7a84f43882320"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S7/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 8273,
+      "sha256": "1252eada8447e82941c580dd9e0da5daa333fefd3634366bdfdf0d46baba4af2"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S8/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 7262,
+      "sha256": "579224a8e977751fa32d2ffbe1d8c4cf72240254b9301801eb0e879bc7ff0d9c"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/agent-context/S9/agent-context.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 9583,
+      "sha256": "ddafb5463d2d75242288dd7b3344ac8f6293a02db00032f5fa526263c37c1fba"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/atomic-recall-alignment.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 5672,
+      "sha256": "d5e364bc4a0f0ddf80846042419f6060dedacf4558b8326ec4469600f85ccb33"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/compiler-state.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 353,
+      "sha256": "6eda0d2580f153726dba556ac6e8eda1486a0a963934eb194ee7c19c67e0b867"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/failure-intents.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 185507,
+      "sha256": "33e49613855954517c169bc0c45560a3044c12048b9286c5433661859ce28df4"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/feasibility.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 63,
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/final-plan-coverage.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 189436,
+      "sha256": "e392f4942db158313ac77b8fb94ddb11a78ba89fa0b3694ef7a9383e037b040a"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/handoff-repair.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 1936,
+      "sha256": "c5191d1166c3369fb2db15e349a68f936a758a02fc05b94ad6047625e22c3bd8"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/obligations.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 743583,
+      "sha256": "790065c97f7c16370e8919c399d14b15d08d34598ef44f305c3f4f5a0b5c1742"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/pre-slice-coverage.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 68959,
+      "sha256": "ff7c207467afa846f3746d21f62709e1abfaf124810679ab750835219e40d6f1"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/semantic-alignment.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 5402,
+      "sha256": "68b2b9a8a3f533f20a2d9073880ac96e29ddb1d7c830d41be1111ebf8524f0aa"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/semantic-chain-audit.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 368,
+      "sha256": "42fef784ac9371541bfecace6604a6f9343061e06de06c34be88004d010b8edd"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/semantic-plan-bundle.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 16851515,
+      "sha256": "955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/slices.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 594306,
+      "sha256": "069e972769a4c31207be0819820b811b327f655997f1668625c20d1a4fc05dad"
+    },
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/source-index.v1.json": {
+      "role": "current-p1-repaired-native-plan",
+      "size": 1624837,
+      "sha256": "b1410bb27c8a53641e80d34c9219f22256ddbf7a0148d282504e1063ed92efbc"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/REPORT.md": {
+      "role": "p1-production-self-check-receipt",
+      "size": 7138,
+      "sha256": "8de66fcba4f1b3ef3b4348517492e9c885a4383eda47856812f75c690dbdd501"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/changed-files.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 1550,
+      "sha256": "c4c7d81d219085d8f4a92c404200787f5a70ff7e96534d96881c281073f0d1bc"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/targeted-final-v3.log": {
+      "role": "p1-production-self-check-receipt",
+      "size": 99,
+      "sha256": "8c4c8abbc87b50e1a562780749d11d1d91207154bf8b51d22b6dcb678892b285"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/default-compatibility.log": {
+      "role": "p1-production-self-check-receipt",
+      "size": 113,
+      "sha256": "e649f03a9f1bf4977c183d0291249d3ea91b92f3b1b01712eac45a78cbe5ded8"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/package-final.log": {
+      "role": "p1-production-self-check-receipt",
+      "size": 121,
+      "sha256": "4e405e6b489d590dbb74d07ab9774d5473c58dfb2a6dd7be2f52ea7034b3aaa8"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/skill-final-validation.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 286,
+      "sha256": "b3bc1303d2f2ca051c4612f53d11c3cee784744f42262301fd3b6c52b0f5b74c"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/verified-launch.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 1100,
+      "sha256": "f02f9c03fa201be2289b12e6762596bc6821876b425bb9a849a304bc91259ce9"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/verified-process-exit.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 68,
+      "sha256": "b92d3aa3a6af88b13afe90108b7d8dd71776a7d6bbbc1c5065cb98bf0c58a282"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/native-verified-result.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 179,
+      "sha256": "71bbfab7bd2a08fd89af1b30b3d7578a6f161b41c5cca1dc3dd1b95e2817a11c"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/final-q1-results.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 76622,
+      "sha256": "91446a7f226e4a9980859e59051ad2dc11d227f97bdc3161cede4ad6c9eb16da"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/final-verification.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 902,
+      "sha256": "c0a40a3e13a60d7815c2508612b87530e75fc391f00d48ca69c8a26cd01eea0d"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/final-plan-delta.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 4152,
+      "sha256": "97559d9f01b85d33b88a0042dce858802d978f3efef8dce3fec44d1b6617b7d0"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/final-plan-manifest.json": {
+      "role": "p1-production-self-check-receipt",
+      "size": 3681,
+      "sha256": "e482f34ce5032bd4abe8f0948a93685ff95d60e63b3fdf58b6e4931db0e65f8d"
+    },
+    "logs/vdd-q1-planned-tests-fix-20261025/STEP-DELTA.patch": {
+      "role": "p1-production-self-check-receipt",
+      "size": 22592,
+      "sha256": "38948fb1b23fc47a9151398c7026ad92afff07e092e7dee4924bfb44dce5dd2a"
+    },
+    "logs/vdd-q1-planned-tests-repair-20261025/q1-reproduction.json": {
+      "role": "frozen-predecessor-q1-rejection-and-diagnostic-control",
+      "size": 4390,
+      "sha256": "e2b134dec7b4f2e59b8a4ca36f921387472d10b306e52f69308d49dd0cd2ea2c"
     }
   },
   "inert_test_snapshots": {
@@ -779,14 +989,14 @@
       "sha256": "c5d064136d6df802ec78e4db2120b85985ae506662fdee4d92367b901512d8f6",
       "bytes": 274625,
       "role": "unreconciled-test-authoring-input-not-executable",
-      "reason": "Mixed historical BMAD-positive/query or guard scenarios require scope reconciliation before the new plan can execute. Preserve exact review bytes; do not reactivate these as runnable tests in this publication."
+      "reason": "Exact historical review input only. The current successor declares the absent active path planned; Q2 must author retained-scope tests rather than restore withdrawn BMAD-positive scenarios."
     },
     "tests/toolchain/knowledge_query/test_planning_boundaries.py": {
       "archive_path": "review-materials/vdd-quick-dev-scoped-plan-20261025/candidate-test-snapshots/tests/toolchain/knowledge_query/test_planning_boundaries.py.txt",
       "sha256": "e6c8e079d89396590d0282ba90789dd993d27db902650f1164f61baffdb14025",
       "bytes": 53835,
       "role": "unreconciled-test-authoring-input-not-executable",
-      "reason": "Mixed historical BMAD-positive/query or guard scenarios require scope reconciliation before the new plan can execute. Preserve exact review bytes; do not reactivate these as runnable tests in this publication."
+      "reason": "Exact historical review input only. The current successor declares the absent active path planned; Q2 must author retained-scope tests rather than restore withdrawn BMAD-positive scenarios."
     }
   },
   "excluded_tracked_worktree_changes": [
@@ -803,17 +1013,45 @@
     "current_obligations": 305,
     "slices": 12
   },
-  "canonical_plan_sha256": "sha256:7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7",
+  "canonical_plan_sha256": "sha256:955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c",
   "secret_scan": {
     "rule_findings": 0,
     "method": "Private key, GitHub/OpenAI token, AWS ID and credential-bearing URL patterns over selected bytes; no full DLP guarantee."
   },
   "limits": [
     "Implementation and final Acceptance are incomplete.",
-    "No independent A/B for the new scoped plan has run.",
-    "Two unreconciled mixed business-test originals are included only as inert review snapshots, not active tests.",
-    "Raw host transcripts, caches, historical runs and unrelated logs stay local.",
-    "No compilation or model tests were rerun for publication."
+    "The dadd5ea predecessor received NO-GO for missing planned tests; this successor has production self-check, not independent external GO.",
+    "The two absent active tests are now legally declared planned; Q1 passes but Q2 still must author retained-scope tests. Their historical originals remain inert snapshots.",
+    "Raw host transcripts, caches, intermediate successors and unrelated logs remain local.",
+    "No tests, Q1, compilation or models were rerun for this publication-only step."
   ],
-  "authorizes": []
+  "authorizes": [],
+  "initial_publication_authorization_message": "Sentinel_633cb6caf32c8191a98a6cb4e0697e16",
+  "current_plan_directory": "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final",
+  "frozen_predecessor": {
+    "commit": "dadd5ea869108893bdfe014c75a06c363b720cc9",
+    "directory": "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3",
+    "semantic_plan_sha256": "sha256:7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7",
+    "review_status": "NO-GO: undeclared missing test targets; history retained"
+  },
+  "p1_repair": {
+    "mode": "--handoff-planned-test (repeatable)",
+    "production_self_check": "passed",
+    "formal_q1_passed": 12,
+    "targeted_tests_passed": 32,
+    "default_mode_tests_passed": 3,
+    "skill_package_tests_passed": 22,
+    "independent_recheck": "not run",
+    "obligations_and_full_acceptances_unchanged": 305,
+    "created_test_files": 0,
+    "new_model_calls": 0,
+    "code_paths": [
+      "scripts/vdd/compile_plan.py",
+      ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      ".agents/skills/vdd-execution-plan/SKILL.md",
+      ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py"
+    ]
+  }
 }

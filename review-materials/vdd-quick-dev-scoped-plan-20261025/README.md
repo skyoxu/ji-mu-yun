@@ -1,67 +1,79 @@
-# VDD / Quick Dev scoped-plan review entry
+# Current P1-repaired VDD / Quick Dev review entry
 
-This branch publishes the current workflow changes and the native plan-ready
-12-slice directory for review. It is not implementation-complete, final
-Acceptance, independent A/B approval, or permission to merge.
+This revision publishes the restricted planned-test declaration repair and the
+actual native successor. It is production self-check passed, NOT independent
+A/B GO, implementation-complete, final Acceptance or permission to merge.
 
-Start with:
+## Current target and frozen predecessor
 
-1. `publication-manifest.json`: exact SHA256/size/role inventory and explicit gaps.
-2. `../../logs/scoped-input-preparation-20261024-v3/SCOPE-SOURCE.md` and
-   `DEPENDENCY-APPROVAL.md`: user scope change and four approved relationships.
-   The scope has246 retained,59 reduced and25 deployment-side old clauses;
-   the new native domain is305 obligations. All330 old IDs remain traceable in
-   `old-to-draft-map.json` and the classification ledger.
-3. `../../logs/scoped-input-preparation-20261024-v3/inputs/`: seven exact active
-   input files. The original requirement and delivered PRD/SPEC/architecture
-   documents are historical/provenance inputs, never instructions to run BMAD.
-4. `../../execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/`:
-   current canonical plan, coverage, dependencies,12 agent contexts and gates.
-5. `../../logs/vdd-scoped-compile-20261025-after-v3/REPORT.md`,
-   `native-result.json`, `formal-artifacts.json` and `v4-decisions.jsonl`:
-   genuine completion and request-bound V4 evidence, with method limitations.
-6. Workflow source/tests: `.agents/skills/vdd-execution-plan/`,
-   `.agents/skills/quick-dev-tdd-adapter/`, `scripts/vdd/compile_plan.py`,
-   `scripts/quick_dev/run.py`, `scripts/workflow_unit_budget.py`, and the
-   retained shared Locator/query infrastructure. Relevant test outputs are
-   explicitly listed by the manifest; no old result is represented as fresh
-   testing of the entire publication commit.
+Use `../../execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-final/`
+for the current12-slice plan. Canonical semantic identity:
+`sha256:955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c`.
 
-## Source and commit identity
+The frozen dadd5ea869108893bdfe014c75a06c363b720cc9 predecessor remains under
+`../../execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/` with identity
+`sha256:7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7`.
+It received NO-GO because its absent tests were not declared planned. Do not
+use that older directory as the repaired target or rewrite its evidence.
 
-The original candidate had uncommitted changes. Its old HEAD f57c2998 is only
-base provenance, NOT the final publication identity. Use this branch's actual
-commit SHA and the manifest's per-file hashes to identify the published bytes.
-The original native semantic bundle identity is
-`sha256:7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7`;
-its canonical JSON hash is separate from its file-byte SHA256.
-The approved host repair chain is retained in history. Two earlier diagnostic/
-review logs are excluded from this branch's current tree; they are not current
-review authority. No history was rewritten.
+Start with `publication-manifest.json` for exact bytes/roles and
+`../../logs/vdd-q1-planned-tests-fix-20261025/REPORT.md` for the production result.
+The report's local/unpushed paragraph records the completed repair BEFORE this
+publication and is deliberately preserved. This branch's actual latest commit
+SHA identifies the publication; the old source HEAD is provenance only.
 
-## Explicit test-publication gap
+## Repair and actual evidence
 
-Two mixed business test files still contain historical BMAD-positive/query or
-guard scenarios requiring the approved new-scope Q2 reconciliation. Publishing
-them as active tests would reactivate excluded expectations. This publication
-therefore preserves their exact original bytes only under
-`candidate-test-snapshots/<original-path>.txt`; the manifest maps each snapshot
-to its original local path and SHA256. They are inert review inputs, not tests
-to collect or run. Skill-specific regression tests are published normally.
+The public `--repair-quick-dev-handoff-from` route now accepts explicit
+`--handoff-planned-test <path>` declarations. It changes only each affected
+slice's planned_new_files and derived slice hash. The305 obligations,
+305 complete Acceptance contracts,305 failure intents, contexts, commands,
+owners, write scope, membership, dependency graph and terminal predicates are
+unchanged. It creates no tests, new RED roles or implementation authority.
 
-The native plan-ready result was obtained in the preserved local candidate
-where those original paths existed. This review branch does not pretend its
-active business-test tree has already been reconciled or recompiled. Clone-only
-execution/preflight needs a separate approved test-authoring step. Do not
-silently copy these snapshots into active test paths or invoke BMAD to verify
-them. This is an explicit review limitation, not a claim that the missing
-active test inputs have passed.
+Evidence under `../../logs/vdd-q1-planned-tests-fix-20261025/`:
 
-## Boundaries
+- `native-verified-result.json`, `verified-launch.json`,
+  `verified-process-exit.json`:actual public owner invocation/result.
+- `final-q1-results.json`, `final-verification.json`, `final-plan-delta.json`:
+  actual12/12 Q1 positives and exact preserved semantics/delta.
+- `targeted-final-v3.log`:32 deterministic positive/negative tests passed.
+- `default-compatibility.log`:3 default-mode compatibility cases passed.
+- `package-final.log`, `skill-final-validation.json`:22 package tests and
+  native Skill checks passed.
+- `final-plan-manifest.json`:exact successor artifact file hashes.
 
-No BMAD installation or BMAD-exclusive wrapper/query-hook/consumer-registration
-increment is included. Existing unrelated wrappers remain unchanged. Credentials,
-raw caches, full caller transcripts, unrelated logs and the unrelated prestart-40
-worktree change are excluded. Original local evidence and unrelated edits remain
-preserved. No PR is created, no CI/Actions status is monitored, and no merge is
-performed by this publication step.
+Original12 Q1 rejections are retained in
+`../../logs/vdd-q1-planned-tests-repair-20261025/q1-reproduction.json`.
+The public producer reuses V1/V4 and runs native source/semantic/coverage/
+feasibility/handoff checks. No new model call or full semantic recompilation
+was needed. This publication did not rerun any of those checks.
+
+## Scope and sources
+
+The active scope remains246 retained,59 reduced and25 deployment-side old
+clauses, yielding305 current obligations. All330 old IDs remain traceable in
+`../../logs/scoped-input-preparation-20261024-v3/old-to-draft-map.json` and the
+classification ledger. The seven exact current inputs, source index, four
+approved dependency decisions and deployment ledger remain unchanged there.
+Original requirements and delivered PRD/SPEC/architecture files are historical
+inputs/provenance, never instructions to run or review BMAD.
+
+## Planned tests are not implemented tests
+
+The two active .py paths remain absent. The current successor declares them
+planned, and Q1 now accepts that legitimate pre-authoring state. Q2 must still
+author correct retained-scope tests. Their mixed historical originals remain
+exact inert bytes under `candidate-test-snapshots/<original-path>.txt`, with
+source paths/hashes in the manifest. Do not restore those files wholesale or
+invoke BMAD to satisfy old scenarios. No actual probe, RED/GREEN, terminal/Q8
+or runtime Windows validation is claimed by Q1.
+
+## Publication boundaries
+
+Only the P1 source/docs/tests, final successor, minimal raw validation receipts
+and this entry/manifest changed in this publication. Intermediate repair plans,
+raw caches, full host transcripts, credentials, BMAD installation and unrelated
+logs/edits are excluded. No BMAD-exclusive wrapper/hook/registration increment
+is restored. No PR, merge, force push, CI monitoring, external review or
+implementation is performed. The original candidate and evidence remain local.

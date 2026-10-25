@@ -258,6 +258,33 @@ primary authorable pytest entry, and missing RED roles for eligible behavior.
 A constraints/governance failure still blocks; never manufacture expected RED
 just to keep the implementation loop running.
 
+### Declare an already-bound absent test
+
+For a declarations-only defect, use the existing public handoff producer with
+one `--handoff-planned-test <repository-relative-test.py>` per explicit path.
+Keep the same requirements, predecessor profile and a distinct empty sibling
+successor. This mode does not call the normal dedicated-entry/RED-role repair:
+it retains commands, selectors, allowed writes, snapshots, owners, obligations,
+full Acceptance/oracles, roles, memberships, dependencies and terminal predicates.
+Only affected `planned_new_files` and derived slice/bundle identities change.
+
+Each requested path must be a normalized missing pytest file under a test
+segment, already bound by the owning slice's snapshot, pytest argv and selector.
+It must not be a production/rollback owner or overlap one, be forbidden by any
+owning context, exist, be tracked in HEAD/index (including staged deletion), or
+pass through a symlink. Arbitrary paths and duplicate declarations reject before
+a result is changed. A successor leaving another missing snapshot undeclared
+also rejects, so partial declarations cannot repeat the Q1 gap. This grants no new GREEN/write scope and restores no old
+BMAD-positive tests. Q2 must still author the actual retained-scope tests.
+
+The native producer reuses the valid V1/V4 predecessor and runs its existing
+source identity, semantic-scope, dependency, coverage, feasibility and handoff
+checks. It publishes a non-authorizing repair report with declared paths and
+unchanged commands/roles, plus genuine successor identities. Q1 is unchanged;
+run its read-only planned preflight on the actual successor workspace. A valid
+planned contract is not a materialized test, observed RED or implementation.
+Do not combine declarations with runtime-role, launcher or test-root repair.
+
 ### Slice-local runtime-role correction
 
 If a real machine assertion was excluded only because its requirement is

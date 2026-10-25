@@ -682,3 +682,16 @@ security/source/V2 and native V3 validation/normalization/preflights remain
 mandatory on resume; corrupt matching evidence fails closed. Existing unit
 budgets and bounded retry ledgers are retained. No new plan lifecycle state or
 execution permission is introduced.
+
+
+## Bound missing-test declarations (2026-10-25)
+
+Maintainer approval Sentinel_9834a5d1716c81918af8ea9399636fd0 permits the explicit
+--handoff-planned-test mode in the existing handoff repair producer. Only absent,
+previously snapshot/pytest/selector-bound test files may become planned; this
+never creates files, expands write scope, changes requirements/oracles/runtime
+roles, or weakens Q1. HEAD/index tracked deletion, existing paths, symlinks,
+forbidden/unbound/production paths and mixed repair modes reject. Original
+contracts remain immutable; the native producer reuses V1/V4, reruns its native
+checks and publishes a distinct successor with real hashes/report. Normal
+handoff behavior and lifecycle/implementation boundaries are unchanged.

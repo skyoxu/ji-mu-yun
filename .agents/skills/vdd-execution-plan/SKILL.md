@@ -85,6 +85,15 @@ same repair scope. The predecessor profile is retained. This mode preserves
 semantic scope and records V1/V4 reuse; it performs no model calls. Read
 [the planning guide](references/planning-operation.md) for its exact limits.
 
+For an existing handoff whose only defect is an absent test already bound by
+its snapshot, pytest argv and selector, repeat `--handoff-planned-test <path>`
+with `--repair-quick-dev-handoff-from`. This explicit mode changes only the
+affected `planned_new_files` and slice identities; it retains every oracle,
+owner, command, runtime role and dependency. It creates no file or execution
+proof. Existing, tracked-deleted, symlink, forbidden or unbound paths reject.
+Do not combine it with role, launcher or test-root repair. The normal handoff
+mode is unchanged. See the planning guide for source checks and reuse limits.
+
 For a wrong V3 contract discovered after publication, use
 `--repair-published-v3-from <plan-ready-predecessor> --v3-contract-repair <json>`
 with the original requirements, predecessor profile, and a distinct empty

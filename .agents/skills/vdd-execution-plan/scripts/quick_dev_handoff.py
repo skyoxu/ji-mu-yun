@@ -280,6 +280,81 @@ def repair_bundle(bundle, test_root, workspace=None, windows_launcher_slices=())
     return result, {'added_expected_red_intents': added, 'command_dispositions': dispositions}
 
 
+def declare_planned_tests(bundle, workspace, paths):
+    """Declare already-bound absent Q2 tests, without new targets or write scope."""
+    import subprocess
+    import semantic_compiler as sc
+    root = Path(workspace).resolve()
+    if not paths or any(not isinstance(raw, str) or not raw for raw in paths):
+        raise ValueError('planned-test declarations must contain non-empty strings')
+    requested = set(paths)
+    if len(requested) != len(paths):
+        raise ValueError('planned-test declarations must be non-empty and unique')
+    contexts = {item['slice_id']: item for item in bundle['agent_contexts']}
+    owners = {p for item in bundle['slices'] for p in
+              [*item['production_owners'], *item['rollback_scope']['production_paths']]}
+    affected = {}
+    for raw in sorted(requested):
+        path = PurePosixPath(raw)
+        if (not path.parts or path.is_absolute() or '..' in path.parts
+                or str(path) != raw or '\\' in raw or ':' in raw
+                or path.parts[0].casefold() in {'.git', '.codex', '.aws', '.ssh'}
+                or 'tests' not in path.parts[:-1] or path.suffix != '.py'
+                or not path.name.startswith('test_')):
+            raise ValueError('planned-test path must be a normalized repository pytest file')
+        if any(_inside(raw, owner) or _inside(owner, raw) for owner in owners):
+            raise ValueError('planned-test cannot declare a production owner or rollback path')
+        full = root / raw
+        if any(p.is_symlink() for p in (full, *full.parents) if p.is_relative_to(root)):
+            raise ValueError('planned-test symlinks are forbidden')
+        if any(p.exists() and not p.is_dir() for p in full.parents if p.is_relative_to(root)):
+            raise ValueError('planned-test ancestor must be a directory')
+        if not full.resolve().is_relative_to(root) or full.exists():
+            raise ValueError('planned-test must be absent inside the repository')
+        # Both HEAD and index matter: staged deletion is not a genuinely new file.
+        tracked = subprocess.run(['git','-C',str(root),'ls-files','--error-unmatch','--',raw],
+                                 capture_output=True, check=False)
+        prior = subprocess.run(['git','-C',str(root),'ls-tree','HEAD','--',raw],
+                               capture_output=True, check=False)
+        if tracked.returncode not in {0, 1} or prior.returncode != 0:
+            raise ValueError('planned-test Git identity unavailable')
+        if tracked.returncode == 0 or prior.stdout.strip():
+            raise ValueError('planned-test cannot resurrect a tracked-deleted path')
+        selected = [item for item in bundle['slices'] if raw in item['execution_snapshot_paths']]
+        if not selected:
+            raise ValueError('planned-test path is not referenced by any slice snapshot')
+        for item in selected:
+            context = contexts[item['slice_id']]
+            if any(_inside(raw, p) for p in context.get('forbidden_paths', [])):
+                raise ValueError('planned-test path is forbidden by the frozen context')
+            commands = context.get('validation_commands', [])
+            pytest_targets = {part.split('::',1)[0] for argv in commands
+                              if isinstance(argv,list) and '-m' in argv
+                              and argv.index('-m')+1 < len(argv) and argv[argv.index('-m')+1]=='pytest'
+                              for part in argv[argv.index('-m')+2:]}
+            if raw not in pytest_targets or not any(raw in text for text in context['selector_intents']):
+                raise ValueError('planned-test must already bind pytest argv and selector intent')
+            affected.setdefault(item['slice_id'], set()).add(raw)
+    # A declaration-only successor must not retain another undeclared missing
+    # fixture: otherwise it would repeat the original Q1 publication defect.
+    for item in bundle['slices']:
+        planned = set(item['planned_new_files']) | requested
+        if any(not (root / ref).is_file() and ref not in planned
+               for ref in item['execution_snapshot_paths']):
+            raise ValueError('planned-test repair leaves an undeclared missing snapshot')
+    # Validate every declaration before changing the copy. No original is mutated.
+    result = deepcopy(bundle)
+    for item in result['slices']:
+        if item['slice_id'] not in affected:
+            continue
+        item['planned_new_files'] = sorted(set(item['planned_new_files']) | affected[item['slice_id']])
+        item['slice_input_hash'] = sc.sha256_value({k:v for k,v in item.items() if k!='slice_input_hash'})
+    return result, {'repair_mode':'declare-planned-tests-only',
+                    'declared_planned_tests':sorted(requested),
+                    'affected_slices':sorted(affected),
+                    'added_expected_red_intents':[], 'command_dispositions':[]}
+
+
 def repair_runtime_red_roles(bundle, failure_intent_ids):
     """Bind explicitly reviewed machine assertions, never infer human approval.
 
@@ -422,7 +497,7 @@ def source_index_identity(source):
     return sc.sha256_value(value)
 
 
-def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=()):
+def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=(), planned_tests=()):
     import semantic_compiler as sc
     from semantic_plan_contract import validate_semantic_bundle
     from semantic_chain_audit import audit_bundle
@@ -495,9 +570,14 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     expected_original = _project_slice_dependencies(deepcopy(original), expected_dependencies)
     if runtime_red_intents and windows_launcher_slices:
         raise ValueError('runtime RED role repair cannot combine Windows launcher repair')
-    repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
-                       if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
-                                                                 windows_launcher_slices=windows_launcher_slices))
+    if planned_tests and (runtime_red_intents or windows_launcher_slices):
+        raise ValueError('planned-test declarations cannot combine role or launcher repair')
+    if planned_tests:
+        repaired, delta = declare_planned_tests(original, root, planned_tests)
+    else:
+        repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
+                           if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
+                                                                     windows_launcher_slices=windows_launcher_slices))
     repaired = _project_slice_dependencies(repaired, expected_dependencies)
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
     if semantic_projection(expected_original) != semantic_projection(repaired):

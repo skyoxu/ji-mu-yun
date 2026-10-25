@@ -18,3 +18,11 @@ increment. Two mixed unreconciled business-test originals are preserved only
 as inert review snapshots, as explained in README.md. No implementation or
 upstream approval is implied. No PR creation, merge, force push or CI monitoring
 is authorized by this publication operation.
+
+
+## P1 repair publication
+
+User Sentinel_4c4f0b485abc8191bcd74de8335f9332 (2026-10-25 05:41 UTC) replied
+"ok" to publishing only the completed P1 repair, final successor and necessary
+receipts to the same review branch, without touching main. No PR, merge, force,
+CI monitoring, review, implementation or retesting is part of this operation.
