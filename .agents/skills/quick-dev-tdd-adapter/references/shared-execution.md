@@ -21,7 +21,20 @@ helper without changing the slice invalidates reuse.
 The unit supervisor's three private routing variables (event sink, total and
 inactivity limits) are removed from the actual controlled test subprocess
 environment and from that same environment fingerprint. The tested process
-cannot read them. Other inherited environment remains content-bound. The unit
+cannot read them. Quick Dev also removes the exact external executor metadata
+variable `CODEX_TOOL_CALL_ID` from both the controlled pytest child and its
+fingerprint through the same provider. It does not ignore any `CODEX_*` prefix,
+PATH, PYTHONPATH, proxies, dependency settings, application/test variables or
+unknown variables. Missing and present-empty values remain distinct for all
+retained variables. The parent executor environment is unchanged.
+
+The environment identity carries `schema=quick-dev.pytest-environment.v2`.
+Aggregate-only identities without that schema, older schemas and unknown future
+schemas are incompatible (`reuse-environment-schema-incompatible`), even when
+their aggregate digests happen to match. No old receipt can be converted by
+removing a field or recomputing a historical hash. New producer/readers must be
+deployed together; normal native recovery decides the required fresh evidence.
+Other inherited environment remains content-bound. The unit
 supervisor implementation itself is included in engine/reentry hashes; this is
 not permission to ignore application variables or relabel old originals.
 

@@ -16,7 +16,7 @@ import sysconfig
 from runtime_evidence import (create_json, create_immutable, load_json,
                               sha256_bytes, sha256_value, resolve_file, hash_refs)
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
-from workflow_unit_budget import execution_environment
+from execution_environment import execution_environment, ENVIRONMENT_SCHEMA
 
 SCHEMA = "quick-dev.shared-execution.v1"
 EXCLUDED = {"logs", "execution-plans"}
@@ -54,7 +54,8 @@ def environment_identity():
             raise ValueError("reuse-environment-budget-exceeded: bytes")
         hashes[str(path)] = sha256_bytes(path.read_bytes())
     # Values are hashed, never persisted (the inherited environment may contain secrets).
-    return {"system": platform.system(), "release": platform.release(), "machine": platform.machine(),
+    return {"schema": ENVIRONMENT_SCHEMA,
+            "system": platform.system(), "release": platform.release(), "machine": platform.machine(),
             "python": sys.version, "executable": str(Path(sys.executable).resolve()),
             "files": hashes, "installed_content": sha256_value(hashes), "packages": sha256_value(sorted(packages)),
             "environment": sha256_value(execution_environment())}
@@ -125,6 +126,12 @@ def input_manifest(workspace, bundle, descriptor):
 
 
 def invalidation_reason(original, current):
+    # Aggregate-only historical hashes cannot be converted to the new filter.
+    # Compare the rule before accepting even an accidentally equal digest.
+    for manifest in (original, current):
+        environment = manifest.get("environment")
+        if not isinstance(environment, dict) or environment.get("schema") != ENVIRONMENT_SCHEMA:
+            return "reuse-environment-schema-incompatible"
     for key in ("argv", "cwd", "contract", "engine", "environment"):
         if original.get(key) != current.get(key):
             if key == "environment":

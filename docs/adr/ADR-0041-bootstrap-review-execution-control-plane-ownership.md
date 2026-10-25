@@ -669,6 +669,19 @@ missing, tampered or identity-incomplete proof cannot become reusable success.
 Historical receipts are never relabeled. See the Quick Dev shared-execution
 reference for bounded discovery, compatibility and rejection rules.
 
+### Quick Dev call metadata boundary (2026-10-25)
+
+Maintainer approval Sentinel_4476a30ec6a88191bb3c9b80cefabdf8 permits excluding
+only the demonstrated volatile `CODEX_TOOL_CALL_ID` executor identifier from
+the controlled Quick Dev pytest child and the matching environment fingerprint.
+One provider serves both boundaries. It does not change VDD environments or
+ignore arbitrary application, test, proxy, dependency or unknown variables.
+The parent environment remains intact. The explicit
+`quick-dev.pytest-environment.v2` rule rejects unversioned/older/unknown
+aggregate identities; historical receipts and source hashes are never rewritten
+or automatically upgraded. Actual subprocess dependency refusals, case coverage,
+current-content binding and Q6/Q7/terminal/Q8 predicates remain unchanged.
+
 
 ## Explicit V3 compiler pause (2026-10-25)
 

@@ -15,7 +15,8 @@ from typing import Any, Mapping
 
 from runtime_evidence import create_immutable, create_json, hash_refs, sha256_bytes, sha256_value, validate_descriptor
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
-from workflow_unit_budget import unit, progress, event, terminate_tree, execution_environment
+from workflow_unit_budget import unit, progress, event, terminate_tree
+from execution_environment import execution_environment
 
 PYTEST_COUNT_RE = re.compile(r"(\d+)\s+(passed|failed|errors?|skipped)\b", re.I)
 FAILURE_RE = re.compile(r"FAILURE_ID:([A-Z0-9][A-Z0-9._-]*)")
