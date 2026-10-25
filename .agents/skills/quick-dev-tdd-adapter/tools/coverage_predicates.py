@@ -27,9 +27,11 @@ class _Q7OriginalChecks:
     filesystem/environment changes during the invocation rather than trusting
     an earlier path-only hit. No validation result survives this object.
     """
-    def __init__(self, workspace, completed):
+    def __init__(self, workspace, completed, *, label="Q7", verify_outputs=False):
         self.workspace = workspace.resolve()
         self.completed = completed
+        self.label = label
+        self.verify_outputs = verify_outputs
         self.environment = sha256_value(execution_environment())
         self.jobs = {}
         self.gates = set()
@@ -64,7 +66,8 @@ class _Q7OriginalChecks:
                    "evidence": str(evidence.resolve()), "descriptor": descriptor,
                    "descriptor_path": str(descriptor_path.resolve()),
                    "receipt_path": str(receipt_path.resolve()),
-                   "receipt": receipt, "environment": self.environment}
+                   "receipt": receipt, "environment": self.environment,
+                   "verify_outputs": self.verify_outputs}
         key = sha256_value(context)
         if key in self.jobs:
             return
@@ -93,7 +96,14 @@ class _Q7OriginalChecks:
             for name in manifest.get("engine", {}):
                 self._watch(self.workspace / "scripts/workflow_unit_budget.py" if name == "workflow_unit_budget.py" else TOOLS / name)
         from shared_execution import validate_saved_request
-        self.jobs[key] = lambda: validate_saved_request(self.workspace, evidence, descriptor, receipt)
+        def check():
+            if self.verify_outputs:
+                for name in ("stdout", "stderr"):
+                    path = resolve_file(evidence, name + ".bin")
+                    if sha256_bytes(path.read_bytes()) != receipt.get(name + "_sha256"):
+                        raise ValueError(f"{self.label} original output changed")
+            validate_saved_request(self.workspace, evidence, descriptor, receipt)
+        self.jobs[key] = check
 
     def gate(self, gate_path, gate):
         key = sha256_value({"kind": "gate", "workspace": str(self.workspace),
@@ -116,9 +126,9 @@ class _Q7OriginalChecks:
             check()
             self.completed("original:" + key)
         if sha256_value(execution_environment()) != self.environment:
-            raise ValueError("Q7 environment changed during validation")
+            raise ValueError(f"{self.label} environment changed during validation")
         if any(self._stamp(path) != stamp for path, stamp in self.seals.items()):
-            raise ValueError("Q7 original/input changed during validation")
+            raise ValueError(f"{self.label} original/input changed during validation")
 
 
 def _git_changed_paths(workspace: Path, source_commit: str, root_path: str, *, exclude_transport: bool = True) -> set[str]:
@@ -434,6 +444,27 @@ def _replay_snapshot(workspace, roots, source_commit, base_commit, terminal_inpu
     return snapshot
 
 
+def _q8_reread_edge(workspace, run_root, ref, *, slice_id, stage,
+                    selector_identity, originals, completed):
+    # Seal each independently checked edge and its lineage, not just originals.
+    path = resolve_file(run_root, ref["path"])
+    originals._watch(path)
+    hint = load_json(path)
+    if not isinstance(hint, Mapping) or sha256_value(hint) != ref["sha256"]:
+        raise ValueError("runtime edge hash stale")
+    for field in ("observation_ref", "receipt_ref"):
+        if not isinstance(hint.get(field), str):
+            raise ValueError("runtime edge lineage reference invalid")
+        originals._watch(resolve_file(run_root, hint[field]))
+    originals._watch(run_root / "canonical-evidence" / stage / "stage-result.v2.json")
+    edge = _reread_edge(workspace, run_root, ref, slice_id=slice_id,
+                        stage=stage, selector_identity=selector_identity,
+                        originals=originals)
+    # Canonical rereads keep the same digest: repetition cannot renew idle time.
+    completed("Q8-edge:" + slice_id + ":" + stage + ":" + ref["sha256"])
+    return edge
+
+
 def publish_implementation_complete(
     *,
     workspace: Path,
@@ -448,6 +479,22 @@ def publish_implementation_complete(
     verify_existing: bool = False,
     allowed_changed_paths: Sequence[str] | None = None,
 ) -> dict[str, Any]:
+    # ADR-0041: one bounded Q8 unit, not a fresh allowance per predecessor.
+    key = ["Q8", str(workspace.resolve()), sha256_bytes(semantic_plan.read_bytes()),
+           list(predecessors), sha256_bytes(Path(__file__).read_bytes())]
+    with unit(key, "Quick Dev Q8 validation") as call:
+        return _publish_implementation_complete(
+            workspace=workspace, semantic_plan=semantic_plan, predecessors=predecessors,
+            snapshot_roots=snapshot_roots, source_commit=source_commit, out=out,
+            base_commit=base_commit, detached_promotion_binding=detached_promotion_binding,
+            profile=profile, verify_existing=verify_existing,
+            allowed_changed_paths=allowed_changed_paths,
+            completed=lambda identity: progress(call, identity.encode()))
+
+
+def _publish_implementation_complete(*, workspace, semantic_plan, predecessors,
+        snapshot_roots, source_commit, out, base_commit, detached_promotion_binding,
+        profile, verify_existing, allowed_changed_paths, completed):
     detached_binding = _validate_detached_binding(detached_promotion_binding, profile)
     bundle = load_json(semantic_plan)
     from behavior_routing import read_route, stage_map, verify_stage, current_result, verify_case_continuity, validate_plan
@@ -457,6 +504,7 @@ def publish_implementation_complete(
     frozen_input = load_json(out.with_name("terminal-input.v2.json")) if verify_existing else None
     before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input, allowed_changed_paths)
               if verify_existing else current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit))
+    completed("Q8-snapshot-before:" + before["sha256"])
     cover = bundle.get("final_plan_coverage")
     acceptance_by_slice: dict[str, set[str]] = {}
     if not isinstance(cover, list):
@@ -474,6 +522,8 @@ def publish_implementation_complete(
     verified_slice_snapshots: dict[str, str] = {}
     for predecessor in predecessors:
         with replay_budget_transition(workspace, predecessor.get("budget_compatibility")):
+            # Do not let a deferred original escape its explicit replay epoch.
+            originals = _Q7OriginalChecks(workspace, completed, label="Q8", verify_outputs=True)
             sid, run_raw, ready_raw = predecessor.get("slice_id"), predecessor.get("run_root"), predecessor.get("result_ref")
             if not all(isinstance(x, str) and x for x in (sid, run_raw, ready_raw)) or sid in seen:
                 raise ValueError("terminal predecessor invalid")
@@ -483,7 +533,9 @@ def publish_implementation_complete(
                 run_root.relative_to(workspace.resolve())
             except ValueError as exc:
                 raise ValueError("terminal predecessor run root escapes workspace") from exc
-            ready = load_json(resolve_file(workspace, ready_raw))
+            ready_path = resolve_file(workspace, ready_raw)
+            originals._watch(ready_path)
+            ready = load_json(ready_path)
             if sha256_value(ready) != predecessor.get("result_sha256") or ready.get("slice_id") != sid or ready.get("status") != "pass":
                 raise ValueError("slice-ready predecessor stale")
             slice_snapshot = ready.get("snapshot_manifest")
@@ -509,6 +561,7 @@ def publish_implementation_complete(
             if ready.get("current_snapshot_sha256") != verified_slice_snapshot["sha256"]:
                 raise ValueError("slice-ready snapshot stale")
             slice_snapshot_hash = verified_slice_snapshot["sha256"]
+            completed("Q8-slice-snapshot:" + sid + ":" + slice_snapshot_hash)
             verified_slice_snapshots[sid] = slice_snapshot_hash
             route = read_route(workspace, bundle, run_root, sid) if routed else None
             requirements = stage_map(bundle, sid, route) if routed else {aid: ("red", "green", "refactor") for aid in acceptance_by_slice[sid]}
@@ -548,7 +601,7 @@ def publish_implementation_complete(
             if not isinstance(terminal_refs, list) or not terminal_refs:
                 raise ValueError("terminal runtime edges missing")
             for ref in terminal_refs:
-                edge = _reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector)
+                edge = _q8_reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector, originals=originals, completed=completed)
                 aid, assertion_id = edge["acceptance_id"], edge["assertion_id"]
                 observed_ids = terminal_assertions.setdefault(aid, set())
                 if assertion_id in observed_ids:
@@ -573,15 +626,15 @@ def publish_implementation_complete(
                     refs = ready.get("assertion_coverage", {}).get(stage, {}).get(aid, [])
                     actual = []
                     for assertion_ref in refs:
-                        checked = _reread_edge(workspace, run_root, assertion_ref, slice_id=sid,
-                                               stage=stage, selector_identity=selector_for_stage)
+                        checked = _q8_reread_edge(workspace, run_root, assertion_ref, slice_id=sid,
+                                               stage=stage, selector_identity=selector_for_stage, originals=originals, completed=completed)
                         if checked["acceptance_id"] != aid:
                             raise ValueError("Q8 assertion Acceptance mismatch")
                         actual.append(checked["assertion_id"])
                     if set(actual) != required_assertions[aid] or len(actual) != len(set(actual)):
                         raise ValueError("Q8 assertion exact cover")
                     ref = _canonical_edge(ready, stage, aid)
-                    _reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=selector_for_stage)
+                    _q8_reread_edge(workspace, run_root, ref, slice_id=sid, stage=stage, selector_identity=selector_for_stage, originals=originals, completed=completed)
                     tuples.append({
                         "tuple_key": f"{sid}|{aid}|{stage}",
                         "slice_id": sid,
@@ -592,6 +645,7 @@ def publish_implementation_complete(
                         "selector_identity": selector_for_stage,
                         "current_snapshot_sha256": slice_snapshot_hash,
                     })
+                    completed("Q8-tuple:" + sid + ":" + aid + ":" + stage)
                 refs = terminal_index.get(aid, [])
                 if not refs:
                     raise ValueError(f"terminal Acceptance coverage missing: {aid}")
@@ -606,6 +660,8 @@ def publish_implementation_complete(
                     "selector_identity": terminal_selector,
                     "current_snapshot_sha256": slice_snapshot_hash,
                 })
+                completed("Q8-tuple:" + sid + ":" + aid + ":terminal")
+            originals.finish()
     if seen != set(acceptance_by_slice):
         raise ValueError("terminal predecessor set does not match slices")
     valid, findings = validate_runtime_closure(
@@ -615,6 +671,7 @@ def publish_implementation_complete(
     )
     if not valid:
         raise ValueError("runtime closure invalid: " + ",".join(findings))
+    completed("Q8-exact-closure:" + sha256_value(tuples))
 
     slices = bundle.get("slices")
     if not isinstance(slices, list):

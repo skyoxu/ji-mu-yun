@@ -104,6 +104,17 @@ snapshot against a privileged adversary able to restore filesystem metadata.
 Only completed edge/original/snapshot checks report progress. Q7 is one unit;
 progress renews inactivity without renewing its total or retry allowance.
 
+Q8 uses the same collector separately within each explicit predecessor replay
+context. Terminal, assertion and canonical-edge checks still execute; identical
+originals are fully revalidated once before leaving that replay context. Replay
+epochs and separate calls never share a collector. Q8 keeps one total/inactivity
+unit across predecessors and reports only actual completed snapshot, edge,
+tuple, gate and original checks. Repeated canonical checks retain the same
+progress digest and cannot renew inactivity. Exact tuple closure and the final
+current-snapshot equality remain mandatory. This does not make an old execution
+compatible with changed reader/input bytes: ordinary native identity and
+observed-dependency checks still decide whether fresh execution is required.
+
 Sequential duplicate requests return their exact existing receipt after checking
 the request/completion seal and outputs. Partial requests block instead of
 launching again. Cross-process scheduling/coalescing is not provided.
