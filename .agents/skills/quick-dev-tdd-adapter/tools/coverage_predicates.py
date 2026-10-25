@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import subprocess
 import sys
 from typing import Any, Mapping, Sequence
@@ -13,6 +14,111 @@ from closure_predicate import validate_runtime_closure
 from runtime_evidence import HASH_RE, current_snapshot, create_json, expected_tuple_keys, load_json, sha256_bytes, sha256_value
 sys.path.insert(0, str(TOOLS.parents[3] / "scripts/quick_dev"))
 from approved_budget_replay import replay_budget_transition, resolve_file
+sys.path.insert(0, str(TOOLS.parents[3] / "scripts"))
+from execution_environment import execution_environment
+from workflow_unit_budget import unit, progress
+
+
+class _Q7OriginalChecks:
+    """ADR-0041: invocation-local deduplication, never persisted evidence/cache.
+
+    Collect identical content-bound original checks while every edge is checked
+    independently. Validate originals before publication, and reject observable
+    filesystem/environment changes during the invocation rather than trusting
+    an earlier path-only hit. No validation result survives this object.
+    """
+    def __init__(self, workspace, completed):
+        self.workspace = workspace.resolve()
+        self.completed = completed
+        self.environment = sha256_value(execution_environment())
+        self.jobs = {}
+        self.gates = set()
+        self.seals = {}
+        self.inventory_watched = False
+
+    def _watch(self, path):
+        path = Path(os.path.abspath(path))
+        if path not in self.seals:
+            self.seals[path] = self._stamp(path)
+        # Directory seals detect additions/removals/replacements as well as
+        # edits to existing inputs. Do not watch unrelated /tmp or / globally.
+        parent = path.parent
+        while parent != parent.parent and str(parent) not in {"/tmp", "/workspace"}:
+            if parent not in self.seals:
+                self.seals[parent] = self._stamp(parent)
+            if parent == self.workspace:
+                break
+            parent = parent.parent
+
+    @staticmethod
+    def _stamp(path):
+        try:
+            s = path.lstat()
+        except FileNotFoundError:
+            return None
+        return (s.st_dev, s.st_ino, s.st_mode, s.st_size,
+                s.st_mtime_ns, s.st_ctime_ns)
+
+    def saved(self, evidence, descriptor_path, descriptor, receipt_path, receipt):
+        context = {"kind": "saved", "workspace": str(self.workspace),
+                   "evidence": str(evidence.resolve()), "descriptor": descriptor,
+                   "descriptor_path": str(descriptor_path.resolve()),
+                   "receipt_path": str(receipt_path.resolve()),
+                   "receipt": receipt, "environment": self.environment}
+        key = sha256_value(context)
+        if key in self.jobs:
+            return
+        request_path = evidence / "reuse-request.v1.json"
+        for path in (descriptor_path, receipt_path, request_path,
+                     evidence / "reuse-complete.v1.json",
+                     evidence / "stdout.bin", evidence / "stderr.bin"):
+            self._watch(path)
+        if request_path.is_file():
+            request = load_json(request_path)
+            manifest = request.get("input") or {}
+            if manifest and not self.inventory_watched:
+                # Include empty inventory directories: a new file there must
+                # not evade the final guard merely because no old file named it.
+                for directory, children, _ in os.walk(self.workspace, followlinks=False):
+                    children[:] = [name for name in children if name not in {
+                        ".git", "__pycache__", ".pytest_cache", ".venv", "venv"}
+                        and not (Path(directory) == self.workspace and name in {"logs", "execution-plans"})]
+                    self._watch(Path(directory))
+                self.inventory_watched = True
+            self._watch(self.workspace / request["semantic_plan"])
+            for relative in manifest.get("files", {}):
+                self._watch(self.workspace / relative)
+            for absolute in manifest.get("environment", {}).get("files", {}):
+                self._watch(Path(absolute))
+            for name in manifest.get("engine", {}):
+                self._watch(self.workspace / "scripts/workflow_unit_budget.py" if name == "workflow_unit_budget.py" else TOOLS / name)
+        from shared_execution import validate_saved_request
+        self.jobs[key] = lambda: validate_saved_request(self.workspace, evidence, descriptor, receipt)
+
+    def gate(self, gate_path, gate):
+        key = sha256_value({"kind": "gate", "workspace": str(self.workspace),
+                            "path": str(gate_path.resolve()), "gate": gate,
+                            "environment": self.environment})
+        if key in self.gates:
+            return
+        self._watch(gate_path)
+        from regression_gate import validate_regression_references
+        validate_regression_references(
+            self.workspace, gate,
+            _saved_request_validator=lambda workspace, evidence, descriptor, receipt:
+                self.saved(evidence, gate_path, descriptor,
+                           evidence / "process-receipt.v2.json", receipt))
+        self.gates.add(key)
+        self.completed("gate:" + key)
+
+    def finish(self):
+        for key, check in self.jobs.items():
+            check()
+            self.completed("original:" + key)
+        if sha256_value(execution_environment()) != self.environment:
+            raise ValueError("Q7 environment changed during validation")
+        if any(self._stamp(path) != stamp for path, stamp in self.seals.items()):
+            raise ValueError("Q7 original/input changed during validation")
 
 
 def _git_changed_paths(workspace: Path, source_commit: str, root_path: str, *, exclude_transport: bool = True) -> set[str]:
@@ -79,7 +185,7 @@ def _semantic_index(bundle: Mapping[str, Any], slice_id: str) -> tuple[Mapping[s
     return selected, expected
 
 
-def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, slice_id: str, stage: str, selector_identity: str) -> dict[str, Any]:
+def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, slice_id: str, stage: str, selector_identity: str, originals=None) -> dict[str, Any]:
     path, expected_sha = ref.get("path"), ref.get("sha256")
     if not isinstance(path, str) or not isinstance(expected_sha, str):
         raise ValueError("runtime edge ref invalid")
@@ -97,7 +203,10 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
         gate_value = load_json(resolve_file(run_root, gate["ref"]))
         if sha256_value(gate_value) != gate["sha256"]:
             raise ValueError("Q6 regression gate changed")
-        validate_regression_references(workspace, gate_value)
+        if originals is None:
+            validate_regression_references(workspace, gate_value)
+        else:
+            originals.gate(resolve_file(run_root, gate["ref"]), gate_value)
     if sha256_value(observation) != edge.get("observation_sha256"):
         raise ValueError("observation hash stale")
     if sha256_value(receipt) != edge.get("receipt_sha256") or observation.get("receipt_sha256") != edge.get("receipt_sha256"):
@@ -109,7 +218,12 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
     if sha256_value(descriptor) != edge.get("descriptor_sha256"):
         raise ValueError("descriptor hash stale")
     from shared_execution import validate_saved_request
-    validate_saved_request(workspace, run_root / "canonical-evidence" / stage, descriptor, receipt)
+    if originals is None:
+        validate_saved_request(workspace, run_root / "canonical-evidence" / stage, descriptor, receipt)
+    else:
+        originals.saved(run_root / "canonical-evidence" / stage,
+                        descriptor_path, descriptor,
+                        resolve_file(run_root, edge["receipt_ref"]), receipt)
     from case_evidence import assertion_cases, reread_stage_cases, VERSION
     cases = assertion_cases(descriptor, receipt)
     if stage in {"green", "refactor"} and cases != reread_stage_cases(run_root, "red"):
@@ -138,6 +252,18 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
 
 
 def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path, slice_id: str, snapshot_roots: Sequence[Mapping[str, str]], source_commit: str, out: Path, base_commit: str | None = None) -> dict[str, Any]:
+    # One independent Q7 unit: completed checks renew inactivity, never total.
+    key = ["Q7", str(run_root.resolve()), slice_id,
+           sha256_bytes(semantic_plan.read_bytes()), sha256_bytes(Path(__file__).read_bytes())]
+    with unit(key, "Quick Dev Q7 validation") as call:
+        return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+            run_root=run_root, slice_id=slice_id, snapshot_roots=snapshot_roots,
+            source_commit=source_commit, out=out, base_commit=base_commit,
+            completed=lambda identity: progress(call, identity.encode()))
+
+
+def _validate_slice_ready(*, workspace, semantic_plan, run_root, slice_id,
+                          snapshot_roots, source_commit, out, base_commit, completed):
     bundle = load_json(semantic_plan)
     _selected, expected_assertions = _semantic_index(bundle, slice_id)
     from behavior_routing import read_route, stage_map, verify_stage, current_result, verify_case_continuity
@@ -145,6 +271,8 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
     route = read_route(workspace, bundle, run_root, slice_id) if routed else None
     requirements = stage_map(bundle, slice_id, route) if routed else {aid: ("red", "green", "refactor") for aid in expected_assertions}
     snapshot = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
+    originals = _Q7OriginalChecks(workspace, completed)
+    completed("snapshot:" + snapshot["sha256"])
     stage_selectors = {}
     selector: str | None = None
     final_candidate: str | None = None
@@ -181,17 +309,22 @@ def validate_slice_ready(*, workspace: Path, semantic_plan: Path, run_root: Path
             raise ValueError("runtime edges missing")
         observed = {aid: {} for aid in stage_expected}
         for ref in refs:
-            edge = _reread_edge(workspace, run_root, ref, slice_id=slice_id, stage=stage, selector_identity=current_selector)
+            edge = _reread_edge(workspace, run_root, ref, slice_id=slice_id, stage=stage, selector_identity=current_selector, originals=originals)
             if edge.get("candidate_hash") != result.get("candidate_hash"):
                 raise ValueError("edge/stage candidate mismatch")
             aid, assertion_id = edge.get("acceptance_id"), edge.get("assertion_id")
             if aid not in stage_expected or assertion_id not in stage_expected[aid] or assertion_id in observed[aid]:
                 raise ValueError("assertion edge outside exact universe or duplicate")
             observed[aid][assertion_id] = {"path": ref["path"], "sha256": ref["sha256"]}
+            completed("edge:" + stage + ":" + ref["sha256"])
         for aid, expected in stage_expected.items():
             if set(observed[aid]) != expected:
                 raise ValueError(f"{stage} assertion exact cover failed for {aid}")
         coverage[stage] = {aid: [observed[aid][assertion] for assertion in sorted(observed[aid])] for aid in sorted(observed)}
+    originals.finish()
+    final_snapshot = current_snapshot(workspace, snapshot_roots, source_commit=source_commit, base_commit=base_commit)
+    if final_snapshot["sha256"] != snapshot["sha256"]:
+        raise ValueError("Q7 snapshot changed during validation")
     result = {
         "schema": "quick-dev.slice-ready-result.v2",
         "predicate": "slice-ready",

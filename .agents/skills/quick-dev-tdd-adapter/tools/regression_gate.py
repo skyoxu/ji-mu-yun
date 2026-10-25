@@ -154,7 +154,7 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
     return result
 
 
-def validate_regression_references(workspace, gate):
+def validate_regression_references(workspace, gate, *, _saved_request_validator=None):
     """Q7/Q8 and reentry reread original Q6 executions, not only a gate digest."""
     from runtime_evidence import load_json, resolve_file, sha256_value
     from shared_execution import admissible
@@ -170,4 +170,4 @@ def validate_regression_references(workspace, gate):
             if sha256_bytes((path.parent / (name + ".bin")).read_bytes()) != receipt[name + "_sha256"]:
                 raise ValueError("Q6 original output changed")
         from shared_execution import validate_saved_request
-        validate_saved_request(workspace, path.parent, row["descriptor"], receipt)
+        (_saved_request_validator or validate_saved_request)(workspace, path.parent, row["descriptor"], receipt)

@@ -92,6 +92,18 @@ use a fresh run to consume successful proof under a different descriptor.
 
 Original and reference request/completion seals are rechecked at Q7/Q8 and recovery.
 
+Within one Q7 invocation, identical content/context-bound originals are queued
+once for full revalidation before publication. Every edge still undergoes its
+own identity, hash, association and exact case-coverage checks. The key includes
+workspace, evidence/descriptor/receipt paths, complete descriptor and receipt,
+and environment context; this is not a cross-call or persistent cache. Input,
+original and directory metadata seals plus a final runtime snapshot detect
+observable concurrent changes and fail closed. Changed inputs are not treated
+as a cache hit. This remains ordinary filesystem validation, not a hermetic
+snapshot against a privileged adversary able to restore filesystem metadata.
+Only completed edge/original/snapshot checks report progress. Q7 is one unit;
+progress renews inactivity without renewing its total or retry allowance.
+
 Sequential duplicate requests return their exact existing receipt after checking
 the request/completion seal and outputs. Partial requests block instead of
 launching again. Cross-process scheduling/coalescing is not provided.
