@@ -10,6 +10,30 @@ from process_executor_v2 import _counts
 from runtime_evidence import create_json,sha256_bytes,sha256_value
 
 
+def _pytest_path_arguments(argv: Sequence[str]):
+    """Keep expression/configuration values distinct from possible file inputs.
+
+    Unknown options do not consume their next token: a real file dependency
+    must not disappear merely because an option is unfamiliar. File operands
+    such as ``-c pytest.ini`` remain eligible for the existing containment and
+    dependency checks. This does not change argv, selection or reuse identity.
+    """
+    values = {"-k", "-m", "-o", "--override-ini", "--keyword", "--markexpr"}
+    start = next(i for i, part in enumerate(argv) if part.lower() == "pytest")
+    parts = iter(argv[start + 1:])
+    positional = False
+    for part in parts:
+        if not positional and part == "--":
+            positional = True
+            continue
+        if not positional and part in values:
+            if next(parts, None) is None:
+                raise ValueError(f"Q6 pytest option missing value: {part}")
+            continue
+        if positional or not part.startswith("-"):
+            yield part.split("::", 1)[0]
+
+
 def _terminal_scope_command(argv: Sequence[str]) -> bool:
     """Keep whole-tree pytest commands out of slice-local Q6.
 
@@ -19,7 +43,7 @@ def _terminal_scope_command(argv: Sequence[str]) -> bool:
     """
     if not any(part.lower() == "pytest" for part in argv):
         return False
-    targets = [part for part in argv if not part.startswith("-")]
+    targets = list(_pytest_path_arguments(argv))
     normalized = {Path(target).as_posix().rstrip("/") for target in targets}
     if normalized & {"scripts/sc", ".agents/skills/quick-dev-tdd-adapter/tools/tests"}:
         return True
@@ -93,10 +117,9 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
                 descriptor = deepcopy(primary_descriptor)
                 descriptor.update(run_id=command_run.name, stage="regression", argv=argv, timeout_seconds=timeout_seconds)
                 targets = set(descriptor["target_refs"])
-                for part in argv[argv.index("pytest") + 1:]:
-                    raw = part.split("::", 1)[0]
+                for raw in _pytest_path_arguments(argv):
                     candidate = workspace / descriptor["cwd"] / raw
-                    if not part.startswith("-") and candidate.is_file():
+                    if candidate.is_file():
                         targets.add(candidate.relative_to(workspace).as_posix())
                 descriptor["target_refs"] = sorted(targets)
                 receipt = execute_with_reuse(workspace=workspace, bundle=bundle, semantic_plan=semantic_plan,
