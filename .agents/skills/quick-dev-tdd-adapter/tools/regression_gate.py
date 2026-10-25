@@ -109,7 +109,8 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
                     "semantic_plan":semantic_plan.resolve().relative_to(workspace.resolve()).as_posix()})
                 continue
         try:
-            proc=subprocess.run(argv,cwd=workspace,shell=False,check=False,capture_output=True,timeout=timeout_seconds)
+            from workflow_unit_budget import run_command
+            proc=run_command(argv,cwd=workspace,timeout=timeout_seconds)
             stdout,stderr=proc.stdout,proc.stderr
             timed_out=False; exit_code=proc.returncode
         except subprocess.TimeoutExpired as exc:

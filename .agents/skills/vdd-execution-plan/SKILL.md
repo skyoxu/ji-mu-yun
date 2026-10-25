@@ -47,7 +47,36 @@ Use the selected profile with the canonical entry:
 py -3 scripts/vdd/compile_plan.py --requirements <requirements.md> --out-dir <execution-plans/plan> --profile <standard|resumable|self-hosted>
 ```
 
-For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit or any status other than `plan-ready` remains a VDD repair result; no caller may promote it. `--recommendation-only` performs no plan publication and never represents readiness.
+For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit remains a VDD repair result; no caller may promote it. The explicit `--stop-after v3` option returns normal `paused` with exit 0 after V3, V3A and execution preflight, before V4. This is not `plan-ready`, publication or implementation permission. `--recommendation-only` performs no plan publication and never represents readiness.
+
+Resume replays validated candidates, not an unchecked program counter. V0 source
+preflight and the cheap current V2 structural guard run again. Identical frozen
+V1 section content, interpretation context and extraction rules reuse the
+content cache; query episode/stage/time and Git-only provenance do not force
+new extraction. Changing a real source section or its interpretation context
+invalidates that extraction. Full-domain source checks keep their own native
+input/partition validation and can be reused when that domain is unchanged.
+
+For an interrupted older caller-session run without content-cache metadata,
+add `--resume-worker-session <original-session-directory>`. This reads only the
+explicit transcript and requires the matching returned request/response, native
+cache, output and schema-valid native receipt. A timeout, cancellation, missing
+result or unconsumed answer cannot satisfy it. Nothing is injected into old
+caches/state and no `plan-ready` witness is invented. The current query/security
+gate still runs before replay. Corrupt matching evidence blocks. See the planning
+guide for the exact route and limits; resume proceeds through V3/V4/downstream
+gates instead of stopping at V3 automatically. To choose a normal V3 boundary,
+pass `--stop-after v3`; this option is limited to ordinary create/resume, not
+fixture, recommendation or semantic/handoff repair modes. The public compiler
+saves a non-authorizing, source/domain/profile/rules-bound native V3 candidate
+under `.compiler-work/v3-checkpoints/` only after both V3 preflights pass.
+Resume the same output using `--resume-from first-failed-stage`, omitting
+`--stop-after` to continue to V4 or retaining it to pause again. Current query,
+V0/V2, native V3 candidate gates, normalization and preflights still run. A
+matching candidate avoids V3 regeneration; input/rule changes miss that candidate
+and use normal dependency-bound caches. Corruption or current contract failure
+blocks, never becomes a successful pause. No canonical lifecycle state is
+published at this boundary.
 
 For an already reviewed plan whose only defect is the Quick Dev execution
 handoff, use `--repair-quick-dev-handoff-from <predecessor-dir>` with the
@@ -76,15 +105,34 @@ must name the approved source-bound replacements and provide complete V3
 contracts for the resulting new obligation IDs; old V1/V3 evidence is not
 silently relabeled. V4 and all downstream gates remain mandatory.
 
-For real-worker quality evaluation, `scripts/vdd/evaluate_real_semantic_quality.py`
-supervises the compiler with `--compile-timeout-seconds` (default 3600), distinct
-from the optional `--repair-timeout-seconds` override. It prints the progress
-path at launch and retains the run directory. Inspect
+## Execution budgets
+
+The public compiler supervises independent work units with a default 1800-second
+total and 600 seconds without real progress. Before V6 there are no execution
+slices: V1 extraction/source-check calls and V3 contract batches are units.
+Container stages exclude time spent in independent child units; a long healthy
+sequence is not killed because its round total exceeds 1800 seconds. Repeated
+attempts of the same content-bound unit share the cumulative allowance, including
+explicit resumes. Real subprocess bytes and completed native sub-units count as
+progress; polling, file touches and artificial heartbeats do not.
+
+`--unit-timeout-seconds` and `--idle-timeout-seconds` select finite execution
+limits at the public entry. Native worker defaults are 1800 seconds; an explicit
+shorter transport/descriptor limit still applies. Caller-session requests use
+the same default total; do not pass the old 600-second host *total* when the
+intention is a 600-second *inactivity* limit. Timeout/cancel terminates the owned
+process tree, retains caches and appends non-authorizing diagnostics under
+`logs/workflow-unit-budgets/`. The budget ledger is cost history, not successful
+execution or cache authority. Cache/recovery validation still owns reuse.
+
+Do not wrap normal compilation in an aggregate 1800-second watchdog. Old
+per-run supervisors remain historical and must not be reused. The separate
+real-worker quality evaluation harness has its own explicit aggregate benchmark
+cap; it is not the production recovery route. Inspect
 `plan/.compiler-work/compiler-progress.jsonl` for stage/worker start and return
 events; an unmatched start locates the last observed wait, not its cause.
-Timeout produces `compile-timeout`, never acceptance evidence. Windows process
-cleanup targets only the owned PID tree; inspect `cleanup_error` if termination
-fails. Existing caches and worker outputs remain available for offline diagnosis.
+Timeout is never acceptance evidence. Existing caches and worker outputs remain
+available for offline diagnosis; late responses do not resume a killed parent.
 
 Before V4 Acceptance alignment, the compiler checks the projected execution
 contract and reports bounded diagnostics. Transport failures do not enter schema

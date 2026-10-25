@@ -436,7 +436,7 @@ def q2_author_red(
         candidate_hash=identity["candidate_hash"],
         argv=argv,
         cwd=".",
-        timeout_seconds=max(1, min(timeout_seconds, 600)),
+        timeout_seconds=max(1, min(timeout_seconds, 1800)),
         target_refs=target_refs,
         fixture_refs=fixture_refs,
     )
@@ -723,7 +723,7 @@ def _materialize_named_descriptor(semantic: Path, run_dir: Path, stage: str) -> 
         terminal = materialize_descriptor(
             bundle=bundle, slice_id=slice_id, stage=stage, run_id=run_dir.name,
             candidate_hash=identity["candidate_hash"], argv=argv, cwd=base["cwd"],
-            timeout_seconds=base["timeout_seconds"] if routed and stage != "terminal" else 600,
+            timeout_seconds=base["timeout_seconds"] if routed and stage != "terminal" else 1800,
             target_refs=target_refs, fixture_refs=fixture_refs, routing_result=route,
         )
         create_json(descriptor, terminal)
@@ -777,7 +777,11 @@ def main() -> int:
     parser.add_argument("--out", type=Path)
     parser.add_argument("--detached-bundle", type=Path)
     parser.add_argument("--detached-promotion-passed", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--worker-timeout-seconds", type=int, default=600)
+    parser.add_argument("--unit-timeout-seconds", type=int, default=1800,
+                        help="Public supervisor independent-unit total budget")
+    parser.add_argument("--idle-timeout-seconds", type=int, default=600,
+                        help="Public supervisor genuine-inactivity budget")
+    parser.add_argument("--worker-timeout-seconds", type=int, default=1800)
     parser.add_argument("--llm-backend")
     args = parser.parse_args()
     try:

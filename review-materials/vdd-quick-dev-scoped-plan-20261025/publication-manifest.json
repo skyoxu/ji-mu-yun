@@ -1,0 +1,819 @@
+{
+  "schema": "scoped-review-publication.v1",
+  "repository": "skyoxu/ji-mu-yun",
+  "branch": "review/vdd-quick-dev-scoped-plan-20261025",
+  "base_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "source_repository_head": "f57c2998f83f12dfc98afe11816a4827fffd0228",
+  "source_head_is_not_publication_snapshot": true,
+  "authorization_message": "Sentinel_633cb6caf32c8191a98a6cb4e0697e16",
+  "files": {
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md": {
+      "role": "workflow-code-doc-test",
+      "size": 9488,
+      "sha256": "d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md": {
+      "role": "workflow-code-doc-test",
+      "size": 17280,
+      "sha256": "1e3d3bae887f505f90d50488d2b4a8c63f210cf61b5c728a118eb059cf9eb060"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/references/recovery-operation.md": {
+      "role": "workflow-code-doc-test",
+      "size": 3435,
+      "sha256": "e57ed9bc5d7427f7d597ac3db8d791c00e66bcec61995368ff8c76ff4730b0d9"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md": {
+      "role": "workflow-code-doc-test",
+      "size": 6194,
+      "sha256": "8762d3939f7ce9f5394d2492413923356294c52ada87db9fa51af718840d5630"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py": {
+      "role": "workflow-code-doc-test",
+      "size": 11633,
+      "sha256": "05bc627f5013a1135bd00e8bcd6703621eea746622c663df8835e38fd1b34ac2"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py": {
+      "role": "workflow-code-doc-test",
+      "size": 32060,
+      "sha256": "8c18e3e77191179e913155ad55b92fa1eb756bf734f90d79a045ff229ecaad1b"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/first_use_entry.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7841,
+      "sha256": "1ae6479a609cafa20022fbf059c4034f0138d11e394791f6e8d5c4876519d7d8"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7143,
+      "sha256": "99d980984378fc269b4e555d478666f4e427975355ffe0abf1091b095b9caf2c"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/pytest_case_collector.py": {
+      "role": "workflow-code-doc-test",
+      "size": 5081,
+      "sha256": "237d2d854cc9610e055b328bc6bf648c748bf2dd0052c3562e95ecf3949fd054"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/recovery_resolver.py": {
+      "role": "workflow-code-doc-test",
+      "size": 6704,
+      "sha256": "df4d5a1752313e75587f2dc1f61d280d57e3df983b9150d9da83891d7152a8de"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py": {
+      "role": "workflow-code-doc-test",
+      "size": 9406,
+      "sha256": "21c368f2768e0488421be8356b7626207a8393edf3a4d76ff1d0aa91c245aff2"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py": {
+      "role": "workflow-code-doc-test",
+      "size": 32960,
+      "sha256": "f46dedcde6ee6a139eb77db55b62c5787576b60d67309026b063d5f207cc2923"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py": {
+      "role": "workflow-code-doc-test",
+      "size": 19315,
+      "sha256": "e3cbf3abc0df2dbee8befc6effdc2f22bcf6e0367454dd4da4bdc52b8791d227"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py": {
+      "role": "workflow-code-doc-test",
+      "size": 13183,
+      "sha256": "9ce4579fa4f3d3a3598aac4b1e32038cadc530882713012f7d79088a4b98abe7"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py": {
+      "role": "workflow-code-doc-test",
+      "size": 5293,
+      "sha256": "b7e363f0b6d9acdd3973d66e2f15dff2172c4f9acb4fcc9d6eefb72977f0d8aa"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7295,
+      "sha256": "4b541bbb34fa8e866773aadfb89495bc9ef3f2df81096d6c153800bb744cf17e"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py": {
+      "role": "workflow-code-doc-test",
+      "size": 3097,
+      "sha256": "a5ea41e80894bee0b57908e1245af206aac411cf41d3ee6e01eafc68684bd188"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py": {
+      "role": "workflow-code-doc-test",
+      "size": 14596,
+      "sha256": "3ad22a97a5d7e568283514adcc91368ac5ad48c14524dc4d3ded04384f07955e"
+    },
+    ".agents/skills/vdd-execution-plan/SKILL.md": {
+      "role": "workflow-code-doc-test",
+      "size": 19043,
+      "sha256": "077007630285dc136f410c518c97e69af605ac32f320e594806fe816dfd90633"
+    },
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md": {
+      "role": "workflow-code-doc-test",
+      "size": 20766,
+      "sha256": "984db0b9713e10a1a69ab3ecdfac6ec916a8295fb01226b12b986097ff092e75"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py": {
+      "role": "workflow-code-doc-test",
+      "size": 4288,
+      "sha256": "45c811b6f1625db94b9631bc3ae1250f0b60bd511db77bb704229465d8a1f0ad"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py": {
+      "role": "workflow-code-doc-test",
+      "size": 34679,
+      "sha256": "f8c8544c492c27cdbcfbcf06c32781e1703548b31aee46a7c3591ad5a2c262ca"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py": {
+      "role": "workflow-code-doc-test",
+      "size": 24704,
+      "sha256": "926adbce0150d2c2e627ba64e223862113cd47791c3dece1adccf5720b902bd2"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_slice_cohesion_patch.py": {
+      "role": "workflow-code-doc-test",
+      "size": 8701,
+      "sha256": "27265e72721732d6b6d1aa3632cbaea660be109b92b14e5976977e42ddf37783"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py": {
+      "role": "workflow-code-doc-test",
+      "size": 56565,
+      "sha256": "886df061086734292cdfb658d0a9bc4f87b8a23e106ea33ade83314b82edeb68"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py": {
+      "role": "workflow-code-doc-test",
+      "size": 46845,
+      "sha256": "0be556e5968fd4c64084d2ce10be06073fc7647ec1263e98a01036cfa6bced6c"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py": {
+      "role": "workflow-code-doc-test",
+      "size": 3235,
+      "sha256": "2f74e4b0162b3c0114250616774259fb7cd42c82b847055494ce1bf8606a5202"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_test_path_input_repair.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7450,
+      "sha256": "c312855754c5449e202850a45b8650a2f7465789d81a8644fccc240e539fa265"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py": {
+      "role": "workflow-code-doc-test",
+      "size": 3241,
+      "sha256": "723c08e089d3346aae5229c7cba7729cd32c9d7d9bc66d0932b83881468b652b"
+    },
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": {
+      "role": "workflow-code-doc-test",
+      "size": 44130,
+      "sha256": "4b9d62818dd520ac6c8c9f6866e90a3957466aa0b015b4c4b2b7f03498ca559f"
+    },
+    "scripts/vdd/compile_plan.py": {
+      "role": "workflow-code-doc-test",
+      "size": 23368,
+      "sha256": "d6698e72fe40027c10c224c8d7120d99443748240bd2a7845857186310acb9ba"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/references/session-operation.md": {
+      "role": "workflow-code-doc-test",
+      "size": 4544,
+      "sha256": "89a3e6995f095322702873b525ffebc8785019855a4b3e15c8853ae31098ff53"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py": {
+      "role": "workflow-code-doc-test",
+      "size": 13874,
+      "sha256": "a11b3212f1af1b2d980bd10751dc7c1a0d3dc771840eff3c8ee92d48f308fa79"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": {
+      "role": "workflow-code-doc-test",
+      "size": 13490,
+      "sha256": "a8a80833e470bfb34dcbc029809db66521012033f6e35e0cd57684884fb78638"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7196,
+      "sha256": "2e239ec8436ca290d4603ee89fb5e8d217356cac79f18a92468434bcaf8c913f"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py": {
+      "role": "workflow-code-doc-test",
+      "size": 47394,
+      "sha256": "13b40dfa724f1b833fc771f541511b606c8919b2b07766fbcba72fb71a3797f9"
+    },
+    ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py": {
+      "role": "workflow-code-doc-test",
+      "size": 15805,
+      "sha256": "254268d5529786d24b4f7ebe98796cc10311a865a3c6fedc0ef15ab30b95ee04"
+    },
+    ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md": {
+      "role": "workflow-code-doc-test",
+      "size": 2721,
+      "sha256": "7faab07879baeaad9e2abc3c6d8b346f91666ba62dabf05c91eb0e9191d5597e"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_progress.py": {
+      "role": "workflow-code-doc-test",
+      "size": 2661,
+      "sha256": "2401551770589b1cc923984d90f0f7a3c4103554eec6fb9cb3bf477e7e551e43"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py": {
+      "role": "workflow-code-doc-test",
+      "size": 19901,
+      "sha256": "5f9e2453ad77513dae6b54ad02f520e1eba0ed66c580a93986b70511a5c42766"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_semantic_worker_transport.py": {
+      "role": "workflow-code-doc-test",
+      "size": 8352,
+      "sha256": "db486a3c13196753fe307a962e1e885a26d444fe6cd10fe49d06a1b511cbb782"
+    },
+    "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md": {
+      "role": "workflow-code-doc-test",
+      "size": 5433,
+      "sha256": "0079b9a2b52dc1a7618f757042f0eebf71cdace0feaffa4707f6b83aa055f8e8"
+    },
+    "docs/workflows/caller-session-execution.md": {
+      "role": "workflow-code-doc-test",
+      "size": 7047,
+      "sha256": "e4dd9808a7bc9b73b5179b786a8fe8e63d1c79fc58b23c6f4e38a8af67002eea"
+    },
+    "scripts/python/_knowledge_locator_core.py": {
+      "role": "retained-shared-query-code",
+      "size": 27769,
+      "sha256": "38e5c976c0d2e0c8d303e8bcfda0808b314f5f68dffccaa29f615d48db2760dd"
+    },
+    "scripts/python/knowledge_locator.py": {
+      "role": "retained-shared-query-code",
+      "size": 1570,
+      "sha256": "3102b6d35aacbf5ebc58304bbfe1d594fc9c16880d93b7f44cc7106900c9721e"
+    },
+    "scripts/quick_dev/run.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7625,
+      "sha256": "ebc25a28d978c585db4d103a189f5d0e302f63f7814e31656ef622ae39e0bbb4"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py": {
+      "role": "workflow-code-doc-test",
+      "size": 10282,
+      "sha256": "5866d970d62871fef30cd9388483246c64528432698ff2fa5269f0ea6077c19e"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py": {
+      "role": "workflow-code-doc-test",
+      "size": 6021,
+      "sha256": "4212cc143faa7c78984009546130a9d8044422d3298a69900fb044be2d2c6f07"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py": {
+      "role": "workflow-code-doc-test",
+      "size": 13472,
+      "sha256": "bc24cae30e9d87a2f5ee9d1373f06386ed096c29a9d03d7d5092d0a4d2a65440"
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py": {
+      "role": "workflow-code-doc-test",
+      "size": 11286,
+      "sha256": "dadfedf51ee12e8f1004ff0bc2defbbe20e61da66525abba7eb73e80b947dd3b"
+    },
+    "knowledge/planning-query.toml": {
+      "role": "retained-shared-query-code",
+      "size": 172,
+      "sha256": "0f83722c40f107b7e6bb31c05bf3f905e0e14af90e45f0cbcd886b4c50476302"
+    },
+    "scripts/sc/tests/test_workflow_unit_budget.py": {
+      "role": "workflow-code-doc-test",
+      "size": 7902,
+      "sha256": "a20368ffb5a0c27f79a2101a5016dbe6e07d17fbc3f97d1cd42a65a732d58891"
+    },
+    "scripts/toolchain/knowledge_query/adapter.py": {
+      "role": "retained-shared-query-code",
+      "size": 38269,
+      "sha256": "aa7b4984a22024bbd409def1e46254bbe4ffbc9040c28084a9565d667940cc39"
+    },
+    "scripts/workflow_unit_budget.py": {
+      "role": "workflow-code-doc-test",
+      "size": 14836,
+      "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/acceptances.v1.json": {
+      "role": "native-final-plan",
+      "size": 1111331,
+      "sha256": "892a41b2d8a21749cd28696cfa1cad81209e64115e314e6988b772d94c9f3dc3"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S1/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 7435,
+      "sha256": "1680003ae4c86caf5e4c29ce392730d0741dbb0c45f57a8010e82abf356fc17e"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S10/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 23906,
+      "sha256": "f910833444dc1f006c7bb79b18df6ec67da52ed2c580691e64c99c2c3990a09d"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S11/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 11300,
+      "sha256": "d0adfbcdf76c2366f1d85ebbb1400d77444ed790513b1da1aac869a67fbacb4e"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S12/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 90910,
+      "sha256": "9ff247d3a33d0296055f97953f75152ff5ebd9e027a12651c881c230361b4a18"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S2/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 55692,
+      "sha256": "30a89481d2cb520b71811c2e355a8c6704ef92ad2121313461edc9a58497a223"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S3/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 7273,
+      "sha256": "c182a77785bde2b07f12b5624e95ac83bda72fa1eb234976f54fba198f9ec5ba"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S4/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 7242,
+      "sha256": "f34e49a1e28b2723eebfadb214197b0de5891b3b8947d496aaa5725c0a3c0827"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S5/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 5656,
+      "sha256": "14c106fe65bc20cdb9f3e025dc645630ef7e5179b94d32fc697de7804b672c87"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S6/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 7292,
+      "sha256": "97962806f34e95c23aad4cc0480df098e14d9feb0e58a885efa7a84f43882320"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S7/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 8273,
+      "sha256": "1252eada8447e82941c580dd9e0da5daa333fefd3634366bdfdf0d46baba4af2"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S8/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 7262,
+      "sha256": "579224a8e977751fa32d2ffbe1d8c4cf72240254b9301801eb0e879bc7ff0d9c"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/agent-context/S9/agent-context.json": {
+      "role": "native-final-plan",
+      "size": 9583,
+      "sha256": "ddafb5463d2d75242288dd7b3344ac8f6293a02db00032f5fa526263c37c1fba"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/atomic-recall-alignment.v1.json": {
+      "role": "native-final-plan",
+      "size": 5672,
+      "sha256": "d5e364bc4a0f0ddf80846042419f6060dedacf4558b8326ec4469600f85ccb33"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/compiler-state.v1.json": {
+      "role": "native-final-plan",
+      "size": 262,
+      "sha256": "2073190cbe9a21eea68d17f1b49c6b2312c8e7595b2b0cff54cfbc12725756b0"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/execution-record.md": {
+      "role": "native-final-plan",
+      "size": 61023,
+      "sha256": "bed748f8b833784b921768e20fdf02901ee69694154f017cf0a1767a068182e1"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/failure-intents.v1.json": {
+      "role": "native-final-plan",
+      "size": 185507,
+      "sha256": "33e49613855954517c169bc0c45560a3044c12048b9286c5433661859ce28df4"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/feasibility.v1.json": {
+      "role": "native-final-plan",
+      "size": 63,
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/final-plan-coverage.v1.json": {
+      "role": "native-final-plan",
+      "size": 189436,
+      "sha256": "e392f4942db158313ac77b8fb94ddb11a78ba89fa0b3694ef7a9383e037b040a"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/obligations.v1.json": {
+      "role": "native-final-plan",
+      "size": 743583,
+      "sha256": "790065c97f7c16370e8919c399d14b15d08d34598ef44f305c3f4f5a0b5c1742"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/pre-slice-coverage.v1.json": {
+      "role": "native-final-plan",
+      "size": 68959,
+      "sha256": "ff7c207467afa846f3746d21f62709e1abfaf124810679ab750835219e40d6f1"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/semantic-alignment.v1.json": {
+      "role": "native-final-plan",
+      "size": 5402,
+      "sha256": "68b2b9a8a3f533f20a2d9073880ac96e29ddb1d7c830d41be1111ebf8524f0aa"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/semantic-chain-audit.v1.json": {
+      "role": "native-final-plan",
+      "size": 368,
+      "sha256": "42fef784ac9371541bfecace6604a6f9343061e06de06c34be88004d010b8edd"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/semantic-plan-bundle.v1.json": {
+      "role": "native-final-plan",
+      "size": 16850753,
+      "sha256": "7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/slices.v1.json": {
+      "role": "native-final-plan",
+      "size": 593544,
+      "sha256": "f21d74c0e5ccb301b7225f7e1dee946965bb5e2842fe6b0796643ef30fe151bb"
+    },
+    "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/source-index.v1.json": {
+      "role": "native-final-plan",
+      "size": 1624837,
+      "sha256": "b1410bb27c8a53641e80d34c9219f22256ddbf7a0148d282504e1063ed92efbc"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/04-failure-protection.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 124713,
+      "sha256": "3d66c8213310bb752c14e1ef953dc83edf454c60772868968bb83a02f793643c"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/07-shared-design.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 221382,
+      "sha256": "4bcf37c586a07a5cfe255812c198a09b2be31e263a55d04a2865a75e35119eab"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/01-scope-and-reuse.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 141969,
+      "sha256": "2e9d61261e7c2158c9fea674f30c878affd630f798780dc58febe35abdb252b1"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/02-historical-boundaries.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 7308,
+      "sha256": "7917123c647983f45f4d63a2579eb8ef2f51a6e0d6911a1f9337c2d6cce754ab"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/06-scope-exclusions.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 66287,
+      "sha256": "100a55420d314544c7aacff98a2ee551f12b691d1338476878a56065b694a16e"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/05-acceptance-boundaries.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 39636,
+      "sha256": "f33bfdd9ebf68f32894ad4aa923580372ca2b27483180f6fb40664d8a65a1e7f"
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/03-behavior-contracts.md": {
+      "role": "current-scoped-compiler-input",
+      "size": 191236,
+      "sha256": "9786df8c552fed20ae8b837e3208c910a297cf288288448782d37458c9429630"
+    },
+    "logs/scoped-input-preparation-20261024-v3/input-source-index.json": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 1633637,
+      "sha256": "cd58fba54c0ebf406adb517b303d9ff466c4600d17cf9624a2cd2db4195e89ef"
+    },
+    "logs/scoped-input-preparation-20261024-v3/old-to-draft-map.json": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 1597585,
+      "sha256": "badbe7d42375b5eebf238a7e646969d9830e9123bb11624ab8659940438e03bd"
+    },
+    "logs/scoped-input-preparation-20261024-v3/dependencies.json": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 497045,
+      "sha256": "a872a8201ef15da8d52d55fbd0ed8e19a7e0ecec2297c2c17e9df6bcf816d2f1"
+    },
+    "logs/scoped-input-preparation-20261024-v3/source-role-bindings.json": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 9190,
+      "sha256": "eec289c57d2922401eac79e7a8b0a5ca44ecc5d4dd3c549cbb411d3ac2252623"
+    },
+    "logs/scoped-input-preparation-20261024-v3/DEPENDENCY-APPROVAL.md": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 2019,
+      "sha256": "77198a1de253cae4fdfcf6f4fcc545b441014076f50fe18eb084cd68269130eb"
+    },
+    "logs/scoped-input-preparation-20261024-v3/deployment-ledger.md": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 22897,
+      "sha256": "99344920094cc33b9ea549fc6a3aa9cd40e7df0829c554b93a4d33d7679ea0ad"
+    },
+    "logs/scoped-input-preparation-20261024-v3/README.md": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 4388,
+      "sha256": "6345ce944310ed9b59f78fc15a68b4c0d3c6b99993fd126dc9d81afb0c8b44c3"
+    },
+    "logs/scoped-input-preparation-20261024-v3/SCOPE-SOURCE.md": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 3027,
+      "sha256": "a3b5975b69b132a78c61c9a38b79b73d610b5dbdf4582af588caf536fe1df7a2"
+    },
+    "logs/scoped-input-preparation-20261024-v3/static-verification.json": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 2526,
+      "sha256": "c34082a09ff2134935dd751b88e5f4374cbb2aca520341901f5c6375901f6249"
+    },
+    "logs/scoped-input-preparation-20261024-v3/original-row-quotes.json": {
+      "role": "scope-mapping-and-source-identity",
+      "size": 39639,
+      "sha256": "b4b42ce3628292892c565574d3693000be85245a33a22aa5dfa6b7eab83f55dc"
+    },
+    "logs/requirements-scope-classification-20261024/classification.json": {
+      "role": "scope-change-and-obligation-trace",
+      "size": 1711772,
+      "sha256": "dc8fb75f265cbb3790037e698be510f0044b392447f904100bfaf7b7add0d9ee"
+    },
+    "logs/requirements-scope-revision-proposal-20261024/PROPOSAL.md": {
+      "role": "scope-change-and-obligation-trace",
+      "size": 15243,
+      "sha256": "1df744c553bd74bfe54da6089efe0399e13fdf12a6d8def46c2256c79b11d0a2"
+    },
+    "logs/scope-withdrawal-step1-20261024/static-verification.json": {
+      "role": "scope-change-and-obligation-trace",
+      "size": 3646,
+      "sha256": "bfac123f4153d34d280f2fd6d746d37f7e85cbce09a471eb78dbfca9be45326a"
+    },
+    "logs/scope-withdrawal-step1-20261024/step-delta.patch": {
+      "role": "scope-change-and-obligation-trace",
+      "size": 10101,
+      "sha256": "1863a7001f1bba1f82ec2f1274cb27e40d8d75fa91e584c868ae4e00a83b5998"
+    },
+    "logs/vdd-scoped-compile-20261024-r3/authoring/v1-source-recall-caller-assessment.json": {
+      "role": "scope-change-and-obligation-trace",
+      "size": 817068,
+      "sha256": "ff06b1c02b1a14e83ace6897136993eb54e10b46582e5571a0a3d59b7b29953e"
+    },
+    "_bmad-output/planning-artifacts/prds/prd-bmad-vdd-knowledge-query-2026-10-22/prd.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 20583,
+      "sha256": "d19fc0995ca6a486038dad19581252289c6e152c69950cc96e39008f3736da75"
+    },
+    "_bmad-output/planning-artifacts/prds/prd-bmad-vdd-knowledge-query-2026-10-22/addendum.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 6100,
+      "sha256": "3edca061b602888df6d9408a2704b49599e1fda9e44cf2ed023d304b4260c248"
+    },
+    "_bmad-output/planning-artifacts/prds/prd-bmad-vdd-knowledge-query-2026-10-22/sources/bmad-vdd-knowledge-query-requirements.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 22056,
+      "sha256": "ce45693489d02227442c04c9b4e7220121a897d81dab03abc7867e6ceff11950"
+    },
+    "_bmad-output/specs/spec-bmad-vdd-knowledge-query/acceptance.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 3240,
+      "sha256": "4abb411b00cb57f5ce81cbfc04af53ef4bccd69f541b1135684c4f43c1a192f7"
+    },
+    "_bmad-output/specs/spec-bmad-vdd-knowledge-query/behavior-contracts.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 10780,
+      "sha256": "73d0b67ce697ac7fef2595ded5f6490de726e1c788e5bd4eae00d3156487db6e"
+    },
+    "_bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 6668,
+      "sha256": "b2a9d5f3682440891586778a3eca3c7d542c57857c84a4e49438708a7cde7d83"
+    },
+    "_bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 6406,
+      "sha256": "f3bbcd5665f3d90ac08c0b40ec2c6b527a41187ad8a74662e225b37c82885faa"
+    },
+    "_bmad-output/specs/spec-bmad-vdd-knowledge-query/scope-and-decisions.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 6324,
+      "sha256": "540976c163f2101d663d52f0d1b721e029c2ae2cebf0ed93443f90ecf9141220"
+    },
+    "_bmad-output/specs/canonical-spec-package-selections/sha256-373d280b03a68904e97306a7b82b797a88eff56eeb3d7989f6b28bdf6ef117c7.json": {
+      "role": "historical-delivered-input-provenance",
+      "size": 1332,
+      "sha256": "30776e5c1b9b44debff7c64350257c0ec7f60bb61b95a2a89a60731618334278"
+    },
+    "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-bmad-vdd-knowledge-query.json": {
+      "role": "historical-delivered-input-provenance",
+      "size": 193,
+      "sha256": "9fbad3b5eec85f3fcd6ba1615e4e8312481287e9512378fab2af8ea92734ac15"
+    },
+    "logs/bmad-wrappers/architecture-zero-match-2026-10-22/native/logs/bmad-wrappers/architecture-knowledge-query-2026-10-22/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md": {
+      "role": "historical-delivered-input-provenance",
+      "size": 19169,
+      "sha256": "514d372320affd73a0c7b5e645aeb109b9af309bd56d2935414a69bdedaf62f3"
+    },
+    "logs/workflow-unit-budget-20261024/REPORT.md": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 7996,
+      "sha256": "785402156655c6bebba410df7d7b8803fe0f716f7d01947c862a5321f89dd7c3"
+    },
+    "logs/workflow-unit-budget-20261024/changed-file-identities.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 4606,
+      "sha256": "b8d4facc709c14d2ce01d1776c2acd360f24ee2d81ef7748594c349bc711d4f8"
+    },
+    "logs/workflow-unit-budget-20261024/unit-signal-final.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 1857,
+      "sha256": "51ad11fd6eb359d276e737583c39e236c9b0aba7f43ed1b9f947569ec2c32b06"
+    },
+    "logs/workflow-unit-budget-20261024/reuse-final.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 98,
+      "sha256": "791bf979183d4a6a19b5c347f6fa39beff4548b4cdbc5caa693c7f31b4933717"
+    },
+    "logs/workflow-unit-budget-20261024/vdd-v2.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 99,
+      "sha256": "aef4a50312e70d0cea3593c16d87830bca01bfa40426feacc302b23fd4676723"
+    },
+    "logs/workflow-unit-budget-20261024/quickdev-v2.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 8233,
+      "sha256": "3441b578cc64bdb0c886e32514639e34bde732e04e656de8624343d31fcf7988"
+    },
+    "logs/workflow-unit-budget-20261024/skill-package.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 104,
+      "sha256": "60be698b77c0822154040cbbf795833f67abcf805655c56c13b1516dc624dd84"
+    },
+    "logs/vdd-source-resume-repair-20261024/REPORT.md": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 9705,
+      "sha256": "7a17e8d2e155f4a7b3b9b06c3bea7b53e6eadc0eed1945f10253ce5359d90c26"
+    },
+    "logs/vdd-source-resume-repair-20261024/changed-files.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 1840,
+      "sha256": "99e3baa632858a882caf10ffb8bd9b84406e23c858682a78e209d150a190ff4f"
+    },
+    "logs/vdd-source-resume-repair-20261024/public-final.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 99,
+      "sha256": "e74caab7bd745394100ea1c6c110d3b5aaca8d4feea482bf16c0dbb1177c20d6"
+    },
+    "logs/vdd-source-resume-repair-20261024/regression.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 99,
+      "sha256": "4ed21e3d31fd8e58973cdc2402913bd0e1cedf572ee37f4e04f476433644de71"
+    },
+    "logs/vdd-source-resume-repair-20261024/package.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 104,
+      "sha256": "5a38457e4035f5f61e5d8a36377a9249f1f8077c6cc3548f52aec337b9796ccf"
+    },
+    "logs/vdd-source-resume-repair-20261024/budget.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 1857,
+      "sha256": "949cce037d8cb1c5bbc478938827528e1e72642c342cb11353663a8cbeacfca6"
+    },
+    "logs/vdd-source-resume-repair-20261024/skill-validation.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 286,
+      "sha256": "b3bc1303d2f2ca051c4612f53d11c3cee784744f42262301fd3b6c52b0f5b74c"
+    },
+    "logs/vdd-v3-draft-binding-fix-20261025/REPORT.md": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 4639,
+      "sha256": "ebcbf7125be91018f89ac156b089d6ad1b239021f598a08d356a309fa3837360"
+    },
+    "logs/vdd-v3-draft-binding-fix-20261025/v3-caller-candidates.corrected.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 3801390,
+      "sha256": "47cbf5528d6b85617d9198f0f9e4b954fe3a759935419dabb17ff6e2bfd7ed8e"
+    },
+    "logs/vdd-v3-draft-binding-fix-20261025/binding-only.diff": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 41151,
+      "sha256": "d301272a1678723bf3e5d72d1b9de258fc02c983e5c6f35be61af0697434b1a9"
+    },
+    "logs/vdd-v3-draft-binding-fix-20261025/validation-results.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 3956,
+      "sha256": "f3be3339cb90f284724daf88c6d76010188f6da65fc7cc148d2a84a20da596ff"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/REPORT.md": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 7398,
+      "sha256": "1456c831af26390c059d7faf67cc59f795a933b2594a9f09fc8ef445b23f498c"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/changed-files.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 1879,
+      "sha256": "00dfd418ad53f23d06539cc6036aae5d3cd0d9c672a0db044917e3cd8829dbf0"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/pause-final-v2.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 100,
+      "sha256": "760bce24b9025fbec59f5d201c1cd6695319c40055655ade83e8e7ba58b3d7e4"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/compatibility-final.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 99,
+      "sha256": "170f98b59ec9a01b3288a0791adc36fcf9378704d3db00f27e9b509fb78bcdd8"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/package.log": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 121,
+      "sha256": "9ad41f8fec288fb6fa0dc66d7b000c7578ae976319c9b1a6ccd2393734232874"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/skill-validation.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 286,
+      "sha256": "b3bc1303d2f2ca051c4612f53d11c3cee784744f42262301fd3b6c52b0f5b74c"
+    },
+    "logs/vdd-v3-pause-boundary-20261025/fixture-request-counts.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 824,
+      "sha256": "bb137fbe8d9724df314daf4981a6174c039698adffa76ec89e72dcf218fb2580"
+    },
+    "logs/vdd-scoped-compile-20261025-v3-pause/REPORT.md": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 4930,
+      "sha256": "1dafc5011b3900fcdac2623893caa1dddca9ad24bd8282954883179b950d09e1"
+    },
+    "logs/vdd-scoped-compile-20261025-v3-pause/native-result.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 791,
+      "sha256": "51ea14ca0ea7ca4569a28c5471c3d3ce68d890298eea524da9081f7d9d28c980"
+    },
+    "logs/vdd-scoped-compile-20261025-v3-pause/run-summary.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 1331,
+      "sha256": "d0a9b62ceb3a3d8f504115d9931a173c891384c500a0b83698b25de0b9d946e5"
+    },
+    "logs/vdd-scoped-compile-20261025-v3-pause/process-exit.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 68,
+      "sha256": "d18d2593de223c6cbad5e78229595ee1f9c23f14721109ec8d0b0a60cfc60ada"
+    },
+    "logs/vdd-scoped-compile-20261025-v3-pause/current-progress.jsonl": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 60926,
+      "sha256": "ac39e49a96bcc32a0487c6b898fa7b094d4be6d33f8330f963eeab86ef237aea"
+    },
+    "logs/vdd-scoped-compile-20261025-v3-pause/preservation-final.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 5000,
+      "sha256": "eb756d17277d6c1b09235d06dee3a1cb0161cc48faac2a9c8e6f0422470582eb"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/REPORT.md": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 6937,
+      "sha256": "4721f62e8a1e0efc6eb5039a4f04b1bc5ac3b162936101a3e7abe47a19f9ff48"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/native-result.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 1228,
+      "sha256": "0028483e3803b909f5a3599c99a651f77124c6c4bf9df061a22b395438bc9acf"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/run-summary.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 2039,
+      "sha256": "4003567611be23d6de881df932c86abe94c9d9b327d0c03643307ade042ed6fd"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/process-exit.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 68,
+      "sha256": "e983241ea240b2e8ef1cc3e659a63ae7d8d59d062c1346dbd25eb5beb88cdbb9"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/current-progress.jsonl": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 50879,
+      "sha256": "fe0b138a9c3cc8830961f613ab9923ca879aa9519a8db62e247313f6aa040f0d"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/preservation-final.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 27405,
+      "sha256": "f6391ae4f21c9066e88385458059dfb30d573460a419f3cf9787e35d32a325e7"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/formal-artifacts.json": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 3679,
+      "sha256": "2947ed456905cb5424c661197f992b3702df2be05d7bda8add5c6aea6c780b65"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/v4-decisions.jsonl": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 234644,
+      "sha256": "cd3e9782dd02cae0909b927f1788830285299134c81a73c94c56e6d21b351b63"
+    },
+    "logs/vdd-scoped-compile-20261025-after-v3/review_alignment_requests.py": {
+      "role": "workflow-validation-or-native-receipt",
+      "size": 6952,
+      "sha256": "e0fe90e33ba26f1fa5d248e67fb9bd1f1747865526e70bfe4c7db092f546e721"
+    }
+  },
+  "inert_test_snapshots": {
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": {
+      "archive_path": "review-materials/vdd-quick-dev-scoped-plan-20261025/candidate-test-snapshots/scripts/toolchain/knowledge_query/tests/test_planning_query.py.txt",
+      "sha256": "c5d064136d6df802ec78e4db2120b85985ae506662fdee4d92367b901512d8f6",
+      "bytes": 274625,
+      "role": "unreconciled-test-authoring-input-not-executable",
+      "reason": "Mixed historical BMAD-positive/query or guard scenarios require scope reconciliation before the new plan can execute. Preserve exact review bytes; do not reactivate these as runnable tests in this publication."
+    },
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py": {
+      "archive_path": "review-materials/vdd-quick-dev-scoped-plan-20261025/candidate-test-snapshots/tests/toolchain/knowledge_query/test_planning_boundaries.py.txt",
+      "sha256": "e6c8e079d89396590d0282ba90789dd993d27db902650f1164f61baffdb14025",
+      "bytes": 53835,
+      "role": "unreconciled-test-authoring-input-not-executable",
+      "reason": "Mixed historical BMAD-positive/query or guard scenarios require scope reconciliation before the new plan can execute. Preserve exact review bytes; do not reactivate these as runnable tests in this publication."
+    }
+  },
+  "excluded_tracked_worktree_changes": [
+    "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json"
+  ],
+  "excluded_parent_logs_from_current_tree": [
+    "logs/cross-slice-evidence-reuse-delivered-inputs/REVIEW.md",
+    "logs/cross-slice-evidence-reuse/legacy-loop-diagnostic.txt"
+  ],
+  "scope_counts": {
+    "retained": 246,
+    "reduced": 59,
+    "deployment_only": 25,
+    "current_obligations": 305,
+    "slices": 12
+  },
+  "canonical_plan_sha256": "sha256:7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7",
+  "secret_scan": {
+    "rule_findings": 0,
+    "method": "Private key, GitHub/OpenAI token, AWS ID and credential-bearing URL patterns over selected bytes; no full DLP guarantee."
+  },
+  "limits": [
+    "Implementation and final Acceptance are incomplete.",
+    "No independent A/B for the new scoped plan has run.",
+    "Two unreconciled mixed business-test originals are included only as inert review snapshots, not active tests.",
+    "Raw host transcripts, caches, historical runs and unrelated logs stay local.",
+    "No compilation or model tests were rerun for publication."
+  ],
+  "authorizes": []
+}

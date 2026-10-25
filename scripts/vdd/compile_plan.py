@@ -11,6 +11,12 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+if __name__ == "__main__":
+    from workflow_unit_budget import public_entry
+    supervised_exit = public_entry("vdd", ROOT, sys.argv)
+    if supervised_exit is not None:
+        raise SystemExit(supervised_exit)
 SCRIPTS = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
@@ -46,6 +52,10 @@ def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--unit-timeout-seconds", type=int, default=1800,
+                        help="Public supervisor total budget per independent unit (not whole compile)")
+    parser.add_argument("--idle-timeout-seconds", type=int, default=600,
+                        help="Public supervisor genuine-inactivity budget per unit")
     parser.add_argument("--requirements", type=Path, required=True)
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--profile", choices=("standard", "resumable", "self-hosted"), default="standard")
@@ -65,7 +75,11 @@ def main() -> int:
                         help="Split one explicitly reviewed source-bound V1 obligation into two complete contracts")
     parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
     parser.add_argument("--recommendation-only", action="store_true")
+    parser.add_argument("--stop-after", choices=("v3",),
+                        help="Pause normally after V3, V3A and execution preflight; never enter V4")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
+    parser.add_argument("--resume-worker-session", type=Path,
+                        help="Explicit original caller-session transcript for validated legacy V1 cache replay")
     parser.add_argument(
         "--v1-reuse-from-git-ref",
         help="Explicit Git predecessor whose unchanged requirement-anchor text may reuse V1 cache entries",
@@ -91,6 +105,14 @@ def main() -> int:
     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
                         help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
     args = parser.parse_args()
+    if args.stop_after and any((args.worker_cache, args.recommendation_only,
+            args.v3_contract_repair, args.repair_published_v3_from,
+            args.repair_quick_dev_handoff_from)):
+        parser.error("--stop-after requires ordinary compilation/resume, without fixture or contract repair modes")
+    if args.resume_worker_session and (not args.resume_from or args.worker_cache or args.recommendation_only):
+        parser.error("--resume-worker-session requires normal --resume-from without fixture/recommendation mode")
+    if args.resume_worker_session and (args.repair_published_v3_from or args.repair_quick_dev_handoff_from or args.v3_contract_repair):
+        parser.error("--resume-worker-session is limited to ordinary failed/unpublished compilation resume")
     if args.repair_published_v3_from and not args.v3_contract_repair:
         parser.error("--repair-published-v3-from requires --v3-contract-repair")
     if args.published_v1_gap_extension and not args.repair_published_v3_from:
@@ -281,17 +303,49 @@ def main() -> int:
             raise SystemExit("worker cache must be a JSON object")
         cache = value
     try:
-        result = compile_plan(
-            requirements=args.requirements,
-            out_dir=args.out_dir,
-            companions=args.companion,
-            profile=args.profile,
-            worker_cache=cache,
-            recommendation_only=args.recommendation_only,
-            resume_from=args.resume_from,
-            published_v3_repair=published is not None,
-            candidate_v3_repair=args.v3_contract_repair is not None,
-        )
+        # ADR-0048/AD-5: read-only advice precedes semantic scope, independent of governance.
+        # Recommendation-only retains its existing side-effect-free contract.
+        previous_worker = semantic_compiler.invoke_worker
+        import semantic_resume_cache
+        semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=args.resume_worker_session)
+        if not args.recommendation_only and not args.worker_cache:
+            sys.path.insert(0, str(ROOT))
+            from scripts.toolchain.knowledge_query import adapter
+            inputs = [p.resolve().relative_to(ROOT.resolve()).as_posix()
+                      for p in [args.requirements, *(args.companion or [])]]
+            prepared_query = adapter.prepare_consumption({
+                "stage": "vdd-repair" if args.resume_from or args.v3_contract_repair or published else "vdd-create",
+                "operation": "repair" if args.resume_from or args.v3_contract_repair or published else "create",
+                "task_id": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix(),
+                "inputs": inputs, "scope": inputs,
+                "query": "current source callers tests contracts " + " ".join(inputs),
+                "record_path": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix() + "/execution-record.md"}, ROOT)
+            if prepared_query["status"] == "blocked":
+                raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
+            def with_planning_context(**kwargs):
+                kwargs["payload"] = {**kwargs["payload"], "planning_source_observations": prepared_query}
+                kwargs["prompt"] += adapter.consumption_instructions(prepared_query)
+                return previous_worker(**kwargs)
+            semantic_compiler.invoke_worker = with_planning_context
+        import semantic_v3_checkpoint
+        with semantic_v3_checkpoint.session(
+            root=ROOT, out_dir=args.out_dir,
+            enabled=bool((args.stop_after or args.resume_from) and not args.worker_cache
+                         and not published and not args.v3_contract_repair),
+            resume=bool(args.resume_from),
+        ):
+            result = compile_plan(
+                requirements=args.requirements,
+                out_dir=args.out_dir,
+                companions=args.companion,
+                profile=args.profile,
+                worker_cache=cache,
+                recommendation_only=args.recommendation_only,
+                resume_from=args.resume_from,
+                stop_after=args.stop_after,
+                published_v3_repair=published is not None,
+                candidate_v3_repair=args.v3_contract_repair is not None,
+            )
         if published is not None and result.get("status") == "plan-ready":
             current = json.loads((args.out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
             candidate_repair.check_unaffected_published_semantics(
@@ -315,11 +369,14 @@ def main() -> int:
             from semantic_compiler_authority import _archive_repair_publications
             _archive_repair_publications(args.out_dir)
         result = {"status": "repair-vdd", "reason": str(exc)}
+    semantic_compiler.invoke_worker = previous_worker
+    result["worker_cache_reuse"] = semantic_resume_cache.statistics()
+    semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=None)
     if args.result_json:
         args.result_json.parent.mkdir(parents=True, exist_ok=True)
         args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result, sort_keys=True))
-    return result.get("transport_exit_code", 0 if result.get("status") in {"plan-ready", "recommendation-only"} else 1)
+    return result.get("transport_exit_code", 0 if result.get("status") in {"plan-ready", "recommendation-only", "paused"} else 1)
 
 
 if __name__ == "__main__":

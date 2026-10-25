@@ -277,7 +277,10 @@ def compile_plan(
     resume_from: str | None = None,
     published_v3_repair: bool = False,
     candidate_v3_repair: bool = False,
+    stop_after: str | None = None,
 ) -> dict[str, Any]:
+    if stop_after not in {None, "v3"}:
+        raise ValueError("unsupported VDD pause boundary")
     if not (published_v3_repair or candidate_v3_repair):
         import semantic_v3_contract_repair as published_repair
         published_repair.reset_published_overlays()
@@ -305,6 +308,8 @@ def compile_plan(
         )
         if completed is not None and completed.get("status") != "plan-ready":
             return completed
+        if completed is not None and stop_after == "v3":
+            raise ValueError("V3 pause requires unfinished output; completed plans cannot be relabeled paused")
         if completed is not None and _published_recall_matches_obligations(out_dir):
             from quick_dev_handoff import handoff_findings
             handoff_errors = handoff_findings(json.loads((out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8")), workspace=root)
@@ -341,6 +346,9 @@ def compile_plan(
         _attempt(out_dir, "v2", result)
         return result
 
+    import semantic_v3_checkpoint
+    v3_reused = semantic_v3_checkpoint.prepare(
+        source_index=source_index, obligations=obligations, profile=profile)
     acceptances, failures, _hints = stage_call(out_dir, "V3", gate.sc.compile_acceptances,
         root=root, out_dir=out_dir, obligations=obligations, worker_cache=worker_cache
     )
@@ -358,6 +366,15 @@ def compile_plan(
                   "repair_class": "execution-contract", **execution_check}
         _attempt(out_dir, "v3-execution-preflight", result)
         return result
+
+    if stop_after == "v3":
+        checkpoint = semantic_v3_checkpoint.save()
+        return {"status": "paused", "stage": "V3", "next_stage": "V4-atomic-recall",
+                "completed_checks": ["V3", "V3A", "V3-execution-preflight"],
+                "source_index_sha256": source_index["sha256"],
+                "obligation_count": len(obligations), "acceptance_count": len(acceptances),
+                "v3_checkpoint_reused": v3_reused, "checkpoint": checkpoint,
+                "authorizes": []}
 
     recall = stage_call(out_dir, "V4-atomic-recall", gate.atomic_recall_alignment,
         root=root,
@@ -410,6 +427,7 @@ def compile_plan(
             recommendation_only=False,
         )
     )
+    result["v3_checkpoint_reused"] = v3_reused
     result["execution_preflight"] = execution_check
     result["atomic_quality_metrics"] = recall["metrics"]
     result["atomic_recall_alignment"] = recall_binding

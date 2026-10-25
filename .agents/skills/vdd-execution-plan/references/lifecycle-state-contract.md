@@ -21,3 +21,12 @@ RED/GREEN/REFACTOR plus terminal, present uses regression plus terminal. This
 runtime projection retains every current obligation and is re-derived at Q7/Q8;
 VDD never writes runtime disposition, observation or success into its plan.
 Bundles without the capability keep the original mandatory four-stage path.
+
+## Compiler pause is not a lifecycle transition
+
+`--stop-after v3` returns `paused` only after V3, V3A and execution preflight.
+The unfinished plan remains draft; no compiler-state or plan-ready publication
+is created by this boundary. Its native candidate checkpoint carries
+`authorizes=[]`. Resume revalidates current sources, candidates and preflights
+before continuing V4. Normal pause has exit 0; failure and cancellation retain
+their failure status. This does not add a lifecycle state or imply completion.

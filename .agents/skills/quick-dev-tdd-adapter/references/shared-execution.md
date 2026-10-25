@@ -18,6 +18,13 @@ excluded from semantic hashing; other contract fields remain conservative.
 A Git commit alone is not an execution input. Changing an implementation or
 helper without changing the slice invalidates reuse.
 
+The unit supervisor's three private routing variables (event sink, total and
+inactivity limits) are removed from the actual controlled test subprocess
+environment and from that same environment fingerprint. The tested process
+cannot read them. Other inherited environment remains content-bound. The unit
+supervisor implementation itself is included in engine/reentry hashes; this is
+not permission to ignore application variables or relabel old originals.
+
 Dependency discovery includes tracked and untracked/ignored repository files,
 with bounded exclusions for logs, execution-plans, Python caches and virtual
 environments. Explicit declared paths inside excluded trees are always added.

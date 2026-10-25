@@ -78,6 +78,21 @@ def test_git_only_commit_change_reuses(tmp_path, monkeypatch):
     assert second['process_attempts']==0 and len(calls)==1
 
 
+def test_private_supervisor_routing_does_not_invalidate_test_environment(tmp_path, monkeypatch):
+    from workflow_unit_budget import EVENT_ENV, TOTAL_ENV, IDLE_ENV
+    semantic, bundle, _ = setup(tmp_path)
+    (tmp_path / 'logs').mkdir(exist_ok=True)
+    calls = measured(monkeypatch)
+    monkeypatch.setenv(EVENT_ENV, str(tmp_path / 'logs' / 'events-a.jsonl'))
+    monkeypatch.setenv(TOTAL_ENV, '1800')
+    monkeypatch.setenv(IDLE_ENV, '600')
+    first = run(tmp_path, semantic, bundle, descriptor(bundle))
+    monkeypatch.setenv(EVENT_ENV, str(tmp_path / 'logs' / 'events-b.jsonl'))
+    second = run(tmp_path, semantic, bundle, descriptor(bundle, 'S2', 'terminal', 'run2', 'b'))
+    assert second['process_attempts'] == 0 and len(calls) == 1
+    assert first['case_report'] == second['case_report']
+
+
 @pytest.mark.parametrize('kind',['code','dependency','test','contract','environment','windows'])
 def test_content_or_environment_change_invalidates(tmp_path,monkeypatch,kind):
     semantic,bundle,_=setup(tmp_path); calls=measured(monkeypatch)

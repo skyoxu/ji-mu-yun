@@ -5,6 +5,9 @@ import os
 from pathlib import Path
 import time
 import uuid
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
+from workflow_unit_budget import unit, worker_input
 
 
 def emit(out_dir, stage, event, call_id, **fields):
@@ -31,6 +34,16 @@ def worker_call(function, *, progress_dir, progress_stage, **kwargs):
 
 
 def _call(out_dir, stage, kind, function, args, kwargs, details):
+    key = [str(Path(out_dir).resolve()), kind, stage]
+    if kind == "worker":
+        # Native content-addressed output names are stable across transport retries.
+        key.append(worker_input(kwargs.get("prompt", ""),
+                                Path(str(details.get("output_last_message", ""))).name))
+    with unit(key, f"VDD {kind} {stage}", container=kind == "stage"):
+        return _call_observed(out_dir, stage, kind, function, args, kwargs, details)
+
+
+def _call_observed(out_dir, stage, kind, function, args, kwargs, details):
     call_id = uuid.uuid4().hex
     started = time.monotonic()
     emit(out_dir, stage, kind + "-started", call_id, **details)

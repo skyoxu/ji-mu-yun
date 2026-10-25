@@ -10,6 +10,13 @@ Use the versioned change-impact resolver for Q0/Q4/Q7/Q8/recovery. Selector/fixt
 
 ## Stage Reentry And Failure History
 
+Public-entry unit-budget diagnostics retain cumulative costs across explicit
+reentry of the same content-bound unit. Changing a request ID or starting a
+worker again does not renew that allowance. Completed native evidence remains
+subject to the existing checks below and is reused without starting a unit.
+After unit timeout/cancel, retain the partial run and budget history; use the
+normal explicit recovery path, never update old receipts or success hashes.
+
 Current stages check their explicit run-local evidence before launching tests.
 A completed stage with matching plan, descriptor, profile, runtime code and
 candidate/target/fixture bytes returns its original result, including a recorded

@@ -1,0 +1,170 @@
+--- before/.agents/skills/jimuyun-architecture/scripts/invoke.py
++++ after/.agents/skills/jimuyun-architecture/scripts/invoke.py
+@@ -34,21 +34,6 @@
+         target = contained(native, relative)
+         target.parent.mkdir(parents=True, exist_ok=True)
+         target.write_bytes(path.read_bytes())
+-    from scripts.toolchain.knowledge_query import adapter
+-    prepared_query = adapter.prepare_consumption({
+-        "stage": "architecture", "operation": "create" if intent == "create" else "update",
+-        "task_id": "architecture:" + "|".join(inputs), "inputs": inputs,
+-        "scope": inputs, "query": "Accepted ADR owner interface current implementation " + " ".join(inputs),
+-        "record_path": run + "/execution-record.md"}, root)
+-    if prepared_query["status"] == "blocked":
+-        raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
+-    for row in prepared_query.get("query_result", {}).get("read_set", []):
+-        relative = row["path"]
+-        if relative.startswith((".agents/", "_bmad/")):
+-            continue  # Native resources must never be replaced by source context.
+-        target = contained(native, relative)
+-        target.parent.mkdir(parents=True, exist_ok=True)
+-        target.write_bytes(contained(root, relative).read_bytes())
+     policy = Path(__file__).resolve().parents[1] / "references/reviewer-lifecycle.md"
+     workspace = native / "_bmad-output/architecture" if intent == "create" else contained(native, existing[0]).parent
+     instructions = policy.read_text(encoding="utf-8") + (
+@@ -62,7 +47,6 @@
+         "Load native references from the verified skill-root below. The lifecycle policy above is effective\n"
+         "from invocation, including every delegated reviewer. Do not invoke Bootstrap or Acceptance.\n"
+     )
+-    instructions += adapter.consumption_instructions(prepared_query)
+     prompt = invocation(root, folder, native, "bmad-architecture", instructions)
+     return {"ok": True, "invocation": prompt.relative_to(root).as_posix(), "doc_workspace": workspace.relative_to(root).as_posix(), "authorizes": []}
+ 
+--- before/.agents/skills/jimuyun-spec/scripts/bridge.py
++++ after/.agents/skills/jimuyun-spec/scripts/bridge.py
+@@ -164,31 +164,6 @@
+               "Read the input role map and snapshots in ../state.json relative to this project; use those paths as input.\n"
+               "Do not publish selection records or invoke VDD, Quick Dev or Acceptance. Return the native headless result.\n")
+     policy += "Follow native headless behavior: skip the interactive Story Breakdown; no stories feature is added by this wrapper.\n"
+-    from scripts.toolchain.knowledge_query import adapter
+-    provenance = [path for path, role in role_map.items() if role == "provenance"]
+-    memory = contained(root, str(PurePosixPath(spec).parent / ".memlog.md"))
+-    prior = memory.read_text(encoding="utf-8") if memory.is_file() else ""
+-    # Existing source-bound decisions are inherited, not promoted into new roles.
+-    inherited = bool(provenance) and all(any(path in line and snapshots[path] in line
+-        for line in prior.splitlines()) for path in provenance)
+-    if inherited:
+-        policy += "\nReuse inherited source decisions: current provenance bytes match recorded path/hash; no factual input change, so no supplemental query. Preserve open questions and exclusions.\n"
+-        # ADR-0048 / AD-5: forward the verified identity, not a new adoption claim.
+-        policy += "Verified inherited provenance: " + json.dumps(
+-            [{"path": path, "sha256": snapshots[path]} for path in provenance],
+-            ensure_ascii=False, sort_keys=True) + "\n"
+-    elif selected:
+-        prepared_query = adapter.prepare_consumption({
+-            "stage": "spec", "operation": "update" if original else "create",
+-            "task_id": identity, "inputs": list(role_map) or [spec],
+-            "scope": list(role_map) or [spec], "query": "current basis " + identity,
+-            "supplement_reason": "missing_or_changed_source_basis",
+-            "record_path": run + "/execution-record.md"}, root)
+-        if prepared_query["status"] == "blocked":
+-            raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
+-        policy += adapter.consumption_instructions(prepared_query)
+-    else:
+-        policy += "\nNo repository source input is available: retain necessary factual questions before decisions.\n"
+     prompt = invocation(root, folder, native, "bmad-spec", policy)
+     return {"ok": True, "invocation": prompt.relative_to(root).as_posix(), "native_spec": native_spec.relative_to(root).as_posix(), "authorizes": []}
+ 
+--- before/_bmad/custom/bmad-prd.toml
++++ after/_bmad/custom/bmad-prd.toml
+@@ -1,3 +0,0 @@
+-# ADR-0048 / AD-5. Team customization; official BMAD stays unchanged.
+-[workflow]
+-activation_steps_append = ["Before repository-fact scope decisions, use the repository prepare-consumption interface: python3 -B scripts/toolchain/knowledge_query/adapter.py prepare-consumption --repository-root <actual-project-root>. Supply UTF-8 JSON on stdin: stage=prd, operation=create or update, task_id=stable PRD slug, mode=headless or interactive, inputs=explicit repository-relative source paths, scope=those paths, query=targeted factual question, record_path=the existing PRD .memlog.md path. If task identity or inputs are not known at activation, defer this command until they are known and before decisions; do not claim a query ran. Initialize the native memlog through its official command before using it as a record. Read returned verified sources and their path/hash/read_identity. Repeated unchanged triggers use the same task and record. Stop blocked/cancelled/budget_exhausted. For unavailable/degraded/no_match independently check direct sources and retain unresolved facts. Record native accepted/rejected decisions with reason and actual use, topic/consumer/raw status and source identity; distinguish implementation, historical planning, exclusions, new scope and unverified claims. Never infer adoption from adapter output or publish knowledge. Pure editorial updates may reuse verified source records with an explicit reason."]
+--- before/knowledge/contracts/knowledge-consumer-projections.v1.schema.json
++++ after/knowledge/contracts/knowledge-consumer-projections.v1.schema.json
+@@ -17,7 +17,7 @@
+         "additionalProperties": false,
+         "required": ["consumer", "eligible_module_ids", "required_modules", "optional_modules", "max_candidates", "freeze_point"],
+         "properties": {
+-          "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance", "bmad-planning"]},
++          "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance"]},
+           "eligible_module_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+           "required_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+           "optional_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+--- before/knowledge/contracts/knowledge-locator-request.v1.schema.json
++++ after/knowledge/contracts/knowledge-locator-request.v1.schema.json
+@@ -7,7 +7,7 @@
+   "properties": {
+     "schema_version": {"const": "jimuyun.knowledge-locator-request.v1"},
+     "request_id": {"type": "string", "minLength": 1},
+-    "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance", "bmad-planning"]},
++    "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance"]},
+     "query": {"type": "string", "minLength": 1},
+     "snapshot": {"type": "object", "additionalProperties": false, "required": ["ref", "commit"], "properties": {"ref": {"const": "refs/heads/main"}, "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}},
+     "policy_revision": {"type": "string", "minLength": 1}
+--- before/knowledge/policies/consumer-policies.v2.json
++++ after/knowledge/policies/consumer-policies.v2.json
+@@ -156,47 +156,6 @@
+       "max_candidates": 32,
+       "minimum_confidence": "medium",
+       "freeze_point": "acceptance-run-input"
+-    },
+-    {
+-      "consumer": "bmad-planning",
+-      "domains": [
+-        "toolchain",
+-        "phase"
+-      ],
+-      "visibility": [
+-        "active",
+-        "dependency",
+-        "conditional"
+-      ],
+-      "lifecycles": [
+-        "repository-source"
+-      ],
+-      "statuses": [
+-        "active",
+-        "conditional",
+-        "historical"
+-      ],
+-      "historical_mode": "exact-only",
+-      "path_prefixes": [
+-        ".agents/skills/",
+-        "docs/",
+-        "knowledge/",
+-        "execution-plans/",
+-        "scripts/python/"
+-      ],
+-      "exact_paths": [
+-        "AGENTS.md",
+-        "README.md"
+-      ],
+-      "required_modules": [
+-        "repository-rules"
+-      ],
+-      "optional_modules": [
+-        "existing-workflow"
+-      ],
+-      "max_candidates": 12,
+-      "minimum_confidence": "medium",
+-      "freeze_point": "before-planning-source-adoption"
+     }
+   ]
+ }
+--- before/scripts/python/_knowledge_catalog_builder.py
++++ after/scripts/python/_knowledge_catalog_builder.py
+@@ -192,11 +192,9 @@
+ 
+ 
+ def _consumer_ids(primary_domain: str) -> list[str]:
+-    # ADR-0048: adding an eligible consumer never publishes or admits a generation.
+-    consumers = ["vdd", "bootstrap", "refactor-acceptance"]
+-    if primary_domain in {"toolchain", "phase"}:
+-        consumers.append("bmad-planning")
+-    return consumers
++    if primary_domain == "marketplace":
++        return ["vdd", "bootstrap", "refactor-acceptance"]
++    return ["vdd", "bootstrap", "refactor-acceptance"]
+ 
+ 
+ def _domain_for_adr(identifier: str, title: str) -> tuple[str, tuple[str, ...]]:
+@@ -638,7 +636,7 @@
+                         else ()
+                     ),
+                 ),
+-                consumer_ids=_consumer_ids("toolchain"),
++                consumer_ids=("vdd", "bootstrap", "refactor-acceptance"),
+             )
+             if module is None:
+                 continue

@@ -4,6 +4,26 @@ Read this guide only for the operation selected in SKILL.md. Commands run from t
 
 ## Current Required Order
 
+The public entry supervises each independent execution command and author/
+implementation worker with default limits of 1800 seconds total and 600 seconds
+without genuine output/progress. Use `--unit-timeout-seconds` and
+`--idle-timeout-seconds` only for an explicit finite override. Q2/worker defaults
+and newly materialized probe/terminal descriptors use 1800 seconds; existing
+frozen descriptors are not rewritten and may have shorter limits. Q6 commands
+are separate units, not one accumulating slice/round timeout. Same-unit retries
+spend one persistent content-bound allowance. Genuine subprocess bytes reset
+inactivity, never total time; repeated identical output does not renew inactivity.
+No heartbeat, polling, touched log or Git-only bookkeeping is proof of progress.
+
+The supervisor terminates the owned process tree on actual timeout/cancellation,
+retains run artifacts and writes diagnostic cost history under
+`logs/workflow-unit-budgets/`. An interrupted process has no successful lifecycle
+receipt; normal recovery must reread existing evidence. Already admissible
+stage/shared originals are still reused before execution. Budget history never
+becomes a successful receipt, changes Q7/Q8, or resets when a worker retries.
+Do not add a whole-round 1800-second outer watchdog. Workflow limits do not
+alter the separate business query timeout/budget contracts.
+
 For CER-capable plans, use the observed behavior routing below. The RED/GREEN/REFACTOR steps apply to the missing subset; present obligations use the regression branch. Historical plans without that capability retain the mandatory TDD route.
 
 1. Q0 recommendation-only: validate the semantic plan, current snapshot, explicit predecessors and change-impact state without running tests or writing run state.

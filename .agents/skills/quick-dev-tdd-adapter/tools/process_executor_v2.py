@@ -10,9 +10,12 @@ import tempfile
 import threading
 import time
 import uuid
+import sys
 from typing import Any, Mapping
 
 from runtime_evidence import create_immutable, create_json, hash_refs, sha256_bytes, sha256_value, validate_descriptor
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
+from workflow_unit_budget import unit, progress, event, terminate_tree, execution_environment
 
 PYTEST_COUNT_RE = re.compile(r"(\d+)\s+(passed|failed|errors?|skipped)\b", re.I)
 FAILURE_RE = re.compile(r"FAILURE_ID:([A-Z0-9][A-Z0-9._-]*)")
@@ -57,6 +60,12 @@ def _pre_execution_receipt(descriptor: Mapping[str, Any], stage: str, profile: s
 
 
 def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seconds: int):
+    key = {k: v for k, v in descriptor.items() if k != "run_id"}
+    with unit([str(cwd), key], "Quick Dev " + descriptor["stage"]) as call:
+        return _run_cases_observed(descriptor, cwd, timeout_seconds=timeout_seconds, budget_call=call)
+
+
+def _run_cases_observed(descriptor, cwd, *, timeout_seconds, budget_call):
     """Run the CER collector with bounded pipes and owned termination."""
     from case_evidence import COLLECTOR
     from runtime_evidence import sha256_value
@@ -74,7 +83,10 @@ def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seco
         actual_argv = [*argv[:index], str(COLLECTOR), str(request_path), str(output_path),
                        *args, "--rootdir", str(cwd), "-p", "no:cacheprovider"]
         process = subprocess.Popen(actual_argv, cwd=cwd, shell=False,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   start_new_session=__import__("os").name != "nt",
+                                   env=execution_environment())
+        event("owned", call=budget_call, pid=process.pid)
         outputs = {"stdout": bytearray(), "stderr": bytearray()}
         overflow = threading.Event()
         terminated = threading.Event()
@@ -83,24 +95,16 @@ def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seco
             if terminated.is_set():
                 return
             terminated.set()
-            if process.poll() is None:
-                process.kill()
-            if __import__("os").name == "nt":
-                # ADR-0041: OS cleanup must not escape the worker time budget.
-                try:
-                    subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                   check=False, timeout=0.2)
-                except subprocess.TimeoutExpired:
-                    pass
+            terminate_tree(process)
 
         def drain(name: str, pipe) -> None:
             try:
                 while True:
-                    chunk = pipe.read(65536)
+                    chunk = pipe.read1(65536)
                     if not chunk:
                         break
                     outputs[name].extend(chunk)
+                    progress(budget_call, chunk)
                     if len(outputs[name]) > OUTPUT_LIMIT_BYTES:
                         overflow.set()
                         terminate_owned()
@@ -132,6 +136,7 @@ def _run_cases_bounded(descriptor: Mapping[str, Any], cwd: Path, *, timeout_seco
             process.wait(timeout=1)
         for thread in threads:
             thread.join(timeout=1)
+        event("reaped", call=budget_call, pid=process.pid)
         stdout = bytes(outputs["stdout"][:OUTPUT_LIMIT_BYTES])
         stderr = bytes(outputs["stderr"][:OUTPUT_LIMIT_BYTES])
         result_code = None if timed_out else process.returncode

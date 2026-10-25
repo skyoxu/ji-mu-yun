@@ -55,6 +55,14 @@ All current evidence writes are immutable create-if-absent and reference explici
 
 ## Failure And Stop-Loss
 
+Each independent slice execution stage/command defaults to a total budget of
+1800 seconds and 600 seconds without real progress. Different Q2/probe/RED/
+GREEN/Q6 regression/terminal units do not share an aggregate round deadline.
+Retries of the same content-bound unit share one cumulative allowance; a new
+worker does not renew it. The public entry accepts `--unit-timeout-seconds` and
+`--idle-timeout-seconds`; explicit shorter frozen descriptor limits remain in
+force. See execution guidance for progress, cancellation and recovery.
+
 Current classification must distinguish at least: `semantic-contract-gap`, `expected-red`, `unexpected-green`, `task-implementation-failure`, `test-harness-failure`, `target-binding-failure`, `repo-noise`, `timeout-no-observation`, `repeated-deterministic-failure`, and `artifact-integrity`.
 
 A successful lifecycle stage requires real observed execution and nonzero test/case counts. Current case counts come from structured pytest call events, never from a summary or arbitrary SUT markers. Counts alone do not authorize an assertion edge. Timeout, harness, repo-noise, zero-case, wrong target, unexpected-green and artifact-integrity failures cannot satisfy RED or completion. Deterministic failure fingerprints exclude timestamp/run-duration/output-byte noise; the same fingerprint twice routes `repair-vdd` or `stop`. Rerun is legal only after relevant input changes.

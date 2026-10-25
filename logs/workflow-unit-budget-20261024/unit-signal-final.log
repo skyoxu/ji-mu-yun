@@ -1,0 +1,17 @@
+test_advisory_attempt_identity_does_not_renew_budget (test_workflow_unit_budget.ClockTests.test_advisory_attempt_identity_does_not_renew_budget) ... ok
+test_idle_and_duplicate_output_do_not_extend_budget (test_workflow_unit_budget.ClockTests.test_idle_and_duplicate_output_do_not_extend_budget) ... ok
+test_independent_units_exceed_round_budget_without_timeout (test_workflow_unit_budget.ClockTests.test_independent_units_exceed_round_budget_without_timeout) ... ok
+test_parallel_v3_batches_are_independent (test_workflow_unit_budget.ClockTests.test_parallel_v3_batches_are_independent) ... ok
+test_retry_spends_same_allowance_and_cannot_renew (test_workflow_unit_budget.ClockTests.test_retry_spends_same_allowance_and_cannot_renew) ... ok
+test_unit_total_survives_real_output (test_workflow_unit_budget.ClockTests.test_unit_total_survives_real_output) ... ok
+test_cancel_terminates_owned_descendant (test_workflow_unit_budget.ProcessTests.test_cancel_terminates_owned_descendant) ... ok
+test_real_subunit_events_prevent_round_deadline (test_workflow_unit_budget.ProcessTests.test_real_subunit_events_prevent_round_deadline) ... ok
+test_recommendation_has_no_supervision_writes (test_workflow_unit_budget.ProcessTests.test_recommendation_has_no_supervision_writes) ... ok
+test_sigterm_stops_supervisor_and_owned_process (test_workflow_unit_budget.ProcessTests.test_sigterm_stops_supervisor_and_owned_process) ... ok
+test_silent_process_timeout_retains_diagnostic_and_cleans_child (test_workflow_unit_budget.ProcessTests.test_silent_process_timeout_retains_diagnostic_and_cleans_child) ... ok
+test_windows_cleanup_targets_owned_tree_before_parent_reap (test_workflow_unit_budget.ProcessTests.test_windows_cleanup_targets_owned_tree_before_parent_reap) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.764s
+
+OK

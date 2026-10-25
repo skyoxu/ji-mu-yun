@@ -16,7 +16,7 @@ All repository paths use POSIX separators, including on Windows.
 | `plan_sha256` | `sha256:` plus SHA-256 of actual semantic bundle bytes |
 | `profile` | Quick Dev execution profile, independent of VDD plan shape |
 | `source_commit`, `base_commit` | Explicit full Git commit IDs; baseline must be an ancestor of source |
-| `targeted_timeout_seconds` | Integer 1..600; respect the declared execution budget |
+| `targeted_timeout_seconds` | Integer 1..1800 per execution unit; 600-second genuine inactivity remains independently enforced |
 | `slices` | Every current slice exactly once in dependency order |
 | `snapshot_roots` | Whole-plan native eight-root input array |
 | `out` | Fresh Q8 result path under `logs/`, outside all run directories |

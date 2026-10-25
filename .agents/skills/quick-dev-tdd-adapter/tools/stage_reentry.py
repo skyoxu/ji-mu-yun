@@ -13,6 +13,7 @@ def input_binding(workspace, bundle, descriptor, profile):
         from behavior_routing import production_hashes
         hashes.update(production_hashes(workspace, bundle, descriptor['slice_id']))
     engine = {name: sha256_bytes(Path(__file__).with_name(name).read_bytes()) for name in ('stage_reentry.py', 'stage_pipeline.py', 'independent_judge_v2.py', 'case_evidence.py', 'pytest_case_collector.py', 'regression_gate.py', 'shared_execution.py', 'process_executor_v2.py')}
+    engine['workflow_unit_budget.py'] = sha256_bytes((Path(__file__).resolve().parents[4] / 'scripts/workflow_unit_budget.py').read_bytes())
     return {'engine_sha256': engine, 'plan_sha256': sha256_value(bundle), 'descriptor_sha256': sha256_value(descriptor),
             'profile': profile, 'candidate_paths': hashes,
             'targets': hash_refs(workspace, descriptor['target_refs']),

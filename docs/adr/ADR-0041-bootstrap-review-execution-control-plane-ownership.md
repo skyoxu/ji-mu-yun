@@ -29,6 +29,46 @@ New plans formally bootstrap the protocol. Historical plans may receive read-onl
 
 ## Consequences
 
+### Interrupted V1 source-cache recovery (2026-10-24)
+
+The maintainer approved a bounded public recovery repair, without restarting the
+real requirement compile. V1 extraction candidates may be replayed by frozen
+section/ref, supplied interpretation context and exact extraction/source-role
+policy. Query execution episode/time/stage and Git-only provenance are advisory,
+not new extraction semantics. V0 still verifies actual current input bytes and
+V2 still guards the current full obligation set. Full-domain source recall and
+V3/downstream gates retain their independent validation and dependency scope.
+
+For an old caller-session interruption, the public --resume-worker-session option
+selects one original repository/output-bound transcript. It requires the exact
+returned request/response, native output/cache and schema-valid native receipt;
+timeout, cancellation and unconsumed replies do not qualify. Corruption and
+conflicting matching candidates block. Source-content cache metadata is a raw
+candidate optimization, never accepted compiler state, implementation evidence,
+V2 authority or a published plan. Current native validation and current query
+security checks remain mandatory; historical bytes are not rewritten or injected.
+
+### Independent workflow execution budgets (2026-10-24)
+
+The maintainer approved per-unit execution supervision for VDD and Quick Dev:
+1800 seconds total and 600 seconds without genuine progress by default. VDD
+uses semantic extraction/check/contract batches before V6 creates slices;
+Quick Dev uses independent author/implementation/execution stages and Q6
+commands inside a slice. Container time excludes independently bounded child
+work. Round cumulative time is diagnostic cost, not an automatic whole-round
+1800-second cutoff. Same-unit retries/resume spend the same cumulative allowance.
+Native cache/reentry checks still decide whether completed work is reusable.
+
+The scoped public-entry supervisor and unit events own time/cancellation only,
+not plan readiness, RED, process receipts or Q7/Q8. Real subprocess bytes or
+completed native sub-units are progress; polling, touches and artificial
+heartbeats cannot renew inactivity. Timeout/cancel terminates the owned tree
+and preserves partial state/history. Diagnostic cost ledgers never authorize
+success. Historical frozen descriptors retain explicit shorter limits. Separate
+business query budgets and provider/model configuration remain unchanged. Normal
+recovery must not reuse an old aggregate per-run watchdog. The standalone quality
+benchmark's explicit aggregate cap is separate from normal workflow execution.
+
 ### VDD Verification Contract Projection (2026-09-05)
 
 Repository-owned V3 workers may share implementation owner, lane, paths and
@@ -628,3 +668,17 @@ original bytes and current execution inputs at closure. Failed, timed-out,
 missing, tampered or identity-incomplete proof cannot become reusable success.
 Historical receipts are never relabeled. See the Quick Dev shared-execution
 reference for bounded discovery, compatibility and rejection rules.
+
+
+## Explicit V3 compiler pause (2026-10-25)
+
+Maintainer approval Sentinel_994707de86808191a4ad36d536154631 authorizes a bounded
+public `--stop-after v3` boundary, after V3/V3A/execution preflight and before V4.
+Normal pause is a non-authorizing result, not failure or plan-ready publication.
+The default entry still runs through the existing gates. Only returned native
+V3 candidates can be saved; drafts and fixture imports do not publish pause
+checkpoints. Exact source/domain/profile/rule content binds replay. Current
+security/source/V2 and native V3 validation/normalization/preflights remain
+mandatory on resume; corrupt matching evidence fails closed. Existing unit
+budgets and bounded retry ledgers are retained. No new plan lifecycle state or
+execution permission is introduced.

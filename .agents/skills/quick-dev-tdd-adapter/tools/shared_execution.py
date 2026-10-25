@@ -15,6 +15,8 @@ import sysconfig
 
 from runtime_evidence import (create_json, create_immutable, load_json,
                               sha256_bytes, sha256_value, resolve_file, hash_refs)
+sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
+from workflow_unit_budget import execution_environment
 
 SCHEMA = "quick-dev.shared-execution.v1"
 EXCLUDED = {"logs", "execution-plans"}
@@ -55,7 +57,7 @@ def environment_identity():
     return {"system": platform.system(), "release": platform.release(), "machine": platform.machine(),
             "python": sys.version, "executable": str(Path(sys.executable).resolve()),
             "files": hashes, "installed_content": sha256_value(hashes), "packages": sha256_value(sorted(packages)),
-            "environment": sha256_value(dict(os.environ))}
+            "environment": sha256_value(execution_environment())}
 
 
 def command_identity(argv):
@@ -116,6 +118,7 @@ def input_manifest(workspace, bundle, descriptor):
             raise ValueError("reuse-dependency-budget-exceeded: bytes")
         hashes[relative] = {"sha256": sha256_bytes(path.read_bytes()), "executable": bool(path.stat().st_mode & 0o111)}
     engine = {p.name: sha256_bytes(p.read_bytes()) for p in Path(__file__).parent.glob("*.py")}
+    engine["workflow_unit_budget.py"] = sha256_bytes((Path(__file__).resolve().parents[4] / "scripts/workflow_unit_budget.py").read_bytes())
     return {"schema": SCHEMA, "files": hashes, "engine": engine,
             "environment": environment_identity(), "contract": semantic_identity(bundle),
             "argv": command_identity(descriptor["argv"]), "cwd": descriptor["cwd"]}

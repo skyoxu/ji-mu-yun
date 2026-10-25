@@ -96,7 +96,7 @@ def test_schema_repair_transport_uses_bounded_longer_timeout_and_medium_reasonin
     assert len(calls) == 1
     assert list(stale.parent.glob(stale.stem + ".prior-*.json")), "prior diagnostic must be retained"
     call = calls[0]
-    assert call["timeout_sec"] == 300
+    assert call["timeout_sec"] == 1800
     assert 'model_reasoning_effort="medium"' in call["codex_configs"]
     assert "features.skills=false" in call["codex_extra_args"]
     assert "--output-schema" in call["codex_extra_args"]
@@ -136,12 +136,12 @@ def test_v4_recheck_uses_explicit_repair_timeout_and_high_reasoning(tmp_path: Pa
         prompt="Recheck the repaired V4 alignment.",
     )
     assert result["valid"] is True
-    assert calls[0]["timeout_sec"] == 300
+    assert calls[0]["timeout_sec"] == 1800
     assert 'model_reasoning_effort="high"' in calls[0]["codex_configs"]
 
 
 @pytest.mark.parametrize(('stage', 'expected_timeout'), [
-    ('v4-atomic-recall', 600), ('v1-source-gap-repair', 600), ('v1-FR-1', 180),
+    ('v4-atomic-recall', 600), ('v1-source-gap-repair', 600), ('v1-FR-1', 1800),
 ])
 def test_semantic_repair_uses_explicit_timeout(tmp_path: Path, monkeypatch, stage, expected_timeout) -> None:
     """ADR-0041: source-gap repair honors the configured bounded repair budget."""
