@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="0.273" timestamp="2026-10-26T16:41:07.460705+00:00" hostname="01dcaac9a2f8"><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass" time="0.001"><error message="failed on setup with &quot;FileNotFoundError: [Errno 2] No such file or directory: '/tmp/acceptance-compat-main-isolated-20261026/compatibility-r2-45ad935c0671'&quot;">self = PosixPath('/tmp/acceptance-compat-main-isolated-20261026/compatibility-r2-45ad935c0671')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+&gt;           os.mkdir(self, mode)
+E           FileNotFoundError: [Errno 2] No such file or directory: '/tmp/acceptance-compat-main-isolated-20261026/compatibility-r2-45ad935c0671'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1311: FileNotFoundError</error></testcase></testsuite></testsuites>

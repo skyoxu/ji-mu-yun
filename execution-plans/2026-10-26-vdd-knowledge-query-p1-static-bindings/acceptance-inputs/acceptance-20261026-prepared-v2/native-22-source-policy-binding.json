@@ -1,0 +1,43 @@
+{
+  "activatedCheckIds": [
+    "TOOLCHAIN-CR-AUTH-001",
+    "TOOLCHAIN-CR-SCOPE-001",
+    "TOOLCHAIN-CR-COMPAT-001",
+    "TOOLCHAIN-CR-TEST-001",
+    "TOOLCHAIN-CR-EVIDENCE-001"
+  ],
+  "adapterHash": "sha256:a2a81f003486ce37e02f35b522fa18baafc257bb83fb0612a7a562c4ce5a4d94",
+  "authorizes": [],
+  "bindingHash": "sha256:4cd9831ab276361183f446e64502e03c51471741fafaf8bd8b0eabe35b83a0aa",
+  "candidateManifestHash": "sha256:4f980ef053bb03d83e9c9a0127a3c1fb406940f7fca5603c8d0ee766e569761a",
+  "crossDomainDependencyPaths": [],
+  "policyHash": "sha256:c41c62bdbb69173f4745d72e661397d7c09e933383ac22e0d6f10e1acfd5bd3d",
+  "policyId": "toolchain-code-review",
+  "policyRevision": "sha256:6876d81e879d8e7148224f0adec15ba41349331713a2238360de18e711b0809b",
+  "schemaVersion": "code-review-policy-binding.v1",
+  "triggeredPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py",
+    ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "scripts/toolchain/knowledge_query/adapter.py",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+    "scripts/vdd/compile_plan.py",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+  ],
+  "unreviewedExternalDomainPaths": []
+}

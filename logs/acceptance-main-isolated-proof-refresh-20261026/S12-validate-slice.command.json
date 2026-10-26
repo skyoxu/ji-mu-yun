@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+    "--slice",
+    "S12",
+    "--profile",
+    "standard",
+    "--action",
+    "validate-slice",
+    "--run-dir",
+    "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current",
+    "--unit-timeout-seconds",
+    "1800",
+    "--idle-timeout-seconds",
+    "600",
+    "--snapshot-roots",
+    "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current.snapshot-roots.json",
+    "--source-commit",
+    "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+    "--base-commit",
+    "965df2e34f71ef197fffd8afb68f037688486ca2",
+    "--out",
+    "logs/acceptance-main-isolated-proof-refresh-20261026/S12-slice-ready.json"
+  ],
+  "started_at": "2026-10-26T18:45:01.900683+00:00",
+  "unit_seconds": 1800,
+  "idle_seconds": 600
+}

@@ -1,0 +1,50 @@
+{
+  "action_coverage": {
+    "validate-acceptance-package": "Repository-owned static and detached package validation",
+    "validate-acceptance-routing": "Actual9 positive/negative route tests; no business test repetition",
+    "validate-code-review-route": "All22 scoped source paths and unchanged policy check activation; no external review authority",
+    "validate-vdd-contract": "Current 305-obligation semantic bundle native structural/integrity contract; no recompile"
+  },
+  "authorizes": [],
+  "baseline": "965df2e34f71ef197fffd8afb68f037688486ca2",
+  "candidate_content_commit": "3e611dab8fc96e2cbd2d02d144abcb780e923710",
+  "changed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py",
+    ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "scripts/toolchain/knowledge_query/adapter.py",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+    "scripts/vdd/compile_plan.py",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+  ],
+  "kind": "Actual Acceptance preparation; not executed actions or frozen prerequisite bundle",
+  "native_registry_shape_and_action_dependencies": "validated",
+  "not_applicable": {
+    "Bootstrap": "Default deterministic_only; no maintainer review request",
+    "Phase_static_security_scans": "No Phase-service candidate or new security permission",
+    "phase_cs_diff_coverage": "No changed PhaseA.Platform C# source"
+  },
+  "not_executed": true,
+  "remaining": "Bind final same-inventory candidate custody; freeze current source before refreshing actual affected proofs.",
+  "reused_after_current_native_revalidation": {
+    "Windows": "11 platform nodes only; no claim of7 new P1 nodes or full Windows Acceptance",
+    "business_REGREEN": "Existing S1/S12 causal proof; only truly stale current content proofs will refresh",
+    "implementation": "12 current slice runtime edges and Q8/610 tuple native owner replay; no print-only placeholder terminal command"
+  },
+  "supervision": "1800 seconds per independent unit;600 seconds genuine inactivity remains required for execution, not encoded as an unsupported registry field"
+}

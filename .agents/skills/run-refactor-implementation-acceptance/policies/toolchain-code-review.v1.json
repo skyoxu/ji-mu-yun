@@ -1,7 +1,7 @@
 {
   "schemaVersion": "code-review-policy-pack.v1",
   "policyId": "toolchain-code-review",
-  "policyRevision": "sha256:ec7ee400158f28b7ff6b406c7a3048e713a8dc685f349746962fafd3092f52e0",
+  "policyRevision": "sha256:6876d81e879d8e7148224f0adec15ba41349331713a2238360de18e711b0809b",
   "targetDomain": "toolchain",
   "authorityRefs": [
     "AGENTS.md",
@@ -19,7 +19,11 @@
       "docs/PROJECT_DOCUMENTATION_INDEX.md",
       "docs/adr/",
       "docs/standards/",
-      "docs/architecture/"
+      "docs/architecture/",
+      "scripts/toolchain/knowledge_query/adapter.py",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "scripts/vdd/compile_plan.py",
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py"
     ],
     "crossDomainPaths": [
       "scripts/sc/_llm_backend.py"

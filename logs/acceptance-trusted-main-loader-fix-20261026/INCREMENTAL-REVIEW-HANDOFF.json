@@ -1,0 +1,135 @@
+{
+  "kind": "Fixed narrow incremental review input; no reviewer has been invoked",
+  "created_at": "2026-10-26T19:43:24.053008+00:00",
+  "reviewed_predecessor": "192eadf293ce07bd1c58b051ff53cf885c2b085d",
+  "candidate_commit": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "candidate_tree": "cbfb0d5f369aa2287abe56ee626d9525c0083773",
+  "source_delta_count": 8,
+  "source_delta": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "candidate_sha256": "sha256:0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502",
+      "candidate_git_blob": "df880f41fc572486ba3d252387c42afb7250027d",
+      "review_baseline_sha256": "sha256:9b7081e8bdece961f6c5c2f5ef8933c5b6a87ddac3aea9be17f2f79e649514c4"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+      "candidate_sha256": "sha256:abcc2c9d78172e1b22a540ef62506f16ea6392a6b32e1b4767d4a0b11f6e11dc",
+      "candidate_git_blob": "f1e78967ca284c81521b3eab3e9bc8b569dff4d7",
+      "review_baseline_sha256": "sha256:7151b44fadb56804ebba256fb18bf0656aa5d252f5d37309f9bf0f7810e0ed48"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+      "candidate_sha256": "sha256:a2a81f003486ce37e02f35b522fa18baafc257bb83fb0612a7a562c4ce5a4d94",
+      "candidate_git_blob": "4e2614ea8daf3abe0c2900490442a267a8c6a3b9",
+      "review_baseline_sha256": "sha256:33f9ecd260ef861afab39cc62e9416d530423752f8c3741d8afd72639adffaca"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "candidate_sha256": "sha256:ff178ea2fb35a7737ceec60e82f353b6ca2d2b76f96ae464a806e0c201f5b59c",
+      "candidate_git_blob": "41fe83a02f8c23a960eedc01e9dde57d993119d0",
+      "review_baseline_sha256": "sha256:1750fab488f47b83c29a416cac889df12a3ca38382a4b0285c98208422aa66d8"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+      "candidate_sha256": "sha256:47fce69f1c62ad55de220ea985f253996c07ac7fd010a4a25e2d6532da3922db",
+      "candidate_git_blob": "e41ec9433b3d558649e11016279f4c6c22a86dae",
+      "review_baseline_sha256": null
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      "candidate_sha256": "sha256:6b93d534f4b19b61d5a4d60cd4a5114842ee2d15b0e6cf18e70bf0093d68c451",
+      "candidate_git_blob": "224e433d4d78216c58f8d26ea39676f86015e75b",
+      "review_baseline_sha256": "sha256:b837db57cfea371b4e09e8744d99f8fc780c3def1f2220a641902f2f3d341408"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "candidate_sha256": "sha256:a56193fbc52ea5bd87e0cad53c46e92bee2e3cf113709caaa5db43ac3d5ccb55",
+      "candidate_git_blob": "d38b708d95974124a4521816fd94d0ddc5efc011",
+      "review_baseline_sha256": "sha256:dadb87012356a400b85976d6bf768b484cffe6bc932fb5be342a7b706040b292"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+      "candidate_sha256": "sha256:1ebeaadf523e1ee99d3275b0dc8919a2fd081f4950363f2c08c04621fa1a86e7",
+      "candidate_git_blob": "97646c4ae9665816e0283e81b96388248b132098",
+      "review_baseline_sha256": null
+    }
+  ],
+  "scope_note": "Eight Acceptance source/guide/test files differ from the prior independent review: three precise coverage-routing maintenance files and the five-file immutable-main isolation/fixture repair. Business adapter, shared query tests, VDD handoff and requirement/oracle bytes have no additional delta. Source Git trees are not substitutes for generated Acceptance/proof originals.",
+  "patch": {
+    "path": "logs/acceptance-trusted-main-loader-fix-20261026/INCREMENTAL-REVIEW.patch",
+    "sha256": "sha256:fc64b1107234b30006978234a937148d240ec30f84f632377c633d7d35b81691"
+  },
+  "native_acceptance": {
+    "Q8": {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/Q8/implementation-complete-result.v2.json",
+      "sha256": "sha256:b21898dbe0a58b558a1ac80d602491285d5a8b9170f5cb4f962a6f50c45a85a2"
+    },
+    "all_completed_attempt_files_retained_in_place": true,
+    "at": "2026-10-26T19:38:33.902838+00:00",
+    "authorizes": [],
+    "candidate": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+    "compatibility_scope": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-source-scope.json",
+    "coordinator_request": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-request.v3.json",
+      "sha256": "sha256:f0373d451951d5dd59337cef3b78447c869fad7af30deda3bd1aa02f68388d32"
+    },
+    "coordinator_result": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-result.v4.json",
+      "sha256": "sha256:0df6297acf086696af1c271c2bec96c47127493fa2cb129a1e4f50b395e80395"
+    },
+    "isolation_source_paths": [
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md"
+    ],
+    "kind": "Actual native Acceptance, not publication authority",
+    "no_new_models_BMAD_AB_Windows_CI_or_push": true,
+    "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+    "plan_sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+    "published": false,
+    "required_attempt_dependency_originals": [
+      {
+        "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/attempt.json",
+        "sha256": "sha256:5aede7d8e58ab2e8ea16e61e4dab90ab41ebe68601a1a2e21984f913301dce59"
+      },
+      {
+        "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/observed.json",
+        "sha256": "sha256:1e4d518d632c7b665129c8147f54ad02f175f72c411c81095e4b22d869396e1d"
+      },
+      {
+        "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/prepared.json",
+        "sha256": "sha256:ceee05c870d20da785f4130fd8cce5677ada960eb8b9a20329597d05b621b52f"
+      }
+    ],
+    "run_directory": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729"
+  },
+  "summary": {
+    "path": "logs/acceptance-trusted-main-loader-fix-20261026/FINAL-STATUS.json",
+    "sha256": "sha256:0381b4ca5a281c58cb846e1507cc04fd2d6eb037a6bbdb99c6c9af4b7f3f2baa"
+  },
+  "local_evidence_index": {
+    "path": "logs/acceptance-trusted-main-loader-fix-20261026/EVIDENCE-INDEX.json",
+    "sha256": "sha256:5de7bfa4e5b847a4b23d532ee649bb1830cfd051a0f8ce0d9433e0ec9894bb43"
+  },
+  "required_completed_attempt_files": [
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/attempt.json",
+      "sha256": "sha256:5aede7d8e58ab2e8ea16e61e4dab90ab41ebe68601a1a2e21984f913301dce59"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/observed.json",
+      "sha256": "sha256:1e4d518d632c7b665129c8147f54ad02f175f72c411c81095e4b22d869396e1d"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/prepared.json",
+      "sha256": "sha256:ceee05c870d20da785f4130fd8cce5677ada960eb8b9a20329597d05b621b52f"
+    }
+  ],
+  "current_tracked_status_note": "Only the source candidate is committed. Native acceptance-current.v1.json and acceptance-runs remain untracked owner outputs, indexed for later publication.",
+  "review_authority_not_claimed": true,
+  "published": false,
+  "authorizes": []
+}

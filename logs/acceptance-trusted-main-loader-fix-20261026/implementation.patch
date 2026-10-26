@@ -1,0 +1,780 @@
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md b/.agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md
+index 6ca58dd1..f1e78967 100644
+--- a/.agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md
++++ b/.agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md
+@@ -200,8 +200,15 @@ py -3 .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_c
+ 
+ Historical function-level inputs without a knowledge context remain readable;
+ new CLI preparations cannot omit it. Later phases consume the frozen summary
+-and never issue another Locator query. The shared context validator must
+-byte-match current main, and the complete Locator read-set is revalidated
++and never issue another Locator query. The executed shared context validator
++and its fixed local dependency must byte-match one resolved actual main commit.
++The private loader executes these immutable Git bytes in an isolated interpreter,
++never candidate Python modules. A private temporary Git metadata view pins that
++same real main commit for validator reads without changing repository refs.
++Main drift, missing or modified originals, unsupported imports and unsafe data
++paths fail closed; no caller selects a validator or trust revision. Candidate
++repository files are data only. Ambiguous nested repository roots cannot select
++their own main authority. The complete Locator read-set is revalidated
+ against both its source commit and current worktree before the summary freezes.
+ 
+ `scripts/acceptance_cli.py prepare-run` validates a hash-bound run input with replayable baseline and candidate content manifests, then writes a new non-authorizing run-input artifact. Commit candidates are checked against raw bytes from resolved immutable Git commits, and the resolved baseline/candidate OIDs are persisted in `candidateCustody`. Dirty-worktree and proposed-commit-set candidates must declare `candidate_frozen_snapshot_path` as `.acceptance-snapshots/<run_id>` beneath the target root; symlinks and live workspace substitutes are rejected, and the snapshot manifest receipt is persisted.
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py b/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py
+index 4222fd0e..41fe83a0 100644
+--- a/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py
++++ b/.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py
+@@ -3,10 +3,7 @@
+ from __future__ import annotations
+ 
+ import hashlib
+-import importlib.util
+ import json
+-import subprocess
+-import sys
+ from pathlib import Path
+ from typing import Any
+ 
+@@ -14,40 +11,35 @@ from acceptance_core import InputError, canonical_hash
+ 
+ 
+ def _repository_root(target_root: Path) -> Path:
+-    for candidate in (target_root, *target_root.parents):
+-        if (candidate / ".git").exists() and (candidate / "knowledge").is_dir():
+-            return candidate
++    roots = [candidate for candidate in (target_root, *target_root.parents)
++             if (candidate / ".git").exists() and (candidate / "knowledge").is_dir()]
++    if len(roots) > 1:
++        raise InputError("knowledge validation repository root is ambiguous")
++    if roots:
++        return roots[0]
+     raise InputError("repository root for knowledge validation is unavailable")
+ 
+ 
+ def _validator(repository_root: Path):
+-    module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
+-    for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
+-        current = subprocess.run(
+-            ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
+-            capture_output=True,
+-            check=False,
+-        )
+-        if current.returncode or (repository_root / relative).read_bytes() != current.stdout:
+-            raise InputError("knowledge context validator is not bound to current main")
+-    spec = importlib.util.spec_from_file_location("refactor_acceptance_knowledge_context_validation", module_path)
+-    if spec is None or spec.loader is None:
+-        raise InputError("knowledge context validator is unavailable")
+-    module = importlib.util.module_from_spec(spec)
+-    previous_path = list(sys.path)
++    # ADR-0053/0058: execute actual main bytes, never candidate validator code.
++    from trusted_knowledge_validator import TrustedMainValidator
+     try:
+-        sys.path.insert(0, str(module_path.parent))
+-        spec.loader.exec_module(module)
+-    finally:
+-        sys.path[:] = previous_path
+-    return module
++        return TrustedMainValidator(repository_root, error_type=InputError)
++    except (ValueError, OSError) as exc:
++        raise InputError(str(exc)) from exc
+ 
+ 
+ def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]:
+     relative = Path(raw_path)
+     if relative.is_absolute() or ".." in relative.parts:
+         raise InputError("knowledge context path must stay inside the target root")
+-    path = (target_root / relative).resolve()
++    unresolved = target_root / relative
++    current = target_root
++    for part in relative.parts:
++        current /= part
++        if current.is_symlink():
++            raise InputError("knowledge context path must not use symlinks")
++    path = unresolved.resolve()
+     try:
+         path.relative_to(target_root)
+     except ValueError as exc:
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py b/.agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py
+new file mode 100644
+index 00000000..e41ec943
+--- /dev/null
++++ b/.agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py
+@@ -0,0 +1,283 @@
++"""ADR-0053/0058: execute immutable main code against candidate data only.
++
++This private worker adds no selectable trust source or execution authority.
++Its temporary Git view pins actual main without modifying repository refs.
++"""
++from __future__ import annotations
++
++import ast
++import hashlib
++import importlib.util
++import json
++import os
++from pathlib import Path, PurePosixPath
++import re
++import shutil
++import subprocess
++import sys
++import tempfile
++import uuid
++
++FILES = ("knowledge_context_validation.py", "_knowledge_locator_core.py")
++OPERATIONS = {"validate_context", "validate_worktree_sources", "validate_catalog_freshness", "refresh_context_read_set"}
++FLAGS = dict(verify_catalog=True, verify_sources=True, expected_consumer="refactor-acceptance",
++             require_selection=True, require_preflight=True)
++STDLIB = {"__future__", "hashlib", "json", "copy", "re", "subprocess", "pathlib", "typing", "os", "tempfile"}
++GIT = shutil.which("git")
++
++
++def _environment():
++    if not GIT:
++        raise ValueError("trusted validator Git is unavailable")
++    result = {k: os.environ[k] for k in ("SYSTEMROOT", "SystemRoot", "WINDIR", "TEMP", "TMP") if k in os.environ}
++    result.update(PATH=str(Path(GIT).resolve().parent) + os.pathsep + os.defpath,
++                  GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
++                  GIT_CONFIG_SYSTEM=os.devnull, GIT_NO_REPLACE_OBJECTS="1", GIT_TERMINAL_PROMPT="0")
++    return result
++
++
++def _git(root, *arguments):
++    result = subprocess.run([GIT, "-C", str(root), *arguments], env=_environment(),
++                            shell=False, capture_output=True, check=False, timeout=30)
++    if result.returncode:
++        raise ValueError("trusted validator main Git object is unavailable")
++    return result.stdout
++
++
++def _main(root):
++    if Path(_git(root, "rev-parse", "--show-toplevel").decode().strip()).resolve() != root:
++        raise ValueError("trusted validator candidate root is invalid")
++    value = _git(root, "rev-parse", "--verify", "refs/heads/main^{commit}").decode().strip()
++    if not re.fullmatch(r"[0-9a-f]{40}", value):
++        raise ValueError("trusted validator main identity is invalid")
++    return value
++
++
++def _dependencies(payload):
++    for node in ast.walk(ast.parse(payload)):
++        if isinstance(node, ast.Import):
++            names = [alias.name for alias in node.names]
++        elif isinstance(node, ast.ImportFrom):
++            if node.module == "_knowledge_locator_core" and node.level in (0, 1):
++                continue
++            if node.level:
++                raise ValueError("trusted validator dependency is unsupported")
++            names = [node.module]
++        else:
++            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in {"__import__", "eval", "exec"}:
++                raise ValueError("trusted validator dynamic dependency is unsupported")
++            continue
++        if any(name not in STDLIB for name in names):
++            raise ValueError("trusted validator dependency is unsupported")
++
++
++def _safe_file(root, raw):
++    if not isinstance(raw, str) or "\\" in raw:
++        raise ValueError("trusted validator data path is invalid")
++    path = PurePosixPath(raw)
++    if path.is_absolute() or not path.parts or any(p in {".", ".."} for p in path.parts) or ":" in raw:
++        raise ValueError("trusted validator data path escapes root")
++    current = root
++    for part in path.parts:
++        current /= part
++        if current.is_symlink():
++            raise ValueError("trusted validator data path uses a symlink")
++    try:
++        current.resolve().relative_to(root)
++    except ValueError as exc:
++        raise ValueError("trusted validator data path escapes root") from exc
++    return current
++
++
++def _check_data_paths(root, payload):
++    # Main retains all schema, authorization and source hash decisions.
++    for path in ("knowledge/catalogs/repository-knowledge-catalog.v2.json",
++                 "knowledge/catalogs/repository-knowledge-catalog.v1.json",
++                 "knowledge/projections/consumer-projections.v1.json",
++                 "knowledge/policies/consumer-policies.v2.json",
++                 "knowledge/policies/source-exclusions.v1.json",
++                 "knowledge/snapshots/repository-source-snapshot.v1.json",
++                 "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
++                 "knowledge/indexes/current.json"):
++        _safe_file(root, path)
++    pointer = _safe_file(root, "knowledge/indexes/current.json")
++    if pointer.is_file():
++        value = json.loads(pointer.read_bytes())
++        generation = value.get("generation_id") if isinstance(value, dict) else None
++        if isinstance(generation, str) and re.fullmatch(r"[0-9a-f]{64}", generation):
++            parent = "knowledge/indexes/generations/" + generation + "/"
++            manifest = _safe_file(root, parent + "manifest.json")
++            if manifest.is_file():
++                body = json.loads(manifest.read_bytes())
++                artifacts = body.get("artifacts") if isinstance(body, dict) else None
++                report = artifacts.get("query_report") if isinstance(artifacts, dict) else None
++                if isinstance(report, dict) and isinstance(report.get("bundle_path"), str):
++                    _safe_file(root, parent + report["bundle_path"])
++    result = payload.get("locator_result") if isinstance(payload, dict) else None
++    candidates = result.get("candidates", []) if isinstance(result, dict) else []
++    if isinstance(candidates, list):
++        for item in candidates:
++            if not isinstance(item, dict):
++                continue
++            if isinstance(item.get("path"), str):
++                _safe_file(root, item["path"])
++            read_set = item.get("read_set", [])
++            if isinstance(read_set, list):
++                for row in read_set:
++                    if isinstance(row, dict) and isinstance(row.get("path"), str):
++                        _safe_file(root, row["path"])
++
++
++def _run_child(directory, request, *, timeout=600):
++    # The child emits only its completed result;600 seconds without it is idle.
++    if (directory / "worker.py").is_symlink() or (directory / "worker.py").read_bytes() != Path(__file__).read_bytes():
++        raise ValueError("trusted validator worker identity mismatch")
++    environment = _environment()
++    environment.update(GIT_DIR=str(directory / "git-view"), GIT_WORK_TREE=request["root"],
++                       GIT_ALTERNATE_OBJECT_DIRECTORIES=request["objects"])
++    process = subprocess.Popen([sys.executable, "-I", "-S", "-B", str(directory / "worker.py")],
++                               cwd=directory, env=environment, shell=False,
++                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++                               start_new_session=os.name != "nt",
++                               creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0)
++    try:
++        stdout, stderr = process.communicate(json.dumps(request).encode(), timeout=timeout)
++    except BaseException:
++        if os.name == "nt":
++            subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=10)
++        else:
++            import signal
++            try:
++                os.killpg(process.pid, signal.SIGKILL)
++            except ProcessLookupError:
++                pass
++        process.communicate(timeout=10)
++        raise
++    if process.returncode or stderr or len(stdout) > 4 * 1024 * 1024:
++        raise ValueError("trusted validator child failed")
++    try:
++        value = json.loads(stdout)
++    except (ValueError, UnicodeError) as exc:
++        raise ValueError("trusted validator child response is invalid") from exc
++    expected = {"nonce", "main", "hashes", "operation", "result"}
++    if not isinstance(value, dict) or set(value) != expected or any(value[key] != request[key] for key in expected - {"result"}):
++        raise ValueError("trusted validator child identity is invalid")
++    if request["operation"] == "refresh_context_read_set":
++        if not isinstance(value["result"], dict):
++            raise ValueError("trusted validator refresh response is invalid")
++    elif value["result"] is not None and not isinstance(value["result"], str):
++        raise ValueError("trusted validator validation response is invalid")
++    return value["result"]
++
++
++class TrustedMainValidator:
++    def __init__(self, repository_root, error_type=ValueError):
++        self.root = Path(repository_root).resolve()
++        self.error_type = error_type
++        self.commit = _main(self.root)
++        self.blobs = {}
++        for name in FILES:
++            path = "scripts/python/" + name
++            entry = _git(self.root, "ls-tree", "-z", self.commit, "--", path)
++            parts = entry.rstrip(b"\0").split(b"\t")
++            if len(parts) != 2 or parts[1].decode() != path or parts[0].split()[:2] not in ([b"100644", b"blob"], [b"100755", b"blob"]):
++                raise ValueError("trusted validator main dependency is missing or unsafe")
++            data = _git(self.root, "show", self.commit + ":" + path)
++            _dependencies(data)
++            self.blobs[name] = data
++        common = Path(_git(self.root, "rev-parse", "--git-common-dir").decode().strip())
++        self.objects = str(((self.root / common) if not common.is_absolute() else common).resolve() / "objects")
++
++    def _call(self, operation, payload=None):
++        try:
++            if operation not in OPERATIONS:
++                raise ValueError("trusted validator operation is invalid")
++            if _main(self.root) != self.commit:
++                raise ValueError("trusted validator main changed")
++            _check_data_paths(self.root, payload)
++            with tempfile.TemporaryDirectory(prefix="acceptance-trusted-main-") as temporary:
++                directory = Path(temporary).resolve()
++                for name, data in self.blobs.items():
++                    (directory / name).write_bytes(data)
++                (directory / "worker.py").write_bytes(Path(__file__).read_bytes())
++                subprocess.run([GIT, "init", "--bare", "-q", str(directory / "git-view")],
++                               env=_environment(), shell=False, check=True, capture_output=True, timeout=30)
++                ref = directory / "git-view/refs/heads/main"
++                ref.parent.mkdir(parents=True, exist_ok=True)
++                ref.write_text(self.commit + "\n", encoding="ascii")
++                request = dict(root=str(self.root), objects=self.objects, main=self.commit,
++                               hashes={name: hashlib.sha256(data).hexdigest() for name, data in self.blobs.items()},
++                               operation=operation, nonce=uuid.uuid4().hex, payload=payload)
++                result = _run_child(directory, request)
++            if _main(self.root) != self.commit:
++                raise ValueError("trusted validator main changed")
++            return result
++        except (ValueError, OSError, subprocess.SubprocessError) as exc:
++            raise self.error_type(str(exc)) from exc
++
++    def _root(self, root):
++        if Path(root).resolve() != self.root:
++            raise self.error_type("trusted validator data root changed")
++
++    def validate_context(self, payload, *, repository_root, **flags):
++        self._root(repository_root)
++        if flags != FLAGS:
++            raise self.error_type("trusted validator context flags are invalid")
++        return self._call("validate_context", payload)
++
++    def validate_worktree_sources(self, payload, repository_root):
++        self._root(repository_root)
++        return self._call("validate_worktree_sources", payload)
++
++    def validate_catalog_freshness(self, repository_root):
++        self._root(repository_root)
++        return self._call("validate_catalog_freshness")
++
++    def refresh_context_read_set(self, payload, repository_root):
++        self._root(repository_root)
++        return self._call("refresh_context_read_set", payload)
++
++
++def _child():
++    request = json.load(sys.stdin)
++    if not isinstance(request, dict) or set(request) != {"root", "objects", "main", "hashes", "operation", "nonce", "payload"}:
++        raise ValueError("invalid trusted validator request")
++    if request["operation"] not in OPERATIONS or set(request["hashes"]) != set(FILES):
++        raise ValueError("invalid trusted validator operation or dependency")
++    directory = Path(__file__).resolve().parent
++    modules = {}
++    for name in reversed(FILES):
++        path = directory / name
++        if path.is_symlink():
++            raise ValueError("unsafe trusted validator module")
++        data = path.read_bytes()
++        if hashlib.sha256(data).hexdigest() != request["hashes"][name]:
++            raise ValueError("trusted validator identity mismatch")
++        _dependencies(data)
++        module_name = Path(name).stem
++        spec = importlib.util.spec_from_file_location(module_name, path)
++        module = importlib.util.module_from_spec(spec)
++        sys.modules[module_name] = module
++        # Execute held verified bytes, not a second unchecked file read.
++        exec(compile(data, str(path), "exec"), module.__dict__)
++        modules[module_name] = module
++    validator = modules["knowledge_context_validation"]
++    root = Path(request["root"]).resolve()
++    _check_data_paths(root, request["payload"])
++    if request["operation"] == "validate_context":
++        result = validator.validate_context(request["payload"], repository_root=root, **FLAGS)
++    elif request["operation"] == "validate_catalog_freshness":
++        result = validator.validate_catalog_freshness(root)
++    else:
++        result = getattr(validator, request["operation"])(request["payload"], root)
++    response = {key: request[key] for key in ("nonce", "main", "hashes", "operation")}
++    response["result"] = result
++    print(json.dumps(response, sort_keys=True))
++
++
++if __name__ == "__main__":
++    try:
++        _child()
++    except Exception:
++        # Do not disclose candidate content, credentials or untrusted diagnostics.
++        raise SystemExit(1)
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py b/.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py
+index c32924d7..224e433d 100644
+--- a/.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py
++++ b/.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py
+@@ -19,7 +19,7 @@ sys.path.insert(0, str(SCRIPTS))
+ import acceptance_cli as cli
+ import compact_vdd_projection as projection
+ import current_quick_dev_handoff as handoff
+-from test_cer_behavior_routing import fixture, execute, implement
++from test_cer_behavior_routing import fixture, execute as _fixture_execute, implement
+ from coverage_predicates import publish_implementation_complete, validate_slice_ready
+ from runtime_evidence import sha256_value
+ from skill_input_composition_support import publish_ready_receipt
+@@ -93,8 +93,16 @@ def knowledge(root, target, commit):
+     return freeze_knowledge_context(target, "knowledge.json")
+ 
+ 
++def execute(root, semantic, stage, route=None, **kwargs):
++    # Generated proof belongs in logs, not the shared source dependency scope.
++    return _fixture_execute(root, semantic, stage, route, run_name="logs/RUN-1", **kwargs)
++
++
+ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_newline=None):
+     semantic, roots = fixture(root, present)
++    for row in roots:
++        if row["root_kind"] == "descriptor":
++            row["repository_relative_posix_path"] = "logs/RUN-1/descriptors"
+     (root / ".gitignore").write_text("*\n!candidate.py\n!.gitignore\n", encoding="utf-8")
+     (root / "rules.md").write_text("# Rules\nVerify current candidate behavior.\n", encoding="utf-8", newline=knowledge_newline)
+     for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py",
+@@ -118,19 +126,8 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
+         stages += ["green", "refactor"]
+     if any(present):
+         stages += ["regression"]
+-    for stage in stages:
+-        assert execute(root, semantic, stage, route)["predicate_result"]
+-    execute(root, semantic, "terminal", route, materialize_only=True)
+-    run = root / "RUN-1"
+-    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+-                                 source_commit=baseline, base_commit=baseline, out=run / "ready.json")
+-    assert execute(root, semantic, "terminal", route)["predicate_result"]
+-    predecessor = {"slice_id": "S1", "run_root": "RUN-1", "result_ref": "RUN-1/ready.json", "result_sha256": sha256_value(ready)}
+-    result = publish_implementation_complete(workspace=root, semantic_plan=semantic, predecessors=[predecessor], snapshot_roots=roots,
+-                                            source_commit=baseline, base_commit=baseline, out=run / "complete.json")
+-    current = {"semanticPlan": ref(semantic, root), "receipt": ref(run / "complete.json", root),
+-               "snapshotRoots": roots, "sourceCommit": baseline, "baseCommit": baseline}
+-    assert handoff.verify_current_handoff(root, current) == result
++    # Complete real Knowledge/Skill-input preparation before positive proofs.
++    # Their source files and completed transport attempt remain dependencies.
+     target = root / "execution-plans/target"
+     target.mkdir(parents=True)
+     (target / "requirements.md").write_text("# Acceptance\nBoth values must return their inputs.\n", encoding="utf-8")
+@@ -139,33 +136,45 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
+     knowledge(root, target, baseline)
+     skill = publish_ready_v2_receipt(root, target="execution-plans/target")
+     candidate = git(root, "rev-parse", "HEAD")
+-    # The present-only fixture uses a declared source baseline predating a comment.
+     if all(present):
+-        old = root / "baseline-candidate.txt"
++        old = target / "acceptance-inputs/baseline-candidate.txt"
+         old.write_text("def value(kind):\n return {1: 1, 2: 2}[kind]\n# previous implementation\n", encoding="utf-8")
+-        overlays = {"candidate.py": "baseline-candidate.txt"}
++        overlays = {"candidate.py": old.relative_to(root).as_posix()}
+     else:
+         overlays = {}
++    for stage in stages:
++        assert execute(root, semantic, stage, route)["predicate_result"]
++    execute(root, semantic, "terminal", route, materialize_only=True)
++    run = root / "logs/RUN-1"
++    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
++                                 source_commit=baseline, base_commit=baseline, out=run / "ready.json")
++    assert execute(root, semantic, "terminal", route)["predicate_result"]
++    predecessor = {"slice_id": "S1", "run_root": "logs/RUN-1", "result_ref": "logs/RUN-1/ready.json", "result_sha256": sha256_value(ready)}
++    result = publish_implementation_complete(workspace=root, semantic_plan=semantic, predecessors=[predecessor], snapshot_roots=roots,
++                                            source_commit=baseline, base_commit=baseline, out=run / "complete.json")
++    current = {"semanticPlan": ref(semantic, root), "receipt": ref(run / "complete.json", root),
++               "snapshotRoots": roots, "sourceCommit": baseline, "baseCommit": baseline}
++    assert handoff.verify_current_handoff(root, current) == result
+     command = {"id": "acceptance-check", "executable": sys.executable, "argv": ["-c", f"import sys; from candidate import value; assert value(1)==1 and value(2)==2; sys.exit({command_exit})"], "cwd": ".", "timeout_seconds": 10, "shell": False}
+     request = {"schemaVersion": "compact-vdd-acceptance-projection-request.v1", "targetPlan": "execution-plans/target",
+                "runId": "closeout", "changeId": "test", "baselineRevision": baseline, "candidateRevision": candidate,
+                "baselineOverlaySources": overlays, "changedPaths": ["candidate.py"], "affectedConsumerRefs": ["tests/test_one.py"],
+                "targetPlanPaths": ["requirements.md"], "knowledgeContextPath": "knowledge.json", "codeReviewDomain": "toolchain",
+-               "codeReviewPolicyPath": "execution-plans/target/policy.json", "implementationReceiptPath": "RUN-1/complete.json",
++               "codeReviewPolicyPath": "execution-plans/target/policy.json", "implementationReceiptPath": "logs/RUN-1/complete.json",
+                "implementationReceiptHash": sha(run / "complete.json"), "currentQuickDev": current,
+                "commands": [command], "actions": [{"actionId": "acceptance-check", "commandId": "acceptance-check", "dependsOn": [], "order": 1, "activation": True}], "authorizes": []}
+-    request_path = write(root / "projection.json", request)
++    request_path = write(target / "compact-vdd-projection-request.v1.json", request)
+     monkeypatch.setattr(cli, "REPOSITORY_ROOT", root)
+     # Code lives in the fixture repository, like the real installed entrypoint.
+     monkeypatch.setattr(handoff, "OWNER", root / ".agents/skills/quick-dev-tdd-adapter/tools")
+     projected = projection.project(root, request_path)
+     bundle = root / projected["bundle"]
+-    prepared_path = root / "prepared.json"
++    prepared_path = target / "acceptance-inputs/prepared.json"
+     cli.prepare_run(str(root / projected["runRequest"]), str(prepared_path), prerequisite_bundle_path=bundle.relative_to(target).as_posix())
+     coord = {"schemaVersion": "jimuyun.acceptance-coordinator-request.v3", "targetPlan": "execution-plans/target",
+-             "preparedRunInput": ref(prepared_path, root), "skillInputReceipt": ref(skill["receipt"], root),
+-             "skillInputContract": ref(skill["contract"], root), "authorizes": []}
+-    return write(root / "coordinator.json", coord), root / "coordinator-result.json", current
++             "preparedRunInput": ref(prepared_path, target), "skillInputReceipt": ref(skill["receipt"], target),
++             "skillInputContract": ref(skill["contract"], target), "authorizes": []}
++    return write(target / "acceptance-coordinator-request.v3.json", coord), target / "acceptance-inputs/coordinator-result.json", current
+ 
+ 
+ def publish_ready_v2_receipt(root, *, target):
+@@ -324,7 +333,7 @@ def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch
+         write(path, value)
+     else:
+         request_value = json.loads(request.read_text(encoding="utf-8"))
+-        pointer = tmp_path / request_value["skillInputReceipt"]["path"]
++        pointer = request.parent / request_value["skillInputReceipt"]["path"]
+         generation = json.loads(pointer.read_text(encoding="utf-8"))["generation_id"]
+         path = pointer.parent / "skill-input-generations" / generation / "context.json"
+         value = json.loads(path.read_text()); value["sections"] = []
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py b/.agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py
+new file mode 100644
+index 00000000..97646c4a
+--- /dev/null
++++ b/.agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py
+@@ -0,0 +1,273 @@
++"""ADR-0053/0058: main code validates candidate data without importing it."""
++import importlib
++import json
++from pathlib import Path
++import shutil
++import subprocess
++import sys
++from types import SimpleNamespace
++
++import pytest
++
++from test_current_acceptance_closeout import ROOT, git, knowledge, write
++from knowledge_context import InputError, freeze_knowledge_context
++
++
++@pytest.fixture
++def repository(tmp_path):
++    root = tmp_path / "candidate"
++    root.mkdir()
++    (root / "rules.md").write_text("# Rules\nVerify exact source bytes.\n", encoding="utf-8")
++    for name in ("knowledge_context_validation.py", "_knowledge_locator_core.py"):
++        path = root / "scripts/python" / name
++        path.parent.mkdir(parents=True, exist_ok=True)
++        shutil.copyfile(ROOT / "scripts/python" / name, path)
++    git(root, "init", "-q", "-b", "main")
++    git(root, "config", "core.autocrlf", "false")
++    git(root, "config", "user.email", "fixture@example.invalid")
++    git(root, "config", "user.name", "Fixture")
++    git(root, "add", ".")
++    git(root, "commit", "-qm", "trusted main fixture")
++    target = root / "execution-plans/target"
++    frozen = knowledge(root, target, git(root, "rev-parse", "HEAD"))
++    return root, target, frozen
++
++
++def test_candidate_core_is_data_and_cannot_execute(repository):
++    root, target, expected = repository
++    marker = root / "candidate-executed"
++    (root / "scripts/python/_knowledge_locator_core.py").write_text(
++        "from pathlib import Path\nPath(" + repr(str(marker)) + ").touch()\nraise RuntimeError('candidate code')\n",
++        encoding="utf-8",
++    )
++    before = git(root, "rev-parse", "main", "HEAD")
++    assert freeze_knowledge_context(target, "knowledge.json") == expected
++    assert not marker.exists()
++    assert git(root, "rev-parse", "main", "HEAD") == before
++
++
++def test_candidate_validator_is_never_executed(repository):
++    root, target, expected = repository
++    (root / "scripts/python/knowledge_context_validation.py").write_text("raise RuntimeError('candidate validator')\n")
++    assert freeze_knowledge_context(target, "knowledge.json") == expected
++
++
++def test_import_pollution_and_python_environment_are_isolated(repository, monkeypatch, tmp_path):
++    root, target, expected = repository
++    marker = tmp_path / "imported"
++    poison = tmp_path / "poison"
++    poison.mkdir()
++    for name in ("sitecustomize.py", "json.py", "_knowledge_locator_core.py"):
++        (poison / name).write_text("from pathlib import Path\nPath(" + repr(str(marker)) + ").touch()\nraise RuntimeError('poison')\n")
++    monkeypatch.setenv("PYTHONPATH", str(poison))
++    monkeypatch.setenv("PYTHONHOME", str(poison))
++    monkeypatch.setitem(sys.modules, "_knowledge_locator_core", SimpleNamespace())
++    assert freeze_knowledge_context(target, "knowledge.json") == expected
++    assert not marker.exists()
++
++
++@pytest.mark.parametrize("mutation", ["consumer", "preflight", "source", "publication", "projection", "policy"])
++def test_invalid_candidate_data_remains_rejected(repository, mutation):
++    root, target, _ = repository
++    path = target / "knowledge.json"
++    doc = json.loads(path.read_text())
++    if mutation == "consumer":
++        doc["consumer"] = "vdd"
++    elif mutation == "preflight":
++        doc["preflight"]["status"] = "blocked"
++    elif mutation == "source":
++        (root / "rules.md").write_text("changed\n")
++    elif mutation == "publication":
++        (root / "knowledge/indexes/current.json").write_text("{}")
++    elif mutation == "projection":
++        (root / "knowledge/projections/consumer-projections.v1.json").write_text("{}")
++    else:
++        (root / "knowledge/policies/consumer-policies.v2.json").write_text("{}")
++    write(path, doc)
++    with pytest.raises(InputError):
++        freeze_knowledge_context(target, "knowledge.json")
++
++
++def test_missing_main_or_dependency_fails_closed(repository):
++    root, target, _ = repository
++    git(root, "update-ref", "-d", "refs/heads/main")
++    with pytest.raises(InputError):
++        freeze_knowledge_context(target, "knowledge.json")
++
++
++def test_missing_main_core_is_not_replaced_by_candidate(repository):
++    root, target, _ = repository
++    git(root, "rm", "scripts/python/_knowledge_locator_core.py")
++    git(root, "commit", "-qm", "main lacks dependency")
++    (root / "scripts/python/_knowledge_locator_core.py").write_text("# candidate fallback must not run\n")
++    with pytest.raises(InputError):
++        freeze_knowledge_context(target, "knowledge.json")
++
++
++def test_context_and_source_path_escape_fail_closed(repository, tmp_path):
++    root, target, _ = repository
++    with pytest.raises(InputError):
++        freeze_knowledge_context(target, "../target/knowledge.json")
++    outside = tmp_path / "outside"
++    outside.write_text("outside\n")
++    source = root / "rules.md"
++    source.unlink()
++    try:
++        source.symlink_to(outside)
++    except OSError:
++        pytest.skip("symlink creation unavailable")
++    with pytest.raises(InputError):
++        freeze_knowledge_context(target, "knowledge.json")
++
++
++def test_main_drift_during_child_rejects_result(repository, monkeypatch):
++    root, _, _ = repository
++    helper = importlib.import_module("trusted_knowledge_validator")
++    proxy = helper.TrustedMainValidator(root)
++    original = helper._run_child
++    def drift(*args, **kwargs):
++        result = original(*args, **kwargs)
++        (root / "new.txt").write_text("new main\n")
++        git(root, "add", "new.txt")
++        git(root, "commit", "-qm", "main moved")
++        return result
++    monkeypatch.setattr(helper, "_run_child", drift)
++    with pytest.raises(ValueError, match="main changed"):
++        proxy.validate_catalog_freshness(root)
++
++
++def test_corrupted_materialized_bytes_reject_before_execution(repository, monkeypatch):
++    root, _, _ = repository
++    helper = importlib.import_module("trusted_knowledge_validator")
++    original = helper._run_child
++    def corrupt(directory, request, **kwargs):
++        (directory / "_knowledge_locator_core.py").write_text("raise RuntimeError('corrupt')\n")
++        return original(directory, request, **kwargs)
++    monkeypatch.setattr(helper, "_run_child", corrupt)
++    with pytest.raises(ValueError, match="identity|failed"):
++        helper.TrustedMainValidator(root).validate_catalog_freshness(root)
++
++
++def test_unexpected_local_main_dependency_is_rejected(repository):
++    root, target, _ = repository
++    with (root / "scripts/python/_knowledge_locator_core.py").open("a") as stream:
++        stream.write("\nimport arbitrary_candidate_plugin\n")
++    git(root, "add", "scripts/python/_knowledge_locator_core.py")
++    git(root, "commit", "-qm", "unsupported trusted dependency")
++    with pytest.raises(InputError, match="dependency"):
++        freeze_knowledge_context(target, "knowledge.json")
++
++
++def test_refresh_preserves_selection_and_updates_only_selected_bytes(repository):
++    root, target, _ = repository
++    from knowledge_context import refresh_context_read_set
++    doc = json.loads((target / "knowledge.json").read_text())
++    (root / "rules.md").write_text("# Rules\nUpdated source bytes.\n")
++    refreshed = refresh_context_read_set(doc, root)
++    before = doc["locator_result"]["candidates"][0]
++    after = refreshed["locator_result"]["candidates"][0]
++    assert after["path"] == before["path"] and after["module_id"] == before["module_id"]
++    assert after["source_sha256"] != before["source_sha256"]
++    assert len(refreshed["locator_result"]["candidates"]) == 1
++    assert doc["locator_result"]["candidates"][0] == before
++
++
++def test_short_child_timeout_cleans_process_and_publishes_nothing(repository, monkeypatch):
++    root, target, _ = repository
++    helper = importlib.import_module("trusted_knowledge_validator")
++    with (root / "scripts/python/_knowledge_locator_core.py").open("a") as stream:
++        stream.write("\nwhile True:\n    pass\n")
++    git(root, "add", "scripts/python/_knowledge_locator_core.py")
++    git(root, "commit", "-qm", "trusted fixture stalls")
++    original = helper._run_child
++    processes = []
++    popen = helper.subprocess.Popen
++    def observe(*args, **kwargs):
++        process = popen(*args, **kwargs)
++        processes.append(process)
++        return process
++    monkeypatch.setattr(helper.subprocess, "Popen", observe)
++    monkeypatch.setattr(helper, "_run_child", lambda d, q: original(d, q, timeout=.15))
++    with pytest.raises(InputError):
++        freeze_knowledge_context(target, "knowledge.json")
++    assert processes and all(p.poll() is not None for p in processes)
++    assert not (target / "acceptance-current.v1.json").exists()
++
++
++def test_private_worker_rejects_unsupported_operation_and_flag_bypass(repository):
++    root, target, _ = repository
++    helper = importlib.import_module("trusted_knowledge_validator")
++    proxy = helper.TrustedMainValidator(root)
++    with pytest.raises(ValueError, match="operation"):
++        proxy._call("exec")
++    with pytest.raises(ValueError, match="flags"):
++        proxy.validate_context({}, repository_root=root, verify_sources=False)
++    with pytest.raises(ValueError, match="root"):
++        proxy.validate_catalog_freshness(target)
++
++
++@pytest.mark.parametrize("mutation", ["json", "nonce", "result"])
++def test_bad_child_responses_cannot_authorize_validation(repository, monkeypatch, mutation):
++    root, _, _ = repository
++    helper = importlib.import_module("trusted_knowledge_validator")
++    original = helper.subprocess.Popen
++    class MutatedResponse(original):
++        def communicate(self, *args, **kwargs):
++            stdout, stderr = super().communicate(*args, **kwargs)
++            if "-I" in self.args and self.returncode == 0:
++                if mutation == "json":
++                    stdout = b"truncated response"
++                else:
++                    value = json.loads(stdout)
++                    value["nonce" if mutation == "nonce" else "result"] = "wrong" if mutation == "nonce" else True
++                    stdout = json.dumps(value).encode()
++            return stdout, stderr
++    monkeypatch.setattr(helper.subprocess, "Popen", MutatedResponse)
++    with pytest.raises(ValueError, match="response|identity"):
++        helper.TrustedMainValidator(root).validate_catalog_freshness(root)
++
++
++def test_cancel_reaps_isolated_child(repository, monkeypatch):
++    root, _, _ = repository
++    helper = importlib.import_module("trusted_knowledge_validator")
++    original = helper.subprocess.Popen
++    children = []
++    class Cancelled(original):
++        def communicate(self, *args, **kwargs):
++            if "-I" in self.args and self not in children:
++                children.append(self)
++                raise KeyboardInterrupt
++            return super().communicate(*args, **kwargs)
++    monkeypatch.setattr(helper.subprocess, "Popen", Cancelled)
++    with pytest.raises(KeyboardInterrupt):
++        helper.TrustedMainValidator(root).validate_catalog_freshness(root)
++    assert len(children) == 1 and children[0].poll() is not None
++
++
++def test_private_git_snapshot_does_not_follow_candidate_git_environment(repository, monkeypatch, tmp_path):
++    root, target, expected = repository
++    monkeypatch.setenv("GIT_DIR", str(tmp_path / "unrelated.git"))
++    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
++    monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.worktree")
++    monkeypatch.setenv("GIT_CONFIG_VALUE_0", str(tmp_path))
++    assert freeze_knowledge_context(target, "knowledge.json") == expected
++
++
++def test_target_nested_repository_cannot_choose_its_own_trust_root(repository):
++    root, target, _ = repository
++    (target / "knowledge").mkdir()
++    files = target / "scripts/python"
++    files.mkdir(parents=True)
++    (files / "_knowledge_locator_core.py").write_text("# Untrusted nested repository.\n")
++    (files / "knowledge_context_validation.py").write_text(
++        "def validate_context(*args, **kwargs): return None\n"
++        "def validate_worktree_sources(*args, **kwargs): return None\n"
++        "def validate_catalog_freshness(*args, **kwargs): return None\n"
++    )
++    git(target, "init", "-q", "-b", "main")
++    git(target, "config", "user.email", "fixture@example.invalid")
++    git(target, "config", "user.name", "Nested fixture")
++    git(target, "add", ".")
++    git(target, "commit", "-qm", "candidate-chosen main must not grant trust")
++    with pytest.raises(InputError, match="ambiguous"):
++        freeze_knowledge_context(target, "knowledge.json")

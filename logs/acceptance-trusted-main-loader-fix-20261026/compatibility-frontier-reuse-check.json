@@ -1,0 +1,18 @@
+{
+  "same_command": true,
+  "same_cwd": true,
+  "same_contract": true,
+  "same_engine": true,
+  "same_environment_identity": false,
+  "same_file_inventory_and_hashes": false,
+  "different_file_path_count": 6,
+  "changed_common_content_count": 5,
+  "changed_common_paths": [
+    "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+    "knowledge/indexes/current.json",
+    "knowledge/indexes/generations/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/manifest.json",
+    "knowledge/projections/consumer-projections.v1.json",
+    "knowledge/snapshots/repository-source-snapshot.v1.json"
+  ],
+  "note": "Deduplicated pytest current-directory symlinks before comparing distinct actual originals; no receipt was accepted or converted"
+}

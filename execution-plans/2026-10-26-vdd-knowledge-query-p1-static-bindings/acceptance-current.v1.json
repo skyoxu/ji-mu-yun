@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729",
+  "finalResult": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:13d958d223426a92d6f281bcbadcfb14c4833cfee11747b0877becaece75acd8"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:c68cba0c2151b30fed4e740bd06f995d11dca2d71449d527857fe3d1ab205d9b"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

@@ -1,0 +1,69 @@
+{
+  "adapter_hash": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "compact-vdd-projection.v1",
+  "affected_consumer_refs": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/vdd-execution-plan/SKILL.md"
+  ],
+  "allowed_write_roots": [],
+  "baseline_content_manifest_hash": "sha256:75293fe6551e1afcba4a74021a147f56af510a70934811e979bf1a09e1442382",
+  "baseline_content_manifest_path": "acceptance-inputs/acceptance-main-isolated-20261026/baseline-content-manifest.v1.json",
+  "baseline_revision": "965df2e34f71ef197fffd8afb68f037688486ca2",
+  "candidate_content_manifest_hash": "sha256:4c161e44b7e9869a2659758466a566406a0ffb2c257f4110e34995a8aeaba477",
+  "candidate_content_manifest_path": "acceptance-inputs/acceptance-main-isolated-20261026/candidate-content-manifest.v1.json",
+  "candidate_mode": "commit",
+  "candidate_revision": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "candidate_scope_manifest": {
+    "candidate_source_root": "sha256:60b4d433b50764d535e05849c89a2ee4578b6cbb718a2b5098d166d45da952bb",
+    "path": "acceptance-inputs/acceptance-main-isolated-20261026/candidate-source-manifest.v1.json",
+    "sha256": "sha256:2d6245dee54a8836825d215cbbf3c7e2ebcadb9b6f2ff0d76e4d3039d66c9464"
+  },
+  "change_id": "knowledge-query-current-isolated-main-validation",
+  "changed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py",
+    ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "scripts/toolchain/knowledge_query/adapter.py",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+    "scripts/vdd/compile_plan.py",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+  ],
+  "code_review_domain": "toolchain",
+  "code_review_policy_hash": "sha256:0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502",
+  "code_review_policy_path": "acceptance-inputs/acceptance-main-isolated-20261026/toolchain-code-review.v1.json",
+  "created_utc": "2026-08-01T00:00:00Z",
+  "execution_mode": "evidence_only",
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet/",
+    "runtime/phase-a/"
+  ],
+  "run_id": "acceptance-main-isolated-20261026",
+  "target": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "target_plan_hash": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "target_plan_paths": [
+    "semantic-plan-bundle.v1.json"
+  ],
+  "validator_hash": "sha256:1d98150f7b23cf4df178c10941ecf02ab5b13a6982c4b049d966e193022bd620"
+}

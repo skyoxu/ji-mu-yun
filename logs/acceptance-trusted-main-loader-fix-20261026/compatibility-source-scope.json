@@ -1,0 +1,12 @@
+{
+  "authorizes": [],
+  "final_root_guard_proof": "GREEN-final-focused.xml includes real valid-root and nested-main rejection; actual-context-freeze-final.json uses final code",
+  "final_source_remaining_composition_cases": "compatibility-r3-*.xml, plus later actual native Acceptance controlled receipts",
+  "kind": "Evidence reuse limits, not receipt conversion",
+  "not_claimed": "No old run is relabeled as execution on the final commit; no zero-regression guarantee",
+  "pre_root_guard_composition_positives": [
+    "compatibility-successor-smoke.xml",
+    "compatibility-successor.xml successful cases only"
+  ],
+  "unchanged_35_checks": "Original raw compatibility.xml; no claim all ran on final candidate"
+}

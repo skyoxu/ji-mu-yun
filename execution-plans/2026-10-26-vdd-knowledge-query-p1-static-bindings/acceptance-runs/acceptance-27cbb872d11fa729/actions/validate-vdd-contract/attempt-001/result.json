@@ -1,0 +1,71 @@
+{
+  "authorizes": [],
+  "commandId": "validate-vdd-contract",
+  "commandRegistryHash": "sha256:77b68c9e61898015b25d9fd016ec66a286bcab5feeb22b6fa871bf53d5bdc6a7",
+  "environmentIdentity": {
+    "hash": "sha256:813232fda9e92b6a0d14dbeec03cdeebbc439b2be9a12c4959ad6d132429c37c",
+    "names": [
+      "HOME",
+      "PATH",
+      "TMPDIR",
+      "USER"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      ".agents/skills/vdd-execution-plan/scripts/validate_plan.py",
+      "--plan-dir",
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+      "--input",
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/semantic-plan-bundle.v1.json"
+    ],
+    "commandId": "validate-vdd-contract",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:1dd698ccf165886f1d66c2502977e42925ca14bccf85cce19788a2c60ce6d3db",
+  "processResult": {
+    "commandId": "validate-vdd-contract",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"findings\": [], \"valid\": true}\n",
+    "stdoutSha256": "sha256:9772b8d79ea4fa2643f712edfb889b5c2319c7f9476127528fcb489bf917c36c"
+  },
+  "processResultHash": "sha256:65d2c91509320f9bfe971de3ffc6f5ae55457d137fecff1b981e2ab0a9b4606e",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

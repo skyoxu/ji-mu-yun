@@ -1,0 +1,27 @@
+{
+  "state": "acceptance-passed",
+  "commands": {
+    "project-compact-vdd": {
+      "exit_code": 0,
+      "seconds": 558.3147549249989,
+      "finished_at": "2026-10-26T19:19:27.165694+00:00"
+    },
+    "prepare-run": {
+      "exit_code": 0,
+      "seconds": 545.0363338380048,
+      "finished_at": "2026-10-26T19:28:32.202978+00:00"
+    },
+    "run-coordinator": {
+      "exit_code": 0,
+      "seconds": 601.6980408149975,
+      "finished_at": "2026-10-26T19:38:33.902115+00:00"
+    }
+  },
+  "candidate": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "authorizes": [],
+  "active": "run-coordinator",
+  "started_at": "2026-10-26T19:28:32.203820+00:00",
+  "finished_at": "2026-10-26T19:38:33.902649+00:00",
+  "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-result.v4.json",
+  "run_directory": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729"
+}

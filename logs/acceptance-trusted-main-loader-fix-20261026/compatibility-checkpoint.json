@@ -1,0 +1,122 @@
+{
+  "state": "passed",
+  "completed": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap"
+  ],
+  "remaining": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap"
+  ],
+  "case_proofs": {
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_bootstrap_requires_explicit_intent_even_for_risk_paths[.agents/skills/run-phase-bootstrap-review/SKILL.md]": "compatibility.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_bootstrap_requires_explicit_intent_even_for_risk_paths[runtime/phase-a/start.ps1]": "compatibility.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_bootstrap_requires_explicit_intent_even_for_risk_paths[PhaseA.Platform/Program.cs]": "compatibility.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present0]": "compatibility-successor-smoke.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]": "compatibility-successor.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]": "compatibility-successor.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf": "compatibility-successor.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass": "compatibility-r3-45ad935c0671.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift": "compatibility-r3-7a70e8ae8bda.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]": "compatibility-r3-5a28d680b9c2.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]": "compatibility-r3-f2faf245bd5f.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]": "compatibility-r3-81f15708bed5.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]": "compatibility-r3-1a6a23ae64b9.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]": "compatibility-r3-f4d851aec5d1.xml",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap": "compatibility-r3-74c9f6d942d2.xml"
+  },
+  "tests": {
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]": {
+      "seconds": 648.3424574579985,
+      "finished_at": "2026-10-26T16:15:17.174142+00:00"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]": {
+      "seconds": 553.3064040910031,
+      "finished_at": "2026-10-26T16:24:30.480970+00:00"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf": {
+      "seconds": 172.14950185400085,
+      "finished_at": "2026-10-26T16:27:22.630823+00:00"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass": {
+      "seconds": 455.9100705430028,
+      "cumulative_wall_seconds": 845.5581135890036,
+      "finished_at": "2026-10-26T16:49:40.045491+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-45ad935c0671.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift": {
+      "seconds": 428.4154477579941,
+      "cumulative_wall_seconds": 472.0074477579941,
+      "finished_at": "2026-10-26T16:56:48.462292+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-7a70e8ae8bda.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]": {
+      "seconds": 507.9421814180023,
+      "cumulative_wall_seconds": 546.9341814180023,
+      "finished_at": "2026-10-26T17:05:16.405617+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-5a28d680b9c2.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]": {
+      "seconds": 579.4819670020006,
+      "cumulative_wall_seconds": 623.7959670020006,
+      "finished_at": "2026-10-26T17:14:55.888776+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-f2faf245bd5f.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]": {
+      "seconds": 525.0385075969971,
+      "cumulative_wall_seconds": 566.4275075969971,
+      "finished_at": "2026-10-26T17:23:40.928595+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-81f15708bed5.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]": {
+      "seconds": 513.7869764479983,
+      "cumulative_wall_seconds": 554.7189764479983,
+      "finished_at": "2026-10-26T17:32:14.717147+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-1a6a23ae64b9.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]": {
+      "seconds": 509.5833588290043,
+      "cumulative_wall_seconds": 550.0133588290042,
+      "finished_at": "2026-10-26T17:40:44.301954+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-f4d851aec5d1.xml"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap": {
+      "seconds": 433.6339806690012,
+      "cumulative_wall_seconds": 473.38898066900117,
+      "finished_at": "2026-10-26T17:47:57.937652+00:00",
+      "exit_code": 0,
+      "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-74c9f6d942d2.xml"
+    }
+  },
+  "history": [
+    "compatibility-checkpoint.r1-failed.json",
+    "compatibility-checkpoint.r2-setup-failed.json"
+  ],
+  "authorizes": [],
+  "active": ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap",
+  "started_at": "2026-10-26T17:40:44.303176+00:00",
+  "exit_code": 0,
+  "finished_at": "2026-10-26T17:47:57.938533+00:00"
+}

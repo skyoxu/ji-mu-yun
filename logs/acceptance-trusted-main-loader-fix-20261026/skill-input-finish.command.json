@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+    "-B",
+    "scripts/python/skill_input_v2.py",
+    "finish",
+    "--plan-id",
+    "knowledge-query-main-isolated-20261026",
+    "--attempt-id",
+    "0411432b57114bfda634a47f402667c2"
+  ],
+  "started_at": "2026-10-26T17:48:00.187326+00:00",
+  "authorizes": []
+}

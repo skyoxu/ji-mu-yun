@@ -1,0 +1,22 @@
+{
+  "actionId": "validate-vdd-contract",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "validate-vdd-contract",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:4433f4453d38960f3c3a93ae06d0b686a4e0fef6f0003c44320aba168cf10768",
+    "knowledgeContextHash": "sha256:13eb9160cc28b03bc93a6accd7e3c8a8211d44e1c76f713bea49fbcbb9be3ae5",
+    "runInputHash": "sha256:8c6853869896b07a04a518bf795445b7cc024c383e401c30599f7146defde4cb",
+    "skillInputBindingHash": "sha256:fcf127ffafd5c9fba22fe5857634985b09b497ab0dc27240c22999569dd04b08",
+    "skillInputContextHash": "sha256:08e8eabc5f857b684705f2e437e3a407474ff8f6a13b385526f8e00a77190de2"
+  },
+  "ownerToken": "owner-acceptance-27cbb872d11fa729",
+  "processId": 3980957,
+  "recordedUtc": "2026-10-26T19:28:33.546998Z",
+  "runId": "acceptance-27cbb872d11fa729",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 1
+}

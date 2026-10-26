@@ -1,0 +1,31 @@
+{
+  "completed": [
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass"
+  ],
+  "tests": {
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]": {
+      "seconds": 648.3424574579985,
+      "finished_at": "2026-10-26T16:15:17.174142+00:00"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]": {
+      "seconds": 553.3064040910031,
+      "finished_at": "2026-10-26T16:24:30.480970+00:00"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf": {
+      "seconds": 172.14950185400085,
+      "finished_at": "2026-10-26T16:27:22.630823+00:00"
+    },
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass": {
+      "seconds": 350.65728697399754,
+      "finished_at": "2026-10-26T16:33:13.288459+00:00"
+    }
+  },
+  "state": "failed",
+  "authorizes": [],
+  "active": ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass",
+  "started_at": "2026-10-26T16:27:22.631211+00:00",
+  "exit_code": 1
+}

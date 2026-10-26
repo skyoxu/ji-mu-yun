@@ -1,0 +1,587 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="12" skipped="0" tests="69" time="428.136" timestamp="2026-10-26T15:49:52.646601+00:00" hostname="01dcaac9a2f8"><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_q8_projection_and_real_coordinator_close_and_replay[present0]" time="16.524"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/regression/execution-complete.v1.json,RUN-1/canonical-evidence/regression/observation.v2.json,RUN-1/canonical-evidence/regression/process-receipt.v2.json,RUN-1/canonical-evidence/regression/regression-gate.v1.json,RUN-1/canonical-evidence/regression/reuse-complete.v1.json,RUN-1/canonical-evidence/regression/reuse-decision.v1.json,RUN-1/canonical-evidence/regression/reuse-publication.v1.json,RUN-1/canonical-evidence/regression/reuse-request.v1.json,RUN-1/canonical-evidence/regression/runtime-edges/0001-A-1-AS-1.json,RUN-1/canonical-evidence/regression/runtime-edges/0002-A-2-AS-2.json">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f221157cad0&gt;
+present = (True, True)
+
+    @pytest.mark.parametrize("present", [(True, True), (True, False), (False, False)])
+    def test_current_q8_projection_and_real_coordinator_close_and_replay(tmp_path, monkeypatch, present):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, present)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:240: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and0')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and0/RUN-1/canonical-evidence/regression')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-1', 'assertion_id': 'AS-1', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/regression/execution-complete.v1.json,RUN-1/canonical-evidence/regression/observation.v2.json,RUN-1/canonical-evidence/regression/process-receipt.v2.json,RUN-1/canonical-evidence/regression/regression-gate.v1.json,RUN-1/canonical-evidence/regression/reuse-complete.v1.json,RUN-1/canonical-evidence/regression/reuse-decision.v1.json,RUN-1/canonical-evidence/regression/reuse-publication.v1.json,RUN-1/canonical-evidence/regression/reuse-request.v1.json,RUN-1/canonical-evidence/regression/runtime-edges/0001-A-1-AS-1.json,RUN-1/canonical-evidence/regression/runtime-edges/0002-A-2-AS-2.json
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_q8_projection_and_real_coordinator_close_and_replay[present1]" time="39.167"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2209a3b230&gt;
+present = (True, False)
+
+    @pytest.mark.parametrize("present", [(True, True), (True, False), (False, False)])
+    def test_current_q8_projection_and_real_coordinator_close_and_replay(tmp_path, monkeypatch, present):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, present)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:240: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and1')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and1/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_q8_projection_and_real_coordinator_close_and_replay[present2]" time="26.686"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-1-AS-1.json,RUN-1/canonical-evidence/green/runtime-edges/0002-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f220a6875f0&gt;
+present = (False, False)
+
+    @pytest.mark.parametrize("present", [(True, True), (True, False), (False, False)])
+    def test_current_q8_projection_and_real_coordinator_close_and_replay(tmp_path, monkeypatch, present):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, present)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:240: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and2')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_q8_projection_and2/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-1', 'assertion_id': 'AS-1', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-1-AS-1.json,RUN-1/canonical-evidence/green/runtime-edges/0002-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf" time="16.410"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/regression/execution-complete.v1.json,RUN-1/canonical-evidence/regression/observation.v2.json,RUN-1/canonical-evidence/regression/process-receipt.v2.json,RUN-1/canonical-evidence/regression/regression-gate.v1.json,RUN-1/canonical-evidence/regression/reuse-complete.v1.json,RUN-1/canonical-evidence/regression/reuse-decision.v1.json,RUN-1/canonical-evidence/regression/reuse-publication.v1.json,RUN-1/canonical-evidence/regression/reuse-request.v1.json,RUN-1/canonical-evidence/regression/runtime-edges/0001-A-1-AS-1.json,RUN-1/canonical-evidence/regression/runtime-edges/0002-A-2-AS-2.json">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_handoff_preserves0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f220af4b710&gt;
+
+    def test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf(tmp_path, monkeypatch):
+        # ADR-0058: byte-bound fixture sources must not inherit Git conversion.
+        config = tmp_path / "user.gitconfig"
+        config.write_text("[core]\n\tautocrlf = true\n", encoding="utf-8", newline="\n")
+        monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
+        root = tmp_path / "repo"
+        root.mkdir()
+&gt;       request, output, _ = build(root, monkeypatch, knowledge_newline="\r\n")
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:263: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_handoff_preserves0/repo')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_current_handoff_preserves0/repo/RUN-1/canonical-evidence/regression')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-1', 'assertion_id': 'AS-1', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/regression/execution-complete.v1.json,RUN-1/canonical-evidence/regression/observation.v2.json,RUN-1/canonical-evidence/regression/process-receipt.v2.json,RUN-1/canonical-evidence/regression/regression-gate.v1.json,RUN-1/canonical-evidence/regression/reuse-complete.v1.json,RUN-1/canonical-evidence/regression/reuse-decision.v1.json,RUN-1/canonical-evidence/regression/reuse-publication.v1.json,RUN-1/canonical-evidence/regression/reuse-request.v1.json,RUN-1/canonical-evidence/regression/runtime-edges/0001-A-1-AS-1.json,RUN-1/canonical-evidence/regression/runtime-edges/0002-A-2-AS-2.json
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass" time="38.343"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_failed_acceptance_action_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f220aa37a10&gt;
+
+    def test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass(tmp_path, monkeypatch):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False), command_exit=3)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:271: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_failed_acceptance_action_0')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_failed_acceptance_action_0/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_q8_replay_rejects_source_and_deferred_drift" time="43.592"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_q8_replay_rejects_source_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2210269070&gt;
+
+    def test_q8_replay_rejects_source_and_deferred_drift(tmp_path, monkeypatch):
+&gt;       request, output, binding = build(tmp_path, monkeypatch, (True, False))
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:284: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_q8_replay_rejects_source_0')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_q8_replay_rejects_source_0/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_coordinator_replay_rejects_changed_owned_evidence[final]" time="38.992"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f220a728770&gt;
+mutation = 'final'
+
+    @pytest.mark.parametrize("mutation", ["final", "events", "registry", "prepared", "context"])
+    def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch, mutation):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject0')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject0/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_coordinator_replay_rejects_changed_owned_evidence[events]" time="44.314"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f221038af60&gt;
+mutation = 'events'
+
+    @pytest.mark.parametrize("mutation", ["final", "events", "registry", "prepared", "context"])
+    def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch, mutation):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject1')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject1/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_coordinator_replay_rejects_changed_owned_evidence[registry]" time="41.389"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f220ada3f20&gt;
+mutation = 'registry'
+
+    @pytest.mark.parametrize("mutation", ["final", "events", "registry", "prepared", "context"])
+    def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch, mutation):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject2')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject2/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_coordinator_replay_rejects_changed_owned_evidence[prepared]" time="40.932"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject3')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f220ad4e360&gt;
+mutation = 'prepared'
+
+    @pytest.mark.parametrize("mutation", ["final", "events", "registry", "prepared", "context"])
+    def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch, mutation):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject3')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject3/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_coordinator_replay_rejects_changed_owned_evidence[context]" time="40.430"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject4')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2209d23c20&gt;
+mutation = 'context'
+
+    @pytest.mark.parametrize("mutation", ["final", "events", "registry", "prepared", "context"])
+    def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch, mutation):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject4')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_coordinator_replay_reject4/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_explicit_review_request_returns_handoff_without_actions_or_bootstrap" time="39.755"><failure message="ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-4/test_explicit_review_request_r0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f2208eb6a20&gt;
+
+    def test_explicit_review_request_returns_handoff_without_actions_or_bootstrap(tmp_path, monkeypatch):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:337: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:125: in build
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:269: in validate_slice_ready
+    return _validate_slice_ready(workspace=workspace, semantic_plan=semantic_plan,
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:334: in _validate_slice_ready
+    originals.finish()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:126: in finish
+    check()
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:105: in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-4/test_explicit_review_request_r0')
+evidence = PosixPath('/tmp/pytest-of-agent/pytest-4/test_explicit_review_request_r0/RUN-1/canonical-evidence/green')
+descriptor = {'acceptance_assertions': [{'acceptance_id': 'A-2', 'assertion_id': 'AS-2', 'case_source_ref': 'tests/test_one.py', 'f....behavior-route.v1'}, 'candidate_hash': 'sha256:f115db82a7f5e9fcbc071bee291da3dd439825c982757ab6a2e66bd9689df3df', ...}
+receipt = {'argv': ['/workspace/scratch/stage5-p1-tests-20261026/bin/python', '-m', 'pytest', 'tests/test_one.py', '-q'], 'candi... 'sha256:b9388bc1d6d12ed6be12da420ab1feca40f99c0e33ec315d92b1e01cb69b25bc', ...}, ...}, 'case_report_error': None, ...}
+
+    def validate_saved_request(workspace, evidence, descriptor, receipt):
+        """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
+        path = evidence / "reuse-request.v1.json"
+        if not path.exists():
+            if receipt.get("execution_reference"):
+                raise ValueError("reuse-request-missing")
+            return  # Historical non-shared evidence retains its existing gates.
+        request = load_json(path)
+        if (request.get("descriptor_sha256") != sha256_value(descriptor)
+                or request.get("profile") != receipt.get("profile_identity")):
+            raise ValueError("reuse-request-identity-changed")
+        if load_json(evidence / "reuse-complete.v1.json") != {
+                "receipt_sha256": sha256_value(receipt), "request_sha256": sha256_value(request)}:
+            raise ValueError("reuse-request-incomplete-or-tampered")
+        if request.get("input") is not None:
+            bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
+            reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+            if reason:
+&gt;               raise ValueError(reason)
+E               ValueError: reuse-dependency-content-changed:RUN-1/canonical-evidence/green/execution-complete.v1.json,RUN-1/canonical-evidence/green/observation.v2.json,RUN-1/canonical-evidence/green/process-receipt.v2.json,RUN-1/canonical-evidence/green/reuse-complete.v1.json,RUN-1/canonical-evidence/green/reuse-decision.v1.json,RUN-1/canonical-evidence/green/reuse-publication.v1.json,RUN-1/canonical-evidence/green/reuse-request.v1.json,RUN-1/canonical-evidence/green/runtime-edges/0001-A-2-AS-2.json,RUN-1/canonical-evidence/green/stage-result.v2.json,RUN-1/canonical-evidence/green/stderr.bin
+
+.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:364: ValueError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_bootstrap_requires_explicit_intent_even_for_risk_paths[.agents/skills/run-phase-bootstrap-review/SKILL.md]" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_bootstrap_requires_explicit_intent_even_for_risk_paths[runtime/phase-a/start.ps1]" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_bootstrap_requires_explicit_intent_even_for_risk_paths[PhaseA.Platform/Program.cs]" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_file_rules_reject_suffixes_and_file_as_directory" time="0.006" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_knowledge_query_exact_files_are_owned_without_external_partition" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_knowledge_query_neighbors_remain_uncovered" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_phase_entrypoint_remains_phase_only" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_policy_checks_and_evaluation_modes_are_not_weakened" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_policy_revision_and_domain_identity_are_bound" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_run_input_accepts_only_phase_and_toolchain" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_toolchain_policy_covers_workflows_docs_plan_and_shared_phase_entrypoint" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_toolchain_domain.ToolchainDomainTests" name="test_uncovered_path_fails_closed" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_handoff_validates_manifest_against_declared_commit_not_worktree" time="0.030" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_can_emit_non_authorizing_quick_dev_recovery_route" time="0.026" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_freezes_only_explicit_paths_and_reproduces_manifest_custody" time="0.091" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_rejects_dirty_worktree_without_candidate_revision" time="0.016" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_rejects_handoff_that_no_longer_matches_the_terminal_contract" time="0.040" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_rejects_legacy_or_unbound_implementation_receipts" time="0.035" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_rejects_paths_outside_the_handoff_candidate_content_manifest" time="0.046" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_rejects_receipt_bound_to_a_different_commit" time="0.032" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_rejects_unchanged_or_ambiguous_paths" time="0.051" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_uses_explicit_baseline_overlay_without_absorbing_prior_dirty_bytes" time="0.067" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_compact_vdd_projection.CompactVddProjectionTests" name="test_projection_uses_quick_dev_handoff_without_claiming_plan_state_and_is_append_only" time="0.088" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_broh_s4_acceptance_owns_review_requirement" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_caller_authored_semantic_facts_are_not_accepted" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_cli_rejects_caller_authored_current_decision" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_cli_replays_candidate_identity_before_deciding" time="0.002" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_execution_plan_metadata_is_known_low_risk" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_incomplete_deterministic_evidence_is_blocked" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_prepare_route_rejects_handwritten_decision_when_replay_differs" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_real_candidate_manifest_preserves_repository_paths_for_skill_route_decision" time="0.072" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_repository_authority_paths_do_not_implicitly_require_review" time="0.001" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_typed_public_api_boundary_does_not_implicitly_require_bootstrap" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_unknown_trigger_policy_fails_closed" time="0.000" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_review_requirement.ReviewRequirementTests" name="test_workflow_paths_do_not_implicitly_select_skill_route" time="0.001" /></testsuite></testsuites>

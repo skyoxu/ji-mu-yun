@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+    "-B",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    "prepare-run",
+    "--input",
+    "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-run-request.acceptance-main-isolated-20261026.v1.json",
+    "--knowledge-context",
+    "acceptance-inputs/acceptance-20261026-main-isolated/knowledge-context.refactor-acceptance.current.v1.json",
+    "--prerequisite-bundle",
+    "acceptance-inputs/acceptance-main-isolated-20261026/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "--out",
+    "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/prepared-run-input.v1.json"
+  ],
+  "at": "2026-10-26T19:19:27.166266+00:00",
+  "authorizes": [],
+  "idle_seconds": 600,
+  "unit_seconds": 1800
+}

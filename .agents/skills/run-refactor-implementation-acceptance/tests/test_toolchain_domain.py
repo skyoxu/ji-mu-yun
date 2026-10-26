@@ -72,6 +72,49 @@ class ToolchainDomainTests(unittest.TestCase):
         with self.assertRaisesRegex(InputError, "revision is stale"):
             resolve_code_review_policy(policy, candidate("scripts/sc/tool.py"), baseline(), "sha256:" + "b" * 64)
 
+    # ADR-0053: route actual knowledge-query paths without granting write authority.
+    def test_knowledge_query_exact_files_are_owned_without_external_partition(self) -> None:
+        paths = (
+            "scripts/toolchain/knowledge_query/adapter.py",
+            "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+            "scripts/vdd/compile_plan.py",
+            "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+        )
+        binding = resolve_code_review_policy(self.policy(), candidate(*paths), baseline(), "sha256:" + "b" * 64)
+        self.assertEqual(sorted(paths), binding["triggeredPaths"])
+        self.assertEqual([], binding["unreviewedExternalDomainPaths"])
+        self.assertEqual([], binding["crossDomainDependencyPaths"])
+        self.assertEqual([], binding["authorizes"])
+
+    def test_file_rules_reject_suffixes_and_file_as_directory(self) -> None:
+        exact_files = (
+            ".gitignore",
+            "docs/PROJECT_DOCUMENTATION_INDEX.md",
+            "scripts/toolchain/knowledge_query/adapter.py",
+            "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+            "scripts/vdd/compile_plan.py",
+            "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+        )
+        for path in exact_files:
+            for changed in (path + ".backup", path + "-other", path + "/child.py"):
+                with self.subTest(changed=changed), self.assertRaisesRegex(InputError, "coverage is incomplete"):
+                    resolve_code_review_policy(self.policy(), candidate(changed), baseline(), "sha256:" + "b" * 64)
+
+    def test_knowledge_query_neighbors_remain_uncovered(self) -> None:
+        for path in ("scripts/toolchain/knowledge_query/other.py", "scripts/vdd/other.py",
+                     "tests/toolchain/knowledge_query/other.py", "PhaseA.Platform/Program.cs"):
+            with self.subTest(path=path), self.assertRaisesRegex(InputError, "coverage is incomplete"):
+                resolve_code_review_policy(self.policy(), candidate(path), baseline(), "sha256:" + "b" * 64)
+
+    def test_policy_checks_and_evaluation_modes_are_not_weakened(self) -> None:
+        self.assertEqual([
+            {"policyCheckId": "TOOLCHAIN-CR-AUTH-001", "evaluationMode": "deterministic"},
+            {"policyCheckId": "TOOLCHAIN-CR-SCOPE-001", "evaluationMode": "deterministic"},
+            {"policyCheckId": "TOOLCHAIN-CR-COMPAT-001", "evaluationMode": "hybrid"},
+            {"policyCheckId": "TOOLCHAIN-CR-TEST-001", "evaluationMode": "deterministic"},
+            {"policyCheckId": "TOOLCHAIN-CR-EVIDENCE-001", "evaluationMode": "review_gate"},
+        ], self.policy()["checks"])
+
     def test_run_input_accepts_only_phase_and_toolchain(self) -> None:
         value = {
             "target": str(SKILL_ROOT.resolve()), "run_id": "run", "created_utc": "2026-08-01T00:00:00Z",

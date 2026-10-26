@@ -19,7 +19,7 @@ sys.path.insert(0, str(SCRIPTS))
 import acceptance_cli as cli
 import compact_vdd_projection as projection
 import current_quick_dev_handoff as handoff
-from test_cer_behavior_routing import fixture, execute, implement
+from test_cer_behavior_routing import fixture, execute as _fixture_execute, implement
 from coverage_predicates import publish_implementation_complete, validate_slice_ready
 from runtime_evidence import sha256_value
 from skill_input_composition_support import publish_ready_receipt
@@ -93,8 +93,16 @@ def knowledge(root, target, commit):
     return freeze_knowledge_context(target, "knowledge.json")
 
 
+def execute(root, semantic, stage, route=None, **kwargs):
+    # Generated proof belongs in logs, not the shared source dependency scope.
+    return _fixture_execute(root, semantic, stage, route, run_name="logs/RUN-1", **kwargs)
+
+
 def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_newline=None):
     semantic, roots = fixture(root, present)
+    for row in roots:
+        if row["root_kind"] == "descriptor":
+            row["repository_relative_posix_path"] = "logs/RUN-1/descriptors"
     (root / ".gitignore").write_text("*\n!candidate.py\n!.gitignore\n", encoding="utf-8")
     (root / "rules.md").write_text("# Rules\nVerify current candidate behavior.\n", encoding="utf-8", newline=knowledge_newline)
     for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py",
@@ -118,19 +126,8 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
         stages += ["green", "refactor"]
     if any(present):
         stages += ["regression"]
-    for stage in stages:
-        assert execute(root, semantic, stage, route)["predicate_result"]
-    execute(root, semantic, "terminal", route, materialize_only=True)
-    run = root / "RUN-1"
-    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
-                                 source_commit=baseline, base_commit=baseline, out=run / "ready.json")
-    assert execute(root, semantic, "terminal", route)["predicate_result"]
-    predecessor = {"slice_id": "S1", "run_root": "RUN-1", "result_ref": "RUN-1/ready.json", "result_sha256": sha256_value(ready)}
-    result = publish_implementation_complete(workspace=root, semantic_plan=semantic, predecessors=[predecessor], snapshot_roots=roots,
-                                            source_commit=baseline, base_commit=baseline, out=run / "complete.json")
-    current = {"semanticPlan": ref(semantic, root), "receipt": ref(run / "complete.json", root),
-               "snapshotRoots": roots, "sourceCommit": baseline, "baseCommit": baseline}
-    assert handoff.verify_current_handoff(root, current) == result
+    # Complete real Knowledge/Skill-input preparation before positive proofs.
+    # Their source files and completed transport attempt remain dependencies.
     target = root / "execution-plans/target"
     target.mkdir(parents=True)
     (target / "requirements.md").write_text("# Acceptance\nBoth values must return their inputs.\n", encoding="utf-8")
@@ -139,33 +136,45 @@ def build(root, monkeypatch, present=(True, True), command_exit=0, knowledge_new
     knowledge(root, target, baseline)
     skill = publish_ready_v2_receipt(root, target="execution-plans/target")
     candidate = git(root, "rev-parse", "HEAD")
-    # The present-only fixture uses a declared source baseline predating a comment.
     if all(present):
-        old = root / "baseline-candidate.txt"
+        old = target / "acceptance-inputs/baseline-candidate.txt"
         old.write_text("def value(kind):\n return {1: 1, 2: 2}[kind]\n# previous implementation\n", encoding="utf-8")
-        overlays = {"candidate.py": "baseline-candidate.txt"}
+        overlays = {"candidate.py": old.relative_to(root).as_posix()}
     else:
         overlays = {}
+    for stage in stages:
+        assert execute(root, semantic, stage, route)["predicate_result"]
+    execute(root, semantic, "terminal", route, materialize_only=True)
+    run = root / "logs/RUN-1"
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run, slice_id="S1", snapshot_roots=roots,
+                                 source_commit=baseline, base_commit=baseline, out=run / "ready.json")
+    assert execute(root, semantic, "terminal", route)["predicate_result"]
+    predecessor = {"slice_id": "S1", "run_root": "logs/RUN-1", "result_ref": "logs/RUN-1/ready.json", "result_sha256": sha256_value(ready)}
+    result = publish_implementation_complete(workspace=root, semantic_plan=semantic, predecessors=[predecessor], snapshot_roots=roots,
+                                            source_commit=baseline, base_commit=baseline, out=run / "complete.json")
+    current = {"semanticPlan": ref(semantic, root), "receipt": ref(run / "complete.json", root),
+               "snapshotRoots": roots, "sourceCommit": baseline, "baseCommit": baseline}
+    assert handoff.verify_current_handoff(root, current) == result
     command = {"id": "acceptance-check", "executable": sys.executable, "argv": ["-c", f"import sys; from candidate import value; assert value(1)==1 and value(2)==2; sys.exit({command_exit})"], "cwd": ".", "timeout_seconds": 10, "shell": False}
     request = {"schemaVersion": "compact-vdd-acceptance-projection-request.v1", "targetPlan": "execution-plans/target",
                "runId": "closeout", "changeId": "test", "baselineRevision": baseline, "candidateRevision": candidate,
                "baselineOverlaySources": overlays, "changedPaths": ["candidate.py"], "affectedConsumerRefs": ["tests/test_one.py"],
                "targetPlanPaths": ["requirements.md"], "knowledgeContextPath": "knowledge.json", "codeReviewDomain": "toolchain",
-               "codeReviewPolicyPath": "execution-plans/target/policy.json", "implementationReceiptPath": "RUN-1/complete.json",
+               "codeReviewPolicyPath": "execution-plans/target/policy.json", "implementationReceiptPath": "logs/RUN-1/complete.json",
                "implementationReceiptHash": sha(run / "complete.json"), "currentQuickDev": current,
                "commands": [command], "actions": [{"actionId": "acceptance-check", "commandId": "acceptance-check", "dependsOn": [], "order": 1, "activation": True}], "authorizes": []}
-    request_path = write(root / "projection.json", request)
+    request_path = write(target / "compact-vdd-projection-request.v1.json", request)
     monkeypatch.setattr(cli, "REPOSITORY_ROOT", root)
     # Code lives in the fixture repository, like the real installed entrypoint.
     monkeypatch.setattr(handoff, "OWNER", root / ".agents/skills/quick-dev-tdd-adapter/tools")
     projected = projection.project(root, request_path)
     bundle = root / projected["bundle"]
-    prepared_path = root / "prepared.json"
+    prepared_path = target / "acceptance-inputs/prepared.json"
     cli.prepare_run(str(root / projected["runRequest"]), str(prepared_path), prerequisite_bundle_path=bundle.relative_to(target).as_posix())
     coord = {"schemaVersion": "jimuyun.acceptance-coordinator-request.v3", "targetPlan": "execution-plans/target",
-             "preparedRunInput": ref(prepared_path, root), "skillInputReceipt": ref(skill["receipt"], root),
-             "skillInputContract": ref(skill["contract"], root), "authorizes": []}
-    return write(root / "coordinator.json", coord), root / "coordinator-result.json", current
+             "preparedRunInput": ref(prepared_path, target), "skillInputReceipt": ref(skill["receipt"], target),
+             "skillInputContract": ref(skill["contract"], target), "authorizes": []}
+    return write(target / "acceptance-coordinator-request.v3.json", coord), target / "acceptance-inputs/coordinator-result.json", current
 
 
 def publish_ready_v2_receipt(root, *, target):
@@ -324,7 +333,7 @@ def test_coordinator_replay_rejects_changed_owned_evidence(tmp_path, monkeypatch
         write(path, value)
     else:
         request_value = json.loads(request.read_text(encoding="utf-8"))
-        pointer = tmp_path / request_value["skillInputReceipt"]["path"]
+        pointer = request.parent / request_value["skillInputReceipt"]["path"]
         generation = json.loads(pointer.read_text(encoding="utf-8"))["generation_id"]
         path = pointer.parent / "skill-input-generations" / generation / "context.json"
         value = json.loads(path.read_text()); value["sections"] = []

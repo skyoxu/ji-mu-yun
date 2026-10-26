@@ -1,0 +1,27 @@
+{
+  "pid": 2847863,
+  "state": "acceptance-passed-unpublished",
+  "at": "2026-10-26T19:38:33.930737+00:00",
+  "authorizes": [],
+  "existing_compatibility_pid": 2847004,
+  "stage": "native-Acceptance",
+  "started_at": "2026-10-26T19:10:08.569954+00:00",
+  "active_pid": null,
+  "completed_stages": [
+    {
+      "stage": "native-preparation",
+      "exit_code": 0,
+      "finished_at": "2026-10-26T17:48:03.215022+00:00"
+    },
+    {
+      "stage": "affected-proof-refresh",
+      "exit_code": 0,
+      "finished_at": "2026-10-26T19:10:08.569536+00:00"
+    },
+    {
+      "stage": "native-Acceptance",
+      "exit_code": 0,
+      "finished_at": "2026-10-26T19:38:33.930459+00:00"
+    }
+  ]
+}

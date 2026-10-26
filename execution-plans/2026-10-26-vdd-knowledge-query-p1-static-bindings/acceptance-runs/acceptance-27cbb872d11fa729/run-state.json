@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:4433f4453d38960f3c3a93ae06d0b686a4e0fef6f0003c44320aba168cf10768",
+  "createdUtc": "2026-10-26T19:28:33.543375Z",
+  "knowledgeContextHash": "sha256:13eb9160cc28b03bc93a6accd7e3c8a8211d44e1c76f713bea49fbcbb9be3ae5",
+  "runId": "acceptance-27cbb872d11fa729",
+  "runInputHash": "sha256:8c6853869896b07a04a518bf795445b7cc024c383e401c30599f7146defde4cb",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:fcf127ffafd5c9fba22fe5857634985b09b497ab0dc27240c22999569dd04b08",
+  "skillInputContextHash": "sha256:08e8eabc5f857b684705f2e437e3a407474ff8f6a13b385526f8e00a77190de2",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/skill-input-v2/acceptance/skill-input-generations/d063d96d8326ca100bedacd068706b72da2bc25a2937ea59316a60b345e15cdd/context.json"
+}

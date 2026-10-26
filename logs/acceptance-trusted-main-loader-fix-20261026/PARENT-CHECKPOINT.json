@@ -1,0 +1,27 @@
+{
+  "kind": "Actual production checkpoint; not final Acceptance",
+  "at": "2026-10-26T17:22:05.841308+00:00",
+  "passed_of_remaining_11": 7,
+  "active_unit": ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]",
+  "active_pytest_pids": [
+    2848561
+  ],
+  "driver_pid": 2847004,
+  "unified_session": 98828,
+  "unit_started_at": "2026-10-26T17:14:55.889712+00:00",
+  "last_real_event": "progress",
+  "last_real_event_utc": "2026-10-26T17:22:02.124001+00:00",
+  "max_actual_subunit_spent_seconds": 303.157,
+  "completed_case_seconds": {
+    "test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf": 172.15,
+    "test_current_q8_projection_and_real_coordinator_close_and_replay[present1]": 648.342,
+    "test_current_q8_projection_and_real_coordinator_close_and_replay[present2]": 553.306,
+    "test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass": 455.91,
+    "test_q8_replay_rejects_source_and_deferred_drift": 428.415,
+    "test_coordinator_replay_rejects_changed_owned_evidence[final]": 507.942,
+    "test_coordinator_replay_rejects_changed_owned_evidence[events]": 579.482
+  },
+  "capacity_error_observed": false,
+  "business_proof_refresh_started": false,
+  "authorizes": []
+}

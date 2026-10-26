@@ -1,0 +1,7 @@
+{
+  "kind": "Actual old-context check retained; not business RED",
+  "at": "2026-10-26T15:49:53.557659+00:00",
+  "failure": "candidate_worktree_source_hash_mismatch",
+  "meaning": "Selected read-set contains changed guide; native successor required",
+  "authorizes": []
+}

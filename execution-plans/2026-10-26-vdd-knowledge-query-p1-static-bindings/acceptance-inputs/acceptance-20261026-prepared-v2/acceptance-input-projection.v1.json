@@ -1,0 +1,52 @@
+{
+  "actionRegistry": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/command-registry.v1.json",
+    "sha256": "sha256:cde922c2b5065a9b19b05d6ff9f7b2b02519d4f99b539784d284a76edbe9680d"
+  },
+  "authorizes": [],
+  "candidateCommit": "1986fbe0fa4756ffee6e40edb8a9085fbfc3fd8f",
+  "canonicalInputs": [
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e"
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/obligations.v1.json",
+      "sha256": "sha256:790065c97f7c16370e8919c399d14b15d08d34598ef44f305c3f4f5a0b5c1742"
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptances.v1.json",
+      "sha256": "sha256:2a30e7e27a3e2edf2fcd67e6d6bda611df53678c09719dae5e047d18e9ed94e0"
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/source-index.v1.json",
+      "sha256": "sha256:b1410bb27c8a53641e80d34c9219f22256ddbf7a0148d282504e1063ed92efbc"
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/slices.v1.json",
+      "sha256": "sha256:c60139c99d49b7b37912adb79e34c30c5ff42555c78cfb671cb12b2fccea087f"
+    }
+  ],
+  "coverage": {
+    "acceptances": 305,
+    "deploymentOnly": 25,
+    "obligations": 305,
+    "originalRows": 330,
+    "reduced": 59,
+    "retained": 246,
+    "slices": 12
+  },
+  "implementationBaseline": "965df2e34f71ef197fffd8afb68f037688486ca2",
+  "projectionRole": "Bounded transport for the already approved full VDD target, not a replacement contract",
+  "requirements": [
+    "Preserve the approved305 obligations and all acceptance/assertion identities, source integrity, permission isolation, failure protection, query30/60-second budgets and Windows runtime coverage limits.",
+    "Require current native Quick Dev Q8 read-only replay for every slice, case/edge, predecessor, runtime root, failure disposition and deferred gate. Preserve failed and superseded originals.",
+    "Bind candidate content to an immutable scoped Git manifest. No Git-SHA-only test reruns, no old-receipt upgrading, no summary-only completion or invented RED.",
+    "Execute only the explicit registered Acceptance actions: native VDD contract validation, full source code-review route binding, narrow route regression, repository-owned Acceptance package validation.",
+    "Acceptance finalization alone may issue acceptance-passed after current Q8, candidate custody, Knowledge context, live Skill-input and every required action receipt validate. Default deterministic_only; no Bootstrap, BMAD, external review, publishing or deployment authorization.",
+    "Retain actual verification limits: Windows11-node platform subset is not the7P1 tests or full Windows Acceptance; historical fixture failure and the Linux Windows-only skip remain disclosed."
+  ],
+  "schema_version": "jimuyun.acceptance-input-projection.v1",
+  "scope": "VDD and Quick Dev knowledge queries, real caller use, exact-source evidence reuse and their shared query infrastructure. Delivered PRD/SPEC/Architecture remain read-only source inputs. BMAD-specific query integration, BMAD generation/review lifecycle and deployment-local adaptations are excluded.",
+  "targetPlan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings"
+}

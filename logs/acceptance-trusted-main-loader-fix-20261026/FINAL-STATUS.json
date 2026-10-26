@@ -1,0 +1,422 @@
+{
+  "created_at": "2026-10-26T19:41:59.124888+00:00",
+  "state": "acceptance-passed-unpublished",
+  "candidate_commit": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "candidate_tree": "cbfb0d5f369aa2287abe56ee626d9525c0083773",
+  "actual_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "completed_slices": [
+    "S2",
+    "S5",
+    "S6",
+    "S1",
+    "S3",
+    "S7",
+    "S8",
+    "S4",
+    "S11",
+    "S12",
+    "S10",
+    "S9"
+  ],
+  "runtime_closure_tuples": 610,
+  "Q8": {
+    "path": "logs/acceptance-main-isolated-proof-refresh-20261026/Q8/implementation-complete-result.v2.json",
+    "sha256": "sha256:b21898dbe0a58b558a1ac80d602491285d5a8b9170f5cb4f962a6f50c45a85a2",
+    "exit_code": 0,
+    "seconds": 547.4012169979978,
+    "finished_at": "2026-10-26T19:10:08.541480+00:00",
+    "predicate_result": null,
+    "status": "pass"
+  },
+  "native_commands": {
+    "project-compact-vdd": {
+      "exit_code": 0,
+      "seconds": 558.3147549249989,
+      "finished_at": "2026-10-26T19:19:27.165694+00:00"
+    },
+    "prepare-run": {
+      "exit_code": 0,
+      "seconds": 545.0363338380048,
+      "finished_at": "2026-10-26T19:28:32.202978+00:00"
+    },
+    "run-coordinator": {
+      "exit_code": 0,
+      "seconds": 601.6980408149975,
+      "finished_at": "2026-10-26T19:38:33.902115+00:00"
+    }
+  },
+  "coordinator_result": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-result.v4.json",
+    "sha256": "sha256:0df6297acf086696af1c271c2bec96c47127493fa2cb129a1e4f50b395e80395"
+  },
+  "finalization": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:13d958d223426a92d6f281bcbadcfb14c4833cfee11747b0877becaece75acd8",
+    "authorizes": [
+      "acceptance-passed"
+    ]
+  },
+  "run_directory": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729",
+  "actions": [
+    {
+      "action_id": "validate-vdd-contract",
+      "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/actions/validate-vdd-contract/attempt-001/result.json",
+      "sha256": "sha256:cb671c8e21dc39644bfaf6cfca2316d6911c67ace2edcf3100c040d0574d050e",
+      "exit_code": 0
+    },
+    {
+      "action_id": "validate-code-review-route",
+      "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/actions/validate-code-review-route/attempt-001/result.json",
+      "sha256": "sha256:b945c9e75a61880e874b84391214ac36649fd4fe3a726e0830d3b992028525c7",
+      "exit_code": 0
+    },
+    {
+      "action_id": "validate-acceptance-routing",
+      "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/actions/validate-acceptance-routing/attempt-001/result.json",
+      "sha256": "sha256:73e2f075dec9159333e75ede3b6c315a825bc4fdbd5cac8342050f8996b2fc3d",
+      "exit_code": 0
+    },
+    {
+      "action_id": "validate-acceptance-package",
+      "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/actions/validate-acceptance-package/attempt-001/result.json",
+      "sha256": "sha256:a99c02430c773f2063f81fb1e16f882b99b32b9cfd365c41afb5a68b93c50067",
+      "exit_code": 0
+    }
+  ],
+  "positive_process_executions": 29,
+  "positive_case_executions": 15375,
+  "positive_originals": [
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S1-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:77c3bca3ab25f929b44b924da672d0a2660aeae5a00669ed0c92eb0bd869c9f9",
+      "cases": 20,
+      "elapsed_seconds": 3.392019368002366,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S1-current/canonical-evidence/regression/q6-executions/command-6e0249423b479bda/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:28055bb53039f073015c1c3d658c23b915ee084827c739108ab256f91c31fc23",
+      "cases": 626,
+      "elapsed_seconds": 164.74435155200626,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S1-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:e2ec0773c39707862600f855fdf5b2978f6eedbec6e0001f1e62be1edd393ba3",
+      "cases": 626,
+      "elapsed_seconds": 168.68583742000192,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S10-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:5b623aa07053e60961fa6c0e9bde7c3df7b7c10180f89f701a16c0065e085dca",
+      "cases": 626,
+      "elapsed_seconds": 159.66595840600348,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S10-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:4ae263de872f8939a6bc83ff8904291fd958a58033e5e17fc59b0254df3ba624",
+      "cases": 626,
+      "elapsed_seconds": 177.7020574679991,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S11-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:81f83a6497e05b3dcf408548fd416533842b92bf5d010c4f95765be9dd79c49d",
+      "cases": 626,
+      "elapsed_seconds": 169.76826957300364,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S11-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:e5e9e9173430f405a629908d80082f13a7cecc4d0fb35e902c71a765f0947db4",
+      "cases": 626,
+      "elapsed_seconds": 160.92632209799922,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:6353a5c734f63e01ff2c8429f660c876afd67282ffc4c8339e01a41f20cf78dc",
+      "cases": 525,
+      "elapsed_seconds": 148.37380173100246,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-6e0249423b479bda/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:cac2d9415ed8a5c5f90da318c852bd28f3af5ec6e4b199266e9d22f5ba7b79cf",
+      "cases": 626,
+      "elapsed_seconds": 162.98170163800387,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-84702b9d559991f7/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:92a3612d2dd0b94d3a2460ad9af17a0c9eae12d7e16991dc9b48d7b8e8c99af8",
+      "cases": 626,
+      "elapsed_seconds": 159.13574017400242,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-db886674895e1b5f/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:dbf50de00c63a7e3dd46b82f7c137b5a03848a9c0d4cf8f078302970fb706cf3",
+      "cases": 626,
+      "elapsed_seconds": 168.21523772999353,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-e59eaee54de0d7da/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:3e18dc244a47ea39ca50deb59565cad299b42c367c542bdc4faa70e70c4163cd",
+      "cases": 626,
+      "elapsed_seconds": 164.74482342299598,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S12-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:f1ad26a37590afd40ff3624a26f59e38e28176ecc313cca9946101e42d2d4242",
+      "cases": 626,
+      "elapsed_seconds": 164.91224887099816,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S2-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:085e885a0c52cbe1d733eb4ddd4cee38aa929a1cde2dc5383902cb6447c21a27",
+      "cases": 108,
+      "elapsed_seconds": 2.658963028996368,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S2-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:f344d8e16cd31fe7da981b7bc50fd95e8410b508b7ee8821f9cbdfd5f3c86b71",
+      "cases": 108,
+      "elapsed_seconds": 1.8093112309943535,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S3-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:efb8e58b95f32630525dd6531e032ede3f2c0c8a99f26b9b21696815b31f514f",
+      "cases": 626,
+      "elapsed_seconds": 168.29410665100295,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S3-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:8c3cffbf4f520bd0aa3419fe845ffd65862539a3c521c5f3cb75dfc0850e8535",
+      "cases": 626,
+      "elapsed_seconds": 169.83896618400468,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S4-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:89cca7b5aee13379d1699bf0b7b404609ea3658c9551ea13b32f9b09ed861cb1",
+      "cases": 626,
+      "elapsed_seconds": 165.7467286739993,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S4-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:3b698f9e591ac9d065f8d5c0c2879efb40f955d4ef669ac34270852a6a30adfe",
+      "cases": 626,
+      "elapsed_seconds": 164.87821950700163,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S5-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:1a7608b4aadbf34a9e295ef4fd4376e22e602c470713e7fdda8222ae656461f3",
+      "cases": 108,
+      "elapsed_seconds": 1.9883929350035032,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S5-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:708b428bb52096bf1479b9867ac9c9a6afc531d6cf0887ba0c0dbb3f862e8bf2",
+      "cases": 108,
+      "elapsed_seconds": 1.9957192759975442,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S6-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:dd33198a518f9dd4e9a8ce892546edb42f4383f57608cb8c2859195bbd055e4d",
+      "cases": 626,
+      "elapsed_seconds": 165.42686417300138,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S6-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:9a1441275d2753391d426b1291760bf243507604b99da011fd0f0ac9b9c57dcb",
+      "cases": 626,
+      "elapsed_seconds": 164.3161659739999,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S7-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:fd7894d08303348e3d1b0128e405feff1ef6ec09f0fa847578df1e5332954dd7",
+      "cases": 626,
+      "elapsed_seconds": 163.7846159499968,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S7-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:fedf8e1a5a558e841a4f801db48d7eb561794acc19850a89aa32361af54b3145",
+      "cases": 626,
+      "elapsed_seconds": 168.49253340599535,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S8-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:2e7164db10964c8a80467d62c9627b4db9348c052e90d2444567407230c9133f",
+      "cases": 626,
+      "elapsed_seconds": 165.10196796299715,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S8-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:48b86422b1d716a669c7ea7af01cc658762e975e2172ed8b8e98bcd21ebdc71d",
+      "cases": 626,
+      "elapsed_seconds": 164.0125123329999,
+      "stage": "terminal"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S9-current/canonical-evidence/regression/process-receipt.v2.json",
+      "sha256": "sha256:1cc6a004af1b15923c1f1ba6e2a28203b176656ba5e998c786ce9bb819331ec5",
+      "cases": 626,
+      "elapsed_seconds": 166.4881634810008,
+      "stage": "regression"
+    },
+    {
+      "path": "logs/acceptance-main-isolated-proof-refresh-20261026/S9-current/canonical-evidence/terminal/process-receipt.v2.json",
+      "sha256": "sha256:f32e324686b2e34b6c579d2c0410f7d95dea78c721cd182be13861376a2a4e25",
+      "cases": 626,
+      "elapsed_seconds": 171.50009652399604,
+      "stage": "terminal"
+    }
+  ],
+  "probe_originals_natively_reused": 12,
+  "compatibility_remaining_cases": {
+    "passed": 11,
+    "originals_by_node": {
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_bootstrap_requires_explicit_intent_even_for_risk_paths[.agents/skills/run-phase-bootstrap-review/SKILL.md]": "compatibility.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_bootstrap_requires_explicit_intent_even_for_risk_paths[runtime/phase-a/start.ps1]": "compatibility.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_bootstrap_requires_explicit_intent_even_for_risk_paths[PhaseA.Platform/Program.cs]": "compatibility.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present0]": "compatibility-successor-smoke.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]": "compatibility-successor.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]": "compatibility-successor.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf": "compatibility-successor.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass": "compatibility-r3-45ad935c0671.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift": "compatibility-r3-7a70e8ae8bda.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]": "compatibility-r3-5a28d680b9c2.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]": "compatibility-r3-f2faf245bd5f.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]": "compatibility-r3-81f15708bed5.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]": "compatibility-r3-1a6a23ae64b9.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]": "compatibility-r3-f4d851aec5d1.xml",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap": "compatibility-r3-74c9f6d942d2.xml"
+    },
+    "timings": {
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]": {
+        "seconds": 648.3424574579985,
+        "finished_at": "2026-10-26T16:15:17.174142+00:00"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]": {
+        "seconds": 553.3064040910031,
+        "finished_at": "2026-10-26T16:24:30.480970+00:00"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf": {
+        "seconds": 172.14950185400085,
+        "finished_at": "2026-10-26T16:27:22.630823+00:00"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass": {
+        "seconds": 455.9100705430028,
+        "cumulative_wall_seconds": 845.5581135890036,
+        "finished_at": "2026-10-26T16:49:40.045491+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-45ad935c0671.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift": {
+        "seconds": 428.4154477579941,
+        "cumulative_wall_seconds": 472.0074477579941,
+        "finished_at": "2026-10-26T16:56:48.462292+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-7a70e8ae8bda.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]": {
+        "seconds": 507.9421814180023,
+        "cumulative_wall_seconds": 546.9341814180023,
+        "finished_at": "2026-10-26T17:05:16.405617+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-5a28d680b9c2.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]": {
+        "seconds": 579.4819670020006,
+        "cumulative_wall_seconds": 623.7959670020006,
+        "finished_at": "2026-10-26T17:14:55.888776+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-f2faf245bd5f.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]": {
+        "seconds": 525.0385075969971,
+        "cumulative_wall_seconds": 566.4275075969971,
+        "finished_at": "2026-10-26T17:23:40.928595+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-81f15708bed5.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]": {
+        "seconds": 513.7869764479983,
+        "cumulative_wall_seconds": 554.7189764479983,
+        "finished_at": "2026-10-26T17:32:14.717147+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-1a6a23ae64b9.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]": {
+        "seconds": 509.5833588290043,
+        "cumulative_wall_seconds": 550.0133588290042,
+        "finished_at": "2026-10-26T17:40:44.301954+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-f4d851aec5d1.xml"
+      },
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap": {
+        "seconds": 433.6339806690012,
+        "cumulative_wall_seconds": 473.38898066900117,
+        "finished_at": "2026-10-26T17:47:57.937652+00:00",
+        "exit_code": 0,
+        "xml": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-74c9f6d942d2.xml"
+      }
+    }
+  },
+  "focused_tests": {
+    "cases": 33,
+    "subtests": 4,
+    "junit_entries": 37,
+    "original": "logs/acceptance-trusted-main-loader-fix-20261026/GREEN-final-focused.xml"
+  },
+  "acceptance_registered_test_action": {
+    "cases": 42,
+    "subtests": 26,
+    "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729/actions/validate-acceptance-routing/attempt-001/result.json"
+  },
+  "isolation_source_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md"
+  ],
+  "required_completed_attempt_originals": [
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/attempt.json",
+      "sha256": "sha256:5aede7d8e58ab2e8ea16e61e4dab90ab41ebe68601a1a2e21984f913301dce59"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/observed.json",
+      "sha256": "sha256:1e4d518d632c7b665129c8147f54ad02f175f72c411c81095e4b22d869396e1d"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/prepared.json",
+      "sha256": "sha256:ceee05c870d20da785f4130fd8cce5677ada960eb8b9a20329597d05b621b52f"
+    }
+  ],
+  "published": false,
+  "no_automatic_external_review_release_or_merge": true,
+  "no_active_owned_execution": true,
+  "authorizes": []
+}

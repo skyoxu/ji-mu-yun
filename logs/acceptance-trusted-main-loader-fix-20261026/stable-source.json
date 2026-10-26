@@ -1,0 +1,28 @@
+{
+  "actual_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "authorizes": [],
+  "candidate": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "files": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+      "sha256": "sha256:ff178ea2fb35a7737ceec60e82f353b6ca2d2b76f96ae464a806e0c201f5b59c"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+      "sha256": "sha256:47fce69f1c62ad55de220ea985f253996c07ac7fd010a4a25e2d6532da3922db"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+      "sha256": "sha256:1ebeaadf523e1ee99d3275b0dc8919a2fd081f4950363f2c08c04621fa1a86e7"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+      "sha256": "sha256:6b93d534f4b19b61d5a4d60cd4a5114842ee2d15b0e6cf18e70bf0093d68c451"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+      "sha256": "sha256:abcc2c9d78172e1b22a540ef62506f16ea6392a6b32e1b4767d4a0b11f6e11dc"
+    }
+  ],
+  "predecessor": "1986fbe0fa4756ffee6e40edb8a9085fbfc3fd8f"
+}

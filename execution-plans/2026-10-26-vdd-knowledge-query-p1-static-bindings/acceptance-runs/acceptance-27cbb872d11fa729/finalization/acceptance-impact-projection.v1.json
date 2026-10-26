@@ -1,0 +1,15 @@
+{
+  "actionReceiptHashes": [
+    "sha256:a99c02430c773f2063f81fb1e16f882b99b32b9cfd365c41afb5a68b93c50067",
+    "sha256:73e2f075dec9159333e75ede3b6c315a825bc4fdbd5cac8342050f8996b2fc3d",
+    "sha256:b945c9e75a61880e874b84391214ac36649fd4fe3a726e0830d3b992028525c7",
+    "sha256:cb671c8e21dc39644bfaf6cfca2316d6911c67ace2edcf3100c040d0574d050e"
+  ],
+  "authorizes": [],
+  "candidateResultHash": "sha256:220efb26f1ab63daadc46596a963855b486801e3f616d17b8eaa388001e91215",
+  "evaluationHash": "sha256:220efb26f1ab63daadc46596a963855b486801e3f616d17b8eaa388001e91215",
+  "requiredCheckStatus": "passed",
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-impact-projection.v1",
+  "status": "current"
+}

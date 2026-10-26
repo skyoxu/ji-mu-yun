@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "plan_id": "knowledge-query-main-isolated-20261026",
+  "schema_version": "jimuyun.acceptance-authority.v1",
+  "skill_input_baseline": "965df2e34f71ef197fffd8afb68f037688486ca2",
+  "target_plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings"
+}

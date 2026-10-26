@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.7.0 -- /workspace/scratch/stage5-p1-tests-20261026/bin/python
+cachedir: .pytest_cache
+rootdir: /workspace/ji-mu-yun-acceptance-candidate-20261026
+plugins: anyio-4.14.2
+collecting ... collected 1 item
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final] PASSED [100%]
+
+- generated xml file: /workspace/ji-mu-yun-acceptance-candidate-20261026/logs/acceptance-trusted-main-loader-fix-20261026/compatibility-r3-5a28d680b9c2.xml -
+======================== 1 passed in 507.43s (0:08:27) =========================
