@@ -1,0 +1,596 @@
+FFFFFFFFFFFFFFFF                                                         [100%]
+=================================== FAILURES ===================================
+___________________________ test_light_3151dcccab85 ____________________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-tsq4d91l')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-03FC732FF336')
+    def test_light_3151dcccab85(local):
+        # Existing recommendation is a real public read-only route, not a test stub.
+        rc, result, workers, _ = invoke(local / 'out', extra=['--recommendation-only'])
+        value = result.get('admission', {})
+>       expect(rc == 0 and set(value.get('checks', {})) == {'inputs', 'recovery', 'dependencies', 'quick_dev'}
+               and value.get('authorizes') == [] and workers == 0, 'LIGHT-03FC732FF336')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-03FC732FF336'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-03FC732FF336
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-03FC732FF336
+_______________________ test_light_1622025eedfb[missing] _______________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-0sd1r5oe')
+defect = 'missing'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
+    @pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'consumer'])
+    def test_light_1622025eedfb(local, defect):
+        source = REQUIREMENTS
+        extra = []
+        out = local / 'out'
+        if defect in {'missing', 'corrupt'}:
+            source = local / 'requirements.md'
+            if defect == 'corrupt':
+                source.write_bytes(b'\xff')
+        if defect.startswith('recovery'):
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+            path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
+            value = json.loads(path.read_text())
+            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
+            path.write_text(json.dumps(value))
+        original_is_file = Path.is_file
+        def visible(path):
+            if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
+                return False
+            return original_is_file(path)
+        with mock.patch.object(Path, 'is_file', visible):
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if defect.startswith('recovery') else 'standard', extra=extra)
+>       expect(rc != 0 and result.get('admission', {}).get('status') == 'blocked' and workers == queries == 0,
+               'LIGHT-D10FAB14076E')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D10FAB14076E'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D10FAB14076E
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D10FAB14076E
+_______________________ test_light_1622025eedfb[corrupt] _______________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-u9qvjj0r')
+defect = 'corrupt'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
+    @pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'consumer'])
+    def test_light_1622025eedfb(local, defect):
+        source = REQUIREMENTS
+        extra = []
+        out = local / 'out'
+        if defect in {'missing', 'corrupt'}:
+            source = local / 'requirements.md'
+            if defect == 'corrupt':
+                source.write_bytes(b'\xff')
+        if defect.startswith('recovery'):
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+            path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
+            value = json.loads(path.read_text())
+            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
+            path.write_text(json.dumps(value))
+        original_is_file = Path.is_file
+        def visible(path):
+            if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
+                return False
+            return original_is_file(path)
+        with mock.patch.object(Path, 'is_file', visible):
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if defect.startswith('recovery') else 'standard', extra=extra)
+>       expect(rc != 0 and result.get('admission', {}).get('status') == 'blocked' and workers == queries == 0,
+               'LIGHT-D10FAB14076E')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D10FAB14076E'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D10FAB14076E
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D10FAB14076E
+___________________ test_light_1622025eedfb[recovery-source] ___________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-19hrj4cj')
+defect = 'recovery-source'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
+    @pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'consumer'])
+    def test_light_1622025eedfb(local, defect):
+        source = REQUIREMENTS
+        extra = []
+        out = local / 'out'
+        if defect in {'missing', 'corrupt'}:
+            source = local / 'requirements.md'
+            if defect == 'corrupt':
+                source.write_bytes(b'\xff')
+        if defect.startswith('recovery'):
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+            path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
+            value = json.loads(path.read_text())
+            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
+            path.write_text(json.dumps(value))
+        original_is_file = Path.is_file
+        def visible(path):
+            if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
+                return False
+            return original_is_file(path)
+        with mock.patch.object(Path, 'is_file', visible):
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if defect.startswith('recovery') else 'standard', extra=extra)
+>       expect(rc != 0 and result.get('admission', {}).get('status') == 'blocked' and workers == queries == 0,
+               'LIGHT-D10FAB14076E')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D10FAB14076E'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D10FAB14076E
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D10FAB14076E
+___________________ test_light_1622025eedfb[recovery-bundle] ___________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-2x3h4q6s')
+defect = 'recovery-bundle'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
+    @pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'consumer'])
+    def test_light_1622025eedfb(local, defect):
+        source = REQUIREMENTS
+        extra = []
+        out = local / 'out'
+        if defect in {'missing', 'corrupt'}:
+            source = local / 'requirements.md'
+            if defect == 'corrupt':
+                source.write_bytes(b'\xff')
+        if defect.startswith('recovery'):
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+            path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
+            value = json.loads(path.read_text())
+            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
+            path.write_text(json.dumps(value))
+        original_is_file = Path.is_file
+        def visible(path):
+            if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
+                return False
+            return original_is_file(path)
+        with mock.patch.object(Path, 'is_file', visible):
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if defect.startswith('recovery') else 'standard', extra=extra)
+>       expect(rc != 0 and result.get('admission', {}).get('status') == 'blocked' and workers == queries == 0,
+               'LIGHT-D10FAB14076E')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D10FAB14076E'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D10FAB14076E
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D10FAB14076E
+______________________ test_light_1622025eedfb[consumer] _______________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-vkz07y6w')
+defect = 'consumer'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
+    @pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'consumer'])
+    def test_light_1622025eedfb(local, defect):
+        source = REQUIREMENTS
+        extra = []
+        out = local / 'out'
+        if defect in {'missing', 'corrupt'}:
+            source = local / 'requirements.md'
+            if defect == 'corrupt':
+                source.write_bytes(b'\xff')
+        if defect.startswith('recovery'):
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+            path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
+            value = json.loads(path.read_text())
+            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
+            path.write_text(json.dumps(value))
+        original_is_file = Path.is_file
+        def visible(path):
+            if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
+                return False
+            return original_is_file(path)
+        with mock.patch.object(Path, 'is_file', visible):
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if defect.startswith('recovery') else 'standard', extra=extra)
+>       expect(rc != 0 and result.get('admission', {}).get('status') == 'blocked' and workers == queries == 0,
+               'LIGHT-D10FAB14076E')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D10FAB14076E'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D10FAB14076E
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D10FAB14076E
+_______________ test_light_51007ee5cc9c[resumable-standard-True] _______________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-1zhipsym')
+plan_profile = 'resumable', execution = 'standard', allowed = True
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D33AF6125B46')
+    @pytest.mark.parametrize('plan_profile,execution,allowed', [('resumable', 'standard', True), ('standard', 'fast-ship', True), ('self-hosted', 'standard', True), ('standard', 'resumable', False)])
+    def test_light_51007ee5cc9c(local, plan_profile, execution, allowed):
+        rc, result, _, _ = admission(local / 'out', profile=plan_profile, extra=['--execution-profile', execution])
+        value = result.get('admission', {})
+>       expect((rc == 0) == allowed and value.get('plan_profile') == plan_profile
+               and value.get('execution_profile') == execution and value.get('status') == ('pending' if allowed else 'blocked'),
+               'LIGHT-D33AF6125B46')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D33AF6125B46'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D33AF6125B46
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D33AF6125B46
+_______________ test_light_51007ee5cc9c[standard-fast-ship-True] _______________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-46nc3igr')
+plan_profile = 'standard', execution = 'fast-ship', allowed = True
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D33AF6125B46')
+    @pytest.mark.parametrize('plan_profile,execution,allowed', [('resumable', 'standard', True), ('standard', 'fast-ship', True), ('self-hosted', 'standard', True), ('standard', 'resumable', False)])
+    def test_light_51007ee5cc9c(local, plan_profile, execution, allowed):
+        rc, result, _, _ = admission(local / 'out', profile=plan_profile, extra=['--execution-profile', execution])
+        value = result.get('admission', {})
+>       expect((rc == 0) == allowed and value.get('plan_profile') == plan_profile
+               and value.get('execution_profile') == execution and value.get('status') == ('pending' if allowed else 'blocked'),
+               'LIGHT-D33AF6125B46')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D33AF6125B46'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D33AF6125B46
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D33AF6125B46
+______________ test_light_51007ee5cc9c[self-hosted-standard-True] ______________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-cvzf6hte')
+plan_profile = 'self-hosted', execution = 'standard', allowed = True
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D33AF6125B46')
+    @pytest.mark.parametrize('plan_profile,execution,allowed', [('resumable', 'standard', True), ('standard', 'fast-ship', True), ('self-hosted', 'standard', True), ('standard', 'resumable', False)])
+    def test_light_51007ee5cc9c(local, plan_profile, execution, allowed):
+        rc, result, _, _ = admission(local / 'out', profile=plan_profile, extra=['--execution-profile', execution])
+        value = result.get('admission', {})
+>       expect((rc == 0) == allowed and value.get('plan_profile') == plan_profile
+               and value.get('execution_profile') == execution and value.get('status') == ('pending' if allowed else 'blocked'),
+               'LIGHT-D33AF6125B46')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D33AF6125B46'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D33AF6125B46
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D33AF6125B46
+______________ test_light_51007ee5cc9c[standard-resumable-False] _______________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-sno24oxt')
+plan_profile = 'standard', execution = 'resumable', allowed = False
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D33AF6125B46')
+    @pytest.mark.parametrize('plan_profile,execution,allowed', [('resumable', 'standard', True), ('standard', 'fast-ship', True), ('self-hosted', 'standard', True), ('standard', 'resumable', False)])
+    def test_light_51007ee5cc9c(local, plan_profile, execution, allowed):
+        rc, result, _, _ = admission(local / 'out', profile=plan_profile, extra=['--execution-profile', execution])
+        value = result.get('admission', {})
+>       expect((rc == 0) == allowed and value.get('plan_profile') == plan_profile
+               and value.get('execution_profile') == execution and value.get('status') == ('pending' if allowed else 'blocked'),
+               'LIGHT-D33AF6125B46')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-D33AF6125B46'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-D33AF6125B46
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-D33AF6125B46
+________________________ test_light_964924bbdac1[valid] ________________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-a8n0hf_f')
+kind = 'valid'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-EE30987A8DDE')
+    @pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery'])
+    def test_light_964924bbdac1(local, kind):
+        source, out, extra = REQUIREMENTS, local / 'out', []
+        if kind == 'invalid':
+            source = local / 'missing.md'
+        if kind == 'recovery':
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+        before = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+        with mock.patch.object(cli, 'compile_plan') as compiler:
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if kind == 'recovery' else 'standard', extra=extra)
+        after = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+>       expect('admission' in result and workers == queries == compiler.call_count == 0 and before == after
+               and not (local / 'out/compiler-state.v1.json').exists() if kind != 'recovery' else
+               'admission' in result and workers == queries == compiler.call_count == 0 and before == after,
+               'LIGHT-EE30987A8DDE')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-EE30987A8DDE'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-EE30987A8DDE
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-EE30987A8DDE
+_______________________ test_light_964924bbdac1[invalid] _______________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-fjkdvfxi')
+kind = 'invalid'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-EE30987A8DDE')
+    @pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery'])
+    def test_light_964924bbdac1(local, kind):
+        source, out, extra = REQUIREMENTS, local / 'out', []
+        if kind == 'invalid':
+            source = local / 'missing.md'
+        if kind == 'recovery':
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+        before = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+        with mock.patch.object(cli, 'compile_plan') as compiler:
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if kind == 'recovery' else 'standard', extra=extra)
+        after = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+>       expect('admission' in result and workers == queries == compiler.call_count == 0 and before == after
+               and not (local / 'out/compiler-state.v1.json').exists() if kind != 'recovery' else
+               'admission' in result and workers == queries == compiler.call_count == 0 and before == after,
+               'LIGHT-EE30987A8DDE')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-EE30987A8DDE'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-EE30987A8DDE
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-EE30987A8DDE
+______________________ test_light_964924bbdac1[recovery] _______________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-uxod9n2k')
+kind = 'recovery'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-EE30987A8DDE')
+    @pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery'])
+    def test_light_964924bbdac1(local, kind):
+        source, out, extra = REQUIREMENTS, local / 'out', []
+        if kind == 'invalid':
+            source = local / 'missing.md'
+        if kind == 'recovery':
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+        before = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+        with mock.patch.object(cli, 'compile_plan') as compiler:
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if kind == 'recovery' else 'standard', extra=extra)
+        after = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+>       expect('admission' in result and workers == queries == compiler.call_count == 0 and before == after
+               and not (local / 'out/compiler-state.v1.json').exists() if kind != 'recovery' else
+               'admission' in result and workers == queries == compiler.call_count == 0 and before == after,
+               'LIGHT-EE30987A8DDE')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-EE30987A8DDE'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-EE30987A8DDE
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-EE30987A8DDE
+___________________________ test_light_6c636a19f2df ____________________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-j3bv5ges')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-6BE79070B34A')
+    def test_light_6c636a19f2df(local):
+        # Admission composes the existing source owner and leaves later compiler gates owned.
+        sc = cli.semantic_compiler
+        original = sc.source_preflight
+        with mock.patch.object(sc, 'source_preflight', wraps=original) as source_check, mock.patch.object(cli, 'compile_plan', return_value={'status': 'repair-vdd', 'stage': 'V3-execution-preflight'}) as compiler:
+            rc, result, workers, _ = invoke(local / 'out')
+>       expect(source_check.call_count >= 1 and compiler.call_count == 1 and result.get('stage') == 'V3-execution-preflight'
+               and rc != 0 and result.get('admission', {}).get('status') == 'pending' and workers == 0,
+               'LIGHT-6BE79070B34A')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:129: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-6BE79070B34A'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-6BE79070B34A
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-6BE79070B34A
+___________________________ test_light_c660ed94c51c ____________________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-1cfs2ijh')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-EB921B27E2BA')
+    def test_light_c660ed94c51c(local):
+        config = ROOT / 'scripts/sc/model_config.py'
+        before = config.read_bytes()
+        rc, result, workers, queries = admission(local / 'out')
+>       expect(rc == 0 and result.get('admission', {}).get('authorizes') == [] and workers == queries == 0
+               and config.read_bytes() == before, 'LIGHT-EB921B27E2BA')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-EB921B27E2BA'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-EB921B27E2BA
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-EB921B27E2BA
+___________________________ test_light_112e17a2606e ____________________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-5x63sb7l')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-B96B2954D606')
+    def test_light_112e17a2606e(local):
+        rc, result, _, _ = admission(local / 'out')
+        value = result.get('admission', {})
+>       expect(rc == 0 and value.get('status') == 'pending' and value.get('checks', {}).get('dependencies', {}).get('status') == 'pending'
+               and value.get('checks', {}).get('recovery', {}).get('status') == 'not-selected'
+               and result.get('status') != 'plan-ready' and not (local / 'out').exists(), 'LIGHT-B96B2954D606')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-B96B2954D606'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-B96B2954D606
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-B96B2954D606
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_3151dcccab85
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_1622025eedfb[missing]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_1622025eedfb[corrupt]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_1622025eedfb[recovery-source]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_1622025eedfb[recovery-bundle]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_1622025eedfb[consumer]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_51007ee5cc9c[resumable-standard-True]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_51007ee5cc9c[standard-fast-ship-True]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_51007ee5cc9c[self-hosted-standard-True]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_51007ee5cc9c[standard-resumable-False]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_964924bbdac1[valid]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_964924bbdac1[invalid]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_964924bbdac1[recovery]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_6c636a19f2df
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_c660ed94c51c
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_112e17a2606e
+16 failed in 0.38s

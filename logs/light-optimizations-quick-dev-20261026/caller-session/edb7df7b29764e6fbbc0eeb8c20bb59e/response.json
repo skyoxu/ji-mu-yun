@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "edb7df7b29764e6fbbc0eeb8c20bb59e",
+  "request_sha256": "sha256:4ecb4e81a47fcdcfff0a957349e0e006d00eb932ea7fd2b8b5ecb55e19cc8ab4",
+  "output_text": "Implemented a closed optional dependency_revision input on the existing published V3 route only. It binds exact predecessor/source/old edges, preserves all V3 contracts and non-edge V1 fields, validates both graphs and computes downstream closure across their union. The existing native compiler reuses frozen V1/V3 peers, derives the corrected frozen partition, requires fresh V4 rather than installing old V4 reuse, and rejects unrelated post-publication drift with the existing archive/repair handling. Role-only/projection-only routes and execution receipts remain unchanged. Changes limited to three declared production owners; frozen tests untouched.",
+  "authorizes": []
+}

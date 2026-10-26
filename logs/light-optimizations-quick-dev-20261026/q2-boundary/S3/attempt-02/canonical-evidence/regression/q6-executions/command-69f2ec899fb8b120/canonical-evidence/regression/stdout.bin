@@ -1,0 +1,90 @@
+............FF..................................                         [100%]
+=================================== FAILURES ===================================
+_ test_public_cli_preserves_semantic_gates_and_rejects_invalid_execution_early[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-13/test_public_cli_preserves_sema0')
+valid = True
+
+    @pytest.mark.parametrize('valid', [True, False])
+    def test_public_cli_preserves_semantic_gates_and_rejects_invalid_execution_early(tmp_path, valid):
+        from test_semantic_compiler_ch456 import _repo, _worker_cache
+        root, req, owner, selector = _repo(tmp_path)
+        cache = _worker_cache('req.md#FR-1', owner, selector)
+        if not valid:
+            cache['v3']['slice_hints'][0]['execution_snapshot_paths'].append(owner)
+            # V1 source recall is retained; Acceptance alignment must not run.
+            del cache['v4']
+        cache_path = root/'workers.json'
+        cache_path.write_text(json.dumps(cache), encoding='utf-8')
+        repository = Path(__file__).resolve().parents[5]
+        result_path = root/'result.json'
+        process = subprocess.run([sys.executable, '-B', str(repository/'scripts/vdd/compile_plan.py'),
+                   '--requirements', str(req), '--out-dir', str(root/'out'),
+                   '--worker-cache', str(cache_path), '--result-json', str(result_path)],
+                   cwd=repository, capture_output=True, text=True, timeout=20)
+>       assert process.returncode == (0 if valid else 1), process.stdout + process.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "/workspace/ji-mu-yun-light-optimizations/scripts/vdd/compile_plan.py", line 18, in <module>
+E             supervised_exit = public_entry("vdd", ROOT, sys.argv)
+E                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/workspace/ji-mu-yun-light-optimizations/scripts/workflow_unit_budget.py", line 344, in public_entry
+E             raise ValueError("workflow budget scope escapes repository")
+E         ValueError: workflow budget scope escapes repository
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/ji-mu-yun-light-qd-venv/bin/python', '-B', '/workspace/ji-mu-yun-light-optimizations/scri... raise ValueError("workflow budget scope escapes repository")\nValueError: workflow budget scope escapes repository\n').returncode
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py:170: AssertionError
+_ test_public_cli_preserves_semantic_gates_and_rejects_invalid_execution_early[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-13/test_public_cli_preserves_sema1')
+valid = False
+
+    @pytest.mark.parametrize('valid', [True, False])
+    def test_public_cli_preserves_semantic_gates_and_rejects_invalid_execution_early(tmp_path, valid):
+        from test_semantic_compiler_ch456 import _repo, _worker_cache
+        root, req, owner, selector = _repo(tmp_path)
+        cache = _worker_cache('req.md#FR-1', owner, selector)
+        if not valid:
+            cache['v3']['slice_hints'][0]['execution_snapshot_paths'].append(owner)
+            # V1 source recall is retained; Acceptance alignment must not run.
+            del cache['v4']
+        cache_path = root/'workers.json'
+        cache_path.write_text(json.dumps(cache), encoding='utf-8')
+        repository = Path(__file__).resolve().parents[5]
+        result_path = root/'result.json'
+        process = subprocess.run([sys.executable, '-B', str(repository/'scripts/vdd/compile_plan.py'),
+                   '--requirements', str(req), '--out-dir', str(root/'out'),
+                   '--worker-cache', str(cache_path), '--result-json', str(result_path)],
+                   cwd=repository, capture_output=True, text=True, timeout=20)
+        assert process.returncode == (0 if valid else 1), process.stdout + process.stderr
+>       result = json.loads(result_path.read_text())
+                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py:171: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1027: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-agent/pytest-13/test_public_cli_preserves_sema1/result.json')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-agent/pytest-13/test_public_cli_preserves_sema1/result.json'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:1013: FileNotFoundError
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_public_cli_preserves_semantic_gates_and_rejects_invalid_execution_early[True]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_public_cli_preserves_semantic_gates_and_rejects_invalid_execution_early[False]
+2 failed, 46 passed in 23.19s

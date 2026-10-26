@@ -30,6 +30,12 @@ def fixture(root):
     _, req, owner, selector = _repo(root)
     shutil.copytree(SCRIPTS, root / '.agents/skills/vdd-execution-plan/scripts',
                     ignore=shutil.ignore_patterns('tests', '__pycache__'))
+    # ADR-0041: use the actual shared consumer in the isolated public repo.
+    shutil.copytree(REPO / '.agents/skills/quick-dev-tdd-adapter/tools',
+                    root / '.agents/skills/quick-dev-tdd-adapter/tools',
+                    ignore=shutil.ignore_patterns('tests', '__pycache__'))
+    shutil.copytree(REPO / 'scripts/quick_dev', root / 'scripts/quick_dev',
+                    ignore=shutil.ignore_patterns('__pycache__'))
     for name in ('vdd/compile_plan.py', 'workflow_unit_budget.py',
                  'sc/_llm_backend.py', 'sc/model_config.py', 'sc/host_session.py'):
         target = root / 'scripts' / name

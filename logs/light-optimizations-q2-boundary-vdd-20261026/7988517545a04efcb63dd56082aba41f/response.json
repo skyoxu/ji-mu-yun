@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "4ec25d5333eb4d61b2204ca92b1f8df6",
+  "request_id": "7988517545a04efcb63dd56082aba41f",
+  "request_sha256": "sha256:09ede3e5562b05f5a62b2b54217abc31db8ae1896dfda7ed9f7d9c6152de278c",
+  "output_text": "{\"supported_obligation_ids\": [\"O-E32A7163D8D0\", \"O-EA02F0FDAA2E\", \"O-F461CEA9E96B\", \"O-F5EB9569ECD3\"], \"invented_obligation_ids\": [], \"source_gap_claims\": []}",
+  "authorizes": []
+}
