@@ -1,0 +1,21 @@
+{
+  "kind": "read-only analysis artifacts; not plan or test mutation authority",
+  "authorizes": [],
+  "files": [
+    {
+      "path": "logs/stage5-p1-selection-minimal-readonly-20261026/REPORT.md",
+      "sha256": "f42befb0b934a645c02f1fa783e9ca8f583137ee7ebe07cbc30643e69b8f5d83",
+      "size_bytes": 10976
+    },
+    {
+      "path": "logs/stage5-p1-selection-minimal-readonly-20261026/WINDOWS-COMMAND.json",
+      "sha256": "4a41f6c04a3013ca21ef71e2ecbc1c7fbe689d161d316fb3279493e6241bb7a5",
+      "size_bytes": 2904
+    },
+    {
+      "path": "logs/stage5-p1-selection-minimal-readonly-20261026/nodes-and-static-data.json",
+      "sha256": "677865f32721a2469cb392b7b21b6d84ed91fb3ed3f6a1fa5d054b5027f03515",
+      "size_bytes": 73141
+    }
+  ]
+}

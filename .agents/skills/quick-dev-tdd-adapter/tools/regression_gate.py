@@ -7,7 +7,31 @@ from typing import Any, Mapping, Sequence
 
 from current_router import profile_contract
 from process_executor_v2 import _counts
-from runtime_evidence import create_json,sha256_bytes
+from runtime_evidence import create_json,sha256_bytes,sha256_value
+
+
+def _pytest_path_arguments(argv: Sequence[str]):
+    """Keep expression/configuration values distinct from possible file inputs.
+
+    Unknown options do not consume their next token: a real file dependency
+    must not disappear merely because an option is unfamiliar. File operands
+    such as ``-c pytest.ini`` remain eligible for the existing containment and
+    dependency checks. This does not change argv, selection or reuse identity.
+    """
+    values = {"-k", "-m", "-o", "--override-ini", "--keyword", "--markexpr"}
+    start = next(i for i, part in enumerate(argv) if part.lower() == "pytest")
+    parts = iter(argv[start + 1:])
+    positional = False
+    for part in parts:
+        if not positional and part == "--":
+            positional = True
+            continue
+        if not positional and part in values:
+            if next(parts, None) is None:
+                raise ValueError(f"Q6 pytest option missing value: {part}")
+            continue
+        if positional or not part.startswith("-"):
+            yield part.split("::", 1)[0]
 
 
 def _terminal_scope_command(argv: Sequence[str]) -> bool:
@@ -19,7 +43,7 @@ def _terminal_scope_command(argv: Sequence[str]) -> bool:
     """
     if not any(part.lower() == "pytest" for part in argv):
         return False
-    targets = [part for part in argv if not part.startswith("-")]
+    targets = list(_pytest_path_arguments(argv))
     normalized = {Path(target).as_posix().rstrip("/") for target in targets}
     if normalized & {"scripts/sc", ".agents/skills/quick-dev-tdd-adapter/tools/tests"}:
         return True
@@ -53,7 +77,7 @@ def _context(bundle:Mapping[str,Any],slice_id:str)->Mapping[str,Any]|None:
     return matches[0] if matches else None
 
 
-def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,profile:str,primary_argv:Sequence[str],primary_receipt:Mapping[str,Any],timeout_seconds:int,out:Path)->dict[str,Any]:
+def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,profile:str,primary_argv:Sequence[str],primary_receipt:Mapping[str,Any],timeout_seconds:int,out:Path,semantic_plan:Path|None=None,primary_descriptor:Mapping[str,Any]|None=None)->dict[str,Any]:
     """Run declared Q6 validations after the primary REFACTOR selector passed."""
     policy=profile_contract(profile)
     required=policy.get("regression_required") is True
@@ -81,8 +105,35 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
                 raise ValueError("Q6 primary refactor selector is not admissible regression evidence")
             records.append({"argv":argv,"status":"covered-by-primary-refactor-selector","exit_code":0,"timed_out":False,"test_executions":executions,"cases":cases,"stdout_sha256":primary_receipt.get("stdout_sha256"),"stderr_sha256":primary_receipt.get("stderr_sha256")})
             continue
+        if semantic_plan is not None and primary_descriptor is not None:
+            from shared_execution import command_identity, execute_with_reuse, admissible
+            from copy import deepcopy
+            try:
+                command_identity(argv)
+            except ValueError:
+                pass  # Existing non-pytest commands remain executable, never reusable.
+            else:
+                command_run = out.parent / "q6-executions" / ("command-" + sha256_bytes(str(argv).encode())[7:23])
+                descriptor = deepcopy(primary_descriptor)
+                descriptor.update(run_id=command_run.name, stage="regression", argv=argv, timeout_seconds=timeout_seconds)
+                targets = set(descriptor["target_refs"])
+                for raw in _pytest_path_arguments(argv):
+                    candidate = workspace / descriptor["cwd"] / raw
+                    if candidate.is_file():
+                        targets.add(candidate.relative_to(workspace).as_posix())
+                descriptor["target_refs"] = sorted(targets)
+                receipt = execute_with_reuse(workspace=workspace, bundle=bundle, semantic_plan=semantic_plan,
+                    run_dir=command_run, descriptor=descriptor, profile=profile)
+                admissible(receipt)
+                records.append({"argv":argv, "status":"covered-by-shared-execution" if receipt.get("execution_reference") else "pass",
+                    "exit_code":0, "timed_out":False, "test_executions":receipt["test_executions"], "cases":receipt["cases"],
+                    "receipt_ref":(command_run / "canonical-evidence/regression/process-receipt.v2.json").relative_to(workspace).as_posix(),
+                    "receipt_sha256":sha256_value(receipt), "descriptor":descriptor,
+                    "semantic_plan":semantic_plan.resolve().relative_to(workspace.resolve()).as_posix()})
+                continue
         try:
-            proc=subprocess.run(argv,cwd=workspace,shell=False,check=False,capture_output=True,timeout=timeout_seconds)
+            from workflow_unit_budget import run_command
+            proc=run_command(argv,cwd=workspace,timeout=timeout_seconds)
             stdout,stderr=proc.stdout,proc.stderr
             timed_out=False; exit_code=proc.returncode
         except subprocess.TimeoutExpired as exc:
@@ -101,3 +152,22 @@ def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,pr
     result={"schema":"quick-dev.q6-regression-gate.v1","slice_id":slice_id,"profile":profile,"regression_required":required,"declared_command_count":len(declared),"deferred_terminal_command_count":len(deferred),"deferred_terminal_commands":deferred,"commands":records,"status":"pass","authorizes":[]}
     create_json(out,result)
     return result
+
+
+def validate_regression_references(workspace, gate, *, _saved_request_validator=None):
+    """Q7/Q8 and reentry reread original Q6 executions, not only a gate digest."""
+    from runtime_evidence import load_json, resolve_file, sha256_value
+    from shared_execution import admissible
+    for row in gate.get("commands", []):
+        if "receipt_ref" not in row:
+            continue
+        path = resolve_file(workspace, row["receipt_ref"])
+        receipt = load_json(path)
+        if sha256_value(receipt) != row["receipt_sha256"]:
+            raise ValueError("Q6 original receipt changed")
+        admissible(receipt)
+        for name in ("stdout", "stderr"):
+            if sha256_bytes((path.parent / (name + ".bin")).read_bytes()) != receipt[name + "_sha256"]:
+                raise ValueError("Q6 original output changed")
+        from shared_execution import validate_saved_request
+        (_saved_request_validator or validate_saved_request)(workspace, path.parent, row["descriptor"], receipt)

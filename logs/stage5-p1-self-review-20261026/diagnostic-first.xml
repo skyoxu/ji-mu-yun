@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="4" skipped="0" tests="7" time="1.224" timestamp="2026-10-26T06:32:09.712434+00:00" hostname="01dcaac9a2f8"><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_public_vdd_missing_component[catalog]" time="0.157"><failure message="AssertionError: Existing publication corruption reached semantic compilation&#10;assert (0 != 0)">published_vdd_base = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/published-vdd-base0')
+tmp_path = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/test_public_vdd_missing_compon0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f9a5e585f10&gt;
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f9a5e585ee0&gt;
+missing = 'catalog'
+
+    @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+    def test_public_vdd_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+        root = tmp_path / 'caller'
+        shutil.copytree(published_vdd_base, root)
+        requirement = fixtures._put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+        paths = [root / p for p in adapter._CANONICAL]
+        if missing == 'uninstalled':
+            for path in paths:
+                path.unlink()
+            shutil.rmtree(root / 'knowledge/indexes')
+        else:
+            paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+            assert (root / 'knowledge/indexes/current.json').is_file()
+        entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+        entry = importlib.util.module_from_spec(entry_spec)
+        entry_spec.loader.exec_module(entry)
+        monkeypatch.setattr(entry, 'ROOT', root)
+        reached = []
+        # Keep the real public CLI preparation/admission path. Stop at the semantic
+        # delegate; neither a model nor a compiler lifecycle is launched here.
+        def stop_at_semantic_delegate(**kwargs):
+            reached.append(True)
+            return {'status': 'recommendation-only', 'fixture_control': True}
+        monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+        monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+            '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+        code = entry.main()
+        result = json.loads(capsys.readouterr().out.splitlines()[-1])
+        print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+            'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+        if missing == 'uninstalled':
+            assert code == 0 and reached == [True]
+        else:
+&gt;           assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+E           AssertionError: Existing publication corruption reached semantic compilation
+E           assert (0 != 0)
+
+logs/stage5-p1-self-review-20261026/test_counterexamples.py:58: AssertionError</failure></testcase><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_public_vdd_missing_component[policy]" time="0.010"><failure message="AssertionError: Existing publication corruption reached semantic compilation&#10;assert (0 != 0)">published_vdd_base = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/published-vdd-base0')
+tmp_path = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/test_public_vdd_missing_compon1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f9a5e5db410&gt;
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f9a5e5db0e0&gt;
+missing = 'policy'
+
+    @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+    def test_public_vdd_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+        root = tmp_path / 'caller'
+        shutil.copytree(published_vdd_base, root)
+        requirement = fixtures._put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+        paths = [root / p for p in adapter._CANONICAL]
+        if missing == 'uninstalled':
+            for path in paths:
+                path.unlink()
+            shutil.rmtree(root / 'knowledge/indexes')
+        else:
+            paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+            assert (root / 'knowledge/indexes/current.json').is_file()
+        entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+        entry = importlib.util.module_from_spec(entry_spec)
+        entry_spec.loader.exec_module(entry)
+        monkeypatch.setattr(entry, 'ROOT', root)
+        reached = []
+        # Keep the real public CLI preparation/admission path. Stop at the semantic
+        # delegate; neither a model nor a compiler lifecycle is launched here.
+        def stop_at_semantic_delegate(**kwargs):
+            reached.append(True)
+            return {'status': 'recommendation-only', 'fixture_control': True}
+        monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+        monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+            '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+        code = entry.main()
+        result = json.loads(capsys.readouterr().out.splitlines()[-1])
+        print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+            'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+        if missing == 'uninstalled':
+            assert code == 0 and reached == [True]
+        else:
+&gt;           assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+E           AssertionError: Existing publication corruption reached semantic compilation
+E           assert (0 != 0)
+
+logs/stage5-p1-self-review-20261026/test_counterexamples.py:58: AssertionError</failure></testcase><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_public_vdd_missing_component[projection]" time="0.010"><failure message="AssertionError: Existing publication corruption reached semantic compilation&#10;assert (0 != 0)">published_vdd_base = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/published-vdd-base0')
+tmp_path = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/test_public_vdd_missing_compon2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f9a5e5db5f0&gt;
+capsys = &lt;_pytest.capture.CaptureFixture object at 0x7f9a5e5db980&gt;
+missing = 'projection'
+
+    @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+    def test_public_vdd_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+        root = tmp_path / 'caller'
+        shutil.copytree(published_vdd_base, root)
+        requirement = fixtures._put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+        paths = [root / p for p in adapter._CANONICAL]
+        if missing == 'uninstalled':
+            for path in paths:
+                path.unlink()
+            shutil.rmtree(root / 'knowledge/indexes')
+        else:
+            paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+            assert (root / 'knowledge/indexes/current.json').is_file()
+        entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+        entry = importlib.util.module_from_spec(entry_spec)
+        entry_spec.loader.exec_module(entry)
+        monkeypatch.setattr(entry, 'ROOT', root)
+        reached = []
+        # Keep the real public CLI preparation/admission path. Stop at the semantic
+        # delegate; neither a model nor a compiler lifecycle is launched here.
+        def stop_at_semantic_delegate(**kwargs):
+            reached.append(True)
+            return {'status': 'recommendation-only', 'fixture_control': True}
+        monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+        monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+            '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+        code = entry.main()
+        result = json.loads(capsys.readouterr().out.splitlines()[-1])
+        print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+            'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+        if missing == 'uninstalled':
+            assert code == 0 and reached == [True]
+        else:
+&gt;           assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+E           AssertionError: Existing publication corruption reached semantic compilation
+E           assert (0 != 0)
+
+logs/stage5-p1-self-review-20261026/test_counterexamples.py:58: AssertionError</failure></testcase><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_public_vdd_missing_component[uninstalled]" time="0.011" /><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_current_permissions_before_reuse[same]" time="0.288" /><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_current_permissions_before_reuse[unrelated-generation]" time="0.328" /><testcase classname="logs.stage5-p1-self-review-20261026.test_counterexamples" name="test_current_permissions_before_reuse[permission-revoked]" time="0.303"><failure message="AssertionError: A revoked candidate survived current policy/projection checks&#10;assert False">published_planning = (PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-10/test_current_permissions_befor0/admis...': 'jimuyun.knowledge-locator-request.v1', 'request_id': 'S7-admission', 'consumer': 'vdd', 'query': 'AGENTS.md', ...})
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f9a5e4fe360&gt;
+change = 'permission-revoked'
+
+    @pytest.mark.parametrize('change', ['same', 'unrelated-generation', 'permission-revoked'])
+    def test_current_permissions_before_reuse(published_planning, monkeypatch, change):
+        root, paths, request = published_planning
+        fixtures._s7_write_config(published_planning)
+        record = root / 'execution-plans/example/memlog.md'
+        record.write_text('# Isolated diagnostic record\n', encoding='utf-8')
+        options = {'record_path': record.relative_to(root).as_posix()}
+        real_query = core.query_with_diagnostics
+        calls = []
+        def traced(*args, **kwargs):
+            calls.append(True)
+            return real_query(*args, **kwargs)
+        monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+        first = fixtures._planning_operation(published_planning, **options)
+        assert first['outcome'] == 'hit' and first['candidates']
+        frozen = copy.deepcopy(first)
+        hashes = {r['path']: hashlib.sha256((root / r['path']).read_bytes()).hexdigest()
+                  for r in first['read_set']}
+        if change != 'same':
+            policy, projections, pointer = _switch_fixture_generation(root, paths,
+                restrict_vdd=change == 'permission-revoked')
+            assert pointer['generation_id'] != first['index_identity']['generation_id']
+            assert all(hashlib.sha256((root / p).read_bytes()).hexdigest() == h
+                       for p, h in hashes.items())
+        else:
+            policy, projections = (json.loads(p.read_text()) for p in paths[1:])
+        second = fixtures._planning_operation(published_planning, **options)
+        assert first == frozen
+        current_policy = core._policy_for(request, policy)
+        catalog = json.loads(paths[0].read_text())
+        eligible = core._projection_for(request, catalog, policy, projections)
+        modules = {m['source_path']: m for m in catalog['modules']}
+        allowed = all(core._policy_allows(modules[c['path']], request['query'], current_policy)
+                      and c['module_id'] in eligible for c in second['candidates'])
+        print('PERMISSION_REUSE_OBSERVATION:' + json.dumps({'change': change,
+            'outcome': second['outcome'], 'reused': second['diagnostic'].get('reused'),
+            'permission_checked': second['diagnostic'].get('permission_checked'),
+            'current_eligibility_satisfied': allowed, 'query_calls': len(calls)}))
+&gt;       assert allowed, 'A revoked candidate survived current policy/projection checks'
+E       AssertionError: A revoked candidate survived current policy/projection checks
+E       assert False
+
+logs/stage5-p1-self-review-20261026/test_counterexamples.py:147: AssertionError</failure></testcase></testsuite></testsuites>

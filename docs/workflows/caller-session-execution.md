@@ -62,12 +62,20 @@ The transport does not change Phase credentials, auth, runtime or live workspace
 
 ## Timeouts, cancellation and recovery
 
-The native worker timeout applies by default, including VDD's 180-second normal
-worker budget. For a long interactive task, explicitly select a finite per-worker
+VDD and Quick Dev public entries now default to independent-unit supervision:
+1800 seconds total and 600 seconds without genuine progress. A VDD contract
+batch before slice generation is a unit; Quick Dev execution/worker stages and
+Q6 commands are units. The workflow round is recorded, not globally capped at
+1800 seconds. Same-unit retries share the persistent cumulative allowance.
+Existing explicit shorter descriptor/host limits still apply. Do not wrap these
+entries in a historical aggregate timeout or use 600 as the host total when it
+means inactivity. The supervisor terminates the owned native tree, retains
+diagnostics and cannot create successful receipts. For an interactive task,
+explicitly select a finite per-worker
 host budget before launch, for example:
 
 ```text
-python -B scripts/workflow_host.py --session <session> --host-timeout-seconds 900 vdd -- --requirements <source> --out-dir <plan> --profile self-hosted
+python -B scripts/workflow_host.py --session <session> --host-timeout-seconds 1800 vdd -- --requirements <source> --out-dir <plan> --profile self-hosted
 ```
 
 The host option accepts 1--3600 seconds. It replaces only the host transport's

@@ -1,0 +1,19 @@
+{
+  "files": {
+    "baseline-nested.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "targeted.stdout.txt": "1e447b2a0a5ed78b18643edb83aa6fe09e4def4dc7d21fec4d3db86ac71c86eb",
+    "REPORT.md": "accb19c5eaeedc94b37ddf23c3c723a1420bc07bf97058fa73110fff5372dd20",
+    "after.stdout.txt": "6caca9d1bf94213311c87d77c33b4287c8c6beac3def0f8334accaf1cb108377",
+    "before.stdout.txt": "af3ae3c5a8842ab55465dd077824c7eb45e6db9db7da966484a84de318663071",
+    "preserved-successful-temp-fixtures.json": "8fc15d56a6c36b2d74b9f48f9fcd91d75e9d0e1cf690fb3fec7f1ada828c0ceb",
+    "baseline-nested.stdout.txt": "f82ecec205e07d84ef9a87b3ca135e25e9fe6a72e27aeb2835443ca944e4bf5c",
+    "targeted.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "before.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "changed-file-hashes.json": "cb727007265097195c2fde5d8ff1350c3af071b9754c3c475a9aca74345bb577",
+    "baseline-nested-result.json": "a6a82934f332629db3f8be07a2d51829809209cdd773462052f804d89938de9a",
+    "old-evidence-admission.json": "3bf2b5b1f8bfd0ed094f51656aa73e2b0528a3d4191ee30951473c5153ec70b5",
+    "host-diff.patch": "d8f3d220cc314bb8520d7af95c225a3c3df3e43d557495c7b5eb649bd36557ce",
+    "after.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "authorizes": []
+}

@@ -129,7 +129,9 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     # Atomic reservation also prevents concurrent or interrupted duplicate launches.
     evidence_dir.mkdir(parents=True, exist_ok=False)
     create_json(evidence_dir / 'execution-input.v1.json', binding)
-    receipt=execute_process(workspace,run_dir,descriptor["stage"],descriptor,profile_identity=profile_identity)
+    from shared_execution import execute_with_reuse
+    receipt=execute_with_reuse(workspace=workspace, bundle=bundle, semantic_plan=semantic_plan,
+        run_dir=run_dir, descriptor=descriptor, profile=profile_identity)
     if routed and production_before != production_hashes(workspace, bundle, descriptor["slice_id"]):
         raise ValueError("behavior-routing:production-changed-during-test")
     dispositions = derive_dispositions(bundle, descriptor, receipt) if descriptor["stage"] == "probe" else None
@@ -150,6 +152,7 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
             primary_receipt=receipt,
             timeout_seconds=descriptor["timeout_seconds"],
             out=gate_path,
+            semantic_plan=semantic_plan, primary_descriptor=descriptor,
         )
         regression_binding={"ref":gate_path.relative_to(run_dir).as_posix(),"sha256":sha256_value(gate)}
 

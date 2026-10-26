@@ -1,0 +1,32 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "/workspace/ji-mu-yun-review-publication/logs/stage5-p1-self-review-20261026/test_counterexamples.py",
+    "-q",
+    "-W",
+    "ignore::pytest.PytestUnknownMarkWarning",
+    "--junitxml=/workspace/ji-mu-yun-review-publication/logs/stage5-p1-self-review-20261026/diagnostic-first.xml"
+  ],
+  "exit_code": 1,
+  "reason": null,
+  "elapsed_seconds": 1.7181549730003098,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "0adc3223ab74f3bbeebb939546fbc96f5e212b21d1af679d11e1316ac3b35c19": 1.7174916970002414
+  },
+  "active_at_stop": [
+    {
+      "key": "0adc3223ab74f3bbeebb939546fbc96f5e212b21d1af679d11e1316ac3b35c19",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 1.7174916970002414,
+      "container": true
+    }
+  ]
+}

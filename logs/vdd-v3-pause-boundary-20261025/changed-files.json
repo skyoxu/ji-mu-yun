@@ -1,0 +1,34 @@
+{
+  "scripts/vdd/compile_plan.py": {
+    "before_sha256": "40ec9ef5796f6f246cb62e80464f8578baf3192526f3381644523659e762d9d9",
+    "after_sha256": "d6698e72fe40027c10c224c8d7120d99443748240bd2a7845857186310acb9ba"
+  },
+  ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py": {
+    "before_sha256": "c156c2e9a32544171f6c63956f49fa0986866f497f544260efe8b05e2cd84812",
+    "after_sha256": "926adbce0150d2c2e627ba64e223862113cd47791c3dece1adccf5720b902bd2"
+  },
+  ".agents/skills/vdd-execution-plan/SKILL.md": {
+    "before_sha256": "8c55aa4bdc0ff7464bcd4050d17b80b395bc142530e9000ba0f098957163341a",
+    "after_sha256": "077007630285dc136f410c518c97e69af605ac32f320e594806fe816dfd90633"
+  },
+  ".agents/skills/vdd-execution-plan/references/planning-operation.md": {
+    "before_sha256": "b0f82be1dfa5e99e79cb061f13c27658d14a541f206503d6f564e9e2ab080d17",
+    "after_sha256": "984db0b9713e10a1a69ab3ecdfac6ec916a8295fb01226b12b986097ff092e75"
+  },
+  ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md": {
+    "before_sha256": "004b44b829f46e639837cd21d9fe20a49930ef51e8de2bda9b58c711284986ef",
+    "after_sha256": "7faab07879baeaad9e2abc3c6d8b346f91666ba62dabf05c91eb0e9191d5597e"
+  },
+  "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": {
+    "before_sha256": "66a730e7b7bec74438ed30ef28254aa007212feeec6a69c3692b053269be4de3",
+    "after_sha256": "4b9d62818dd520ac6c8c9f6866e90a3957466aa0b015b4c4b2b7f03498ca559f"
+  },
+  ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py": {
+    "before_sha256": null,
+    "after_sha256": "4212cc143faa7c78984009546130a9d8044422d3298a69900fb044be2d2c6f07"
+  },
+  ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py": {
+    "before_sha256": null,
+    "after_sha256": "dadfedf51ee12e8f1004ff0bc2defbbe20e61da66525abba7eb73e80b947dd3b"
+  }
+}

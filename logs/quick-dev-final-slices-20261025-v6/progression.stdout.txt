@@ -1,0 +1,87 @@
+{"slice": "S2", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S2", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S2", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S2", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S2", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S2", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S2", "current_count": 1, "total": 12}
+{"slice": "S5", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S5", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S5", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S5", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S5", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S5", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S5", "current_count": 2, "total": 12}
+{"slice": "S6", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S6", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S6", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S6", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S6", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S6", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S6", "current_count": 3, "total": 12}
+{"slice": "S1", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S1", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S1", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S1", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S1", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S1", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S1", "current_count": 4, "total": 12}
+{"slice": "S3", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S3", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S3", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S3", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S3", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S3", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S3", "current_count": 5, "total": 12}
+{"slice": "S7", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S7", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S7", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S7", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S7", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S7", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S7", "current_count": 6, "total": 12}
+{"slice": "S8", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S8", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S8", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S8", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S8", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S8", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S8", "current_count": 7, "total": 12}
+{"slice": "S4", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S4", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S4", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S4", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S4", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S4", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S4", "current_count": 8, "total": 12}
+{"slice": "S11", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S11", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S11", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S11", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S11", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S11", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S11", "current_count": 9, "total": 12}
+{"slice": "S12", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S12", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S12", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S12", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S12", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S12", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S12", "current_count": 10, "total": 12}
+{"slice": "S10", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S10", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S10", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S10", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S10", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S10", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S10", "current_count": 11, "total": 12}
+{"slice": "S9", "action": "preflight", "status": "preflight-passed", "predicate_result": null, "next": null}
+{"slice": "S9", "action": "author-red", "status": "probe-materialized", "predicate_result": null, "next": "run-probe"}
+{"slice": "S9", "action": "run-probe", "status": null, "predicate_result": true, "next": "run-regression"}
+{"slice": "S9", "action": "run-regression", "status": null, "predicate_result": true, "next": "validate-slice"}
+{"slice": "S9", "action": "validate-slice", "status": "pass", "predicate_result": null, "next": null}
+{"slice": "S9", "action": "run-terminal", "status": null, "predicate_result": true, "next": null}
+{"slice_completed": "S9", "current_count": 12, "total": 12}
+All 12 current Q7/terminal results obtained; preparing Q8.
+{"slice": "S2", "action": "implementation-complete", "status": "pass", "predicate_result": null, "next": null}
+Whole-plan Q8 passed. Stopped before external review/Acceptance/publication.

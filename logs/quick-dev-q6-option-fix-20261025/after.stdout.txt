@@ -1,0 +1,106 @@
+.................F                                                       [100%]
+=================================== FAILURES ===================================
+_________ test_standard_q6_runs_explicit_single_file_consumer_fixture __________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-40/test_standard_q6_runs_explicit0')
+
+    def test_standard_q6_runs_explicit_single_file_consumer_fixture(tmp_path: Path) -> None:
+        primary = [sys.executable, "-m", "pytest", "tests/test_behavior.py", "-q"]
+        fixture = [sys.executable, "-m", "pytest", ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py", "-q"]
+        bundle = _bundle([primary, fixture])
+>       result = run_regression_gate(
+            workspace=Path(__file__).resolve().parents[5], bundle=bundle, slice_id="S1",
+            profile="standard", primary_argv=primary,
+            primary_receipt={"exit_code": 0, "timed_out": False, "test_executions": 1, "cases": 1,
+                             "stdout_sha256": "sha256:" + "a" * 64, "stderr_sha256": "sha256:" + "b" * 64},
+            timeout_seconds=60, out=tmp_path / "q6.json",
+        )
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py:251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/workspace/ji-mu-yun-review-publication')
+bundle = {'schema_version': 'vdd.semantic-plan-bundle.v1', 'plan_id': 'PLAN-Q6', 'obligations': [{'obligation_id': 'O-1', 'requ....md#FR-1']}], 'acceptances': [{'acceptance_id': 'A-1', 'obligation_ids': ['O-1'], 'assertion_ids': ['ASSERT-1']}], ...}
+slice_id = 'S1', profile = 'standard'
+primary_argv = ['/tmp/vdd-pause-tests/bin/python', '-m', 'pytest', 'tests/test_behavior.py', '-q']
+primary_receipt = {'exit_code': 0, 'timed_out': False, 'test_executions': 1, 'cases': 1, ...}
+timeout_seconds = 60
+out = PosixPath('/tmp/pytest-of-agent/pytest-40/test_standard_q6_runs_explicit0/q6.json')
+semantic_plan = None, primary_descriptor = None
+
+    def run_regression_gate(*,workspace:Path,bundle:Mapping[str,Any],slice_id:str,profile:str,primary_argv:Sequence[str],primary_receipt:Mapping[str,Any],timeout_seconds:int,out:Path,semantic_plan:Path|None=None,primary_descriptor:Mapping[str,Any]|None=None)->dict[str,Any]:
+        """Run declared Q6 validations after the primary REFACTOR selector passed."""
+        policy=profile_contract(profile)
+        required=policy.get("regression_required") is True
+        context=_context(bundle,slice_id)
+        commands=context.get("validation_commands") if isinstance(context,Mapping) else []
+        if commands is None:
+            commands=[]
+        if not isinstance(commands,list) or any(not isinstance(cmd,list) or not cmd or any(not isinstance(part,str) or not part for part in cmd) for cmd in commands):
+            raise ValueError("Q6 validation_commands invalid")
+        primary=list(primary_argv)
+        declared=[list(cmd) for cmd in commands]
+        if required and context is None:
+            raise ValueError("Q6 standard/self-hosted profile requires agent-context regression projection")
+        # fast-ship keeps the primary selector truth floor but explicitly omits
+        # additional agent-context regression commands.  Standard/self-hosted
+        # retain the complete declared command set.
+        deferred = [argv for argv in declared if argv != primary and _terminal_scope_command(argv)]
+        commands_to_run = [argv for argv in (declared if required else [argv for argv in declared if argv == primary]) if argv not in deferred]
+        records=[]
+        for argv in commands_to_run:
+            if argv==primary:
+                executions=primary_receipt.get("test_executions")
+                cases=primary_receipt.get("cases")
+                if primary_receipt.get("timed_out") is True or primary_receipt.get("exit_code")!=0 or not isinstance(executions,int) or executions<1 or not isinstance(cases,int) or cases<1:
+                    raise ValueError("Q6 primary refactor selector is not admissible regression evidence")
+                records.append({"argv":argv,"status":"covered-by-primary-refactor-selector","exit_code":0,"timed_out":False,"test_executions":executions,"cases":cases,"stdout_sha256":primary_receipt.get("stdout_sha256"),"stderr_sha256":primary_receipt.get("stderr_sha256")})
+                continue
+            if semantic_plan is not None and primary_descriptor is not None:
+                from shared_execution import command_identity, execute_with_reuse, admissible
+                from copy import deepcopy
+                try:
+                    command_identity(argv)
+                except ValueError:
+                    pass  # Existing non-pytest commands remain executable, never reusable.
+                else:
+                    command_run = out.parent / "q6-executions" / ("command-" + sha256_bytes(str(argv).encode())[7:23])
+                    descriptor = deepcopy(primary_descriptor)
+                    descriptor.update(run_id=command_run.name, stage="regression", argv=argv, timeout_seconds=timeout_seconds)
+                    targets = set(descriptor["target_refs"])
+                    for raw in _pytest_path_arguments(argv):
+                        candidate = workspace / descriptor["cwd"] / raw
+                        if candidate.is_file():
+                            targets.add(candidate.relative_to(workspace).as_posix())
+                    descriptor["target_refs"] = sorted(targets)
+                    receipt = execute_with_reuse(workspace=workspace, bundle=bundle, semantic_plan=semantic_plan,
+                        run_dir=command_run, descriptor=descriptor, profile=profile)
+                    admissible(receipt)
+                    records.append({"argv":argv, "status":"covered-by-shared-execution" if receipt.get("execution_reference") else "pass",
+                        "exit_code":0, "timed_out":False, "test_executions":receipt["test_executions"], "cases":receipt["cases"],
+                        "receipt_ref":(command_run / "canonical-evidence/regression/process-receipt.v2.json").relative_to(workspace).as_posix(),
+                        "receipt_sha256":sha256_value(receipt), "descriptor":descriptor,
+                        "semantic_plan":semantic_plan.resolve().relative_to(workspace.resolve()).as_posix()})
+                    continue
+            try:
+                from workflow_unit_budget import run_command
+                proc=run_command(argv,cwd=workspace,timeout=timeout_seconds)
+                stdout,stderr=proc.stdout,proc.stderr
+                timed_out=False; exit_code=proc.returncode
+            except subprocess.TimeoutExpired as exc:
+                stdout,stderr=exc.stdout or b"",exc.stderr or b""; timed_out=True; exit_code=None
+                if isinstance(stdout,str): stdout=stdout.encode("utf-8",errors="replace")
+                if isinstance(stderr,str): stderr=stderr.encode("utf-8",errors="replace")
+            text=(stdout+b"\n"+stderr).decode("utf-8",errors="replace")
+            pytest_like=any("pytest" in part.lower() for part in argv)
+            executions,cases=_counts(text,timed_out=timed_out) if pytest_like else (None,None)
+            passed=(not timed_out and exit_code==0 and (not pytest_like or (isinstance(executions,int) and executions>=1 and isinstance(cases,int) and cases>=1)))
+            records.append({"argv":argv,"status":"pass" if passed else "fail","exit_code":exit_code,"timed_out":timed_out,"test_executions":executions,"cases":cases,"stdout_sha256":sha256_bytes(stdout),"stderr_sha256":sha256_bytes(stderr)})
+            if not passed:
+>               raise ValueError("Q6 regression/schema command failed")
+E               ValueError: Q6 regression/schema command failed
+
+.agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py:148: ValueError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_runs_explicit_single_file_consumer_fixture
+1 failed, 17 passed in 2.31s

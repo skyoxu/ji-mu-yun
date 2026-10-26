@@ -1,0 +1,33 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_contract_f7fb563211e4 __________________________
+
+vdd_public_consumption = {'root': PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-2/vdd-public-consumption0'), 'pr...files': [{...}, {...}, {...}, {...}], 'schema': 'vdd.repository-path-context.v1', ...}, ...}, 'sandbox': 'read-only'}]}
+
+    @pytest.mark.cer_assertion('ASSERT_F7FB563211E4')
+    def test_contract_f7fb563211e4(vdd_public_consumption):
+        sample = vdd_public_consumption
+        query = _vdd_current_episode(sample)
+        record = (sample['root']/'execution-plans/sample/execution-record.md').read_text()
+        # The adapter cannot fabricate adoption. After the real native caller has
+        # accepted a contract, its existing record must contain its own decision.
+        lines = [line for line in record.splitlines() if line.startswith('{')]
+        decisions = [json.loads(line) for line in lines]
+        matching = [row for row in decisions
+                    if row.get('decision') in {'accepted','rejected'}
+                    and row.get('reason') and row.get('actual_use')
+                    and row.get('consumer') == 'vdd'
+                    and any(row.get('path') == read['path']
+                            and row.get('sha256') == read['sha256'] for read in query['read_set'])]
+        if not matching:
+            print('FAILURE_ID:KQ_F7FB563211E4')
+>       assert matching, 'Native VDD accepted V3 but its execution record has no caller decision/reason/use bound to verified sources'
+E       AssertionError: Native VDD accepted V3 but its execution record has no caller decision/reason/use bound to verified sources
+E       assert []
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3524: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:KQ_F7FB563211E4
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7fb563211e4
+1 failed, 599 deselected, 165 warnings in 1.19s

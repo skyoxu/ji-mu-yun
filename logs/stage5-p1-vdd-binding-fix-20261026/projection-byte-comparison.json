@@ -1,0 +1,32 @@
+{
+  "unchanged_files": [
+    "acceptances.v1.json",
+    "obligations.v1.json",
+    "atomic-recall-alignment.v1.json",
+    "failure-intents.v1.json",
+    "pre-slice-coverage.v1.json",
+    "slices.v1.json",
+    "final-plan-coverage.v1.json",
+    "source-index.v1.json",
+    "semantic-chain-audit.v1.json",
+    "feasibility.v1.json",
+    "semantic-alignment.v1.json",
+    "agent-context/S10/agent-context.json",
+    "agent-context/S5/agent-context.json",
+    "agent-context/S11/agent-context.json",
+    "agent-context/S9/agent-context.json",
+    "agent-context/S4/agent-context.json",
+    "agent-context/S3/agent-context.json",
+    "agent-context/S8/agent-context.json",
+    "agent-context/S2/agent-context.json",
+    "agent-context/S6/agent-context.json",
+    "agent-context/S7/agent-context.json"
+  ],
+  "changed_files": [
+    "compiler-state.v1.json",
+    "semantic-plan-bundle.v1.json",
+    "handoff-repair.v1.json",
+    "agent-context/S1/agent-context.json",
+    "agent-context/S12/agent-context.json"
+  ]
+}

@@ -62,8 +62,8 @@ def preflight_session(api, semantic, request):
         raise ValueError("session profile must be a string")
     api.profile_contract(request["profile"])
     budget = request["targeted_timeout_seconds"]
-    if type(budget) is not int or not 1 <= budget <= 600:
-        raise ValueError("session targeted timeout must be 1..600 seconds")
+    if type(budget) is not int or not 1 <= budget <= 1800:
+        raise ValueError("session targeted timeout must be 1..1800 seconds")
     for key in ("source_commit", "base_commit"):
         commit = request[key]
         if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):

@@ -1,0 +1,181 @@
+{
+  "as_of_utc": "2026-10-26T08:11:37.175317+00:00",
+  "host_commit": "5b585094288f1958539d88261d78467865cfe8e7",
+  "published": false,
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_sha256": "aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "final_files": {
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "6711fcd3e01cee6ac6e90c399622f746402e479060dbdb7cb81b63964fb98d84",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py": "4a04d97d3b68e2968bf16c60888f4183693e347b7c1cb6e67086d9910e415690",
+    "scripts/vdd/compile_plan.py": "e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py": "ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7",
+    "scripts/toolchain/knowledge_query/adapter.py": "92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041"
+  },
+  "native_runs": [
+    {
+      "slice_id": "S1",
+      "run_dir": "logs/stage5-p1-native-20261026/S1",
+      "stage": "probe",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "exit_code": 1,
+      "selected": 20,
+      "call_passed": 17,
+      "call_failed": 3,
+      "elapsed_seconds": 3.2773544270003185,
+      "started_at": "2026-10-26T07:45:56.407471Z",
+      "ended_at": "2026-10-26T07:45:59.684827Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [
+        "KQ_2E09F07252E1"
+      ],
+      "adapter_sha256": "sha256:aa7b4984a22024bbd409def1e46254bbe4ffbc9040c28084a9565d667940cc39",
+      "receipt": "logs/stage5-p1-native-20261026/S1/canonical-evidence/probe/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S1/canonical-evidence/probe/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S1",
+      "run_dir": "logs/stage5-p1-native-20261026/S1",
+      "stage": "red",
+      "predicate_result": true,
+      "verification_outcome": "fail",
+      "exit_code": 1,
+      "selected": 20,
+      "call_passed": 17,
+      "call_failed": 3,
+      "elapsed_seconds": 3.2105201519998445,
+      "started_at": "2026-10-26T07:46:16.866656Z",
+      "ended_at": "2026-10-26T07:46:20.077179Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [
+        "KQ_2E09F07252E1"
+      ],
+      "adapter_sha256": "sha256:aa7b4984a22024bbd409def1e46254bbe4ffbc9040c28084a9565d667940cc39",
+      "receipt": "logs/stage5-p1-native-20261026/S1/canonical-evidence/red/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S1/canonical-evidence/red/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S1",
+      "run_dir": "logs/stage5-p1-native-20261026/S1",
+      "stage": "green",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "exit_code": 0,
+      "selected": 20,
+      "call_passed": 20,
+      "call_failed": 0,
+      "elapsed_seconds": 3.2896770570005174,
+      "started_at": "2026-10-26T07:47:23.006039Z",
+      "ended_at": "2026-10-26T07:47:26.295719Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [],
+      "adapter_sha256": "sha256:a62e5fd334ae3fce31fa9afb251d83e644a81da0fc5cacb769ad8f0b5d37936a",
+      "receipt": "logs/stage5-p1-native-20261026/S1/canonical-evidence/green/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S1/canonical-evidence/green/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S12",
+      "run_dir": "logs/stage5-p1-native-20261026/S12",
+      "stage": "probe",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "exit_code": 1,
+      "selected": 525,
+      "call_passed": 524,
+      "call_failed": 1,
+      "elapsed_seconds": 142.38911434799957,
+      "started_at": "2026-10-26T07:47:35.163422Z",
+      "ended_at": "2026-10-26T07:49:57.552538Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [
+        "KQ_C442B3B56FCE"
+      ],
+      "adapter_sha256": "sha256:a62e5fd334ae3fce31fa9afb251d83e644a81da0fc5cacb769ad8f0b5d37936a",
+      "receipt": "logs/stage5-p1-native-20261026/S12/canonical-evidence/probe/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S12/canonical-evidence/probe/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S12",
+      "run_dir": "logs/stage5-p1-native-20261026/S12",
+      "stage": "red",
+      "predicate_result": true,
+      "verification_outcome": "fail",
+      "exit_code": 1,
+      "selected": 525,
+      "call_passed": 524,
+      "call_failed": 1,
+      "elapsed_seconds": 135.82666836700082,
+      "started_at": "2026-10-26T07:50:16.021387Z",
+      "ended_at": "2026-10-26T07:52:31.848059Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [
+        "KQ_C442B3B56FCE"
+      ],
+      "adapter_sha256": "sha256:a62e5fd334ae3fce31fa9afb251d83e644a81da0fc5cacb769ad8f0b5d37936a",
+      "receipt": "logs/stage5-p1-native-20261026/S12/canonical-evidence/red/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S12/canonical-evidence/red/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S12",
+      "run_dir": "logs/stage5-p1-native-20261026/S12",
+      "stage": "green",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "exit_code": 0,
+      "selected": 525,
+      "call_passed": 525,
+      "call_failed": 0,
+      "elapsed_seconds": 136.71737229999962,
+      "started_at": "2026-10-26T07:54:12.919899Z",
+      "ended_at": "2026-10-26T07:56:29.637274Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [],
+      "adapter_sha256": "sha256:92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+      "receipt": "logs/stage5-p1-native-20261026/S12/canonical-evidence/green/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S12/canonical-evidence/green/stage-result.v2.json"
+    },
+    {
+      "slice_id": "S1",
+      "run_dir": "logs/stage5-p1-native-20261026/S1-final",
+      "stage": "probe",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "exit_code": 0,
+      "selected": 20,
+      "call_passed": 20,
+      "call_failed": 0,
+      "elapsed_seconds": 2.801488879998942,
+      "started_at": "2026-10-26T08:09:45.892727Z",
+      "ended_at": "2026-10-26T08:09:48.694218Z",
+      "process_attempts": 1,
+      "observed_failure_ids": [],
+      "adapter_sha256": "sha256:92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+      "receipt": "logs/stage5-p1-native-20261026/S1-final/canonical-evidence/probe/process-receipt.v2.json",
+      "stage_result": "logs/stage5-p1-native-20261026/S1-final/canonical-evidence/probe/stage-result.v2.json"
+    }
+  ],
+  "new_native_test_process_attempts": 7,
+  "native_reference_executions": 0,
+  "test_author_model_workers": 0,
+  "semantic_repair_model_calls": 0,
+  "reused_planning_stages": [
+    "V1",
+    "V4"
+  ],
+  "S1_intermediate_GREEN": "historical after S12 adapter patch; final S1 current probe is positive, pending full regression",
+  "current_Q7_Q8": "not established; historical v6 originals retained",
+  "Windows": "not executed; old archive incompatible with final adapter",
+  "directed_VDD_verification": {
+    "new_mode_passed": 23,
+    "old_regression_passed": 48,
+    "old_fixture_initial_dependency_failures": 4,
+    "skill_unittest_passed": 22,
+    "exact_host_guard_passed": 1
+  },
+  "test_equivalence": {
+    "old_nodes_preserved": 619,
+    "equivalent_parameter_nodes": 22,
+    "new_cases": 7,
+    "total_collected": 626
+  }
+}

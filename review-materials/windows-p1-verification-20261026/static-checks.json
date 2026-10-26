@@ -1,0 +1,67 @@
+{
+  "kind": "static publication checks only; no tests or CI query",
+  "authorizes": [],
+  "baseline_files_exact": 41404,
+  "frozen_overlay_files": 8,
+  "raw_originals_exact": 271,
+  "fixture_artifacts": [
+    {
+      "name": "catalog_v1",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/layers/repository-knowledge-catalog.v1.json",
+      "sha256": "5b48575fcb421a37575289cd1ffd96e91a206de45e28bcb48578df75cf46f9cf"
+    },
+    {
+      "name": "catalog_v2",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/layers/repository-knowledge-catalog.v2.json",
+      "sha256": "11cc177cca53784b7e7e5c4022efab9f2ef2706cbae95a52a21f0325e69cf17c"
+    },
+    {
+      "name": "exclusions",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/inputs/source-exclusions.v1.json",
+      "sha256": "c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d"
+    },
+    {
+      "name": "policy",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/inputs/consumer-policies.v2.json",
+      "sha256": "eabe46712ac4cf3e2f35aad169191f713401166293673a34a74044041c6ffaa7"
+    },
+    {
+      "name": "projections",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/layers/consumer-projections.v1.json",
+      "sha256": "2b2da593b2892ebdafd7d944a926f3d4b9d763deef77fb73c294fb028e8acb21"
+    },
+    {
+      "name": "query_report",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/evaluation/query-report.v1.json",
+      "sha256": "6ae5640889829c5ddd9bf23b69593b66a0281bd7a1fd28566d5bf2265cd015a5"
+    },
+    {
+      "name": "query_suite",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/inputs/repository-knowledge-query-suite.v1.json",
+      "sha256": "2a7caaa2813cd963ae97c0f14857a647fc49e4ef0e7b8b754d977944971a0850"
+    },
+    {
+      "name": "snapshot",
+      "path": "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/layers/repository-source-snapshot.v1.json",
+      "sha256": "d79646c39535153a392f0f1c082a98159eb1914039633b180f3c2ea0c59c7afe"
+    }
+  ],
+  "published_source_commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+  "published_source_object_in_verification_history": true,
+  "workflow_supervisor_AST_parsed": true,
+  "nodes_exact": 11,
+  "secret_scan": {
+    "scope": "8 source overlays plus selected raw transport, not unrelated local logs",
+    "files": 279,
+    "high_confidence_pattern_hits": [],
+    "raw_environment_values_exported": false
+  },
+  "exclusions": [
+    "credentials",
+    "unrelated original dirty context",
+    "Python caches",
+    "unrelated local logs",
+    "BMAD-only PRD query hook"
+  ],
+  "remaining": "No Windows result; no3-reader rebinding, Linux proof refresh or Q8 performed"
+}

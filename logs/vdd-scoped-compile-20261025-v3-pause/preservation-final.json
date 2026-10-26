@@ -1,0 +1,98 @@
+{
+  "files": {
+    "scripts/vdd/compile_plan.py": {
+      "sha256": "d6698e72fe40027c10c224c8d7120d99443748240bd2a7845857186310acb9ba",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py": {
+      "sha256": "926adbce0150d2c2e627ba64e223862113cd47791c3dece1adccf5720b902bd2",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/SKILL.md": {
+      "sha256": "077007630285dc136f410c518c97e69af605ac32f320e594806fe816dfd90633",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md": {
+      "sha256": "984db0b9713e10a1a69ab3ecdfac6ec916a8295fb01226b12b986097ff092e75",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.md": {
+      "sha256": "7faab07879baeaad9e2abc3c6d8b346f91666ba62dabf05c91eb0e9191d5597e",
+      "unchanged_since_approved_fix": true
+    },
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": {
+      "sha256": "4b9d62818dd520ac6c8c9f6866e90a3957466aa0b015b4c4b2b7f03498ca559f",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py": {
+      "sha256": "4212cc143faa7c78984009546130a9d8044422d3298a69900fb044be2d2c6f07",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py": {
+      "sha256": "dadfedf51ee12e8f1004ff0bc2defbbe20e61da66525abba7eb73e80b947dd3b",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/vdd-scoped-compile-20261024-r3/authoring/v3-caller-candidates.json": {
+      "sha256": "49da496937898dfdceb01f96f62b94a9da684a7fe6750bd5b62678e4d5fd8965",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/vdd-scoped-compile-20261024-r3/authoring/v1-source-recall-caller-assessment.json": {
+      "sha256": "ff06b1c02b1a14e83ace6897136993eb54e10b46582e5571a0a3d59b7b29953e",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/input-source-index.json": {
+      "sha256": "cd58fba54c0ebf406adb517b303d9ff466c4600d17cf9624a2cd2db4195e89ef",
+      "unchanged_since_approved_fix": true
+    },
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": {
+      "sha256": "c5d064136d6df802ec78e4db2120b85985ae506662fdee4d92367b901512d8f6",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py": {
+      "sha256": "5f9e2453ad77513dae6b54ad02f520e1eba0ed66c580a93986b70511a5c42766",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py": {
+      "sha256": "5866d970d62871fef30cd9388483246c64528432698ff2fa5269f0ea6077c19e",
+      "unchanged_since_approved_fix": true
+    },
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py": {
+      "sha256": "bc24cae30e9d87a2f5ee9d1373f06386ed096c29a9d03d7d5092d0a4d2a65440",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/vdd-v3-draft-binding-fix-20261025/v3-caller-candidates.corrected.json": {
+      "sha256": "47cbf5528d6b85617d9198f0f9e4b954fe3a759935419dabb17ff6e2bfd7ed8e",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/01-scope-and-reuse.md": {
+      "sha256": "2e9d61261e7c2158c9fea674f30c878affd630f798780dc58febe35abdb252b1",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/02-historical-boundaries.md": {
+      "sha256": "7917123c647983f45f4d63a2579eb8ef2f51a6e0d6911a1f9337c2d6cce754ab",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/03-behavior-contracts.md": {
+      "sha256": "9786df8c552fed20ae8b837e3208c910a297cf288288448782d37458c9429630",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/04-failure-protection.md": {
+      "sha256": "3d66c8213310bb752c14e1ef953dc83edf454c60772868968bb83a02f793643c",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/05-acceptance-boundaries.md": {
+      "sha256": "f33bfdd9ebf68f32894ad4aa923580372ca2b27483180f6fb40664d8a65a1e7f",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/06-scope-exclusions.md": {
+      "sha256": "100a55420d314544c7aacff98a2ee551f12b691d1338476878a56065b694a16e",
+      "unchanged_since_approved_fix": true
+    },
+    "logs/scoped-input-preparation-20261024-v3/inputs/07-shared-design.md": {
+      "sha256": "4bcf37c586a07a5cfe255812c198a09b2be31e263a55d04a2865a75e35119eab",
+      "unchanged_since_approved_fix": true
+    }
+  },
+  "real_response_bodies_exactly_equal_saved_draft": 305,
+  "response_id_cover_exact": true
+}

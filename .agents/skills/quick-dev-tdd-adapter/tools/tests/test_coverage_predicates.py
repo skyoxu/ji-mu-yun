@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import sys
+from contextlib import contextmanager
+
+import pytest
 
 TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
@@ -146,3 +149,97 @@ def test_q7_rejects_mutated_runtime_edge_bytes(tmp_path: Path) -> None:
         pass
     else:
         raise AssertionError("Q7 must reject mutated runtime edge bytes")
+
+
+def _q8_fixture(root):
+    semantic, roots = prepare(root)
+    run, _, _, _ = execute_nonterminal_stages(root, semantic)
+    path = run / "ready.json"
+    ready = validate_slice_ready(workspace=root, semantic_plan=semantic, run_root=run,
+        slice_id="S1", snapshot_roots=roots, source_commit="TEST", out=path)
+    terminal = execute_stage(workspace=root, semantic_plan=semantic, run_dir=run,
+        descriptor_path=run/"descriptors/terminal.json", profile_identity="standard")
+    assert terminal["predicate_result"] is True
+    return dict(workspace=root, semantic_plan=semantic, snapshot_roots=roots,
+        source_commit="TEST", out=root/"Q8/complete.json", predecessors=[{
+            "slice_id":"S1", "run_root":"RUN-1", "result_ref":"RUN-1/ready.json",
+            "result_sha256":sha256_value(ready)}])
+
+
+def test_q8_deduplicates_originals_but_checks_every_edge_within_replay_context(tmp_path, monkeypatch):
+    import coverage_predicates as predicates
+    import shared_execution
+    args = _q8_fixture(tmp_path)
+    calls, edges, notifications, active = [], [], [], []
+    real_saved = shared_execution.validate_saved_request
+    real_edge = predicates._reread_edge
+    @contextmanager
+    def epoch(*_):
+        active.append(True)
+        try:
+            yield
+        finally:
+            active.pop()
+    def saved(*a):
+        assert active == [True]  # Deferred checks cannot escape a replay epoch.
+        calls.append(a[1])
+        return real_saved(*a)
+    def edge(*a, **kw):
+        edges.append(kw['stage'])
+        return real_edge(*a, **kw)
+    monkeypatch.setattr(predicates, 'replay_budget_transition', epoch)
+    monkeypatch.setattr(shared_execution, 'validate_saved_request', saved)
+    monkeypatch.setattr(predicates, '_reread_edge', edge)
+    monkeypatch.setattr(predicates, 'progress', lambda call, data: notifications.append(data))
+    first = publish_implementation_complete(**args)
+    assert first['status'] == 'pass' and len(first['runtime_closure_tuples']) == 4
+    assert len(edges) == 11  # terminal 2 + (2 assertion refs + canonical) * 3 stages
+    assert len(calls) == 4  # one original per red/green/refactor/terminal stage
+    assert len([x for x in notifications if x.startswith(b'original:')]) == 4
+    assert len([x for x in notifications if x.startswith(b'Q8-tuple:')]) == 4
+    assert len({x for x in notifications if x.startswith(b'Q8-edge:')}) == 8
+    publish_implementation_complete(**{**args, 'out':tmp_path/'Q8-second/complete.json'})
+    assert len(calls) == 8 and len(edges) == 22  # Nothing cached across calls.
+
+
+@pytest.mark.parametrize('mutation', ['missing_predecessor', 'duplicate_predecessor',
+    'ready_hash', 'terminal_edge', 'terminal_duplicate', 'stdout', 'fixture'])
+def test_q8_rejects_bad_proof_without_publishing(tmp_path, mutation):
+    args = _q8_fixture(tmp_path)
+    run = tmp_path/'RUN-1'
+    if mutation == 'missing_predecessor':
+        args['predecessors'] = []
+    elif mutation == 'duplicate_predecessor':
+        args['predecessors'] *= 2
+    elif mutation == 'ready_hash':
+        args['predecessors'][0]['result_sha256'] = 'sha256:' + '0'*64
+    elif mutation == 'terminal_edge':
+        result = json.loads((run/'canonical-evidence/terminal/stage-result.v2.json').read_text())
+        (run/result['runtime_edges'][0]['path']).write_text('{}')
+    elif mutation == 'terminal_duplicate':
+        path = run/'canonical-evidence/terminal/stage-result.v2.json'
+        result = json.loads(path.read_text());result['runtime_edges'].append(result['runtime_edges'][0])
+        path.write_text(json.dumps(result))
+    elif mutation == 'stdout':
+        (run/'canonical-evidence/refactor/stdout.bin').write_bytes(b'changed')
+    else:
+        (tmp_path/'fixture.txt').write_text('changed')
+    with pytest.raises(ValueError):
+        publish_implementation_complete(**args)
+    assert not args['out'].exists()
+
+
+def test_q8_detects_original_mutation_during_deferred_checks(tmp_path, monkeypatch):
+    import shared_execution
+    args = _q8_fixture(tmp_path)
+    real = shared_execution.validate_saved_request
+    count = []
+    def changed(*a):
+        real(*a)
+        if not count:
+            (tmp_path/'RUN-1/canonical-evidence/terminal/stdout.bin').write_bytes(b'changed')
+        count.append(1)
+    monkeypatch.setattr(shared_execution, 'validate_saved_request', changed)
+    with pytest.raises(ValueError, match='Q8 original/input changed during validation'):
+        publish_implementation_complete(**args)
+    assert not args['out'].exists()

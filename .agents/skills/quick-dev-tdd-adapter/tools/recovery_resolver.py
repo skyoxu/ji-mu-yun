@@ -47,13 +47,13 @@ def recover_explicit_run(*, run_root: Path, recovery_input: Mapping[str, Any]) -
         raise ValueError("recovery stage lineage stale")
     if receipt.get("candidate_hash") != candidate:
         raise ValueError("recovery candidate lineage stale")
-    if observation.get("evidence_state") not in {"observed-run", "recovered-run"}:
+    if observation.get("evidence_state") not in {"observed-run", "recovered-run", "reused-execution"}:
         raise ValueError("recovery predecessor evidence state invalid")
 
     case_map = None
-    if stage == "regression":
+    if stage == "regression" or receipt.get("execution_reference"):
         from case_evidence import assertion_cases
-        descriptor = load_json(run_root / "descriptors/regression.json")
+        descriptor = load_json(run_root / "descriptors" / (stage + ".json"))
         case_map = assertion_cases(descriptor, receipt)
 
     refs = recovery_input["runtime_edges"]

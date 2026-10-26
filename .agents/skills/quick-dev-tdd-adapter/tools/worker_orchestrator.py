@@ -23,6 +23,8 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 if str(SC) not in sys.path:
     sys.path.insert(0, str(SC))
+sys.path.insert(0, str(ROOT / "scripts"))
+from workflow_unit_budget import unit
 
 from _llm_backend import inspect_llm_backend, resolve_llm_backend, run_llm_exec
 from current_router import validate_expected_red
@@ -201,15 +203,16 @@ def _invoke(
             }
         with tempfile.TemporaryDirectory(prefix=f"quick-dev-{stage}-") as raw:
             output = Path(raw) / "last-message.txt"
-            code, trace, argv = run_llm_exec(
-                backend=backend_name,
-                root=root,
-                prompt=_prompt(stage, payload, allowed=allowed, forbidden=forbidden),
-                output_last_message=output,
-                timeout_sec=timeout_seconds,
-                codex_configs=["model_reasoning_effort=\"medium\""],
-                codex_sandbox="workspace-write",
-            )
+            with unit([stage, payload, sorted(allowed), sorted(forbidden)], "Quick Dev " + stage):
+                code, trace, argv = run_llm_exec(
+                    backend=backend_name,
+                    root=root,
+                    prompt=_prompt(stage, payload, allowed=allowed, forbidden=forbidden),
+                    output_last_message=output,
+                    timeout_sec=timeout_seconds,
+                    codex_configs=["model_reasoning_effort=\"medium\""],
+                    codex_sandbox="workspace-write",
+                )
             if output.is_file():
                 output_sha = sha256_bytes(output.read_bytes())
             if code != 0:
@@ -264,7 +267,7 @@ def run_red_author(
     plan_dir: Path,
     semantic_plan: Path,
     slice_id: str,
-    timeout_seconds: int = 300,
+    timeout_seconds: int = 1800,
     backend: str | None = None,
     worker_mutator: WorkerMutator | None = None,
 ) -> dict[str, Any]:
@@ -288,7 +291,7 @@ def run_implementation_worker(
     slice_id: str,
     red_stage_result: Mapping[str, Any],
     run_dir: Path | None = None,
-    timeout_seconds: int = 600,
+    timeout_seconds: int = 1800,
     backend: str | None = None,
     worker_mutator: WorkerMutator | None = None,
 ) -> dict[str, Any]:
@@ -323,7 +326,7 @@ def run_refactor_worker(
     slice_id: str,
     green_stage_result: Mapping[str, Any],
     run_dir: Path | None = None,
-    timeout_seconds: int = 600,
+    timeout_seconds: int = 1800,
     backend: str | None = None,
     worker_mutator: WorkerMutator | None = None,
 ) -> dict[str, Any]:

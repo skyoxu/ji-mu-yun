@@ -1,0 +1,12 @@
+{
+  "authorizes": [],
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_sha256": "aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "files": {
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "6711fcd3e01cee6ac6e90c399622f746402e479060dbdb7cb81b63964fb98d84",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py": "4a04d97d3b68e2968bf16c60888f4183693e347b7c1cb6e67086d9910e415690",
+    "scripts/vdd/compile_plan.py": "e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py": "ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7"
+  },
+  "production_adapter": "Q4 changes separately bound by native predecessor/successor"
+}

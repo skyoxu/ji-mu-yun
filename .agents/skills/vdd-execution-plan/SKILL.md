@@ -47,7 +47,36 @@ Use the selected profile with the canonical entry:
 py -3 scripts/vdd/compile_plan.py --requirements <requirements.md> --out-dir <execution-plans/plan> --profile <standard|resumable|self-hosted>
 ```
 
-For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit or any status other than `plan-ready` remains a VDD repair result; no caller may promote it. `--recommendation-only` performs no plan publication and never represents readiness.
+For an existing failed compiler directory, add `--resume-from first-failed-stage`. A nonzero exit remains a VDD repair result; no caller may promote it. The explicit `--stop-after v3` option returns normal `paused` with exit 0 after V3, V3A and execution preflight, before V4. This is not `plan-ready`, publication or implementation permission. `--recommendation-only` performs no plan publication and never represents readiness.
+
+Resume replays validated candidates, not an unchecked program counter. V0 source
+preflight and the cheap current V2 structural guard run again. Identical frozen
+V1 section content, interpretation context and extraction rules reuse the
+content cache; query episode/stage/time and Git-only provenance do not force
+new extraction. Changing a real source section or its interpretation context
+invalidates that extraction. Full-domain source checks keep their own native
+input/partition validation and can be reused when that domain is unchanged.
+
+For an interrupted older caller-session run without content-cache metadata,
+add `--resume-worker-session <original-session-directory>`. This reads only the
+explicit transcript and requires the matching returned request/response, native
+cache, output and schema-valid native receipt. A timeout, cancellation, missing
+result or unconsumed answer cannot satisfy it. Nothing is injected into old
+caches/state and no `plan-ready` witness is invented. The current query/security
+gate still runs before replay. Corrupt matching evidence blocks. See the planning
+guide for the exact route and limits; resume proceeds through V3/V4/downstream
+gates instead of stopping at V3 automatically. To choose a normal V3 boundary,
+pass `--stop-after v3`; this option is limited to ordinary create/resume, not
+fixture, recommendation or semantic/handoff repair modes. The public compiler
+saves a non-authorizing, source/domain/profile/rules-bound native V3 candidate
+under `.compiler-work/v3-checkpoints/` only after both V3 preflights pass.
+Resume the same output using `--resume-from first-failed-stage`, omitting
+`--stop-after` to continue to V4 or retaining it to pause again. Current query,
+V0/V2, native V3 candidate gates, normalization and preflights still run. A
+matching candidate avoids V3 regeneration; input/rule changes miss that candidate
+and use normal dependency-bound caches. Corruption or current contract failure
+blocks, never becomes a successful pause. No canonical lifecycle state is
+published at this boundary.
 
 For an already reviewed plan whose only defect is the Quick Dev execution
 handoff, use `--repair-quick-dev-handoff-from <predecessor-dir>` with the
@@ -55,6 +84,15 @@ unchanged requirements and a distinct empty successor `--out-dir` inside the
 same repair scope. The predecessor profile is retained. This mode preserves
 semantic scope and records V1/V4 reuse; it performs no model calls. Read
 [the planning guide](references/planning-operation.md) for its exact limits.
+
+For an existing handoff whose only defect is an absent test already bound by
+its snapshot, pytest argv and selector, repeat `--handoff-planned-test <path>`
+with `--repair-quick-dev-handoff-from`. This explicit mode changes only the
+affected `planned_new_files` and slice identities; it retains every oracle,
+owner, command, runtime role and dependency. It creates no file or execution
+proof. Existing, tracked-deleted, symlink, forbidden or unbound paths reject.
+Do not combine it with role, launcher or test-root repair. The normal handoff
+mode is unchanged. See the planning guide for source checks and reuse limits.
 
 For a wrong V3 contract discovered after publication, use
 `--repair-published-v3-from <plan-ready-predecessor> --v3-contract-repair <json>`
@@ -76,15 +114,34 @@ must name the approved source-bound replacements and provide complete V3
 contracts for the resulting new obligation IDs; old V1/V3 evidence is not
 silently relabeled. V4 and all downstream gates remain mandatory.
 
-For real-worker quality evaluation, `scripts/vdd/evaluate_real_semantic_quality.py`
-supervises the compiler with `--compile-timeout-seconds` (default 3600), distinct
-from the optional `--repair-timeout-seconds` override. It prints the progress
-path at launch and retains the run directory. Inspect
+## Execution budgets
+
+The public compiler supervises independent work units with a default 1800-second
+total and 600 seconds without real progress. Before V6 there are no execution
+slices: V1 extraction/source-check calls and V3 contract batches are units.
+Container stages exclude time spent in independent child units; a long healthy
+sequence is not killed because its round total exceeds 1800 seconds. Repeated
+attempts of the same content-bound unit share the cumulative allowance, including
+explicit resumes. Real subprocess bytes and completed native sub-units count as
+progress; polling, file touches and artificial heartbeats do not.
+
+`--unit-timeout-seconds` and `--idle-timeout-seconds` select finite execution
+limits at the public entry. Native worker defaults are 1800 seconds; an explicit
+shorter transport/descriptor limit still applies. Caller-session requests use
+the same default total; do not pass the old 600-second host *total* when the
+intention is a 600-second *inactivity* limit. Timeout/cancel terminates the owned
+process tree, retains caches and appends non-authorizing diagnostics under
+`logs/workflow-unit-budgets/`. The budget ledger is cost history, not successful
+execution or cache authority. Cache/recovery validation still owns reuse.
+
+Do not wrap normal compilation in an aggregate 1800-second watchdog. Old
+per-run supervisors remain historical and must not be reused. The separate
+real-worker quality evaluation harness has its own explicit aggregate benchmark
+cap; it is not the production recovery route. Inspect
 `plan/.compiler-work/compiler-progress.jsonl` for stage/worker start and return
 events; an unmatched start locates the last observed wait, not its cause.
-Timeout produces `compile-timeout`, never acceptance evidence. Windows process
-cleanup targets only the owned PID tree; inspect `cleanup_error` if termination
-fails. Existing caches and worker outputs remain available for offline diagnosis.
+Timeout is never acceptance evidence. Existing caches and worker outputs remain
+available for offline diagnosis; late responses do not resume a killed parent.
 
 Before V4 Acceptance alignment, the compiler checks the projected execution
 contract and reports bounded diagnostics. Transport failures do not enter schema
@@ -138,11 +195,11 @@ legacy path to manufacture a missing RED. Legacy RED import remains a
 read-only compatibility path for already-versioned historical plans, never an
 artifact that a newly created or repaired VDD plan may publish.
 
-During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
+During repair, first stabilize the smallest affected layer. A slice-local change invalidates that slice and its declared downstream dependents only. A shared lifecycle contract, global validator semantic, baseline content identity, or dependency used by every slice requires one terminal full replay after targeted stabilization. Targeted validation never authorizes completion. Before publishing `implementation-complete`, run one current terminal full validation.
 
 ## Candidate, Review, And Reports
 
-Use current scoped Git identity for TDD freshness and preserve invalidated evidence as historical. Only when governance is enabled, read [governance operations](references/governance-operation.md) before freezing inputs or preparing review/report artifacts. That guide preserves a stable `lineageFamilyId` derived from the original plan target. A successor does not reset that budget; require a hash-bound `inspect-lineage` projection even when it reports zero rounds and a root-cause callsite inventory before review re-entry.
+Use current scoped Git identity for provenance and content-bound execution inputs for TDD freshness; preserve invalidated evidence as historical. Only when governance is enabled, read [governance operations](references/governance-operation.md) before freezing inputs or preparing review/report artifacts. That guide preserves a stable `lineageFamilyId` derived from the original plan target. A successor does not reset that budget; require a hash-bound `inspect-lineage` projection even when it reports zero rounds and a root-cause callsite inventory before review re-entry.
 
 Bootstrap history indexes, cost-calibration candidates, and synthetic shadow
 corpora are non-authorizing operational inputs. VDD may use their cost signal
@@ -179,3 +236,43 @@ explicit [caller-session route](../../../docs/workflows/caller-session-execution
 It invokes this Skill's existing native entry and retains its gates and lifecycle
 ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
 execution or acceptance evidence.
+
+## Shared test coverage and execution dependencies
+
+Declare complete assertion/case coverage, actual validation argv, production
+owners and execution_snapshot_paths in the existing semantic projection. Shared
+modules may cover multiple slices; do not duplicate a test execution declaration
+as if it were separate execution proof. Include test helpers, fixtures, imported
+production dependencies and tool/configuration inputs in the appropriate scope.
+Quick Dev additionally inventories repository and environment content rather
+than trusting hand-filled path lists alone. VDD does not emit, import or relabel
+execution receipts. See the consuming [shared execution contract](../quick-dev-tdd-adapter/references/shared-execution.md).
+The terminal full validation requirement may be satisfied by a currently valid
+shared original only after Quick Dev rechecks actual terminal case coverage and
+all Q8 predicates. An unchanged slice hash alone is never enough.
+
+## Delivered upstream inputs
+
+Consume delivered BMAD artifacts directly as inputs. Do not determine whether
+they need upstream review, require BMAD reviewer reports or approval evidence,
+or launch/repeat BMAD generation or review. Keep readability, format/schema,
+reference and input-content identity checks, plus this workflow's own contract
+and implementation checks. These checks must not become an upstream quality
+review gate. Explicit user-requested stage-end external A/B remains separate
+and is neither launched nor removed by this rule.
+
+## Explicit static primary binding repair
+
+ADR-0041: with `--repair-quick-dev-handoff-from`, repeat
+`--handoff-static-primary-slice <slice-id>` only for explicitly selected slices
+whose already-bound primary pytest module has a redundant simple OR filter.
+The current import-free CER parser must completely map every required assertion,
+and every mapped function must remain inside the old filter. The mode removes
+only that primary `-k` filter; all other fields/commands, requirements, oracles,
+owners, write scopes, roles and dependencies remain unchanged. Q6/terminal
+retain the full module. Unknown/missing/unsafe/forbidden targets, symlinks,
+unsupported argv or incomplete mappings reject; no arbitrary command is accepted.
+It cannot combine with other handoff modes. Default repair remains unchanged.
+The normal native predecessor/source/semantic/feasibility gates and successor
+publication remain mandatory, with V1/V4 reused and no model/execution evidence
+created. A repaired binding is not behavioral verification.

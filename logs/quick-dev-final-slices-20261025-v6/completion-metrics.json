@@ -1,0 +1,54 @@
+{
+  "kind": "author metrics derived from retained native evidence; not gate authority",
+  "authorizes": [],
+  "Q8_report": "logs/workflow-unit-budgets/quick-dev/55382ed022fff5b50c649a803b5aa88c99bb67d7931c0f1a850a26a073e474b0/fdc1993c688d436b8c3a040e37b4c6f6.json",
+  "Q8_events": "logs/workflow-unit-budgets/quick-dev/55382ed022fff5b50c649a803b5aa88c99bb67d7931c0f1a850a26a073e474b0/fdc1993c688d436b8c3a040e37b4c6f6.events.jsonl",
+  "Q8_exit_code": 0,
+  "Q8_elapsed_seconds": 388.4153811040014,
+  "Q8_unit_seconds": 1800,
+  "Q8_idle_seconds": 600,
+  "Q8_event_counts": {
+    "start": 1,
+    "progress": 1578,
+    "end": 1
+  },
+  "Q8_progress_events": 1578,
+  "Q8_unique_progress_digests": 1273,
+  "primary_stage_attempts": {
+    "probe": 12,
+    "regression": 12,
+    "terminal": 12
+  },
+  "additional_Q6_attempts": 3,
+  "additional_Q6_selected_case_calls": 1857,
+  "additional_Q6_executions": [
+    {
+      "slice_id": "S12",
+      "receipt": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/regression/q6-executions/command-84702b9d559991f7/canonical-evidence/regression/process-receipt.v2.json",
+      "process_attempts": 1,
+      "selected_cases": 619,
+      "exit_code": 0
+    },
+    {
+      "slice_id": "S12",
+      "receipt": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/regression/q6-executions/command-db886674895e1b5f/canonical-evidence/regression/process-receipt.v2.json",
+      "process_attempts": 1,
+      "selected_cases": 619,
+      "exit_code": 0
+    },
+    {
+      "slice_id": "S12",
+      "receipt": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/regression/q6-executions/command-e59eaee54de0d7da/canonical-evidence/regression/process-receipt.v2.json",
+      "process_attempts": 1,
+      "selected_cases": 619,
+      "exit_code": 0
+    }
+  ],
+  "total_new_test_stage_attempts": 39,
+  "Q6_same_run_primary_references": 12,
+  "new_real_model_calls": 0,
+  "whole_plan_Q8": "pass",
+  "Acceptance": "not-run",
+  "external_AB": "not-run",
+  "publication": "not-performed"
+}

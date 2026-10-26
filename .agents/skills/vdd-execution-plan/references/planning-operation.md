@@ -1,5 +1,82 @@
 # Create Or Repair A Plan
 
+## Interrupted caller-session recovery
+
+Use the normal public compiler with the same requirements, all companions,
+out-dir and profile, adding `--resume-from first-failed-stage`. New V1 extraction
+stores non-authorizing source-content candidate metadata. The identity retains
+the exact section text/ref, interpretation context, extraction prompt and source
+role rules. File position/whole-file provenance is rechecked at V0 rather than
+used to rerun an otherwise identical section. Advisory query execution metadata
+is not source semantics. Candidate schema/source bindings are still revalidated
+and V2 runs on the current full set; a cached V1 candidate is never a saved V2
+verdict. Missing/changed dependencies can still fail the later owning execution
+preflight; this route does not suppress them.
+
+An older interrupted caller-session directory may have raw caches and native
+receipts but no new metadata. Select its original transcript explicitly:
+
+```text
+py -3 -B scripts/vdd/compile_plan.py --requirements <unchanged-source> --companion <each-original-companion> --out-dir <same-failed-directory> --profile <original-profile> --resume-from first-failed-stage --resume-worker-session <logs/original-session>
+```
+
+Use a fresh live caller session for new requests; the original session is a
+read-only compatibility witness. It must belong to the same repository/output
+scope. Replay requires a returned host result and hash-bound response, original
+native output/cache and schema-valid receipt bound to the original input and
+prompt. Current normalized content/policy must match, and current native gates
+still run. Unknown, timed-out, cancelled or unconsumed responses are not adopted;
+corruption or conflicting matching results block rather than selecting a latest
+success. There is no fixture-cache import, direct V3 jump or published contract
+rewrite. The public result exposes `worker_cache_reuse` counters, which are
+diagnostic only. Original witnesses are not rewritten.
+
+Full-domain source-recall caches still bind the actual entire candidate/source
+domain and use the existing resolved native receipt checks. A relevant domain
+change requires those checks again even when other V1 sections were reusable.
+V3 partial contracts retain their existing frozen-domain/native path validators;
+an answer file alone is not an accepted contract. Resume continues all required
+V3/V4/V5/V6/downstream checks before readiness. Use existing unit budgets, not a
+whole-round watchdog, and do not run a real recovery merely to test this route.
+
+## Explicit V3 pause boundary
+
+For ordinary create/resume, add `--stop-after v3` to the same public command.
+V3 worker/schema/domain validation, deterministic normalization, V3A semantic
+preflight and V3 execution preflight all complete before normal pause. V4 and
+all publication/downstream gates remain unexecuted. The result is `paused`,
+exit 0, `authorizes=[]`, with a content-bound checkpoint reference; it is not
+`plan-ready` or a new lifecycle transition. A timeout/cancel/exception or failed
+preflight remains `repair-vdd`, never `paused`.
+
+Only returned native candidates are saved after these checks. Author drafts,
+unconsumed responses and injected fixture caches cannot create this checkpoint
+through the pause option. Its identity binds repository/output scope, source
+index, complete obligations, profile and current V3 rules by content, without
+Git-only provenance. It is a revalidatable candidate, not saved permission.
+No old cache/receipt or canonical state is rewritten.
+
+Resume with the same inputs/profile/output and `--resume-from first-failed-stage`.
+Keep `--resume-worker-session` when the older V1 witness still requires it.
+Omit `--stop-after` to continue through V4 and all normal gates, or retain it to
+pause again. Current query/security, V0/V2 and both V3 preflights rerun; an exact
+checkpoint candidate also passes current V3 schema/domain/execution checks and
+normalization before reuse. Invalid current paths block. Source/domain/rule
+changes require fresh validation using ordinary matching native caches; a saved
+checkpoint does not force an old result into a changed domain. Failed/malformed
+matching checkpoints block without replacement author calls. An already
+plan-ready directory rejects the pause option rather than downgrading or
+relabeling completed state. Ordinary completed-resume semantics are unchanged.
+
+Execution is bounded per independent native unit, not by an aggregate round
+deadline: default total 1800 seconds and genuine inactivity 600 seconds. Before
+slices exist, source extraction/checks and V3 contract batches are the units.
+Retries share the same content-bound cumulative allowance; parent stages do not
+charge their children's elapsed time again. The public entry's unit supervisor
+retains diagnostics and terminates the owned tree on timeout/cancel. It does not
+publish semantic evidence or bypass native cache checks. Do not reuse an old
+per-run aggregate watchdog for recovery. See SKILL.md Execution budgets.
+
 Read this guide only for the operation selected in SKILL.md. Commands run from the repository root unless stated otherwise; inline paths retain their original repository/Skill-root meaning.
 
 ## Current Behavior Routing (CER)
@@ -181,6 +258,33 @@ primary authorable pytest entry, and missing RED roles for eligible behavior.
 A constraints/governance failure still blocks; never manufacture expected RED
 just to keep the implementation loop running.
 
+### Declare an already-bound absent test
+
+For a declarations-only defect, use the existing public handoff producer with
+one `--handoff-planned-test <repository-relative-test.py>` per explicit path.
+Keep the same requirements, predecessor profile and a distinct empty sibling
+successor. This mode does not call the normal dedicated-entry/RED-role repair:
+it retains commands, selectors, allowed writes, snapshots, owners, obligations,
+full Acceptance/oracles, roles, memberships, dependencies and terminal predicates.
+Only affected `planned_new_files` and derived slice/bundle identities change.
+
+Each requested path must be a normalized missing pytest file under a test
+segment, already bound by the owning slice's snapshot, pytest argv and selector.
+It must not be a production/rollback owner or overlap one, be forbidden by any
+owning context, exist, be tracked in HEAD/index (including staged deletion), or
+pass through a symlink. Arbitrary paths and duplicate declarations reject before
+a result is changed. A successor leaving another missing snapshot undeclared
+also rejects, so partial declarations cannot repeat the Q1 gap. This grants no new GREEN/write scope and restores no old
+BMAD-positive tests. Q2 must still author the actual retained-scope tests.
+
+The native producer reuses the valid V1/V4 predecessor and runs its existing
+source identity, semantic-scope, dependency, coverage, feasibility and handoff
+checks. It publishes a non-authorizing repair report with declared paths and
+unchanged commands/roles, plus genuine successor identities. Q1 is unchanged;
+run its read-only planned preflight on the actual successor workspace. A valid
+planned contract is not a materialized test, observed RED or implementation.
+Do not combine declarations with runtime-role, launcher or test-root repair.
+
 ### Slice-local runtime-role correction
 
 If a real machine assertion was excluded only because its requirement is
@@ -241,3 +345,19 @@ shared multi-file test surface, each existing file's markers are checked against
 its own declared domain. Prose source prerequisites remain in obligations and
 are not invented as obligation-ID graph edges. Source-index verification and
 republication retain the producer's entries/companions identity shape.
+
+## Explicit static primary binding repair
+
+ADR-0041: with `--repair-quick-dev-handoff-from`, repeat
+`--handoff-static-primary-slice <slice-id>` only for explicitly selected slices
+whose already-bound primary pytest module has a redundant simple OR filter.
+The current import-free CER parser must completely map every required assertion,
+and every mapped function must remain inside the old filter. The mode removes
+only that primary `-k` filter; all other fields/commands, requirements, oracles,
+owners, write scopes, roles and dependencies remain unchanged. Q6/terminal
+retain the full module. Unknown/missing/unsafe/forbidden targets, symlinks,
+unsupported argv or incomplete mappings reject; no arbitrary command is accepted.
+It cannot combine with other handoff modes. Default repair remains unchanged.
+The normal native predecessor/source/semantic/feasibility gates and successor
+publication remain mandatory, with V1/V4 reused and no model/execution evidence
+created. A repaired binding is not behavioral verification.

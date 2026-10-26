@@ -164,31 +164,6 @@ def prepare(root, spec, run, identity=None, roles=()):
               "Read the input role map and snapshots in ../state.json relative to this project; use those paths as input.\n"
               "Do not publish selection records or invoke VDD, Quick Dev or Acceptance. Return the native headless result.\n")
     policy += "Follow native headless behavior: skip the interactive Story Breakdown; no stories feature is added by this wrapper.\n"
-    from scripts.toolchain.knowledge_query import adapter
-    provenance = [path for path, role in role_map.items() if role == "provenance"]
-    memory = contained(root, str(PurePosixPath(spec).parent / ".memlog.md"))
-    prior = memory.read_text(encoding="utf-8") if memory.is_file() else ""
-    # Existing source-bound decisions are inherited, not promoted into new roles.
-    inherited = bool(provenance) and all(any(path in line and snapshots[path] in line
-        for line in prior.splitlines()) for path in provenance)
-    if inherited:
-        policy += "\nReuse inherited source decisions: current provenance bytes match recorded path/hash; no factual input change, so no supplemental query. Preserve open questions and exclusions.\n"
-        # ADR-0048 / AD-5: forward the verified identity, not a new adoption claim.
-        policy += "Verified inherited provenance: " + json.dumps(
-            [{"path": path, "sha256": snapshots[path]} for path in provenance],
-            ensure_ascii=False, sort_keys=True) + "\n"
-    elif selected:
-        prepared_query = adapter.prepare_consumption({
-            "stage": "spec", "operation": "update" if original else "create",
-            "task_id": identity, "inputs": list(role_map) or [spec],
-            "scope": list(role_map) or [spec], "query": "current basis " + identity,
-            "supplement_reason": "missing_or_changed_source_basis",
-            "record_path": run + "/execution-record.md"}, root)
-        if prepared_query["status"] == "blocked":
-            raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
-        policy += adapter.consumption_instructions(prepared_query)
-    else:
-        policy += "\nNo repository source input is available: retain necessary factual questions before decisions.\n"
     prompt = invocation(root, folder, native, "bmad-spec", policy)
     return {"ok": True, "invocation": prompt.relative_to(root).as_posix(), "native_spec": native_spec.relative_to(root).as_posix(), "authorizes": []}
 

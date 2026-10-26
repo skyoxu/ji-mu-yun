@@ -1,0 +1,22 @@
+{
+  "kind": "local review checklist byte hashes; not new execution evidence",
+  "authorizes": [],
+  "files": {
+    "worktree-status.txt": {
+      "sha256": "72740817c9f3b66c8b3ef3259540eaf3c551d83c9f74c260ae45420cdd44669a",
+      "size_bytes": 8184
+    },
+    "change-list.json": {
+      "sha256": "9d484f45c327726459bcfe6d82367faf8a7bf54df1a72bb74679313e7967a2ac",
+      "size_bytes": 18357
+    },
+    "README.md": {
+      "sha256": "8af9baf3ed4eeaed5deb9535a5ac8a0a746d02038af52b585704b94a4fa997b0",
+      "size_bytes": 7488
+    },
+    "manifest.json": {
+      "sha256": "284c54f90374b7008533ff99a0529fed9117ed6b1839ef54e1e7824c731cb47e",
+      "size_bytes": 1134129
+    }
+  }
+}

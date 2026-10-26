@@ -1,0 +1,30 @@
+.........F                                                               [100%]
+=================================== FAILURES ===================================
+__________________________ test_contract_7694233db1c7 __________________________
+
+published_planning = (PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-5/test_contract_7694233db1c70/admission-...': 'jimuyun.knowledge-locator-request.v1', 'request_id': 'S7-admission', 'consumer': 'vdd', 'query': 'AGENTS.md', ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb6c865cc80>
+
+    @pytest.mark.cer_assertion('ASSERT_7694233DB1C7')
+    def test_contract_7694233db1c7(published_planning,monkeypatch):
+        root,paths,request=published_planning
+        _s7_write_config(published_planning)
+        record=root/'execution-plans/example/memlog.md'
+        calls=[]
+        real=core.query_with_diagnostics
+        def observed(*args,**kwargs):
+            calls.append(args[0]); return real(*args,**kwargs)
+        monkeypatch.setattr(core,'query_with_diagnostics',observed)
+        first=_planning_operation(published_planning,record_path=record.relative_to(root).as_posix())
+        second=_planning_operation(published_planning,record_path=record.relative_to(root).as_posix())
+>       assert first['episode_id'] == second['episode_id'] and len(calls) == 1
+E       AssertionError: assert ('e7d1d1397edf...f69671012a191' == 'e7d1d1397edf...f69671012a191'
+E         
+E         Skipping 53 identical leading characters in diff, use -v to show
+E           9671012a191 and 0 == 1)
+E        +  where 0 = len([])
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3674: AssertionError
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_7694233db1c7
+1 failed, 9 passed, 608 deselected, 198 warnings in 1.14s

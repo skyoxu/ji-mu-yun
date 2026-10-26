@@ -1,0 +1,77 @@
+{
+  "authorizes": [],
+  "step": "approved BMAD-exclusive implementation withdrawal only",
+  "candidate_branch": "feature/bmad-vdd-knowledge-query-reuse",
+  "head": "f57c2998f83f12dfc98afe11816a4827fffd0228",
+  "changes": [
+    {
+      "path": ".agents/skills/jimuyun-architecture/scripts/invoke.py",
+      "before_sha256": "9bf26d964bf3a47bcb7df035f03d95b71cd4ea9cafa3334f16d243d5779d9979",
+      "after_sha256": "32ab790740dfeb1a98f236210f661c5cd13323c7ead10ae50683dc44272445ad",
+      "status": "approved-increment-reversed"
+    },
+    {
+      "path": ".agents/skills/jimuyun-spec/scripts/bridge.py",
+      "before_sha256": "8ff66106cf8f907a2f46fb7dfd3c25f5ce703478e5c2d8d449163cc6edfadab0",
+      "after_sha256": "aa7c640f1c5e5b8df1f78659c1e5b42c75ca68835cd523cab45b7e9afbf3f77d",
+      "status": "approved-increment-reversed"
+    },
+    {
+      "path": "_bmad/custom/bmad-prd.toml",
+      "before_sha256": "a5a6c6b9135e1456c28858a5db143a007dcdaf66ce1523bfbc99ce553d3433b5",
+      "after_sha256": null,
+      "status": "active-hook-withdrawn-and-original-archived"
+    },
+    {
+      "path": "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
+      "before_sha256": "992153bd56249bac303c0a2ade49cac556825eaa5ade41871591954c69ea8944",
+      "after_sha256": "515ba5840ecd87d04f26a240c632dd27bb9d4f821f965172664d903b9b9a1b30",
+      "status": "approved-increment-reversed"
+    },
+    {
+      "path": "knowledge/contracts/knowledge-locator-request.v1.schema.json",
+      "before_sha256": "7be5339dc667ead001cd74ca13706b42389da7485edeb136435f49ebd14d23d2",
+      "after_sha256": "f89ae3b9bff3d20640a2828dd4a18a5b622868b0db0d719a195dcd6020d7d451",
+      "status": "approved-increment-reversed"
+    },
+    {
+      "path": "knowledge/policies/consumer-policies.v2.json",
+      "before_sha256": "567be4f8cb243d99124f9b14eaddb5c9bd1822e1c10d4c3359579a8efc992046",
+      "after_sha256": "049980211328bf554f404043616448f5915e8a72f01afec5333038e0a9d27996",
+      "status": "approved-increment-reversed"
+    },
+    {
+      "path": "scripts/python/_knowledge_catalog_builder.py",
+      "before_sha256": "3457f4164922da0ccd0b175df5e4024d14553e50d9cb549bc2f149e4bb5aca95",
+      "after_sha256": "e7ecb2b43cea4d88bdce74d8efebb5124a2c87b7ec82f49ea922a9bd5708a3d9",
+      "status": "approved-increment-reversed"
+    }
+  ],
+  "unchanged_checked": [
+    "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+    "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json",
+    "scripts/python/_knowledge_locator_core.py",
+    "scripts/python/knowledge_locator.py",
+    "scripts/vdd/compile_plan.py",
+    "scripts/toolchain/knowledge_query/adapter.py",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+    "knowledge/planning-query.toml",
+    "execution-plans/2026-10-23-bmad-vdd-knowledge-query-runtime-r23/semantic-plan-bundle.v1.json"
+  ],
+  "original_workspace_unchanged": true,
+  "wrapper_schema_catalog_equal_existing_HEAD": true,
+  "remaining_policy_json_equal_existing_HEAD": true,
+  "remaining_policy_diff": "pre-existing formatting only; other policy text preserved",
+  "vdd_hook_present": true,
+  "adapter_config_tests_contracts_unchanged": true,
+  "tests_run": false,
+  "bmads_invoked": 0,
+  "reviewers_invoked": 0,
+  "plan_revised": false,
+  "pushed": false,
+  "limitations": [
+    "Existing BMAD stages remain in shared adapter/config and obsolete tests/contracts until a separately authorized next step.",
+    "No runtime behavior has been validated in this step."
+  ]
+}

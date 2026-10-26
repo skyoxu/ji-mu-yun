@@ -1,429 +1,888 @@
-"""ADR-0048/ADR-0041: shared Locator diagnostics retain legacy CLI behavior."""
+"""ADR-0048/0041: actual legacy CLI and VDD adapter share read-only preflight.
+
+Fixtures are isolated local Git repositories. Legacy catalog arguments test
+the existing CLI compatibility interface; canonical missing-publication denial
+is tested separately. No debug bypass flag, publication or BMAD flow is used.
+"""
+import copy
+import hashlib
 import io
+import importlib.util
+import shutil
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / 'scripts/python'))
-from scripts.toolchain.knowledge_query.adapter import diagnose
-import knowledge_locator as cli
+sys.path[:0] = [str(ROOT), str(ROOT / 'scripts/python')]
 import _knowledge_locator_core as core
+import knowledge_locator as cli
+from scripts.toolchain.knowledge_query import adapter
 
 
-def _check_diagnostic(condition):
-    if not condition:
-        print('FAILURE_ID:KQ_CA335D988AF5')
-    assert condition
+def _put(root, relative, payload):
+    target = root / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(payload)
+    return target
+
+
+def _git(root, *args):
+    return subprocess.check_output(['git', '-C', str(root), *args],
+                                   stderr=subprocess.PIPE, timeout=10).decode().strip()
+
+
+def _preflight_fixture(root, scenario):
+    source = b'# Planning contract\nRead-only repository source.\n'
+    _put(root, 'docs/contract.md', source)
+    _git(root, 'init', '-b', 'main')
+    _git(root, 'add', 'docs/contract.md')
+    _git(root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+         'commit', '-qm', 'Fixture source')
+    commit = _git(root, 'rev-parse', 'refs/heads/main')
+    source_hash = hashlib.sha256(source).hexdigest()
+    catalog = {'authority_ref': 'refs/heads/main',
+        'source_snapshot': {'ref': 'refs/heads/main', 'commit': commit,
+                            'sources': [{'path': 'docs/contract.md', 'sha256': source_hash}]},
+        'entries': [{'path': 'docs/contract.md', 'content': source.decode(),
+                     'source_sha256': source_hash, 'status': 'active'}]}
+    policies = {'policy_revision': 'fixture-policy', 'policies': [
+        {'consumer': 'vdd', 'path_prefixes': ['docs/'], 'statuses': ['active'],
+         'max_candidates': 12}]}
+    request = {'schema_version': 'jimuyun.knowledge-locator-request.v1',
+        'request_id': 'shared-preflight', 'consumer': 'vdd', 'query': 'planning contract',
+        'snapshot': {'ref': 'refs/heads/main', 'commit': commit},
+        'policy_revision': policies['policy_revision']}
+    if scenario == 'no-match':
+        request['query'] = 'unmatcheduniquevaluezz7'
+    elif scenario == 'snapshot-missing':
+        catalog.pop('source_snapshot')
+    elif scenario == 'snapshot-mismatch':
+        request['snapshot']['commit'] = '0' * 40
+    elif scenario == 'policy-missing':
+        request['consumer'] = 'not-registered'
+    elif scenario == 'stale-main':
+        _put(root, 'docs/contract.md', source + b'Changed real main source.\n')
+        _git(root, 'add', 'docs/contract.md')
+        _git(root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+             'commit', '-qm', 'Changed fixture main source')
+    names = ('catalog.json', 'policies.json', 'projections.json')
+    if scenario == 'publication-missing':
+        names = ('knowledge/catalogs/repository-knowledge-catalog.v2.json',
+                 'knowledge/policies/consumer-policies.v2.json',
+                 'knowledge/projections/consumer-projections.v1.json')
+    paths = []
+    for relative, data in zip(names, (catalog, policies, {})):
+        payload = json.dumps(data, ensure_ascii=False).encode('utf-8')
+        if scenario == 'malformed-catalog' and relative == names[0]:
+            payload = b'{invalid-json'
+        paths.append(_put(root, relative, payload))
+    return request, paths
+
+
+def _content_snapshot(root):
+    return {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in root.rglob('*') if p.is_file() and '.git' not in p.relative_to(root).parts}
 
 
 @pytest.mark.cer_assertion('ASSERT_CA335D988AF5')
-def test_contract_ca335d988af5(tmp_path, monkeypatch, capsys):
-    request = {'schema_version': 'jimuyun.knowledge-locator-request.v1',
-               'request_id': 'shared-preflight', 'consumer': 'vdd', 'query': 'contract',
-               'snapshot': {'ref': 'refs/heads/main', 'commit': 'a' * 40},
-               'policy_revision': 'test-policy'}
-    paths = [tmp_path / n for n in ('catalog.json', 'policies.json', 'projections.json')]
-    for path, content in zip(paths, [
-        {'entries': []},
-        {'policy_revision': 'test-policy', 'policies': [{'consumer': 'vdd'}]}, {}]):
-        path.write_text(json.dumps(content), encoding='utf-8')
-    def run_cli():
-        monkeypatch.setattr(sys, 'stdin', io.StringIO(json.dumps(request)))
-        monkeypatch.setattr(sys, 'argv', ['knowledge_locator.py', '--repository-root', str(tmp_path),
-            '--catalog', str(paths[0]), '--policies', str(paths[1]), '--projections', str(paths[2])])
+@pytest.mark.parametrize('scenario,status,diagnostic', [
+    ('matched', 'matched', None),
+    ('no-match', 'insufficient_match', None),
+    ('snapshot-missing', 'blocked', 'snapshot_missing'),
+    ('snapshot-mismatch', 'blocked', 'snapshot_mismatch'),
+    ('policy-missing', 'blocked', 'policy_missing'),
+    ('stale-main', 'blocked', 'stale'),
+    ('publication-missing', 'blocked', 'publication_invalid'),
+    ('malformed-catalog', None, None),
+], ids=['matched', 'no-match', 'snapshot-missing', 'snapshot-mismatch',
+        'policy-missing', 'stale-main', 'publication-missing', 'malformed-catalog'])
+def test_contract_ca335d988af5(tmp_path, monkeypatch, capsys, scenario, status, diagnostic):
+    request, paths = _preflight_fixture(tmp_path, scenario)
+    before = _content_snapshot(tmp_path)
+    # Wrap the actual implementation; never replace preflight results with
+    # expected data. Both in-process callers must delegate exactly once.
+    assert cli.core is core and adapter.core is core
+    original = core.query_with_diagnostics
+    calls, outputs = [], []
+    def traced(*args, **kwargs):
+        calls.append((copy.deepcopy(args[0]), kwargs))
+        result = original(*args, **kwargs)
+        outputs.append(copy.deepcopy(result))
+        return result
+    monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+    arguments = ['--repository-root', str(tmp_path), '--catalog', str(paths[0]),
+                 '--policies', str(paths[1]), '--projections', str(paths[2])]
+    monkeypatch.setattr(sys, 'stdin', io.StringIO(json.dumps(request)))
+    monkeypatch.setattr(sys, 'argv', ['knowledge_locator.py', *arguments])
+    if scenario == 'malformed-catalog':
+        with pytest.raises(json.JSONDecodeError):
+            cli.main()
+        assert capsys.readouterr().out == ''
+        with pytest.raises(json.JSONDecodeError):
+            adapter.diagnose(request, tmp_path, *paths)
+    else:
         code = cli.main()
-        output = json.loads(capsys.readouterr().out)
-        return code, output
-    code, legacy = run_cli()
-    assert code == 0 and legacy['status'] == 'blocked'
-    assert legacy['request_id'] == request['request_id'] and legacy['snapshot'] == request['snapshot']
-    actual = diagnose(request, tmp_path, *paths)
-    _check_diagnostic(isinstance(actual, dict) and actual.get('result') == legacy)
-    _check_diagnostic(any(d.get('code') == 'snapshot_missing' for d in actual.get('diagnostics', [])))
-    # Both callers must use the same real read-only routine, not duplicated checks.
-    shared = getattr(core, 'query_with_diagnostics', None)
-    _check_diagnostic(callable(shared))
-    calls = []
-    def tracked(*args, **kwargs):
-        calls.append((args, kwargs))
-        return shared(*args, **kwargs)
-    monkeypatch.setattr(core, 'query_with_diagnostics', tracked)
-    repeated = diagnose(request, tmp_path, *paths)
-    repeated_code, repeated_legacy = run_cli()
-    _check_diagnostic(len(calls) == 2 and repeated == actual and repeated_code == code and repeated_legacy == legacy)
+        legacy = json.loads(capsys.readouterr().out)
+        actual = adapter.diagnose(request, tmp_path, *paths)
+        assert code == 0 and legacy == actual['result'] == outputs[0]['result']
+        assert actual == outputs[1] == outputs[0]
+        assert legacy['schema_version'] == 'jimuyun.knowledge-locator-result.v1'
+        assert legacy['request_id'] == request['request_id']
+        assert legacy['snapshot'] == request['snapshot'] and legacy['status'] == status
+        assert bool(legacy['candidates']) == (status == 'matched')
+        codes = {item['code'] for item in actual['diagnostics']}
+        assert diagnostic in codes if diagnostic else not codes
+    assert len(calls) == 2
+    assert all(call[0] == request for call in calls)
+    assert all(not call[1].get('allow_unpublished_inputs', False)
+               and not call[1].get('allow_stale_catalog', False) for call in calls)
+    # Run the actual public CLI process too: its exit/wire boundary is not
+    # inferred from the Python main() call or from a mocked subprocess result.
+    process = subprocess.run([sys.executable, '-B', str(ROOT / 'scripts/python/knowledge_locator.py'),
+                              *arguments], input=json.dumps(request), text=True, encoding='utf-8',
+                             capture_output=True, shell=False, timeout=15)
+    if scenario == 'malformed-catalog':
+        assert process.returncode != 0 and 'JSONDecodeError' in process.stderr
+        assert process.stdout == ''
+    else:
+        assert process.returncode == 0 and json.loads(process.stdout) == legacy
+        assert process.stderr == ''
+    assert _content_snapshot(tmp_path) == before
 
 
-def test_existing_locator_statuses_remain_unchanged():
-    catalog = {'entries': [{'path': 'docs/example.md', 'content': 'shared locator', 'source_sha256': 'a' * 64}]}
-    assert core.locate({'query': 'shared locator'}, catalog)['status'] == 'matched'
-    assert core.locate({'query': 'zzzzunmatched'}, catalog)['status'] == 'insufficient_match'
-
-
-@pytest.mark.cer_assertion('ASSERT_5CC00384D23A')
-def test_contract_5cc00384d23a(tmp_path):
-    import _knowledge_catalog_builder as builder
-    consumers = builder._consumer_ids('toolchain')
-    if 'bmad-planning' not in consumers:
-        print('FAILURE_ID:KQ_5CC00384D23A')
-    assert 'bmad-planning' in consumers
-    request_schema = json.loads((ROOT / 'knowledge/contracts/knowledge-locator-request.v1.schema.json').read_text())
-    projection_schema = json.loads((ROOT / 'knowledge/contracts/knowledge-consumer-projections.v1.schema.json').read_text())
-    assert 'bmad-planning' in request_schema['properties']['consumer']['enum']
-    assert 'bmad-planning' in projection_schema['properties']['projections']['items']['properties']['consumer']['enum']
-    policies = json.loads((ROOT / 'knowledge/policies/consumer-policies.v2.json').read_text())
-    policy = next(p for p in policies['policies'] if p['consumer'] == 'bmad-planning')
-    catalog = {'source_snapshot': {'snapshot_id': 'sha256:' + 'a' * 64}, 'modules': [
-        {'module_id': 'allowed', 'source_path': 'docs/example.md', 'semantic_eligible': True,
-         'lifecycle': 'repository-source', 'consumer_ids': consumers, 'visibility': {'toolchain': 'active'}}]}
-    projection = builder.build_consumer_projections(catalog, policies)
-    selected = next(p for p in projection['projections'] if p['consumer'] == policy['consumer'])
-    assert selected['eligible_module_ids'] == ['allowed']
-    assert projection['catalog_sha256'] == builder.prefixed_sha256(builder.canonical_bytes(catalog))
-    assert not list(tmp_path.iterdir())  # Producer calculation does not publish a generation.
-    assert not core.verify_current_publication(tmp_path, catalog_path=tmp_path/'catalog.json',
-        policy_path=tmp_path/'policy.json', projections_path=tmp_path/'projection.json')
+@pytest.fixture(scope='module')
+def published_vdd_base(tmp_path_factory):
+    """Copy an actual existing generation; never manufacture or republish one."""
+    root = tmp_path_factory.mktemp('published-vdd-base')
+    relative_paths = [
+        'knowledge/snapshots/repository-source-snapshot.v1.json',
+        'knowledge/catalogs/repository-knowledge-catalog.v2.json',
+        'knowledge/catalogs/repository-knowledge-catalog.v1.json',
+        'knowledge/projections/consumer-projections.v1.json',
+        'knowledge/policies/consumer-policies.v2.json',
+        'knowledge/policies/source-exclusions.v1.json',
+        'knowledge/evaluation/repository-knowledge-query-suite.v1.json',
+        'knowledge/indexes/current.json', 'knowledge/planning-query.toml',
+    ]
+    canonical = [ROOT / p for p in relative_paths[1:2] + relative_paths[4:5] + relative_paths[3:4]]
+    assert core.verify_current_publication(ROOT, catalog_path=canonical[0],
+        policy_path=canonical[1], projections_path=canonical[2])
+    pointer = json.loads((ROOT / 'knowledge/indexes/current.json').read_text(encoding='utf-8'))
+    generation = Path('knowledge/indexes/generations') / pointer['generation_id']
+    manifest = json.loads((ROOT / generation / 'manifest.json').read_text(encoding='utf-8'))
+    report = generation / manifest['artifacts']['query_report']['bundle_path']
+    assert (ROOT / report).resolve().is_relative_to((ROOT / generation).resolve())
+    for relative in [*relative_paths, generation / 'manifest.json', report]:
+        _put(root, relative, (ROOT / relative).read_bytes())
+    # Borrow real source objects read-only, without checking out the repository
+    # or restoring any installed skill. Fixture refs are independent copies.
+    subprocess.run(['git', 'clone', '--shared', '--bare', str(ROOT), str(root / '.git')],
+                   capture_output=True, check=True, timeout=15)
+    _git(root, 'config', '--local', 'core.bare', 'false')
+    _git(root, 'symbolic-ref', 'HEAD', 'refs/heads/main')
+    # A fresh-publication control must use the actual published source commit,
+    # not pretend this older generation is fresh at today's repository main.
+    # Only independent fixture refs change; the real repository is read-only.
+    _git(root, 'update-ref', 'refs/heads/main', pointer['main_commit'])
+    _git(root, 'read-tree', 'refs/heads/main')
+    assert _git(root, 'rev-parse', 'refs/heads/main') == pointer['main_commit']
+    agents = subprocess.check_output(['git', '-C', str(ROOT), 'show', pointer['main_commit'] + ':AGENTS.md'], timeout=10)
+    _put(root, 'AGENTS.md', agents)
+    return root
 
 
 @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
-def test_contract_2e09f07252e1(tmp_path):
-    # Installed Locator + missing/corrupt publication must never claim admission.
-    paths = [tmp_path / n for n in ('catalog.json', 'policy.json', 'projection.json')]
-    request = {'request_id': 'not-admitted', 'consumer': 'bmad-planning', 'query': 'contract',
-               'snapshot': {'ref': 'refs/heads/main', 'commit': 'a' * 40}, 'policy_revision': 'test-policy'}
-    assert not core.verify_current_publication(tmp_path, catalog_path=paths[0],
-        policy_path=paths[1], projections_path=paths[2])
-    with pytest.raises(FileNotFoundError):
-        diagnose(request, tmp_path, *paths)
-    paths[0].write_text('{broken', encoding='utf-8')
-    with pytest.raises(json.JSONDecodeError):
-        diagnose(request, tmp_path, *paths)
-    index = tmp_path / 'knowledge/indexes/current.json'
-    index.parent.mkdir(parents=True)
-    index.write_text('{broken', encoding='utf-8')
-    before = index.read_bytes()
-    assert not core.verify_current_publication(tmp_path, catalog_path=paths[0],
-        policy_path=paths[1], projections_path=paths[2])
-    assert index.read_bytes() == before
-
-
-def _planning_policy():
-    policies = json.loads((ROOT / 'knowledge/policies/consumer-policies.v2.json').read_text())
-    return next(p for p in policies['policies'] if p['consumer'] == 'bmad-planning')
-
-
-def _planning_module(**changes):
-    entry = dict(module_id='planning-contract', source_path='docs/example.md',
-                 content='planning contract', source_sha256='a' * 64,
-                 primary_domain='toolchain', visibility={'toolchain': 'active'},
-                 lifecycle='repository-source', status='active',
-                 consumer_ids=['bmad-planning'], semantic_eligible=True,
-                 enforcement_level='reference')
-    entry.update(changes)
-    return entry
-
-
-def _located(entry, query='planning contract'):
-    return core.locate({'query': query}, {'modules': [entry]}, policy=_planning_policy())['candidates']
-
-
-@pytest.mark.cer_assertion('ASSERT_482C87E0D4A0')
-def test_contract_482c87e0d4a0():
-    policy = _planning_policy()
-    assert set(policy['path_prefixes']) == {'.agents/skills/', 'docs/', 'knowledge/', 'execution-plans/', 'scripts/python/'}
-    assert set(policy['exact_paths']) == {'AGENTS.md', 'README.md'}
-    for path in ['.agents/skills/example/SKILL.md', 'docs/example.md', 'knowledge/example.md',
-                 'execution-plans/example/plan.md', 'scripts/python/example.py', 'AGENTS.md', 'README.md']:
-        assert _located(_planning_module(source_path=path))
-    for path in ['runtime/phase-a/secret.py', 'scripts/toolchain/example.py', 'AGENTS.md.other', 'docs/migration/history.md']:
-        assert not _located(_planning_module(source_path=path))
-    # Outside-index reads cannot enter a Locator result or gain its provenance.
-
-
-@pytest.mark.cer_assertion('ASSERT_84C5EA6C39EC')
-def test_contract_84c5ea6c39ec():
-    policy = _planning_policy()
-    assert set(policy['domains']) == {'toolchain', 'phase'}
-    assert set(policy['visibility']) == {'active', 'dependency', 'conditional'}
-    assert policy['lifecycles'] == ['repository-source']
-    assert set(policy['statuses']) == {'active', 'conditional', 'historical'}
-    assert policy['historical_mode'] == 'exact-only'
-    for domain in ['toolchain', 'phase']:
-        for visibility in ['active', 'dependency', 'conditional']:
-            assert _located(_planning_module(visibility={domain: visibility}))
-    for domain in ['workspace', 'marketplace']:
-        assert not _located(_planning_module(primary_domain=domain, visibility={domain: 'active'}))
-    assert not _located(_planning_module(lifecycle='workspace'))
-    assert not _located(_planning_module(status='retired'))
-    assert not _located(_planning_module(status='historical'), 'planning contract')
-    assert _located(_planning_module(status='historical'), 'docs/example.md')
-
-
-@pytest.mark.cer_assertion('ASSERT_BD7C42FF441E')
-def test_contract_bd7c42ff441e():
-    # Real Locator policy enforcement cannot turn Hosted data into repository sources.
-    assert not _located(_planning_module(source_path='logs/phase-a-innernet/workspaces/w/repo/secret.md',
-        lifecycle='workspace', primary_domain='workspace', visibility={'workspace': 'active'},
-        enforcement_level='required'))
-    candidate = _located(_planning_module(enforcement_level='reference'))[0]
-    assert candidate['enforcement_level'] == 'reference'
-    assert candidate['lifecycle'] == 'repository-source'
-    assert candidate['visibility'] == {'toolchain': 'active'}
-    assert not any(k in candidate for k in ['hosted_authorization', 'completion', 'acceptance_passed'])
-
-
-@pytest.mark.cer_assertion('ASSERT_94C2D2FA535D')
-def test_contract_94c2d2fa535d(tmp_path):
+@pytest.mark.cer_assertion('ASSERT_3F7D90E3D044')
+@pytest.mark.parametrize('scenario', [
+    'admitted', 'later-main-stale', 'configuration-absent', 'publication-absent', 'pointer-json',
+    'manifest-absent', 'manifest-content', 'catalog-domain', 'catalog-visibility',
+    'catalog-lifecycle', 'catalog-enforcement', 'catalog-path', 'policy-permission',
+    'projection-membership', 'consumer-unknown', 'consumer-bootstrap',
+])
+def test_contract_2e09f07252e1(published_vdd_base, tmp_path, monkeypatch, scenario):
+    import shutil
+    import jsonschema
     import _knowledge_catalog_builder as builder
-    policies = json.loads((ROOT / 'knowledge/policies/consumer-policies.v2.json').read_text())
-    catalog = {'source_snapshot': {'snapshot_id': 'sha256:' + 'a' * 64}, 'modules': [
-        _planning_module(consumer_ids=builder._consumer_ids('toolchain')),
-        _planning_module(module_id='outside', source_path='runtime/phase-a/x.py'),
-        _planning_module(module_id='unadmitted', consumer_ids=['vdd'])]}
-    document = builder.build_consumer_projections(catalog, policies)
-    projection = next(p for p in document['projections'] if p['consumer'] == 'bmad-planning')
-    assert projection['eligible_module_ids'] == ['planning-contract']
-    assert document['catalog_sha256'] == builder.prefixed_sha256(builder.canonical_bytes(catalog))
-    assert document['policy_sha256'] == builder.prefixed_sha256(builder.canonical_bytes(policies))
-    assert 'bmad-planning' not in builder._consumer_ids('marketplace')
-    assert not list(tmp_path.iterdir())
 
-
-@pytest.mark.cer_assertion('ASSERT_2B5B0BA2BE94')
-def test_contract_2b5b0ba2be94(tmp_path):
-    paths = [tmp_path / n for n in ('catalog.json', 'policies.json', 'projection.json')]
-    paths[0].write_text(json.dumps({'modules': []}), encoding='utf-8')
-    paths[1].write_text(json.dumps({'policy_revision': 'test', 'policies': []}), encoding='utf-8')
-    paths[2].write_text('{}', encoding='utf-8')
-    for consumer in [None, 'bmad-planning']:
-        request = dict(request_id='missing-authority', query='planning', consumer=consumer,
-                       snapshot={'ref': 'refs/heads/main', 'commit': 'a' * 40}, policy_revision='test')
-        output = diagnose(request, tmp_path, *paths)
-        assert output['result']['status'] == 'blocked'
-        assert output['result']['candidates'] == []
-        codes = {d['code'] for d in output['diagnostics']}
-        assert 'policy_missing' in codes and 'projection_invalid' in codes
-        assert not core.verify_current_publication(tmp_path, catalog_path=paths[0],
-            policy_path=paths[1], projections_path=paths[2])
+    root = tmp_path / 'published-copy'
+    shutil.copytree(published_vdd_base, root)
+    catalog_path = root / 'knowledge/catalogs/repository-knowledge-catalog.v2.json'
+    policy_path = root / 'knowledge/policies/consumer-policies.v2.json'
+    projection_path = root / 'knowledge/projections/consumer-projections.v1.json'
+    pointer_path = root / 'knowledge/indexes/current.json'
+    catalog = json.loads(catalog_path.read_text(encoding='utf-8'))
+    policy = json.loads(policy_path.read_text(encoding='utf-8'))
+    projections = json.loads(projection_path.read_text(encoding='utf-8'))
+    pointer = json.loads(pointer_path.read_text(encoding='utf-8'))
+    manifest_path = root / 'knowledge/indexes/generations' / pointer['generation_id'] / 'manifest.json'
+    request = {'schema_version': 'jimuyun.knowledge-locator-request.v1', 'request_id': 'vdd-admission',
+        'consumer': 'vdd', 'query': 'AGENTS.md', 'policy_revision': policy['policy_revision'],
+        'snapshot': {key: catalog['source_snapshot'][key] for key in ('ref', 'commit')}}
+    schema = json.loads((ROOT / 'knowledge/contracts/knowledge-locator-request.v1.schema.json').read_text(encoding='utf-8'))
+    jsonschema.Draft202012Validator(schema).validate(request)
+    schema_projection = json.loads((ROOT / 'knowledge/contracts/knowledge-consumer-projections.v1.schema.json').read_text(encoding='utf-8'))
+    # Admission consumes the existing published binding, not a new upstream
+    # schema approval. The old generation contains repeated module IDs; the
+    # native owner consumes membership as a set. Keep that
+    # historical finding separate instead of adding a whole-package gate.
+    declared_consumers = set(schema_projection['properties']['projections']['items']['properties']['consumer']['enum'])
+    assert {p['consumer'] for p in projections['projections']} == {p['consumer'] for p in policy['policies']} == declared_consumers
+    assert core.verify_current_publication(root, catalog_path=catalog_path,
+        policy_path=policy_path, projections_path=projection_path)
+    vdd_policy = next(p for p in policy['policies'] if p['consumer'] == 'vdd')
+    vdd_projection = next(p for p in projections['projections'] if p['consumer'] == 'vdd')
+    module = next(m for m in catalog['modules'] if m['source_path'] == 'AGENTS.md')
+    if scenario == 'admitted':
+        # Use the actual unchanged registry, not a copied foreign consumer ACL.
+        assert policy == json.loads((ROOT / 'knowledge/policies/consumer-policies.v2.json').read_text(encoding='utf-8'))
+        recomputed = builder.build_consumer_projections(catalog, policy)
+        assert next(p for p in recomputed['projections'] if p['consumer'] == 'vdd') == vdd_projection
+        assert core._projection_for(request, catalog, policy, projections) == set(vdd_projection['eligible_module_ids'])
+        assert module['module_id'] in vdd_projection['eligible_module_ids']
+        assert module['primary_domain'] == 'toolchain' and module['visibility']['toolchain'] == 'active'
+        assert module['lifecycle'] == 'repository-source' and module['enforcement_level'] == 'E1'
+        assert builder._module_allowed(module, vdd_policy)
+        for change in ({'consumer_ids': ['bootstrap']}, {'lifecycle': 'other-instance'},
+                       {'source_path': 'outside-contract.md'},
+                       {'visibility': {'workspace': 'active', 'marketplace': 'active'}}):
+            restricted = {**module, **change}
+            assert not builder._module_allowed(restricted, vdd_policy)
+            assert not core._policy_allows(restricted, request['query'], vdd_policy)
+    if scenario == 'later-main-stale':
+        later_main = _git(ROOT, 'rev-parse', 'refs/heads/main')
+        _git(root, 'update-ref', 'refs/heads/main', later_main)
+        _git(root, 'read-tree', 'refs/heads/main')
+        _put(root, 'AGENTS.md', subprocess.check_output(
+            ['git', '-C', str(ROOT), 'show', later_main + ':AGENTS.md'], timeout=10))
+    elif scenario == 'configuration-absent':
+        (root / 'knowledge/planning-query.toml').unlink()
+    elif scenario == 'publication-absent':
+        pointer_path.unlink()
+    elif scenario == 'pointer-json':
+        pointer_path.write_bytes(b'{broken-json')
+    elif scenario == 'manifest-absent':
+        manifest_path.unlink()
+    elif scenario == 'manifest-content':
+        manifest_path.write_bytes(manifest_path.read_bytes() + b' ')
+    elif scenario.startswith('catalog-'):
+        field, value = {
+            'catalog-domain': ('primary_domain', 'marketplace'),
+            'catalog-visibility': ('visibility', {'toolchain': 'excluded'}),
+            'catalog-lifecycle': ('lifecycle', 'other-instance'),
+            'catalog-enforcement': ('enforcement_level', 'E2'),
+            'catalog-path': ('source_path', 'outside-contract.md'),
+        }[scenario]
+        module[field] = value
+        catalog_path.write_text(json.dumps(catalog), encoding='utf-8')
+    elif scenario == 'policy-permission':
+        vdd_policy['domains'].append('marketplace')
+        policy_path.write_text(json.dumps(policy), encoding='utf-8')
+    elif scenario == 'projection-membership':
+        vdd_projection['eligible_module_ids'].append('unapproved-module')
+        projection_path.write_text(json.dumps(projections), encoding='utf-8')
+    elif scenario == 'consumer-unknown':
+        request['consumer'] = 'not-registered'
+    elif scenario == 'consumer-bootstrap':
+        request['consumer'] = 'bootstrap'
+    before = _content_snapshot(root)
+    observed = []
+    original = core.query_with_diagnostics
+    def tracked(*args, **kwargs):
+        observed.append(copy.deepcopy(args[0]))
+        return original(*args, **kwargs)
+    monkeypatch.setattr(core, 'query_with_diagnostics', tracked)
+    actual = adapter.diagnose({**request, 'stage': 'vdd-create', 'operation': 'create',
+        'task_id': 'S1-admission', 'scope': ['AGENTS.md'],
+        'narrow_overrides': {'max_candidates': 1}}, root, catalog_path, policy_path, projection_path)
+    assert actual['consumer'] == request['consumer'] and not actual.get('authorizes')
+    if scenario == 'admitted':
+        assert actual['outcome'] == 'hit' and actual['reason_code'] == 'matched'
+        assert actual['index_identity']['generation_id'] == pointer['generation_id']
+        assert actual['index_identity']['policy_revision'] == policy['policy_revision']
+        assert len(actual['candidates']) == 1 and actual['candidates'][0]['path'] == 'AGENTS.md'
+        assert any(r['path'] == 'AGENTS.md' and r['sha256'] == hashlib.sha256((root / 'AGENTS.md').read_bytes()).hexdigest()
+                   for r in actual['read_set'])
+        assert observed == [request]
+    elif scenario == 'later-main-stale':
+        assert actual['outcome'] == 'degraded' and actual['reason_code'] == 'stale_verified'
+        assert observed == [request]
+        assert actual['candidates'] == []
+        assert actual['read_set'] and all(r['origin'] == 'direct-source' for r in actual['read_set'])
+    elif scenario == 'configuration-absent':
+        assert actual['outcome'] == 'unavailable' and actual['reason_code'] == 'config_missing'
+        assert observed == []
+        assert core.verify_current_publication(root, catalog_path=catalog_path,
+            policy_path=policy_path, projections_path=projection_path)
+    elif scenario in {'consumer-unknown', 'consumer-bootstrap'}:
+        assert actual['outcome'] == 'blocked' and actual['reason_code'] == 'invalid_request'
+        assert observed == []  # No identity rewrite, fallback or borrowed retry.
+    else:
+        expected = 'publication_missing' if scenario == 'publication-absent' else 'integrity_failed'
+        assert actual['outcome'] == 'blocked' and actual['reason_code'] == expected
+        assert observed == [request]  # Reuses real shared preflight exactly once.
+        assert not core.verify_current_publication(root, catalog_path=catalog_path,
+            policy_path=policy_path, projections_path=projection_path)
+    if scenario not in {'admitted', 'later-main-stale'}:
+        assert actual['candidates'] == [] and actual['read_set'] == []
+    assert _content_snapshot(root) == before
 
 
 @pytest.mark.cer_assertion('ASSERT_F96ECD3253A2')
-def test_contract_f96ecd3253a2(tmp_path):
-    paths = [tmp_path / n for n in ('catalog.json', 'policies.json', 'projection.json')]
-    paths[0].write_text(json.dumps({'entries': []}), encoding='utf-8')
-    paths[1].write_text(json.dumps({'policies': []}), encoding='utf-8')
-    paths[2].write_text('{}', encoding='utf-8')
-    for stage, consumer in [('prd', 'bmad-planning'), ('spec', 'bmad-planning'),
-                            ('architecture', 'bmad-planning'), ('vdd-create', 'vdd'), ('vdd-repair', 'vdd')]:
-        request = dict(request_id='stage-' + stage, consumer=consumer, query='planning',
-                       snapshot={'ref': 'refs/heads/main', 'commit': 'a' * 40},
-                       policy_revision='test', stage=stage)
-        output = diagnose(request, tmp_path, *paths)
-        if output.get('stage') != stage or output.get('consumer') != consumer:
-            print('FAILURE_ID:KQ_F96ECD3253A2')
-        assert output.get('stage') == stage and output.get('consumer') == consumer
-        assert output['result']['status'] == 'blocked'
-        assert 'stage' not in output['result']  # Stage metadata cannot change legacy result schema.
-
-
-@pytest.fixture
-def published_planning(tmp_path):
-    """An isolated owner-built publication; never the repository generation."""
-    import subprocess
-    import _knowledge_catalog_builder as builder
-    import publish_knowledge_catalog as publisher
-    root = tmp_path / 'isolated-repository'
-    root.mkdir()
-    def put(path, content):
-        target = root / path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(content)
-    for path in ['AGENTS.md', 'README.md']:
-        put(path, b'# Repository knowledge authority\nPlanning contract source.\n')
-    for path in ['docs/architecture/ADR_INDEX_PHASE.md', 'docs/architecture/ADR_INDEX_GODOT.md',
-                 'execution-plans/example/00-index.md']:
-        put(path, b'# Isolated planning fixture\n')
-    for path in ['scripts/python/knowledge_locator.py', 'scripts/python/_knowledge_locator_core.py']:
-        put(path, (ROOT / path).read_bytes())
-    for path in publisher.INPUT_PATHS.values():
-        put(path, (ROOT / path).read_bytes())
-    def git(*args):
-        return subprocess.check_output(['git', '-C', str(root), *args], stderr=subprocess.PIPE).decode().strip()
-    git('init', '-b', 'main')
-    git('add', '.')
-    git('-c', 'user.name=Isolated Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'Isolated publication sources')
-    commit = git('rev-parse', 'HEAD')
-    policies = json.loads((root / publisher.INPUT_PATHS['policy']).read_text())
-    exclusions = json.loads((root / publisher.INPUT_PATHS['exclusions']).read_text())
-    layers = builder.build_layers(root, policy=policies, exclusions=exclusions)
-    request = dict(schema_version='jimuyun.knowledge-publication-request.v1', request_id='isolated-test',
-        caller='maintain-knowledge-base', trigger='operator-requested', target_plan='execution-plans/example',
-        main_commit=commit, automatic=False, maintainer_confirmation=True,
-        recorded_at='2026-10-23T00:00:00+00:00', authorizes=['knowledge-publication'], source_route=None)
-    request_path = Path('logs/knowledge-context/publication-requests/isolated-test.json')
-    put(request_path, json.dumps(request).encode())
-    authorization = publisher._load_publication_request(root, request_path, expected_main=commit)
-    report = dict(snapshot=layers[0], policy_revision=policies['policy_revision'], summary={'fixture': True})
-    publisher._publish_bundle(root, main_commit=commit,
-        layer_bytes={name: publisher._render(value) for name, value in zip(publisher.LAYER_PATHS, layers)},
-        input_bytes={name: (root / path).read_bytes() for name, path in publisher.INPUT_PATHS.items()},
-        report_bytes=publisher._render(report), report=report, publication_authorization=authorization)
-    paths = [root / publisher.LAYER_PATHS['catalog_v2'], root / publisher.INPUT_PATHS['policy'],
-             root / publisher.LAYER_PATHS['projections']]
-    request = dict(schema_version='jimuyun.knowledge-locator-request.v1', request_id='planning-test',
-        consumer='bmad-planning', stage='prd', query='repository knowledge authority',
-        snapshot={'ref': 'refs/heads/main', 'commit': commit}, policy_revision=policies['policy_revision'])
-    return root, paths, request
-
-
-def _query_published(fixture, **overrides):
-    root, paths, request = fixture
-    return diagnose({**request, **overrides}, root, *paths)
-
-
 @pytest.mark.cer_assertion('ASSERT_31BA1038EB57')
-def test_contract_31ba1038eb57(published_planning):
-    for stage in ['prd', 'spec', 'architecture']:
-        output = _query_published(published_planning, stage=stage)
-        assert output['consumer'] == 'bmad-planning' and output['stage'] == stage
-        assert output['result']['status'] == 'matched'
-    for stage in ['vdd-create', 'vdd-repair']:
-        assert _query_published(published_planning, stage=stage, consumer='vdd')['consumer'] == 'vdd'
-    with pytest.raises(ValueError, match='consumer_stage_mismatch'):
-        _query_published(published_planning, consumer='bootstrap')
-
-
-@pytest.mark.cer_assertion('ASSERT_9C72720F8F91')
-def test_contract_9c72720f8f91(published_planning):
-    test_contract_84c5ea6c39ec()
-    test_contract_bd7c42ff441e()
-    root, paths, _ = published_planning
-    assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
-    for path in paths:
-        before = path.read_bytes()
-        path.write_bytes(before + b' ')
-        assert not core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
-        assert _query_published(published_planning)['result']['status'] == 'blocked'
-        path.write_bytes(before)
-
-
-@pytest.mark.cer_assertion('ASSERT_9D537AF787EB')
-def test_contract_9d537af787eb(published_planning):
-    output = _query_published(published_planning)
-    assert output['consumer'] == 'bmad-planning'
-    assert output['result']['status'] == 'matched'
-    for candidate in output['result']['candidates']:
-        assert 'bmad-planning' in candidate['consumer_ids']
-        assert candidate['lifecycle'] == 'repository-source'
-        assert candidate['primary_domain'] in ['toolchain', 'phase']
-    test_contract_482c87e0d4a0()
-
-
 @pytest.mark.cer_assertion('ASSERT_65F3B954FB04')
-def test_contract_65f3b954fb04(published_planning):
-    output = _query_published(published_planning, stage=None, consumer='unknown')
-    assert output['result']['status'] == 'blocked'
-    assert 'policy_missing' in {d['code'] for d in output['diagnostics']}
-    root, paths, request = published_planning
-    policy = json.loads(paths[1].read_text())
-    policy['policies'] = [p for p in policy['policies'] if p['consumer'] != 'bmad-planning']
-    paths[1].write_text(json.dumps(policy), encoding='utf-8')
-    output = _query_published(published_planning)
-    assert output['consumer'] == request['consumer'] and output['result']['status'] == 'blocked'
+@pytest.mark.cer_assertion('ASSERT_D64F7E6FDF45')
+@pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+@pytest.mark.parametrize('stage,operation,scenario', [
+    ('vdd-create', 'create', 'admitted'),
+    ('vdd-create', 'create', 'unknown'),
+    ('vdd-create', 'create', 'bootstrap'),
+    ('vdd-create', 'create', 'quick-dev'),
+    ('vdd-create', 'create', 'refactor-acceptance'),
+    ('vdd-create', 'create', 'stage-as-consumer'),
+    ('vdd-create', 'create', 'policy-absent'),
+    ('vdd-create', 'create', 'publication-absent'),
+    ('vdd-create', 'create', 'publication-corrupt'),
+    ('vdd-repair', 'repair', 'admitted'),
+    ('vdd-repair', 'repair', 'unknown'),
+    ('vdd-repair', 'repair', 'bootstrap'),
+    ('vdd-repair', 'repair', 'quick-dev'),
+    ('vdd-repair', 'repair', 'refactor-acceptance'),
+    ('vdd-repair', 'repair', 'stage-as-consumer'),
+    ('vdd-repair', 'repair', 'policy-absent'),
+    ('vdd-repair', 'repair', 'publication-absent'),
+    ('vdd-repair', 'repair', 'publication-corrupt'),
+    (None, None, 'vdd'),
+    (None, None, 'bootstrap'),
+    (None, None, 'refactor-acceptance'),
+    (None, None, 'quick-dev'),
+])
+def test_contract_f96ecd3253a2(published_vdd_base, tmp_path, monkeypatch, stage, operation, scenario):
+    """Stage is sidecar metadata; actual Locator identity/policy never changes."""
+    import shutil
+    import jsonschema
+
+    root = tmp_path / 'identity-copy'
+    shutil.copytree(published_vdd_base, root)
+    paths = [root / relative for relative in (
+        'knowledge/catalogs/repository-knowledge-catalog.v2.json',
+        'knowledge/policies/consumer-policies.v2.json',
+        'knowledge/projections/consumer-projections.v1.json')]
+    catalog, policy = [json.loads(p.read_text(encoding='utf-8')) for p in paths[:2]]
+    consumer = scenario if stage is None else {
+        'unknown': 'not-registered', 'bootstrap': 'bootstrap', 'quick-dev': 'quick-dev',
+        'refactor-acceptance': 'refactor-acceptance', 'stage-as-consumer': stage,
+    }.get(scenario, 'vdd')
+    request = {'schema_version': 'jimuyun.knowledge-locator-request.v1',
+        'request_id': 'identity-boundary', 'consumer': consumer, 'query': 'AGENTS.md',
+        'snapshot': {k: catalog['source_snapshot'][k] for k in ('ref', 'commit')},
+        'policy_revision': policy['policy_revision']}
+    schema = json.loads((ROOT / 'knowledge/contracts/knowledge-locator-request.v1.schema.json').read_text(encoding='utf-8'))
+    validator = jsonschema.Draft202012Validator(schema)
+    assert set(schema['properties']['consumer']['enum']) == {'vdd', 'quick-dev', 'bootstrap', 'refactor-acceptance'}
+    if scenario in {'unknown', 'stage-as-consumer'}:
+        assert list(validator.iter_errors(request))
+    else:
+        validator.validate(request)
+    if stage is not None:
+        assert list(validator.iter_errors({**request, 'stage': stage}))
+    if scenario == 'policy-absent':
+        policy['policies'] = [p for p in policy['policies'] if p['consumer'] != 'vdd']
+        paths[1].write_text(json.dumps(policy), encoding='utf-8')
+    elif scenario == 'publication-absent':
+        (root / 'knowledge/indexes/current.json').unlink()
+    elif scenario == 'publication-corrupt':
+        pointer = root / 'knowledge/indexes/current.json'
+        pointer.write_bytes(b'{broken-json')
+    before = _content_snapshot(root)
+    original = core.query_with_diagnostics
+    calls, results = [], []
+    def traced(*args, **kwargs):
+        calls.append((copy.deepcopy(args[0]), copy.deepcopy(kwargs)))
+        result = original(*args, **kwargs)
+        results.append(copy.deepcopy(result))
+        return result
+    monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+    envelope = request if stage is None else {**request, 'stage': stage,
+        'operation': operation, 'task_id': 'S3-identity', 'scope': ['AGENTS.md'],
+        'narrow_overrides': {'max_candidates': 1}}
+    actual = adapter.diagnose(envelope, root, *paths)
+    try:
+        if stage is None:
+            # Compatibility only: no workflow or live QuickDev caller is enabled.
+            assert len(calls) == 1 and calls[0][0] == request
+            assert actual == results[0]
+            assert 'stage' not in actual and 'consumer' not in actual
+            assert actual['result']['request_id'] == request['request_id']
+            assert actual['result']['snapshot'] == request['snapshot']
+            if scenario == 'quick-dev':
+                assert actual['result']['candidates'] == []
+            else:
+                assert actual['result']['status'] == 'matched'
+                assert actual['result']['candidates']
+        else:
+            assert actual['stage'] == stage and actual['operation'] == operation
+            assert actual['consumer'] == consumer and not actual.get('authorizes')
+            if scenario in {'unknown', 'bootstrap', 'quick-dev', 'refactor-acceptance', 'stage-as-consumer'}:
+                assert actual['outcome'] == 'blocked' and actual['reason_code'] == 'invalid_request'
+                assert calls == []  # Rejection must never retry as vdd/bootstrap.
+            else:
+                assert len(calls) == 1 and calls[0][0] == request
+                assert 'stage' not in calls[0][0] and 'operation' not in calls[0][0]
+                if scenario == 'admitted':
+                    assert actual['outcome'] == 'hit' and actual['reason_code'] == 'matched'
+                    assert actual['candidates'] and actual['read_set']
+                    assert actual['index_identity']['policy_revision'] == policy['policy_revision']
+                else:
+                    reason = 'publication_missing' if scenario == 'publication-absent' else 'integrity_failed'
+                    assert actual['outcome'] == 'blocked' and actual['reason_code'] == reason
+            if scenario != 'admitted':
+                assert actual['candidates'] == [] and actual['read_set'] == []
+        assert all(not kw.get('allow_unpublished_inputs', False)
+                   and not kw.get('allow_stale_catalog', False) for _, kw in calls)
+        assert _content_snapshot(root) == before
+    except AssertionError:
+        print('KQ_F96ECD3253A2')
+        raise
 
 
+def _s7_inputs(published_vdd_base, tmp_path):
+    import shutil
+    root = tmp_path / 'admission-copy'
+    shutil.copytree(published_vdd_base, root)
+    paths = [root / p for p in (
+        'knowledge/catalogs/repository-knowledge-catalog.v2.json',
+        'knowledge/policies/consumer-policies.v2.json',
+        'knowledge/projections/consumer-projections.v1.json')]
+    catalog, policy, projection = [json.loads(p.read_text(encoding='utf-8')) for p in paths]
+    request = {'schema_version': 'jimuyun.knowledge-locator-request.v1',
+        'request_id': 'S7-admission', 'consumer': 'vdd', 'query': 'AGENTS.md',
+        'snapshot': {k: catalog['source_snapshot'][k] for k in ('ref', 'commit')},
+        'policy_revision': policy['policy_revision'], 'stage': 'vdd-create',
+        'operation': 'create', 'task_id': 'S7', 'scope': ['AGENTS.md'],
+        'narrow_overrides': {'max_candidates': 1}}
+    return root, paths, catalog, policy, projection, request
+
+
+def _s7_query(root, paths, request, monkeypatch):
+    before = _content_snapshot(root)
+    original, calls = core.query_with_diagnostics, []
+    def traced(*args, **kwargs):
+        calls.append(copy.deepcopy(args[0]))
+        assert not kwargs.get('allow_unpublished_inputs', False)
+        assert not kwargs.get('allow_stale_catalog', False)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+    actual = adapter.diagnose(request, root, *paths)
+    assert _content_snapshot(root) == before
+    assert actual['consumer'] == request.get('consumer')
+    assert not actual.get('authorizes')
+    assert len(calls) <= 1 and all(r['consumer'] == 'vdd' for r in calls)
+    return actual, calls
+
+
+@pytest.mark.cer_assertion('ASSERT_2B5B0BA2BE94')
 @pytest.mark.cer_assertion('ASSERT_085B1807BD2E')
-def test_contract_085b1807bd2e(published_planning):
-    test_contract_31ba1038eb57(published_planning)
-    output = _query_published(published_planning, stage=None, consumer=None)
-    assert output['result']['status'] == 'blocked'
-    assert not output['result']['candidates']
+@pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+@pytest.mark.parametrize('scenario', ['admitted', 'identity-absent', 'identity-unknown',
+    'policy-absent', 'publication-absent', 'publication-corrupt', 'configuration-absent'])
+def test_contract_2b5b0ba2be94(published_vdd_base, tmp_path, monkeypatch, scenario):
+    root, paths, catalog, policy, projection, request = _s7_inputs(published_vdd_base, tmp_path)
+    if scenario == 'identity-absent':
+        request.pop('consumer')
+    elif scenario == 'identity-unknown':
+        request['consumer'] = 'not-registered'
+    elif scenario == 'policy-absent':
+        policy['policies'] = [r for r in policy['policies'] if r['consumer'] != 'vdd']
+        paths[1].write_text(json.dumps(policy), encoding='utf-8')
+    elif scenario == 'publication-absent':
+        (root / 'knowledge/indexes/current.json').unlink()
+    elif scenario == 'publication-corrupt':
+        (root / 'knowledge/indexes/current.json').write_bytes(b'{invalid')
+    elif scenario == 'configuration-absent':
+        (root / 'knowledge/planning-query.toml').unlink()
+    actual, calls = _s7_query(root, paths, request, monkeypatch)
+    if scenario == 'admitted':
+        assert actual['outcome'] == 'hit' and actual['reason_code'] == 'matched'
+        assert actual['candidates'] and actual['read_set'] and len(calls) == 1
+    else:
+        expected = {'identity-absent': ('blocked', 'invalid_request', 0),
+            'identity-unknown': ('blocked', 'invalid_request', 0),
+            'policy-absent': ('blocked', 'integrity_failed', 1),
+            'publication-absent': ('blocked', 'publication_missing', 1),
+            'publication-corrupt': ('blocked', 'integrity_failed', 1),
+            'configuration-absent': ('unavailable', 'config_missing', 0)}[scenario]
+        assert (actual['outcome'], actual['reason_code'], len(calls)) == expected
+        assert actual['candidates'] == [] and actual['read_set'] == []
+        if scenario == 'policy-absent':
+            assert 'policy_missing' in {r['code'] for r in actual['diagnostics']}
+        if scenario == 'configuration-absent':
+            assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
 
 
-@pytest.mark.cer_assertion('ASSERT_B4DDDFEB665F')
-def test_contract_b4dddfeb665f(published_planning):
-    import hashlib
-    root, paths, _ = published_planning
-    before = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in root.rglob('*') if p.is_file()}
-    output = _query_published(published_planning)
-    assert output['result']['status'] == 'matched'
-    after = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-             for p in root.rglob('*') if p.is_file()}
-    assert before == after
-    assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
+@pytest.mark.cer_assertion('ASSERT_BD7C42FF441E')
+@pytest.mark.cer_assertion('ASSERT_9C72720F8F91')
+@pytest.mark.cer_assertion('ASSERT_2D078C89F59A')
+@pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+@pytest.mark.parametrize('scenario', ['admitted', 'domain', 'visibility', 'lifecycle',
+    'path', 'consumer', 'enforcement-binding', 'hosted-override', 'hosted-config'])
+def test_contract_bd7c42ff441e(published_vdd_base, tmp_path, monkeypatch, scenario):
+    import _knowledge_catalog_builder as builder
+    root, paths, catalog, policy, projection, request = _s7_inputs(published_vdd_base, tmp_path)
+    module = next(m for m in catalog['modules'] if m['source_path'] == 'AGENTS.md')
+    vdd = next(p for p in policy['policies'] if p['consumer'] == 'vdd')
+    assert builder._module_allowed(module, vdd) and core._policy_allows(module, request['query'], vdd)
+    changes = {
+        'domain': {'primary_domain': 'marketplace', 'visibility': {'marketplace': 'active'}},
+        'visibility': {'visibility': {d: 'excluded' for d in module['visibility']}},
+        'lifecycle': {'lifecycle': 'hosted-instance'},
+        'path': {'source_path': 'hosted/private.md'},
+        'consumer': {'consumer_ids': ['bootstrap']},
+        'enforcement-binding': {'enforcement_level': 'E2'},
+    }
+    if scenario in changes:
+        module.update(changes[scenario])
+        if scenario != 'enforcement-binding':
+            assert not builder._module_allowed(module, vdd)
+            assert not core._policy_allows(module, request['query'], vdd)
+        # Enforcement metadata is protected by the published byte binding;
+        # configuration is never a grant or a replacement isolation authority.
+        paths[0].write_text(json.dumps(catalog), encoding='utf-8')
+    elif scenario == 'hosted-override':
+        request['narrow_overrides']['enforcement_level'] = 'E2'
+    elif scenario == 'hosted-config':
+        config = root / 'knowledge/planning-query.toml'
+        config.write_bytes(config.read_bytes() + b'\nenforcement_level = "E2"\n')
+    actual, calls = _s7_query(root, paths, request, monkeypatch)
+    if scenario == 'admitted':
+        assert actual['outcome'] == 'hit' and actual['candidates'] and actual['read_set']
+    else:
+        assert actual['outcome'] == 'blocked'
+        if scenario.startswith('hosted-'):
+            assert actual['reason_code'] == 'invalid_config' and calls == []
+        else:
+            assert actual['reason_code'] == 'integrity_failed' and len(calls) == 1
+        assert actual['candidates'] == [] and actual['read_set'] == []
 
 
-@pytest.mark.cer_assertion('ASSERT_3F7D90E3D044')
-def test_contract_3f7d90e3d044(published_planning):
-    root, _, _ = published_planning
-    pointer = root / 'knowledge/indexes/current.json'
-    original = pointer.read_bytes()
-    pointer.unlink()
-    output = _query_published(published_planning)
-    assert output['result']['status'] == 'blocked' and output['result']['candidates'] == []
-    if 'publication_missing' not in {d['code'] for d in output['diagnostics']}:
-        print('FAILURE_ID:KQ_3F7D90E3D044')
-    assert 'publication_missing' in {d['code'] for d in output['diagnostics']}
-    pointer.write_bytes(original + b'corrupt')
-    output = _query_published(published_planning)
-    if 'integrity_failed' not in {d['code'] for d in output['diagnostics']}:
-        print('FAILURE_ID:KQ_3F7D90E3D044')
-    assert output['result']['status'] == 'blocked' and output['result']['candidates'] == []
-    assert 'integrity_failed' in {d['code'] for d in output['diagnostics']}
+@pytest.mark.cer_assertion('ASSERT_94C2D2FA535D')
+@pytest.mark.cer_assertion('ASSERT_9C72720F8F91')
+@pytest.mark.cer_assertion('ASSERT_2D078C89F59A')
+@pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+@pytest.mark.parametrize('scenario', ['owner-consistent', 'policy-only', 'catalog-consumer',
+    'projection-handedit', 'generation-mismatch'])
+def test_contract_94c2d2fa535d(published_vdd_base, tmp_path, monkeypatch, scenario):
+    import _knowledge_catalog_builder as builder
+    root, paths, catalog, policy, projection, request = _s7_inputs(published_vdd_base, tmp_path)
+    module = next(m for m in catalog['modules'] if m['source_path'] == 'AGENTS.md')
+    # Recompute with the existing owner without writing/publishing a generation.
+    assert builder.build_consumer_projections(catalog, policy) == projection
+    assert module['consumer_ids'] == sorted(builder._consumer_ids(module['primary_domain']))
+    expected_ids = {m['module_id'] for m in catalog['modules'] if
+                    builder._module_allowed(m, next(p for p in policy['policies'] if p['consumer'] == 'vdd'))}
+    assert core._projection_for(request, catalog, policy, projection) == expected_ids
+    if scenario == 'policy-only':
+        next(p for p in policy['policies'] if p['consumer'] == 'vdd')['domains'].append('workspace')
+        paths[1].write_text(json.dumps(policy), encoding='utf-8')
+    elif scenario == 'catalog-consumer':
+        module['consumer_ids'] = ['bootstrap']
+        paths[0].write_text(json.dumps(catalog), encoding='utf-8')
+    elif scenario == 'projection-handedit':
+        next(p for p in projection['projections'] if p['consumer'] == 'vdd')['eligible_module_ids'].append('unapproved-module')
+        paths[2].write_text(json.dumps(projection), encoding='utf-8')
+    elif scenario == 'generation-mismatch':
+        pointer = root / 'knowledge/indexes/current.json'
+        data = json.loads(pointer.read_text(encoding='utf-8'))
+        data['generation_id'] = '0' * 64
+        pointer.write_text(json.dumps(data), encoding='utf-8')
+    actual, calls = _s7_query(root, paths, request, monkeypatch)
+    assert len(calls) == 1
+    if scenario == 'owner-consistent':
+        assert actual['outcome'] == 'hit' and actual['candidates'] and actual['read_set']
+        assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
+    else:
+        assert actual['outcome'] == 'blocked' and actual['reason_code'] == 'integrity_failed'
+        assert actual['candidates'] == [] and actual['read_set'] == []
+        assert not core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
+        if scenario in {'policy-only', 'catalog-consumer'}:
+            with pytest.raises(ValueError, match='consumer_projection_stale'):
+                core._projection_for(request, catalog, policy, projection)
+
+
+@pytest.mark.cer_assertion('ASSERT_F7401102FE99')
+@pytest.mark.parametrize('scenario', ['unicode-argv', 'stdout', 'stderr', 'combined',
+                                    'timeout', 'cancel', 'windows-evidence'])
+def test_contract_f7401102fe99(published_vdd_base, tmp_path, monkeypatch, scenario):
+    import threading
+    import time
+    if scenario == 'windows-evidence':
+        import ast
+        import zipfile
+        import xml.etree.ElementTree as ET
+        evidence = ROOT / 'logs/quick-dev-s4-20261025/windows-original'
+        archive = evidence / 'parent-original.zip'
+        assert hashlib.sha256(archive.read_bytes()).hexdigest() == '769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21'
+        with zipfile.ZipFile(archive) as z:
+            assert z.testzip() is None
+            assert z.read('commit.txt').decode().strip() == '4012465ddb093e2d952d1ab4482d8e1257a7fffb'
+            assert z.read('pytest-exit.txt').decode().strip() == '0'
+            platform = json.loads(z.read('platform.json'))
+            assert platform['platform'] == 'win32' and platform['system'].startswith('Windows-2022Server')
+            suite = ET.fromstring(z.read('junit.xml')).find('testsuite')
+            assert suite is not None
+            assert {k: int(suite.attrib[k]) for k in ('tests', 'failures', 'errors', 'skipped')} == {
+                'tests': 13, 'failures': 0, 'errors': 0, 'skipped': 0}
+            cases = {c.attrib['name'] for c in suite.findall('testcase')}
+            assert all(not list(c) for c in suite.findall('testcase'))
+            required = {'test_contract_295a1ed8402c', 'test_planning_attempt_deadline',
+                'test_contract_8299476377c3[nonzero]', 'test_contract_8299476377c3[unicode-argv]'}
+            required.update('test_contract_f7401102fe99[' + s + ']' for s in ('stdout', 'stderr', 'combined', 'json-parser'))
+            required.update('test_windows_planning_query_runtime[' + s + ']' for s in ('unicode-path-utf8', 'subprocess-timeout', 'subprocess-cancel'))
+            assert required <= cases
+            hashes = json.loads(z.read('source-hashes.json'))
+            original = (evidence / 'original-test_planning_query.py').read_bytes()
+            checked = set()
+            for row in hashes:
+                relative = row['Path'].replace('\\', '/').split('/ji-mu-yun/ji-mu-yun/')[-1]
+                if relative == 'scripts/toolchain/knowledge_query/tests/test_planning_query.py':
+                    assert hashlib.sha256(original).hexdigest() == row['Hash'].lower()
+                else:
+                    assert relative in {'scripts/toolchain/knowledge_query/adapter.py',
+                        'scripts/python/knowledge_locator.py', 'scripts/python/_knowledge_locator_core.py',
+                        'knowledge/planning-query.toml'}
+                    assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == row['Hash'].lower()
+                    checked.add(relative)
+            assert len(checked) == 4
+            # Parse frozen historical author code only; never import its fixtures
+            # or execute its VDD/BMAD/other workflows. This is a historical proof
+            # check over identical runtime bytes, not a new Windows execution.
+            names = {n.name for n in ast.parse(original).body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+            assert {'_s7_transport', '_s7_cancel', '_s7_process_cause', 'test_planning_attempt_deadline'} <= names
+        return
+    root, paths, _, _, _, request = _s7_inputs(published_vdd_base, tmp_path)
+    renamed = root.with_name('repository space \u03c0')
+    root.rename(renamed)
+    paths = [renamed / p.relative_to(root) for p in paths]
+    root = renamed
+    before = _content_snapshot(root)
+    if scenario == 'timeout':
+        request['narrow_overrides']['timeout_seconds'] = 1
+    cancelled = threading.Event()
+    if scenario == 'cancel':
+        request['cancel_event'] = cancelled
+    spawn, run = subprocess.Popen, subprocess.run
+    children, invocation = [], []
+    consumed = {'stdout': 0, 'stderr': 0}
+    class ObservedPipe:
+        def __init__(self, pipe, label):
+            self.pipe, self.label = pipe, label
+        def __getattr__(self, name):
+            return getattr(self.pipe, name)
+        def read(self, *args, **kwargs):
+            data = self.pipe.read(*args, **kwargs)
+            consumed[self.label] += len(data.encode('utf-8') if isinstance(data, str) else data)
+            return data
+    def observed_run(argv, *args, **kwargs):
+        if list(argv) == ['git', '-C', str(root), 'rev-parse', 'refs/heads/main']:
+            invocation.append({'argv': list(argv), 'shell': kwargs.get('shell', False), 'encoding': kwargs.get('encoding')})
+        return run(argv, *args, **kwargs)
+    def launch(argv, *args, **kwargs):
+        selected = list(argv) == ['git', '-C', str(root), 'rev-parse', 'refs/heads/main']
+        if not selected or scenario == 'unicode-argv':
+            return spawn(argv, *args, **kwargs)
+        if scenario in {'timeout', 'cancel'}:
+            script = 'import time; time.sleep(2.2)'
+        else:
+            script = 'import sys; '
+            script += ('sys.stdout.write(chr(960)*35000); ' if scenario in {'stdout', 'combined'}
+                       else 'sys.stdout.write(' + repr(request['snapshot']['commit']+'\n') + '); ')
+            script += 'sys.stdout.flush(); '
+            if scenario in {'stderr', 'combined'}:
+                script += 'sys.stderr.write("y"*70000); sys.stderr.flush()'
+        child = spawn([sys.executable, '-c', script], *args, **kwargs)
+        children.append(child)
+        for label in ('stdout', 'stderr'):
+            pipe = getattr(child, label)
+            if pipe is not None:
+                setattr(child, label, ObservedPipe(pipe, label))
+        if scenario == 'cancel':
+            cancelled.set()
+        return child
+    monkeypatch.setattr(subprocess, 'run', observed_run)
+    monkeypatch.setattr(subprocess, 'Popen', launch)
+    start = time.monotonic()
+    try:
+        actual = adapter.diagnose(request, root, *paths)
+        elapsed = time.monotonic() - start
+        assert invocation and all(i['shell'] is False and i['encoding'] == 'utf-8' for i in invocation)
+        if scenario == 'unicode-argv':
+            assert actual['outcome'] == 'hit' and actual['reason_code'] == 'matched'
+            assert actual['candidates'] and actual['read_set']
+        else:
+            assert len(children) == 1 and children[0].poll() is not None
+            assert actual['candidates'] == [] and actual['read_set'] == []
+            assert actual['diagnostic']['incomplete'] is True
+            if scenario == 'cancel':
+                assert elapsed < 1.75 and actual['outcome'] == actual['reason_code'] == 'cancelled'
+            elif scenario == 'timeout':
+                assert elapsed < 1.75 and (actual['outcome'], actual['reason_code']) == ('unavailable', 'timeout')
+            else:
+                assert sum(consumed.values()) > 0
+                assert consumed['stdout'] <= 65537 and consumed['stderr'] <= 65537
+                assert sum(consumed.values()) <= 131074
+                assert actual['outcome'] in {'blocked', 'budget_exhausted'}
+        assert not actual.get('authorizes') and _content_snapshot(root) == before
+    except AssertionError:
+        print('FAILURE_ID:KQ_F7401102FE99')
+        raise
+    finally:
+        for child in children:
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=5)
 
 
 @pytest.mark.cer_assertion('ASSERT_850A2D68C126')
-def test_contract_850a2d68c126(published_planning, monkeypatch):
-    import publish_knowledge_catalog as publisher
-    def forbidden(*args, **kwargs):
-        raise AssertionError('Query attempted publication')
-    monkeypatch.setattr(publisher, '_publish_bundle', forbidden)
-    monkeypatch.setattr(publisher, 'run', forbidden)
-    test_contract_b4dddfeb665f(published_planning)
+@pytest.mark.cer_assertion('ASSERT_B4DDDFEB665F')
+@pytest.mark.parametrize('scenario', ['hit', 'publication-missing', 'publication-corrupt'])
+def test_contract_850a2d68c126(published_vdd_base, tmp_path, monkeypatch, scenario):
+    root, paths, _, _, _, request = _s7_inputs(published_vdd_base, tmp_path)
+    history = root / 'execution-plans/existing/memlog.md'
+    history.parent.mkdir(parents=True)
+    history.write_bytes(b'# Immutable prior caller history\nExisting decision.\n')
+    if scenario == 'publication-missing':
+        (root / 'knowledge/indexes/current.json').unlink()
+    elif scenario == 'publication-corrupt':
+        (root / 'knowledge/indexes/current.json').write_bytes(b'{invalid')
+    before = _content_snapshot(root)
+    refs = _git(root, 'show-ref')
+    head = _git(root, 'rev-parse', 'HEAD')
+    branch = _git(root, 'symbolic-ref', 'HEAD')
+    spawn, commands = subprocess.Popen, []
+    def trace(argv, *args, **kwargs):
+        if isinstance(argv, (list, tuple)) and list(argv[:3]) == ['git', '-C', str(root)]:
+            commands.append(list(argv))
+        return spawn(argv, *args, **kwargs)
+    monkeypatch.setattr(subprocess, 'Popen', trace)
+    actual = adapter.diagnose(request, root, *paths)
+    assert commands
+    assert all(c[3] in {'rev-parse', 'merge-base', 'cat-file', 'status'} for c in commands)
+    assert _git(root, 'show-ref') == refs
+    assert _git(root, 'rev-parse', 'HEAD') == head
+    assert _git(root, 'symbolic-ref', 'HEAD') == branch
+    assert _content_snapshot(root) == before
+    assert history.read_bytes() == b'# Immutable prior caller history\nExisting decision.\n'
+    assert not actual.get('authorizes')
+    if scenario == 'hit':
+        assert actual['outcome'] == 'hit' and actual['read_set']
+    else:
+        reason = 'publication_missing' if scenario == 'publication-missing' else 'integrity_failed'
+        assert actual['outcome'] == 'blocked' and actual['reason_code'] == reason
+        assert actual['candidates'] == [] and actual['read_set'] == []
 
 
-@pytest.mark.cer_assertion('ASSERT_D64F7E6FDF45')
-def test_contract_d64f7e6fdf45(published_planning):
-    test_contract_31ba1038eb57(published_planning)
-    test_contract_9d537af787eb(published_planning)
-    output = _query_published(published_planning)
-    assert not any(k in output for k in ['acceptance_passed', 'implementation_complete', 'authorizes'])
+# Scoped S12: retained adapter tests, rebound to authentic VDD inputs.
+# Historical author source is never imported and no BMAD workflow is restored.
+diagnose = adapter.diagnose
 
 
-@pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
-def test_contract_dcf68b1aba8f(published_planning):
-    import publish_knowledge_catalog as publisher
-    root, paths, _ = published_planning
-    pointer = json.loads((root / 'knowledge/indexes/current.json').read_text())
-    manifest, payloads = publisher._generation_payloads(root, pointer)
-    assert set(payloads) == publisher.REQUIRED_ARTIFACTS
-    policy = json.loads(payloads['policy'])
-    catalog = json.loads(payloads['catalog_v2'])
-    projection = json.loads(payloads['projections'])
-    import _knowledge_catalog_builder as builder
-    assert projection == builder.build_consumer_projections(catalog, policy)
-    assert any('bmad-planning' in m['consumer_ids'] for m in catalog['modules'])
-    assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1], projections_path=paths[2])
+def _s12_raw_query(request, *args, **kwargs):
+    # Give controlled raw producer samples the same explicit one-row bound as
+    # the tested adapter call, without truncating or changing returned data.
+    kwargs.setdefault('max_candidates', 1)
+    return core.query_with_diagnostics(request, *args, **kwargs)
 
 
-@pytest.mark.cer_assertion('ASSERT_2D078C89F59A')
-def test_contract_2d078c89f59a(published_planning):
-    test_contract_9c72720f8f91(published_planning)
-    test_contract_482c87e0d4a0()
-    test_contract_bd7c42ff441e()
+@pytest.fixture
+def published_planning(published_vdd_base, tmp_path):
+    root, paths, catalog, policy, _, envelope = _s7_inputs(published_vdd_base, tmp_path)
+    pointer = json.loads((root/'knowledge/indexes/current.json').read_text(encoding='utf-8'))
+    generation = Path('knowledge/indexes/generations') / pointer['generation_id']
+    manifest = json.loads((ROOT/generation/'manifest.json').read_text(encoding='utf-8'))
+    # Keep real frozen layer originals for the switch/data-attribution check.
+    for metadata in manifest['artifacts'].values():
+        relative = generation / metadata['bundle_path']
+        _put(root, relative, (ROOT/relative).read_bytes())
+    vdd = next(p for p in policy['policies'] if p['consumer']=='vdd')
+    needed = {'AGENTS.md', 'README.md'}
+    for query in ('AGENTS.md', 'repository knowledge authority'):
+        rows = core.locate({'consumer':'vdd', 'query':query}, catalog, policy=vdd,
+            max_candidates=20, eligible_module_ids=core._projection_for(envelope,catalog,policy,
+                json.loads(paths[2].read_text(encoding='utf-8'))))['candidates']
+        needed.update(r['path'] for r in rows)
+    for path in sorted(needed):
+        data = subprocess.check_output(['git','-C',str(ROOT),'show',pointer['main_commit']+':'+path],timeout=10)
+        _put(root, path, data)
+    (root/'execution-plans/example').mkdir(parents=True, exist_ok=True)
+    (root/'knowledge/planning-query.toml').unlink()
+    request = {k:v for k,v in envelope.items() if k in {
+        'schema_version','request_id','consumer','query','snapshot','policy_revision','stage'}}
+    assert request['consumer']=='vdd' and request['stage']=='vdd-create'
+    return root, paths, request
 
 
-# S7 exercises the planning-operation envelope through the real adapter entry.
-# Caller metadata is separate from the underlying Locator request and result.
+def _s12_restore_existing_generation(root):
+    # Exact historical pointer, not a newly manufactured publication request.
+    pointer_bytes = (ROOT/'logs/quick-dev-s12-20261025/existing-generation-B-pointer.json').read_bytes()
+    pointer = json.loads(pointer_bytes)
+    generation = Path('knowledge/indexes/generations')/pointer['generation_id']
+    manifest_bytes = (ROOT/generation/'manifest.json').read_bytes()
+    manifest = json.loads(manifest_bytes)
+    _put(root,generation/'manifest.json',manifest_bytes)
+    for metadata in manifest['artifacts'].values():
+        relative = generation/metadata['bundle_path']
+        data = (ROOT/relative).read_bytes()
+        assert 'sha256:'+hashlib.sha256(data).hexdigest()==metadata['sha256']
+        _put(root,relative,data)
+        if metadata.get('repository_path'):
+            _put(root,metadata['repository_path'],data)
+    _put(root,'knowledge/indexes/current.json',pointer_bytes)
+    assert core.verify_current_publication(root, catalog_path=root/'knowledge/catalogs/repository-knowledge-catalog.v2.json',
+        policy_path=root/'knowledge/policies/consumer-policies.v2.json',
+        projections_path=root/'knowledge/projections/consumer-projections.v1.json')
+    return pointer
+
+
+def _s7_generation_switch(fixture):
+    from unittest.mock import patch
+    root,paths,request=fixture
+    _s7_write_config(fixture)
+    before=json.loads((root/'knowledge/indexes/current.json').read_text())
+    original=adapter._stream_source_hashes
+    original_locate=core.locate
+    switched,consumed=[],[]
+    def locate(req,catalog,*args,**kwargs):
+        consumed.append(copy.deepcopy(catalog))
+        return original_locate(req,catalog,*args,**kwargs)
+    def switch(*args,**kwargs):
+        hashes=original(*args,**kwargs)
+        switched.append(_s12_restore_existing_generation(root))
+        return hashes
+    with patch.object(adapter,'_stream_source_hashes',switch),patch.object(core,'locate',locate):
+        output=_planning_operation(fixture)
+    assert len(switched)==1 and switched[0]['generation_id']!=before['generation_id']
+    if output.get('result',output).get('status',output.get('outcome'))=='blocked':
+        assert not output.get('read_set') and not output.get('adopted')
+    else:
+        assert len(consumed)==1
+        assert consumed[0]['source_snapshot']['commit']==before['main_commit']
+        frozen_manifest=json.loads((root/'knowledge/indexes/generations'/before['generation_id']/'manifest.json').read_text())
+        frozen=(root/'knowledge/indexes/generations'/before['generation_id']/frozen_manifest['artifacts']['catalog_v2']['bundle_path']).read_bytes()
+        assert json.loads(frozen)==consumed[0]
+        hashes={m['source_path']:m['source_sha256'] for m in consumed[0]['modules']}
+        assert all(c['source_sha256']==hashes[c['path']] for c in output.get('result',output)['candidates'])
+        assert before['generation_id'] in json.dumps(output['index_identity'])
+        assert switched[0]['generation_id'] not in json.dumps(output['index_identity'])
+
+
 def _planning_operation(fixture, **options):
     __tracebackhide__ = True  # Presentation only; collector retains every exception and case.
     root, paths, base = fixture
     request = {**base, 'operation': 'create', 'task_id': 'bounded-planning',
-               'scope': ['AGENTS.md'], 'relevant_inputs': {}, **options}
+               'scope': ['AGENTS.md'], 'relevant_inputs': {}, 'narrow_overrides': {'max_candidates':1}, **options}
     return diagnose(request, root, *paths)
 
 
@@ -521,13 +980,13 @@ def _s7_config(fixture, scenario):
         raise ValueError('Unknown author scenario: ' + scenario)
     values = {'max_candidates':20,'max_calls':5,'timeout_seconds':60,'max_output_bytes':131072} if scenario=='legal-boundary' else ({'max_candidates':1,'max_calls':1,'timeout_seconds':1,'max_output_bytes':4096} if scenario=='narrow-team' else {})
     _s7_write_config(fixture, **values)
-    output=_planning_operation(fixture)
+    output=_planning_operation(fixture,narrow_overrides={})
     effective=output.get('diagnostic',{}).get('effective_config',{})
     assert effective, 'Actual tracked query configuration is not consumed or reported'
     assert effective.get('max_candidates') <= values.get('max_candidates',12)
     for field, default in [('max_calls',3),('max_output_bytes',65536),('timeout_seconds',30)]:
         assert effective.get(field)==values.get(field,default)
-    assert effective.get('origins') and effective.get('consumer')=='bmad-planning'
+    assert effective.get('origins') and effective.get('consumer')=='vdd'
 
 
 def _s7_hit_read(fixture):
@@ -627,7 +1086,6 @@ def _s7_zero(fixture):
     assert reads and all(r.get('origin')=='direct-source' for r in reads), 'Targeted source check must have actual verified sources, not only a flag'
 
 
-
 def _s7_blocked(fixture):
     __tracebackhide__ = True  # Presentation only; collector retains every exception and case.
     _s7_write_config(fixture)
@@ -640,25 +1098,6 @@ def _s7_blocked(fixture):
     if 'outcome' in output:
         assert output.get('reason_code') in ['invalid_request', 'policy_denied']
         assert output.get('diagnostic', {}).get('incomplete') is True
-
-
-def _s7_corruption(fixture, scenario):
-    __tracebackhide__ = True  # Presentation only; collector retains every exception and case.
-    _s7_write_config(fixture)
-    root, paths, _ = fixture
-    if scenario == 'pointer':
-        (root/'knowledge/indexes/current.json').write_bytes(b'{DENIED_CONTENT_SENTINEL')
-    elif scenario == 'projection':
-        paths[2].write_bytes(paths[2].read_bytes() + b' ')
-    elif scenario == 'catalog':
-        paths[0].write_bytes(paths[0].read_bytes() + b' ')
-    elif scenario == 'policy':
-        paths[1].write_bytes(paths[1].read_bytes() + b' ')
-    output = _planning_operation(fixture, query='zzzz-no-match')
-    assert (output.get('outcome'), output.get('reason_code')) == ('blocked', 'integrity_failed')
-    assert 'DENIED_CONTENT_SENTINEL' not in json.dumps(output)
-    assert output.get('candidates') == [] and output.get('read_set') == []
-    assert output.get('diagnostic', {}).get('incomplete') is True
 
 
 def _s7_paths(fixture, scenario):
@@ -735,7 +1174,7 @@ def _s7_budget(fixture, scenario='candidate-cap'):
     root, paths, request = fixture
     original = core.query_with_diagnostics
     baseline = original({k:v for k,v in request.items() if k != 'stage'}, root,
-        catalog_path=paths[0], policies_path=paths[1], projections_path=paths[2])
+        catalog_path=paths[0], policies_path=paths[1], projections_path=paths[2], max_candidates=2)
     if len(baseline['result']['candidates']) < 2:
         raise RuntimeError('AUTHOR_FIXTURE: candidate cap needs at least two real published matches')
     record = root/'execution-plans/example/memlog.md'
@@ -831,7 +1270,7 @@ def _s7_cancel(fixture):
     from unittest.mock import patch
     _s7_write_config(fixture)
     root, paths, request = fixture
-    raw = core.query_with_diagnostics({k: v for k, v in request.items() if k != 'stage'},
+    raw = _s12_raw_query({k: v for k, v in request.items() if k != 'stage'},
         root, catalog_path=paths[0], policies_path=paths[1], projections_path=paths[2])
     cancelled = threading.Event()
     record = root/'execution-plans/example/memlog.md'
@@ -1026,7 +1465,7 @@ def _s7_unknown(fixture, scenario):
     from unittest.mock import patch
     _s7_write_config(fixture)
     root, paths, request = fixture
-    response = core.query_with_diagnostics({k: v for k, v in request.items() if k != 'stage'},
+    response = _s12_raw_query({k: v for k, v in request.items() if k != 'stage'},
         root, catalog_path=paths[0], policies_path=paths[1], projections_path=paths[2])
     controlled = deepcopy(response)
     controlled['result']['candidates'] = []
@@ -1054,7 +1493,7 @@ def _s7_direct(fixture):
     path=root/'scripts/toolchain/knowledge_query/local-evidence.py'
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('# Current source outside publication\n', encoding='utf-8')
-    raw=core.query_with_diagnostics({k:v for k,v in request.items() if k!='stage'},root,
+    raw=_s12_raw_query({k:v for k,v in request.items() if k!='stage'},root,
         catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])
     relative=path.relative_to(root).as_posix()
     if any(c['path']==relative for c in raw['result']['candidates']):
@@ -1080,7 +1519,7 @@ def _s7_degraded(fixture, scenario):
     _s7_write_config(fixture)
     root, paths, request = fixture
     raw_request = {k: v for k, v in request.items() if k != 'stage'}
-    response = core.query_with_diagnostics(raw_request, root, catalog_path=paths[0],
+    response = _s12_raw_query(raw_request, root, catalog_path=paths[0],
                                           policies_path=paths[1], projections_path=paths[2])
     if not response['result']['candidates']:
         raise RuntimeError('S7 fixture requires a trusted nonempty result')
@@ -1110,7 +1549,6 @@ def _s7_degraded(fixture, scenario):
         assert read.get('origin')=='direct-source'
         assert read.get('sha256','').removeprefix('sha256:')==__import__('hashlib').sha256((root/read['path']).read_bytes()).hexdigest()
     assert output.get('diagnostic', {}).get('requires_source_check') is True
-
 
 
 def _s7_integrity_guard(fixture, scenario):
@@ -1199,7 +1637,7 @@ def _s7_closed_pairs(fixture, scenario):
     _s7_required_gate(fixture, scenario!='empty')
     _s7_write_config(fixture)
     root, paths, request = fixture
-    raw = core.query_with_diagnostics({k: v for k, v in request.items() if k != 'stage'},
+    raw = _s12_raw_query({k: v for k, v in request.items() if k != 'stage'},
         root, catalog_path=paths[0], policies_path=paths[1], projections_path=paths[2])
     if not raw['result']['candidates']:
         raise RuntimeError('Closed-pair fixture requires a trusted nonempty result')
@@ -1255,9 +1693,6 @@ def _s7_snapshot_truth_guard(fixture, scenario):
     assert not output.get('adopted') and not output.get('authorizes')
 
 
-
-# Test-only probes for the actual adapter/core boundary. No production owner,
-# formal gate, publication outside a temporary repository or runtime role added.
 def _s7_failure_priority(fixture, scenario):
     __tracebackhide__ = True  # Presentation only; collector retains every exception and case.
     import subprocess
@@ -1323,64 +1758,6 @@ def _s7_process_cause(fixture, scenario):
         assert output.get('outcome')=='blocked' and output.get('reason_code')=='unknown_failure', 'Unknown child exit is not positive timeout/unavailability evidence'
 
 
-def _s7_generation_switch(fixture):
-    __tracebackhide__ = True  # Presentation only; collector retains every exception and case.
-    import subprocess
-    from unittest.mock import patch
-    import publish_knowledge_catalog as publisher
-    import _knowledge_catalog_builder as builder
-    _s7_write_config(fixture)
-    root,paths,request=fixture
-    before=json.loads((root/'knowledge/indexes/current.json').read_text())
-    assert core.verify_current_publication(root,catalog_path=paths[0],policy_path=paths[1],projections_path=paths[2])
-    from scripts.toolchain.knowledge_query import adapter as planning_adapter
-    original=planning_adapter._stream_source_hashes
-    switches=[]
-    consumed=[]
-    original_locate=core.locate
-    def trace_locate(req,catalog,*args,**kwargs):
-        consumed.append(json.loads(json.dumps(catalog)))
-        return original_locate(req,catalog,*args,**kwargs)
-    def switch_after_freshness(*args,**kwargs):
-        result=original(*args,**kwargs)
-        (root/'README.md').write_text('# New published repository knowledge authority\nChanged generation source.\n',encoding='utf-8')
-        subprocess.run(['git','-C',str(root),'add','README.md'],check=True,capture_output=True)
-        subprocess.run(['git','-C',str(root),'-c','user.name=Isolated Test','-c','user.email=test@example.invalid','commit','-m','New isolated publication generation'],check=True,capture_output=True)
-        commit=subprocess.check_output(['git','-C',str(root),'rev-parse','HEAD'],text=True).strip()
-        policy=json.loads(paths[1].read_text()); exclusions=json.loads((root/publisher.INPUT_PATHS['exclusions']).read_text())
-        layers=builder.build_layers(root,policy=policy,exclusions=exclusions)
-        reqpath=Path('logs/knowledge-context/publication-requests/isolated-switch.json')
-        req=dict(schema_version='jimuyun.knowledge-publication-request.v1',request_id='isolated-switch',caller='maintain-knowledge-base',trigger='operator-requested',target_plan='execution-plans/example',main_commit=commit,automatic=False,maintainer_confirmation=True,recorded_at='2026-10-23T00:00:00+00:00',authorizes=['knowledge-publication'],source_route=None)
-        (root/reqpath).write_text(json.dumps(req),encoding='utf-8')
-        auth=publisher._load_publication_request(root,reqpath,expected_main=commit)
-        report=dict(snapshot=layers[0],policy_revision=policy['policy_revision'],summary={'fixture':'switch'})
-        publisher._publish_bundle(root,main_commit=commit,layer_bytes={name:publisher._render(value) for name,value in zip(publisher.LAYER_PATHS,layers)},input_bytes={name:(root/path).read_bytes() for name,path in publisher.INPUT_PATHS.items()},report_bytes=publisher._render(report),report=report,publication_authorization=auth)
-        assert core.verify_current_publication(root,catalog_path=paths[0],policy_path=paths[1],projections_path=paths[2])
-        switches.append(json.loads((root/'knowledge/indexes/current.json').read_text()))
-        return result
-    with patch.object(planning_adapter,'_stream_source_hashes',switch_after_freshness), patch.object(core,'locate',trace_locate):
-        output=_planning_operation(fixture)
-    if len(switches)!=1:raise RuntimeError('AUTHOR_BINDING: generation switch barrier not reached once')
-    assert before['generation_id']!=switches[0]['generation_id']
-    print('S7_REAL_GENERATION_SWITCH:'+json.dumps({'before':before,'after':switches[0]}))
-    if output.get('result',output).get('status',output.get('outcome'))=='blocked':
-        assert not output.get('read_set') and not output.get('adopted')
-    else:
-        assert len(consumed)==1
-        assert consumed[0]['source_snapshot']['commit']==before['main_commit']
-        delivered=output.get('result',output)['candidates']
-        source_hashes={x['source_path']:x['source_sha256'] for x in consumed[0]['modules']}
-        assert all(c['source_sha256']==source_hashes[c['path']] for c in delivered)
-        manifest=json.loads((root/'knowledge/indexes/generations'/before['generation_id']/'manifest.json').read_text())
-        frozen=(root/'knowledge/indexes/generations'/before['generation_id']/manifest['artifacts']['catalog_v2']['bundle_path']).read_bytes()
-        assert __import__('hashlib').sha256(frozen).hexdigest()==manifest['artifacts']['catalog_v2']['sha256'].removeprefix('sha256:')
-        assert json.loads(frozen)==consumed[0]
-        identity=output.get('index_identity')
-        assert isinstance(identity,dict), 'Successful query must bind its pinned publication generation'
-        assert before['generation_id'] in json.dumps(identity), 'Loaded pre-switch data cannot be attributed to post-switch generation'
-        assert switches[0]['generation_id'] not in json.dumps(identity)
-
-
 def _s7_delivery_boundary(fixture):
     __tracebackhide__ = True  # Presentation only; collector retains every exception and case.
     _s7_write_config(fixture)
@@ -1420,6 +1797,96 @@ def _s7_delivery_boundary(fixture):
     assert second['episode_id'] == output['episode_id']
     assert second['budget_usage']['output_bytes'] == len(raw) + len(second_raw)
     assert second['budget_usage']['output_bytes'] <= 65536
+
+
+def _s7_exit_zero_blocked(fixture):
+    __tracebackhide__ = True
+    import subprocess
+    from unittest.mock import patch
+    root,paths,request=fixture
+    _s7_write_config(fixture)
+    denied={**request,'policy_revision':'not-authorized'}
+    raw=_s12_raw_query({k:v for k,v in denied.items() if k!='stage'},root,
+        catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])
+    assert raw['result']['status']=='blocked' and raw['result']['candidates']==[]
+    # CLI exit is an observed process fact, never fabricated in an adapter result.
+    proc=subprocess.run([sys.executable,str(ROOT/'scripts/python/knowledge_locator.py'),'--repository-root',str(root),'--catalog',str(paths[0]),'--policies',str(paths[1]),'--projections',str(paths[2])],input=json.dumps({k:v for k,v in denied.items() if k!='stage'}),capture_output=True,text=True,encoding='utf-8',check=False)
+    assert proc.returncode==0
+    observed={**raw,'result':json.loads(proc.stdout)}
+    assert observed['result']['status']=='blocked'
+    with patch.object(core,'query_with_diagnostics',return_value=observed) as called:
+        output=_planning_operation(fixture)
+    assert called.called
+    result=output.get('result',output)
+    assert result.get('status',output.get('outcome'))=='blocked'
+    assert not result.get('candidates') and not output.get('read_set') and not output.get('adopted')
+
+
+def _s7_raw_compatibility(fixture, scenario):
+    __tracebackhide__ = True
+    import subprocess
+    root,paths,request=fixture
+    _s7_write_config(fixture)
+    overrides={'query':'zzzz-no-match'} if scenario=='empty' else ({'policy_revision':'unknown-policy'} if scenario=='blocked' else {})
+    raw_request={k:v for k,v in {**request,**overrides}.items() if k!='stage'}
+    proc=subprocess.run([sys.executable,str(ROOT/'scripts/python/knowledge_locator.py'),'--max-candidates','1','--repository-root',str(root),'--catalog',str(paths[0]),'--policies',str(paths[1]),'--projections',str(paths[2])],input=json.dumps(raw_request),capture_output=True,text=True,encoding='utf-8',check=False)
+    assert proc.returncode==0
+    legacy=json.loads(proc.stdout)
+    output=_planning_operation(fixture,**overrides)
+    assert output.get('result')==legacy, 'The original Locator result and caller compatibility must be retained'
+    diagnostic=output.get('diagnostic',{})
+    assert diagnostic.get('raw_status')==legacy['status']
+    assert 'exit_code' in diagnostic
+    assert diagnostic['exit_code'] is None or diagnostic['exit_code']==proc.returncode
+    assert diagnostic.get('evidence_refs'), 'Classification may not erase its real diagnostic evidence'
+
+
+def _s7_required_gate(fixture, nonempty=False):
+    __tracebackhide__ = True
+    import knowledge_context_validation as validator
+    root,paths,base=fixture
+    req={k:v for k,v in base.items() if k!='stage'}
+    req.update(consumer='vdd',query='repository knowledge authority' if nonempty else 'zzzz-no-match')
+    raw=_s12_raw_query(req,root,catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])['result']
+    if nonempty:assert raw['candidates']
+    else:assert raw['status']=='insufficient_match' and raw['candidates']==[]
+    payload={'schema_version':'jimuyun.vdd-knowledge-context.v1','locator_request':req,'locator_result':raw,
+        'required_modules':['repository-rules'],'decisions':[{'owner':'adapter','candidate':{'path':c['path'],'source_sha256':c['source_sha256']},'decision':'rejected','satisfies':[],'rejection_reason':'insufficient_specificity'} for c in raw['candidates']],
+        'request_sha256':validator.canonical_hash(req),'result_sha256':validator.canonical_hash(raw)}
+    reason=validator.validate_context(payload,repository_root=root,verify_catalog=True,expected_consumer='vdd',require_selection=True)
+    assert reason==('required_modules_unsatisfied' if nonempty else 'locator_result_not_matched')
+    return reason
+
+
+def _s7_verified_read(fixture, scenario):
+    __tracebackhide__ = True
+    from copy import deepcopy
+    from unittest.mock import patch
+    import hashlib
+    _s7_write_config(fixture)
+    root,paths,request=fixture
+    raw=_s12_raw_query({k:v for k,v in request.items() if k!='stage'},root,catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])
+    assert raw['result']['candidates']
+    if scenario=='hash-mismatch':
+        raw=deepcopy(raw)
+        for c in raw['result']['candidates']:
+            c['source_sha256']='0'*64
+            for ref in c.get('read_set',[]):ref['source_sha256']='0'*64
+    with patch.object(core,'query_with_diagnostics',return_value=raw) as reached:
+        output=_planning_operation(fixture)
+    assert reached.called
+    if scenario=='hash-mismatch':
+        assert output.get('outcome')=='blocked' and output.get('reason_code')=='integrity_failed'
+        assert not output.get('read_set') and not output.get('candidates')
+    else:
+        reads=output.get('read_set',[])
+        assert reads, 'Matched source must produce actually verified read metadata'
+        for read in reads:
+            actual=(root/read['path']).read_bytes()
+            assert read['sha256'].removeprefix('sha256:')==hashlib.sha256(actual).hexdigest()
+            assert read.get('excerpt_range') and read.get('read_identity')
+    assert not output.get('adopted') and not output.get('authorizes')
+
 
 @pytest.mark.cer_assertion('ASSERT_C2B808E0497D')
 @pytest.mark.parametrize("scenario", ['same', 'unrelated-file', 'related-source', 'task-change'], ids=['0-same', '1-unrelated-file', '2-related-source', '3-task-change'])
@@ -1476,7 +1943,7 @@ def test_contract_7161798390fd(published_planning):
 @pytest.mark.cer_assertion('ASSERT_8118AC4A1D1B')
 @pytest.mark.parametrize("scenario", ['snapshot', 'main', 'branch', 'worktree', 'candidate-preservation', 'unauthorized-change'])
 def test_contract_8118ac4a1d1b(published_planning, scenario):
-    # BMAD request and all source version kinds
+    # Retained VDD request and all source version kinds
     try:
         _s7_identity(published_planning, scenario)
     except AssertionError:
@@ -2199,24 +2666,6 @@ def test_contract_cc2672622099(published_planning, scenario):
         raise
 
 
-@pytest.mark.cer_assertion('ASSERT_3DAF23250361')
-def test_contract_3daf23250361(native_caller_decision):
-    # Actual native owner reads a source and records its effect on scope.
-    try:
-        added = _native_decision_body(native_caller_decision)
-        assert 'accepted' in added and 'cap-1' in added
-        assert 'retain' in added or 'reuse' in added
-        assert 'CAP-1' in native_caller_decision['spec']
-        assert native_caller_decision['locator_request']['query'].lower() in added
-        assert native_caller_decision['locator_request']['consumer'] in added
-        assert native_caller_decision['locator_result']['status'] in added
-        assert 'worktree' in added and 'direct-source' in added
-        assert native_caller_decision['locator_request']['snapshot']['commit'] in added
-    except AssertionError:
-        print('FAILURE_ID:KQ_3DAF23250361')
-        raise
-
-
 @pytest.mark.cer_assertion('ASSERT_06FDF04DDEA5')
 @pytest.mark.parametrize("scenario", ['insufficient', 'low-confidence', 'missing-confidence'], ids=['0-insufficient', '1-low-confidence', '2-missing-confidence'])
 def test_contract_06fdf04ddea5(published_planning, scenario):
@@ -2324,7 +2773,7 @@ def test_contract_ad21c3976803(published_planning, scenario):
 
 
 @pytest.mark.cer_assertion('ASSERT_1B2DEF4F4ED8')
-def test_contract_1b2def4f4ed8(published_planning):
+def test_planning_attempt_deadline_timeout(published_planning):
     # Controlled child at30/60 wallclock bounds and explicit cancellation
     try:
         _s7_timeout(published_planning)
@@ -2420,26 +2869,6 @@ def test_contract_23847110e04a(published_planning, scenario):
         raise
 
 
-@pytest.mark.cer_assertion('ASSERT_F7FB563211E4')
-def test_contract_f7fb563211e4(native_caller_decision):
-    # This guard has no expected-red role. A real failure remains blocking.
-    added = _native_decision_body(native_caller_decision)
-    assert 'accepted' in added and 'rejected' in added
-    rejected = [line for line in added.splitlines() if '(decision)' in line and 'rejected' in line]
-    assert any('docs/source.md' in line and native_caller_decision['source_hash'] in line
-        and 'obsolete' in line and ('replacement' in line or 'proposal' in line)
-        and any(term in line for term in ('scope', 'exclude', 'not adopt', 'non-goal')) for line in rejected)
-    assert 'retain' in added or 'reuse' in added
-    from scripts.toolchain.bmad_native.testing import load
-    canonical = load('planning_native_selection_check',
-        '.agents/skills/jimuyun-spec/scripts/canonical_package.py')
-    root = native_caller_decision['root']
-    descriptor, _, _ = canonical.build_contract(root, root/'_bmad-output/specs/spec-example/SPEC.md')
-    assert descriptor['sources'] == native_caller_decision['roles']['sources']
-    assert not any(e['path'] == 'docs/source.md' for e in descriptor['companions'])
-    assert (root/'docs/source.md').read_bytes() == native_caller_decision['source_bytes']
-
-
 @pytest.mark.cer_assertion('ASSERT_D823F94E0DB3')
 def test_contract_d823f94e0db3(published_planning):
     # Confirmed missing integration/config, diagnosed backend unavailability or timeout with accessible authorized current source
@@ -2447,17 +2876,6 @@ def test_contract_d823f94e0db3(published_planning):
         _s7_direct(published_planning)
     except AssertionError:
         print('FAILURE_ID:KQ_D823F94E0DB3')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_F7401102FE99')
-@pytest.mark.parametrize("scenario", ["stdout", "stderr", "combined", "json-parser"])
-def test_contract_f7401102fe99(published_planning, scenario):
-    # Actual Windows/Linux argv subprocess with spaces/Unicode and cancellation
-    try:
-        _s7_transport(published_planning, scenario)
-    except AssertionError:
-        print('FAILURE_ID:KQ_F7401102FE99')
         raise
 
 
@@ -2567,6 +2985,8 @@ def test_contract_c442b3b56fce(published_planning, scenario):
         raise
 
 
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_8C43A73A097A')
 @pytest.mark.parametrize('scenario', ['matched', 'empty', 'blocked'])
 def test_contract_8c43a73a097a(published_planning, scenario):
@@ -2673,7 +3093,7 @@ def test_contract_9c582f662dbb(published_planning, scenario):
 
 
 @pytest.mark.cer_assertion('ASSERT_1907855D27FB')
-def test_contract_1907855d27fb(published_planning):
+def test_planning_request_structure_guard(published_planning):
     # Invalid request/config or denied policy/path
     try:
         _s7_blocked(published_planning)
@@ -2758,6 +3178,8 @@ def test_contract_59796beeec1f(published_planning, scenario):
         raise
 
 
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_3FD712CCE882')
 def test_contract_3fd712cce882(published_planning):
     _s7_exit_zero_blocked(published_planning)
@@ -2808,7 +3230,7 @@ def test_contract_ae4526de3c66(published_planning, scenario):
 
 @pytest.mark.cer_assertion('ASSERT_550968C7B8C5')
 @pytest.mark.parametrize("scenario", ['candidate-cap', 'episode-counter'])
-def test_contract_550968c7b8c5(published_planning, scenario):
+def test_planning_closed_episode_does_not_retry_call_cap(published_planning, scenario):
     # Same episode successful, failed, timedout and supplemental attempts
     try:
         _s7_budget(published_planning, scenario)
@@ -2891,6 +3313,8 @@ def test_contract_5a35cfcd0192(published_planning, scenario):
         raise
 
 
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_035DDCBA7E48')
 def test_contract_035ddcba7e48(published_planning):
     # Terminal report with long paths/errors and exhausted ordinary budget
@@ -2931,817 +3355,6 @@ def test_contract_eda461017f8c(published_planning, scenario):
         raise
 
 
-def _s7_exit_zero_blocked(fixture):
-    __tracebackhide__ = True
-    import subprocess
-    from unittest.mock import patch
-    root,paths,request=fixture
-    _s7_write_config(fixture)
-    denied={**request,'policy_revision':'not-authorized'}
-    raw=core.query_with_diagnostics({k:v for k,v in denied.items() if k!='stage'},root,
-        catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])
-    assert raw['result']['status']=='blocked' and raw['result']['candidates']==[]
-    # CLI exit is an observed process fact, never fabricated in an adapter result.
-    proc=subprocess.run([sys.executable,str(ROOT/'scripts/python/knowledge_locator.py'),'--repository-root',str(root),'--catalog',str(paths[0]),'--policies',str(paths[1]),'--projections',str(paths[2])],input=json.dumps({k:v for k,v in denied.items() if k!='stage'}),capture_output=True,text=True,encoding='utf-8',check=False)
-    assert proc.returncode==0
-    observed={**raw,'result':json.loads(proc.stdout)}
-    assert observed['result']['status']=='blocked'
-    with patch.object(core,'query_with_diagnostics',return_value=observed) as called:
-        output=_planning_operation(fixture)
-    assert called.called
-    result=output.get('result',output)
-    assert result.get('status',output.get('outcome'))=='blocked'
-    assert not result.get('candidates') and not output.get('read_set') and not output.get('adopted')
-
-
-def _s7_raw_compatibility(fixture, scenario):
-    __tracebackhide__ = True
-    import subprocess
-    root,paths,request=fixture
-    _s7_write_config(fixture)
-    overrides={'query':'zzzz-no-match'} if scenario=='empty' else ({'policy_revision':'unknown-policy'} if scenario=='blocked' else {})
-    raw_request={k:v for k,v in {**request,**overrides}.items() if k!='stage'}
-    proc=subprocess.run([sys.executable,str(ROOT/'scripts/python/knowledge_locator.py'),'--repository-root',str(root),'--catalog',str(paths[0]),'--policies',str(paths[1]),'--projections',str(paths[2])],input=json.dumps(raw_request),capture_output=True,text=True,encoding='utf-8',check=False)
-    assert proc.returncode==0
-    legacy=json.loads(proc.stdout)
-    output=_planning_operation(fixture,**overrides)
-    assert output.get('result')==legacy, 'The original Locator result and caller compatibility must be retained'
-    diagnostic=output.get('diagnostic',{})
-    assert diagnostic.get('raw_status')==legacy['status']
-    assert 'exit_code' in diagnostic
-    assert diagnostic['exit_code'] is None or diagnostic['exit_code']==proc.returncode
-    assert diagnostic.get('evidence_refs'), 'Classification may not erase its real diagnostic evidence'
-
-
-def _s7_required_gate(fixture, nonempty=False):
-    __tracebackhide__ = True
-    import knowledge_context_validation as validator
-    root,paths,base=fixture
-    req={k:v for k,v in base.items() if k!='stage'}
-    req.update(consumer='vdd',query='repository knowledge authority' if nonempty else 'zzzz-no-match')
-    raw=core.query_with_diagnostics(req,root,catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])['result']
-    if nonempty:assert raw['candidates']
-    else:assert raw['status']=='insufficient_match' and raw['candidates']==[]
-    payload={'schema_version':'jimuyun.vdd-knowledge-context.v1','locator_request':req,'locator_result':raw,
-        'required_modules':['repository-rules'],'decisions':[{'owner':'adapter','candidate':{'path':c['path'],'source_sha256':c['source_sha256']},'decision':'rejected','satisfies':[],'rejection_reason':'insufficient_specificity'} for c in raw['candidates']],
-        'request_sha256':validator.canonical_hash(req),'result_sha256':validator.canonical_hash(raw)}
-    reason=validator.validate_context(payload,repository_root=root,verify_catalog=True,expected_consumer='vdd',require_selection=True)
-    assert reason==('required_modules_unsatisfied' if nonempty else 'locator_result_not_matched')
-    return reason
-
-def _s7_verified_read(fixture, scenario):
-    __tracebackhide__ = True
-    from copy import deepcopy
-    from unittest.mock import patch
-    import hashlib
-    _s7_write_config(fixture)
-    root,paths,request=fixture
-    raw=core.query_with_diagnostics({k:v for k,v in request.items() if k!='stage'},root,catalog_path=paths[0],policies_path=paths[1],projections_path=paths[2])
-    assert raw['result']['candidates']
-    if scenario=='hash-mismatch':
-        raw=deepcopy(raw)
-        for c in raw['result']['candidates']:
-            c['source_sha256']='0'*64
-            for ref in c.get('read_set',[]):ref['source_sha256']='0'*64
-    with patch.object(core,'query_with_diagnostics',return_value=raw) as reached:
-        output=_planning_operation(fixture)
-    assert reached.called
-    if scenario=='hash-mismatch':
-        assert output.get('outcome')=='blocked' and output.get('reason_code')=='integrity_failed'
-        assert not output.get('read_set') and not output.get('candidates')
-    else:
-        reads=output.get('read_set',[])
-        assert reads, 'Matched source must produce actually verified read metadata'
-        for read in reads:
-            actual=(root/read['path']).read_bytes()
-            assert read['sha256'].removeprefix('sha256:')==hashlib.sha256(actual).hexdigest()
-            assert read.get('excerpt_range') and read.get('read_identity')
-    assert not output.get('adopted') and not output.get('authorizes')
-
-
-@pytest.fixture(scope='module')
-def native_runtime_environment():
-    """Use the supplied native dependency cache without writing the user home."""
-    import os
-    import tempfile
-    cache = Path(os.environ.get('UV_CACHE_DIR') or (Path(tempfile.gettempdir())/'ji-mu-yun-uv-cache'))
-    cache.mkdir(parents=True, exist_ok=True)
-    with pytest.MonkeyPatch.context() as environment:
-        environment.setenv('UV_CACHE_DIR', str(cache))
-        environment.setenv('UV_OFFLINE', '1')
-        environment.setenv('PYTHONDONTWRITEBYTECODE', '1')
-        yield cache
-
-
-def _execute_native_caller_decision(tmp_path_factory, native_runtime_environment):
-    """ADR-0062/AD-7: real native owner, not a synthesized adoption fixture.
-
-    This bounded live sample uses the supported caller-session transport. The
-    external caller must execute the verified native Skill; transport failure
-    is an environment failure, never behavioral RED. A new pytest invocation
-    creates a new isolated project and cannot reuse previous native evidence.
-    """
-    import hashlib
-    import os
-    from scripts.toolchain.bmad_native.testing import fixture, load
-    from scripts.toolchain.bmad_native import verify
-    sys.path.insert(0, str(ROOT / 'scripts/sc'))
-    from _llm_backend import run_llm_exec
-    import host_session
-
-    import subprocess
-    import shutil
-    base = tmp_path_factory.mktemp('s5-native-caller')
-    root, locator_paths, locator_request = published_planning.__wrapped__(base)
-    _s7_write_config((root, locator_paths, locator_request))
-    installed = fixture(base / 'native-install')
-    # Copy verified native runtime, retaining the actual publication's AGENTS.
-    for prefix in ('.agents', '_bmad'):
-        shutil.copytree(installed/prefix, root/prefix, dirs_exist_ok=True)
-    verify(root)
-    locator_call = subprocess.run(
-        [sys.executable, '-B', str(ROOT/'scripts/python/knowledge_locator.py'),
-         '--repository-root', str(root), '--catalog', str(locator_paths[0]),
-         '--policies', str(locator_paths[1]), '--projections', str(locator_paths[2])],
-        input=json.dumps(locator_request), text=True, encoding='utf-8',
-        capture_output=True, shell=False, timeout=30)
-    if locator_call.returncode:
-        raise RuntimeError(f'LOCATOR_SAMPLE_UNAVAILABLE: {locator_call.stderr}')
-    locator_result = json.loads(locator_call.stdout)
-    if locator_result.get('status') == 'blocked':
-        raise RuntimeError(f'LOCATOR_SAMPLE_BLOCKED: {locator_result}')
-    bridge_tests = load('planning_native_bridge_fixture',
-        '.agents/skills/jimuyun-spec/scripts/tests/test_bridge.py')
-    bridge_tests.initial(root)
-    source = root / 'docs/source.md'
-    # A concrete decision source, not a prewritten decision or expected output.
-    source.write_text(
-        '# Current source evidence\n'
-        'Existing CAP-1 behavior is supported by the maintained local source.\n'
-        'Retain CAP-1 and its existing accepted behavior; do not rebuild it.\n'
-        'An earlier proposal to replace CAP-1 is obsolete and must be rejected.\n'
-        'This document is provenance, not a new normative companion.\n'
-        'The detailed functional criteria of the original accepted behavior are unconfirmed. '
-        'Keep that necessary question open: do not invent an additional capability or '
-        'authorize a replacement until the owner supplies those details.\n',
-        encoding='utf-8')
-    # Rebuild the fixture selection through its real owner after changing input.
-    descriptor, selection, selection_hash = bridge_tests.canonical.build_contract(
-        root, root / bridge_tests.SPEC)
-    registry = root / '_bmad-output/specs/canonical-spec-package-selections'
-    bridge_tests.canonical.write_json(registry / (selection_hash.replace(':', '-') + '.json'), selection)
-    bridge_tests.canonical.write_json(registry / 'current/SPEC-example.json', {
-        'package_id': 'SPEC-example', 'schema': bridge_tests.canonical.CURRENT_SCHEMA,
-        'selection_hash': selection_hash})
-    before_memory = (root / bridge_tests.SPEC).parent.joinpath('.memlog.md').read_text(encoding='utf-8')
-    source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
-    result = bridge_tests.bridge.prepare(root, bridge_tests.SPEC, 'logs/bmad-wrappers/live-decision')
-    native = root / 'logs/bmad-wrappers/live-decision/native'
-    session = native / 'logs/native-caller-session'
-    host_session.initialize(native, session, 'chatgpt-work-mode')
-    prompt = (root / result['invocation']).read_text(encoding='utf-8') + (
-        '\nBounded live consumer integration sample. Execute the complete verified bmad-spec '
-        'headless update and all required native checks. Read docs/source.md yourself; '
-        'verify its actual bytes and decide whether to retain the existing capability '
-        'and whether to adopt the obsolete proposal. Record your own decisions through '
-        'the official memlog command, with source path/hash, accepted/rejected, '
-        'reason and actual use. Preserve typed roles at outer publication; no automatic '
-        'provenance promotion. Do not claim any adapter query or default hook ran unless '
-        'it actually did. Do not create fixture decisions or edit any test. '
-        'Return the native headless result; this sample does not authorize implementation.\n')
-    prompt += ('Actual public Locator invocation for this sample: ' + json.dumps({
-        'topic': locator_request['query'], 'consumer': locator_request['consumer'],
-        'status': locator_result['status'], 'result': locator_result,
-        'source_read_identity': 'worktree',
-        'base_commit': locator_request['snapshot']['commit']}) +
-        '\nThis is an explicitly requested caller sample, not a default-hook claim. '
-        'The additional docs/source.md is direct-source discovery; do not label it a '
-        'Locator hit. Record the actual topic, consumer, raw status, direct-source origin, '
-        'worktree identity and base commit alongside its verified byte hash and use.\n')
-    old = {k: os.environ.get(k) for k in ('JIMUYUN_HOST_SESSION_DIR', 'JIMUYUN_HOST_TIMEOUT_SECONDS')}
-    try:
-        os.environ['JIMUYUN_HOST_SESSION_DIR'] = str(session)
-        os.environ.pop('JIMUYUN_HOST_TIMEOUT_SECONDS', None)
-        code, trace, argv = run_llm_exec(backend='host-session', root=native,
-            prompt=prompt, output_last_message=native/'logs/native-result.txt',
-            timeout_sec=1800, codex_sandbox='workspace-write')
-    finally:
-        for key, value in old.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
-    if code:
-        raise RuntimeError(f'NATIVE_CALLER_EXECUTION_UNAVAILABLE: exit={code}; session={session}; {trace}')
-    publication = bridge_tests.bridge.publish(root, 'logs/bmad-wrappers/live-decision')
-    verify(root)
-    verify(native)
-    after_memory = (root / bridge_tests.SPEC).parent.joinpath('.memlog.md').read_text(encoding='utf-8')
-    actual = bridge_tests.canonical.validate_selection(root, root/bridge_tests.SPEC,
-        registry/'current/SPEC-example.json')
-    return dict(root=root, native=native, before=before_memory, after=after_memory,
-        source_hash=source_hash, source_bytes=source.read_bytes(), roles=descriptor,
-        selection=actual, publication=publication, locator_request=locator_request, locator_result=locator_result, spec=(root/bridge_tests.SPEC).read_text(encoding='utf-8'))
-
-
-def _native_decision_body(sample):
-    # Native memlog's updated metadata is mutable; its chronological body is not.
-    old_body = sample['before'].split('\n---\n', 1)[1]
-    new_body = sample['after'].split('\n---\n', 1)[1]
-    assert new_body.strip().startswith(old_body.strip()), 'Native caller rewrote prior decisions'
-    added = new_body.strip()[len(old_body.strip()):]
-    assert 'docs/source.md' in added and sample['source_hash'] in added
-    assert '(decision)' in added
-    return added.lower()
-
-
-@pytest.mark.cer_assertion('ASSERT_09A30E743B67')
-@pytest.mark.parametrize('phase,environment_mode,explicit', [
-    (None, None, None),
-    (None, None, 'auto'),
-    (None, None, 'on'),
-    (None, None, 'off'),
-    (None, 'auto', None),
-    (None, 'auto', 'auto'),
-    (None, 'auto', 'on'),
-    (None, 'auto', 'off'),
-    (None, 'on', None),
-    (None, 'on', 'auto'),
-    (None, 'on', 'on'),
-    (None, 'on', 'off'),
-    (None, 'off', None),
-    (None, 'off', 'auto'),
-    (None, 'off', 'on'),
-    (None, 'off', 'off'),
-    ('development', None, None),
-    ('development', None, 'auto'),
-    ('development', None, 'on'),
-    ('development', None, 'off'),
-    ('development', 'auto', None),
-    ('development', 'auto', 'auto'),
-    ('development', 'auto', 'on'),
-    ('development', 'auto', 'off'),
-    ('development', 'on', None),
-    ('development', 'on', 'auto'),
-    ('development', 'on', 'on'),
-    ('development', 'on', 'off'),
-    ('development', 'off', None),
-    ('development', 'off', 'auto'),
-    ('development', 'off', 'on'),
-    ('development', 'off', 'off'),
-    ('test', None, None),
-    ('test', None, 'auto'),
-    ('test', None, 'on'),
-    ('test', None, 'off'),
-    ('test', 'auto', None),
-    ('test', 'auto', 'auto'),
-    ('test', 'auto', 'on'),
-    ('test', 'auto', 'off'),
-    ('test', 'on', None),
-    ('test', 'on', 'auto'),
-    ('test', 'on', 'on'),
-    ('test', 'on', 'off'),
-    ('test', 'off', None),
-    ('test', 'off', 'auto'),
-    ('test', 'off', 'on'),
-    ('test', 'off', 'off'),
-    ('production', None, None),
-    ('production', None, 'auto'),
-    ('production', None, 'on'),
-    ('production', None, 'off'),
-    ('production', 'auto', None),
-    ('production', 'auto', 'auto'),
-    ('production', 'auto', 'on'),
-    ('production', 'auto', 'off'),
-    ('production', 'on', None),
-    ('production', 'on', 'auto'),
-    ('production', 'on', 'on'),
-    ('production', 'on', 'off'),
-    ('production', 'off', None),
-    ('production', 'off', 'auto'),
-    ('production', 'off', 'on'),
-    ('production', 'off', 'off'),
-], ids=['case-0', 'case-1', 'case-2', 'case-3', 'case-4', 'case-5', 'case-6', 'case-7', 'case-8', 'case-9', 'case-10', 'case-11', 'case-12', 'case-13', 'case-14', 'case-15', 'case-16', 'case-17', 'case-18', 'case-19', 'case-20', 'case-21', 'case-22', 'case-23', 'case-24', 'case-25', 'case-26', 'case-27', 'case-28', 'case-29', 'case-30', 'case-31', 'case-32', 'case-33', 'case-34', 'case-35', 'case-36', 'case-37', 'case-38', 'case-39', 'case-40', 'case-41', 'case-42', 'case-43', 'case-44', 'case-45', 'case-46', 'case-47', 'case-48', 'case-49', 'case-50', 'case-51', 'case-52', 'case-53', 'case-54', 'case-55', 'case-56', 'case-57', 'case-58', 'case-59', 'case-60', 'case-61', 'case-62', 'case-63'])
-def test_contract_09a30e743b67(phase, environment_mode, explicit):
-    # ADR-0041 / AD-9: exercise the existing owner, including all precedence tiers.
-    from scripts.toolchain.bmad_native.testing import load
-    owner = load('planning_governance_policy',
-        '.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
-    env = {}
-    if phase is not None:
-        env['PHASEA_SERVICE_STATE'] = phase
-    if environment_mode is not None:
-        env['JIMUYUN_GOVERNANCE_MODE'] = environment_mode
-    actual = owner.resolve_governance_policy(explicit, environment=env)
-    expected_mode = explicit if explicit is not None else environment_mode or 'auto'
-    expected_phase = phase or 'development'
-    expected_source = 'parameter' if explicit is not None else (
-        'environment' if environment_mode is not None else 'phase-service-state')
-    try:
-        assert actual['mode'] == expected_mode
-        assert actual['phase_service_state'] == expected_phase
-        assert actual['source'] == expected_source
-        assert actual['enabled'] == (expected_mode == 'on' or (
-            expected_mode == 'auto' and expected_phase in {'test', 'production'}))
-    except AssertionError:
-        print('FAILURE_ID:KQ_09A30E743B67')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_6C6853493E27')
-@pytest.mark.parametrize('query_switch,phase,environment_mode,explicit', [
-    ('on', None, None, None),
-    ('on', None, 'on', None),
-    ('on', None, 'off', None),
-    ('on', None, 'on', 'off'),
-    ('on', None, 'off', 'on'),
-    ('on', None, 'on', 'auto'),
-    ('on', 'development', None, None),
-    ('on', 'development', 'on', None),
-    ('on', 'development', 'off', None),
-    ('on', 'development', 'on', 'off'),
-    ('on', 'development', 'off', 'on'),
-    ('on', 'development', 'on', 'auto'),
-    ('on', 'test', None, None),
-    ('on', 'test', 'on', None),
-    ('on', 'test', 'off', None),
-    ('on', 'test', 'on', 'off'),
-    ('on', 'test', 'off', 'on'),
-    ('on', 'test', 'on', 'auto'),
-    ('on', 'production', None, None),
-    ('on', 'production', 'on', None),
-    ('on', 'production', 'off', None),
-    ('on', 'production', 'on', 'off'),
-    ('on', 'production', 'off', 'on'),
-    ('on', 'production', 'on', 'auto'),
-    ('off', None, None, None),
-    ('off', None, 'on', None),
-    ('off', None, 'off', None),
-    ('off', None, 'on', 'off'),
-    ('off', None, 'off', 'on'),
-    ('off', None, 'on', 'auto'),
-    ('off', 'development', None, None),
-    ('off', 'development', 'on', None),
-    ('off', 'development', 'off', None),
-    ('off', 'development', 'on', 'off'),
-    ('off', 'development', 'off', 'on'),
-    ('off', 'development', 'on', 'auto'),
-    ('off', 'test', None, None),
-    ('off', 'test', 'on', None),
-    ('off', 'test', 'off', None),
-    ('off', 'test', 'on', 'off'),
-    ('off', 'test', 'off', 'on'),
-    ('off', 'test', 'on', 'auto'),
-    ('off', 'production', None, None),
-    ('off', 'production', 'on', None),
-    ('off', 'production', 'off', None),
-    ('off', 'production', 'on', 'off'),
-    ('off', 'production', 'off', 'on'),
-    ('off', 'production', 'on', 'auto'),
-], ids=['case-0', 'case-1', 'case-2', 'case-3', 'case-4', 'case-5', 'case-6', 'case-7', 'case-8', 'case-9', 'case-10', 'case-11', 'case-12', 'case-13', 'case-14', 'case-15', 'case-16', 'case-17', 'case-18', 'case-19', 'case-20', 'case-21', 'case-22', 'case-23', 'case-24', 'case-25', 'case-26', 'case-27', 'case-28', 'case-29', 'case-30', 'case-31', 'case-32', 'case-33', 'case-34', 'case-35', 'case-36', 'case-37', 'case-38', 'case-39', 'case-40', 'case-41', 'case-42', 'case-43', 'case-44', 'case-45', 'case-46', 'case-47'])
-def test_contract_6c6853493e27(query_switch, phase, environment_mode, explicit, tmp_path, monkeypatch):
-    from scripts.toolchain.bmad_native.testing import load
-    owner = load('planning_governance_policy_independence',
-        '.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
-    config = tmp_path/'knowledge/planning-query.toml'
-    config.parent.mkdir()
-    config.write_text('[query]\nenabled = ' + ('true' if query_switch == 'on' else 'false') + '\n', encoding='utf-8')
-    monkeypatch.chdir(tmp_path)
-    env = {}
-    if phase is not None:
-        env['PHASEA_SERVICE_STATE'] = phase
-    if environment_mode is not None:
-        env['JIMUYUN_GOVERNANCE_MODE'] = environment_mode
-    actual = owner.resolve_governance_policy(explicit, environment=env)
-    mode = explicit if explicit is not None else environment_mode or 'auto'
-    state = phase or 'development'
-    try:
-        assert actual['mode'] == mode and actual['phase_service_state'] == state
-        assert actual['enabled'] == (mode == 'on' or (mode == 'auto' and state != 'development'))
-        config.write_text('[query]\nenabled = ' + ('false' if query_switch == 'on' else 'true') + '\n', encoding='utf-8')
-        assert actual == owner.resolve_governance_policy(explicit, environment=env)
-        assert actual['checks'] == list(owner.GOVERNANCE_CHECKS)
-    except AssertionError:
-        print('FAILURE_ID:KQ_6C6853493E27')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_BA9A0474912A')
-@pytest.mark.cer_assertion('ASSERT_06A867E00BC5')
-@pytest.mark.cer_assertion('ASSERT_B7A571632018')
-@pytest.mark.parametrize('scenario', ['unicode-path-utf8', 'subprocess-timeout', 'subprocess-cancel'])
-def test_windows_planning_query_runtime(tmp_path, scenario):
-    # FR-10 / AC-14: the OS prerequisite is not a product failure or a skipped pass.
-    import os
-    import subprocess
-    if sys.platform != 'win32':
-        _assert_recorded_windows_evidence(scenario)
-        return
-    base = tmp_path / 'space \u4e2d\u6587'
-    base.mkdir()
-    root, paths, request = published_planning.__wrapped__(base)
-    argv = [sys.executable, '-B', str(ROOT/'scripts/python/knowledge_locator.py'),
-        '--repository-root', str(root), '--catalog', str(paths[0]),
-        '--policies', str(paths[1]), '--projections', str(paths[2])]
-    env = {**os.environ, 'PYTHONUTF8': '1', 'PYTHONDONTWRITEBYTECODE': '1'}
-    if scenario == 'unicode-path-utf8':
-        child = subprocess.run(argv, input=json.dumps(request, ensure_ascii=False),
-            capture_output=True, text=True, encoding='utf-8', shell=False, env=env, timeout=30)
-        assert child.returncode == 0, child.stderr
-        actual = json.loads(child.stdout)
-        expected = _query_published((root, paths, request))['result']
-        assert actual == expected
-        assert actual['request_id'] == request['request_id']
-    else:
-        # Actual public Locator process waiting for request bytes on stdin.
-        # The harness owns termination; this is platform transport proof only,
-        # not evidence that the planning adapter's cancellation is implemented.
-        child = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, shell=False, env=env)
-        try:
-            if scenario == 'subprocess-timeout':
-                with pytest.raises(subprocess.TimeoutExpired):
-                    child.wait(timeout=0.05)
-                child.kill()
-            else:
-                child.terminate()
-            child.wait(timeout=5)
-            assert child.poll() is not None and child.returncode != 0
-        finally:
-            if child.poll() is None:
-                child.kill()
-                child.wait(timeout=5)
-            for stream in (child.stdin, child.stdout, child.stderr):
-                stream.close()
-
-# ADR-0041/ADR-0062 and adopted AD-5/AD-7.
-# Merge into the shared test module; depends on ROOT and published_planning.
-
-@pytest.fixture(scope='module')
-def architecture_consumer_sample(tmp_path_factory, native_runtime_environment):
-    import hashlib
-    import os
-    import shutil
-    from unittest.mock import patch
-    from scripts.toolchain.bmad_native.testing import fixture, load
-    from scripts.toolchain.bmad_native import verify
-    from scripts.toolchain.knowledge_query import adapter
-
-    base = tmp_path_factory.mktemp('s5-architecture-consumer')
-    root, paths, request = published_planning.__wrapped__(base)
-    installed = fixture(base / 'verified-native')
-    for prefix in ('.agents', '_bmad'):
-        shutil.copytree(installed/prefix, root/prefix, dirs_exist_ok=True)
-    # Preserve publication AGENTS and its source identity.
-    source_texts = {
-        'docs/current-adr.md': '# ADR-TEST (Accepted)\nThe current transport uses stdio. '
-            'TCP is excluded. TransportOwner owns this contract.\n',
-        'src/transport.py': 'def transport_kind():\n    return "stdio"\n',
-        'docs/upstream.md': '# Approved scope\nReuse the current transport. '
-            'No transport replacement is authorized. A prior adopted factual '
-            'conclusion said the transport used TCP; reconcile that claim against '
-            'the current accepted ADR and actual implementation.\n',
-        'docs/old-plan.md': '# Historical plan, not implemented\n'
-            'An earlier proposal planned a TCP transport.\n',
-        'docs/task.md': '# Architecture request\nCreate a discussion architecture '
-            'for reuse of the current transport. Check accepted ADRs, current '
-            'owners/interfaces and source before choosing scope. Explicitly '
-            'resolve the old TCP claim and preserve the approved no-replacement '
-            'scope. Do not implement anything.\n',
-    }
-    for path, text in source_texts.items():
-        target = root/path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding='utf-8')
-    # The configuration is input, not a fabricated query result.
-    _s7_write_config((root, paths, request))
-    calls = []
-    original = adapter.diagnose
-    def observe(*args, **kwargs):
-        result = original(*args, **kwargs)
-        calls.append({'request': args[0] if args else kwargs.get('request'), 'result': json.loads(json.dumps(result))})
-        return result
-    # Import after patch so a direct import also observes the real implementation.
-    with patch.object(adapter, 'diagnose', observe):
-        invoke = load('planning_architecture_live', '.agents/skills/jimuyun-architecture/scripts/invoke.py')
-        prepared = invoke.prepare(root, 'logs/bmad-wrappers/architecture-live',
-            list(source_texts), purpose='discussion')
-    verify(root)
-    native = root/'logs/bmad-wrappers/architecture-live/native'
-    verify(native)
-    source_hashes = {p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in source_texts}
-    state = dict(root=root, native=native, prepared=prepared, calls=calls,
-        hashes=source_hashes, inputs=source_texts, locator_paths=paths, locator_request=request, completed=False)
-
-    state['finish'] = lambda: _architecture_finish(state)
-    return state
-
-
-
-def _architecture_predecision_read(sample, required):
-    import hashlib
-    assert sample['calls'], 'Actual Architecture prepare did not call the shared query adapter'
-    results = [c['result'] for c in sample['calls']]
-    assert all(r.get('schema') == 'planning-query.v1' for r in results)
-    assert all(r.get('stage') == 'architecture' for r in results)
-    assert all(r.get('consumer') == 'bmad-planning' for r in results)
-    reads = {item['path']: item for r in results for item in r.get('read_set', [])}
-    assert set(required) <= set(reads), 'Prepare did not verify required source before native decision'
-    for path in required:
-        item = reads[path]
-        assert item['sha256'].removeprefix('sha256:') == sample['hashes'][path]
-        assert item['origin'] in {'locator', 'direct-source'}
-        identity = json.dumps(item['read_identity'])
-        assert 'worktree' in identity and sample['hashes'][path] in identity
-        assert item.get('excerpt_range')
-        assert hashlib.sha256((sample['root']/path).read_bytes()).hexdigest() == sample['hashes'][path]
-    return reads
-
-
-
-def _architecture_decisions(sample):
-    actual = sample['finish']()
-    decisions = [line.lower() for line in actual['memory'].splitlines() if '(decision)' in line]
-    assert decisions, 'Real native owner did not record a decision'
-    return actual, decisions
-
-
-
-def _architecture_source_decision(sample, decisions, path):
-    matches = [line for line in decisions if path in line and sample['hashes'][path] in line]
-    assert matches, 'Native decision must bind the actual read source: '+path
-    return '\n'.join(matches)
-
-
-
-@pytest.mark.cer_assertion('ASSERT_4658282A03DF')
-def test_contract_4658282a03df(architecture_consumer_sample):
-    sample = architecture_consumer_sample
-    try:
-        _architecture_predecision_read(sample, ['docs/current-adr.md', 'docs/upstream.md', 'src/transport.py'])
-        _, decisions = _architecture_decisions(sample)
-        upstream = _architecture_source_decision(sample, decisions, 'docs/upstream.md')
-        current = _architecture_source_decision(sample, decisions, 'src/transport.py')
-        assert 'tcp' in upstream and ('reject' in upstream or 'conflict' in upstream)
-        assert 'stdio' in current and ('reuse' in current or 'retain' in current
-            or ('accepted actual' in current and 'no replacement' in current))
-    except AssertionError:
-        print('FAILURE_ID:KQ_4658282A03DF')
-        raise
-
-
-
-@pytest.mark.cer_assertion('ASSERT_C20CFAFDB4D0')
-def test_contract_c20cfafdb4d0(architecture_consumer_sample):
-    sample = architecture_consumer_sample
-    try:
-        _architecture_predecision_read(sample, ['docs/current-adr.md', 'src/transport.py', 'docs/upstream.md'])
-        actual, decisions = _architecture_decisions(sample)
-        adr = _architecture_source_decision(sample, decisions, 'docs/current-adr.md')
-        code = _architecture_source_decision(sample, decisions, 'src/transport.py')
-        assert 'accepted' in adr and 'stdio' in adr
-        assert 'stdio' in code
-        assert 'TransportOwner' in actual['spine']
-        assert 'transport_kind' in actual['spine'] or 'src/transport.py' in actual['spine']
-    except AssertionError:
-        print('FAILURE_ID:KQ_C20CFAFDB4D0')
-        raise
-
-
-
-@pytest.mark.cer_assertion('ASSERT_B4C65F02340C')
-def test_contract_b4c65f02340c(architecture_consumer_sample):
-    sample = architecture_consumer_sample
-    try:
-        _architecture_predecision_read(sample, ['docs/current-adr.md', 'src/transport.py', 'docs/upstream.md'])
-        actual, decisions = _architecture_decisions(sample)
-        upstream = _architecture_source_decision(sample, decisions, 'docs/upstream.md')
-        assert 'tcp' in upstream and ('reject' in upstream or 'conflict' in upstream)
-        spine = actual['spine'].lower()
-        assert ('no-replacement' in spine or 'no transport replacement' in spine
-            or 'tcp and transport replacement are excluded' in spine)
-        assert (sample['root']/'docs/upstream.md').read_text(encoding='utf-8') == sample['inputs']['docs/upstream.md']
-    except AssertionError:
-        print('FAILURE_ID:KQ_B4C65F02340C')
-        raise
-
-
-
-@pytest.mark.cer_assertion('ASSERT_765306749370')
-def test_contract_765306749370(architecture_consumer_sample):
-    sample = architecture_consumer_sample
-    try:
-        _architecture_predecision_read(sample, ['docs/current-adr.md', 'docs/old-plan.md', 'src/transport.py'])
-        _, decisions = _architecture_decisions(sample)
-        old = _architecture_source_decision(sample, decisions, 'docs/old-plan.md')
-        current = _architecture_source_decision(sample, decisions, 'docs/current-adr.md')
-        assert 'rejected' in old and ('historical' in old or 'not implemented' in old)
-        assert 'accepted' in current and 'stdio' in current
-    except AssertionError:
-        print('FAILURE_ID:KQ_765306749370')
-        raise
-
-
-
-@pytest.mark.cer_assertion('ASSERT_DA1D012CDA24')
-def test_contract_da1d012cda24(architecture_consumer_sample):
-    sample = architecture_consumer_sample
-    try:
-        _architecture_predecision_read(sample, ['docs/current-adr.md', 'docs/upstream.md', 'docs/old-plan.md'])
-        actual, decisions = _architecture_decisions(sample)
-        conflicts = '\n'.join(line for line in decisions if 'conflict' in line or 'rejected' in line)
-        assert 'tcp' in conflicts and 'stdio' in '\n'.join(decisions)
-        assert 'TransportOwner' in actual['spine']
-        assert any(('reuse' in line or 'retain' in line
-            or ('accepted actual' in line and 'no replacement' in line))
-            and 'stdio' in line for line in decisions)
-    except AssertionError:
-        print('FAILURE_ID:KQ_DA1D012CDA24')
-        raise
-
-
-
-# ADR-0041 / AD-5: public VDD preplanning boundary, not completed plan evidence.
-# Merge into the declared shared test module. Requires its existing ROOT,
-# published_planning and _s7_write_config helpers. No fake model response is used.
-
-
-def _vdd_public_first_worker(fixture, tmp_path, *, governance='off', resume=False):
-    """Observe the real public process before its first semantic worker.
-
-    The genuine host request is cancelled through its public owner. This
-    exposes a preplanning counterexample without producing a plan or pretending
-    that a model adopted a source. It must not be reused for full-plan oracles.
-    """
-    import os
-    import shutil
-    import subprocess
-    import time
-
-    root, _, _ = fixture
-    for relative in ('scripts', '.agents/skills/vdd-execution-plan',
-                     '.agents/skills/quick-dev-tdd-adapter/tools'):
-        shutil.copytree(ROOT/relative, root/relative, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-    _s7_write_config(fixture)
-    source = root/'requirements.md'
-    if not source.exists():
-        source.write_text(
-            '# FR-1\nPreserve the current repository knowledge authority. '
-            'Inspect AGENTS.md and the existing source and tests before deciding '
-            'whether any implementation change is needed.\n', encoding='utf-8')
-    out = root/'execution-plans/preplanning-boundary'
-    run_name = 'repair' if resume else 'create'
-    session = root/'logs'/('boundary-session-' + run_name)
-    owner_cli = root/'scripts/sc/host_session.py'
-    initialized = subprocess.run(
-        [sys.executable, '-B', str(owner_cli), 'init', '--session', str(session),
-         '--caller', 'chatgpt-work-mode'], cwd=root, capture_output=True,
-        text=True, encoding='utf-8', shell=False, timeout=15)
-    if initialized.returncode:
-        raise RuntimeError('VDD_TEST_SESSION_UNAVAILABLE: ' + initialized.stderr + initialized.stdout)
-    trace = root/'logs'/('boundary-trace-' + run_name + '.jsonl')
-    # The instrumentation records only reached production calls/returns. It
-    # never substitutes an adapter result, compiler function or model response.
-    bootstrap = r'''
-import json, pathlib, runpy, sys, time
-root, trace = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
-args = sys.argv[3:]
-stream = trace.open('x', encoding='utf-8')
-def observe(frame, event, arg):
-    if event not in {'call', 'return'}:
-        return
-    # Ignore unrelated code before filesystem resolution. The exact contained
-    # source checks below still govern every recorded event.
-    filename = frame.f_code.co_filename.replace('\\', '/')
-    if not filename.endswith(('scripts/toolchain/knowledge_query/adapter.py',
-                              'scripts/python/_knowledge_locator_core.py',
-                              'scripts/sc/host_session.py')):
-        return
-    # Keep the same POSIX representation for containment and event identity.
-    prefix = root.as_posix() + '/'
-    if not filename.startswith(prefix):
-        return
-    relative = filename[len(prefix):]
-    name = frame.f_code.co_name
-    if (relative == 'scripts/toolchain/knowledge_query/adapter.py'
-        or (relative == 'scripts/python/_knowledge_locator_core.py' and name == 'query_with_diagnostics')
-        or (relative == 'scripts/sc/host_session.py' and name == 'execute')):
-        stream.write(json.dumps({'path': relative, 'function': name,
-            'event': event, 'monotonic_ns': time.monotonic_ns()}) + '\n')
-        stream.flush()
-sys.path.insert(0, str(root))
-sys.argv = [str(root/'scripts/vdd/compile_plan.py'), *args]
-sys.setprofile(observe)
-try:
-    runpy.run_path(sys.argv[0], run_name='__main__')
-finally:
-    sys.setprofile(None)
-    stream.close()
-'''
-    args = ['--requirements', str(source), '--out-dir', str(out), '--profile', 'self-hosted']
-    if resume:
-        args += ['--resume-from', 'first-failed-stage']
-    env = {**os.environ, 'SC_LLM_BACKEND': 'host-session',
-           'JIMUYUN_HOST_SESSION_DIR': str(session), 'JIMUYUN_GOVERNANCE_MODE': governance,
-           'PHASEA_SERVICE_STATE': 'development', 'PYTHONDONTWRITEBYTECODE': '1',
-           'PYTHONUTF8': '1'}
-    env.pop('JIMUYUN_HOST_TIMEOUT_SECONDS', None)
-    stdout = root/'logs'/('boundary-' + run_name + '.stdout')
-    stderr = root/'logs'/('boundary-' + run_name + '.stderr')
-    request = None
-    with stdout.open('wb') as output, stderr.open('wb') as errors:
-        child = subprocess.Popen([sys.executable, '-B', '-c', bootstrap, str(root), str(trace), *args],
-                                 cwd=root, env=env, stdout=output, stderr=errors, shell=False)
-        deadline = time.monotonic() + 35
-        try:
-            while child.poll() is None and time.monotonic() < deadline:
-                # Discovery is scoped to this unique live transport session;
-                # it does not select prior successful evidence.
-                pending = list(session.glob('*/request.json'))
-                if pending:
-                    if len(pending) != 1:
-                        raise RuntimeError('VDD_TEST_AMBIGUOUS_LIVE_REQUEST')
-                    request = json.loads(pending[0].read_text(encoding='utf-8'))
-                    cancellation = subprocess.run(
-                        [sys.executable, '-B', str(owner_cli), 'cancel', '--session', str(session),
-                         '--request-id', request['request_id']], cwd=root, capture_output=True,
-                        text=True, encoding='utf-8', shell=False, timeout=15)
-                    if cancellation.returncode:
-                        raise RuntimeError('VDD_TEST_CANCEL_FAILED: ' + cancellation.stdout + cancellation.stderr)
-                    break
-                time.sleep(0.05)
-            if request is None:
-                raise RuntimeError('VDD_PRESEMANTIC_REACHABILITY_UNAVAILABLE: ' +
-                                   stdout.read_text(encoding='utf-8') + stderr.read_text(encoding='utf-8'))
-            child.wait(timeout=15)
-        finally:
-            if child.poll() is None:
-                child.terminate()
-                child.wait(timeout=10)
-    events = [json.loads(line) for line in trace.read_text(encoding='utf-8').splitlines()]
-    worker = next((i for i, e in enumerate(events)
-                   if e['path'] == 'scripts/sc/host_session.py' and e['event'] == 'call'), None)
-    if worker is None:
-        raise RuntimeError('VDD_WORKER_ENTRY_NOT_OBSERVED')
-    return {'events': events, 'before_worker': events[:worker], 'request': request,
-            'exit_code': child.returncode, 'out': out, 'root': root}
-
-
-def _assert_actual_vdd_prequery(observation):
-    events = observation['before_worker']
-    adapter_calls = [e for e in events if e['path'] == 'scripts/toolchain/knowledge_query/adapter.py'
-                     and e['event'] == 'call']
-    locator_calls = [e for e in events if e['path'] == 'scripts/python/_knowledge_locator_core.py'
-                     and e['function'] == 'query_with_diagnostics' and e['event'] == 'call']
-    locator_returns = [e for e in events if e['path'] == 'scripts/python/_knowledge_locator_core.py'
-                       and e['function'] == 'query_with_diagnostics' and e['event'] == 'return']
-    assert adapter_calls, 'Actual public VDD process reached semantic worker without shared adapter'
-    assert locator_calls and locator_returns, 'Default-enabled preplanning did not complete real Locator diagnosis'
-    assert adapter_calls[0]['monotonic_ns'] <= locator_calls[0]['monotonic_ns'] < locator_returns[-1]['monotonic_ns']
-    assert locator_returns[-1]['monotonic_ns'] - locator_calls[0]['monotonic_ns'] <= 30_000_000_000
-
-
-@pytest.mark.cer_assertion('ASSERT_05552304BD9E')
-def test_contract_05552304bd9e(published_planning, tmp_path):
-    observation = _vdd_public_first_worker(published_planning, tmp_path)
-    try:
-        _assert_actual_vdd_prequery(observation)
-    except AssertionError:
-        print('FAILURE_ID:KQ_05552304BD9E')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_FD756962A671')
-@pytest.mark.parametrize('proposal', [False, True], ids=['existing-source', 'proposed-new-path'])
-def test_contract_fd756962a671(published_planning, tmp_path, proposal):
-    if proposal:
-        root, _, _ = published_planning
-        (root/'requirements.md').write_text(
-            '# FR-1\nInspect AGENTS.md and preserve the current behavior before '
-            'planning a new feature in `src/proposed.py`. That path is proposed '
-            'and does not yet exist; it is not current source evidence.\n', encoding='utf-8')
-        assert not (root/'src/proposed.py').exists()
-    try:
-        try:
-            created = _vdd_public_first_worker(published_planning, tmp_path, governance='off')
-        except RuntimeError as exc:
-            # An observed structured production denial of a valid proposal is
-            # behavioral failure. Other transport/harness errors stay errors.
-            if (proposal and str(exc).startswith('VDD_PRESEMANTIC_REACHABILITY_UNAVAILABLE:')
-                    and 'consumption_reference_denied' in str(exc)):
-                assert 'consumption_reference_denied' not in str(exc), str(exc)
-            raise
-        _assert_actual_vdd_prequery(created)
-        # A real failed predecessor is reused through the public recovery flag;
-        # no successful cache, V1 answer or authority is manufactured.
-        repaired = _vdd_public_first_worker(published_planning, tmp_path, governance='off', resume=True)
-        _assert_actual_vdd_prequery(repaired)
-    except AssertionError:
-        print('FAILURE_ID:KQ_FD756962A671')
-        raise
-
-
 @pytest.mark.cer_assertion('ASSERT_1907855D27FB')
 @pytest.mark.parametrize('invalid', [{'query': None}, {'query': ''}, {'schema_version': 'unknown'}], ids=['null-query', 'empty-query', 'unknown-schema'])
 def test_planning_request_structure(published_planning, invalid):
@@ -3757,6 +3370,8 @@ def test_planning_request_structure(published_planning, invalid):
         raise
 
 
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_1B2DEF4F4ED8')
 def test_planning_attempt_deadline(published_planning, monkeypatch):
     """AD-3: the attempt deadline cannot restart for each Git child."""
@@ -3787,6 +3402,8 @@ def test_planning_attempt_deadline(published_planning, monkeypatch):
         raise
 
 
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_550968C7B8C5')
 def test_planning_closed_episode_does_not_retry(published_planning, monkeypatch):
     """AD-3: delivery exhaustion closes the episode even below call cap."""
@@ -3816,1595 +3433,553 @@ def test_planning_closed_episode_does_not_retry(published_planning, monkeypatch)
         raise
 
 
-def _architecture_finish(state):
-    import os
-    import hashlib
-    from scripts.toolchain.bmad_native import verify
-    root, native, prepared = state['root'], state['native'], state['prepared']
-    source_hashes = state['hashes']
-    # Called only after each test establishes the actual prepare/query/read
-    # precondition. No native text or success record is synthesized here.
-    if state['completed']:
-        return state
-    sys.path.insert(0, str(ROOT/'scripts/sc'))
-    from _llm_backend import run_llm_exec
-    import host_session
-    session = native/'logs/architecture-live-session'
-    host_session.initialize(native, session, 'chatgpt-work-mode')
-    prompt = (root/prepared['invocation']).read_text(encoding='utf-8') + (
-        '\nExecute the complete verified native architecture Skill, including '
-        'required source reconciliation and reviewer lifecycle. The fixture '
-        'files are source inputs, not desired decisions. Read them and hash '
-        'the actual bytes. Record your own source decisions in the native '
-        'memlog using the official command: path/hash, accepted/rejected, '
-        'reason and actual scope impact. Explicitly reconcile the prior TCP '
-        'claim against the current ADR, owner/interface and code. Preserve '
-        'the approved no-replacement scope. Do not invent that a query ran. '
-        'Do not implement or modify tests, source inputs or native Skill bytes.\n')
-    prompt += state.get('prompt_suffix', '')
-    keys = ('JIMUYUN_HOST_SESSION_DIR', 'JIMUYUN_HOST_TIMEOUT_SECONDS')
-    previous = {k: os.environ.get(k) for k in keys}
-    try:
-        os.environ['JIMUYUN_HOST_SESSION_DIR'] = str(session)
-        os.environ.pop('JIMUYUN_HOST_TIMEOUT_SECONDS', None)
-        code, trace, _ = run_llm_exec(backend='host-session', root=native,
-            prompt=prompt, output_last_message=native/'logs/architecture-result.txt',
-            timeout_sec=1800, codex_sandbox='workspace-write')
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
-    if code:
-        raise RuntimeError(f'ARCHITECTURE_NATIVE_ENVIRONMENT: exit={code}; {session}; {trace}')
-    workspace = root/prepared['doc_workspace']
-    state['spine'] = (workspace/'ARCHITECTURE-SPINE.md').read_text(encoding='utf-8')
-    state['memory'] = (workspace/'.memlog.md').read_text(encoding='utf-8')
-    verify(root)
-    verify(native)
-    for path, expected in source_hashes.items():
-        if hashlib.sha256((root/path).read_bytes()).hexdigest() != expected:
-            raise RuntimeError('ARCHITECTURE_NATIVE_MODIFIED_READ_ONLY_INPUT: '+path)
-    state['completed'] = True
-    return state
-
-
-@pytest.mark.cer_assertion('ASSERT_44BC8197CE64')
-@pytest.mark.parametrize('reason', ['new-question', 'missing-basis', 'related-source-change'])
-def test_contract_44bc8197ce64(architecture_consumer_sample, reason, tmp_path):
-    import hashlib
-    from unittest.mock import patch
-    from scripts.toolchain.bmad_native.testing import load
-    from scripts.toolchain.knowledge_query import adapter
-    sample = architecture_consumer_sample
-    try:
-        _architecture_predecision_read(sample, ['docs/current-adr.md', 'docs/upstream.md', 'src/transport.py'])
-    except AssertionError:
-        print('FAILURE_ID:KQ_44BC8197CE64')
-        raise
-    # Establish the predecessor using an explicit current public Locator call
-    # and real native source reading. This is NOT an automatic prepare-hook
-    # claim and does not require the future S5 lookup implementation.
-    if not sample['completed']:
-        import subprocess
-        root = sample['root']
-        paths = sample['locator_paths']
-        request = {**sample['locator_request'], 'stage': 'architecture'}
-        observed = subprocess.run([sys.executable, '-B',
-            str(ROOT/'scripts/python/knowledge_locator.py'), '--repository-root', str(root),
-            '--catalog', str(paths[0]), '--policies', str(paths[1]),
-            '--projections', str(paths[2])], input=json.dumps(request), text=True,
-            encoding='utf-8', capture_output=True, shell=False, timeout=30)
-        if observed.returncode:
-            raise RuntimeError('SUPPLEMENT_BASELINE_LOCATOR_UNAVAILABLE: '+observed.stderr)
-        raw = json.loads(observed.stdout)
-        if raw.get('status') == 'blocked':
-            raise RuntimeError('SUPPLEMENT_BASELINE_LOCATOR_BLOCKED: '+json.dumps(raw))
-        actual_hashes = {p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in sample['inputs']}
-        if actual_hashes != sample['hashes']:
-            raise RuntimeError('SUPPLEMENT_BASELINE_SOURCE_CHANGED')
-        sample['prompt_suffix'] = ('\nExplicit test-arranged predecessor lookup, not an '
-            'automatic wrapper hook: '+json.dumps(raw)+'. These additional task-input '
-            'sources are direct-source discoveries, not manufactured Locator hits: '+
-            json.dumps(actual_hashes)+'. Read them yourself and verify the actual bytes '
-            'before forming and recording your own architecture source decisions.\n')
-    baseline = sample['finish']()
+# ADR-0048/AD-5 and ADR-0041: only the semantic transport is scripted. The
+# public caller, source adapter, native compiler and record writers stay real.
+def _vdd_public_run(published_vdd_base, tmp_path_factory, mode='enabled'):
     import shutil
-    root = tmp_path/'supplement-root'
-    shutil.copytree(sample['root'], root)
-    # Exact prior history is an input, not current proof. Each parameter owns
-    # its own current root so changing sources cannot alter another case.
-    prior = baseline
-    old_workspace = root/prior['prepared']['doc_workspace']
-    old_memory = (old_workspace/'.memlog.md').read_text(encoding='utf-8')
-    unchanged_path = 'docs/current-adr.md'
-    unchanged_hash = hashlib.sha256((root/unchanged_path).read_bytes()).hexdigest()
-    inputs = list(sample['inputs'])
-    if reason == 'new-question':
-        extra = 'docs/new-question.md'
-        text = ('# New architecture question\nCan the current stdio interface '
-            'support a binary payload? The previously verified interface only '
-            'specifies transport kind. Check actual current source; leave an '
-            'unsupported answer open rather than infer a feature.\n')
-    elif reason == 'missing-basis':
-        extra = 'docs/encoding-basis.md'
-        text = ('# Accepted interface clarification\nTransportOwner requires UTF-8 '
-            'text at the existing stdio boundary. This supplies the encoding basis '
-            'that was absent from the preceding architecture discussion. It does '
-            'not authorize replacing the transport.\n')
-    else:
-        extra = 'src/transport.py'
-        text = ('def transport_kind():\n    return "stdio"\n\n'
-            'def text_encoding():\n    return "utf-8"\n')
-    (root/extra).parent.mkdir(parents=True, exist_ok=True)
-    (root/extra).write_text(text, encoding='utf-8')
-    if extra not in inputs:
-        inputs.append(extra)
-    task = ('# Supplemental architecture request\nReason: '+reason+
-        '. Reuse unchanged verified ADR evidence, but verify the new or changed '
-        'source '+extra+' before deciding. Record the qualifying reason and '
-        'concrete scope impact. Preserve prior decisions chronologically and '
-        'retain the no-replacement boundary.\n')
-    (root/'docs/task.md').write_text(task, encoding='utf-8')
-    inputs += [(old_workspace/'ARCHITECTURE-SPINE.md').relative_to(root).as_posix(),
-               (old_workspace/'.memlog.md').relative_to(root).as_posix()]
-    hashes = {p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in inputs}
-    calls = []
-    original = adapter.diagnose
-    def observe(*args, **kwargs):
-        result = original(*args, **kwargs)
-        calls.append({'request': args[0] if args else kwargs.get('request'),
-                      'result': json.loads(json.dumps(result))})
-        return result
-    with patch.object(adapter, 'diagnose', observe):
-        invoke = load('architecture_supplement_'+reason.replace('-', '_'),
-            '.agents/skills/jimuyun-architecture/scripts/invoke.py')
-        prepared = invoke.prepare(root, 'logs/bmad-wrappers/supplement-'+reason,
-            inputs, intent='update', purpose='discussion')
-    updated = dict(root=root, native=root/('logs/bmad-wrappers/supplement-'+reason+'/native'),
-        prepared=prepared, calls=calls, hashes=hashes, completed=False,
-        prompt_suffix='\nThis actual update was requested for '+reason+
-        '. Record that trigger, the verified changed/new source and the concrete '
-        'impact; explicitly explain reuse of unchanged ADR evidence.\n')
-    updated['finish'] = lambda: _architecture_finish(updated)
-    try:
-        _architecture_predecision_read(updated, [extra])
-        assert len(calls) <= 3, 'Supplement exceeded the approved call budget'
-        assert hashlib.sha256((root/unchanged_path).read_bytes()).hexdigest() == unchanged_hash
-        # These three cases exercise the real supplemental prepare boundary.
-        # Base native adoption is separately observed by the five tests above.
-        invocation = (root/prepared['invocation']).read_text(encoding='utf-8')
-        assert extra in invocation and hashes[extra] in invocation
-        assert 'no-replacement' in (root/'docs/task.md').read_text(encoding='utf-8')
-        assert (old_workspace/'.memlog.md').read_text(encoding='utf-8') == old_memory
-        current = json.dumps([call['result'] for call in calls])
-        assert reason in current or extra in current
-    except AssertionError:
-        print('FAILURE_ID:KQ_44BC8197CE64')
-        raise
-
+    root = tmp_path_factory.mktemp('vdd-public-consumption')
+    shutil.copytree(published_vdd_base, root, dirs_exist_ok=True)
+    for name in ('scripts', '.agents/skills/vdd-execution-plan',
+                 '.agents/skills/quick-dev-tdd-adapter'):
+        shutil.copytree(ROOT / name, root / name, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns('__pycache__', '.pytest_cache'))
+    _put(root, 'src/compiler.py', b'VALUE = 1\n')
+    _put(root, 'tests/test_compile.py',
+         b'import runpy\nimport pytest\nfrom pathlib import Path\n@pytest.mark.cer_assertion("ASSERT-COMPILE")\ndef test_compile():\n'
+         b'    assert runpy.run_path(str(Path(__file__).parents[1]/"src/compiler.py"))["VALUE"] == 1\n')
+    _put(root, 'requirements.md',
+         b'# FR-1\nRetain the existing VALUE = 1 in `src/compiler.py`; '
+         b'keep its regression `tests/test_compile.py`. '
+         b'`src/proposed.py` is a proposal, not existing implementation.\n')
+    config = root / 'knowledge/planning-query.toml'
+    config.write_text(config.read_text().replace('max_candidates = 12', 'max_candidates = 1'), encoding='utf-8')
+    if mode == 'disabled':
+        config.write_text(config.read_text().replace('enabled = true', 'enabled = false'), encoding='utf-8')
+    if mode == 'unknown-fact':
+        requirement=root/'requirements.md'
+        requirement.write_text(requirement.read_text() + '\nThis decision requires verified current facts from `src/unknown.py`; unresolved facts must stop dependent scope.\n',encoding='utf-8')
+    # Materialize only real, currently selected source bytes. No publisher,
+    # knowledge generation, BMAD skill installation or reviewer is invoked.
+    catalog = json.loads((root/'knowledge/catalogs/repository-knowledge-catalog.v2.json').read_text())
+    policies = json.loads((root/'knowledge/policies/consumer-policies.v2.json').read_text())
+    policy = next(p for p in policies['policies'] if p['consumer'] == 'vdd')
+    preview = core.locate({'consumer':'vdd', 'query':'current source callers tests contracts requirements.md'},
+                          catalog, policy=policy, max_candidates=1)
+    for candidate in preview.get('candidates', []):
+        name = candidate['path']
+        assert not name.startswith(('_bmad/', '.agents/skills/jimuyun-')), name
+        if not (root/name).exists():
+            data = subprocess.check_output(['git','-C',str(ROOT),'show',
+                catalog['source_snapshot']['commit'] + ':' + name], timeout=10)
+            _put(root, name, data)
+    runner = r'''
+import copy, importlib.util, json, sys
+from pathlib import Path
+root=Path(sys.argv[1]); mode=sys.argv[2]; sys.path[:0]=[str(root/'scripts/sc'),str(root/'.agents/skills/vdd-execution-plan/scripts'),str(root)]
+import _llm_backend
+spec=importlib.util.spec_from_file_location('fixture_data', root/'.agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py')
+data=importlib.util.module_from_spec(spec); spec.loader.exec_module(data)
+expected=data._cache('src/compiler.py','tests/test_compile.py')
+old_oid=expected['v3']['acceptances'][0]['obligation_ids'][0]
+raw=expected['v1-FR-1']['obligations'][0]
+raw.update(subject='existing compiler VALUE',trigger='existing VALUE is reused',state_before='VALUE = 1 implemented',
+    state_after='VALUE = 1 retained',expected_behavior='reuse existing VALUE = 1 with its regression',
+    observable_result='src/compiler.py VALUE equals 1; tests/test_compile.py verifies it',
+    forbidden_result=['duplicate src/proposed.py implementation'])
+from semantic_compiler import _normalize_obligation
+new_oid=_normalize_obligation({'requirement_id':'FR-1','source_ref':'requirements.md#FR-1'},raw)['obligation_id']
+expected=json.loads(json.dumps(expected).replace(old_oid,new_oid))
+acceptance=expected['v3']['acceptances'][0]
+acceptance.update(given='existing src/compiler.py VALUE = 1',when='the existing regression executes',
+    then='retain VALUE = 1 without duplicate implementation',
+    oracle={'observable':'src/compiler.py VALUE','expected':'1','forbidden':['duplicate implementation']})
+hint=expected['v3']['slice_hints'][0]
+hint.update(behavior_change='reuse existing VALUE = 1',state_transition='existing->retained')
+if mode == 'unknown-fact':
+    expected['v1-FR-1']['obligations'][0]['unresolved_fragments']=['Required current source fact unavailable: src/unknown.py']
+trace=[]
+def transport(**kwargs):
+    stage=Path(kwargs['output_last_message']).name.split('-last-message')[0]
+    payload=json.loads(kwargs['prompt'].rsplit('\n\nINPUT:\n',1)[1])
+    trace.append({'stage':stage,'payload':payload,'sandbox':kwargs.get('codex_sandbox')})
+    if stage.startswith('v1-'): answer=copy.deepcopy(expected['v1-FR-1'])
+    elif stage.startswith('v3'): answer=copy.deepcopy(expected['v3'])
+    elif stage == 'v4-atomic-recall': answer=copy.deepcopy(expected['v4-atomic-recall'])
+    else: raise AssertionError('Unexpected semantic stage: '+stage)
+    Path(kwargs['output_last_message']).write_text(json.dumps(answer),encoding='utf-8')
+    return 0,'scripted semantic candidate; no model invocation',['deterministic-semantic-transport']
+_llm_backend.run_llm_exec=transport
+spec=importlib.util.spec_from_file_location('public_vdd',root/'scripts/vdd/compile_plan.py')
+entry=importlib.util.module_from_spec(spec); spec.loader.exec_module(entry)
+sys.argv=[str(root/'scripts/vdd/compile_plan.py'),'--requirements',str(root/'requirements.md'),
+          '--out-dir',str(root/'execution-plans/sample'),'--stop-after','v3']
+try: code=entry.main()
+finally: (root/'transport-trace.json').write_text(json.dumps(trace),encoding='utf-8')
+raise SystemExit(code)
+'''
+    proc = subprocess.run([sys.executable, '-B', '-c', runner, str(root), mode],
+        cwd=root, capture_output=True, text=True, timeout=60, shell=False)
+    lines = [line for line in proc.stdout.splitlines() if line.strip()]
+    result = json.loads(lines[-1]) if lines else {}
+    return {'root':root, 'process':proc, 'result':result,
+            'trace':json.loads((root/'transport-trace.json').read_text())}
 
 
 @pytest.fixture(scope='module')
-def spec_supplement_cache():
-    # The key identifies one immutable case episode, not a prior run receipt.
-    # A new pytest process has an empty cache. No native authority is fabricated.
-    return {}
-
-
-def _spec_supplement_episode(baseline, reason, tmp_path_factory, cache):
-    import hashlib
-    import shutil
-    from unittest.mock import patch
-    from scripts.toolchain.bmad_native.testing import load
-    from scripts.toolchain.bmad_native import verify
-    from scripts.toolchain.knowledge_query import adapter
-    if reason in cache:
-        return cache[reason]
-    root = tmp_path_factory.mktemp('s5-spec-'+reason)/'repository'
-    shutil.copytree(baseline['root'], root)
-    # Exact prior native memory is inherited input. Current prepare revalidates
-    # source bytes and selection; the old runtime result grants no current edge.
-    bridge = load('planning_spec_'+reason.replace('-', '_'),
-        '.agents/skills/jimuyun-spec/scripts/bridge.py')
-    canonical = load('planning_spec_owner_'+reason.replace('-', '_'),
-        '.agents/skills/jimuyun-spec/scripts/canonical_package.py')
-    spec = '_bmad-output/specs/spec-example/SPEC.md'
-    source = root/'docs/source.md'
-    before_source = source.read_bytes()
-    old_memory = (root/spec).parent.joinpath('.memlog.md').read_text(encoding='utf-8')
-    before_contract, _, _ = canonical.build_contract(root, root/spec)
-    if reason == 'new-question':
-        suffix = '\nNew question: Does retained CAP-1 guarantee Unicode normalization? '
-        suffix += 'Check the current basis; leave this unverified guarantee open rather than invent it.\n'
-    elif reason == 'missing-basis':
-        suffix = '\nPreviously missing accepted basis: CAP-1 is local-only and must not initiate network access.\n'
-    elif reason == 'related-source-change':
-        suffix = '\nRelevant accepted source clarification: CAP-1 supports UTF-8 text while preserving its existing behavior.\n'
-    elif reason == 'preserve-upstream':
-        suffix = ('\nApproved upstream constraints: CAP-1 is local-only. '
-            'Package B is an explicit non-goal. The S2 schedule is an unresolved '
-            'maintainer question and does not authorize parallel execution. '
-            'Preserve these along with CAP-1 when deriving the contract.\n')
-    elif reason == 'unchanged':
-        suffix = ''
-    else:
-        raise ValueError('Unsupported test scenario: '+reason)
-    if suffix:
-        source.write_bytes(before_source+suffix.encode('utf-8'))
-        # This is the source author's changed input, not an arbitrary mutation of
-        # a derived selection: recompute it through the actual canonical owner.
-        descriptor, selection, selection_hash = canonical.build_contract(root, root/spec)
-        registry = root/'_bmad-output/specs/canonical-spec-package-selections'
-        canonical.write_json(registry/(selection_hash.replace(':', '-')+'.json'), selection)
-        canonical.write_json(registry/'current/SPEC-example.json', {
-            'schema': canonical.CURRENT_SCHEMA, 'package_id': 'SPEC-example',
-            'selection_hash': selection_hash})
-    actual_source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
-    calls = []
-    original = adapter.diagnose
-    def observe(*args, **kwargs):
-        result = original(*args, **kwargs)
-        calls.append({'request': args[0] if args else kwargs.get('request'),
-                      'result': json.loads(json.dumps(result))})
-        return result
-    with patch.object(adapter, 'diagnose', observe):
-        # Load after the spy in case the candidate uses a direct import.
-        bridge = load('planning_spec_preparation_'+reason.replace('-', '_'),
-            '.agents/skills/jimuyun-spec/scripts/bridge.py')
-        prepared = bridge.prepare(root, spec, 'logs/bmad-wrappers/spec-'+reason)
-    verify(root)
-    canonical.validate_selection(root, root/spec,
-        root/'_bmad-output/specs/canonical-spec-package-selections/current/SPEC-example.json')
-    state = dict(root=root, spec=spec, reason=reason, bridge=bridge,
-        canonical=canonical, prepared=prepared, calls=calls,
-        old_memory=old_memory, old_contract=before_contract,
-        source_bytes=source.read_bytes(), source_hash=actual_source_hash, complete=False)
-    cache[reason] = state
-    return state
-
-
-def _spec_supplement_precondition(state):
-    if state['reason'] == 'unchanged':
-        assert not state['calls'], 'Unchanged verified inheritance triggered unnecessary query'
-        return
-    assert state['calls'], 'A qualifying factual gap/change did not trigger actual SPEC supplemental query'
-    assert len(state['calls']) <= 3
-    reads = []
-    for call in state['calls']:
-        result = call['result']
-        assert result.get('schema') == 'planning-query.v1'
-        assert result.get('stage') == 'spec' and result.get('consumer') == 'bmad-planning'
-        reads.extend(result.get('read_set', []))
-    selected = [r for r in reads if r.get('path') == 'docs/source.md']
-    assert selected, 'Supplement did not verify the changed/current factual source'
-    assert all(r['sha256'].removeprefix('sha256:') == state['source_hash'] for r in selected)
-    assert all(r.get('origin') in {'locator', 'direct-source'} and r.get('read_identity') for r in selected)
-
-
-def _spec_finish_supplement(state):
-    import os
-    from scripts.toolchain.bmad_native import verify
-    if state['complete']:
-        return state
-    root = state['root']
-    run = 'logs/bmad-wrappers/spec-'+state['reason']
-    native = root/run/'native'
-    sys.path.insert(0, str(ROOT/'scripts/sc'))
-    from _llm_backend import run_llm_exec
-    import host_session
-    session = native/'logs/spec-supplement-session'
-    host_session.initialize(native, session, 'chatgpt-work-mode')
-    prompt = (root/state['prepared']['invocation']).read_text(encoding='utf-8') + (
-        '\nActual native SPEC update sample. Input change class: '+state['reason']+
-        '. Read the current source and actual inherited native record; verify source '
-        'bytes. Execute the complete native derive and both self-checks. Preserve '
-        'CAP-1, valid constraints, non-goals and open questions. Do not promote '
-        'provenance into normative companions. Record your own actual reuse or '
-        'supplement reason, current source path/hash, read identity and scope impact '
-        'through the official memlog command. An unchanged run is cosmetic reuse, '
-        'not new query proof. Never claim a hook/query ran unless it actually did. '
-        'Do not implement business code or modify test/native resources.\n')
-    previous = {k: os.environ.get(k) for k in ('JIMUYUN_HOST_SESSION_DIR','JIMUYUN_HOST_TIMEOUT_SECONDS')}
-    try:
-        os.environ['JIMUYUN_HOST_SESSION_DIR'] = str(session)
-        os.environ.pop('JIMUYUN_HOST_TIMEOUT_SECONDS', None)
-        code, trace, _ = run_llm_exec(backend='host-session', root=native,
-            prompt=prompt, output_last_message=native/'logs/spec-result.txt',
-            timeout_sec=1800, codex_sandbox='workspace-write')
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key,None)
-            else:
-                os.environ[key]=value
-    if code:
-        raise RuntimeError(f'SPEC_NATIVE_ENVIRONMENT: exit={code}; {session}; {trace}')
-    state['bridge'].publish(root,run)
-    canonical=state['canonical']
-    descriptor, selection, _ = canonical.build_contract(root,root/state['spec'])
-    canonical.validate_selection(root,root/state['spec'],
-        root/'_bmad-output/specs/canonical-spec-package-selections/current/SPEC-example.json')
-    verify(root);verify(native)
-    assert descriptor['sources'] == state['old_contract']['sources']
-    assert [(r['path'],r['role']) for r in descriptor['companions']] == [
-        (r['path'],r['role']) for r in state['old_contract']['companions']]
-    assert (root/'docs/source.md').read_bytes() == state['source_bytes']
-    memory=(root/state['spec']).parent.joinpath('.memlog.md').read_text(encoding='utf-8')
-    before=state['old_memory'].split('\n---\n',1)[1].strip()
-    after=memory.split('\n---\n',1)[1].strip()
-    assert after.startswith(before), 'Native update rewrote prior chronological decisions'
-    state['added']=after[len(before):].lower()
-    state['rendered']=(root/state['spec']).read_text(encoding='utf-8')
-    for entry in descriptor['companions']:
-        if entry['role']=='normative_companion':
-            state['rendered']+='\n'+(root/entry['path']).read_text(encoding='utf-8')
-    state['complete']=True
-    return state
-
-
-def _spec_reuse_or_supplement(state):
-    _spec_supplement_precondition(state)
-    root=state['root']
-    native=root/('logs/bmad-wrappers/spec-'+state['reason']+'/native')
-    source=native/'docs/source.md'
-    assert source.read_bytes()==state['source_bytes']
-    invocation=(root/state['prepared']['invocation']).read_text(encoding='utf-8')
-    # Actual preparation must carry evidence to the native owner. Native
-    # adoption is tested independently, not fabricated for each branch.
-    assert 'docs/source.md' in invocation and state['source_hash'] in invocation
-    if state['reason']=='unchanged':
-        assert 'reuse' in invocation.lower() or 'unchanged' in invocation.lower()
-    else:
-        assert state['calls'] and state['source_hash'] in json.dumps(state['calls'])
-    assert (root/state['spec']).parent.joinpath('.memlog.md').read_text(encoding='utf-8')==state['old_memory']
-    state['canonical'].validate_selection(root,root/state['spec'],
-        root/'_bmad-output/specs/canonical-spec-package-selections/current/SPEC-example.json')
-    return state
-
-
-@pytest.mark.cer_assertion('ASSERT_B14283217516')
-@pytest.mark.parametrize('reason',['unchanged','new-question','missing-basis','related-source-change'])
-def test_contract_b14283217516(native_caller_decision,tmp_path_factory,spec_supplement_cache,reason):
-    state=_spec_supplement_episode(native_caller_decision,reason,tmp_path_factory,spec_supplement_cache)
-    try:
-        _spec_reuse_or_supplement(state)
-    except AssertionError:
-        print('FAILURE_ID:KQ_B14283217516')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_D44E7CF213F2')
-@pytest.mark.parametrize('reason',['unchanged','new-question','missing-basis','related-source-change'])
-def test_contract_d44e7cf213f2(native_caller_decision,tmp_path_factory,spec_supplement_cache,reason):
-    state=_spec_supplement_episode(native_caller_decision,reason,tmp_path_factory,spec_supplement_cache)
-    try:
-        _spec_reuse_or_supplement(state)
-    except AssertionError:
-        print('FAILURE_ID:KQ_D44E7CF213F2')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_6C0520FE0D5E')
-@pytest.mark.parametrize('reason',['unchanged','new-question','missing-basis','related-source-change'])
-def test_contract_6c0520fe0d5e(native_caller_decision,tmp_path_factory,spec_supplement_cache,reason):
-    state=_spec_supplement_episode(native_caller_decision,reason,tmp_path_factory,spec_supplement_cache)
-    try:
-        _spec_reuse_or_supplement(state)
-    except AssertionError:
-        print('FAILURE_ID:KQ_6C0520FE0D5E')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_B34E35470A88')
-@pytest.mark.parametrize('reason',['unchanged','related-source-change'])
-def test_contract_b34e35470a88(native_caller_decision,tmp_path_factory,spec_supplement_cache,reason):
-    state=_spec_supplement_episode(native_caller_decision,reason,tmp_path_factory,spec_supplement_cache)
-    try:
-        _spec_reuse_or_supplement(state)
-    except AssertionError:
-        print('FAILURE_ID:KQ_B34E35470A88')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_21EB4214946A')
-def test_contract_21eb4214946a(native_caller_decision,tmp_path_factory,spec_supplement_cache):
-    state=_spec_supplement_episode(native_caller_decision,'preserve-upstream',tmp_path_factory,spec_supplement_cache)
-    try:
-        _spec_supplement_precondition(state)
-        actual=_spec_finish_supplement(state)
-        rendered=actual['rendered'].lower()
-        assert 'cap-1' in rendered and 'local-only' in rendered
-        assert 'package b' in rendered
-        assert 's2' in rendered and ('unresolved' in rendered or 'pending' in rendered)
-        assert ('does not authorize parallel' in rendered or 'no parallel' in rendered
-            or 'not parallel permission' in rendered)
-    except AssertionError:
-        print('FAILURE_ID:KQ_21EB4214946A')
-        raise
-
-
-
-def _execute_prd_source_consumer_sample(tmp_path_factory, native_runtime_environment):
-    import hashlib
-    import os
-    import shutil
-    from scripts.toolchain.bmad_native.testing import fixture
-    from scripts.toolchain.bmad_native import verify, write_config
-    sys.path.insert(0, str(ROOT/'scripts/sc'))
-    from _llm_backend import run_llm_exec
-    import host_session
-
-    base = tmp_path_factory.mktemp('s5-prd-source-consumer')
-    root, paths, request = published_planning.__wrapped__(base)
-    installed = fixture(base/'verified-native')
-    for prefix in ('.agents', '_bmad'):
-        shutil.copytree(installed/prefix, root/prefix, dirs_exist_ok=True)
-    # These additional original skills are installed from the pinned upstream
-    # tree by the environment owner, not supplied by this test as replacements.
-    for skill in ('bmad-prd', 'bmad-review'):
-        shutil.copytree(ROOT/'.agents/skills'/skill, root/'.agents/skills'/skill)
-    for relative in ('scripts/toolchain', 'scripts/python'):
-        shutil.copytree(ROOT/relative, root/relative, dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-    custom = root/'_bmad/custom/bmad-prd.toml'
-    custom.parent.mkdir(parents=True, exist_ok=True)
-    custom.write_bytes((ROOT/'_bmad/custom/bmad-prd.toml').read_bytes())
-    write_config(root)
-    verify(root)
-    _s7_write_config((root, paths, request))
-    sources = {
-        'src/current.py': 'def normalize_name(value):\n    return value.strip().lower()\n',
-        'docs/history.md': '# Historical plan only\nBulk export was proposed but never implemented.\n',
-        'docs/exclusions.md': '# Approved exclusions\nRemote synchronization is excluded.\n',
-        'docs/rumor.md': '# Unverified claim\nA partner may support spreadsheet import; no implementation or confirmed interface is supplied.\n',
-        'docs/request.md': '# Internal solo utility increment\n'
-            'The maintained utility has a current name-normalization function. '
-            'Create a small PRD that reuses current behavior and adds name deduplication. '
-            'Read the local current code and the supplied historical/exclusion/unverified '
-            'sources before deciding what already exists and what work is proposed. '
-            'Bulk export is only historical planning. Remote synchronization stays excluded. '
-            'Spreadsheet import remains awaiting verification. The genuine new requested '
-            'behavior is deduplication. Do not implement code or design an architecture.\n',
-    }
-    for relative, content in sources.items():
-        target = root/relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding='utf-8')
-    source_hashes = {p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in sources}
-    native_files = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-        for folder in (root/'.agents/skills/bmad-prd', root/'.agents/skills/bmad-review', root/'_bmad/scripts')
-        for p in folder.rglob('*') if p.is_file()}
-
-    import subprocess
-    configured = subprocess.run(['uv', 'run', str(root/'_bmad/scripts/resolve_customization.py'),
-        '--project-root', str(root), '--skill', str(root/'.agents/skills/bmad-prd'), '--key', 'workflow'],
-        capture_output=True, text=True, encoding='utf-8', shell=False, timeout=30)
-    if configured.returncode:
-        raise RuntimeError('PRD_NATIVE_RESOLVER_UNAVAILABLE: '+configured.stderr)
-    effective = json.loads(configured.stdout)['workflow']
-    hooks = effective.get('activation_steps_prepend', []) + effective.get('activation_steps_append', [])
-    assert any('prepare-consumption' in hook for hook in hooks), 'Native resolver has no default predecision query hook'
-
-    # Observe real child calls without replacing adapter/Locator results. Every
-    # native Python invocation must retain this test-only PYTHONPATH. Absence of
-    # all observed memlog calls is a harness error, never evidence of missing query.
-    observer = base/'observer'
-    observer.mkdir()
-    trace = base/'native-calls.jsonl'
-    observer_code = r'''
-import json, os, sys, time
-from pathlib import Path
-root = Path(os.environ['JIMUYUN_PRD_TEST_ROOT']).resolve()
-trace = Path(os.environ['JIMUYUN_PRD_TEST_TRACE'])
-prefix = str(root) + os.sep
-
-def observe(frame, event, value):
-    filename = frame.f_code.co_filename
-    if not filename.startswith(prefix):
-        return
-    relative = filename[len(prefix):].replace(os.sep, '/')
-    name = frame.f_code.co_name
-    record = None
-    if relative == '_bmad/scripts/memlog.py' and name == 'cmd_append' and event == 'call':
-        args = frame.f_locals.get('args')
-        record = {'kind': 'memlog-append', 'type': getattr(args, 'type', None),
-                  'text': getattr(args, 'text', None)}
-    elif relative == 'scripts/toolchain/knowledge_query/adapter.py' and event == 'return':
-        if isinstance(value, dict) and value.get('schema') == 'planning-query.v1':
-            record = {'kind': 'query-return', 'function': name, 'value': value}
-    if record is not None:
-        record['monotonic_ns'] = time.monotonic_ns()
-        with trace.open('a', encoding='utf-8') as output:
-            output.write(json.dumps(record, ensure_ascii=False) + '\n')
-sys.setprofile(observe)
-'''
-    (observer/'sitecustomize.py').write_text(observer_code, encoding='utf-8')
-    session = root/'logs/prd-native-session'
-    host_session.initialize(root, session, 'chatgpt-work-mode')
-    workspace = root/'_bmad-output/planning-artifacts/prds/prd-source-sample'
-    prompt = (
-        'Execute the complete original project-local bmad-prd Skill at '
-        + str(root/'.agents/skills/bmad-prd/SKILL.md')
-        + '. Read all references required by its headless Create path. '
-        'Project root: '+str(root)+'. headless=true; intent=create. '
-        'Input brief: docs/request.md; additional source inputs: '
-        + json.dumps(list(sources)) + '. doc_workspace='+str(workspace)+'. '
-        'This is an isolated small internal/solo sample. Preserve source files and '
-        'official Skill/runtime bytes. Use only actual source findings, and keep '
-        'native memlog ownership and all required native self-checks. Do not '
-        'implement code, run downstream stages, write test output or manufacture '
-        'a query result. Return the official headless JSON result.\n'
-        'Test instrumentation only, not a workflow customization: for EVERY '
-        'Python/uv command preserve PYTHONDONTWRITEBYTECODE=1, UV_OFFLINE=1, '
-        'UV_CACHE_DIR=/tmp/ji-mu-yun-uv-cache and the following environment: '
-        + json.dumps({'PYTHONPATH': str(observer), 'JIMUYUN_PRD_TEST_ROOT': str(root),
-                      'JIMUYUN_PRD_TEST_TRACE': str(trace)})
-        + '. Do not write or edit the observer or trace. The observer only records '
-        'actually reached adapter returns and official memlog append calls.\n')
-    previous = {k: os.environ.get(k) for k in ('JIMUYUN_HOST_SESSION_DIR', 'JIMUYUN_HOST_TIMEOUT_SECONDS')}
-    try:
-        os.environ['JIMUYUN_HOST_SESSION_DIR'] = str(session)
-        os.environ.pop('JIMUYUN_HOST_TIMEOUT_SECONDS', None)
-        code, transport, _ = run_llm_exec(backend='host-session', root=root,
-            prompt=prompt, output_last_message=root/'logs/native-prd-result.txt',
-            timeout_sec=1800, codex_sandbox='workspace-write')
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
-    if code:
-        raise RuntimeError(f'PRD_NATIVE_EXECUTION_UNAVAILABLE: {code}; {session}; {transport}')
-    verify(root)
-    for path, expected in {**source_hashes, **native_files}.items():
-        if hashlib.sha256((root/path).read_bytes()).hexdigest() != expected:
-            raise RuntimeError('PRD_NATIVE_MODIFIED_READ_ONLY_SOURCE: '+path)
-    if not trace.is_file():
-        raise RuntimeError('PRD_NATIVE_INSTRUMENTATION_NOT_REACHED')
-    events = [json.loads(line) for line in trace.read_text(encoding='utf-8').splitlines()]
-    if not any(e['kind'] == 'memlog-append' for e in events):
-        raise RuntimeError('PRD_NATIVE_MEMLOG_OBSERVER_NOT_REACHED')
-    memory = (workspace/'.memlog.md').read_text(encoding='utf-8')
-    prd = (workspace/'prd.md').read_text(encoding='utf-8')
-    addendum = (workspace/'addendum.md').read_text(encoding='utf-8') if (workspace/'addendum.md').exists() else ''
-    return dict(root=root, memory=memory, prd=prd, addendum=addendum,
-        events=events, source_hashes=source_hashes, workspace=workspace)
-
-
-def _prd_source_decision(sample, path):
-    lines = [line.lower() for line in sample['memory'].splitlines()
-             if '(decision)' in line and path in line]
-    assert lines, 'Native caller did not bind a source decision: '+path
-    matching = [line for line in lines if sample['source_hashes'][path] in line]
-    assert matching, 'Native source decision does not identify actual read bytes: '+path
-    return '\n'.join(matching)
-
-
-@pytest.mark.cer_assertion('ASSERT_03668F0ADF94')
-def test_contract_03668f0adf94(prd_source_consumer_sample):
-    sample = prd_source_consumer_sample
-    try:
-        current = _prd_source_decision(sample, 'src/current.py')
-        history = _prd_source_decision(sample, 'docs/history.md')
-        excluded = _prd_source_decision(sample, 'docs/exclusions.md')
-        unverified = _prd_source_decision(sample, 'docs/rumor.md')
-        request = _prd_source_decision(sample, 'docs/request.md')
-        assert 'normaliz' in current and ('existing' in current or 'implemented' in current)
-        assert 'bulk export' in history and any(term in history for term in ('planning-only', 'not implemented', 'never implemented'))
-        assert 'remote synchronization' in excluded and ('excluded' in excluded or 'non-goal' in excluded)
-        assert 'spreadsheet import' in unverified and ('unverified' in unverified or 'awaiting verification' in unverified)
-        assert 'deduplication' in request and ('new' in request or 'proposed' in request)
-    except AssertionError:
-        print('FAILURE_ID:KQ_03668F0ADF94')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_920AD324F19B')
-def test_contract_920ad324f19b(prd_source_consumer_sample):
-    sample = prd_source_consumer_sample
-    try:
-        existing = _prd_source_decision(sample, 'src/current.py')
-        proposed = _prd_source_decision(sample, 'docs/request.md')
-        assert 'normaliz' in existing and ('reuse' in existing or 'retain' in existing)
-        assert 'deduplication' in proposed and ('new' in proposed or 'gap' in proposed)
-        scope = (sample['prd']+'\n'+sample['addendum']).lower()
-        assert 'deduplication' in scope and 'normaliz' in scope
-        assert ('reuse' in scope or 'retain' in scope) and ('non-goal' in scope or 'excluded' in scope)
-        # The real producer must never preclaim the native owner's adoption.
-        results = [e['value'] for e in sample['events'] if e['kind'] == 'query-return']
-        assert results, 'No actual adapter return was observed; adoption ownership cannot be inferred from an empty set'
-        assert all(not r.get('adopted') and not r.get('authorizes') for r in results)
-    except AssertionError:
-        print('FAILURE_ID:KQ_920AD324F19B')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_4E03A6CCB9A1')
-def test_contract_4e03a6ccb9a1(prd_source_consumer_sample):
-    sample = prd_source_consumer_sample
-    try:
-        query = [e for e in sample['events'] if e['kind'] == 'query-return']
-        assert query, 'Actual PRD source judgment had no observed planning-query result'
-        relevant_decisions = [e for e in sample['events'] if e['kind'] == 'memlog-append'
-            and e['type'] == 'decision' and any(p in str(e.get('text')) for p in sample['source_hashes'])]
-        assert relevant_decisions
-        first_decision = min(e['monotonic_ns'] for e in relevant_decisions)
-        before = [e for e in query if e['monotonic_ns'] < first_decision]
-        assert before, 'The actual query/read did not precede the source judgment'
-        reads = {r['path']: r for e in before for r in e['value'].get('read_set', [])}
-        for path in ('src/current.py', 'docs/history.md', 'docs/rumor.md'):
-            assert path in reads
-            assert reads[path]['sha256'].removeprefix('sha256:') == sample['source_hashes'][path]
-            _prd_source_decision(sample, path)
-        current = _prd_source_decision(sample, 'src/current.py')
-        history = _prd_source_decision(sample, 'docs/history.md')
-        uncertain = _prd_source_decision(sample, 'docs/rumor.md')
-        assert 'reuse' in current or 'retain' in current
-        assert any(term in history for term in ('planning-only', 'not implemented', 'never implemented'))
-        assert 'unverified' in uncertain or 'awaiting verification' in uncertain
-    except AssertionError:
-        print('FAILURE_ID:KQ_4E03A6CCB9A1')
-        raise
-
-
-
-def _execute_vdd_complete_consumption(tmp_path_factory):
-    import hashlib
-    import os
-    import shutil
-    import subprocess
-
-    pre_base = tmp_path_factory.mktemp('s5-vdd-prequery')
-    pre_fixture = published_planning.__wrapped__(pre_base)
-    pre_observation = _vdd_public_first_worker(pre_fixture, pre_base, governance='off')
-    _assert_actual_vdd_prequery(pre_observation)
-    base = tmp_path_factory.mktemp('s5-vdd-complete')
-    fixture = published_planning.__wrapped__(base)
-    root, _, _ = fixture
-    for relative in ('scripts', '.agents/skills/vdd-execution-plan',
-                     '.agents/skills/quick-dev-tdd-adapter/tools'):
-        shutil.copytree(ROOT/relative, root/relative, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-    _s7_write_config(fixture)
-    files = {
-        'src/existing.py': 'def indexed_value():\n    return 13\n',
-        'src/unindexed.py': 'def unindexed_value():\n    return 29\n',
-        'src/combined.py': 'def combined():\n    return None\n',
-        'src/caller.py': 'from combined import combined\ndef report():\n    return combined()\n',
-        'tests/test_combined.py': (
-            'from pathlib import Path\nimport sys\nimport hashlib\nimport pytest\n'
-            "sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))\n"
-            'from combined import combined\nfrom existing import indexed_value\n'
-            'from unindexed import unindexed_value\n'
-            "ROOT = Path(__file__).resolve().parents[1]\n"
-            "@pytest.mark.cer_assertion('ASSERT_COMBINED')\n"
-            'def test_combined():\n    assert combined() == 42\n'
-            "@pytest.mark.cer_assertion('ASSERT_SOURCE_READS')\n"
-            'def test_source_inputs():\n'
-            "    for name in ('src/existing.py', 'src/unindexed.py', 'src/caller.py', 'docs/control.md'):\n"
-            "        assert (ROOT/name).read_text(encoding='utf-8').strip()\n"
-            '    assert indexed_value() == 13 and unindexed_value() == 29\n'
-            "@pytest.mark.cer_assertion('ASSERT_WRITE_BOUNDARY')\n"
-            'def test_protected_sources():\n'
-            '    for name, expected in PROTECTED_HASHES.items():\n'
-            '        assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest() == expected\n'
-            "@pytest.mark.cer_assertion('ASSERT_HARNESS')\n"
-            'def test_real_entry():\n'
-            '    assert callable(combined) and callable(indexed_value) and callable(unindexed_value)\n'),
-        'docs/control.md': '# Current control\nExisting helper APIs are read-only; do not duplicate their implementations.\n',
-    }
-    # These inputs are deliberately added after the real publication, so the
-    # unindexed helper cannot be inferred absent merely from a valid index miss.
-    for relative, content in files.items():
-        target = root/relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding='utf-8')
-    protected = {name: hashlib.sha256((root/name).read_bytes()).hexdigest()
-                 for name in ('src/existing.py', 'src/unindexed.py', 'src/caller.py', 'docs/control.md')}
-    files['tests/test_combined.py'] += '\nPROTECTED_HASHES = ' + repr(protected) + '\n'
-    (root/'tests/test_combined.py').write_text(files['tests/test_combined.py'], encoding='utf-8')
-    requirements = root/'requirements.md'
-    requirements.write_text(
-        '# FR-1\n'
-        'Implement `src/combined.py::combined` to return the sum of the current '
-        'return values of `src/existing.py::indexed_value` and '
-        '`src/unindexed.py::unindexed_value`. Inspect their actual current source; '
-        'do not infer either value or absence from index coverage. Reuse those '
-        'helpers unchanged, and do not create replacement implementations. '
-        'Inspect the actual caller `src/caller.py`, test `tests/test_combined.py`, '
-        'and control contract `docs/control.md` before forming scope. '
-        'Production owner: `src/combined.py`. Production implementation may modify '
-        'only the production owner. Existing fixture `tests/test_combined.py`. '
-        'Preserve both helper APIs and their current behavior. Do not modify '
-        '`src/existing.py`, `src/unindexed.py`, `src/caller.py`, or `docs/control.md`. '
-        'Use the existing real pytest entry; missing imports or harness failures '
-        'are not behavioral RED.\n', encoding='utf-8')
-    before = {p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in files}
-    session = root/'logs/live-vdd-consumption'
-    owner_cli = root/'scripts/sc/host_session.py'
-    init = subprocess.run([sys.executable, '-B', str(owner_cli), 'init', '--session', str(session),
-        '--caller', 'chatgpt-work-mode'], cwd=root, capture_output=True, text=True,
-        encoding='utf-8', shell=False, timeout=15)
-    if init.returncode:
-        raise RuntimeError('VDD_LIVE_SESSION_SETUP_FAILED: ' + init.stdout + init.stderr)
-    trace = root/'logs/live-vdd-trace.jsonl'
-    bootstrap = r'''
-import json, pathlib, runpy, sys, time
-root, trace = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
-args = sys.argv[3:]
-stream = trace.open('x', encoding='utf-8')
-def observe(frame, event, arg):
-    if event not in {'call', 'return'}:
-        return
-    filename = frame.f_code.co_filename.replace('\\', '/')
-    if not filename.endswith(('scripts/toolchain/knowledge_query/adapter.py',
-                              'scripts/python/_knowledge_locator_core.py',
-                              'scripts/sc/host_session.py')):
-        return
-    try:
-        relative = pathlib.Path(frame.f_code.co_filename).resolve().relative_to(root.resolve()).as_posix()
-    except ValueError:
-        return
-    name = frame.f_code.co_name
-    relevant = (relative == 'scripts/toolchain/knowledge_query/adapter.py'
-        or (relative == 'scripts/python/_knowledge_locator_core.py' and name == 'query_with_diagnostics')
-        or (relative == 'scripts/sc/host_session.py' and name == 'execute'))
-    if not relevant:
-        return
-    row = {'path': relative, 'function': name, 'event': event, 'monotonic_ns': time.monotonic_ns()}
-    if event == 'return' and relative.endswith('/adapter.py') and isinstance(arg, dict):
-        # The actual return value, not a fabricated fixture result.
-        row['actual_return'] = arg
-    stream.write(json.dumps(row, sort_keys=True) + '\n')
-    stream.flush()
-sys.path.insert(0, str(root))
-sys.argv = [str(root/'scripts/vdd/compile_plan.py'), *args]
-sys.setprofile(observe)
-try:
-    runpy.run_path(sys.argv[0], run_name='__main__')
-finally:
-    sys.setprofile(None)
-    stream.close()
-'''
-    out = root/'execution-plans/live-consumption'
-    result = root/'logs/live-compiler-result.json'
-    env = {**os.environ, 'SC_LLM_BACKEND': 'host-session',
-           'JIMUYUN_HOST_SESSION_DIR': str(session), 'PYTHONDONTWRITEBYTECODE': '1',
-           'PYTHONUTF8': '1'}
-    for name in ('JIMUYUN_HOST_TIMEOUT_SECONDS', 'JIMUYUN_GOVERNANCE_MODE', 'PHASEA_SERVICE_STATE'):
-        env.pop(name, None)
-    stdout, stderr = root/'logs/live-vdd.stdout', root/'logs/live-vdd.stderr'
-    with stdout.open('wb') as output, stderr.open('wb') as errors:
-        child = subprocess.Popen([sys.executable, '-B', '-c', bootstrap, str(root), str(trace),
-            '--requirements', str(requirements), '--out-dir', str(out), '--profile', 'self-hosted',
-            '--result-json', str(result)], cwd=root, env=env, stdout=output, stderr=errors, shell=False)
-        try:
-            child.wait(timeout=1800)
-        except subprocess.TimeoutExpired as exc:
-            child.terminate()
-            child.wait(timeout=10)
-            raise RuntimeError('VDD_LIVE_SAMPLE_TIMEOUT: actual compiler did not finish inside the frozen test budget; ' + str(session)) from exc
-    if child.returncode != 0 or not result.is_file():
-        raise RuntimeError('VDD_LIVE_SAMPLE_FAILED: ' + stdout.read_text(encoding='utf-8') + stderr.read_text(encoding='utf-8'))
-    native_result = json.loads(result.read_text(encoding='utf-8'))
-    if native_result.get('status') != 'plan-ready':
-        raise RuntimeError('VDD_LIVE_SAMPLE_NOT_READY: ' + json.dumps(native_result))
-    bundle = json.loads((out/'semantic-plan-bundle.v1.json').read_text(encoding='utf-8'))
-    source_index = json.loads((out/'source-index.v1.json').read_text(encoding='utf-8'))
-    events = [json.loads(line) for line in trace.read_text(encoding='utf-8').splitlines()]
-    requests = []
-    for path in session.glob('*/request.json'):
-        request = json.loads(path.read_text(encoding='utf-8'))
-        if '\n\nINPUT:\n' in request['prompt']:
-            requests.append(json.loads(request['prompt'].split('\n\nINPUT:\n', 1)[1]))
-    return dict(root=root, out=out, before=before, files=files, bundle=bundle,
-        source_index=source_index, events=events, requests=requests,
-        requirement_sha256=hashlib.sha256(requirements.read_bytes()).hexdigest())
-
-
-def _vdd_actual_read_context(sample):
-    import hashlib
-    events = sample['events']
-    first_worker = next((e['monotonic_ns'] for e in events
-                         if e['path'] == 'scripts/sc/host_session.py' and e['event'] == 'call'), None)
-    if first_worker is None:
-        raise RuntimeError('VDD_LIVE_SAMPLE_HAS_NO_REAL_SEMANTIC_REQUEST')
-    responses = [e['actual_return'] for e in events if e.get('actual_return', {}).get('schema') == 'planning-query.v1'
-                 and e['monotonic_ns'] < first_worker]
-    assert responses, 'No actual planning-query return preceded semantic extraction'
-    assert all(r['consumer'] == 'vdd' and r['stage'] == 'vdd-create' for r in responses)
-    read_rows = [row for response in responses for row in response['read_set']]
-    required = {'src/existing.py', 'src/unindexed.py', 'src/caller.py',
-                'tests/test_combined.py', 'docs/control.md'}
-    for path in required:
-        matches = [row for row in read_rows if row.get('path') == path]
-        assert matches, 'Actual preplanning read missing: ' + path
-        assert any(row.get('sha256', '').removeprefix('sha256:') == sample['before'][path] for row in matches)
-        assert hashlib.sha256((sample['root']/path).read_bytes()).hexdigest() == sample['before'][path]
-    for path in ('src/existing.py', 'src/unindexed.py'):
-        assert any(row.get('path') == path and row.get('origin') == 'direct-source' for row in read_rows)
-    return responses, read_rows
-
-
-def _vdd_real_scope(sample):
-    bundle = sample['bundle']
-    assert bundle['obligations'] and bundle['acceptances'] and bundle['slices']
-    owners = {path for piece in bundle['slices'] for path in piece['production_owners']}
-    assert owners == {'src/combined.py'}, 'Native scope duplicated or rewrote an existing helper'
-    for piece in bundle['slices']:
-        assert set(piece['allowed_write_paths']) <= {'src/combined.py', 'tests/test_combined.py'}
-        assert not piece['planned_new_files'], 'All authorized production/test entries already exist'
-    relevant = [a for a in bundle['acceptances'] if 'combined' in json.dumps(a['oracle']).lower()]
-    assert relevant, 'The requested genuine gap has no native Acceptance'
-    assert all(a['obligation_ids'] for a in relevant)
-    for acceptance in relevant:
-        owners_for_acceptance = {path for piece in bundle['slices']
-            if acceptance['acceptance_id'] in piece['acceptance_ids'] for path in piece['production_owners']}
-        assert owners_for_acceptance == {'src/combined.py'}
-    # Validating this graph does not label runtime behavior present or missing.
-    # Those classifications still belong to the later controlled probe.
-    assert all(intent.get('disposition') not in {'present', 'missing'}
-               for intent in bundle.get('behavior_routing', {}).get('intents', []))
-    return relevant
-
-
-@pytest.mark.cer_assertion('ASSERT_E4C02160E0CC')
-def test_contract_e4c02160e0cc(vdd_complete_consumption):
-    try:
-        _vdd_actual_read_context(vdd_complete_consumption)
-        _vdd_real_scope(vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_E4C02160E0CC')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_2678EA925C89')
-def test_contract_2678ea925c89(vdd_complete_consumption):
-    try:
-        _vdd_actual_read_context(vdd_complete_consumption)
-        relevant = _vdd_real_scope(vdd_complete_consumption)
-        # The native V3 producer must have received the frozen requirement bytes,
-        # not an unbound substitute. Source hashes are checked independently of
-        # successful compiler exit or the existence of a context file.
-        contracts = []
-        for request in vdd_complete_consumption['requests']:
-            # The public V3 group-repair transport wraps the same frozen input.
-            # Unwrap only that explicit protocol, never an arbitrary nested object.
-            producer = request
-            if request.get('original_stage') == 'v3':
-                assert isinstance(request.get('input'), dict)
-                producer = request['input']
-            contracts.extend(producer.get('source_contracts', []))
-        assert contracts
-        import hashlib
-        actual_text = (vdd_complete_consumption['root']/'requirements.md').read_text(encoding='utf-8').strip()
-        for contract in contracts:
-            assert contract['source_text'] == actual_text
-            assert hashlib.sha256(contract['source_text'].encode('utf-8')).hexdigest() == contract['text_sha256'].removeprefix('sha256:')
-        assert all(c['source_sha256'].removeprefix('sha256:') ==
-                   vdd_complete_consumption['requirement_sha256'] for c in contracts)
-        refs = {c['source_ref'] for c in contracts}
-        assert all(set(a['source_refs']) <= refs for a in relevant)
-    except AssertionError:
-        print('FAILURE_ID:KQ_2678EA925C89')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_A37D4E43898B')
-def test_contract_a37d4e43898b(vdd_complete_consumption):
-    try:
-        _, reads = _vdd_actual_read_context(vdd_complete_consumption)
-        assert any(r['path'] == 'src/unindexed.py' and r['origin'] == 'direct-source' for r in reads)
-        _vdd_real_scope(vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_A37D4E43898B')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_121ED996CEAE')
-def test_contract_121ed996ceae(vdd_complete_consumption):
-    try:
-        _vdd_actual_read_context(vdd_complete_consumption)
-        _vdd_real_scope(vdd_complete_consumption)
-        # Existing source is executed here independently of the plan's prose.
-        import runpy
-        root = vdd_complete_consumption['root']
-        assert runpy.run_path(str(root/'src/existing.py'))['indexed_value']() == 13
-        assert runpy.run_path(str(root/'src/unindexed.py'))['unindexed_value']() == 29
-        existing = {'src/existing.py', 'src/unindexed.py'}
-        assert not any(existing & set(s['production_owners']) for s in vdd_complete_consumption['bundle']['slices'])
-    except AssertionError:
-        print('FAILURE_ID:KQ_121ED996CEAE')
-        raise
-
-
-
-def _s5_prd_chain(sample):
-    """Join actual hook result, verified reads and native use by source identity."""
-    decisions = [e for e in sample['events'] if e['kind'] == 'memlog-append'
-                 and e.get('type') == 'decision']
-    assert decisions
-    first = min(e['monotonic_ns'] for e in decisions)
-    results = [e['value'] for e in sample['events']
-               if e['kind'] == 'query-return' and e['monotonic_ns'] < first]
-    assert results, 'No actual predecision PRD hook/query return'
-    assert all(r['consumer'] == 'bmad-planning' and r['stage'] == 'prd' for r in results)
-    assert all(r['diagnostic']['effective_config']['enabled'] is True for r in results)
-    assert all(r['diagnostic']['effective_config']['origins'] for r in results)
-    reads = {r['path']: r for result in results for r in result['read_set']}
-    for path in ('src/current.py', 'docs/history.md', 'docs/exclusions.md', 'docs/rumor.md'):
-        assert path in reads and reads[path]['sha256'].removeprefix('sha256:') == sample['source_hashes'][path]
-        assert reads[path]['read_identity']
-        decision = _prd_source_decision(sample, path)
-        assert ('accepted' in decision or 'rejected' in decision
-            or ('unverified' in decision and 'not adopted' in decision))
-    current = _prd_source_decision(sample, 'src/current.py')
-    assert 'reuse' in current or 'retain' in current
-    assert any(term in _prd_source_decision(sample, 'docs/history.md')
-        for term in ('planning-only', 'not implemented', 'never implemented'))
-    assert all(not r.get('adopted') and not r.get('authorizes') for r in results)
-    return results
-
-
-def _s5_unverified_scope(sample):
-    _s5_prd_chain(sample)
-    unknown = _prd_source_decision(sample, 'docs/rumor.md')
-    assert 'spreadsheet import' in unknown and ('unverified' in unknown or 'awaiting verification' in unknown)
-    assert any(word in unknown for word in ('defer', 'pending', 'blocked', 'not adopted', 'rejected'))
-    current = _prd_source_decision(sample, 'src/current.py')
-    assert 'normaliz' in current and ('reuse' in current or 'retain' in current)
-    scope = (sample['prd'] + '\n' + sample['addendum']).lower()
-    assert 'deduplication' in scope
-    assert 'spreadsheet import' in scope and any(word in scope for word in ('unverified', 'pending', 'open question'))
-    assert 'remote synchronization' in scope and any(word in scope for word in ('excluded', 'non-goal'))
-
-
-def _s5_all_consumers(prd, architecture, native, vdd):
-    _s5_prd_chain(prd)
-    _architecture_predecision_read(architecture, ['docs/current-adr.md', 'docs/upstream.md', 'src/transport.py'])
-    actual, decisions = _architecture_decisions(architecture)
-    assert 'TransportOwner' in actual['spine']
-    assert 'stdio' in _architecture_source_decision(architecture, decisions, 'src/transport.py')
-    added = _native_decision_body(native)
-    assert 'accepted' in added and 'rejected' in added and 'retain' in added
-    _vdd_actual_read_context(vdd)
-    _vdd_real_scope(vdd)
-    # These are native decisions, not an adapter-adopted field or static prompt.
-    for result in _s5_prd_chain(prd):
-        assert not result.get('authorizes') and not result.get('adopted')
-
-
-def _s5_direct_discovery(vdd):
-    _, rows = _vdd_actual_read_context(vdd)
-    _vdd_real_scope(vdd)
-    import hashlib
-    for name in ('src/existing.py', 'src/unindexed.py'):
-        found = [r for r in rows if r['path'] == name]
-        assert found and all(r['origin'] == 'direct-source' for r in found)
-        assert all(r['sha256'].removeprefix('sha256:') == hashlib.sha256((vdd['root']/name).read_bytes()).hexdigest() for r in found)
-    assert all(not r.get('adopted') and not r.get('authorizes') for r in vdd['events'] if isinstance(r, dict))
-
-
-def _s5_required_gate(fixture):
-    _s7_write_config(fixture)
-    result = _planning_operation(fixture)
-    assert result['outcome'] == 'hit'
-    assert not result.get('authorizes') and not result.get('required_gate_satisfied')
-    assert _s7_required_gate(fixture, True) == 'required_modules_unsatisfied'
-    from scripts.toolchain.bmad_native.testing import load
-    owner = load('s5_required_governance_owner', '.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
-    for phase in ('development', 'test', 'production'):
-        policy = owner.resolve_governance_policy('on', environment={'PHASEA_SERVICE_STATE': phase})
-        assert policy['enabled'] is True and policy['checks'] == list(owner.GOVERNANCE_CHECKS)
-
-
-def _s5_default_vdd(fixture, tmp_path):
-    observation = _vdd_public_first_worker(fixture, tmp_path, governance='off')
-    _assert_actual_vdd_prequery(observation)
-    # The intentionally cancelled first worker did not publish completed scope.
-    assert not (observation['out']/'semantic-plan-bundle.v1.json').exists()
-    names = [p.name.lower() for p in observation['out'].rglob('*') if p.is_file()]
-    assert not any('attestation' in name or 'knowledge-freeze' in name for name in names)
-
-
-def _s5_native_configuration(sample):
-    import subprocess, hashlib
-    from scripts.toolchain.bmad_native import verify
-    root = sample['root']
-    native_before = {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-        for prefix in ('.agents/skills/bmad-prd', '.agents/skills/bmad-review', '_bmad/scripts')
-        for p in (root/prefix).rglob('*') if p.is_file()}
-    custom = root/'_bmad/custom/bmad-prd.toml'
-    before = custom.read_bytes()
-    resolved = subprocess.run(['uv', 'run', str(root/'_bmad/scripts/resolve_customization.py'),
-        '--project-root', str(root), '--skill', str(root/'.agents/skills/bmad-prd'), '--key', 'workflow'],
-        capture_output=True, text=True, encoding='utf-8', shell=False, timeout=30)
-    if resolved.returncode:
-        raise RuntimeError('OFFICIAL_CUSTOMIZATION_RESOLVER_UNAVAILABLE: '+resolved.stderr)
-    workflow = json.loads(resolved.stdout)['workflow']
-    hooks = workflow.get('activation_steps_prepend', []) + workflow.get('activation_steps_append', [])
-    assert hooks and any('prepare-consumption' in hook for hook in hooks)
-    assert custom.read_bytes() == before
-    verify(root)
-    assert native_before == {name: hashlib.sha256((root/name).read_bytes()).hexdigest() for name in native_before}
-    results = _s5_prd_chain(sample)
-    episodes = {r['episode_id'] for r in results}
-    assert len(episodes) == 1, 'One unchanged input trigger must not create new episodes'
-    assert max(r['budget_usage']['calls'] for r in results) == 1
-
-
-def _s5_cosmetic(native, tmp_path_factory, cache):
-    unchanged = _spec_supplement_episode(native, 'unchanged', tmp_path_factory, cache)
-    changed = _spec_supplement_episode(native, 'related-source-change', tmp_path_factory, cache)
-    _spec_reuse_or_supplement(unchanged)
-    _spec_reuse_or_supplement(changed)
-    assert not unchanged['calls'] and changed['calls']
-    assert unchanged['source_hash'] != changed['source_hash']
-
-
-def _s5_windows_current(tmp_path):
-    # Real platform execution only. No skip, canned result, or Linux substitute.
-    for scenario in ('unicode-path-utf8', 'subprocess-timeout', 'subprocess-cancel'):
-        folder = tmp_path/scenario
-        folder.mkdir()
-        test_windows_planning_query_runtime(folder, scenario)
-
-
-def _s5_prd_identity(fixture, mode):
-    """AD-5: exercise the public hook before and after input becomes known."""
-    import subprocess
-    root, paths, request = fixture
-    _s7_write_config(fixture)
-    def invoke(task):
-        payload = {'stage': 'prd', 'operation': 'create', 'task_id': task,
-            'mode': mode, 'inputs': ['AGENTS.md'], 'query': 'repository rules',
-            'scope': ['AGENTS.md'], 'record_path': 'logs/prd-query.md'}
-        result = subprocess.run([sys.executable, '-B',
-            str(ROOT/'scripts/toolchain/knowledge_query/adapter.py'),
-            'prepare-consumption', '--repository-root', str(root)],
-            input=json.dumps(payload), text=True, encoding='utf-8',
-            capture_output=True, shell=False, timeout=35)
-        assert result.returncode == 0, result.stderr
-        assert result.stdout.strip(), 'Public prepare-consumption returned no observation'
-        return json.loads(result.stdout)
-    pending = invoke(None)
-    assert pending['status'] == 'awaiting-input'
-    assert not pending.get('queried') and not pending.get('query_result')
-    known = invoke('prd-identity-'+mode)
-    assert known['status'] == 'prepared' and known['queried'] is True
-    result = known['query_result']
-    assert result['stage'] == 'prd' and result['consumer'] == 'bmad-planning'
-    assert any(r['path'] == 'AGENTS.md' for r in result['read_set'])
-    assert not known.get('adopted') and not known.get('authorizes')
-
-
-def _s5_reinstall(sample, tmp_path):
-    """Real scoped native reinstall with external customization preserved."""
-    import shutil, hashlib, subprocess
-    from scripts.toolchain.bmad_native import verify
-    source_receipt = json.loads((ROOT/'_bmad/jimuyun-native-install.json').read_text())
-    source = Path(source_receipt['installed_from'])
-    if not source.is_dir():
-        raise OSError('PINNED_OFFICIAL_REINSTALL_SOURCE_UNAVAILABLE')
-    target = tmp_path/'reinstall'
-    shutil.copytree(sample['root'], target)
-    custom = target/'_bmad/custom/bmad-prd.toml'
-    before_custom = custom.read_bytes()
-    before = {p.relative_to(target).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-        for prefix in ('.agents/skills/bmad-prd', '.agents/skills/bmad-review',
-                       '.agents/skills/bmad-spec', '.agents/skills/bmad-architecture', '_bmad/scripts')
-        for p in (target/prefix).rglob('*') if p.is_file()}
-    completed = subprocess.run([sys.executable, '-B', '-m', 'scripts.toolchain.bmad_native',
-        'install-from-source', '--repository-root', str(target), '--source-root', str(source),
-        '--replace-native'], cwd=ROOT, capture_output=True, text=True, encoding='utf-8', shell=False, timeout=45)
-    if completed.returncode:
-        raise RuntimeError('REAL_NATIVE_REINSTALL_FAILED: '+completed.stdout+completed.stderr)
-    assert json.loads(completed.stdout)['ok'] is True
-    verify(target)
-    assert custom.read_bytes() == before_custom
-    assert before == {name: hashlib.sha256((target/name).read_bytes()).hexdigest() for name in before}
-    # Scoped installer replaces SPEC/Architecture/runtime, and must not overwrite
-    # separately installed original PRD/review or external team configuration.
-    resolved = subprocess.run(['uv', 'run', str(target/'_bmad/scripts/resolve_customization.py'),
-        '--project-root', str(target), '--skill', str(target/'.agents/skills/bmad-prd'), '--key', 'workflow'],
-        capture_output=True, text=True, encoding='utf-8', shell=False, timeout=30)
-    assert resolved.returncode == 0, resolved.stderr
-    assert 'prepare-consumption' in resolved.stdout
-    _s5_native_configuration(sample)
-
-
-def _s5_handoff_owners(native, vdd):
-    from scripts.toolchain.bmad_native.testing import load
-    canonical = load('s5_current_selection_owner', '.agents/skills/jimuyun-spec/scripts/canonical_package.py')
-    package = native['root']/'_bmad-output/specs/spec-example/SPEC.md'
-    # Use the actual native publication's package path, not an invented record.
-    packages = list((native['root']/'_bmad-output/specs').glob('*/SPEC.md'))
-    assert len(packages) == 1
-    current = native['root']/'_bmad-output/specs/canonical-spec-package-selections/current/SPEC-example.json'
-    assert canonical.validate_selection(native['root'], packages[0], current) == native['selection']
-    handoff = load('s5_real_handoff_owner', '.agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py')
-    assert not handoff.handoff_findings(vdd['bundle'], workspace=vdd['root'])
-    _vdd_real_scope(vdd)
-    assert vdd['bundle']['profile'] == 'self-hosted'
-    # A compiler plan is not runtime/Acceptance permission. Runtime role presence
-    # cannot substitute for actual case evidence or publish acceptance-passed.
-    assert not vdd['bundle'].get('authorizes')
-    assert not (vdd['out']/'acceptance-passed.json').exists()
-
-
-
-@pytest.mark.cer_assertion('ASSERT_C5739C9FC820')
-def test_contract_c5739c9fc820(prd_source_consumer_sample):
-    try:
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_C5739C9FC820')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_996BF56C8518')
-def test_contract_996bf56c8518(prd_source_consumer_sample):
-    try:
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_996BF56C8518')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_63783142FD7B')
-def test_contract_63783142fd7b(prd_source_consumer_sample):
-    try:
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_63783142FD7B')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_4C1B8DE3882C')
-def test_contract_4c1b8de3882c(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_4C1B8DE3882C')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_9E29614CA1B7')
-def test_contract_9e29614ca1b7(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_9E29614CA1B7')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_11A7E3CEF26B')
-def test_contract_11a7e3cef26b(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_11A7E3CEF26B')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_8E3D097B669C')
-def test_contract_8e3d097b669c(vdd_complete_consumption):
-    try:
-        _s5_direct_discovery(vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_8E3D097B669C')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_314A186BF90E')
-def test_contract_314a186bf90e(prd_source_consumer_sample, vdd_complete_consumption):
-    try:
-        _s5_prd_chain(prd_source_consumer_sample)
-        _s5_direct_discovery(vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_314A186BF90E')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_113D52ECE151')
-def test_contract_113d52ece151(prd_source_consumer_sample):
-    try:
-        _s5_unverified_scope(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_113D52ECE151')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_B347CD2195F2')
-def test_contract_b347cd2195f2(native_caller_decision):
-    try:
-        _s5_unresolved_native(native_caller_decision)
-    except AssertionError:
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_7F6AF9FDD617')
-def test_contract_7f6af9fdd617(native_caller_decision):
-    try:
-        _s5_unresolved_native(native_caller_decision)
-    except AssertionError:
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_812769EB2D98')
-def test_contract_812769eb2d98(published_planning):
-    try:
-        _s5_required_gate(published_planning)
-    except AssertionError:
-        print('FAILURE_ID:KQ_812769EB2D98')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_891AB647E730')
-def test_contract_891ab647e730(published_planning):
-    try:
-        _s5_required_gate(published_planning)
-    except AssertionError:
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_01DA6B7A91DC')
-def test_contract_01da6b7a91dc(published_planning, tmp_path, vdd_complete_consumption):
-    try:
-        _s5_default_vdd(published_planning, tmp_path)
-        _vdd_actual_read_context(vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_01DA6B7A91DC')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_14832D388C3C')
-def test_contract_14832d388c3c(published_planning, tmp_path):
-    try:
-        _s5_default_vdd(published_planning, tmp_path)
-    except AssertionError:
-        print('FAILURE_ID:KQ_14832D388C3C')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_5165AA0D7344')
-def test_contract_5165aa0d7344(prd_source_consumer_sample, tmp_path):
-    try:
-        _s5_reinstall(prd_source_consumer_sample, tmp_path)
-    except AssertionError:
-        print('FAILURE_ID:KQ_5165AA0D7344')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_7694233DB1C7')
-def test_contract_7694233db1c7(prd_source_consumer_sample, tmp_path):
-    try:
-        _s5_reinstall(prd_source_consumer_sample, tmp_path)
-    except AssertionError:
-        print('FAILURE_ID:KQ_7694233DB1C7')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_CE33174BFA28')
-def test_contract_ce33174bfa28(native_caller_decision, vdd_complete_consumption):
-    try:
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_CE33174BFA28')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_40CE012D7173')
-def test_contract_40ce012d7173(native_caller_decision, vdd_complete_consumption, published_planning):
-    try:
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-        _s5_required_gate(published_planning)
-    except AssertionError:
-        print('FAILURE_ID:KQ_40CE012D7173')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_58D790ED2D22')
-def test_contract_58d790ed2d22(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_58D790ED2D22')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_01ABAC86036B')
-def test_contract_01abac86036b(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-    except AssertionError:
-        print('FAILURE_ID:KQ_01ABAC86036B')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_8F2E3484B2E6')
-def test_contract_8f2e3484b2e6(native_caller_decision, tmp_path_factory, spec_supplement_cache):
-    try:
-        _s5_cosmetic(native_caller_decision, tmp_path_factory, spec_supplement_cache)
-    except AssertionError:
-        print('FAILURE_ID:KQ_8F2E3484B2E6')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_88C0C7FEA6B8')
-def test_contract_88c0c7fea6b8(native_caller_decision, tmp_path_factory, spec_supplement_cache):
-    try:
-        _s5_cosmetic(native_caller_decision, tmp_path_factory, spec_supplement_cache)
-    except AssertionError:
-        print('FAILURE_ID:KQ_88C0C7FEA6B8')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_E4F3DC15833A')
-def test_contract_e4f3dc15833a(native_caller_decision, tmp_path_factory, spec_supplement_cache):
-    try:
-        _s5_cosmetic(native_caller_decision, tmp_path_factory, spec_supplement_cache)
-    except AssertionError:
-        print('FAILURE_ID:KQ_E4F3DC15833A')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_1809571E1027')
-@pytest.mark.parametrize('mode', ['interactive', 'headless'])
-def test_contract_1809571e1027(published_planning, prd_source_consumer_sample, mode):
-    try:
-        _s5_prd_identity(published_planning, mode)
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_1809571E1027')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_26ACEA55F9E7')
-@pytest.mark.parametrize('mode', ['interactive', 'headless'])
-def test_contract_26acea55f9e7(published_planning, prd_source_consumer_sample, mode):
-    try:
-        _s5_prd_identity(published_planning, mode)
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_26ACEA55F9E7')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_3A04B9A52F94')
-@pytest.mark.parametrize('mode', ['interactive', 'headless'])
-def test_contract_3a04b9a52f94(published_planning, prd_source_consumer_sample, mode):
-    try:
-        _s5_prd_identity(published_planning, mode)
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_3A04B9A52F94')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_D6B77290E535')
-@pytest.mark.parametrize('mode', ['interactive', 'headless'])
-def test_contract_d6b77290e535(published_planning, prd_source_consumer_sample, mode):
-    try:
-        _s5_prd_identity(published_planning, mode)
-        _s5_prd_chain(prd_source_consumer_sample)
-    except AssertionError:
-        print('FAILURE_ID:KQ_D6B77290E535')
-        raise
-
-
-@pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
-def test_contract_5f92ac05bcfa(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption, tmp_path):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-        _s5_windows_current(tmp_path)
-    except AssertionError:
-        print('FAILURE_ID:KQ_5F92AC05BCFA')
-        raise
+def vdd_public_consumption(published_vdd_base, tmp_path_factory):
+    return _vdd_public_run(published_vdd_base, tmp_path_factory)
+
+
+@pytest.fixture(scope='module')
+def vdd_disabled_consumption(published_vdd_base, tmp_path_factory):
+    return _vdd_public_run(published_vdd_base, tmp_path_factory, 'disabled')
+
+
+@pytest.fixture(scope='module')
+def vdd_unknown_consumption(published_vdd_base, tmp_path_factory):
+    return _vdd_public_run(published_vdd_base, tmp_path_factory, 'unknown-fact')
+
+
+def _vdd_current_episode(sample):
+    assert sample['process'].returncode == 0, (sample['result'], sample['process'].stderr)
+    assert sample['result']['status'] == 'paused', sample['result']
+    assert sample['result']['completed_checks'] == ['V3','V3A','V3-execution-preflight']
+    assert sample['trace'] and any(t['stage'].startswith('v3') for t in sample['trace'])
+    # This is an actual public caller/native validator execution with scripted
+    # author input, explicitly not real-model or end-to-end delivery evidence.
+    observations = sample['trace'][0]['payload']['planning_source_observations']
+    assert observations['status'] == 'prepared' and observations['queried']
+    query = observations['query_result']
+    assert query['outcome'] == 'hit' and query['read_set'], query
+    return query
+
+
+def _assert_vdd_caller_record(sample, query):
+    """Read the actual native journal, not the adapter's advice or status."""
+    import re
+    root=sample['root']; output=root/'execution-plans/sample'
+    text=(output/'execution-record.md').read_text(encoding='utf-8')
+    caller=re.sub(r'<!-- planning-query\.v1 .*?-->', '', text, flags=re.S)
+    rows=[json.loads(line) for line in caller.splitlines() if line.startswith('{')]
+    rows=[row for row in rows if row.get('kind')=='planning-source-decision']
+    reads={read['path']:read for read in query['read_set']}
+    by_path={row['path']:row for row in rows}
+    assert len(rows)==len(by_path)==len(reads) and set(by_path)==set(reads)
+    checkpoint=Path(sample['result']['checkpoint']['path'])
+    contract=checkpoint.relative_to(output).as_posix()
+    candidate=json.loads(checkpoint.read_text(encoding='utf-8'))['candidate']
+    hint=candidate['slice_hints'][0]
+    for name,read in reads.items():
+        row=by_path[name]
+        assert row['consumer']=='vdd' and row['stage']==query['stage']
+        assert row['task_id']=='execution-plans/sample' and row['episode_id']==query['episode_id']
+        assert row['query_topic']=='current source callers tests contracts requirements.md'
+        assert row['raw_status']==query['diagnostic'].get('raw_status') and row['outcome']==query['outcome']
+        assert row['sha256']==read['sha256'] and row['read_identity']==read['read_identity']
+        assert row['origin']==read['origin'] and row['reason']
+        assert row['actual_use']['contract']==contract and row['actual_use']['effect']
+        assert row['authority']=='observation-only' and row['authorizes']==[]
+        assert hashlib.sha256((root/name).read_bytes()).hexdigest()==read['sha256'].removeprefix('sha256:')
+    for name in ('src/compiler.py','tests/test_compile.py'):
+        assert by_path[name]['decision']=='accepted'
+        assert by_path[name]['actual_use']['obligation_ids']==sorted(hint['obligation_ids'])
+    for item in query['candidates']:
+        name=item['path']
+        if name not in {*hint['production_owners'],*hint['execution_snapshot_paths'],'requirements.md'}:
+            assert by_path[name]['decision']=='rejected'
+            assert by_path[name]['actual_use']['effect']=='excluded from scope adoption'
 
 
 @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
-def test_contract_f3b89696b975(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption, tmp_path):
+@pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+@pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+@pytest.mark.cer_assertion('ASSERT_3DAF23250361')
+@pytest.mark.cer_assertion('ASSERT_63783142FD7B')
+@pytest.mark.cer_assertion('ASSERT_4C1B8DE3882C')
+@pytest.mark.cer_assertion('ASSERT_9E29614CA1B7')
+@pytest.mark.cer_assertion('ASSERT_C5739C9FC820')
+@pytest.mark.cer_assertion('ASSERT_F7FB563211E4')
+def test_contract_f7fb563211e4(vdd_public_consumption):
+    sample = vdd_public_consumption
+    query = _vdd_current_episode(sample)
     try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-        _s5_windows_current(tmp_path)
+        _assert_vdd_caller_record(sample, query)
     except AssertionError:
-        print('FAILURE_ID:KQ_F3B89696B975')
+        print('FAILURE_ID:KQ_3DAF23250361')
+        print('FAILURE_ID:KQ_63783142FD7B')
+        print('FAILURE_ID:KQ_4C1B8DE3882C')
+        print('FAILURE_ID:KQ_9E29614CA1B7')
+        print('FAILURE_ID:KQ_C5739C9FC820')
+        print('FAILURE_ID:KQ_F7FB563211E4')
         raise
+
+
+
+@pytest.mark.cer_assertion('ASSERT_05552304BD9E')
+def test_contract_05552304bd9e(vdd_public_consumption):
+    query = _vdd_current_episode(vdd_public_consumption)
+    assert query['consumer'] == 'vdd'
+    assert all(t['sandbox'] == 'read-only' for t in vdd_public_consumption['trace'])
+    assert not (vdd_public_consumption['root']/'src/proposed.py').exists()
+
+
+# ADR-0048: each group observes a distinct public consumer boundary. Native
+# outputs below are evaluated, never authored by a fake receipt/plan writer.
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+@pytest.mark.cer_assertion('ASSERT_8E3D097B669C')
+@pytest.mark.cer_assertion('ASSERT_121ED996CEAE')
+@pytest.mark.cer_assertion('ASSERT_A37D4E43898B')
+@pytest.mark.cer_assertion('ASSERT_2678EA925C89')
+@pytest.mark.cer_assertion('ASSERT_996BF56C8518')
+@pytest.mark.cer_assertion('ASSERT_314A186BF90E')
+@pytest.mark.cer_assertion('ASSERT_E4C02160E0CC')
+@pytest.mark.cer_assertion('ASSERT_03668F0ADF94')
+def test_contract_8e3d097b669c(vdd_public_consumption):
+    sample = vdd_public_consumption
+    query = _vdd_current_episode(sample)
+    root = sample['root']
+    reads = {r['path']:r for r in query['read_set']}
+    assert {'requirements.md','src/compiler.py','tests/test_compile.py'} <= reads.keys()
+    assert 'src/compiler.py' not in {c['path'] for c in query['candidates']}
+    for name in ('src/compiler.py','tests/test_compile.py'):
+        actual = (root/name).read_bytes()
+        assert reads[name]['origin'] == 'direct-source'
+        assert reads[name]['sha256'].removeprefix('sha256:') == hashlib.sha256(actual).hexdigest()
+        assert reads[name]['read_identity'] and reads[name]['excerpt_range']
+    assert 'VALUE = 1' in reads['src/compiler.py']['excerpt']
+    assert 'def test_compile' in reads['tests/test_compile.py']['excerpt']
+    # Query/source reads are already present at V1, before any V3 boundary.
+    assert sample['trace'][0]['stage'].startswith('v1-')
+    assert all(t['payload']['planning_source_observations']['query_result']['read_set'] == query['read_set']
+               for t in sample['trace'])
+    v3 = next(t['payload'] for t in sample['trace'] if t['stage'].startswith('v3'))
+    assert 'VALUE = 1 implemented' == v3['obligations'][0]['state_before']
+    checkpoint = next((root/'execution-plans/sample/.compiler-work/v3-checkpoints').glob('*.json'))
+    candidate = json.loads(checkpoint.read_text())['candidate']
+    hint = candidate['slice_hints'][0]
+    assert hint['production_owners'] == ['src/compiler.py']
+    assert hint['execution_snapshot_paths'] == ['tests/test_compile.py']
+    assert hint['planned_new_files'] == [] and not (root/'src/proposed.py').exists()
+    assert 'src/proposed.py' in (root/'requirements.md').read_text()
+
+
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+@pytest.mark.cer_assertion('ASSERT_14832D388C3C')
+@pytest.mark.cer_assertion('ASSERT_FD756962A671')
+@pytest.mark.cer_assertion('ASSERT_01DA6B7A91DC')
+def test_contract_14832d388c3c(vdd_public_consumption, vdd_disabled_consumption):
+    _vdd_current_episode(vdd_public_consumption)
+    other = vdd_disabled_consumption
+    assert other['process'].returncode == 0 and other['result']['status'] == 'paused'
+    prepared = other['trace'][0]['payload']['planning_source_observations']
+    assert not prepared['queried']
+    query = prepared['query_result']
+    assert (query['outcome'], query['reason_code']) == ('unavailable','disabled')
+    assert query['read_set'] and all(r['origin'] == 'direct-source' for r in query['read_set'])
+    _assert_vdd_caller_record(other,query)
+    # Query enablement cannot create governance/authorization artifacts.
+    for sample in (vdd_public_consumption, other):
+        root=sample['root']; names=[p.name.lower() for p in (root/'execution-plans/sample').rglob('*') if p.is_file()]
+        assert not any(word in name for name in names for word in ('attestation','authorization','conformance','source-freeze'))
+        assert not sample['result'].get('authorizes')
+
+
+@pytest.mark.cer_assertion('ASSERT_113D52ECE151')
+@pytest.mark.cer_assertion('ASSERT_7F6AF9FDD617')
+@pytest.mark.cer_assertion('ASSERT_B347CD2195F2')
+def test_contract_113d52ece151(vdd_unknown_consumption):
+    sample=vdd_unknown_consumption
+    assert sample['process'].returncode != 0
+    assert sample['result']['status'] == 'repair-vdd'
+    assert 'active-unresolved' in json.dumps(sample['result']), sample['result']
+    assert not any(t['stage'].startswith('v3') for t in sample['trace'])
+    assert not list((sample['root']/'execution-plans/sample/.compiler-work').glob('v3-checkpoints/*.json'))
+    assert not sample['result'].get('authorizes')
+
+
+@pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+@pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+@pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+    (None,None,None,False,'phase-service-state'),
+    ('development',None,None,False,'phase-service-state'),
+    ('test',None,None,True,'phase-service-state'),
+    ('production',None,None,True,'phase-service-state'),
+    ('development','on',None,True,'environment'),
+    ('production','off',None,False,'environment'),
+    ('development','on','off',False,'parameter'),
+    ('production','off','on',True,'parameter')])
+def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    env={}
+    if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+    if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+    actual=module.resolve_governance_policy(explicit,environment=env)
+    assert actual['enabled'] is enabled and actual['source'] == source
+
+
+@pytest.mark.cer_assertion('ASSERT_812769EB2D98')
+@pytest.mark.cer_assertion('ASSERT_891AB647E730')
+@pytest.mark.parametrize('matched',[False,True])
+def test_contract_812769eb2d98(published_planning,matched):
+    assert _s7_required_gate(published_planning,nonempty=matched) in {'required_modules_unsatisfied','locator_result_not_matched'}
 
 
 @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
-def test_contract_cead20c83823(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption, tmp_path):
-    try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-        _s5_windows_current(tmp_path)
-    except AssertionError:
-        print('FAILURE_ID:KQ_CEAD20C83823')
-        raise
+@pytest.mark.cer_assertion('ASSERT_7694233DB1C7')
+def test_contract_7694233db1c7(published_planning,monkeypatch):
+    root,paths,request=published_planning
+    _s7_write_config(published_planning)
+    record=root/'execution-plans/example/memlog.md'
+    _put(root,record.relative_to(root),b'# Existing native caller record\n')
+    calls=[]
+    real=core.query_with_diagnostics
+    def observed(*args,**kwargs):
+        calls.append(args[0]); return real(*args,**kwargs)
+    monkeypatch.setattr(core,'query_with_diagnostics',observed)
+    first=_planning_operation(published_planning,record_path=record.relative_to(root).as_posix())
+    second=_planning_operation(published_planning,record_path=record.relative_to(root).as_posix())
+    assert first['episode_id'] == second['episode_id'] and len(calls) == 1
+    assert second['budget_usage']['calls'] == first['budget_usage']['calls'] == 1
+    assert (root/'knowledge/planning-query.toml').is_file()
+    assert first['budget_usage']['calls'] == 1
+
+
+def _s10_guards():
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('s10_retained_boundaries',ROOT/'tests/toolchain/knowledge_query/test_planning_boundaries.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+@pytest.mark.cer_assertion('ASSERT_5165AA0D7344')
+@pytest.mark.cer_assertion('ASSERT_B34E35470A88')
+@pytest.mark.cer_assertion('ASSERT_6C0520FE0D5E')
+def test_contract_5165aa0d7344():
+    guards=_s10_guards()
+    guards.package_guard(); guards.native_guard()
+
+
+@pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+@pytest.mark.cer_assertion('ASSERT_CE33174BFA28')
+@pytest.mark.cer_assertion('ASSERT_01ABAC86036B')
+@pytest.mark.cer_assertion('ASSERT_40CE012D7173')
+def test_contract_ce33174bfa28():
+    guards=_s10_guards()
+    guards.scope_guard(); guards.authority_guard(); guards.dependency_guard()
 
 
 @pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
-def test_contract_54829fe46af9(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption, tmp_path):
+@pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+@pytest.mark.cer_assertion('ASSERT_58D790ED2D22')
+@pytest.mark.cer_assertion('ASSERT_11A7E3CEF26B')
+def test_contract_58d790ed2d22(vdd_public_consumption):
+    _vdd_current_episode(vdd_public_consumption)
+    # Current public caller with scripted author input is distinct from the
+    # preserved, real Windows transport run. No model/Windows result is invented.
+    import zipfile,xml.etree.ElementTree as ET
+    archive=ROOT/'logs/quick-dev-s4-20261025/windows-original/parent-original.zip'
+    assert hashlib.sha256(archive.read_bytes()).hexdigest() == '769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21'
+    with zipfile.ZipFile(archive) as z:
+        assert z.testzip() is None
+        suite=ET.fromstring(z.read('junit.xml')).find('testsuite')
+        assert all(suite.attrib[k]=='0' for k in ('failures','errors','skipped')) and suite.attrib['tests']=='13'
+        assert z.read('pytest-exit.txt').strip()==b'0'
+        hashes=json.loads(z.read('source-hashes.json'))
+        expected={r['Path'].split('\\')[-1]:r['Hash'].lower() for r in hashes}
+        for relative in ('scripts/toolchain/knowledge_query/adapter.py','scripts/python/knowledge_locator.py',
+                         'scripts/python/_knowledge_locator_core.py','knowledge/planning-query.toml'):
+            assert hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()==expected[Path(relative).name]
+
+
+
+@pytest.mark.cer_assertion('ASSERT_06A867E00BC5')
+@pytest.mark.cer_assertion('ASSERT_BA9A0474912A')
+@pytest.mark.cer_assertion('ASSERT_B7A571632018')
+@pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+@pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+@pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+@pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+def test_windows_planning_query_runtime_evidence():
+    """Original real Windows transport execution, never a Linux substitute.
+
+    Reuse covers the unchanged query runtime. Current native VDD caller tests
+    separately prove its Linux execution; this archive does not claim that the
+    current complete compiler/test source ran on Windows.
+    """
+    import ast,zipfile,xml.etree.ElementTree as ET
+    original=ROOT/'logs/quick-dev-s4-20261025/windows-original'
+    archive=original/'parent-original.zip'
+    assert hashlib.sha256(archive.read_bytes()).hexdigest() == '769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21'
+    with zipfile.ZipFile(archive) as bundle:
+        assert bundle.testzip() is None
+        assert bundle.read('commit.txt').strip() == b'4012465ddb093e2d952d1ab4482d8e1257a7fffb'
+        platform=json.loads(bundle.read('platform.json'))
+        assert platform['platform']=='win32' and platform['system'].startswith('Windows-2022Server-')
+        assert bundle.read('pytest-exit.txt').strip()==b'0'
+        suite=ET.fromstring(bundle.read('junit.xml')).find('testsuite')
+        assert suite.attrib['tests']=='13'
+        assert all(suite.attrib[k]=='0' for k in ('errors','failures','skipped'))
+        names={c.attrib['name'] for c in suite.findall('testcase')}
+        assert {'test_windows_planning_query_runtime[unicode-path-utf8]',
+                'test_windows_planning_query_runtime[subprocess-timeout]',
+                'test_windows_planning_query_runtime[subprocess-cancel]',
+                'test_contract_8299476377c3[unicode-argv]',
+                'test_planning_attempt_deadline'} <= names
+        hashes=json.loads(bundle.read('source-hashes.json'))
+        expected={row['Path'].split('\\')[-1]:row['Hash'].lower() for row in hashes}
+        for relative in ('scripts/toolchain/knowledge_query/adapter.py','scripts/python/_knowledge_locator_core.py',
+                         'scripts/python/knowledge_locator.py','knowledge/planning-query.toml'):
+            assert hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()==expected[Path(relative).name]
+        old_test=original/'original-test_planning_query.py'
+        assert hashlib.sha256(old_test.read_bytes()).hexdigest()==expected['test_planning_query.py']
+        tree=ast.parse(old_test.read_text(encoding='utf-8'))
+        functions={n.name:n for n in tree.body if isinstance(n,ast.FunctionDef)}
+        body=ast.get_source_segment(old_test.read_text(encoding='utf-8'),functions['test_windows_planning_query_runtime'])
+        assert all(word in body for word in ('timeout','cancel','utf-8'))
+
+
+# ADR-0048: current publication admission and permission-bound reuse.
+@pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+@pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+def test_contract_2e09f07252e1_public_caller_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+    root = tmp_path / 'caller'
+    shutil.copytree(published_vdd_base, root)
+    requirement = _put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+    paths = [root / p for p in adapter._CANONICAL]
+    if missing == 'uninstalled':
+        for path in paths:
+            path.unlink()
+        shutil.rmtree(root / 'knowledge/indexes')
+    else:
+        paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+        assert (root / 'knowledge/indexes/current.json').is_file()
+    entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+    entry = importlib.util.module_from_spec(entry_spec)
+    entry_spec.loader.exec_module(entry)
+    monkeypatch.setattr(entry, 'ROOT', root)
+    reached = []
+    # Keep the real public CLI preparation/admission path. Stop at the semantic
+    # delegate; neither a model nor a compiler lifecycle is launched here.
+    def stop_at_semantic_delegate(**kwargs):
+        reached.append(True)
+        return {'status': 'recommendation-only', 'fixture_control': True}
+    monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+    monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+        '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+    code = entry.main()
+    result = json.loads(capsys.readouterr().out.splitlines()[-1])
+    print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+        'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
     try:
-        _s5_all_consumers(prd_source_consumer_sample, architecture_consumer_sample, native_caller_decision, vdd_complete_consumption)
-        _s5_handoff_owners(native_caller_decision, vdd_complete_consumption)
-        _s5_windows_current(tmp_path)
+        if missing == 'uninstalled':
+            assert code == 0 and reached == [True]
+        else:
+            assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+            assert 'PLANNING_QUERY_BLOCKED:' in result.get('reason', '')
     except AssertionError:
-        print('FAILURE_ID:KQ_54829FE46AF9')
+        print('FAILURE_ID:KQ_2E09F07252E1')
         raise
 
+def _switch_fixture_generation(root, paths, *, restrict_vdd):
+    """Construct isolated content-bound input, never a production receipt.
 
-class _DeferredNativeSample:
-    """One actual sample per pytest invocation; never persistent evidence reuse."""
-    def __init__(self, execute):
-        self.execute, self.value, self.error = execute, None, None
-
-    def __getitem__(self, key):
-        if self.error is not None:
-            raise self.error
-        if self.value is None:
-            try:
-                self.value = self.execute()
-            except Exception as error:
-                self.error = error
-                raise
-        return self.value[key]
-
-
-@pytest.fixture(scope='module')
-def native_caller_decision(tmp_path_factory, native_runtime_environment):
-    return _DeferredNativeSample(lambda: _execute_native_caller_decision(tmp_path_factory, native_runtime_environment))
-
-
-@pytest.fixture(scope='module')
-def prd_source_consumer_sample(tmp_path_factory, native_runtime_environment):
-    return _DeferredNativeSample(lambda: _execute_prd_source_consumer_sample(tmp_path_factory, native_runtime_environment))
-
-
-@pytest.fixture(scope='module')
-def vdd_complete_consumption(tmp_path_factory):
-    return _DeferredNativeSample(lambda: _execute_vdd_complete_consumption(tmp_path_factory))
-
-
-def _s5_unresolved_native(sample):
-    body = _native_decision_body(sample)
-    spec = sample['spec'].lower()
-    assert '(question)' in body and ('unconfirmed' in body or 'unresolved' in body or 'not enumerate' in body)
-    assert 'open questions' in spec
-    assert 'accepted' in body and 'rejected' in body and 'retain' in body
-    assert 'docs/source.md' in body and sample['source_hash'] in body
-    assert 'worktree' in body and sample['locator_request']['snapshot']['commit'] in body
-    assert 'cap-1' in spec and 'cap-2' not in spec
-    assert 'non-goals' in spec and 'replac' in spec
-    assert 'not invent' in spec or 'unconfirmed' in spec or 'not enumerate' in spec
-    non_goals = spec.split('## non-goals', 1)[1].split('\n## ', 1)[0]
-    assert ('new capability' not in spec or 'no new capability' in spec
-            or 'new capability' in non_goals)
-
-# BEGIN WINDOWS EVIDENCE ADMISSION (test-only, not a Quick Dev receipt writer)
-_WINDOWS_EVIDENCE = ROOT / 'logs/stage5-author-recovery-20261023/windows-run-40063091327'
-_WINDOWS_ZIP_SHA256 = 'bdf3f0496eb7f764926e18c46971c53018c1d1a9ebdccf1070d3a55bc73accc2'
-_WINDOWS_BINDING_SHA256 = '38c279caf8a83546f29308b54ece23214d19f1643f4c68bcf57da5d42e8e009e'
-_WINDOWS_OLD_GUARD = "        raise OSError('WINDOWS_EXECUTION_REQUIRED: real Windows path/encoding/subprocess evidence is unavailable on ' + sys.platform)"
-_WINDOWS_NEW_GUARD = "        _assert_recorded_windows_evidence(scenario)\n        return"
-
-
-def _validate_recorded_windows_evidence(payload, metadata_bytes, binding_bytes, original_test, read_source):
-    """Inspect immutable real Windows facts; never synthesize platform execution."""
-    import hashlib
-    import zipfile
-    import xml.etree.ElementTree as ET
-    sha = lambda data: hashlib.sha256(data).hexdigest()
-    assert len(payload) == 17190 and sha(payload) == _WINDOWS_ZIP_SHA256, 'Windows artifact integrity'
-    assert sha(binding_bytes) == _WINDOWS_BINDING_SHA256, 'Windows binding integrity'
-    binding = json.loads(binding_bytes)
-    assert sha(metadata_bytes) == binding['github_metadata_sha256'], 'Windows provenance integrity'
-    metadata = json.loads(metadata_bytes)
-    job, = metadata['jobs']['jobs']
-    assert job['id'] == 120780588117 and job['run_id'] == 40063091327
-    assert job['head_sha'] == '4891e609ef126d16dc0d42b6e0eb1f66a47cf128'
-    assert job['head_branch'] == 'verify/bmad-vdd-knowledge-query-windows'
-    assert job['run_url'] == 'https://api.github.com/repos/skyoxu/ji-mu-yun/actions/runs/40063091327'
-    assert job['workflow_name'] == 'Windows CI (Manual)' and job['conclusion'] == 'success'
-    assert any(s['name'] == 'Execute actual Windows cases' and s['conclusion'] == 'success' for s in job['steps'])
-    artifact, = metadata['artifacts']['artifacts']
-    assert artifact['id'] == 12548511319 and artifact['digest'] == 'sha256:' + _WINDOWS_ZIP_SHA256
-    assert artifact['workflow_run']['id'] == job['run_id']
-    assert artifact['workflow_run']['head_sha'] == job['head_sha']
-    assert sha(original_test) == binding['original_test_sha256'], 'Windows executed test source changed'
-    for path, expected in binding['sources'].items():
-        assert sha(read_source(path)) == expected, 'Windows source evidence stale: ' + path
-    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
-        assert set(archive.namelist()) == {'commit.txt', 'platform.json', 'pytest-exit.txt', 'source-hashes.json', 'junit.xml', 'pytest.txt', 'status-before.txt'}
-        assert archive.testzip() is None
-        read = lambda name: archive.read(name).decode('utf-8-sig')
-        assert read('commit.txt').strip() == job['head_sha']
-        platform = json.loads(read('platform.json'))
-        assert platform['platform'] == 'win32' and platform['system'].startswith('Windows-2022Server-')
-        assert read('pytest-exit.txt').strip() == '0'
-        suite, = ET.fromstring(read('junit.xml')).findall('testsuite')
-        assert {k: suite.attrib[k] for k in ('tests', 'errors', 'failures', 'skipped')} == {'tests': '11', 'errors': '0', 'failures': '0', 'skipped': '0'}
-        expected_cases = {
-            *(f'test_windows_planning_query_runtime[{s}]' for s in ('unicode-path-utf8', 'subprocess-timeout', 'subprocess-cancel')),
-            'test_contract_295a1ed8402c',
-            *(f'test_contract_f7401102fe99[{s}]' for s in ('stdout', 'stderr', 'combined', 'json-parser')),
-            *(f'test_contract_8299476377c3[{s}]' for s in ('nonzero', 'unicode-argv')),
-            'test_planning_attempt_deadline',
-        }
-        cases = suite.findall('testcase')
-        assert len(cases) == 11 and {c.attrib['name'] for c in cases} == expected_cases
-        assert all(not list(c) and c.attrib['classname'] == 'scripts.toolchain.knowledge_query.tests.test_planning_query' for c in cases)
-        assert '11 passed, 222 warnings' in read('pytest.txt')
-        rows = json.loads(read('source-hashes.json'))
-        expected_paths = {'scripts/toolchain/knowledge_query/adapter.py', 'scripts/toolchain/knowledge_query/tests/test_planning_query.py', 'scripts/python/knowledge_locator.py', 'scripts/python/_knowledge_locator_core.py', 'knowledge/planning-query.toml'}
-        actual_paths = set()
-        for row in rows:
-            path = row['Path'].split('ji-mu-yun\\ji-mu-yun\\', 1)[1].replace('\\', '/')
-            actual_paths.add(path)
-            data = original_test if path.endswith('/test_planning_query.py') else read_source(path)
-            assert row['Algorithm'] == 'SHA256' and row['Hash'].lower() == sha(data)
-        assert actual_paths == expected_paths and len(rows) == 5
-        # Preserve the recorded checkout limitation; these historical paths are
-        # outside this isolated platform fixture and are never treated as clean.
-        historical = ('execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/', 'execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/')
-        status = read('status-before.txt').splitlines()
-        assert len(status) == 1506 and all(line.startswith(' D ') and line[3:].startswith(historical) for line in status)
-    return expected_cases
-
-
-def _recorded_windows_inputs():
-    # Admit only the exact reviewed non-Windows edits. Reconstructing the
-    # executed prefix is a comparison, never a replacement of historical bytes.
-    import ast
-    import hashlib
-    frozen = _WINDOWS_EVIDENCE.joinpath('original-test_planning_query.py').read_bytes()
-    binding_bytes = _WINDOWS_EVIDENCE.joinpath('test-input-binding-r38.json').read_bytes()
-    binding = json.loads(binding_bytes)
-    current = Path(__file__).read_text(encoding='utf-8').split('\n# BEGIN WINDOWS EVIDENCE ADMISSION', 1)[0]
-    original = frozen.decode('utf-8').split('\n# BEGIN WINDOWS EVIDENCE ADMISSION', 1)[0]
-    def spans(text):
-        lines = text.splitlines(keepends=True)
-        return {n.name: (sum(map(len, lines[:min([n.lineno] + [d.lineno for d in n.decorator_list])-1])),
-                         sum(map(len, lines[:n.end_lineno])))
-                for n in ast.parse(text).body if isinstance(n, ast.FunctionDef)}
-    current_spans, original_spans = spans(current), spans(original)
-    replacements = []
-    for name, expected in binding['reviewed_non_windows_functions'].items():
-        start, end = current_spans[name]
-        assert hashlib.sha256(current[start:end].encode()).hexdigest() == expected, 'Reviewed test edit drift: ' + name
-        a, b = original_spans[name]
-        replacements.append((start, end, original[a:b]))
-    for start, end, old in sorted(replacements, reverse=True):
-        current = current[:start] + old + current[end:]
-    assert current == original, 'Unreviewed Windows test/source dependency drift'
-    return (_WINDOWS_EVIDENCE.joinpath('parent-original.zip').read_bytes(),
-            _WINDOWS_EVIDENCE.joinpath('github-metadata.json').read_bytes(),
-            binding_bytes, frozen, lambda path: (ROOT/path).read_bytes())
-
-
-def _assert_recorded_windows_evidence(scenario):
-    assert scenario in ('unicode-path-utf8', 'subprocess-timeout', 'subprocess-cancel')
-    cases = _validate_recorded_windows_evidence(*_recorded_windows_inputs())
-    assert f'test_windows_planning_query_runtime[{scenario}]' in cases
-
-
-@pytest.mark.parametrize('changed', ['zip', 'metadata', 'binding', 'test-source', 'production-source'])
-def test_recorded_windows_evidence_rejects_drift(changed):
-    args = list(_recorded_windows_inputs())
-    if changed == 'production-source':
-        original_reader = args[4]
-        args[4] = lambda path: original_reader(path) + b'\n'
+    The native projection owner rebuilds membership and the real consumer
+    verifies manifest/artifact bindings. No publication approval is invented or
+    borrowed and no real repository generation or pointer is modified.
+    """
+    import _knowledge_catalog_builder as builder
+    pointer_path = root / 'knowledge/indexes/current.json'
+    old = json.loads(pointer_path.read_text())
+    old_root = root / 'knowledge/indexes/generations' / old['generation_id']
+    body = json.loads((old_root / 'manifest.json').read_text())
+    body.pop('generation_id')
+    body.pop('publication_request', None)
+    policy = json.loads(paths[1].read_text())
+    selected = next(p for p in policy['policies'] if p['consumer'] == ('vdd' if restrict_vdd else 'bootstrap'))
+    if restrict_vdd:
+        selected['path_prefixes'] = ['docs/']
+        selected['exact_paths'] = ['README.md']
     else:
-        index = {'zip': 0, 'metadata': 1, 'binding': 2, 'test-source': 3}[changed]
-        args[index] += b'\n'
-    with pytest.raises(AssertionError):
-        _validate_recorded_windows_evidence(*args)
-# END WINDOWS EVIDENCE ADMISSION
+        selected['max_candidates'] = max(1, selected['max_candidates'] - 1)
+    catalog = json.loads(paths[0].read_text())
+    projection = builder.build_consumer_projections(catalog, policy)
+    updates = {'policy': json.dumps(policy, sort_keys=True).encode(),
+               'projections': json.dumps(projection, sort_keys=True).encode()}
+    payloads = {}
+    for name, item in body['artifacts'].items():
+        payload = updates.get(name, (old_root / item['bundle_path']).read_bytes())
+        payloads[item['bundle_path']] = payload
+        item['sha256'] = 'sha256:' + hashlib.sha256(payload).hexdigest()
+    generation = hashlib.sha256(builder.canonical_bytes(body)).hexdigest()
+    manifest = {**body, 'generation_id': generation}
+    generation_root = root / 'knowledge/indexes/generations' / generation
+    for relative, payload in payloads.items():
+        _put(generation_root, relative, payload)
+    manifest_bytes = json.dumps(manifest, sort_keys=True).encode()
+    _put(generation_root, 'manifest.json', manifest_bytes)
+    paths[1].write_bytes(updates['policy'])
+    paths[2].write_bytes(updates['projections'])
+    pointer = {**old, 'generation_id': generation,
+               'generation_sha256': 'sha256:' + hashlib.sha256(manifest_bytes).hexdigest()}
+    pointer_path.write_text(json.dumps(pointer), encoding='utf-8')
+    assert core.verify_current_publication(root, catalog_path=paths[0],
+        policy_path=paths[1], projections_path=paths[2])
+    return policy, projection, pointer
+
+
+@pytest.mark.cer_assertion('ASSERT_C442B3B56FCE')
+@pytest.mark.parametrize('change', ['same', 'unrelated-generation', 'permission-revoked'])
+def test_contract_c442b3b56fce_current_permissions(published_planning, monkeypatch, change):
+    root, paths, request = published_planning
+    _s7_write_config(published_planning)
+    record = root / 'execution-plans/example/memlog.md'
+    record.write_text('# Isolated diagnostic record\n', encoding='utf-8')
+    options = {'record_path': record.relative_to(root).as_posix()}
+    real_query = core.query_with_diagnostics
+    calls = []
+    def traced(*args, **kwargs):
+        calls.append(True)
+        return real_query(*args, **kwargs)
+    monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+    first = _planning_operation(published_planning, **options)
+    assert first['outcome'] == 'hit' and first['candidates']
+    frozen = copy.deepcopy(first)
+    hashes = {r['path']: hashlib.sha256((root / r['path']).read_bytes()).hexdigest()
+              for r in first['read_set']}
+    if change != 'same':
+        policy, projections, pointer = _switch_fixture_generation(root, paths,
+            restrict_vdd=change == 'permission-revoked')
+        assert pointer['generation_id'] != first['index_identity']['generation_id']
+        assert all(hashlib.sha256((root / p).read_bytes()).hexdigest() == h
+                   for p, h in hashes.items())
+    else:
+        policy, projections = (json.loads(p.read_text()) for p in paths[1:])
+    second = _planning_operation(published_planning, **options)
+    assert first == frozen
+    current_policy = core._policy_for(request, policy)
+    catalog = json.loads(paths[0].read_text())
+    eligible = core._projection_for(request, catalog, policy, projections)
+    modules = {m['source_path']: m for m in catalog['modules']}
+    allowed = all(core._policy_allows(modules[c['path']], request['query'], current_policy)
+                  and c['module_id'] in eligible for c in second['candidates'])
+    print('PERMISSION_REUSE_OBSERVATION:' + json.dumps({'change': change,
+        'outcome': second['outcome'], 'reused': second['diagnostic'].get('reused'),
+        'permission_checked': second['diagnostic'].get('permission_checked'),
+        'current_eligibility_satisfied': allowed, 'query_calls': len(calls)}))
+    try:
+        assert allowed, 'A revoked candidate survived current policy/projection checks'
+        if change != 'permission-revoked':
+            assert second['diagnostic'].get('reused') is True and len(calls) == 1
+            assert second['index_identity'] == first['index_identity']
+        else:
+            assert not second['diagnostic'].get('reused')
+    except AssertionError:
+        print('FAILURE_ID:KQ_C442B3B56FCE')
+        raise

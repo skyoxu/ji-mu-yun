@@ -14,6 +14,8 @@ jobs:
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
         env:
           GIT_CONFIG_COUNT: '1'
           GIT_CONFIG_KEY_0: core.longpaths
@@ -42,12 +44,17 @@ jobs:
           from pathlib import Path
           out = Path('logs/windows-query-verification')
           args = [sys.executable, '-B', '-m', 'pytest',
-              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_windows_planning_query_runtime',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[unicode-argv]',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stdout]',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stderr]',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[combined]',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[timeout]',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[cancel]',
               'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c',
-              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99',
-              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[nonzero]',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[unicode-argv]',
               'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline',
-              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_fd756962a671',
+              'scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline_timeout',
               '-vv', '-s', '--junitxml=logs/windows-query-verification/junit.xml']
           started = last = time.monotonic()
           child = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

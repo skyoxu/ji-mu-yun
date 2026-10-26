@@ -1,0 +1,243 @@
+diff --git a/.agents/skills/quick-dev-tdd-adapter/references/shared-execution.md b/.agents/skills/quick-dev-tdd-adapter/references/shared-execution.md
+index 279e2686..ca003b61 100644
+--- a/.agents/skills/quick-dev-tdd-adapter/references/shared-execution.md
++++ b/.agents/skills/quick-dev-tdd-adapter/references/shared-execution.md
+@@ -21,7 +21,20 @@ helper without changing the slice invalidates reuse.
+ The unit supervisor's three private routing variables (event sink, total and
+ inactivity limits) are removed from the actual controlled test subprocess
+ environment and from that same environment fingerprint. The tested process
+-cannot read them. Other inherited environment remains content-bound. The unit
++cannot read them. Quick Dev also removes the exact external executor metadata
++variable `CODEX_TOOL_CALL_ID` from both the controlled pytest child and its
++fingerprint through the same provider. It does not ignore any `CODEX_*` prefix,
++PATH, PYTHONPATH, proxies, dependency settings, application/test variables or
++unknown variables. Missing and present-empty values remain distinct for all
++retained variables. The parent executor environment is unchanged.
++
++The environment identity carries `schema=quick-dev.pytest-environment.v2`.
++Aggregate-only identities without that schema, older schemas and unknown future
++schemas are incompatible (`reuse-environment-schema-incompatible`), even when
++their aggregate digests happen to match. No old receipt can be converted by
++removing a field or recomputing a historical hash. New producer/readers must be
++deployed together; normal native recovery decides the required fresh evidence.
++Other inherited environment remains content-bound. The unit
+ supervisor implementation itself is included in engine/reentry hashes; this is
+ not permission to ignore application variables or relabel old originals.
+ 
+diff --git a/.agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py b/.agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py
+index 8d81248d..46c5d6d9 100644
+--- a/.agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py
++++ b/.agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py
+@@ -15,7 +15,8 @@ from typing import Any, Mapping
+ 
+ from runtime_evidence import create_immutable, create_json, hash_refs, sha256_bytes, sha256_value, validate_descriptor
+ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
+-from workflow_unit_budget import unit, progress, event, terminate_tree, execution_environment
++from workflow_unit_budget import unit, progress, event, terminate_tree
++from execution_environment import execution_environment
+ 
+ PYTEST_COUNT_RE = re.compile(r"(\d+)\s+(passed|failed|errors?|skipped)\b", re.I)
+ FAILURE_RE = re.compile(r"FAILURE_ID:([A-Z0-9][A-Z0-9._-]*)")
+diff --git a/.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py b/.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py
+index 5fab578d..a8f670c5 100644
+--- a/.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py
++++ b/.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py
+@@ -16,7 +16,7 @@ import sysconfig
+ from runtime_evidence import (create_json, create_immutable, load_json,
+                               sha256_bytes, sha256_value, resolve_file, hash_refs)
+ sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "scripts"))
+-from workflow_unit_budget import execution_environment
++from execution_environment import execution_environment, ENVIRONMENT_SCHEMA
+ 
+ SCHEMA = "quick-dev.shared-execution.v1"
+ EXCLUDED = {"logs", "execution-plans"}
+@@ -54,7 +54,8 @@ def environment_identity():
+             raise ValueError("reuse-environment-budget-exceeded: bytes")
+         hashes[str(path)] = sha256_bytes(path.read_bytes())
+     # Values are hashed, never persisted (the inherited environment may contain secrets).
+-    return {"system": platform.system(), "release": platform.release(), "machine": platform.machine(),
++    return {"schema": ENVIRONMENT_SCHEMA,
++            "system": platform.system(), "release": platform.release(), "machine": platform.machine(),
+             "python": sys.version, "executable": str(Path(sys.executable).resolve()),
+             "files": hashes, "installed_content": sha256_value(hashes), "packages": sha256_value(sorted(packages)),
+             "environment": sha256_value(execution_environment())}
+@@ -125,6 +126,12 @@ def input_manifest(workspace, bundle, descriptor):
+ 
+ 
+ def invalidation_reason(original, current):
++    # Aggregate-only historical hashes cannot be converted to the new filter.
++    # Compare the rule before accepting even an accidentally equal digest.
++    for manifest in (original, current):
++        environment = manifest.get("environment")
++        if not isinstance(environment, dict) or environment.get("schema") != ENVIRONMENT_SCHEMA:
++            return "reuse-environment-schema-incompatible"
+     for key in ("argv", "cwd", "contract", "engine", "environment"):
+         if original.get(key) != current.get(key):
+             if key == "environment":
+diff --git a/docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md b/docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md
+index 5bfd59d4..222a6be9 100644
+--- a/docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md
++++ b/docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md
+@@ -669,6 +669,19 @@ missing, tampered or identity-incomplete proof cannot become reusable success.
+ Historical receipts are never relabeled. See the Quick Dev shared-execution
+ reference for bounded discovery, compatibility and rejection rules.
+ 
++### Quick Dev call metadata boundary (2026-10-25)
++
++Maintainer approval Sentinel_4476a30ec6a88191bb3c9b80cefabdf8 permits excluding
++only the demonstrated volatile `CODEX_TOOL_CALL_ID` executor identifier from
++the controlled Quick Dev pytest child and the matching environment fingerprint.
++One provider serves both boundaries. It does not change VDD environments or
++ignore arbitrary application, test, proxy, dependency or unknown variables.
++The parent environment remains intact. The explicit
++`quick-dev.pytest-environment.v2` rule rejects unversioned/older/unknown
++aggregate identities; historical receipts and source hashes are never rewritten
++or automatically upgraded. Actual subprocess dependency refusals, case coverage,
++current-content binding and Q6/Q7/terminal/Q8 predicates remain unchanged.
++
+ 
+ ## Explicit V3 compiler pause (2026-10-25)
+ 
+diff --git a/.agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py b/.agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py
+new file mode 100644
+index 00000000..e1e5eb36
+--- /dev/null
++++ b/.agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py
+@@ -0,0 +1,14 @@
++"""ADR-0041: one environment boundary for controlled Quick Dev pytest.
++
++The call identifier belongs to the external executor, not the tested program.
++Remove it from the child as well as its fingerprint; keep every other input.
++"""
++from workflow_unit_budget import execution_environment as _supervised_environment
++
++ENVIRONMENT_SCHEMA = "quick-dev.pytest-environment.v2"
++
++
++def execution_environment():
++    environment = _supervised_environment()
++    environment.pop("CODEX_TOOL_CALL_ID", None)
++    return environment
+diff --git a/.agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py b/.agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py
+new file mode 100644
+index 00000000..8735798e
+--- /dev/null
++++ b/.agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py
+@@ -0,0 +1,117 @@
++"""ADR-0041: narrow transport metadata boundary; no business/model workflow."""
++from copy import deepcopy
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++
++import pytest
++
++TOOLS = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(TOOLS))
++import shared_execution
++from runtime_evidence import create_json, sha256_value
++
++
++def test_only_call_metadata_change_keeps_candidate_environment(monkeypatch):
++    monkeypatch.setenv('CODEX_TOOL_CALL_ID', 'first-tool-call')
++    first = shared_execution.execution_environment()
++    monkeypatch.setenv('CODEX_TOOL_CALL_ID', 'second-tool-call')
++    second = shared_execution.execution_environment()
++    assert sha256_value(first) == sha256_value(second)
++    assert 'CODEX_TOOL_CALL_ID' not in second
++    assert os.environ['CODEX_TOOL_CALL_ID'] == 'second-tool-call'
++    monkeypatch.delenv('CODEX_TOOL_CALL_ID')
++    assert sha256_value(shared_execution.execution_environment()) == sha256_value(first)
++
++
++@pytest.mark.parametrize('name', [
++    'PATH', 'PYTHONPATH', 'HTTPS_PROXY', 'GIT_CONFIG_NOSYSTEM',
++    'CODEX_UNKNOWN_SETTING', 'JIMUYUN_QUERY_LIMIT', 'UNRECOGNIZED_TEST_INPUT',
++])
++def test_nontransport_environment_changes_and_presence_remain_bound(monkeypatch, name):
++    monkeypatch.delenv(name, raising=False)
++    absent = sha256_value(shared_execution.execution_environment())
++    monkeypatch.setenv(name, '')
++    empty = sha256_value(shared_execution.execution_environment())
++    monkeypatch.setenv(name, 'fixture-value-one')
++    first = sha256_value(shared_execution.execution_environment())
++    monkeypatch.setenv(name, 'fixture-value-two')
++    second = sha256_value(shared_execution.execution_environment())
++    assert len({absent, empty, first, second}) == 4
++    assert shared_execution.execution_environment()[name] == 'fixture-value-two'
++    monkeypatch.delenv(name)
++    assert sha256_value(shared_execution.execution_environment()) == absent
++
++
++def test_independent_processes_use_the_same_normalized_capture():
++    script = (
++        'import json,sys; sys.path.insert(0,sys.argv[1]); '
++        'from shared_execution import execution_environment; '
++        'from runtime_evidence import sha256_value; '
++        'env=execution_environment(); '
++        'print(json.dumps({"hash":sha256_value(env),'
++        '"metadata_visible":"CODEX_TOOL_CALL_ID" in env}))'
++    )
++    observations = []
++    for call_id, meaningful in [('first-call', 'same'), ('second-call', 'same'), ('third-call', 'changed')]:
++        env = {**os.environ, 'CODEX_TOOL_CALL_ID': call_id, 'RETAINED_TEST_INPUT': meaningful}
++        result = subprocess.run([sys.executable, '-B', '-c', script, str(TOOLS)],
++                                env=env, capture_output=True, text=True, check=True, timeout=10)
++        observations.append(json.loads(result.stdout))
++    assert observations[0] == observations[1]
++    assert observations[2]['hash'] != observations[0]['hash']
++    assert all(not row['metadata_visible'] for row in observations)
++
++
++@pytest.mark.parametrize('old_schema', [None, 'quick-dev.pytest-environment.v1', 'unknown-future-schema'])
++def test_aggregate_only_or_unknown_schema_is_not_upgraded(tmp_path, monkeypatch, old_schema):
++    current = {'schema': 'quick-dev.pytest-environment.v2', 'environment': 'sha256:' + 'a' * 64}
++    old = deepcopy(current)
++    if old_schema is None:
++        old.pop('schema')
++    else:
++        old['schema'] = old_schema
++    original, now = {'environment': old}, {'environment': current}
++    # Even identical aggregate digests cannot establish the old filtering rule.
++    assert shared_execution.invalidation_reason(original, now) == 'reuse-environment-schema-incompatible'
++    assert shared_execution.invalidation_reason(now, now) is None
++
++    semantic = tmp_path / 'plan.json'
++    create_json(semantic, {'slices': []})
++    evidence = tmp_path / 'evidence'
++    descriptor = {'stage': 'regression'}
++    receipt = {'profile_identity': 'standard'}
++    request = {'descriptor_sha256': sha256_value(descriptor), 'profile': 'standard',
++               'input': original, 'semantic_plan': 'plan.json'}
++    create_json(evidence / 'reuse-request.v1.json', request)
++    create_json(evidence / 'reuse-complete.v1.json',
++                {'receipt_sha256': sha256_value(receipt), 'request_sha256': sha256_value(request)})
++    prior_bytes = (evidence / 'reuse-request.v1.json').read_bytes()
++    monkeypatch.setattr(shared_execution, 'input_manifest', lambda *args: now)
++    with pytest.raises(ValueError, match='reuse-environment-schema-incompatible'):
++        shared_execution.validate_saved_request(tmp_path, evidence, descriptor, receipt)
++    assert (evidence / 'reuse-request.v1.json').read_bytes() == prior_bytes
++
++
++def test_actual_pytest_child_and_reference_share_metadata_boundary(tmp_path, monkeypatch):
++    from test_shared_execution import setup, measured, run, descriptor
++    semantic, bundle, _ = setup(tmp_path)
++    # The actual native collector must receive the same environment that was
++    # fingerprinted. This child assertion would fail if only hashing filtered it.
++    with (tmp_path / 'tests/test_one.py').open('a', encoding='utf-8') as stream:
++        stream.write('\ndef test_transport_is_not_a_test_input():\n import os\n assert "CODEX_TOOL_CALL_ID" not in os.environ\n')
++    calls = measured(monkeypatch)
++    monkeypatch.setenv('CODEX_TOOL_CALL_ID', 'original-call')
++    original = run(tmp_path, semantic, bundle, descriptor(bundle))
++    assert original['exit_code'] == 0
++    monkeypatch.setenv('CODEX_TOOL_CALL_ID', 'later-terminal-call')
++    terminal = descriptor(bundle, 'S2', 'terminal', 'later')
++    reference = run(tmp_path, semantic, bundle, terminal)
++    assert len(calls) == 1 and reference['process_attempts'] == 0
++    assert reference['case_report'] == original['case_report']
++    monkeypatch.setenv('CODEX_TOOL_CALL_ID', 'later-validation-call')
++    assert shared_execution.validate_use(terminal, reference)['run_id'] == 'run1'
++    current = shared_execution.environment_identity()
++    assert current['schema'] == 'quick-dev.pytest-environment.v2'

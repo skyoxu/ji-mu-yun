@@ -1,0 +1,14 @@
+[
+  {
+    "from": "/workspace/scratch/quick-dev-pytest-tmp/pytest-of-agent/pytest-0",
+    "to": "/workspace/scratch/quick-dev-s12-successful-fixtures-preserved-20261025/pytest-0",
+    "same_device_inode": true,
+    "operation": "atomic rename; no content deletion/rewrite"
+  },
+  {
+    "from": "/workspace/scratch/quick-dev-pytest-tmp/pytest-of-agent/pytest-1",
+    "to": "/workspace/scratch/quick-dev-s12-successful-fixtures-preserved-20261025/pytest-1",
+    "same_device_inode": true,
+    "operation": "atomic rename; no content deletion/rewrite"
+  }
+]

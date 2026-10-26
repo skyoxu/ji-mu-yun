@@ -1,0 +1,1 @@
+{"authorizes": [], "model_called": false, "semantic_plan_sha256": "sha256:7b4c69ff7e4a64bafbc3a8d6dd0ed4c83c1ab3c21935bd1f9d3e581f5e583276", "slices": 12, "status": "plan-ready"}

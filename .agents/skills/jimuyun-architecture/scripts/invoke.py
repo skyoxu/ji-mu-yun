@@ -34,21 +34,6 @@ def prepare(root, run, inputs, intent="create", altitude=None, purpose=None):
         target = contained(native, relative)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(path.read_bytes())
-    from scripts.toolchain.knowledge_query import adapter
-    prepared_query = adapter.prepare_consumption({
-        "stage": "architecture", "operation": "create" if intent == "create" else "update",
-        "task_id": "architecture:" + "|".join(inputs), "inputs": inputs,
-        "scope": inputs, "query": "Accepted ADR owner interface current implementation " + " ".join(inputs),
-        "record_path": run + "/execution-record.md"}, root)
-    if prepared_query["status"] == "blocked":
-        raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
-    for row in prepared_query.get("query_result", {}).get("read_set", []):
-        relative = row["path"]
-        if relative.startswith((".agents/", "_bmad/")):
-            continue  # Native resources must never be replaced by source context.
-        target = contained(native, relative)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(contained(root, relative).read_bytes())
     policy = Path(__file__).resolve().parents[1] / "references/reviewer-lifecycle.md"
     workspace = native / "_bmad-output/architecture" if intent == "create" else contained(native, existing[0]).parent
     instructions = policy.read_text(encoding="utf-8") + (
@@ -62,7 +47,6 @@ def prepare(root, run, inputs, intent="create", altitude=None, purpose=None):
         "Load native references from the verified skill-root below. The lifecycle policy above is effective\n"
         "from invocation, including every delegated reviewer. Do not invoke Bootstrap or Acceptance.\n"
     )
-    instructions += adapter.consumption_instructions(prepared_query)
     prompt = invocation(root, folder, native, "bmad-architecture", instructions)
     return {"ok": True, "invocation": prompt.relative_to(root).as_posix(), "doc_workspace": workspace.relative_to(root).as_posix(), "authorizes": []}
 

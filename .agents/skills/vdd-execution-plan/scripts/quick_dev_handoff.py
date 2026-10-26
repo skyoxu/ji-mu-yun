@@ -10,6 +10,77 @@ import ast
 import json
 from pathlib import Path, PurePosixPath
 import shlex
+import re
+import sys
+
+
+def repair_static_primary_bindings(bundle, workspace, slice_ids):
+    """ADR-0041: drop only a proven redundant primary pytest OR filter.
+
+    This is planning admission, not execution proof. Q6/terminal retain the
+    entire module; the existing CER reader selects every required slice case.
+    """
+    selected = list(slice_ids)
+    if not selected or len(set(selected)) != len(selected):
+        raise ValueError('static-primary repair requires unique explicit slices')
+    slices = {s['slice_id']: s for s in bundle['slices']}
+    contexts = {c['slice_id']: c for c in bundle['agent_contexts']}
+    acceptances = {a['acceptance_id']: a for a in bundle['acceptances']}
+    if not set(selected) <= slices.keys() or not set(selected) <= contexts.keys():
+        raise ValueError('unknown static-primary slice')
+    tools = Path(workspace) / '.agents/skills/quick-dev-tdd-adapter/tools'
+    sys.path.insert(0, str(tools))
+    try:
+        from case_selection import literal_nodes
+    finally:
+        sys.path.pop(0)
+    repaired = deepcopy(bundle)
+    target_contexts = {c['slice_id']: c for c in repaired['agent_contexts']}
+    changes = []
+    for sid in selected:
+        item, context = slices[sid], contexts[sid]
+        commands = context.get('validation_commands', [])
+        argv = commands[0] if commands else []
+        offset = 2 if argv[:2] == ['py', '-3'] else 1
+        if not argv or (offset == 1 and argv[0] not in {'python', 'python3'}):
+            raise ValueError('unsupported static-primary launcher')
+        if argv[offset:offset+1] == ['-B']:
+            offset += 1
+        tail = argv[offset:]
+        if len(tail) != 6 or tail[:2] != ['-m', 'pytest'] or tail[3:5] != ['-q', '-k']:
+            raise ValueError('static-primary requires one module and a simple OR filter')
+        path, expression = tail[2], tail[5]
+        relative = PurePosixPath(path)
+        if (not isinstance(path, str) or relative.is_absolute() or relative.as_posix() != path
+                or any(p in {'..', '.', '.git', '.codex', '.aws'} for p in relative.parts)
+                or '\\' in path or ':' in path or not relative.name.startswith('test_')
+                or relative.suffix != '.py'):
+            raise ValueError('unsafe static-primary test path')
+        current = Path(workspace)
+        for part in relative.parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValueError('static-primary symlink refused')
+        if not current.is_file() or not current.resolve().is_relative_to(Path(workspace).resolve()):
+            raise ValueError('static-primary module missing or outside workspace')
+        forbidden = (context.get('forbidden_paths', []) + item.get('production_owners', [])
+                     + item.get('rollback_scope', {}).get('production_paths', []))
+        if path not in item.get('execution_snapshot_paths', []) or any(_inside(path, f) for f in forbidden):
+            raise ValueError('static-primary target is not an owned frozen test')
+        if not isinstance(expression, str) or not re.fullmatch(r'test_[A-Za-z0-9_]+(?: or test_[A-Za-z0-9_]+)*', expression):
+            raise ValueError('unsupported static-primary filter expression')
+        required = {m for aid in item['acceptance_ids'] for m in acceptances[aid]['assertion_ids']}
+        nodes, reason = literal_nodes(workspace, [path], required)
+        terms = expression.split(' or ')
+        if nodes is None or not nodes or any(not any(t in n.split('::')[-1].split('[')[0] for t in terms) for n in nodes):
+            raise ValueError('static-primary filter does not cover complete CER mapping: ' + reason)
+        replacement = argv[:offset] + tail[:3] + ['-q']
+        target_contexts[sid]['validation_commands'][0] = replacement
+        changes.append({'slice_id': sid, 'before': argv, 'after': replacement,
+                        'required_nodes': nodes, 'selection_reason': reason})
+    return repaired, {'repair_mode': 'static-primary-bindings-only',
+                      'affected_slices': selected, 'command_dispositions': changes,
+                      'added_expected_red_intents': []}
 
 
 def _eligible(acceptance, obligations):
@@ -280,6 +351,81 @@ def repair_bundle(bundle, test_root, workspace=None, windows_launcher_slices=())
     return result, {'added_expected_red_intents': added, 'command_dispositions': dispositions}
 
 
+def declare_planned_tests(bundle, workspace, paths):
+    """Declare already-bound absent Q2 tests, without new targets or write scope."""
+    import subprocess
+    import semantic_compiler as sc
+    root = Path(workspace).resolve()
+    if not paths or any(not isinstance(raw, str) or not raw for raw in paths):
+        raise ValueError('planned-test declarations must contain non-empty strings')
+    requested = set(paths)
+    if len(requested) != len(paths):
+        raise ValueError('planned-test declarations must be non-empty and unique')
+    contexts = {item['slice_id']: item for item in bundle['agent_contexts']}
+    owners = {p for item in bundle['slices'] for p in
+              [*item['production_owners'], *item['rollback_scope']['production_paths']]}
+    affected = {}
+    for raw in sorted(requested):
+        path = PurePosixPath(raw)
+        if (not path.parts or path.is_absolute() or '..' in path.parts
+                or str(path) != raw or '\\' in raw or ':' in raw
+                or path.parts[0].casefold() in {'.git', '.codex', '.aws', '.ssh'}
+                or 'tests' not in path.parts[:-1] or path.suffix != '.py'
+                or not path.name.startswith('test_')):
+            raise ValueError('planned-test path must be a normalized repository pytest file')
+        if any(_inside(raw, owner) or _inside(owner, raw) for owner in owners):
+            raise ValueError('planned-test cannot declare a production owner or rollback path')
+        full = root / raw
+        if any(p.is_symlink() for p in (full, *full.parents) if p.is_relative_to(root)):
+            raise ValueError('planned-test symlinks are forbidden')
+        if any(p.exists() and not p.is_dir() for p in full.parents if p.is_relative_to(root)):
+            raise ValueError('planned-test ancestor must be a directory')
+        if not full.resolve().is_relative_to(root) or full.exists():
+            raise ValueError('planned-test must be absent inside the repository')
+        # Both HEAD and index matter: staged deletion is not a genuinely new file.
+        tracked = subprocess.run(['git','-C',str(root),'ls-files','--error-unmatch','--',raw],
+                                 capture_output=True, check=False)
+        prior = subprocess.run(['git','-C',str(root),'ls-tree','HEAD','--',raw],
+                               capture_output=True, check=False)
+        if tracked.returncode not in {0, 1} or prior.returncode != 0:
+            raise ValueError('planned-test Git identity unavailable')
+        if tracked.returncode == 0 or prior.stdout.strip():
+            raise ValueError('planned-test cannot resurrect a tracked-deleted path')
+        selected = [item for item in bundle['slices'] if raw in item['execution_snapshot_paths']]
+        if not selected:
+            raise ValueError('planned-test path is not referenced by any slice snapshot')
+        for item in selected:
+            context = contexts[item['slice_id']]
+            if any(_inside(raw, p) for p in context.get('forbidden_paths', [])):
+                raise ValueError('planned-test path is forbidden by the frozen context')
+            commands = context.get('validation_commands', [])
+            pytest_targets = {part.split('::',1)[0] for argv in commands
+                              if isinstance(argv,list) and '-m' in argv
+                              and argv.index('-m')+1 < len(argv) and argv[argv.index('-m')+1]=='pytest'
+                              for part in argv[argv.index('-m')+2:]}
+            if raw not in pytest_targets or not any(raw in text for text in context['selector_intents']):
+                raise ValueError('planned-test must already bind pytest argv and selector intent')
+            affected.setdefault(item['slice_id'], set()).add(raw)
+    # A declaration-only successor must not retain another undeclared missing
+    # fixture: otherwise it would repeat the original Q1 publication defect.
+    for item in bundle['slices']:
+        planned = set(item['planned_new_files']) | requested
+        if any(not (root / ref).is_file() and ref not in planned
+               for ref in item['execution_snapshot_paths']):
+            raise ValueError('planned-test repair leaves an undeclared missing snapshot')
+    # Validate every declaration before changing the copy. No original is mutated.
+    result = deepcopy(bundle)
+    for item in result['slices']:
+        if item['slice_id'] not in affected:
+            continue
+        item['planned_new_files'] = sorted(set(item['planned_new_files']) | affected[item['slice_id']])
+        item['slice_input_hash'] = sc.sha256_value({k:v for k,v in item.items() if k!='slice_input_hash'})
+    return result, {'repair_mode':'declare-planned-tests-only',
+                    'declared_planned_tests':sorted(requested),
+                    'affected_slices':sorted(affected),
+                    'added_expected_red_intents':[], 'command_dispositions':[]}
+
+
 def repair_runtime_red_roles(bundle, failure_intent_ids):
     """Bind explicitly reviewed machine assertions, never infer human approval.
 
@@ -422,7 +568,7 @@ def source_index_identity(source):
     return sc.sha256_value(value)
 
 
-def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=()):
+def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=(), planned_tests=(), static_primary_slices=()):
     import semantic_compiler as sc
     from semantic_plan_contract import validate_semantic_bundle
     from semantic_chain_audit import audit_bundle
@@ -495,9 +641,19 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     expected_original = _project_slice_dependencies(deepcopy(original), expected_dependencies)
     if runtime_red_intents and windows_launcher_slices:
         raise ValueError('runtime RED role repair cannot combine Windows launcher repair')
-    repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
-                       if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
-                                                                 windows_launcher_slices=windows_launcher_slices))
+    if planned_tests and (runtime_red_intents or windows_launcher_slices):
+        raise ValueError('planned-test declarations cannot combine role or launcher repair')
+    if static_primary_slices and (planned_tests or runtime_red_intents or windows_launcher_slices
+                                 or test_root != 'scripts/sc/tests/tc_d1_cer'):
+        raise ValueError('static-primary repair cannot combine other handoff repairs')
+    if static_primary_slices:
+        repaired, delta = repair_static_primary_bindings(original, root, static_primary_slices)
+    elif planned_tests:
+        repaired, delta = declare_planned_tests(original, root, planned_tests)
+    else:
+        repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
+                           if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
+                                                                     windows_launcher_slices=windows_launcher_slices))
     repaired = _project_slice_dependencies(repaired, expected_dependencies)
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
     if semantic_projection(expected_original) != semantic_projection(repaired):
