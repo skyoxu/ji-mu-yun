@@ -1,0 +1,30 @@
+diff --git a/docs/2026-10-26-toolchain-light-optimizations-requirements.md b/docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md
+index c34189ac1..9cb74b6df 100644
+--- a/docs/2026-10-26-toolchain-light-optimizations-requirements.md
++++ b/docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md
+@@ -29,6 +29,25 @@ V3 execution preflight and final publication gates remain mandatory.
+ Package owner: VDD public compiler/admission; Quick Dev supplies its existing
+ consumer-owned read-only checks.
+ 
++Shared-consumer clarification of FR-1/FR-2 (no additional behavior): FR-2
++owns the shared stage-appropriate consumer check, including strict comparison
++when a materialized recovery context exists and actual argv/selector resolution
++through the existing consumer readers. FR-1's bounded admission-result behavior
++consumes that FR-2 behavior and therefore depends on it. In the current four-slice
++partition this means the admission slice S3 depends on the consumer slice S4;
++shared file ownership alone creates no other dependency. Bind the behavioral
++edge from the admission-result obligation to the shared stage-appropriate
++consumer-check obligation, without creating additional obligations.
++
++FR-2 must expose/reuse its checks at the existing VDD projected-candidate entry
++(`execution_preflight.inspect_candidate`) and the materialized Quick Dev entry.
++It can implement and verify both without the new FR-1 pre-worker admission
++orchestration. FR-1 only composes those owning results; it does not duplicate
++argv, selector, context-identity or profile policy. Pre-V3 future contracts
++remain pending; a selected materialized recovery input uses the strict shared
++check rather than treating unavailable comparison as passed. The existing
++static-reader fallback remains diagnostic and does not become execution proof.
++
+ Production boundary:
+ 
+ - `scripts/vdd/compile_plan.py`

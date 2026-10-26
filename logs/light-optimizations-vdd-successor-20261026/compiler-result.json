@@ -1,0 +1,1 @@
+{"authorizes": [], "reason": "host-session v4-atomic-recall-invented-entailment-recheck cancelled", "stage": "v4-atomic-recall-invented-entailment-recheck", "status": "repair-vdd", "transport_exit_code": 130, "worker_cache_reuse": {"legacy_v1_replays": 0, "source_content_replays": 0}}

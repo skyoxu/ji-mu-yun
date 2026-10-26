@@ -1,0 +1,840 @@
+{
+  "schema": "light-optimizations.producer-handoff.v1",
+  "authorizes": [],
+  "evidence_kind": "producer static reconciliation; not runtime or independent external review",
+  "original_commit": "00f688bbe7421899eb3a48203631458d811ba14c",
+  "baseline_code_commit": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+  "candidate_directory": "execution-plans/2026-10-26-toolchain-light-optimizations-ready",
+  "plan_id": "PLAN-6F8ECBD1CED1",
+  "semantic_plan_sha256": "caa9210a02739c8eb4f63b434d62e6f97a82944e6aa3f53b388378d2fedf8e6e",
+  "source_index_identity": "sha256:a6db1c8a32e88e49f9f39524c7101beacd31a16f0dcd716b3e648d79a784540a",
+  "requirements": {
+    "path": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+    "bytes": 10111,
+    "sha256": "4ba6b1eb66be06344e28cd2191b00b37c3279f1ea3466307b8d0728e5c5ca260"
+  },
+  "original_requirements": {
+    "path": "docs/2026-10-26-toolchain-light-optimizations-requirements.md",
+    "bytes": 8797,
+    "sha256": "afddc7297b788fb2a6740b16dd421299d2c642d674ce5f799062151df153d642"
+  },
+  "producer_checks": {
+    "original_tracked_files_unchanged": true,
+    "production_and_skill_sources_changed": false,
+    "obligation_count": 24,
+    "acceptance_count": 24,
+    "failure_intent_count": 24,
+    "slice_counts": {
+      "S1": 1,
+      "S2": 9,
+      "S3": 7,
+      "S4": 7
+    },
+    "slice_dependencies": {
+      "S1": [],
+      "S2": [],
+      "S3": [
+        "S4"
+      ],
+      "S4": []
+    },
+    "failure_contracts_unchanged_after_identity_rebinding": true,
+    "agent_contexts_unchanged_after_identity_rebinding": true,
+    "disk_context_equals_bundle": true,
+    "slice_contracts_unchanged_except_S3_dependency": true
+  },
+  "obligation_semantic_deltas": [
+    {
+      "old_obligation_id": "O-3151DCCCAB85",
+      "new_obligation_id": "O-7154B7C3CDBC",
+      "changes": {
+        "depends_on": {
+          "old": [],
+          "new": [
+            "O-5FF4477292C0"
+          ]
+        }
+      }
+    }
+  ],
+  "acceptance_semantic_deltas": [
+    {
+      "obligation_id": "O-7154B7C3CDBC",
+      "changes": {
+        "when": {
+          "old": "Invoke the public compiler admission path with readable requirements and explicit recovery/consumer inputs while worker dispatch is instrumented",
+          "new": "Invoke the public compiler admission path with readable requirements and explicit recovery/consumer inputs while worker dispatch is instrumented; consume the FR-2 shared stage-appropriate consumer check result, including strict comparison for an explicitly materialized recovery context"
+        }
+      }
+    },
+    {
+      "obligation_id": "O-5FF4477292C0",
+      "changes": {
+        "when": {
+          "old": "Exercise VDD projected-candidate checks and materialized Quick Dev preflight with the same equivalent contract, then change a real transitive production dependency",
+          "new": "Exercise the existing execution_preflight.inspect_candidate projected-candidate entry without the new FR-1 pre-worker orchestration and materialized Quick Dev preflight with the same equivalent contract, then change a real transitive production dependency"
+        }
+      }
+    }
+  ],
+  "slice_contract_deltas": [
+    {
+      "slice_id": "S3",
+      "changes": {
+        "depends_on": {
+          "old": [],
+          "new": [
+            "S4"
+          ]
+        }
+      }
+    }
+  ],
+  "complete_24_row_mapping": [
+    {
+      "old_obligation_id": "O-D353D902F43C",
+      "obligation_id": "O-E4F4F1CE5BFC",
+      "subject": "Retained execution and delivery safeguards",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-B9E28E23E20D",
+      "assertion_ids": [
+        "ASSERT-LIGHT-9ECB9EABF5D9"
+      ],
+      "failure_intent_id": "FI-D79CF0AE196B",
+      "failure_id": "LIGHT-9ECB9EABF5D9",
+      "failure_family": "artifact-integrity",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py::test_light_d353d902f43c; evaluate the actual frozen current plan and owning execution/delivery policy at regression/terminal, never as implementation RED",
+      "slice_id": "S1",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-E8C955695910",
+      "obligation_id": "O-13124D09E660",
+      "subject": "Explicit dependency revision input binding",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-45FB9EFC292E",
+      "assertion_ids": [
+        "ASSERT-LIGHT-6F1AEDA1DBC8"
+      ],
+      "failure_intent_id": "FI-A266F50F6CBC",
+      "failure_id": "LIGHT-6F1AEDA1DBC8",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_e8c955695910; invoke the real production entry for Explicit dependency revision input binding; emit LIGHT-6F1AEDA1DBC8 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-EB373FBD3F25",
+      "obligation_id": "O-1A66DB67D04C",
+      "subject": "Existing role and projection-only repair compatibility",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-4C36578F3BFA",
+      "assertion_ids": [
+        "ASSERT-LIGHT-F6C303667A95"
+      ],
+      "failure_intent_id": "FI-E5D345E18C7C",
+      "failure_id": "LIGHT-F6C303667A95",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_eb373fbd3f25; invoke the real production entry for Existing role and projection-only repair compatibility; emit LIGHT-F6C303667A95 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-C20A9174D21A",
+      "obligation_id": "O-397C1CA7DBEE",
+      "subject": "Generation reuse without execution relabeling",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-44CC8FB81DA3",
+      "assertion_ids": [
+        "ASSERT-LIGHT-52B78C7AFF3E"
+      ],
+      "failure_intent_id": "FI-1C24DE183002",
+      "failure_id": "LIGHT-52B78C7AFF3E",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c20a9174d21a; invoke the real production entry for Generation reuse without execution relabeling; emit LIGHT-52B78C7AFF3E only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-008838D2F51B",
+      "obligation_id": "O-3D02F69FB788",
+      "subject": "Fresh semantic dependency gates",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-6C032AF0AF9A",
+      "assertion_ids": [
+        "ASSERT-LIGHT-1268DA5EAF2C"
+      ],
+      "failure_intent_id": "FI-CB49F7BC9068",
+      "failure_id": "LIGHT-1268DA5EAF2C",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_008838d2f51b; invoke the real production entry for Fresh semantic dependency gates; emit LIGHT-1268DA5EAF2C only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-9B9F1488F81B",
+      "obligation_id": "O-48EF52780D5C",
+      "subject": "Bounded unsupported-authority outcome",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-CDF8A321F709",
+      "assertion_ids": [
+        "ASSERT-LIGHT-CA6D769917C2"
+      ],
+      "failure_intent_id": "FI-DBE41D316CF0",
+      "failure_id": "LIGHT-CA6D769917C2",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_9b9f1488f81b; invoke the real production entry for Bounded unsupported-authority outcome; emit LIGHT-CA6D769917C2 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-7F086CF4DA00",
+      "obligation_id": "O-6AB9C6EE0FB7",
+      "subject": "Unselected contract preservation",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-9929ABBB516B",
+      "assertion_ids": [
+        "ASSERT-LIGHT-0CC55D3C196E"
+      ],
+      "failure_intent_id": "FI-8A29054D3238",
+      "failure_id": "LIGHT-0CC55D3C196E",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_7f086cf4da00; invoke the real production entry for Unselected contract preservation; emit LIGHT-0CC55D3C196E only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-CBED8D28DD7B",
+      "obligation_id": "O-7372B5DCF67E",
+      "subject": "Immutable legal successor publication",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-2DACBD848B46",
+      "assertion_ids": [
+        "ASSERT-LIGHT-18D1FC191242"
+      ],
+      "failure_intent_id": "FI-A1911B5AD8F3",
+      "failure_id": "LIGHT-18D1FC191242",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_cbed8d28dd7b; invoke the real production entry for Immutable legal successor publication; emit LIGHT-18D1FC191242 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-B0F66FFCFC79",
+      "obligation_id": "O-A95939FEE1D2",
+      "subject": "Old and new downstream impact closure",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-D414D5949C96",
+      "assertion_ids": [
+        "ASSERT-LIGHT-2768B5FD436D"
+      ],
+      "failure_intent_id": "FI-1DCAA6E79C5C",
+      "failure_id": "LIGHT-2768B5FD436D",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_b0f66ffcfc79; invoke the real production entry for Old and new downstream impact closure; emit LIGHT-2768B5FD436D only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-C88BF08EF42B",
+      "obligation_id": "O-E95C43ADC0B2",
+      "subject": "Both-graph relation validation",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-3",
+      "source_line_start": 113,
+      "source_line_end": 176,
+      "acceptance_id": "A-2A71F4D108E7",
+      "assertion_ids": [
+        "ASSERT-LIGHT-8B877C540FC4"
+      ],
+      "failure_intent_id": "FI-DC5DA0C0E476",
+      "failure_id": "LIGHT-8B877C540FC4",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b; invoke the real production entry for Both-graph relation validation; emit LIGHT-8B877C540FC4 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S2",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-6C636A19F2DF",
+      "obligation_id": "O-1C0E07502F17",
+      "subject": "Existing owning admission and final gates",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-B09965317C84",
+      "assertion_ids": [
+        "ASSERT-LIGHT-6BE79070B34A"
+      ],
+      "failure_intent_id": "FI-1936E04AB2DB",
+      "failure_id": "LIGHT-6BE79070B34A",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_6c636a19f2df; invoke the real production entry for Existing owning admission and final gates; emit LIGHT-6BE79070B34A only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-1622025EEDFB",
+      "obligation_id": "O-5C5436705821",
+      "subject": "Required current-input rejection",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-E4EB4E49A915",
+      "assertion_ids": [
+        "ASSERT-LIGHT-D10FAB14076E"
+      ],
+      "failure_intent_id": "FI-AA346D80D2A7",
+      "failure_id": "LIGHT-D10FAB14076E",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_1622025eedfb; invoke the real production entry for Required current-input rejection; emit LIGHT-D10FAB14076E only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-3151DCCCAB85",
+      "obligation_id": "O-7154B7C3CDBC",
+      "subject": "VDD admission result",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-FF2EC068BAC8",
+      "assertion_ids": [
+        "ASSERT-LIGHT-03FC732FF336"
+      ],
+      "failure_intent_id": "FI-BB8105AB5390",
+      "failure_id": "LIGHT-03FC732FF336",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_3151dcccab85; invoke the real production entry for VDD admission result; emit LIGHT-03FC732FF336 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": [
+        "O-5FF4477292C0"
+      ]
+    },
+    {
+      "old_obligation_id": "O-964924BBDAC1",
+      "obligation_id": "O-CE0BE2C89E0C",
+      "subject": "Read-only admission effects",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-22AF83E87EE7",
+      "assertion_ids": [
+        "ASSERT-LIGHT-EE30987A8DDE"
+      ],
+      "failure_intent_id": "FI-B933BEEF2611",
+      "failure_id": "LIGHT-EE30987A8DDE",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_964924bbdac1; invoke the real production entry for Read-only admission effects; emit LIGHT-EE30987A8DDE only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-112E17A2606E",
+      "obligation_id": "O-D37D342B3D56",
+      "subject": "Pending future contracts",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-70240EFD6012",
+      "assertion_ids": [
+        "ASSERT-LIGHT-B96B2954D606"
+      ],
+      "failure_intent_id": "FI-37FD88E0225F",
+      "failure_id": "LIGHT-B96B2954D606",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_112e17a2606e; invoke the real production entry for Pending future contracts; emit LIGHT-B96B2954D606 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-C660ED94C51C",
+      "obligation_id": "O-EAA9C1ECD141",
+      "subject": "Admission model route preservation",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-DF07874A6911",
+      "assertion_ids": [
+        "ASSERT-LIGHT-EB921B27E2BA"
+      ],
+      "failure_intent_id": "FI-1E3CE2A09202",
+      "failure_id": "LIGHT-EB921B27E2BA",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_c660ed94c51c; invoke the real production entry for Admission model route preservation; emit LIGHT-EB921B27E2BA only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-51007EE5CC9C",
+      "obligation_id": "O-F92531980240",
+      "subject": "Independent profile validation",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-1",
+      "source_line_start": 14,
+      "source_line_end": 70,
+      "acceptance_id": "A-01AA49F0291F",
+      "assertion_ids": [
+        "ASSERT-LIGHT-D33AF6125B46"
+      ],
+      "failure_intent_id": "FI-D0816098A9E9",
+      "failure_id": "LIGHT-D33AF6125B46",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_51007ee5cc9c; invoke the real production entry for Independent profile validation; emit LIGHT-D33AF6125B46 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S3",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-D07A4A77480C",
+      "obligation_id": "O-0249DDF32004",
+      "subject": "Exact consumer dependency projection",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-802C399AC287",
+      "assertion_ids": [
+        "ASSERT-LIGHT-104D8E0F76C4"
+      ],
+      "failure_intent_id": "FI-7CCAC6071AB2",
+      "failure_id": "LIGHT-104D8E0F76C4",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_d07a4a77480c; invoke the real production entry for Exact consumer dependency projection; emit LIGHT-104D8E0F76C4 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-33F5FD4E59AD",
+      "obligation_id": "O-0F5BEB365D58",
+      "subject": "Legal expected-red rule reuse",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-C1FA5222C761",
+      "assertion_ids": [
+        "ASSERT-LIGHT-CCCC9778C3EC"
+      ],
+      "failure_intent_id": "FI-99C75537691D",
+      "failure_id": "LIGHT-CCCC9778C3EC",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_33f5fd4e59ad; invoke the real production entry for Legal expected-red rule reuse; emit LIGHT-CCCC9778C3EC only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-2186EAB31AA1",
+      "obligation_id": "O-15F570153FF9",
+      "subject": "Materialized consumer context identity",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-7869437EC7F3",
+      "assertion_ids": [
+        "ASSERT-LIGHT-77EEE6DD9C66"
+      ],
+      "failure_intent_id": "FI-577EBDCB35AD",
+      "failure_id": "LIGHT-77EEE6DD9C66",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1; invoke the real production entry for Materialized consumer context identity; emit LIGHT-77EEE6DD9C66 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-8888741BB36F",
+      "obligation_id": "O-23E5EB5FB832",
+      "subject": "Planned absent test admission",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-644F9D9A34D8",
+      "assertion_ids": [
+        "ASSERT-LIGHT-D9E930D6957F"
+      ],
+      "failure_intent_id": "FI-356B8509EE7E",
+      "failure_id": "LIGHT-D9E930D6957F",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_8888741bb36f; invoke the real production entry for Planned absent test admission; emit LIGHT-D9E930D6957F only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-B01C33D730EE",
+      "obligation_id": "O-497079A3D3B4",
+      "subject": "Actual consumer input resolution",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-0A4B87010E92",
+      "assertion_ids": [
+        "ASSERT-LIGHT-BB99F694D6BB"
+      ],
+      "failure_intent_id": "FI-D6187F6747B3",
+      "failure_id": "LIGHT-BB99F694D6BB",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee; invoke the real production entry for Actual consumer input resolution; emit LIGHT-BB99F694D6BB only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-3A295774A883",
+      "obligation_id": "O-5FF4477292C0",
+      "subject": "Shared stage-appropriate consumer checks",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-486872096DB2",
+      "assertion_ids": [
+        "ASSERT-LIGHT-C35D920B20D8"
+      ],
+      "failure_intent_id": "FI-1865E25EE6AA",
+      "failure_id": "LIGHT-C35D920B20D8",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_3a295774a883; invoke the real production entry for Shared stage-appropriate consumer checks; emit LIGHT-C35D920B20D8 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    },
+    {
+      "old_obligation_id": "O-E16830860490",
+      "obligation_id": "O-66A54151F4BF",
+      "subject": "Unsupported static selector fallback",
+      "source_ref": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md#FR-2",
+      "source_line_start": 72,
+      "source_line_end": 111,
+      "acceptance_id": "A-C696677963C4",
+      "assertion_ids": [
+        "ASSERT-LIGHT-D7B4E29286C5"
+      ],
+      "failure_intent_id": "FI-CD6FA251F1FD",
+      "failure_id": "LIGHT-D7B4E29286C5",
+      "failure_family": "expected-red",
+      "selector_intent": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_e16830860490; invoke the real production entry for Unsupported static selector fallback; emit LIGHT-D7B4E29286C5 only on the bound actual behavioral assertion failure; setup/import/timeout/approval failures are not RED",
+      "slice_id": "S4",
+      "depends_on": []
+    }
+  ],
+  "key_original_files": [
+    {
+      "path": "docs/2026-10-26-toolchain-light-optimizations-requirements.md",
+      "bytes": 8797,
+      "sha256": "afddc7297b788fb2a6740b16dd421299d2c642d674ce5f799062151df153d642"
+    },
+    {
+      "path": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+      "bytes": 10111,
+      "sha256": "4ba6b1eb66be06344e28cd2191b00b37c3279f1ea3466307b8d0728e5c5ca260"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/source-index.v1.json",
+      "bytes": 20827,
+      "sha256": "02f8e7949de4d68301f10424a929bb2fa3a47f43d967f9ce4c2a9b6dff594af2"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/obligations.v1.json",
+      "bytes": 24244,
+      "sha256": "b0bbfd03c89b451bc78ea159ab3cab082edc9f0e65a0952d99f10d57c1625c03"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/acceptances.v1.json",
+      "bytes": 39991,
+      "sha256": "821d283e4c45705d325d8da52ca30ec570fd8281f324ca8c432465372eb6ad07"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/failure-intents.v1.json",
+      "bytes": 11851,
+      "sha256": "2de52c83c210023e1c14390fa656bd71af7f633553a03b3ea11cc53e44ef37cd"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/slices.v1.json",
+      "bytes": 18984,
+      "sha256": "5c7c9200258c26bb61d5f2d2f7275620328546c16e5c36e71ecfb4aa1016d578"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/semantic-plan-bundle.v1.json",
+      "bytes": 202882,
+      "sha256": "caa9210a02739c8eb4f63b434d62e6f97a82944e6aa3f53b388378d2fedf8e6e"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/semantic-alignment.v1.json",
+      "bytes": 1245,
+      "sha256": "ad605fff55e6efb60358f12588fbe035db233a2870a62462746f54d26eef4e88"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/atomic-recall-alignment.v1.json",
+      "bytes": 893,
+      "sha256": "4d7b848f56559990d4f350157078700ad3685d3d63c468f0c4cd22cb9e4073db"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/semantic-chain-audit.v1.json",
+      "bytes": 360,
+      "sha256": "88bdf6c80101b1fc304e8483ed597d267175fae3fea2577ba1320d235bfa547a"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/compiler-state.v1.json",
+      "bytes": 262,
+      "sha256": "7c55ff450420d6cbe8a2e32bff7f49bdfc1f1ef5e1f8dccc770f32f5b4d5bc3c"
+    },
+    {
+      "path": "logs/light-optimizations-vdd-ready-20261026/compiler-result.json",
+      "bytes": 1058,
+      "sha256": "301013d7fe3e45c14d386519b41454f0d59324afc033ae492417acd73f1fd7aa"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/agent-context/S1/agent-context.json",
+      "bytes": 1889,
+      "sha256": "8a8d2c68ca0c6a9252c1184a1bad95b47d8e6a087a652fb78d1e7c58d55476c0"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/agent-context/S2/agent-context.json",
+      "bytes": 4694,
+      "sha256": "ab3b457788e3f42fdf6b113e9b975425e024798e0530b50fb8bdce55911dc42c"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/agent-context/S3/agent-context.json",
+      "bytes": 3317,
+      "sha256": "67787ebead8e0dc927e49a5730f8e20f7b808f5ceba925e132b2b3a47b0280f8"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/agent-context/S4/agent-context.json",
+      "bytes": 3769,
+      "sha256": "f034e44cd29bf1ba6e896c5df0e2c2ed71b211597d5fcd1a294b9115e5af8d5f"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/.compiler-work/worker-receipts/v3-2aba80c24345-afa0e93a9ab5.json",
+      "bytes": 632,
+      "sha256": "e55a5b60dfae1a98747271bc001cf18b0d93801e875ce592caf1cd41060acf04"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/.compiler-work/worker-receipts/v4-10240b928522-2ea388daeea5.json",
+      "bytes": 632,
+      "sha256": "4a9eb4bacc1f10c422bbf5c2f4140c594fd6cc249a259ad2efdce8c0ef4be0dd"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-ready/.compiler-work/worker-receipts/v4-atomic-recall-45db8bbd965e-671c293b3707.json",
+      "bytes": 646,
+      "sha256": "3816007542a2fb914cd0682a95681e1d68727bd557dad879b40f771be60be6b3"
+    }
+  ],
+  "native_final_result": {
+    "atomic_quality_metrics": {
+      "active_obligation_count": 24,
+      "f1": 1.0,
+      "invented_obligation_count": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "source_gap_count": 0,
+      "supported_obligation_count": 24
+    },
+    "atomic_recall_alignment": {
+      "path": "atomic-recall-alignment.v1.json",
+      "sha256": "sha256:4d7b848f56559990d4f350157078700ad3685d3d63c468f0c4cd22cb9e4073db"
+    },
+    "execution_preflight": {
+      "authorizes": [],
+      "consumer_warnings": [],
+      "findings": [],
+      "valid": true
+    },
+    "plan_id": "PLAN-6F8ECBD1CED1",
+    "semantic_chain_metrics": {
+      "acceptance_count": 24,
+      "active_obligation_count": 24,
+      "fully_chained_obligation_count": 24,
+      "obligation_chain_coverage": 1.0,
+      "single_slice_acceptance_count": 24,
+      "v5_actual_edge_count": 24,
+      "v5_expected_edge_count": 24,
+      "v6a_actual_edge_count": 24,
+      "v6a_expected_edge_count": 24
+    },
+    "semantic_plan_sha256": "sha256:caa9210a02739c8eb4f63b434d62e6f97a82944e6aa3f53b388378d2fedf8e6e",
+    "slices": [
+      "S1",
+      "S2",
+      "S3",
+      "S4"
+    ],
+    "status": "plan-ready",
+    "v3_checkpoint_reused": false,
+    "worker_cache_reuse": {
+      "legacy_v1_replays": 0,
+      "source_content_replays": 0
+    }
+  },
+  "commands": [
+    "python -B scripts/workflow_host.py --session logs/light-optimizations-vdd-successor-v2-20261026 --host-timeout-seconds 1800 vdd -- --requirements docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md --out-dir execution-plans/2026-10-26-toolchain-light-optimizations-successor-v2 --profile self-hosted --v1-reuse-from-plan execution-plans/2026-10-26-toolchain-light-optimizations --unit-timeout-seconds 1800 --idle-timeout-seconds 600 --result-json logs/light-optimizations-vdd-successor-v2-20261026/compiler-result.json",
+    "python -B scripts/workflow_host.py --session logs/light-optimizations-vdd-ready-20261026 --host-timeout-seconds 1800 vdd -- --requirements docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md --out-dir execution-plans/2026-10-26-toolchain-light-optimizations-ready --profile self-hosted --v1-reuse-from-plan execution-plans/2026-10-26-toolchain-light-optimizations-successor-v2 --v3-contract-repair logs/light-optimizations-vdd-final-20261026/authoring/test-boundary-repair.v1.json --unit-timeout-seconds 1800 --idle-timeout-seconds 600 --result-json logs/light-optimizations-vdd-ready-20261026/compiler-result.json"
+  ],
+  "budgets": [
+    {
+      "receipt": "logs/workflow-unit-budgets/vdd/085095a47c304fab25da265b324c5d5a5f9d36d474d879c014c4d127b7093c5a/a4bb1f3d7bce461db47f5263d5b9ae8d.json",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "/workspace/ji-mu-yun-light-optimizations/scripts/vdd/compile_plan.py",
+        "--requirements",
+        "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+        "--out-dir",
+        "execution-plans/2026-10-26-toolchain-light-optimizations-ready",
+        "--profile",
+        "self-hosted",
+        "--v1-reuse-from-plan",
+        "execution-plans/2026-10-26-toolchain-light-optimizations-successor-v2",
+        "--v3-contract-repair",
+        "logs/light-optimizations-vdd-final-20261026/authoring/test-boundary-repair.v1.json",
+        "--result-json",
+        "logs/light-optimizations-vdd-ready-20261026/compiler-result.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 87.39684386399995,
+      "unit_seconds": 1800,
+      "idle_seconds": 600
+    },
+    {
+      "receipt": "logs/workflow-unit-budgets/vdd/cac84f1e985c032f5c6d32eb5b8cb9e3b1360c72fb3eaf1598d2fb1ca3ac9017/6d731a78bb2d479ea5c079fd6656f376.json",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "/workspace/ji-mu-yun-light-optimizations/scripts/vdd/compile_plan.py",
+        "--requirements",
+        "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+        "--out-dir",
+        "execution-plans/2026-10-26-toolchain-light-optimizations-successor-v2",
+        "--profile",
+        "self-hosted",
+        "--v1-reuse-from-plan",
+        "execution-plans/2026-10-26-toolchain-light-optimizations",
+        "--result-json",
+        "logs/light-optimizations-vdd-successor-v2-20261026/compiler-result.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 150.18729292099988,
+      "unit_seconds": 1800,
+      "idle_seconds": 600
+    },
+    {
+      "receipt": "logs/workflow-unit-budgets/vdd/c50af24e4782d20178f1af369bfa7693b6ca5536405f1231722db20f1fad0357/46b6e9febe8a482a9474dc986de1daff.json",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "/workspace/ji-mu-yun-light-optimizations/scripts/vdd/compile_plan.py",
+        "--requirements",
+        "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+        "--out-dir",
+        "execution-plans/2026-10-26-toolchain-light-optimizations-successor",
+        "--profile",
+        "self-hosted",
+        "--v1-reuse-from-plan",
+        "execution-plans/2026-10-26-toolchain-light-optimizations",
+        "--result-json",
+        "logs/light-optimizations-vdd-successor-20261026/compiler-result.json"
+      ],
+      "exit_code": 130,
+      "elapsed_seconds": 151.9805209440001,
+      "unit_seconds": 1800,
+      "idle_seconds": 600
+    },
+    {
+      "receipt": "logs/workflow-unit-budgets/vdd/16bdd7d060f5ba07e2d67350b75c4ea809c4b4be169024de1f612cfb3319a8fa/1c3cc0a4852b4c9091f61d69f7e352fe.json",
+      "argv": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "/workspace/ji-mu-yun-light-optimizations/scripts/vdd/compile_plan.py",
+        "--requirements",
+        "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+        "--out-dir",
+        "execution-plans/2026-10-26-toolchain-light-optimizations-final",
+        "--profile",
+        "self-hosted",
+        "--repair-published-v3-from",
+        "execution-plans/2026-10-26-toolchain-light-optimizations-successor-v2",
+        "--v3-contract-repair",
+        "logs/light-optimizations-vdd-final-20261026/authoring/test-boundary-repair.v1.json",
+        "--result-json",
+        "logs/light-optimizations-vdd-final-20261026/compiler-result.json"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.8586305320000065,
+      "unit_seconds": 1800,
+      "idle_seconds": 600
+    }
+  ],
+  "execution_identity": {
+    "transport": "host-session",
+    "caller": "chatgpt-current-session",
+    "session_path": "logs/light-optimizations-vdd-ready-20261026/session.json",
+    "session_id": "7f4a9c3a77da419cb501131d660a5167",
+    "native_receipt_model": "host-session:runtime-default-model",
+    "native_receipt_model_version": "runtime-resolved",
+    "provider_model_id_not_asserted": true,
+    "independent_external_reviewer": false,
+    "fresh_v4_request": "logs/light-optimizations-vdd-ready-20261026/00b449c7b00e4a54a7c8d12b8f3ef548/request.json"
+  },
+  "reuse": {
+    "initial_source_unchanged_FR2_FR3_V1": "native --v1-reuse-from-plan original predecessor",
+    "final_all_V1": "native --v1-reuse-from-plan successor-v2; source and graph identical",
+    "V3": "existing contract wording retained as current caller authoring; native validation and selected FR3 test-boundary correction; no raw fixture cache injection",
+    "V4": "fresh caller-session source checks and semantic alignment on new dependency candidate; no original old-graph V4 promotion",
+    "execution_receipts": "none imported or executed"
+  },
+  "not_run": [
+    "Quick Dev",
+    "runtime RED/GREEN",
+    "old regressions",
+    "original Acceptance",
+    "BMAD",
+    "reviewer sub-session",
+    "push/PR/merge",
+    "CI/Actions monitoring"
+  ],
+  "planned_test_files": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      "exists": false
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      "exists": false
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      "exists": false
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+      "exists": false
+    }
+  ],
+  "superseded_attempts": [
+    {
+      "directory": "execution-plans/2026-10-26-toolchain-light-optimizations-successor",
+      "result": "repair-vdd / cancelled",
+      "reason": "author supplied noncanonical dependency hash; native caller-session cancellation exit 130; immutable failure retained"
+    },
+    {
+      "directory": "execution-plans/2026-10-26-toolchain-light-optimizations-successor-v2",
+      "result": "native plan-ready, not selected final",
+      "reason": "FR3 planned test declarations projected into both S1/S2"
+    },
+    {
+      "directory": "execution-plans/2026-10-26-toolchain-light-optimizations-final",
+      "result": "native plan-ready, not selected final",
+      "reason": "published V3 partition overlay omitted explicit slice dependencies; no production fix attempted"
+    }
+  ],
+  "remaining_boundary": "Stop at VDD stage; parent coordinates separate-context readonly review of this fixed candidate; no implementation authority inferred from this producer report",
+  "shared_access": "Local execution environment and git show <fixed-commit>:<path>; no remote publication or upload"
+}
