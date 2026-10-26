@@ -39,6 +39,9 @@ Production boundary:
 
 Test boundary:
 
+- Quick Dev must create `.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py`
+  as the dedicated primary assertion surface; existing tests below are retained
+  regressions rather than pre-existing proof of this plan's assertions.
 - Extend `test_execution_preflight.py` or one adjacent focused admission test.
 - Public entry: invalid input, explicit corrupt/stale recovery and unavailable
   consumer entry block before any worker; the two profiles remain independent.
@@ -77,6 +80,9 @@ Production boundary:
 
 Test boundary:
 
+- Quick Dev must create `.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py`
+  as the dedicated primary assertion surface; the existing Q1/session tests
+  remain required regressions and may be extended within their current purpose.
 - Extend `test_ch456_q1_planned_preflight.py` and `test_execution_session.py`.
 - Bundle-valid but disk-missing/changed context blocks before a run is created.
 - Bundle-valid but unconsumable actual argv/selector blocks; legal planned
@@ -121,6 +127,11 @@ Candidate production boundary, subject to authority resolution:
 
 Test boundary:
 
+- Quick Dev must create `.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py`
+  for the dependency-revision assertions and must create
+  `.agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py`
+  for test-only retained execution/delivery guards. These declarations create
+  no test bytes, runtime evidence or additional production write authority.
 - Extend dependency projection and native successor-repair tests.
 - Explicit add/remove edges yield the old/new downstream closure.
 - Source/predecessor drift, unsafe output, cycle/dangling edges and nonselected
