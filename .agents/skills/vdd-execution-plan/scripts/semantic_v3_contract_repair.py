@@ -1036,7 +1036,7 @@ def install_dependency_revision(predecessor, revision):
         values = original(**kwargs)
         if ({o['obligation_id']: o for o in values} != {o['obligation_id']: o for o in expected}
                 or kwargs['source_index']['sha256'] != revision['input']['source_index_sha256']):
-            raise ValueError('dependency revision reused generation input drift')
+            raise ValueError('dependency revision reused V1 input drift')
         return deepcopy(revision['obligations'])
     group.sc.compile_obligations = revised_obligations
 

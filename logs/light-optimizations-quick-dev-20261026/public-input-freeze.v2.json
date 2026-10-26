@@ -1,0 +1,91 @@
+{
+  "schema": "light-optimizations.public-input-freeze.v2",
+  "authorizes": [],
+  "recorded_at": "2026-10-26T23:53:27.575534+00:00",
+  "producer_parent_commit": "94d8d00a7a63a39484949f18981e4ff7f7c9a6d8",
+  "files": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/case_selection.py",
+      "sha256": "2e72bf8a6b6fb74bf6023123ce12a2638379018376dfb89d5c118f90fab9fb53"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+      "sha256": "a11b3212f1af1b2d980bd10751dc7c1a0d3dc771840eff3c8ee92d48f308fa79"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+      "sha256": "5267488dc0545350df49ad0b114a4de8a053a2f4c9106585a6ce60b4fffc3544"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      "sha256": "8ebf8eafd0553cb26f18474ed698ac63ab3f10a36bdafb9c17bc5d0f02cff6b1"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      "sha256": "01979c39183f818e8a420fde28fe4b72e51afff62182b2a204b0f62360940079"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+      "sha256": "f5a8ea8a17d40a6c84f7f14e0d6534ff7e7f45660645aacfe49331ba2317b218"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+      "sha256": "3399f2fb1c840fab59e37d1a6b1308678d453100e4c021cce0916b9ed6847ccd"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      "sha256": "ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+      "sha256": "68b90cbf4349339049f983228622d5a7c652fdb6de5b69043b7092d51c759d1c"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      "sha256": "41fe8c611a5b4e8dd9098351a63a839e1eda4803a325530e01117617f060c75a"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      "sha256": "6ecf213d7dcff67ca6f3860632e8fdd5c2bb2d804bdf0d159f485090b0672b9c"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+      "sha256": "8d484cc96e5a44f48637c5aaca1beeac87016a54b50701c2a26919499aa12a2b"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+      "sha256": "ca3b358fea2e8772dd16b0934d365a147977ac8cc7a47980b8588f7422d5dd62"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      "sha256": "2d5e40ec95d096508b7ddcbef4a1867994793123fef9004cf3eac24c3e106593"
+    },
+    {
+      "path": "docs/2026-10-26-toolchain-light-optimizations-requirements-v3.md",
+      "sha256": "3c353f4d69dbea496e16f0e0dae4fd5d6a6b48d398d0148fd37444797f991dd7"
+    },
+    {
+      "path": "execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary/semantic-plan-bundle.v1.json",
+      "sha256": "e9ca66fc079a6660fc5b777f580bb744cc92758e262fa135469330e585c9708e"
+    },
+    {
+      "path": "scripts/vdd/compile_plan.py",
+      "sha256": "34570a860bacf18bcdfbebfe693705b90d0926d2fbd29a4772ef5c1d8c3d2a9e"
+    }
+  ],
+  "trusted_fixed_files_unchanged": true,
+  "environment": {
+    "python_environment": "/tmp/ji-mu-yun-light-qd-venv",
+    "pytest": "9.1.1",
+    "TMPDIR": "/workspace/ji-mu-yun-light-optimizations/logs/light-optimizations-quick-dev-20261026/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "budgets": {
+    "total_seconds": 1800,
+    "real_idle_seconds": 600
+  },
+  "execution": "strictly serial",
+  "not_completion": true,
+  "supersedes_for_current_bytes": "public-input-freeze.v1.json; prior originals retained",
+  "reason": "One diagnostic wording correction required by the existing package architecture test: reused generation input -> reused V1 input. No checks, tests, roles, source authority or model policy changed."
+}
