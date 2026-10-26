@@ -177,6 +177,8 @@ def main() -> int:
     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
                         help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
     args = parser.parse_args()
+    if args.admission_only and args.repair_quick_dev_handoff_from:
+        parser.error("admission-only cannot combine handoff publication")
     if args.handoff_static_primary_slice and (not args.repair_quick_dev_handoff_from
             or args.handoff_planned_test or args.runtime_red_intent or args.handoff_windows_launcher_slice
             or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):

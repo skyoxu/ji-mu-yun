@@ -63,7 +63,7 @@ def test_light_3151dcccab85(local):
 
 
 @pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
-@pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'consumer'])
+@pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'recovery-missing-bundle', 'consumer'])
 def test_light_1622025eedfb(local, defect):
     source = REQUIREMENTS
     extra = []
@@ -76,9 +76,12 @@ def test_light_1622025eedfb(local, defect):
         shutil.copytree(PLAN, out)
         extra = ['--resume-from', 'first-failed-stage']
         path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
-        value = json.loads(path.read_text())
-        value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
-        path.write_text(json.dumps(value))
+        if defect == 'recovery-missing-bundle':
+            path.unlink()
+        else:
+            value = json.loads(path.read_text())
+            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
+            path.write_text(json.dumps(value))
     original_is_file = Path.is_file
     def visible(path):
         if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
@@ -101,7 +104,7 @@ def test_light_51007ee5cc9c(local, plan_profile, execution, allowed):
 
 
 @pytest.mark.cer_assertion('ASSERT-LIGHT-EE30987A8DDE')
-@pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery'])
+@pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery', 'handoff-mode'])
 def test_light_964924bbdac1(local, kind):
     source, out, extra = REQUIREMENTS, local / 'out', []
     if kind == 'invalid':
@@ -109,14 +112,21 @@ def test_light_964924bbdac1(local, kind):
     if kind == 'recovery':
         shutil.copytree(PLAN, out)
         extra = ['--resume-from', 'first-failed-stage']
+    if kind == 'handoff-mode':
+        prior = local / 'predecessor'
+        shutil.copytree(PLAN, prior)
+        extra = ['--repair-quick-dev-handoff-from', str(prior)]
     before = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
     with mock.patch.object(cli, 'compile_plan') as compiler:
         rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if kind == 'recovery' else 'standard', extra=extra)
     after = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
-    expect('admission' in result and workers == queries == compiler.call_count == 0 and before == after
-           and not (local / 'out/compiler-state.v1.json').exists() if kind != 'recovery' else
-           'admission' in result and workers == queries == compiler.call_count == 0 and before == after,
-           'LIGHT-EE30987A8DDE')
+    untouched = workers == queries == compiler.call_count == 0 and before == after
+    if kind == 'handoff-mode':
+        expect(rc != 0 and untouched and not out.exists(), 'LIGHT-EE30987A8DDE')
+    else:
+        expect('admission' in result and untouched
+               and (kind == 'recovery' or not (out / 'compiler-state.v1.json').exists()),
+               'LIGHT-EE30987A8DDE')
 
 
 @pytest.mark.cer_assertion('ASSERT-LIGHT-6BE79070B34A')

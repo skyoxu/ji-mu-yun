@@ -169,14 +169,19 @@ def test_light_c88bf08ef42b(side, defect):
 
 
 @pytest.mark.cer_assertion('ASSERT-LIGHT-2768B5FD436D')
-@pytest.mark.parametrize('operation', ['remove', 'add'])
+@pytest.mark.parametrize('operation', ['remove', 'add', 'reorder'])
 def test_light_b0f66ffcfc79(operation):
     old, new, slices = graphs()
     if operation == 'add':
         old, new = new, old
+    if operation == 'reorder':
+        old[2]['depends_on'] = ['O-A', 'O-B']
+        new = deepcopy(old)
+        new[2]['depends_on'].reverse()
     function = getattr(graph, 'dependency_revision_impact', None)
     result = function(old, new, slices) if function else {}
-    expect(result.get('affected_slices') == ['B', 'C'] and result.get('changed_obligation_ids') == ['O-B'], 'LIGHT-2768B5FD436D')
+    expected_slices, expected_ids = ([], []) if operation == 'reorder' else (['B', 'C'], ['O-B'])
+    expect(result.get('affected_slices') == expected_slices and result.get('changed_obligation_ids') == expected_ids, 'LIGHT-2768B5FD436D')
 
 
 @pytest.mark.cer_assertion('ASSERT-LIGHT-0CC55D3C196E')

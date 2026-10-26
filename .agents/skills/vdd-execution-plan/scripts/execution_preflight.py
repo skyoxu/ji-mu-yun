@@ -81,8 +81,7 @@ def inspect_admission(sc, root, requirements, companions=(), *, profile="standar
               "execution_profile": execution_profile, "checks": checks,
               "findings": findings, "authorizes": []}
     try:
-        if profile not in {"standard", "resumable", "self-hosted"}:
-            raise ValueError("VDD plan-shape profile is invalid")
+        # The public compiler parser owns VDD profile admission.
         for raw in [requirements, *companions]:
             path = Path(raw)
             path.resolve().relative_to(root)
@@ -127,6 +126,8 @@ def inspect_admission(sc, root, requirements, companions=(), *, profile="standar
                     value = json.loads(state.read_text(encoding="utf-8"))
                     if not isinstance(value, dict):
                         raise ValueError("selected recovery state is malformed")
+                    if value.get("state") == "plan-ready":
+                        raise ValueError("selected completed recovery is missing required artifacts")
                 checks["recovery"] = {"status": "pending", "reason": "native-candidate-revalidation-required"}
             else:
                 if completed.get("status") != "plan-ready":

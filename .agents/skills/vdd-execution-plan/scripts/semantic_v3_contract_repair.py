@@ -999,7 +999,9 @@ def prepare_dependency_revision(correction, predecessor):
             raise ValueError('dependency revision target is unknown or duplicated')
         selected.add(oid)
         if (change['old_depends_on'] != prior[oid].get('depends_on', [])
-                or change['new_depends_on'] == change['old_depends_on']):
+                or (isinstance(change['new_depends_on'], list)
+                    and all(isinstance(dep, str) for dep in change['new_depends_on'])
+                    and set(change['new_depends_on']) == set(change['old_depends_on']))):
             raise ValueError('dependency revision old edges differ or change is empty')
         revised[oid]['depends_on'] = deepcopy(change['new_depends_on'])
     # A dependency-only request may repeat existing V3 bytes for its selected

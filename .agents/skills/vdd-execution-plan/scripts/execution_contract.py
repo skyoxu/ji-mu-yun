@@ -116,7 +116,7 @@ def dependency_revision_impact(before, after, slices):
     current = {o['obligation_id']: o for o in after}
     if set(prior) != set(current):
         raise ValueError('dependency:obligation-domain-changed')
-    changed = sorted(oid for oid in prior if prior[oid].get('depends_on', []) != current[oid].get('depends_on', []))
+    changed = sorted(oid for oid in prior if set(prior[oid].get('depends_on', [])) != set(current[oid].get('depends_on', [])))
     owners = {oid: s['slice_id'] for s in slices for oid in s['obligation_ids']}
     if not set(changed) <= owners.keys():
         raise ValueError('dependency:changed-obligation-has-no-slice')
