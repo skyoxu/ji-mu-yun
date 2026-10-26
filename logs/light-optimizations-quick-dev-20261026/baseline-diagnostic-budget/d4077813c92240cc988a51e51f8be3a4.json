@@ -1,0 +1,27 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "-c",
+    "from pathlib import Path\nimport sys,json\nfrom unittest import mock\nroot=Path.cwd();sys.path[:0]=[str(root),str(root/'.agents/skills/vdd-execution-plan/scripts/tests')]\nimport test_published_v3_compiler_integration as test\noriginal=test.cli.main\nobserved={'source_commit':'99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec','kind':'non-authoritative targeted baseline diagnostic'}\ndef observer():\n    result=original()\n    observed.update(exit_code=result,raw_native_stdout=sys.stdout.getvalue())\n    return result\nwith mock.patch.object(test.cli,'main',side_effect=observer):\n    try:test.test_real_0805_predecessor_reuses_v3_but_invokes_v4()\n    except Exception as exc:observed['test_exception']=type(exc).__name__+': '+str(exc)\np=Path('/workspace/ji-mu-yun-light-optimizations/logs/light-optimizations-quick-dev-20261026/baseline-published-v3-reason.json')\np.write_text(json.dumps(observed,indent=2)+'\\n',encoding='utf-8')\nprint(json.dumps(observed))\n"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.6085588510004527,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "263fd5c1933223da5e472842965ef9d6d79057cfd3299b975884296f342d2a95": 0.6055164420004076
+  },
+  "active_at_stop": [
+    {
+      "key": "263fd5c1933223da5e472842965ef9d6d79057cfd3299b975884296f342d2a95",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.6055164420004076,
+      "container": true
+    }
+  ]
+}

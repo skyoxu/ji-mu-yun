@@ -1,0 +1,260 @@
+....................................................................FFFF [ 85%]
+.F..........                                                             [100%]
+=================================== FAILURES ===================================
+__________ test_public_cli_publishes_checked_successor_without_worker __________
+
+cli_root = PosixPath('/tmp/pytest-of-agent/pytest-11/test_public_cli_publishes_chec0/repo')
+
+    def test_public_cli_publishes_checked_successor_without_worker(cli_root):
+        result, out = invoke(cli_root)
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "/tmp/pytest-of-agent/pytest-11/test_public_cli_publishes_chec0/repo/scripts/vdd/compile_plan.py", line 17, in <module>
+E             from workflow_unit_budget import public_entry
+E         ModuleNotFoundError: No module named 'workflow_unit_budget'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/ji-mu-yun-light-qd-venv/bin/python', 'scripts/vdd/compile_plan.py', '--requirements', 'ex...>\n    from workflow_unit_budget import public_entry\nModuleNotFoundError: No module named \'workflow_unit_budget\'\n').returncode
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py:182: AssertionError
+__ test_cli_refuses_drift_or_missing_review_without_publishing[source-drift] ___
+
+cli_root = PosixPath('/tmp/pytest-of-agent/pytest-11/test_cli_refuses_drift_or_miss0/repo')
+fault = 'source-drift'
+
+    @pytest.mark.parametrize('fault', ['source-drift', 'state-hash', 'review'])
+    def test_cli_refuses_drift_or_missing_review_without_publishing(cli_root, fault):
+        if fault == 'source-drift':
+            path = cli_root / SCOPE / 'assembled-requirements.md'
+            path.write_text(path.read_text(encoding='utf-8') + '\nUnreviewed requirement change.\n', encoding='utf-8')
+        else:
+            name = 'compiler-state.v1.json' if fault == 'state-hash' else 'semantic-alignment.v1.json'
+            path = cli_root / PRIOR / name
+            value = json.loads(path.read_text(encoding='utf-8'))
+            if fault == 'state-hash':
+                value['semantic_plan_sha256'] = 'sha256:' + '0' * 64
+            else:
+                value['valid'] = False
+            path.write_text(json.dumps(value), encoding='utf-8')
+        result, out = invoke(cli_root)
+        assert result.returncode == 1
+>       assert json.loads(result.stdout)['status'] == 'repair-vdd'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7ff2dd0648f0>, s = '', idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py:356: JSONDecodeError
+___ test_cli_refuses_drift_or_missing_review_without_publishing[state-hash] ____
+
+cli_root = PosixPath('/tmp/pytest-of-agent/pytest-11/test_cli_refuses_drift_or_miss1/repo')
+fault = 'state-hash'
+
+    @pytest.mark.parametrize('fault', ['source-drift', 'state-hash', 'review'])
+    def test_cli_refuses_drift_or_missing_review_without_publishing(cli_root, fault):
+        if fault == 'source-drift':
+            path = cli_root / SCOPE / 'assembled-requirements.md'
+            path.write_text(path.read_text(encoding='utf-8') + '\nUnreviewed requirement change.\n', encoding='utf-8')
+        else:
+            name = 'compiler-state.v1.json' if fault == 'state-hash' else 'semantic-alignment.v1.json'
+            path = cli_root / PRIOR / name
+            value = json.loads(path.read_text(encoding='utf-8'))
+            if fault == 'state-hash':
+                value['semantic_plan_sha256'] = 'sha256:' + '0' * 64
+            else:
+                value['valid'] = False
+            path.write_text(json.dumps(value), encoding='utf-8')
+        result, out = invoke(cli_root)
+        assert result.returncode == 1
+>       assert json.loads(result.stdout)['status'] == 'repair-vdd'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7ff2dd0648f0>, s = '', idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py:356: JSONDecodeError
+_____ test_cli_refuses_drift_or_missing_review_without_publishing[review] ______
+
+cli_root = PosixPath('/tmp/pytest-of-agent/pytest-11/test_cli_refuses_drift_or_miss2/repo')
+fault = 'review'
+
+    @pytest.mark.parametrize('fault', ['source-drift', 'state-hash', 'review'])
+    def test_cli_refuses_drift_or_missing_review_without_publishing(cli_root, fault):
+        if fault == 'source-drift':
+            path = cli_root / SCOPE / 'assembled-requirements.md'
+            path.write_text(path.read_text(encoding='utf-8') + '\nUnreviewed requirement change.\n', encoding='utf-8')
+        else:
+            name = 'compiler-state.v1.json' if fault == 'state-hash' else 'semantic-alignment.v1.json'
+            path = cli_root / PRIOR / name
+            value = json.loads(path.read_text(encoding='utf-8'))
+            if fault == 'state-hash':
+                value['semantic_plan_sha256'] = 'sha256:' + '0' * 64
+            else:
+                value['valid'] = False
+            path.write_text(json.dumps(value), encoding='utf-8')
+        result, out = invoke(cli_root)
+        assert result.returncode == 1
+>       assert json.loads(result.stdout)['status'] == 'repair-vdd'
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py:338: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x7ff2dd0648f0>, s = '', idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py:356: JSONDecodeError
+_____________ test_real_0805_predecessor_reuses_v3_but_invokes_v4 ______________
+
+    def test_real_0805_predecessor_reuses_v3_but_invokes_v4() -> None:
+        # A temporary copy keeps the published plan and its evidence immutable.
+        with tempfile.TemporaryDirectory(dir=ROOT / "logs") as location:
+            predecessor = Path(location) / "predecessor"
+            successor = Path(location) / "successor"
+            predecessor.mkdir()
+            for name in (
+                "semantic-plan-bundle.v1.json", "compiler-state.v1.json",
+                "source-index.v1.json", "semantic-alignment.v1.json",
+                "atomic-recall-alignment.v1.json", "obligations.v1.json",
+            ):
+                shutil.copyfile(PLAN / name, predecessor / name)
+            bundle = json.loads((predecessor / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+            raw = repair.project_published_v3(bundle)
+            target = "O-530CF6DD124B"
+            acceptance = next(item for item in raw["acceptances"] if item["obligation_ids"] == [target])
+            failures = [item for item in raw["failure_intents"] if item["obligation_ids"] == [target]]
+            hint = next(item for item in raw["slice_hints"] if item["obligation_ids"] == [target])
+            correction = {
+                "schema": "vdd.v3-candidate-repair.v1",
+                "requirements_sha256": "sha256:" + hashlib.sha256(REQUIREMENTS.read_bytes()).hexdigest(),
+                "authorizes": [],
+                "obligation_contracts": {target: {
+                    "acceptance": {key: deepcopy(value) for key, value in acceptance.items()
+                                   if key != "obligation_ids"},
+                    "failure_intents": [{key: deepcopy(value) for key, value in item.items()
+                                         if key != "obligation_ids"} for item in failures],
+                    "slice_hint": {key: deepcopy(value) for key, value in hint.items()
+                                   if key != "obligation_ids"},
+                }},
+            }
+            repair_path = Path(location) / "correction.json"
+            repair_path.write_text(json.dumps(correction), encoding="utf-8")
+            calls = []
+    
+            def underlying_worker(**kwargs):
+                calls.append(kwargs["stage"])
+                return {"independent_v4": True}
+    
+            def compile_probe(**kwargs):
+                assert kwargs["out_dir"] == successor
+                source = json.loads((predecessor / "source-index.v1.json").read_text(encoding="utf-8"))
+                obligations = sc.compile_obligations(root=ROOT, out_dir=successor,
+                                                      source_index=source, worker_cache=None)
+                assert len(obligations) == 116
+                observed_v3 = sc.invoke_worker(root=ROOT, out_dir=successor, stage="v3",
+                                               payload={"obligations": obligations}, prompt="V3")
+                assert len(observed_v3["acceptances"]) == 116
+                assert len(observed_v3["failure_intents"]) == 155
+                observed_v4 = sc.invoke_worker(root=ROOT, out_dir=successor, stage="v4",
+                                               payload={}, prompt="V4")
+                assert observed_v4["valid"] is True
+                assert observed_v4["source_gap_claims"] == []
+                return {"status": "repair-vdd", "stage": "V4"}
+    
+            argv = ["compile_plan.py", "--requirements", str(REQUIREMENTS),
+                    "--out-dir", str(successor), "--profile", "self-hosted",
+                    "--repair-published-v3-from", str(predecessor),
+                    "--v3-contract-repair", str(repair_path),
+                    "--published-v1-gap-extension",
+                    str(PLAN.parent.parent / "published-v1-fr4-probe-outcomes.json")]
+            output = io.StringIO()
+            with (mock.patch.object(sc, "invoke_worker", side_effect=underlying_worker),
+                  mock.patch.object(sc, "semantic_align", sc.semantic_align),
+                  mock.patch.object(sc, "compile_obligations", sc.compile_obligations),
+                  mock.patch.object(sc, "_v1_reuse_predecessor_plan", sc._v1_reuse_predecessor_plan),
+                  mock.patch.object(cli, "compile_plan", side_effect=compile_probe),
+                  mock.patch.object(sys, "argv", argv), redirect_stdout(output)):
+                exit_code = cli.main()
+            assert exit_code == 1
+            assert calls == []
+>           assert json.loads(output.getvalue())["stage"] == "V4"
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'stage'
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py:103: KeyError
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py::test_public_cli_publishes_checked_successor_without_worker
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py::test_cli_refuses_drift_or_missing_review_without_publishing[source-drift]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py::test_cli_refuses_drift_or_missing_review_without_publishing[state-hash]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py::test_cli_refuses_drift_or_missing_review_without_publishing[review]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py::test_real_0805_predecessor_reuses_v3_but_invokes_v4
+5 failed, 79 passed in 6.37s

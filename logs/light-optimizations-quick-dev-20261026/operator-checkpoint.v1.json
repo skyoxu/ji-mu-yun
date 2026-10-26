@@ -1,0 +1,220 @@
+{
+  "schema": "light-optimizations.operator-checkpoint.v1",
+  "authorizes": [],
+  "recorded_at": "2026-10-26T22:41:31.459689+00:00",
+  "not_completion": "This is a producer checkpoint and scope-block report, not implementation-complete, acceptance or independent review.",
+  "fixed_plan_commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+  "fixed_plan_sha256": "caa9210a02739c8eb4f63b434d62e6f97a82944e6aa3f53b388378d2fedf8e6e",
+  "pytest_environment": {
+    "venv": "/tmp/ji-mu-yun-light-qd-venv",
+    "pytest": "9.1.1",
+    "prepared": true,
+    "downloads_failed": false
+  },
+  "execution_profile": "standard",
+  "trusted_files_unchanged": true,
+  "changed_files": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+      "sha256": "5267488dc0545350df49ad0b114a4de8a053a2f4c9106585a6ce60b4fffc3544"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      "sha256": "8ebf8eafd0553cb26f18474ed698ac63ab3f10a36bdafb9c17bc5d0f02cff6b1"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+      "sha256": "b12ba0c7fdc5731c40afc9d360ef6ae1d76c8bc128a084b9c896f885546dfb33"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      "sha256": "01979c39183f818e8a420fde28fe4b72e51afff62182b2a204b0f62360940079"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      "sha256": "aee9a202b2684baf1e0fcde8032b4fa6e362b5c7ea41318815a2a5b6e9eed991"
+    }
+  ],
+  "native_stages": [
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-02/canonical-evidence/probe/stage-result.v2.json",
+      "sha256": "901c616be038c55feaab91e808633fa5a5449192c02cac2af50805cc4a925d81",
+      "mtime_utc": "2026-10-26T22:11:52.364651+00:00",
+      "stage": "probe",
+      "predicate_result": false,
+      "verification_outcome": "blocked",
+      "failure_family": "semantic-contract-gap"
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-03/canonical-evidence/probe/stage-result.v2.json",
+      "sha256": "53c7dd197aa46a208fca23d9a1ec2cdfc57812e08e8db2417243549e78412d26",
+      "mtime_utc": "2026-10-26T22:13:17.643892+00:00",
+      "stage": "probe",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "failure_family": null
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-03/canonical-evidence/red/stage-result.v2.json",
+      "sha256": "21863060a82f1702d56fba7105a26463b55ed5b19027f7c7615cf5ee11430ba0",
+      "mtime_utc": "2026-10-26T22:13:37.443166+00:00",
+      "stage": "red",
+      "predicate_result": true,
+      "verification_outcome": "fail",
+      "failure_family": "expected-red"
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-03/canonical-evidence/green/stage-result.v2.json",
+      "sha256": "5b52a46d1c75ddf0770ef85a301bda72f832570515c27080ef4cd532dd955307",
+      "mtime_utc": "2026-10-26T22:16:18.161273+00:00",
+      "stage": "green",
+      "predicate_result": false,
+      "verification_outcome": "blocked",
+      "failure_family": "test-harness-failure"
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-04/canonical-evidence/probe/stage-result.v2.json",
+      "sha256": "ef8f7a5d8269c82be2ef7a34a426ed3855a37fbb785a7ec74d6509d141cedc5d",
+      "mtime_utc": "2026-10-26T22:18:09.154603+00:00",
+      "stage": "probe",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "failure_family": null
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-04/canonical-evidence/regression/stage-result.v2.json",
+      "sha256": "9aab6e088922330d8ab781b79e6ae561b2a8a350013d1540be3b6175a61640d0",
+      "mtime_utc": "2026-10-26T22:21:46.723413+00:00",
+      "stage": "regression",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "failure_family": null
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S4/attempt-04/canonical-evidence/terminal/stage-result.v2.json",
+      "sha256": "8bcf034999aa4e6d52803ed6705b35d5cfa79cc227555346a828ba1f0634e702",
+      "mtime_utc": "2026-10-26T22:26:17.615043+00:00",
+      "stage": "terminal",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "failure_family": null
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/S1/attempt-01/canonical-evidence/probe/stage-result.v2.json",
+      "sha256": "7ce0d1c3b200d7571557c822c644a6dad4abcc721b9c5f98cf45b058482bf2b4",
+      "mtime_utc": "2026-10-26T22:29:00.089303+00:00",
+      "stage": "probe",
+      "predicate_result": true,
+      "verification_outcome": "pass",
+      "failure_family": null
+    }
+  ],
+  "S4_native_q7": {
+    "path": "logs/light-optimizations-quick-dev-20261026/S4-checkpoint-ready.json",
+    "sha256": "4aa8f633766061e3246fa40e7c1de37270601be6a4e548d1ccff76854756fd7f",
+    "status": "pass at that checkpoint; later source/test input changes must use native freshness checks"
+  },
+  "S4_q6_commands": [
+    {
+      "argv": [
+        "python",
+        "-B",
+        "-m",
+        "pytest",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+        "-q"
+      ],
+      "cases": 15,
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "-m",
+        "pytest",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q1_planned_preflight.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py",
+        "-q"
+      ],
+      "cases": 20,
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "python",
+        "-B",
+        "-m",
+        "pytest",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py",
+        "-q"
+      ],
+      "cases": 46,
+      "exit_code": 0
+    }
+  ],
+  "S1_q6": {
+    "primary": "1 passed",
+    "old_regression_group": "79 passed, 5 failed",
+    "native_status": "blocked / reuse-unsuccessful-or-incomplete-execution",
+    "all_originals_under": "logs/light-optimizations-quick-dev-20261026/S1/attempt-01/canonical-evidence/regression"
+  },
+  "baseline_comparison": {
+    "workspace": "/tmp/light-qd-baseline-99144af7",
+    "commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+    "result": "The same five named failures, 79 passed / 5 failed, observed in the fixed baseline. Test stdout was returned in the execution tool transcript; budget originals are copied byte-for-byte here.",
+    "budget_original_source": "/tmp/light-qd-baseline-99144af7/logs/light-qd-baseline-group-1",
+    "budget_original_copy": "logs/light-optimizations-quick-dev-20261026/baseline-group-1-originals",
+    "copies": [
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/baseline-group-1-originals/64757fae95f54c3db38195e07c15acb2.events.jsonl",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/baseline-group-1-originals/64757fae95f54c3db38195e07c15acb2.json",
+        "sha256": "825e4c8eb6ece39757be027ab0dc6518b7b2e56ca9890c61dc55d5c6184409cf",
+        "source_sha256": "825e4c8eb6ece39757be027ab0dc6518b7b2e56ca9890c61dc55d5c6184409cf"
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/baseline-group-1-originals/budget-ledger.json",
+        "sha256": "84660bf9c8f2c66854d4a101c08c95d0489082ec4123dcb3a9e5e62058fb2226",
+        "source_sha256": "84660bf9c8f2c66854d4a101c08c95d0489082ec4123dcb3a9e5e62058fb2226"
+      }
+    ],
+    "source_tree_clean": true
+  },
+  "specific_baseline_causes": {
+    "test_quick_dev_handoff.py": "Four CLI cases: isolated cli_root omits scripts/workflow_unit_budget.py required by the unchanged public compiler entry.",
+    "test_published_v3_compiler_integration.py::test_real_0805_predecessor_reuses_v3_but_invokes_v4": "Native rejection consumption_reference_denied before expected V4 seam; historical requirement target. See baseline-published-v3-reason.json. Do not bypass this rejection."
+  },
+  "new_affected_regression": {
+    "command": "test_execution_preflight.py plus test_public_v3_pause.py::test_public_pause_then_resume_reuses_v3_and_preserves_history",
+    "result": "23 passed, 1 failed",
+    "reason": "Copied VDD-only public fixture lacks the shared Quick Dev consumer module; this is introduced by the actual shared-consumer integration.",
+    "native_budget_root": "logs/light-optimizations-quick-dev-20261026/affected-vdd-preflight-budget"
+  },
+  "required_scope_coordination": {
+    "action": "Use an already supported trusted VDD authoring/repair path to bind minimal existing test-fixture changes before native Q2 may write them. Do not use the not-yet-implemented dependency revision to authorize its own plan.",
+    "files": [
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py"
+    ],
+    "reason": "Current S1/S2/S3 execution_snapshot_paths/planned_new_files grant Q2 only the dedicated new primary modules. Existing regression paths are argv consumers, not Q2 write authority.",
+    "minimum_directions": [
+      "Copy actual native budget and Quick Dev entry/consumer dependencies into the isolated CLI fixture; do not relax missing-entry checks.",
+      "Use a permitted source fixture for the controlled V3 repair integration; do not mock away or weaken consumption_reference_denied."
+    ],
+    "status": "Pending parent coordination; no approval denial and no uncertain mutation"
+  },
+  "S2": "Not authored or implemented yet",
+  "S3": "Not authored or implemented yet; shared consumer dependency implemented in S4",
+  "S1": "Test-only probe present; required old regressions blocked as above",
+  "Q8": "Not run; incomplete",
+  "remote_actions": "None",
+  "review_or_acceptance": "None during implementation",
+  "capacity_or_model_block": "None; retain current caller model setting",
+  "next_step": "Resolve the exact Q2 fixture boundary through the parent, then continue S3/S2 and final content-frozen native validation."
+}

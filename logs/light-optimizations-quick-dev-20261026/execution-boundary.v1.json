@@ -1,0 +1,96 @@
+{
+  "schema": "light-optimizations.execution-boundary.v1",
+  "authorizes": [],
+  "source_commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+  "candidate_workspace": "/workspace/ji-mu-yun-light-optimizations",
+  "stable_host_workspace_preserved": "/workspace/ji-mu-yun",
+  "execution_profile": "standard",
+  "reason": "Bounded isolated static-validator/consumer implementation, no stable-host or judge promotion; retain native cases, Q6, snapshots and Q7/Q8. ADR-0041 runtime-profile and execution-ownership decisions apply.",
+  "trusted_fixed_files": [
+    {
+      "path": "scripts/quick_dev/run.py",
+      "sha256": "ebc25a28d978c585db4d103a189f5d0e302f63f7814e31656ef622ae39e0bbb4"
+    },
+    {
+      "path": "scripts/workflow_host.py",
+      "sha256": "20f02582b6f3365fa31e1e1045d7d84f7a2a9c76fb69ef9cd8e1ca90392711a7"
+    },
+    {
+      "path": "scripts/sc/host_session.py",
+      "sha256": "dfc67459cf380494e942b903563736a08833095b27bbbef953a66c6d9af609a7"
+    },
+    {
+      "path": "scripts/workflow_unit_budget.py",
+      "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py",
+      "sha256": "254268d5529786d24b4f7ebe98796cc10311a865a3c6fedc0ef15ab30b95ee04"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "sha256": "9ce4579fa4f3d3a3598aac4b1e32038cadc530882713012f7d79088a4b98abe7"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+      "sha256": "99d980984378fc269b4e555d478666f4e427975355ffe0abf1091b095b9caf2c"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+      "sha256": "a2745753e3a0a44847508930165fb8f396d1ae1e9cc6db6c4b74175caa8113be"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+      "sha256": "f46dedcde6ee6a139eb77db55b62c5787576b60d67309026b063d5f207cc2923"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+      "sha256": "1d98150f7b23cf4df178c10941ecf02ab5b13a6982c4b049d966e193022bd620"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py",
+      "sha256": "b7e363f0b6d9acdd3973d66e2f15dff2172c4f9acb4fcc9d6eefb72977f0d8aa"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+      "sha256": "05bc627f5013a1135bd00e8bcd6703621eea746622c663df8835e38fd1b34ac2"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/pytest_case_collector.py",
+      "sha256": "237d2d854cc9610e055b328bc6bf648c748bf2dd0052c3562e95ecf3949fd054"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+      "sha256": "e2c193bd6ebe63061572aeb7f8525cefb943250be1157885be5ec37a9b449c9d"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+      "sha256": "c6f53d7784d51c798d7a6ca85c204dece2f52db4be465329d1032b5ac12171fe"
+    }
+  ],
+  "candidate_production_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/case_selection.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+    "scripts/vdd/compile_plan.py"
+  ],
+  "test_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py"
+  ],
+  "order": [
+    "S2",
+    "S4",
+    "S3",
+    "S1"
+  ],
+  "models": "Retain the current caller setting; no model policy change",
+  "scope": "Only this three-package candidate. No original PR21 replay, BMAD, external review, Acceptance or remote delivery."
+}

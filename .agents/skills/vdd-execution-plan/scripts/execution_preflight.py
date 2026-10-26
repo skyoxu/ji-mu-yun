@@ -5,6 +5,8 @@ repair. Diagnostics cannot authorize Quick Dev or manufacture behavioral RED.
 """
 from copy import deepcopy
 import json
+from pathlib import Path
+import sys
 
 
 def inspect_candidate(sc, root, obligations, acceptances, failures, hints, *, profile="standard"):
@@ -26,6 +28,13 @@ def inspect_candidate(sc, root, obligations, acceptances, failures, hints, *, pr
         findings.extend(sc.feasibility(root, slices, acceptances, failures, by_acceptance)["findings"])
         findings.extend(sc.validate_semantic_bundle(bundle)[1])
         findings.extend(handoff_findings(bundle, workspace=root))
+        tools = Path(__file__).resolve().parents[2] / "quick-dev-tdd-adapter" / "tools"
+        if str(tools) not in sys.path:
+            sys.path.insert(0, str(tools))
+        from q1_planned_preflight import validate_planned_preflight
+        for item in slices:
+            validate_planned_preflight(workspace=root, bundle=bundle,
+                slice_id=item["slice_id"], timeout_seconds=1800)
         for item in slices:
             absent = sorted(owner for owner in item["production_owners"]
                             if owner in item["planned_new_files"] and not (root / owner).is_file())

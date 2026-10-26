@@ -1,0 +1,21 @@
+{"at": 6480.79699502, "call": "fb96d58f955d436fb2302b784966fe1e", "container": false, "event": "start", "key": "d4d1ad607ba6a5407f693a0d53192f6aa0aebd254745d2f974e4baca4c96f178", "label": "Quick Dev terminal", "parent": "entry"}
+{"at": 6480.798109999, "call": "fb96d58f955d436fb2302b784966fe1e", "event": "owned", "pid": 9433}
+{"at": 6481.111096858, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.116830041, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.122387515, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.130640205, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.136709703, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.141915698, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.154410381, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.160968262, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.166918471, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.173399755, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.185582323, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.189890387, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.203791702, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.219985676, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.54442358, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8", "event": "progress"}
+{"at": 6481.544713851, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "355f19bb41988243e6e13dcaa43ed53c42c4f86c8c836e739e0b6190306d4b6d", "event": "progress"}
+{"at": 6481.607896388, "call": "fb96d58f955d436fb2302b784966fe1e", "digest": "70726feb17c56ae08d0154f86ec8e32b449771e2e9ba1a57696e1632bbead298", "event": "progress"}
+{"at": 6481.648638094, "call": "fb96d58f955d436fb2302b784966fe1e", "event": "reaped", "pid": 9433}
+{"at": 6481.649427871, "call": "fb96d58f955d436fb2302b784966fe1e", "event": "end"}
