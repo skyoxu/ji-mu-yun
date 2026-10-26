@@ -11777,7 +11777,7 @@
   "historical_metadata_note": "Old published metadata is preserved as history. The byte comparisons in current_source_overlay distinguish presence in the host tree from exact current bytes, including the preserved caller overlay in compile_plan.py.",
   "Git_raw_byte_transport": {
     "purpose": "Preserve exact Windows original bytes without changing source, receipts, .gitattributes or Git config.",
-    "method": "Index-only hash-object --no-filters and update-index for files subject to automatic CRLF normalization.",
+    "method": "Exact raw index blobs plus a publication-only logs/.gitattributes containing five literal -text rules; root attributes and Git configuration unchanged.",
     "paths": [
       {
         "path": "logs/windows-p1-result-40293104427/verified-original/platform.json",
@@ -11804,6 +11804,16 @@
         "sha256": "b0177b8071a3e50501d49f2c1efcfb05e4431045d583a2034a329ce14b5ecfa3",
         "raw_blob_oid": "0e9a61a66b43dd1528c3f2348bb47565f77bcedc"
       }
-    ]
+    ],
+    "checkout_attribute_file": {
+      "path": "logs/.gitattributes",
+      "sha256": "f751aeb5806910f1bd8a57001378f081adf358ad89d63646dd4e47cc9a432bbb",
+      "scope": "Only the five listed original text files; -text preserves CRLF bytes on checkout.",
+      "outside_Q7_Q8_roots": true,
+      "available_dependency_inventories_checked": 29,
+      "unavailable_shared_reuse_manifests": 12,
+      "inventory_rule": "The existing shared_execution EXCLUDED set excludes logs; no exclusion rule was changed.",
+      "checkout_filtered_bytes_match_originals": true
+    }
   }
 }
