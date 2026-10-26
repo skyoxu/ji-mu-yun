@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_contract_f7fb563211e4 __________________________
+
+vdd_public_consumption = {'root': PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-1/vdd-public-consumption0'), 'pr...files': [{...}, {...}, {...}, {...}], 'schema': 'vdd.repository-path-context.v1', ...}, ...}, 'sandbox': 'read-only'}]}
+
+    @pytest.mark.cer_assertion('ASSERT_F7FB563211E4')
+    def test_contract_f7fb563211e4(vdd_public_consumption):
+        sample = vdd_public_consumption
+>       query = _vdd_current_episode(sample)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3495: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+sample = {'root': PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-1/vdd-public-consumption0'), 'pr...files': [{...}, {...}, {...}, {...}], 'schema': 'vdd.repository-path-context.v1', ...}, ...}, 'sandbox': 'read-only'}]}
+
+    def _vdd_current_episode(sample):
+>       assert sample['process'].returncode == 0, (sample['result'], sample['process'].stderr)
+E       AssertionError: ({'authorizes': [], 'consumer_warnings': [], 'diagnostic': {'path': '.compiler-work/execution-preflight/566746370b26ec...eed0a8c3c793014fd19698490f8e442'}, 'findings': ['S1:existing-test-assertion-mismatch:tests/test_compile.py'], ...}, '')
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/tmp/vdd-pause-tests/bin/python', '-B', '-c', "\nimport copy, importlib.util, json, sys\nfrom ...epair-vdd", "valid": false, "worker_cache_reuse": {"legacy_v1_replays": 0, "source_content_replays": 0}}\n', stderr='').returncode
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3479: AssertionError
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7fb563211e4
+1 failed, 599 deselected, 165 warnings in 1.13s

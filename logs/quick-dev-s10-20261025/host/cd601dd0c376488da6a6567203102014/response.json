@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "85c5bd16a0e446ceae876db964e40ec9",
+  "request_id": "cd601dd0c376488da6a6567203102014",
+  "request_sha256": "sha256:777b082ea86c7126700c10033002747564c521ed52509ce557ce909a425927a3",
+  "output_text": "Added a bounded public VDD caller fixture and two concrete mappings. Only the semantic transport returns deterministic author candidates; the public caller, query adapter, native validators and execution-record writers remain real. The public-entry control passes; the caller decision record obligation exposes a real missing decision after V3 acceptance. Remaining 32 assertion bindings are not claimed complete. No production/plan/evidence changes were made by this author. No BMAD skill, reviewer or real model was called. The native probe must classify the observed guard failure; this response grants no RED or implementation authority.",
+  "authorizes": []
+}

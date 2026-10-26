@@ -1,0 +1,60 @@
+..F.............................................                         [100%]
+=================================== FAILURES ===================================
+_ PlanDirectoryLoopTests.test_builder_expands_run_path_and_serializes_base64_context _
+
+self = <test_plan_directory_loop.PlanDirectoryLoopTests testMethod=test_builder_expands_run_path_and_serializes_base64_context>
+
+    def test_builder_expands_run_path_and_serializes_base64_context(self) -> None:
+        plan = REPOSITORY_ROOT / "execution-plans/2026-07-15-repository-maintenance-tdd-adapter"
+>       result = BUILDER.build(REPOSITORY_ROOT, plan, "RMAP-S0", "RUN-TEST")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py:904: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py:259: in build
+    identity = _load_candidate_identity(plan, slice_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/build_slice_invocation.py:82: in _load_candidate_identity
+    identity = module.current_candidate_identity(slice_id)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/validate_all.py:168: in current_candidate_identity
+    index_tree = read_only_index_tree(REPOSITORY_ROOT)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+execution-plans/2026-07-15-repository-maintenance-tdd-adapter/tools/isolated_test_repository.py:70: in read_only_index_tree
+    temporary = Path(tempfile.mkdtemp(prefix="ri", dir=repository_root.anchor))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+suffix = '', prefix = 'ri', dir = '/'
+
+    def mkdtemp(suffix=None, prefix=None, dir=None):
+        """User-callable function to create and return a unique temporary
+        directory.  The return value is the pathname of the directory.
+    
+        Arguments are as for mkstemp, except that the 'text' argument is
+        not accepted.
+    
+        The directory is readable, writable, and searchable only by the
+        creating user.
+    
+        Caller is responsible for deleting the directory when done with it.
+        """
+    
+        prefix, suffix, dir, output_type = _sanitize_params(prefix, suffix, dir)
+    
+        names = _get_candidate_names()
+        if output_type is bytes:
+            names = map(_os.fsencode, names)
+    
+        for seq in range(TMP_MAX):
+            name = next(names)
+            file = _os.path.join(dir, prefix + name + suffix)
+            _sys.audit("tempfile.mkdtemp", file)
+            try:
+>               _os.mkdir(file, 0o700)
+E               OSError: [Errno 30] Read-only file system: '/rib6mzgrtn'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/tempfile.py:384: OSError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_plan_directory_loop.py::PlanDirectoryLoopTests::test_builder_expands_run_path_and_serializes_base64_context
+1 failed, 47 passed in 0.99s

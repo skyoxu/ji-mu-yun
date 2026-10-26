@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "405a14e87b6148d29e8187877ffc1c07",
+  "request_id": "1595b2e54faa423583616ad5d536cb1e",
+  "request_sha256": "sha256:82347982a047c8a9e1424d3a206efde61ac207edc4bce35c42f65998487fd22b",
+  "output_text": "Implemented only scripts/vdd/compile_plan.py. After native V3/checkpoint or plan-ready validation, the actual caller appends its own verified source decisions to its existing execution record. Decisions bind task/stage/episode/query/raw status/path/hash/read identity and actual validated contract scope. Used current matching sources are accepted with their scope use; unused or changed advice is rejected with a reason. Adapter behavior and normative/provenance authority are unchanged. Writes append, preserve the adapter record, reject path escape and avoid duplicate identical decision lines. No test, descriptor, plan, receipt or host/skill file changed. Two targeted caller/public-entry tests passed; these diagnostics are not native GREEN authority.",
+  "authorizes": []
+}

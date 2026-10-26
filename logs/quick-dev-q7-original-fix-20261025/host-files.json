@@ -1,0 +1,10 @@
+{
+  "commit": "93d06e67b0276ec8cc2e7ae7298aff8ac8e5fbf6",
+  "authorizes": [],
+  "files": {
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py": "170246bf96d1d0f3da263ea101a5b4b2f71cf3c2b36cda4e411d06297b735803",
+    ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py": "e2c193bd6ebe63061572aeb7f8525cefb943250be1157885be5ec37a9b449c9d",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py": "e320f1dcfc66e9559ebc361f719c1bfe99fdf25451d322c9f97d334a89ece500",
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md": "a53efc10fb0cdf994faf1312e4bf045053351ccb636f34ede08d91db45f52eb9"
+  }
+}

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="25" time="9.976" timestamp="2026-10-25T17:04:30.212459+00:00" hostname="0c18639253a4"><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q7_and_q8_cover_all_assertions_with_current_runtime" time="0.970" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q7_rejects_mutated_runtime_edge_bytes" time="0.696" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_deduplicates_originals_but_checks_every_edge_within_replay_context" time="1.019" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[missing_predecessor]" time="0.883" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[duplicate_predecessor]" time="0.930" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[ready_hash]" time="0.859" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[terminal_edge]" time="0.840"><failure message="KeyError: 'observation_ref'">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-46/test_q8_rejects_bad_proof_with3')
+mutation = 'terminal_edge'
+
+    @pytest.mark.parametrize('mutation', ['missing_predecessor', 'duplicate_predecessor',
+        'ready_hash', 'terminal_edge', 'terminal_duplicate', 'stdout', 'fixture'])
+    def test_q8_rejects_bad_proof_without_publishing(tmp_path, mutation):
+        args = _q8_fixture(tmp_path)
+        run = tmp_path/'RUN-1'
+        if mutation == 'missing_predecessor':
+            args['predecessors'] = []
+        elif mutation == 'duplicate_predecessor':
+            args['predecessors'] *= 2
+        elif mutation == 'ready_hash':
+            args['predecessors'][0]['result_sha256'] = 'sha256:' + '0'*64
+        elif mutation == 'terminal_edge':
+            result = json.loads((run/'canonical-evidence/terminal/stage-result.v2.json').read_text())
+            (run/result['runtime_edges'][0]['path']).write_text('{}')
+        elif mutation == 'terminal_duplicate':
+            path = run/'canonical-evidence/terminal/stage-result.v2.json'
+            result = json.loads(path.read_text());result['runtime_edges'].append(result['runtime_edges'][0])
+            path.write_text(json.dumps(result))
+        elif mutation == 'stdout':
+            (run/'canonical-evidence/refactor/stdout.bin').write_bytes(b'changed')
+        else:
+            (tmp_path/'fixture.txt').write_text('changed')
+        with pytest.raises(ValueError):
+&gt;           publish_implementation_complete(**args)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py:228: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:473: in publish_implementation_complete
+    return _publish_implementation_complete(
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:591: in _publish_implementation_complete
+    edge = _q8_reread_edge(workspace, run_root, ref, slice_id=sid, stage="terminal", selector_identity=terminal_selector, originals=originals, completed=completed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-46/test_q8_rejects_bad_proof_with3')
+run_root = PosixPath('/tmp/pytest-of-agent/pytest-46/test_q8_rejects_bad_proof_with3/RUN-1')
+ref = {'acceptance_id': 'A-ONE', 'assertion_id': 'AS-1', 'path': 'canonical-evidence/terminal/runtime-edges/0001-A-ONE-AS-1.json', 'sha256': 'sha256:dcacd0eddd3081bd66fc730ee843c744c90a8d8a99828064221a948fd02f93b0'}
+slice_id = 'S1', stage = 'terminal'
+selector_identity = 'sha256:a7e1f7c8a324da779482b8a80bbf6447399753dbae575f4304ed4e037051c46c'
+originals = &lt;coverage_predicates._Q7OriginalChecks object at 0x7f76e66ab890&gt;
+completed = &lt;function publish_implementation_complete.&lt;locals&gt;.&lt;lambda&gt; at 0x7f76e54be660&gt;
+
+    def _q8_reread_edge(workspace, run_root, ref, *, slice_id, stage,
+                        selector_identity, originals, completed):
+        # Seal each independently checked edge and its lineage, not just originals.
+        path = resolve_file(run_root, ref["path"])
+        originals._watch(path)
+        hint = load_json(path)
+        for field in ("observation_ref", "receipt_ref"):
+&gt;           originals._watch(resolve_file(run_root, hint[field]))
+                                                    ^^^^^^^^^^^
+E           KeyError: 'observation_ref'
+
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:445: KeyError</failure></testcase><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[terminal_duplicate]" time="0.872" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[stdout]" time="0.916"><failure message="Failed: DID NOT RAISE ValueError">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-46/test_q8_rejects_bad_proof_with5')
+mutation = 'stdout'
+
+    @pytest.mark.parametrize('mutation', ['missing_predecessor', 'duplicate_predecessor',
+        'ready_hash', 'terminal_edge', 'terminal_duplicate', 'stdout', 'fixture'])
+    def test_q8_rejects_bad_proof_without_publishing(tmp_path, mutation):
+        args = _q8_fixture(tmp_path)
+        run = tmp_path/'RUN-1'
+        if mutation == 'missing_predecessor':
+            args['predecessors'] = []
+        elif mutation == 'duplicate_predecessor':
+            args['predecessors'] *= 2
+        elif mutation == 'ready_hash':
+            args['predecessors'][0]['result_sha256'] = 'sha256:' + '0'*64
+        elif mutation == 'terminal_edge':
+            result = json.loads((run/'canonical-evidence/terminal/stage-result.v2.json').read_text())
+            (run/result['runtime_edges'][0]['path']).write_text('{}')
+        elif mutation == 'terminal_duplicate':
+            path = run/'canonical-evidence/terminal/stage-result.v2.json'
+            result = json.loads(path.read_text());result['runtime_edges'].append(result['runtime_edges'][0])
+            path.write_text(json.dumps(result))
+        elif mutation == 'stdout':
+            (run/'canonical-evidence/refactor/stdout.bin').write_bytes(b'changed')
+        else:
+            (tmp_path/'fixture.txt').write_text('changed')
+&gt;       with pytest.raises(ValueError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py:227: Failed</failure></testcase><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_rejects_bad_proof_without_publishing[fixture]" time="0.898" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_coverage_predicates" name="test_q8_detects_original_mutation_during_deferred_checks" time="0.910" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_same_original_checked_once_per_invocation" time="0.012" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_distinct_original_or_context_never_merges[descriptor]" time="0.002" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_distinct_original_or_context_never_merges[receipt]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_distinct_original_or_context_never_merges[path]" time="0.002" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[content]" time="0.002" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[replacement]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[new_dependency]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[empty_directory]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[environment]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[request]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_damaged_original_not_accepted_as_dedup_hit" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_each_edge_keeps_independent_identity_checks" time="0.004" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_genuine_completion_does_not_reset_unit_total" time="0.000" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_139_edges_check_three_q6_originals_and_main_only_four_times" time="0.026" /></testsuite></testsuites>

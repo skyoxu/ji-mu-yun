@@ -1,0 +1,485 @@
+{
+  "generated_at": "2026-10-25T18:45:46.883490+00:00",
+  "kind": "read-only author completion index; native Q8 separately referenced; not Acceptance authority",
+  "authorizes": [],
+  "host": "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+  "plan": "execution-plans/2026-10-25-vdd-knowledge-query-caller-runtime-role",
+  "slice_count": 12,
+  "slices": [
+    {
+      "slice_id": "S2",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:cf7eee7ad6be18ff6b6a1fe94ab916f27f4faa7502bf8ba75bb95aa667aec480",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S2-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 108,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 108,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 108,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S5",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:45a38ecbce0ddefb6b9d551dc07098af73727b5096d3e316549e2d6ce29fa52e",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S5-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 108,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S5-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 108,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S5-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 108,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S5-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S6",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:18ca1f4f788e03ca91c272b37e9aad4c2c450d38b6fc61fa560fc49fbf2fc8d9",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S6-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S6-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S6-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S6-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S1",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:def2e88caaf56ff376bce15d81b83e74c0454190cd441b5d245a04bd29e12cc2",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S1-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S1-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S1-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S1-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S3",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:a389ec5692489f53e7f9b9b4e59cbd48534921d6682ac5e3b61dc6b2563a7f33",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S3-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S3-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S3-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S3-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S7",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:b10f3c0ee64a7f39d0e293f2bc3e90573799d0448cf65e606672942aaa763ef0",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S7-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S7-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S7-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S7-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S8",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:10170ddf4ae9e1d785f88c31cd5830a9eff2c695310e74abc6d230b3e782f463",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S8-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S8-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S8-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S8-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S4",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:b59c4a0b34936ab8b8455f869847a340e248c843ef264b39af705590ca6c847f",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S4-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S4-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S4-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S4-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S11",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:e9c5954792328c6ab72e792cecb5c9e12bdef1fc0bc8153cf8e4ee3fb103d2a1",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S11-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S11-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S11-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S11-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S12",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:5ec610484aa8ffcdba4268e91f6ce76ea0a85d7f5acec301ebf9173fbd7aeb69",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S12-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S10",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:c1e7208022351e1a8a6f94b50ce1f5ce599ad58401354a1654cd0125d252ada7",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S10-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S10-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S10-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S10-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S9",
+      "Q7": "pass",
+      "terminal": "pass",
+      "snapshot_matches_now": true,
+      "snapshot_sha256": "sha256:a32045d3c3d8cb5746a2b9b23d7cf9ba1d8b39060ecbb4340053eda3a31aeec1",
+      "ready": "logs/quick-dev-final-slices-20261025-v6/S9-slice-ready.json",
+      "stages": {
+        "probe": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S9-current/canonical-evidence/probe/process-receipt.v2.json"
+        },
+        "regression": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S9-current/canonical-evidence/regression/process-receipt.v2.json"
+        },
+        "terminal": {
+          "selected_cases": 619,
+          "call_outcomes": {
+            "passed": 619
+          },
+          "process_attempts": 1,
+          "execution_kind": "original",
+          "receipt": "logs/quick-dev-final-slices-20261025-v6/S9-current/canonical-evidence/terminal/process-receipt.v2.json"
+        }
+      }
+    }
+  ],
+  "primary_process_attempts": {
+    "probe": 12,
+    "regression": 12,
+    "terminal": 12
+  },
+  "q6_command_status_counts": {
+    "covered-by-primary-refactor-selector": 12,
+    "pass": 3
+  },
+  "call_outcomes_across_primary_stages": {
+    "passed": 19218
+  },
+  "source_hashes": {
+    "scripts/vdd/compile_plan.py": "679442ba962e808fff3576a8c1fd32ec9e50135407191084ce6d62500e61167a",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "71926958969db6cf07c0c636468585dfba31d46d03d190bcd55cdf97c880215d",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py": "830f3f9f62913d8287a35d2e5fdf3e298a79447b5b08dd52bd5196f81646c480"
+  },
+  "free_GiB": 6.1,
+  "whole_plan_Q8": "pass",
+  "external_AB": "not-run",
+  "Acceptance": "not-run",
+  "publication": "not-performed",
+  "Q8": {
+    "result": "logs/quick-dev-final-slices-20261025-v6/Q8/implementation-complete-result.v2.json",
+    "result_file_sha256": "9a6620fc66ec0530475b4b60396ab8e7888d6e73147c54aae4210055ff2c5f20",
+    "status": "pass",
+    "runtime_closure_tuple_count": 610,
+    "terminal_input": "logs/quick-dev-final-slices-20261025-v6/Q8/terminal-input.v2.json",
+    "terminal_input_sha256": "sha256:c0cdb4cde0213e0bbc0e4bc0b51d00585b698cdb91951be0e22e110f17ea9117",
+    "runtime_closure_sha256": "sha256:b32ee96a9e442c9a8db334bf5d144c2cc4189f9da7781828011a6373fe425824"
+  }
+}

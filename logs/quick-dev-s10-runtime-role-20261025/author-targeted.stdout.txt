@@ -1,0 +1,279 @@
+..FFFFFFFFF..F...                                                        [100%]
+=================================== FAILURES ===================================
+__________________________ test_contract_113d52ece151 __________________________
+
+vdd_unknown_consumption = {'root': PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-4/vdd-public-consumption2'), 'pr...ions[0]:active-unresolved:mandatory-active-obligations-require-empty-unresolved_fragments']}, 'sandbox': 'read-only'}]}
+
+    @pytest.mark.cer_assertion('ASSERT_113D52ECE151')
+    @pytest.mark.cer_assertion('ASSERT_7F6AF9FDD617')
+    @pytest.mark.cer_assertion('ASSERT_B347CD2195F2')
+    def test_contract_113d52ece151(vdd_unknown_consumption):
+        sample=vdd_unknown_consumption
+        assert sample['process'].returncode != 0
+        assert sample['result']['status'] == 'repair-vdd'
+>       assert any('active-unresolved' in f for f in sample['result'].get('findings',[])), sample['result']
+E       AssertionError: {'reason': 'repeated deterministic semantic worker failure; stop and repair VDD: ["worker-output:obligations[0]:active...lved_fragments"]', 'status': 'repair-vdd', 'worker_cache_reuse': {'legacy_v1_replays': 0, 'source_content_replays': 0}}
+E       assert False
+E        +  where False = any(<generator object test_contract_113d52ece151.<locals>.<genexpr> at 0x7fc93b49b370>)
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3627: AssertionError
+_____ test_contract_6c6853493e27[None-None-None-False-phase-service-state] _____
+
+phase = None, env_mode = None, explicit = None, enabled = False
+source = 'phase-service-state'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+_ test_contract_6c6853493e27[development-None-None-False-phase-service-state] __
+
+phase = 'development', env_mode = None, explicit = None, enabled = False
+source = 'phase-service-state'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+_____ test_contract_6c6853493e27[test-None-None-True-phase-service-state] ______
+
+phase = 'test', env_mode = None, explicit = None, enabled = True
+source = 'phase-service-state'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+__ test_contract_6c6853493e27[production-None-None-True-phase-service-state] ___
+
+phase = 'production', env_mode = None, explicit = None, enabled = True
+source = 'phase-service-state'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+_______ test_contract_6c6853493e27[development-on-None-True-environment] _______
+
+phase = 'development', env_mode = 'on', explicit = None, enabled = True
+source = 'environment'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+______ test_contract_6c6853493e27[production-off-None-False-environment] _______
+
+phase = 'production', env_mode = 'off', explicit = None, enabled = False
+source = 'environment'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+________ test_contract_6c6853493e27[development-on-off-False-parameter] ________
+
+phase = 'development', env_mode = 'on', explicit = 'off', enabled = False
+source = 'parameter'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+_________ test_contract_6c6853493e27[production-off-on-True-parameter] _________
+
+phase = 'production', env_mode = 'off', explicit = 'on', enabled = True
+source = 'parameter'
+
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+    @pytest.mark.parametrize('phase,env_mode,explicit,enabled,source',[
+        (None,None,None,False,'phase-service-state'),
+        ('development',None,None,False,'phase-service-state'),
+        ('test',None,None,True,'phase-service-state'),
+        ('production',None,None,True,'phase-service-state'),
+        ('development','on',None,True,'environment'),
+        ('production','off',None,False,'environment'),
+        ('development','on','off',False,'parameter'),
+        ('production','off','on',True,'parameter')])
+    def test_contract_6c6853493e27(phase,env_mode,explicit,enabled,source):
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('s10_governance',ROOT/'.agents/skills/quick-dev-tdd-adapter/tools/governance_policy.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        env={}
+        if phase is not None:env['PHASEA_SERVICE_STATE']=phase
+        if env_mode is not None:env['JIMUYUN_GOVERNANCE_MODE']=env_mode
+        actual=module.resolve_governance_policy(explicit,environment=env)
+>       assert actual['enabled'] is enabled and actual['mode_source'] == source
+                                                ^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'mode_source'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3652: KeyError
+__________________________ test_contract_7694233db1c7 __________________________
+
+published_planning = (PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-4/test_contract_7694233db1c70/admission-...': 'jimuyun.knowledge-locator-request.v1', 'request_id': 'S7-admission', 'consumer': 'vdd', 'query': 'AGENTS.md', ...})
+
+    @pytest.mark.cer_assertion('ASSERT_7694233DB1C7')
+    def test_contract_7694233db1c7(published_planning):
+        root,paths,request=published_planning
+        _s7_write_config(published_planning)
+        record=root/'execution-plans/example/memlog.md'
+        first=_planning_operation(published_planning,record_path=record.relative_to(root).as_posix())
+        second=_planning_operation(published_planning,record_path=record.relative_to(root).as_posix())
+>       assert first['episode_id'] == second['episode_id'] and second['diagnostic']['reused']
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'reused'
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3669: KeyError
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_113d52ece151
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[None-None-None-False-phase-service-state]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[development-None-None-False-phase-service-state]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[test-None-None-True-phase-service-state]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[production-None-None-True-phase-service-state]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[development-on-None-True-environment]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[production-off-None-False-environment]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[development-on-off-False-parameter]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_6c6853493e27[production-off-on-True-parameter]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_7694233db1c7
+10 failed, 7 passed, 601 deselected, 414 warnings in 4.19s

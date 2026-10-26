@@ -1,0 +1,8 @@
+{
+  ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py": "f6a41e8f8e404049a0a0ee7a26c1f6fdf78a3ac3c829658dc360d92cae834091",
+  ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py": "c6f53d7784d51c798d7a6ca85c204dece2f52db4be465329d1032b5ac12171fe",
+  ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py": "a2745753e3a0a44847508930165fb8f396d1ae1e9cc6db6c4b74175caa8113be",
+  ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py": "c9906d4f86c4aa5aa7cae8096e2371a8956df4f949b5fb99f7d911ad6ee5d537",
+  ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md": "a93a7698ee7c509cf127a88ea3ea1c3a8777aac203c7c5005aef175502ecb634",
+  "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "3c48ba395316daf371aa119d8f254b1f0a55a1ad6136e6ebfa446a8017806b18"
+}

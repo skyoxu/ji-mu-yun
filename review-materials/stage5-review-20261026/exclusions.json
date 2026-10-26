@@ -1,0 +1,21 @@
+{
+  "credentials": "Excluded; selected-byte and ZIP-member pattern scan found zero matches, not a comprehensive DLP guarantee.",
+  "unrelated_dirty_file": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json",
+  "noncurrent_untracked_attempts": [
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair",
+    "execution-plans/2026-10-25-vdd-knowledge-query-planned-tests-repair-r2"
+  ],
+  "unselected_logs": "Not copied; only the frozen 1708-file inventory plus the local intake record and new review entry are selected.",
+  "BMAD_installations": "No BMAD installation increment selected. Historical delivered requirement/PRD/SPEC/architecture source bytes remain provenance, not active BMAD duties. Existing main baseline _bmad/.gdignore is unchanged.",
+  "ephemeral_runtime_dependencies": "Historical temporary test workspaces and Python installation are not repackaged. Original source/fixture definitions, observed dependency hashes, descriptors and raw executions are preserved; no hermetic replay claim.",
+  "no_external_actions": [
+    "A/B",
+    "BMAD",
+    "Acceptance",
+    "PR",
+    "merge",
+    "CI monitoring",
+    "model change"
+  ],
+  "authorizes": []
+}

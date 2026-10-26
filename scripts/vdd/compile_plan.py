@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from copy import deepcopy
 import json
+import hashlib
 from pathlib import Path
 import re
 import subprocess
@@ -48,6 +49,69 @@ def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
     if not identities:
         raise ValueError("V1 reuse predecessor has no requirement anchors")
     semantic_compiler.configure_v1_reuse_predecessor_text_hashes(identities)
+
+
+def _record_planning_decisions(*, prepared, request, result, out_dir):
+    """AD-5: the native consumer records its own validated use, never adapter adoption."""
+    if result.get('status') not in {'paused', 'plan-ready'}:
+        return
+    out_dir = out_dir.resolve()
+    query = prepared.get('query_result', {})
+    if not query.get('read_set'):
+        return
+    checkpoint = result.get('checkpoint')
+    candidate_path = (Path(checkpoint['path']) if checkpoint else
+                      out_dir / 'semantic-plan-bundle.v1.json')
+    if not candidate_path.resolve().is_relative_to(out_dir.resolve()):
+        raise ValueError('planning decision candidate outside compiler output')
+    candidate = json.loads(candidate_path.read_text(encoding='utf-8'))
+    if checkpoint:
+        candidate = candidate['candidate']
+    scopes = candidate.get('slice_hints', candidate.get('slices', []))
+    uses = {}
+    for scope in scopes:
+        for key in ('production_owners', 'execution_snapshot_paths'):
+            for name in scope.get(key, []):
+                uses.setdefault(name.split('::', 1)[0], []).extend(scope['obligation_ids'])
+    inputs = set(request['inputs'])
+    record = out_dir / 'execution-record.md'
+    if record.is_symlink() or not record.resolve().is_relative_to(out_dir.resolve()):
+        raise ValueError('planning decision record outside compiler output')
+    existing = record.read_text(encoding='utf-8') if record.exists() else ''
+    lines = []
+    for read in query['read_set']:
+        name = read['path']
+        source = (ROOT / name).resolve()
+        if not source.is_relative_to(ROOT.resolve()):
+            raise ValueError('planning decision source outside repository')
+        current = None
+        if source.is_file():
+            with source.open('rb') as stream:
+                current = 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest()
+        observed = 'sha256:' + read['sha256'].removeprefix('sha256:')
+        used = name in uses or name in inputs
+        accepted = used and current == observed
+        reason = ('verified source participates in validated contract scope' if accepted else
+                  'source changed after observation; advice was not adopted' if current != observed else
+                  'verified advice is not used by the validated contract scope')
+        row = {'kind': 'planning-source-decision', 'consumer': 'vdd',
+               'stage': query['stage'], 'task_id': request['task_id'],
+               'episode_id': query['episode_id'], 'query_topic': request['query'],
+               'raw_status': query.get('diagnostic', {}).get('raw_status'),
+               'outcome': query['outcome'], 'path': name, 'sha256': read['sha256'],
+               'read_identity': read['read_identity'], 'origin': read['origin'],
+               'decision': 'accepted' if accepted else 'rejected', 'reason': reason,
+               'actual_use': {'contract': candidate_path.relative_to(out_dir).as_posix(),
+                   'effect': 'retained input/source/test scope' if accepted else 'excluded from scope adoption',
+                   'obligation_ids': sorted(set(uses.get(name, [])))},
+               'authority': 'observation-only', 'authorizes': []}
+        line = json.dumps(row, ensure_ascii=False, sort_keys=True) + '\n'
+        if line not in existing:
+            lines.append(line)
+    if lines:
+        record.parent.mkdir(parents=True, exist_ok=True)
+        with record.open('a', encoding='utf-8', newline='\n') as stream:
+            stream.writelines(lines)
 
 
 def main() -> int:
@@ -310,6 +374,8 @@ def main() -> int:
         if not isinstance(value, dict):
             raise SystemExit("worker cache must be a JSON object")
         cache = value
+    prepared_query = None
+    planning_request = None
     try:
         # ADR-0048/AD-5: read-only advice precedes semantic scope, independent of governance.
         # Recommendation-only retains its existing side-effect-free contract.
@@ -321,13 +387,14 @@ def main() -> int:
             from scripts.toolchain.knowledge_query import adapter
             inputs = [p.resolve().relative_to(ROOT.resolve()).as_posix()
                       for p in [args.requirements, *(args.companion or [])]]
-            prepared_query = adapter.prepare_consumption({
+            planning_request = {
                 "stage": "vdd-repair" if args.resume_from or args.v3_contract_repair or published else "vdd-create",
                 "operation": "repair" if args.resume_from or args.v3_contract_repair or published else "create",
                 "task_id": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix(),
                 "inputs": inputs, "scope": inputs,
                 "query": "current source callers tests contracts " + " ".join(inputs),
-                "record_path": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix() + "/execution-record.md"}, ROOT)
+                "record_path": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix() + "/execution-record.md"}
+            prepared_query = adapter.prepare_consumption(planning_request, ROOT)
             if prepared_query["status"] == "blocked":
                 raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
             def with_planning_context(**kwargs):
@@ -365,6 +432,9 @@ def main() -> int:
                     **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
                        if split else {}),
                 })
+        if prepared_query is not None:
+            _record_planning_decisions(prepared=prepared_query, request=planning_request,
+                                       result=result, out_dir=args.out_dir)
     except WorkerTransportError as exc:
         result = {"status": "repair-vdd", "stage": exc.stage, "repair_class": "transport",
                   "transport_category": exc.category, "attempts": exc.attempts,

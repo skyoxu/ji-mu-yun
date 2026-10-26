@@ -1,0 +1,15 @@
+{
+  "host": "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+  "plan": "execution-plans/2026-10-25-vdd-knowledge-query-caller-runtime-role",
+  "plan_sha256": "7b4c69ff7e4a64bafbc3a8d6dd0ed4c83c1ab3c21935bd1f9d3e581f5e583276",
+  "source_hashes": {
+    "scripts/vdd/compile_plan.py": "679442ba962e808fff3576a8c1fd32ec9e50135407191084ce6d62500e61167a",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "71926958969db6cf07c0c636468585dfba31d46d03d190bcd55cdf97c880215d",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py": "830f3f9f62913d8287a35d2e5fdf3e298a79447b5b08dd52bd5196f81646c480"
+  },
+  "old_proofs_preserved": true,
+  "reason_for_fresh": "actual observed reader and boundary-test dependencies changed; positive manifests bind changed engine/file bytes; no Git-only invalidation",
+  "maximum_expected_business_stage_processes": 39,
+  "new_protocol": false,
+  "authorizes": []
+}
