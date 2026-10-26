@@ -481,6 +481,26 @@ def diagnose(request, repository_root, catalog_path, policies_path, projections_
             reads_valid = all(_digest_file(_path(root, r['path']))[0] == r['sha256']
                               for r in previous.get('read_set', []))
             if reads_valid and previous.get('outcome') in {'hit', 'no_match', 'degraded'}:
+                # ADR-0048: unchanged source bytes do not preserve permission.
+                # Recheck the current publication before copying old advice;
+                # unrelated generation changes may still reuse the original.
+                projections = json.loads(paths[2].read_text(encoding='utf-8'))
+                try:
+                    eligible = core._projection_for(request, catalog, policy, projections)
+                except ValueError:
+                    raise _Stop('integrity_failed') from None
+                modules = {m['module_id']: m for m in catalog.get('modules', [])}
+                candidates = previous.get('candidates', [])
+                if len(candidates) > config['max_candidates']:
+                    raise _Stop('budget_exhausted')
+                for candidate in candidates:
+                    module = modules.get(candidate.get('module_id'))
+                    if (module is None or module.get('source_path') != candidate.get('path')
+                            or not core._policy_allows(module, request['query'], effective_policy)
+                            or (eligible is not None and candidate.get('module_id') not in eligible)):
+                        raise _Stop('policy_denied')
+                    if module.get('source_sha256') != candidate.get('source_sha256'):
+                        raise _Stop('integrity_failed')
                 current = output['diagnostic']
                 output = copy.deepcopy(previous)
                 output['diagnostic'].update(current, reused=True)
@@ -663,6 +683,17 @@ def prepare_consumption(payload, repository_root):
         _path(root, name)
     paths = [root / p for p in _CANONICAL]
     if any(not p.is_file() for p in paths):
+        # ADR-0048: optional absence is not permission to bypass a damaged
+        # installed publication. Surviving artifacts/pointer/generations are
+        # installation evidence even when another required file is missing.
+        installed = any(p.exists() or p.is_symlink() for p in [
+            *paths, root / 'knowledge/indexes/current.json',
+            root / 'knowledge/indexes/generations'])
+        if installed:
+            return {'status': 'blocked', 'queried': False, 'authorizes': [],
+                    'availability': 'publication_incomplete',
+                    'query_result': {'outcome': 'blocked', 'reason_code': 'integrity_failed',
+                                     'candidates': [], 'read_set': []}}
         return {'status': 'prepared', 'queried': False, 'authorizes': [],
                 'availability': 'not_installed', 'requires_direct_source_check': True}
     catalog = json.loads(paths[0].read_text(encoding='utf-8'))

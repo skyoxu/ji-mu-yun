@@ -1,0 +1,39 @@
+{
+  "kind": "production checkpoint, not native execution proof",
+  "recorded_at": "2026-10-26T06:57:29.082798+00:00",
+  "state": "stopped-before-new-selector-host-scope",
+  "current_host_HEAD": "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+  "successor_plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair",
+  "successor_plan_file_sha256": "33140e79b1ad0902363289c183ce7816e998b86675e83054176abfc37cb3b761",
+  "native_report_semantic_identity": "sha256:33140e79b1ad0902363289c183ce7816e998b86675e83054176abfc37cb3b761",
+  "added_role": [
+    {
+      "acceptance_id": "A-988348C16D10",
+      "failure_id": "KQ_2E09F07252E1",
+      "original_failure_intent_id": "FI-6BF12A63835A",
+      "runtime_failure_intent_id": "FI-121539D49FA8"
+    }
+  ],
+  "native_plan_status": "plan-ready",
+  "semantic_model_calls": 0,
+  "reused_native_semantic_stages": [
+    "V1",
+    "V4"
+  ],
+  "new_test_processes_this_step": 0,
+  "reused_diagnostic": "logs/stage5-p1-self-review-20261026/diagnostic-first.xml",
+  "reused_diagnostic_counts": {
+    "failed": 4,
+    "passed": 3,
+    "errors": 0
+  },
+  "production_code_changed": false,
+  "active_tests_changed": false,
+  "new_formal_RED": false,
+  "new_Q4": false,
+  "new_GREEN": false,
+  "new_Q7_Q8": false,
+  "old_selected_source_bytes_unchanged": true,
+  "blocking_boundary": "Public S1/S12 selectors fall back to the same complete shared suite; exact process-wide RED marker matching cannot isolate two simultaneous real P1 failures. A separate narrow selection/binding repair is required before safely freezing both tests.",
+  "authorizes": []
+}

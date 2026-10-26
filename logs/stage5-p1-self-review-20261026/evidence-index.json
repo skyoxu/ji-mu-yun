@@ -1,0 +1,106 @@
+{
+  "kind": "local diagnostic artifact hashes; not execution-gate authority",
+  "authorizes": [],
+  "files": [
+    {
+      "path": "logs/stage5-p1-self-review-20261026/REPORT.md",
+      "sha256": "9890d3a3f7a26d841f8583983fb1a9b4af4d7811278616e5e0ac2def3c9b75c1",
+      "size_bytes": 7605
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/S1-preflight.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/S1-preflight.stdout.json",
+      "sha256": "77f0e653a46647bc9c4d3f9435f1b50d9df37e700983876ef9bbe86f13de5df0",
+      "size_bytes": 1352
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/S12-preflight.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/S12-preflight.stdout.json",
+      "sha256": "e3b7f74111f0a6f42fbbaefb047fd37002e2635f77a157e8774ef46e74db4883",
+      "size_bytes": 932
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-budget/6fc9b423856c40ad97003c7d03c744a4.events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-budget/6fc9b423856c40ad97003c7d03c744a4.json",
+      "sha256": "8c4be6988db4048ea48417ef9c7913b8c2b200e679e53670d4223f16c6fbb1e5",
+      "size_bytes": 933
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-budget/budget-ledger.json",
+      "sha256": "53433e4193f04a8070580cb306eeb9966bf9645ef2bb13b1774c57e506d37678",
+      "size_bytes": 100
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-executed.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-executed.stdout.txt",
+      "sha256": "83b3d6efe7e33a8b9e58cf9ebe070581ce9e98796c2bbb7de2e1ee29a5238379",
+      "size_bytes": 13557
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-first.stderr.txt",
+      "sha256": "e93affabca67e2401f4e19fc752702631863c68249c8dde4914013ed16942770",
+      "size_bytes": 78
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-first.stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-first.xml",
+      "sha256": "a17a42e4e067a480b02329917bc1c2bb3dd5dbc2a2a5b53c839290e88cda2645",
+      "size_bytes": 13132
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-input.json",
+      "sha256": "9fab2aa9b74290076db59d7f9b045cefc4ae6c10a1c5cf6e94996e2048b8d412",
+      "size_bytes": 222
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/proof-impact-static.json",
+      "sha256": "228b9778b251aec929290a8dd4211e522fc08ee628da7fcd9cef4abb980d8a77",
+      "size_bytes": 11129
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/run_diagnostics.py",
+      "sha256": "7c3e3ce4c25e3089b168f9062eecbc4263d129b188b210bba9b3b3590c5b1e58",
+      "size_bytes": 1784
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/runtime-setup.stderr.txt",
+      "sha256": "59e78ac9cc0b41f105d9b49b8664ac0a0a0b65154a8b7fff99747381decc799a",
+      "size_bytes": 387
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/runtime-setup.stdout.txt",
+      "sha256": "304684156f40f9685158a8658d613283a36ab453c74b9c0229c57f9efcb935d3",
+      "size_bytes": 925
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/self-review-result.json",
+      "sha256": "36bb1577bcfdfd374c5283930994ef555875c6bf42af538c229948591beacb1c",
+      "size_bytes": 4254
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/test_counterexamples.py",
+      "sha256": "7419c773fb203ad985c770eda42f999e2783db211b19bb3b429581387364c7c8",
+      "size_bytes": 7903
+    }
+  ]
+}

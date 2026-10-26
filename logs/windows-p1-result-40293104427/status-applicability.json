@@ -1,0 +1,14 @@
+{
+  "kind": "Windows scope limitation from preserved original status, not a clean whole-tree claim",
+  "status_records": 1506,
+  "status_kinds": {
+    " D": 1506
+  },
+  "affected_top_level_roots": {
+    "execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan": 51,
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed": 1455
+  },
+  "runtime_source_paths_missing_or_changed": [],
+  "checkout_log_filename_too_long_mentions": 97,
+  "coverage": "11 scoped runtime cases succeeded against exact recorded runtime bytes and admitted fixture originals. Windows checkout is not claimed to materialize or validate every historical snapshot in the repository."
+}

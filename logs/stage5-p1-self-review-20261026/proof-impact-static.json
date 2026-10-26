@@ -1,0 +1,282 @@
+{
+  "kind": "static exact saved-request dependency membership; not native replay or new execution",
+  "authorizes": [],
+  "rows": [
+    {
+      "slice_id": "S2",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S5",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S5-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S5-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S5-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S6",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S6-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S6-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S6-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S1",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S1-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S1-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S1-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S3",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S3-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S3-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S3-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S7",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S7-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S7-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S7-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S8",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S8-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S8-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S8-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S4",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S4-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S4-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S4-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S11",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S11-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S11-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S11-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S12",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S12-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S10",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S10-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S10-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S10-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    },
+    {
+      "slice_id": "S9",
+      "stages": {
+        "probe": {
+          "adapter_inventory_bound": false,
+          "shared_test_inventory_bound": false,
+          "input_present": false,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S9-current/canonical-evidence/probe/reuse-request.v1.json"
+        },
+        "regression": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S9-current/canonical-evidence/regression/reuse-request.v1.json"
+        },
+        "terminal": {
+          "adapter_inventory_bound": true,
+          "shared_test_inventory_bound": true,
+          "input_present": true,
+          "request_ref": "logs/quick-dev-final-slices-20261025-v6/S9-current/canonical-evidence/terminal/reuse-request.v1.json"
+        }
+      }
+    }
+  ]
+}

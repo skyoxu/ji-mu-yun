@@ -1,0 +1,39 @@
+{
+  "kind": "proposal only; not executed",
+  "existing_workflow": ".github/workflows/ci-windows.yml",
+  "existing_verification_branch": "verify/bmad-vdd-knowledge-query-windows",
+  "existing_local_workflow_source": "/workspace/ji-mu-yun-windows-verification/.github/workflows/ci-windows.yml",
+  "runner": "windows-latest",
+  "known_original_success_commit": "4012465ddb093e2d952d1ab4482d8e1257a7fffb",
+  "command": [
+    "python",
+    "-B",
+    "-m",
+    "pytest",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_windows_planning_query_runtime",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_fd756962a671",
+    "-vv",
+    "-s",
+    "--junitxml=logs/windows-query-verification/junit.xml"
+  ],
+  "test_scope": "six selectors, thirteen parameterized runtime tests in the historical run; re-collect actual final candidate count",
+  "total_seconds": 1800,
+  "silence_seconds": 600,
+  "needed_actions": [
+    "Freeze final repaired source and tests.",
+    "Obtain separately authorized normal verification-branch push or equivalent authorized source delivery to the existing Windows runner.",
+    "Run the existing workflow once under explicit authorization; user monitors the result.",
+    "Retrieve the matching result only after user notification and bind exact source hashes."
+  ],
+  "forbidden_now": [
+    "push",
+    "dispatch",
+    "CI monitoring",
+    "Linux-as-Windows claim"
+  ],
+  "authorizes": []
+}

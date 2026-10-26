@@ -10,6 +10,77 @@ import ast
 import json
 from pathlib import Path, PurePosixPath
 import shlex
+import re
+import sys
+
+
+def repair_static_primary_bindings(bundle, workspace, slice_ids):
+    """ADR-0041: drop only a proven redundant primary pytest OR filter.
+
+    This is planning admission, not execution proof. Q6/terminal retain the
+    entire module; the existing CER reader selects every required slice case.
+    """
+    selected = list(slice_ids)
+    if not selected or len(set(selected)) != len(selected):
+        raise ValueError('static-primary repair requires unique explicit slices')
+    slices = {s['slice_id']: s for s in bundle['slices']}
+    contexts = {c['slice_id']: c for c in bundle['agent_contexts']}
+    acceptances = {a['acceptance_id']: a for a in bundle['acceptances']}
+    if not set(selected) <= slices.keys() or not set(selected) <= contexts.keys():
+        raise ValueError('unknown static-primary slice')
+    tools = Path(workspace) / '.agents/skills/quick-dev-tdd-adapter/tools'
+    sys.path.insert(0, str(tools))
+    try:
+        from case_selection import literal_nodes
+    finally:
+        sys.path.pop(0)
+    repaired = deepcopy(bundle)
+    target_contexts = {c['slice_id']: c for c in repaired['agent_contexts']}
+    changes = []
+    for sid in selected:
+        item, context = slices[sid], contexts[sid]
+        commands = context.get('validation_commands', [])
+        argv = commands[0] if commands else []
+        offset = 2 if argv[:2] == ['py', '-3'] else 1
+        if not argv or (offset == 1 and argv[0] not in {'python', 'python3'}):
+            raise ValueError('unsupported static-primary launcher')
+        if argv[offset:offset+1] == ['-B']:
+            offset += 1
+        tail = argv[offset:]
+        if len(tail) != 6 or tail[:2] != ['-m', 'pytest'] or tail[3:5] != ['-q', '-k']:
+            raise ValueError('static-primary requires one module and a simple OR filter')
+        path, expression = tail[2], tail[5]
+        relative = PurePosixPath(path)
+        if (not isinstance(path, str) or relative.is_absolute() or relative.as_posix() != path
+                or any(p in {'..', '.', '.git', '.codex', '.aws'} for p in relative.parts)
+                or '\\' in path or ':' in path or not relative.name.startswith('test_')
+                or relative.suffix != '.py'):
+            raise ValueError('unsafe static-primary test path')
+        current = Path(workspace)
+        for part in relative.parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValueError('static-primary symlink refused')
+        if not current.is_file() or not current.resolve().is_relative_to(Path(workspace).resolve()):
+            raise ValueError('static-primary module missing or outside workspace')
+        forbidden = (context.get('forbidden_paths', []) + item.get('production_owners', [])
+                     + item.get('rollback_scope', {}).get('production_paths', []))
+        if path not in item.get('execution_snapshot_paths', []) or any(_inside(path, f) for f in forbidden):
+            raise ValueError('static-primary target is not an owned frozen test')
+        if not isinstance(expression, str) or not re.fullmatch(r'test_[A-Za-z0-9_]+(?: or test_[A-Za-z0-9_]+)*', expression):
+            raise ValueError('unsupported static-primary filter expression')
+        required = {m for aid in item['acceptance_ids'] for m in acceptances[aid]['assertion_ids']}
+        nodes, reason = literal_nodes(workspace, [path], required)
+        terms = expression.split(' or ')
+        if nodes is None or not nodes or any(not any(t in n.split('::')[-1].split('[')[0] for t in terms) for n in nodes):
+            raise ValueError('static-primary filter does not cover complete CER mapping: ' + reason)
+        replacement = argv[:offset] + tail[:3] + ['-q']
+        target_contexts[sid]['validation_commands'][0] = replacement
+        changes.append({'slice_id': sid, 'before': argv, 'after': replacement,
+                        'required_nodes': nodes, 'selection_reason': reason})
+    return repaired, {'repair_mode': 'static-primary-bindings-only',
+                      'affected_slices': selected, 'command_dispositions': changes,
+                      'added_expected_red_intents': []}
 
 
 def _eligible(acceptance, obligations):
@@ -497,7 +568,7 @@ def source_index_identity(source):
     return sc.sha256_value(value)
 
 
-def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=(), planned_tests=()):
+def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=(), planned_tests=(), static_primary_slices=()):
     import semantic_compiler as sc
     from semantic_plan_contract import validate_semantic_bundle
     from semantic_chain_audit import audit_bundle
@@ -572,7 +643,12 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
         raise ValueError('runtime RED role repair cannot combine Windows launcher repair')
     if planned_tests and (runtime_red_intents or windows_launcher_slices):
         raise ValueError('planned-test declarations cannot combine role or launcher repair')
-    if planned_tests:
+    if static_primary_slices and (planned_tests or runtime_red_intents or windows_launcher_slices
+                                 or test_root != 'scripts/sc/tests/tc_d1_cer'):
+        raise ValueError('static-primary repair cannot combine other handoff repairs')
+    if static_primary_slices:
+        repaired, delta = repair_static_primary_bindings(original, root, static_primary_slices)
+    elif planned_tests:
         repaired, delta = declare_planned_tests(original, root, planned_tests)
     else:
         repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)

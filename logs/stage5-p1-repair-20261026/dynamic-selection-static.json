@@ -1,0 +1,28 @@
+{
+  "kind": "static parser-boundary localization, not test execution",
+  "rows": [
+    {
+      "slice": "S1",
+      "dynamic_declarations": [
+        {
+          "test": "test_contract_f96ecd3253a2",
+          "line": 337,
+          "parameter_expression": "BinOp",
+          "required_by_slice": false
+        }
+      ]
+    },
+    {
+      "slice": "S12",
+      "dynamic_declarations": [
+        {
+          "test": "test_contract_f96ecd3253a2",
+          "line": 337,
+          "parameter_expression": "BinOp",
+          "required_by_slice": false
+        }
+      ]
+    }
+  ],
+  "authorizes": []
+}

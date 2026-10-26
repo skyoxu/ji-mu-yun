@@ -1,0 +1,66 @@
+........................................................................ [ 13%]
+........................................................................ [ 27%]
+........................................................................ [ 41%]
+........................................................................ [ 54%]
+........................................................................ [ 68%]
+........................................................................ [ 82%]
+........................................................................ [ 96%]
+....................F                                                    [100%]
+=================================== FAILURES ===================================
+______ test_contract_c442b3b56fce_current_permissions[permission-revoked] ______
+
+published_planning = (PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-16/test_contract_c442b3b56fce_cur0/admis...': 'jimuyun.knowledge-locator-request.v1', 'request_id': 'S7-admission', 'consumer': 'vdd', 'query': 'AGENTS.md', ...})
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fe9956833e0>
+change = 'permission-revoked'
+
+    @pytest.mark.cer_assertion('ASSERT_C442B3B56FCE')
+    @pytest.mark.parametrize('change', ['same', 'unrelated-generation', 'permission-revoked'])
+    def test_contract_c442b3b56fce_current_permissions(published_planning, monkeypatch, change):
+        root, paths, request = published_planning
+        _s7_write_config(published_planning)
+        record = root / 'execution-plans/example/memlog.md'
+        record.write_text('# Isolated diagnostic record\n', encoding='utf-8')
+        options = {'record_path': record.relative_to(root).as_posix()}
+        real_query = core.query_with_diagnostics
+        calls = []
+        def traced(*args, **kwargs):
+            calls.append(True)
+            return real_query(*args, **kwargs)
+        monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+        first = _planning_operation(published_planning, **options)
+        assert first['outcome'] == 'hit' and first['candidates']
+        frozen = copy.deepcopy(first)
+        hashes = {r['path']: hashlib.sha256((root / r['path']).read_bytes()).hexdigest()
+                  for r in first['read_set']}
+        if change != 'same':
+            policy, projections, pointer = _switch_fixture_generation(root, paths,
+                restrict_vdd=change == 'permission-revoked')
+            assert pointer['generation_id'] != first['index_identity']['generation_id']
+            assert all(hashlib.sha256((root / p).read_bytes()).hexdigest() == h
+                       for p, h in hashes.items())
+        else:
+            policy, projections = (json.loads(p.read_text()) for p in paths[1:])
+        second = _planning_operation(published_planning, **options)
+        assert first == frozen
+        current_policy = core._policy_for(request, policy)
+        catalog = json.loads(paths[0].read_text())
+        eligible = core._projection_for(request, catalog, policy, projections)
+        modules = {m['source_path']: m for m in catalog['modules']}
+        allowed = all(core._policy_allows(modules[c['path']], request['query'], current_policy)
+                      and c['module_id'] in eligible for c in second['candidates'])
+        print('PERMISSION_REUSE_OBSERVATION:' + json.dumps({'change': change,
+            'outcome': second['outcome'], 'reused': second['diagnostic'].get('reused'),
+            'permission_checked': second['diagnostic'].get('permission_checked'),
+            'current_eligibility_satisfied': allowed, 'query_calls': len(calls)}))
+        try:
+>           assert allowed, 'A revoked candidate survived current policy/projection checks'
+E           AssertionError: A revoked candidate survived current policy/projection checks
+E           assert False
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3977: AssertionError
+----------------------------- Captured stdout call -----------------------------
+PERMISSION_REUSE_OBSERVATION:{"change": "permission-revoked", "outcome": "hit", "reused": true, "permission_checked": true, "current_eligibility_satisfied": false, "query_calls": 1}
+FAILURE_ID:KQ_C442B3B56FCE
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[permission-revoked]
+1 failed, 524 passed in 141.89s (0:02:21)

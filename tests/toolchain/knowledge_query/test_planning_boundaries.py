@@ -26,6 +26,8 @@ ENVIRONMENT_HOST = 'b9c701c1cfe662d679d747533920f992379c4b06'
 OPTION_HOST = 'b908cb3915cb50c6860445e27c1e1012137e60bb'
 Q7_HOST = '93d06e67b0276ec8cc2e7ae7298aff8ac8e5fbf6'
 STABLE_HOST = 'd86539b9602d9cff7cfe1d96ae6a58b287ce7b3d'
+STATIC_BINDING_HOST = '5b585094288f1958539d88261d78467865cfe8e7'
+CALLER_CLI_WITH_STATIC_BINDING_SHA256 = 'e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77'
 sys.path[:0] = [str(ROOT), str(ROOT / 'scripts/python'),
     str(ROOT / '.agents/skills/quick-dev-tdd-adapter/tools'),
     str(ROOT / '.agents/skills/vdd-execution-plan/scripts')]
@@ -161,6 +163,17 @@ def stable_owner_guard():
     assert git('rev-parse', STABLE_HOST + '^').decode().strip() == Q7_HOST
     assert set(git('diff-tree', '--no-commit-id', '--name-only', '-r', STABLE_HOST).decode().splitlines()) == q8_repair
     approved |= q8_repair
+    # Explicitly approved static primary repair is a bounded host-only child.
+    static_repair = {
+        '.agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py',
+        '.agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py',
+        '.agents/skills/vdd-execution-plan/SKILL.md',
+        '.agents/skills/vdd-execution-plan/references/planning-operation.md',
+        'scripts/vdd/compile_plan.py',
+    }
+    assert git('rev-parse', STATIC_BINDING_HOST + '^').decode().strip() == STABLE_HOST
+    assert set(git('diff-tree', '--no-commit-id', '--name-only', '-r', STATIC_BINDING_HOST).decode().splitlines()) == static_repair
+    approved |= static_repair
     subprocess.run(['git', '-C', str(ROOT), 'merge-base', '--is-ancestor', STABLE_HOST, 'HEAD'],
                    check=True, capture_output=True, timeout=10)
     prefixes = ('.agents/skills/quick-dev-tdd-adapter/', '.agents/skills/vdd-execution-plan/',
@@ -168,12 +181,17 @@ def stable_owner_guard():
     checked = []
     for path, expected in inventory.items():
         if path.startswith(prefixes) and expected.get('state') == 'present':
-            expected_hash = (hashlib.sha256(git('show', STABLE_HOST + ':' + path)).hexdigest()
+            expected_hash = (hashlib.sha256(git('show', (STATIC_BINDING_HOST if path in static_repair else STABLE_HOST) + ':' + path)).hexdigest()
                              if path in approved else expected['sha256'])
             assert digest(ROOT / path) == expected_hash, path
             checked.append(path)
     for path in approved:
-        assert (ROOT / path).read_bytes() == git('show', STABLE_HOST + ':' + path), path
+        if path == 'scripts/vdd/compile_plan.py':
+            # Keep the already-published caller-record overlay separate from
+            # the host-only commit; bind its exact combined current bytes.
+            assert digest(ROOT / path) == CALLER_CLI_WITH_STATIC_BINDING_SHA256
+            continue
+        assert (ROOT / path).read_bytes() == git('show', (STATIC_BINDING_HOST if path in static_repair else STABLE_HOST) + ':' + path), path
     assert 'scripts/quick_dev/run.py' in checked
     assert any('independent_judge' in path for path in checked)
     package_guard()

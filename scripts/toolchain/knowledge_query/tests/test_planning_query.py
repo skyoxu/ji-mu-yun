@@ -7,6 +7,8 @@ is tested separately. No debug bypass flag, publication or BMAD flow is used.
 import copy
 import hashlib
 import io
+import importlib.util
+import shutil
 import json
 from pathlib import Path
 import subprocess
@@ -335,12 +337,29 @@ def test_contract_2e09f07252e1(published_vdd_base, tmp_path, monkeypatch, scenar
 @pytest.mark.cer_assertion('ASSERT_D64F7E6FDF45')
 @pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
 @pytest.mark.parametrize('stage,operation,scenario', [
-    (stage, operation, scenario)
-    for stage, operation in [('vdd-create', 'create'), ('vdd-repair', 'repair')]
-    for scenario in ['admitted', 'unknown', 'bootstrap', 'quick-dev',
-                     'refactor-acceptance', 'stage-as-consumer', 'policy-absent',
-                     'publication-absent', 'publication-corrupt']
-] + [(None, None, consumer) for consumer in ['vdd', 'bootstrap', 'refactor-acceptance', 'quick-dev']])
+    ('vdd-create', 'create', 'admitted'),
+    ('vdd-create', 'create', 'unknown'),
+    ('vdd-create', 'create', 'bootstrap'),
+    ('vdd-create', 'create', 'quick-dev'),
+    ('vdd-create', 'create', 'refactor-acceptance'),
+    ('vdd-create', 'create', 'stage-as-consumer'),
+    ('vdd-create', 'create', 'policy-absent'),
+    ('vdd-create', 'create', 'publication-absent'),
+    ('vdd-create', 'create', 'publication-corrupt'),
+    ('vdd-repair', 'repair', 'admitted'),
+    ('vdd-repair', 'repair', 'unknown'),
+    ('vdd-repair', 'repair', 'bootstrap'),
+    ('vdd-repair', 'repair', 'quick-dev'),
+    ('vdd-repair', 'repair', 'refactor-acceptance'),
+    ('vdd-repair', 'repair', 'stage-as-consumer'),
+    ('vdd-repair', 'repair', 'policy-absent'),
+    ('vdd-repair', 'repair', 'publication-absent'),
+    ('vdd-repair', 'repair', 'publication-corrupt'),
+    (None, None, 'vdd'),
+    (None, None, 'bootstrap'),
+    (None, None, 'refactor-acceptance'),
+    (None, None, 'quick-dev'),
+])
 def test_contract_f96ecd3253a2(published_vdd_base, tmp_path, monkeypatch, stage, operation, scenario):
     """Stage is sidecar metadata; actual Locator identity/policy never changes."""
     import shutil
@@ -600,48 +619,7 @@ def test_contract_f7401102fe99(published_vdd_base, tmp_path, monkeypatch, scenar
     import threading
     import time
     if scenario == 'windows-evidence':
-        import ast
-        import zipfile
-        import xml.etree.ElementTree as ET
-        evidence = ROOT / 'logs/quick-dev-s4-20261025/windows-original'
-        archive = evidence / 'parent-original.zip'
-        assert hashlib.sha256(archive.read_bytes()).hexdigest() == '769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21'
-        with zipfile.ZipFile(archive) as z:
-            assert z.testzip() is None
-            assert z.read('commit.txt').decode().strip() == '4012465ddb093e2d952d1ab4482d8e1257a7fffb'
-            assert z.read('pytest-exit.txt').decode().strip() == '0'
-            platform = json.loads(z.read('platform.json'))
-            assert platform['platform'] == 'win32' and platform['system'].startswith('Windows-2022Server')
-            suite = ET.fromstring(z.read('junit.xml')).find('testsuite')
-            assert suite is not None
-            assert {k: int(suite.attrib[k]) for k in ('tests', 'failures', 'errors', 'skipped')} == {
-                'tests': 13, 'failures': 0, 'errors': 0, 'skipped': 0}
-            cases = {c.attrib['name'] for c in suite.findall('testcase')}
-            assert all(not list(c) for c in suite.findall('testcase'))
-            required = {'test_contract_295a1ed8402c', 'test_planning_attempt_deadline',
-                'test_contract_8299476377c3[nonzero]', 'test_contract_8299476377c3[unicode-argv]'}
-            required.update('test_contract_f7401102fe99[' + s + ']' for s in ('stdout', 'stderr', 'combined', 'json-parser'))
-            required.update('test_windows_planning_query_runtime[' + s + ']' for s in ('unicode-path-utf8', 'subprocess-timeout', 'subprocess-cancel'))
-            assert required <= cases
-            hashes = json.loads(z.read('source-hashes.json'))
-            original = (evidence / 'original-test_planning_query.py').read_bytes()
-            checked = set()
-            for row in hashes:
-                relative = row['Path'].replace('\\', '/').split('/ji-mu-yun/ji-mu-yun/')[-1]
-                if relative == 'scripts/toolchain/knowledge_query/tests/test_planning_query.py':
-                    assert hashlib.sha256(original).hexdigest() == row['Hash'].lower()
-                else:
-                    assert relative in {'scripts/toolchain/knowledge_query/adapter.py',
-                        'scripts/python/knowledge_locator.py', 'scripts/python/_knowledge_locator_core.py',
-                        'knowledge/planning-query.toml'}
-                    assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == row['Hash'].lower()
-                    checked.add(relative)
-            assert len(checked) == 4
-            # Parse frozen historical author code only; never import its fixtures
-            # or execute its VDD/BMAD/other workflows. This is a historical proof
-            # check over identical runtime bytes, not a new Windows execution.
-            names = {n.name for n in ast.parse(original).body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
-            assert {'_s7_transport', '_s7_cancel', '_s7_process_cause', 'test_planning_attempt_deadline'} <= names
+        _current_windows_runtime_evidence()
         return
     root, paths, _, _, _, request = _s7_inputs(published_vdd_base, tmp_path)
     renamed = root.with_name('repository space \u03c0')
@@ -3762,21 +3740,7 @@ def test_contract_ce33174bfa28():
 @pytest.mark.cer_assertion('ASSERT_11A7E3CEF26B')
 def test_contract_58d790ed2d22(vdd_public_consumption):
     _vdd_current_episode(vdd_public_consumption)
-    # Current public caller with scripted author input is distinct from the
-    # preserved, real Windows transport run. No model/Windows result is invented.
-    import zipfile,xml.etree.ElementTree as ET
-    archive=ROOT/'logs/quick-dev-s4-20261025/windows-original/parent-original.zip'
-    assert hashlib.sha256(archive.read_bytes()).hexdigest() == '769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21'
-    with zipfile.ZipFile(archive) as z:
-        assert z.testzip() is None
-        suite=ET.fromstring(z.read('junit.xml')).find('testsuite')
-        assert all(suite.attrib[k]=='0' for k in ('failures','errors','skipped')) and suite.attrib['tests']=='13'
-        assert z.read('pytest-exit.txt').strip()==b'0'
-        hashes=json.loads(z.read('source-hashes.json'))
-        expected={r['Path'].split('\\')[-1]:r['Hash'].lower() for r in hashes}
-        for relative in ('scripts/toolchain/knowledge_query/adapter.py','scripts/python/knowledge_locator.py',
-                         'scripts/python/_knowledge_locator_core.py','knowledge/planning-query.toml'):
-            assert hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()==expected[Path(relative).name]
+    _current_windows_runtime_evidence()
 
 
 
@@ -3788,39 +3752,202 @@ def test_contract_58d790ed2d22(vdd_public_consumption):
 @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
 def test_windows_planning_query_runtime_evidence():
-    """Original real Windows transport execution, never a Linux substitute.
+    _current_windows_runtime_evidence()
 
-    Reuse covers the unchanged query runtime. Current native VDD caller tests
-    separately prove its Linux execution; this archive does not claim that the
-    current complete compiler/test source ran on Windows.
+
+# ADR-0048: current publication admission and permission-bound reuse.
+@pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+@pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+def test_contract_2e09f07252e1_public_caller_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+    root = tmp_path / 'caller'
+    shutil.copytree(published_vdd_base, root)
+    requirement = _put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+    paths = [root / p for p in adapter._CANONICAL]
+    if missing == 'uninstalled':
+        for path in paths:
+            path.unlink()
+        shutil.rmtree(root / 'knowledge/indexes')
+    else:
+        paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+        assert (root / 'knowledge/indexes/current.json').is_file()
+    entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+    entry = importlib.util.module_from_spec(entry_spec)
+    entry_spec.loader.exec_module(entry)
+    monkeypatch.setattr(entry, 'ROOT', root)
+    reached = []
+    # Keep the real public CLI preparation/admission path. Stop at the semantic
+    # delegate; neither a model nor a compiler lifecycle is launched here.
+    def stop_at_semantic_delegate(**kwargs):
+        reached.append(True)
+        return {'status': 'recommendation-only', 'fixture_control': True}
+    monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+    monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+        '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+    code = entry.main()
+    result = json.loads(capsys.readouterr().out.splitlines()[-1])
+    print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+        'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+    try:
+        if missing == 'uninstalled':
+            assert code == 0 and reached == [True]
+        else:
+            assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+            assert 'PLANNING_QUERY_BLOCKED:' in result.get('reason', '')
+    except AssertionError:
+        print('FAILURE_ID:KQ_2E09F07252E1')
+        raise
+
+def _switch_fixture_generation(root, paths, *, restrict_vdd):
+    """Construct isolated content-bound input, never a production receipt.
+
+    The native projection owner rebuilds membership and the real consumer
+    verifies manifest/artifact bindings. No publication approval is invented or
+    borrowed and no real repository generation or pointer is modified.
     """
-    import ast,zipfile,xml.etree.ElementTree as ET
-    original=ROOT/'logs/quick-dev-s4-20261025/windows-original'
-    archive=original/'parent-original.zip'
-    assert hashlib.sha256(archive.read_bytes()).hexdigest() == '769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21'
-    with zipfile.ZipFile(archive) as bundle:
-        assert bundle.testzip() is None
-        assert bundle.read('commit.txt').strip() == b'4012465ddb093e2d952d1ab4482d8e1257a7fffb'
-        platform=json.loads(bundle.read('platform.json'))
-        assert platform['platform']=='win32' and platform['system'].startswith('Windows-2022Server-')
-        assert bundle.read('pytest-exit.txt').strip()==b'0'
-        suite=ET.fromstring(bundle.read('junit.xml')).find('testsuite')
-        assert suite.attrib['tests']=='13'
-        assert all(suite.attrib[k]=='0' for k in ('errors','failures','skipped'))
-        names={c.attrib['name'] for c in suite.findall('testcase')}
-        assert {'test_windows_planning_query_runtime[unicode-path-utf8]',
-                'test_windows_planning_query_runtime[subprocess-timeout]',
-                'test_windows_planning_query_runtime[subprocess-cancel]',
-                'test_contract_8299476377c3[unicode-argv]',
-                'test_planning_attempt_deadline'} <= names
-        hashes=json.loads(bundle.read('source-hashes.json'))
-        expected={row['Path'].split('\\')[-1]:row['Hash'].lower() for row in hashes}
-        for relative in ('scripts/toolchain/knowledge_query/adapter.py','scripts/python/_knowledge_locator_core.py',
-                         'scripts/python/knowledge_locator.py','knowledge/planning-query.toml'):
-            assert hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()==expected[Path(relative).name]
-        old_test=original/'original-test_planning_query.py'
-        assert hashlib.sha256(old_test.read_bytes()).hexdigest()==expected['test_planning_query.py']
-        tree=ast.parse(old_test.read_text(encoding='utf-8'))
-        functions={n.name:n for n in tree.body if isinstance(n,ast.FunctionDef)}
-        body=ast.get_source_segment(old_test.read_text(encoding='utf-8'),functions['test_windows_planning_query_runtime'])
-        assert all(word in body for word in ('timeout','cancel','utf-8'))
+    import _knowledge_catalog_builder as builder
+    pointer_path = root / 'knowledge/indexes/current.json'
+    old = json.loads(pointer_path.read_text())
+    old_root = root / 'knowledge/indexes/generations' / old['generation_id']
+    body = json.loads((old_root / 'manifest.json').read_text())
+    body.pop('generation_id')
+    body.pop('publication_request', None)
+    policy = json.loads(paths[1].read_text())
+    selected = next(p for p in policy['policies'] if p['consumer'] == ('vdd' if restrict_vdd else 'bootstrap'))
+    if restrict_vdd:
+        selected['path_prefixes'] = ['docs/']
+        selected['exact_paths'] = ['README.md']
+    else:
+        selected['max_candidates'] = max(1, selected['max_candidates'] - 1)
+    catalog = json.loads(paths[0].read_text())
+    projection = builder.build_consumer_projections(catalog, policy)
+    updates = {'policy': json.dumps(policy, sort_keys=True).encode(),
+               'projections': json.dumps(projection, sort_keys=True).encode()}
+    payloads = {}
+    for name, item in body['artifacts'].items():
+        payload = updates.get(name, (old_root / item['bundle_path']).read_bytes())
+        payloads[item['bundle_path']] = payload
+        item['sha256'] = 'sha256:' + hashlib.sha256(payload).hexdigest()
+    generation = hashlib.sha256(builder.canonical_bytes(body)).hexdigest()
+    manifest = {**body, 'generation_id': generation}
+    generation_root = root / 'knowledge/indexes/generations' / generation
+    for relative, payload in payloads.items():
+        _put(generation_root, relative, payload)
+    manifest_bytes = json.dumps(manifest, sort_keys=True).encode()
+    _put(generation_root, 'manifest.json', manifest_bytes)
+    paths[1].write_bytes(updates['policy'])
+    paths[2].write_bytes(updates['projections'])
+    pointer = {**old, 'generation_id': generation,
+               'generation_sha256': 'sha256:' + hashlib.sha256(manifest_bytes).hexdigest()}
+    pointer_path.write_text(json.dumps(pointer), encoding='utf-8')
+    assert core.verify_current_publication(root, catalog_path=paths[0],
+        policy_path=paths[1], projections_path=paths[2])
+    return policy, projection, pointer
+
+
+@pytest.mark.cer_assertion('ASSERT_C442B3B56FCE')
+@pytest.mark.parametrize('change', ['same', 'unrelated-generation', 'permission-revoked'])
+def test_contract_c442b3b56fce_current_permissions(published_planning, monkeypatch, change):
+    root, paths, request = published_planning
+    _s7_write_config(published_planning)
+    record = root / 'execution-plans/example/memlog.md'
+    record.write_text('# Isolated diagnostic record\n', encoding='utf-8')
+    options = {'record_path': record.relative_to(root).as_posix()}
+    real_query = core.query_with_diagnostics
+    calls = []
+    def traced(*args, **kwargs):
+        calls.append(True)
+        return real_query(*args, **kwargs)
+    monkeypatch.setattr(core, 'query_with_diagnostics', traced)
+    first = _planning_operation(published_planning, **options)
+    assert first['outcome'] == 'hit' and first['candidates']
+    frozen = copy.deepcopy(first)
+    hashes = {r['path']: hashlib.sha256((root / r['path']).read_bytes()).hexdigest()
+              for r in first['read_set']}
+    if change != 'same':
+        policy, projections, pointer = _switch_fixture_generation(root, paths,
+            restrict_vdd=change == 'permission-revoked')
+        assert pointer['generation_id'] != first['index_identity']['generation_id']
+        assert all(hashlib.sha256((root / p).read_bytes()).hexdigest() == h
+                   for p, h in hashes.items())
+    else:
+        policy, projections = (json.loads(p.read_text()) for p in paths[1:])
+    second = _planning_operation(published_planning, **options)
+    assert first == frozen
+    current_policy = core._policy_for(request, policy)
+    catalog = json.loads(paths[0].read_text())
+    eligible = core._projection_for(request, catalog, policy, projections)
+    modules = {m['source_path']: m for m in catalog['modules']}
+    allowed = all(core._policy_allows(modules[c['path']], request['query'], current_policy)
+                  and c['module_id'] in eligible for c in second['candidates'])
+    print('PERMISSION_REUSE_OBSERVATION:' + json.dumps({'change': change,
+        'outcome': second['outcome'], 'reused': second['diagnostic'].get('reused'),
+        'permission_checked': second['diagnostic'].get('permission_checked'),
+        'current_eligibility_satisfied': allowed, 'query_calls': len(calls)}))
+    try:
+        assert allowed, 'A revoked candidate survived current policy/projection checks'
+        if change != 'permission-revoked':
+            assert second['diagnostic'].get('reused') is True and len(calls) == 1
+            assert second['index_identity'] == first['index_identity']
+        else:
+            assert not second['diagnostic'].get('reused')
+    except AssertionError:
+        print('FAILURE_ID:KQ_C442B3B56FCE')
+        raise
+
+
+def _current_windows_runtime_evidence():
+    """ADR-0048: verified11-case platform subset, never full acceptance.
+
+    Preserve the13-case historical ZIP separately. This current original covers
+    only its explicitly executed runtime nodes; none of the7 P1 cases is claimed.
+    Reader-only source edits do not relabel the Windows author/source identity.
+    """
+    import ast
+    import zipfile
+    import xml.etree.ElementTree as ET
+    evidence = ROOT / 'logs/windows-p1-result-40293104427/verified-original'
+    archive = evidence / 'windows-query-verification-40293104427.zip'
+    assert len(archive.read_bytes()) == 18327
+    assert hashlib.sha256(archive.read_bytes()).hexdigest() == '86428f5351e85929f348a07fca6506c2f9f9c1f9c1cef695bdfc69d404e96429'
+    with zipfile.ZipFile(archive) as z:
+        assert z.testzip() is None and len(z.namelist()) == 8
+        decode = lambda name: z.read(name).decode('utf-8-sig').strip()
+        assert decode('commit.txt') == 'cc70f153f1c4cded4a9dceca408d3faae54f8ad6'
+        platform = json.loads(decode('platform.json'))
+        assert platform['platform'] == 'win32' and platform['system'].startswith('Windows-2022Server-')
+        assert decode('pytest-exit.txt') == '0'
+        suite = ET.fromstring(z.read('junit.xml')).find('testsuite')
+        assert suite is not None and int(suite.attrib['tests']) == 11
+        assert all(int(suite.attrib[k]) == 0 for k in ('errors', 'failures', 'skipped'))
+        cases = suite.findall('testcase')
+        assert len(cases) == 11 and all(not list(c) for c in cases)
+        required = ['test_contract_295a1ed8402c', 'test_contract_8299476377c3[nonzero]', 'test_contract_8299476377c3[unicode-argv]', 'test_contract_f7401102fe99[cancel]', 'test_contract_f7401102fe99[combined]', 'test_contract_f7401102fe99[stderr]', 'test_contract_f7401102fe99[stdout]', 'test_contract_f7401102fe99[timeout]', 'test_contract_f7401102fe99[unicode-argv]', 'test_planning_attempt_deadline', 'test_planning_attempt_deadline_timeout']
+        assert {c.attrib['name'] for c in cases} == set(required)
+        supervision = json.loads(decode('supervision.json'))
+        assert supervision['exit_code'] == 0 and supervision['termination'] is None
+        assert supervision['total_seconds'] == 1800 and supervision['silence_seconds'] == 600
+        assert {arg.split('::', 1)[1] for arg in supervision['command'] if '.py::' in arg} == set(required)
+        expected = {row['Path'].replace('\\', '/').split('/ji-mu-yun/ji-mu-yun/')[-1]: row['Hash'].lower()
+                    for row in json.loads(decode('source-hashes.json'))}
+        runtime = {'scripts/toolchain/knowledge_query/adapter.py', 'scripts/python/knowledge_locator.py',
+                   'scripts/python/_knowledge_locator_core.py', 'knowledge/planning-query.toml'}
+        assert set(expected) == runtime | {'scripts/toolchain/knowledge_query/tests/test_planning_query.py'}
+        for relative in runtime:
+            assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected[relative]
+        original = (evidence / 'original-test_planning_query.py').read_bytes()
+        assert hashlib.sha256(original).hexdigest() == expected['scripts/toolchain/knowledge_query/tests/test_planning_query.py']
+        # Compare actual runtime author code without importing the archived file.
+        # Only the3 evidence readers may differ; remove only the non-executed
+        # windows-evidence branch of the mixed transport/reader function.
+        def runtime_tree(raw):
+            parsed = ast.parse(raw)
+            parsed.body = [n for n in parsed.body if not (isinstance(n, ast.FunctionDef) and n.name in {
+                'test_contract_58d790ed2d22', 'test_windows_planning_query_runtime_evidence',
+                '_current_windows_runtime_evidence'})]
+            for function in parsed.body:
+                if isinstance(function, ast.FunctionDef) and function.name == 'test_contract_f7401102fe99':
+                    for branch in function.body:
+                        if isinstance(branch, ast.If) and ast.unparse(branch.test) == "scenario == 'windows-evidence'":
+                            branch.body = [ast.Pass()]
+            return ast.dump(parsed, include_attributes=False)
+        assert runtime_tree(original) == runtime_tree(Path(__file__).read_bytes())

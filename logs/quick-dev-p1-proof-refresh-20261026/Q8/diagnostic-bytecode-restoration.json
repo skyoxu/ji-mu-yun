@@ -1,0 +1,27 @@
+{
+  "purpose": "Restore exact frozen directory after caller diagnostic-created bytecodes; source and proofs unchanged",
+  "validator_judge_matches_frozen": true,
+  "content_sha256": "sha256:6c2a1f283f8e94cf4db6c82034ef7dee13309bde2f4096a79d46c05d9382cad5",
+  "quarantined_files": [
+    {
+      "original_path": ".agents/skills/quick-dev-tdd-adapter/tools/__pycache__/closure_predicate.cpython-312.pyc",
+      "preserved_path": "/tmp/p1-q8-diagnostic-bytecode-quarantine-20261026/closure_predicate.cpython-312.pyc",
+      "sha256": "1142a3416360300726381c9dae9bb225a149a28e41a1f64b8b9ee37e5599dab2"
+    },
+    {
+      "original_path": ".agents/skills/quick-dev-tdd-adapter/tools/__pycache__/coverage_predicates.cpython-312.pyc",
+      "preserved_path": "/tmp/p1-q8-diagnostic-bytecode-quarantine-20261026/coverage_predicates.cpython-312.pyc",
+      "sha256": "6ac97d4d38172bc5ecfb40b696535d2d1797ae545f24d58cc67d449130b7101b"
+    },
+    {
+      "original_path": ".agents/skills/quick-dev-tdd-adapter/tools/__pycache__/execution_environment.cpython-312.pyc",
+      "preserved_path": "/tmp/p1-q8-diagnostic-bytecode-quarantine-20261026/execution_environment.cpython-312.pyc",
+      "sha256": "25a5c77950ced74fdac7b2451465da920221b50cac51c911a7ec996133c40f53"
+    },
+    {
+      "original_path": ".agents/skills/quick-dev-tdd-adapter/tools/__pycache__/runtime_evidence.cpython-312.pyc",
+      "preserved_path": "/tmp/p1-q8-diagnostic-bytecode-quarantine-20261026/runtime_evidence.cpython-312.pyc",
+      "sha256": "af0f221d08fe4c82d34146e025b065e95799586949cc6ab19684fe0ba4aeac61"
+    }
+  ]
+}

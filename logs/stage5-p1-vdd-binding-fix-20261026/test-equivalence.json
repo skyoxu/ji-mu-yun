@@ -1,0 +1,27 @@
+{
+  "parameter_rows_equal": 22,
+  "original_function_ASTs_preserved": true,
+  "collected": 626,
+  "new_p1_nodes": [
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[catalog]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[policy]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[projection]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[uninstalled]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[same]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[unrelated-generation]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[permission-revoked]"
+  ],
+  "historical_collected": 619,
+  "preserved_historical_node_ids": 619,
+  "preserved_parameter_node_ids": 22,
+  "deleted_nodes": [],
+  "added_nodes": [
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[catalog]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[policy]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[projection]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[uninstalled]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[permission-revoked]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[same]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce_current_permissions[unrelated-generation]"
+  ]
+}

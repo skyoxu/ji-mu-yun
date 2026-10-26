@@ -260,3 +260,19 @@ reference and input-content identity checks, plus this workflow's own contract
 and implementation checks. These checks must not become an upstream quality
 review gate. Explicit user-requested stage-end external A/B remains separate
 and is neither launched nor removed by this rule.
+
+## Explicit static primary binding repair
+
+ADR-0041: with `--repair-quick-dev-handoff-from`, repeat
+`--handoff-static-primary-slice <slice-id>` only for explicitly selected slices
+whose already-bound primary pytest module has a redundant simple OR filter.
+The current import-free CER parser must completely map every required assertion,
+and every mapped function must remain inside the old filter. The mode removes
+only that primary `-k` filter; all other fields/commands, requirements, oracles,
+owners, write scopes, roles and dependencies remain unchanged. Q6/terminal
+retain the full module. Unknown/missing/unsafe/forbidden targets, symlinks,
+unsupported argv or incomplete mappings reject; no arbitrary command is accepted.
+It cannot combine with other handoff modes. Default repair remains unchanged.
+The normal native predecessor/source/semantic/feasibility gates and successor
+publication remain mandatory, with V1/V4 reused and no model/execution evidence
+created. A repaired binding is not behavioral verification.

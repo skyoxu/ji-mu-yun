@@ -1,0 +1,87 @@
+{
+  "status": "verified",
+  "archive": "logs/windows-p1-result-40293104427/verified-original/windows-query-verification-40293104427.zip",
+  "zip_size": 18327,
+  "zip_sha256": "86428f5351e85929f348a07fca6506c2f9f9c1f9c1cef695bdfc69d404e96429",
+  "zip_crc_valid": true,
+  "archive_entries": [
+    "junit.xml",
+    "commit.txt",
+    "platform.json",
+    "pytest-exit.txt",
+    "pytest.txt",
+    "source-hashes.json",
+    "status-before.txt",
+    "supervision.json"
+  ],
+  "commit": "cc70f153f1c4cded4a9dceca408d3faae54f8ad6",
+  "platform": {
+    "platform": "win32",
+    "version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+    "system": "Windows-2022Server-10.0.20348-SP0"
+  },
+  "junit": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "11",
+    "time": "12.640",
+    "timestamp": "2026-10-26T08:34:16.775577+00:00",
+    "hostname": "runnervma5ucf"
+  },
+  "case_names": [
+    "test_contract_f7401102fe99[unicode-argv]",
+    "test_contract_f7401102fe99[stdout]",
+    "test_contract_f7401102fe99[stderr]",
+    "test_contract_f7401102fe99[combined]",
+    "test_contract_f7401102fe99[timeout]",
+    "test_contract_f7401102fe99[cancel]",
+    "test_contract_295a1ed8402c",
+    "test_contract_8299476377c3[nonzero]",
+    "test_contract_8299476377c3[unicode-argv]",
+    "test_planning_attempt_deadline",
+    "test_planning_attempt_deadline_timeout"
+  ],
+  "source_hashes": {
+    "scripts/toolchain/knowledge_query/adapter.py": "92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "6711fcd3e01cee6ac6e90c399622f746402e479060dbdb7cb81b63964fb98d84",
+    "scripts/python/knowledge_locator.py": "3102b6d35aacbf5ebc58304bbfe1d594fc9c16880d93b7f44cc7106900c9721e",
+    "scripts/python/_knowledge_locator_core.py": "38e5c976c0d2e0c8d303e8bcfda0808b314f5f68dffccaa29f615d48db2760dd",
+    "knowledge/planning-query.toml": "0f83722c40f107b7e6bb31c05bf3f905e0e14af90e45f0cbcd886b4c50476302"
+  },
+  "supervision": {
+    "command": [
+      "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+      "-B",
+      "-m",
+      "pytest",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[unicode-argv]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stdout]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stderr]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[combined]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[timeout]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[cancel]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[nonzero]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[unicode-argv]",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline_timeout",
+      "-vv",
+      "-s",
+      "--junitxml=logs/windows-query-verification/junit.xml"
+    ],
+    "total_seconds": 1800,
+    "silence_seconds": 600,
+    "elapsed_seconds": 13.297000000000025,
+    "exit_code": 0,
+    "termination": null,
+    "progress": "actual child stdout/stderr bytes only",
+    "authorizes": []
+  },
+  "Library_text_bytes_rendered": 24607,
+  "Library_json_source_size": 24608,
+  "Library_text_note": "Full read omitted final JSON-file newline; base64 length and original decoded ZIP size/SHA are exact. No byte added to ZIP.",
+  "source_test_copy": "original-test_planning_query.py from fixed Git commit, verified against artifact hash",
+  "limits": "11 runtime cases only; not full Windows acceptance or7 new P1 cases"
+}

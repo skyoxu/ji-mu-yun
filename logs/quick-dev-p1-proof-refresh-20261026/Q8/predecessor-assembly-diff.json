@@ -1,0 +1,66 @@
+{
+  "cause": "Caller omitted canonical JSON final newline; originals are unchanged",
+  "changed_only": "result_sha256 in caller input",
+  "rows": [
+    {
+      "slice_id": "S2",
+      "old_hash": "sha256:d4c5ce0edb295c7195607f18b193cdf0fe4f7854ced4d6320a78178b0d0a8a5a",
+      "native_canonical_hash": "sha256:67941bdc191549f400397b9e957707907ec8176c46ae1e574ef64eb599d05854"
+    },
+    {
+      "slice_id": "S5",
+      "old_hash": "sha256:ffcb1233e84b3a39f89203e8183a490873eee687ca6a7199f99e03c13e855701",
+      "native_canonical_hash": "sha256:6d23bb282c42011ff629d4c40ffdef9f1bfa2416c5404ac492484e5e85224c53"
+    },
+    {
+      "slice_id": "S6",
+      "old_hash": "sha256:f09bce1354fbd5c172719b1adb024bd645b98e73de1ba0e5ac850af66eb9ec0d",
+      "native_canonical_hash": "sha256:8663e45f4cb1565a540f0d8691f1ac67defdda8d2552e4662acf09a9b3f35885"
+    },
+    {
+      "slice_id": "S1",
+      "old_hash": "sha256:c1a6b9c5d2e1fcf1d5bd64cc4bf966e6039d2d1e19ce9499fabb67c4712b73e7",
+      "native_canonical_hash": "sha256:cae8343253d9a54ef1aaa5994ca2eb5e0c3327d128786b38bdee3d966e573daa"
+    },
+    {
+      "slice_id": "S3",
+      "old_hash": "sha256:3eda53a36aa3a0931c098511fc2ce9733f110a6667e8892b3934ca8f8247fdf9",
+      "native_canonical_hash": "sha256:7e52113e334fbbf279ecc518515c3a50e85de090bd80cc4557800c7d1e0e8792"
+    },
+    {
+      "slice_id": "S7",
+      "old_hash": "sha256:91843f265533b9b2758a55eb114fc8725d24b2ee444e53a9db47fa9a2d1caf06",
+      "native_canonical_hash": "sha256:2f840de887c31a17326c2bd626754253c46f422b5d2367659e7b79acb4412230"
+    },
+    {
+      "slice_id": "S8",
+      "old_hash": "sha256:ba40f16d8adbde2004455c85e6fc710232ee6d6f975b171ffe5861b166606984",
+      "native_canonical_hash": "sha256:94cb0f4f4f4cd3c9dd342b64ca7ae60748e3803395f8258e575c1976be9adc80"
+    },
+    {
+      "slice_id": "S4",
+      "old_hash": "sha256:d0eff54d30831e133fc57fa5aa7738f943e58324d9df2fa3377a3c55c5a44526",
+      "native_canonical_hash": "sha256:ea030099bedee3ae0eea5d1eaf38408efa5e9c8c7a00164a3f0a3444f2757992"
+    },
+    {
+      "slice_id": "S11",
+      "old_hash": "sha256:d5365f16a7bcb62f421edd2573fe94bdbaf0a335fb77a07035c012fe9b40c9c8",
+      "native_canonical_hash": "sha256:962db813a8df8996ab4262381bbd4e34f8f4410f1f5789e43b52a763b27927a1"
+    },
+    {
+      "slice_id": "S12",
+      "old_hash": "sha256:449240ed73d56d60391d3ce83b5cb97ab1d887dc2a4e9a9b662d0388210d39fb",
+      "native_canonical_hash": "sha256:2a8a1f3dbabb40a981b01529aa55ee840433f99d6a3a23739338dfa09614b572"
+    },
+    {
+      "slice_id": "S10",
+      "old_hash": "sha256:a65268985529bb20f060bb6725ceb464735541485e54e5da0a379e5bdfc4c739",
+      "native_canonical_hash": "sha256:f299831e087387e2ab410389e45bbf9d60f76dd1619521b02a52b63f63f0c1ae"
+    },
+    {
+      "slice_id": "S9",
+      "old_hash": "sha256:20647f9f0418ff494e0dc949b291989830f1f65a371a3c7f3c6bf39d18b2d1a5",
+      "native_canonical_hash": "sha256:cf08fcd4ab603662766fc281a453dfdd0e5f95889c437b196a1e66464638aed5"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+    "--slice",
+    "S12",
+    "--profile",
+    "standard",
+    "--action",
+    "run-green",
+    "--run-dir",
+    "logs/stage5-p1-native-20261026/S12",
+    "--unit-timeout-seconds",
+    "1800",
+    "--idle-timeout-seconds",
+    "600"
+  ],
+  "start_utc": "2026-10-26T07:54:05Z"
+}

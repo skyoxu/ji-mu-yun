@@ -1,0 +1,56 @@
+[
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/24edd50498024fa68f96cc981c36d91b.events.jsonl",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/24edd50498024fa68f96cc981c36d91b.events.jsonl",
+    "sha256": "1e87c7d59e6c31d671484f10cd34417ccd5a1d17b944a8ea16cf9d604e11dc1b",
+    "size": 487
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/24edd50498024fa68f96cc981c36d91b.json",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/24edd50498024fa68f96cc981c36d91b.json",
+    "sha256": "0d571dd3f7aa9dee20cae1bef99e580bc2402c9b408c5bc6ac514d0f8aaabf67",
+    "size": 1631
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/302aaa7a5c3143b1801dc70e41e3551c.events.jsonl",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/302aaa7a5c3143b1801dc70e41e3551c.events.jsonl",
+    "sha256": "d8feb7dd8e713e41e8eb5efb87ba3c86f806a7148a88909b7ddf6f70971d9744",
+    "size": 487
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/302aaa7a5c3143b1801dc70e41e3551c.json",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/302aaa7a5c3143b1801dc70e41e3551c.json",
+    "sha256": "e9d0092ed4c1d15e7114c0c4be27200b482d0f2ced617a71b5c979c296619fe2",
+    "size": 1436
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/bad4382b06474bf9ae58a0f1145d05c9.events.jsonl",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/bad4382b06474bf9ae58a0f1145d05c9.events.jsonl",
+    "sha256": "de3f53df90819411b8a990d41f415a91c804edf8f2524178cccbfb8fe050c767",
+    "size": 264014
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/bad4382b06474bf9ae58a0f1145d05c9.json",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/bad4382b06474bf9ae58a0f1145d05c9.json",
+    "sha256": "6122613c84e46828967b04aad480f1c9f7fd83439f9916a58143a3a517060de0",
+    "size": 1627
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/budget-ledger.json",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/budget-ledger.json",
+    "sha256": "58cfa4bc9ab440b547585f00092720b7b933cc1302fc1f33e1faadfcdc9794ec",
+    "size": 365
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/c08fc0b8710a4172938f474700b89f75.events.jsonl",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/c08fc0b8710a4172938f474700b89f75.events.jsonl",
+    "sha256": "e1cb24e92e734c5e16be344ddda07d259663407155539c9f6fbd5e52b233f8aa",
+    "size": 88771
+  },
+  {
+    "source": "logs/workflow-unit-budgets/quick-dev/8e9a7ab4051f04a43098ef0f7781ba68bd47b76117cd622823485adcaa400b18/c08fc0b8710a4172938f474700b89f75.json",
+    "copy": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-originals/c08fc0b8710a4172938f474700b89f75.json",
+    "sha256": "5d35d8e74acd1f7d813854546f3438122dd314201df93c2a392a19fb7a33d735",
+    "size": 1628
+  }
+]

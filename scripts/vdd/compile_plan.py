@@ -164,6 +164,8 @@ def main() -> int:
     parser.add_argument("--repair-quick-dev-handoff-from", type=Path,
                         help="Repair execution bindings of a reviewed plan into a distinct successor")
     parser.add_argument("--handoff-test-root", default="scripts/sc/tests/tc_d1_cer")
+    parser.add_argument("--handoff-static-primary-slice", action="append", default=[],
+                        help="Drop a redundant primary pytest OR filter for an explicitly bound slice only")
     parser.add_argument("--handoff-planned-test", action="append", default=[],
                         help="Declare an already-bound absent Q2 test only; requires handoff repair")
     parser.add_argument("--runtime-red-intent", action="append", default=[],
@@ -171,6 +173,10 @@ def main() -> int:
     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
                         help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
     args = parser.parse_args()
+    if args.handoff_static_primary_slice and (not args.repair_quick_dev_handoff_from
+            or args.handoff_planned_test or args.runtime_red_intent or args.handoff_windows_launcher_slice
+            or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
+        parser.error('static-primary repair requires handoff repair without other binding modes')
     if args.stop_after and any((args.worker_cache, args.recommendation_only,
             args.v3_contract_repair, args.repair_published_v3_from,
             args.repair_quick_dev_handoff_from)):
@@ -211,7 +217,8 @@ def main() -> int:
                 predecessor=args.repair_quick_dev_handoff_from, out_dir=args.out_dir,
                 test_root=args.handoff_test_root, runtime_red_intents=args.runtime_red_intent,
                 windows_launcher_slices=args.handoff_windows_launcher_slice,
-                planned_tests=args.handoff_planned_test)
+                planned_tests=args.handoff_planned_test,
+                static_primary_slices=args.handoff_static_primary_slice)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             result = {"status": "repair-vdd", "reason": str(exc)}
         if args.result_json:

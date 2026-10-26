@@ -1,0 +1,221 @@
+{
+  "kind": "incremental native plan/diagnostic inventory; no implementation completion authority",
+  "authorizes": [],
+  "files": [
+    {
+      "path": "logs/stage5-p1-repair-20261026/REPORT.md",
+      "sha256": "33a87359b673879664c0f9579ed72ad3a2691e4e3f17a425808a15a70195b223",
+      "size_bytes": 7380
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/S1-selection.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/S1-selection.stdout.json",
+      "sha256": "ccd81311e4673f8bdc52a7cc1f02f385595bfefc6747b3dc372d8eb9667767ce",
+      "size_bytes": 18270
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/S12-selection.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/S12-selection.stdout.json",
+      "sha256": "7b4b4504ca859a0b4e838027142a98b4d68101ea3db77d2dcbf36039eb8199fc",
+      "size_bytes": 36355
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/WINDOWS-NEXT-COMMAND.json",
+      "sha256": "77e642c3d269613a05343d05b0a9bbbcf023eb270e69e0a6403a4466105cac89",
+      "size_bytes": 1864
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/checkpoint.json",
+      "sha256": "09eb500dfbbcea77cce494a8ffc552bb038c5d3d100e35a1b2abbcabda9e3f94",
+      "size_bytes": 1594
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/dynamic-selection-static.json",
+      "sha256": "127f6f27b803b2fff1d34f7625ef9c864486a599e04f0a933d31446de2610944",
+      "size_bytes": 599
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/role-and-selection-preservation.json",
+      "sha256": "c468f65714121e8a3567a43f84323c92bc4e146ec34ef709c121842a3af061f6",
+      "size_bytes": 1735
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/role-command.json",
+      "sha256": "4d6b98350fbf089d20ed9a4490769573ad53aa485d0432e9b39ef778b534ab96",
+      "size_bytes": 579
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/role-native.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "path": "logs/stage5-p1-repair-20261026/role-native.stdout.json",
+      "sha256": "4c973a25b574d5139ec7c79eaec87e64f581ee66488ccb1e7f660878a0a5515f",
+      "size_bytes": 179
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/acceptances.v1.json",
+      "sha256": "2a30e7e27a3e2edf2fcd67e6d6bda611df53678c09719dae5e047d18e9ed94e0",
+      "size_bytes": 1111367
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S1/agent-context.json",
+      "sha256": "5387ab907d0bc1a085e45c585fa62c3b2b1bca0fb21f4628bf685d6b639ac755",
+      "size_bytes": 8427
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S10/agent-context.json",
+      "sha256": "03503390912bf1755447d10b8ca90e21f2508382f50ce25bf280cb2ffb740ca4",
+      "size_bytes": 24898
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S11/agent-context.json",
+      "sha256": "d0adfbcdf76c2366f1d85ebbb1400d77444ed790513b1da1aac869a67fbacb4e",
+      "size_bytes": 11300
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S12/agent-context.json",
+      "sha256": "9ff247d3a33d0296055f97953f75152ff5ebd9e027a12651c881c230361b4a18",
+      "size_bytes": 90910
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S2/agent-context.json",
+      "sha256": "30a89481d2cb520b71811c2e355a8c6704ef92ad2121313461edc9a58497a223",
+      "size_bytes": 55692
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S3/agent-context.json",
+      "sha256": "c182a77785bde2b07f12b5624e95ac83bda72fa1eb234976f54fba198f9ec5ba",
+      "size_bytes": 7273
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S4/agent-context.json",
+      "sha256": "f34e49a1e28b2723eebfadb214197b0de5891b3b8947d496aaa5725c0a3c0827",
+      "size_bytes": 7242
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S5/agent-context.json",
+      "sha256": "14c106fe65bc20cdb9f3e025dc645630ef7e5179b94d32fc697de7804b672c87",
+      "size_bytes": 5656
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S6/agent-context.json",
+      "sha256": "97962806f34e95c23aad4cc0480df098e14d9feb0e58a885efa7a84f43882320",
+      "size_bytes": 7292
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S7/agent-context.json",
+      "sha256": "1252eada8447e82941c580dd9e0da5daa333fefd3634366bdfdf0d46baba4af2",
+      "size_bytes": 8273
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S8/agent-context.json",
+      "sha256": "579224a8e977751fa32d2ffbe1d8c4cf72240254b9301801eb0e879bc7ff0d9c",
+      "size_bytes": 7262
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/agent-context/S9/agent-context.json",
+      "sha256": "ddafb5463d2d75242288dd7b3344ac8f6293a02db00032f5fa526263c37c1fba",
+      "size_bytes": 9583
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/atomic-recall-alignment.v1.json",
+      "sha256": "d5e364bc4a0f0ddf80846042419f6060dedacf4558b8326ec4469600f85ccb33",
+      "size_bytes": 5672
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/compiler-state.v1.json",
+      "sha256": "a5f8f9aa7c5d4ab25021e583bd2496a406bdb7ec588274c44477802acaa16799",
+      "size_bytes": 353
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/failure-intents.v1.json",
+      "sha256": "70d8d79a48973c5783b6d504246d9def78ff126add331f62e2bccac1ceb84150",
+      "size_bytes": 187367
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/feasibility.v1.json",
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa",
+      "size_bytes": 63
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/final-plan-coverage.v1.json",
+      "sha256": "c90bb916092c30961026222ecb75f545264344632784b6d056bba4baf9e7cd57",
+      "size_bytes": 190677
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/handoff-repair.v1.json",
+      "sha256": "1e1a64bf7307b552e6bc4ed75d585746875511e762442e02575e8ba07db76836",
+      "size_bytes": 2091
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/obligations.v1.json",
+      "sha256": "790065c97f7c16370e8919c399d14b15d08d34598ef44f305c3f4f5a0b5c1742",
+      "size_bytes": 743583
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/pre-slice-coverage.v1.json",
+      "sha256": "b148bad52881b46f20d3ff7ee71b373868e0bb4c281b49ef7dfc84e097d07259",
+      "size_bytes": 69405
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/semantic-alignment.v1.json",
+      "sha256": "68b2b9a8a3f533f20a2d9073880ac96e29ddb1d7c830d41be1111ebf8524f0aa",
+      "size_bytes": 5402
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/semantic-chain-audit.v1.json",
+      "sha256": "80edb811a014eb00d974a10df0846a301d95aaae7f1a184e5d973e69c42c4afe",
+      "size_bytes": 368
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/semantic-plan-bundle.v1.json",
+      "sha256": "33140e79b1ad0902363289c183ce7816e998b86675e83054176abfc37cb3b761",
+      "size_bytes": 16884757
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/slices.v1.json",
+      "sha256": "c60139c99d49b7b37912adb79e34c30c5ff42555c78cfb671cb12b2fccea087f",
+      "size_bytes": 595836
+    },
+    {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-role-repair/source-index.v1.json",
+      "sha256": "b1410bb27c8a53641e80d34c9219f22256ddbf7a0148d282504e1063ed92efbc",
+      "size_bytes": 1624837
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/REPORT.md",
+      "sha256": "9890d3a3f7a26d841f8583983fb1a9b4af4d7811278616e5e0ac2def3c9b75c1",
+      "size_bytes": 7605
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/test_counterexamples.py",
+      "sha256": "7419c773fb203ad985c770eda42f999e2783db211b19bb3b429581387364c7c8",
+      "size_bytes": 7903
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-first.xml",
+      "sha256": "a17a42e4e067a480b02329917bc1c2bb3dd5dbc2a2a5b53c839290e88cda2645",
+      "size_bytes": 13132
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/diagnostic-executed.stdout.txt",
+      "sha256": "83b3d6efe7e33a8b9e58cf9ebe070581ce9e98796c2bbb7de2e1ee29a5238379",
+      "size_bytes": 13557
+    },
+    {
+      "path": "logs/stage5-p1-self-review-20261026/proof-impact-static.json",
+      "sha256": "228b9778b251aec929290a8dd4211e522fc08ee628da7fcd9cef4abb980d8a77",
+      "size_bytes": 11129
+    }
+  ]
+}

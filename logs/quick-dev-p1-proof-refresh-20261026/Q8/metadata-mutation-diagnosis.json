@@ -1,0 +1,7 @@
+{
+  "native_rejection": "Q8 original/input changed during validation",
+  "known_caller_write_during_validation": "logs/quick-dev-p1-proof-refresh-20261026/q8-caller-input-recovery.py",
+  "code_evidence": "_Q7OriginalChecks._watch seals ready result parent directory; finish rejects changed parent stamps",
+  "limitation": "Native rejection has no path-specific diagnostic; recorded caller write is a sufficient observed seal invalidation",
+  "correction": "Freeze all caller metadata before invocation and perform no repository writes during Q8; source/native originals unchanged"
+}
