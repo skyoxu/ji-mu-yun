@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.870" timestamp="2026-10-26T16:32:57.497600+00:00" hostname="01dcaac9a2f8"><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_trusted_knowledge_validator" name="test_target_nested_repository_cannot_choose_its_own_trust_root" time="0.521"><failure message="Failed: DID NOT RAISE InputError">repository = (PosixPath('/tmp/pytest-of-agent/pytest-8/test_target_nested_repository_0/candidate'), PosixPath('/tmp/pytest-of-agent...15b83898e020269393119', 'requestHash': 'sha256:5a0396a83e99a678a5fffde3f0f94eab80d74f7d397f345016aada40b029835a', ...})
+
+    def test_target_nested_repository_cannot_choose_its_own_trust_root(repository):
+        root, target, _ = repository
+        (target / "knowledge").mkdir()
+        files = target / "scripts/python"
+        files.mkdir(parents=True)
+        (files / "_knowledge_locator_core.py").write_text("# Untrusted nested repository.\n")
+        (files / "knowledge_context_validation.py").write_text(
+            "def validate_context(*args, **kwargs): return None\n"
+            "def validate_worktree_sources(*args, **kwargs): return None\n"
+            "def validate_catalog_freshness(*args, **kwargs): return None\n"
+        )
+        git(target, "init", "-q", "-b", "main")
+        git(target, "config", "user.email", "fixture@example.invalid")
+        git(target, "config", "user.name", "Nested fixture")
+        git(target, "add", ".")
+        git(target, "commit", "-qm", "candidate-chosen main must not grant trust")
+&gt;       with pytest.raises(InputError, match="ambiguous"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE InputError
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py:272: Failed</failure></testcase></testsuite></testsuites>

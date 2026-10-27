@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="12" time="0.107" timestamp="2026-10-25T14:15:47.963231+00:00" hostname="0c18639253a4"><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_same_original_checked_once_per_invocation" time="0.014" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_distinct_original_or_context_never_merges[descriptor]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_distinct_original_or_context_never_merges[receipt]" time="0.002" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_distinct_original_or_context_never_merges[path]" time="0.001"><failure message="ValueError: Q7 original/input changed during validation">tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-42/test_distinct_original_or_cont2')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7fd5e86bfe00&gt;
+change = 'path'
+
+    @pytest.mark.parametrize('change', ['descriptor', 'receipt', 'path'])
+    def test_distinct_original_or_context_never_merges(tmp_path, monkeypatch, change):
+        evidence, descriptor, receipt, _ = original(tmp_path)
+        calls = []
+        monkeypatch.setattr(shared_execution, 'validate_saved_request', lambda *a: calls.append(a))
+        scope = q7._Q7OriginalChecks(tmp_path, lambda _: None)
+        add(scope, evidence, descriptor, receipt)
+        descriptor, receipt = deepcopy(descriptor), deepcopy(receipt)
+        if change == 'descriptor':
+            descriptor['argv'].append('-k different')
+        elif change == 'receipt':
+            receipt['profile_identity'] = 'self-hosted'
+        else:
+            other = tmp_path / 'other'
+            other.mkdir()
+            (other / 'evidence').mkdir()
+            evidence = other / 'evidence'
+        add(scope, evidence, descriptor, receipt)
+&gt;       scope.finish()
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;coverage_predicates._Q7OriginalChecks object at 0x7fd5e86bfd70&gt;
+
+    def finish(self):
+        for key, check in self.jobs.items():
+            check()
+            self.completed("original:" + key)
+        if sha256_value(execution_environment()) != self.environment:
+            raise ValueError("Q7 environment changed during validation")
+        if any(self._stamp(path) != stamp for path, stamp in self.seals.items()):
+&gt;           raise ValueError("Q7 original/input changed during validation")
+E           ValueError: Q7 original/input changed during validation
+
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:111: ValueError</failure></testcase><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[content]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[replacement]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[new_dependency]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[environment]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_mutation_during_validation_rejected[request]" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_damaged_original_not_accepted_as_dedup_hit" time="0.001" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_each_edge_keeps_independent_identity_checks" time="0.006" /><testcase classname=".agents.skills.quick-dev-tdd-adapter.tools.tests.test_q7_original_checks" name="test_genuine_completion_does_not_reset_unit_total" time="0.000" /></testsuite></testsuites>

@@ -1,0 +1,950 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-8.3.5, pluggy-1.7.0 -- C:\hostedtoolcache\windows\Python\3.12.10\x64\python.exe
+cachedir: .pytest_cache
+rootdir: D:\a\ji-mu-yun\ji-mu-yun
+plugins: platformdirs-4.13.5
+collecting ... collected 11 items
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[unicode-argv] PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stdout] PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stderr] PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[combined] PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[timeout] PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[cancel] PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[nonzero] S7_ACTUAL_PROCESS:[{"argv": ["git", "-C", "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\pytest-of-runneradmin\\pytest-0\\test_contract_8299476377c3_non0\\admission-copy", "rev-parse", "refs/heads/main"], "shell": false, "encoding": "utf-8"}]
+PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[unicode-argv] S7_ACTUAL_PROCESS:[{"argv": ["git", "-C", "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\pytest-of-runneradmin\\pytest-0\\test_contract_8299476377c3_uni0\\repository space π", "rev-parse", "refs/heads/main"], "shell": false, "encoding": "utf-8"}]
+PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline PASSED
+scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline_timeout S7_ACTUAL_DEADLINE:{"calls": [{"argv": ["git", "-C", "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\pytest-of-runneradmin\\pytest-0\\test_planning_attempt_deadline1\\admission-copy", "rev-parse", "refs/heads/main"], "timeout": null}], "elapsed": 1.0160000000000764}
+PASSED
+
+============================== warnings summary ===============================
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:91
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:91: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CA335D988AF5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:198
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:198: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:199
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:199: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3F7D90E3D044')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:334
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:334: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F96ECD3253A2')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:335
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:335: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_31BA1038EB57')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:336
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:336: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_65F3B954FB04')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:337
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:337: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D64F7E6FDF45')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:338
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:338: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:487
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:487: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2B5B0BA2BE94')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:488
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:488: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_085B1807BD2E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:489
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:489: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:526
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:526: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_BD7C42FF441E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:527
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:527: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9C72720F8F91')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:528
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:528: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2D078C89F59A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:529
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:529: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:571
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:571: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_94C2D2FA535D')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:572
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:572: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9C72720F8F91')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:573
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:573: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2D078C89F59A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:574
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:574: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_DCF68B1ABA8F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:615
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:615: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F7401102FE99')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:748
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:748: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_850A2D68C126')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:749
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:749: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B4DDDFEB665F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1891
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1891: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C2B808E0497D')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1902
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1902: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C1C6D547B2BD')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1912
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1912: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C90E2D008D9F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1923
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1923: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_E7FD5135E3CE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1933
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1933: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7161798390FD')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1943
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1943: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8118AC4A1D1B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1954
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1954: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_295A1ED8402C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1964
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1964: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1986A8A866A9')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1975
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1975: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7D56282FCA48')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1986
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1986: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6F28F6213395')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:1997
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:1997: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FBE33745AF99')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2007
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2007: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CF914A509B70')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2018
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2018: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_53AB257DBFF5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2028
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2028: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_50ACBBD8D0AF')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2038
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2038: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_0531C165C195')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2048
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2048: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_0E473B3331BF')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2059
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2059: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8610730096AD')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2069
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2069: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FC7DBACE2B9E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2080
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2080: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5B57A2FF7E8E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2090
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2090: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3BF54CFB6A2C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2101
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2101: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9B9F2277BAF0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2111
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2111: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_BA146B52F4BF')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2121
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2121: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_891CBF9A43F0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2131
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2131: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2A4453D64EC3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2141
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2141: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9A38E9C1D8D3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2152
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2152: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C3FDEAA09926')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2162
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2162: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6D340C60E04C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2172
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2172: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_663AC61551EA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2182
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2182: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FD5C326B64A0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2193
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2193: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C4EF411007FE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2204
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2204: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9C630007325C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2214
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2214: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_79A83B840FB4')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2225
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2225: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_EE8FAD50FD50')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2235
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2235: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_4D7902276417')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2246
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2246: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_639EEB9CC5A0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2257
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2257: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_43B295DB7583')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2268
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2268: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_49AD192F8507')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2278
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2278: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1EACFC8E1EAE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2289
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2289: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3036B6BC69BB')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2300
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2300: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B56CECA98BA0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2310
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2310: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_AF2078FB2E4B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2321
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2321: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6FF05E83E725')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2332
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2332: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8C9E227B4EAE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2343
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2343: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B0293AD5244C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2353
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2353: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7128DF18FB20')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2364
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2364: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_E4594C06522D')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2375
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2375: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6D014AB0CCF2')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2385
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2385: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_03DD2B8DEFDB')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2396
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2396: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9431A00FFFBA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2407
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2407: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1693A89D7360')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2417
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2417: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D1E9D110AFB1')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2428
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2428: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1207E29C7AAF')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2438
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2438: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_41A0E85D2369')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2449
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2449: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FCA87D5A1DD3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2459
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2459: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9A069365A1DC')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2470
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2470: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D1CD48A38E94')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2481
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2481: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_48A9ADB890E3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2491
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2491: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B9CC1CD8672A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2501
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2501: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D097E8932C6D')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2512
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2512: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_627B8C4B71A7')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2523
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2523: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5E3DA627C900')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2534
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2534: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_58D6151EF2C1')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2545
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2545: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1AC1A5752B1A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2555
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2555: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C9F4C60FB490')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2565
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2565: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FAEF193B73BF')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2575
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2575: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5E6CC5C750BC')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2585
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2585: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_971C0DC625C8')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2596
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2596: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_150240BC71C3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2606
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2606: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9D64F32F363E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2616
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2616: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_A06E38594D27')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2626
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2626: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_BFA252173BA7')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2637
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2637: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9F085544A2E4')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2648
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2648: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B9783098460C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2658
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2658: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CC2672622099')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2669
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2669: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_06FDF04DDEA5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2680
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2680: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3D2630E90BF0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2691
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2691: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_88D9B960346B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2701
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2701: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8914061E7998')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2711
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2711: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8D11934293AE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2722
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2722: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D15067654AC2')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2733
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2733: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7DF0A2364C34')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2744
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2744: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B9380328BF22')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2754
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2754: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_0EECFA4AF377')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2764
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2764: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_AD21C3976803')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2775
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2775: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1B2DEF4F4ED8')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2785
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2785: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6ECFC199C2D2')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2796
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2796: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7E78E000DDDC')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2807
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2807: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_32C6C396BEC7')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2818
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2818: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_560D069494F3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2829
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2829: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_08A195E40B8A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2840
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2840: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3DC165490699')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2851
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2851: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8376A58C8D9A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2861
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2861: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_23847110E04A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2872
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2872: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D823F94E0DB3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2882
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2882: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F9C89045878F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2893
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2893: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8299476377C3')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2903
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2903: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_74A2254C30B4')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2914
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2914: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3C7A68FEFC3A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2925
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2925: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_99AF9B9AC486')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2936
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2936: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F031D2D60A88')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2946
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2946: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_DB1051A2B636')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2956
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2956: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C773656A60C5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2966
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2966: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7D065E7B1877')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2977
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2977: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C442B3B56FCE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2988
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2988: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2989
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2989: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:2990
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:2990: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8C43A73A097A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3000
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3000: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C9A0D76031FA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3010
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3010: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_A92FC8578FE6')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3021
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3021: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_E4C91B5029D5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3032
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3032: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_E042DE12D872')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3042
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3042: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D0C9017CF9BC')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3052
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3052: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8A097832E3DF')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3062
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3062: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_325E95636B4D')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3073
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3073: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_0DBBDB9AF5F0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3084
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3084: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9C582F662DBB')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3095
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3095: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1907855D27FB')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3105
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3105: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_EB0D7FBF2CC9')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3116
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3116: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C3ED964D28B0')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3127
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3127: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_69398B597306')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3137
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3137: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_AD31E8B711AA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3148
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3148: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CE5ECD0F87CE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3159
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3159: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C86932028DD4')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3170
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3170: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_59796BEEEC1F')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3181
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3181: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3182
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3182: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3183
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3183: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3FD712CCE882')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3188
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3188: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B09FE8B2FF4C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3199
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3199: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6A0DFDBB434A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3209
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3209: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F2E10C1F034C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3220
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3220: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_AE4526DE3C66')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3231
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3231: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_550968C7B8C5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3242
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3242: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8FD1E5E14DCA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3252
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3252: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_20D666972084')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3263
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3263: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_D3739660D2DA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3274
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3274: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B2ED3F3540EB')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3284
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3284: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_0D09D61E0B4E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3295
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3295: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FD1D93782C03')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3305
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3305: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5A35CFCD0192')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3316
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3316: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3317
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3317: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3318
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3318: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_035DDCBA7E48')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3328
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3328: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8B5CFD412697')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3337
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3337: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_77997046881C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3347
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3347: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_EDA461017F8C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3358
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3358: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1907855D27FB')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3373
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3373: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3374
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3374: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3375
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3375: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_1B2DEF4F4ED8')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3405
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3405: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3406
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3406: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3407
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3407: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_550968C7B8C5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3593
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3593: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3594
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3594: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3595
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3595: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3596
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3596: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3597
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3597: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_3DAF23250361')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3598
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3598: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_63783142FD7B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3599
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3599: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_4C1B8DE3882C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3600
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3600: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_9E29614CA1B7')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3601
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3601: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C5739C9FC820')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3602
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3602: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F7FB563211E4')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3619
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3619: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_05552304BD9E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3629
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3629: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3630
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3630: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3631
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3631: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3632
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3632: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_8E3D097B669C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3633
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3633: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_121ED996CEAE')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3634
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3634: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_A37D4E43898B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3635
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3635: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2678EA925C89')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3636
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3636: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_996BF56C8518')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3637
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3637: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_314A186BF90E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3638
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3638: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_E4C02160E0CC')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3639
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3639: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_03668F0ADF94')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3669
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3669: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3670
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3670: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3671
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3671: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_14832D388C3C')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3672
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3672: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_FD756962A671')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3673
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3673: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_01DA6B7A91DC')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3691
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3691: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_113D52ECE151')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3692
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3692: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7F6AF9FDD617')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3693
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3693: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B347CD2195F2')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3704
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3704: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6C6853493E27')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3705
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3705: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_09A30E743B67')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3726
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3726: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_812769EB2D98')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3727
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3727: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_891AB647E730')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3733
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3733: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3734
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3734: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_7694233DB1C7')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3760
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3760: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3761
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3761: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5165AA0D7344')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3762
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3762: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B34E35470A88')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3763
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3763: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_6C0520FE0D5E')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3769
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3769: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3770
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3770: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CE33174BFA28')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3771
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3771: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_01ABAC86036B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3772
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3772: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_40CE012D7173')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3778
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3778: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3779
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3779: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3780
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3780: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_58D790ED2D22')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3781
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3781: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_11A7E3CEF26B')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3802
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3802: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_06A867E00BC5')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3803
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3803: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_BA9A0474912A')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3804
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3804: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_B7A571632018')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3805
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3805: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_F3B89696B975')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3806
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3806: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_54829FE46AF9')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3807
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3807: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3808
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3808: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3849
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3849: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+
+scripts\toolchain\knowledge_query\tests\test_planning_query.py:3937
+  D:\a\ji-mu-yun\ji-mu-yun\scripts\toolchain\knowledge_query\tests\test_planning_query.py:3937: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT_C442B3B56FCE')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: D:\a\ji-mu-yun\ji-mu-yun\logs\windows-query-verification\junit.xml -
+====================== 11 passed, 231 warnings in 12.72s ======================

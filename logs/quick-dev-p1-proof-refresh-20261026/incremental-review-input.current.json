@@ -1,0 +1,101 @@
+{
+  "kind": "local fixed-content handoff for two-P1 incremental recheck; not published",
+  "review_baseline_commit": "2abfbccbe532f6d934d3bba36d00c915207f5e38",
+  "runtime_host_commit": "5b585094288f1958539d88261d78467865cfe8e7",
+  "runtime_host_tree": "b0c44bfd9bd0b7edb4e9dc592e22b945510c6a37",
+  "head_alone_is_not_complete_candidate": true,
+  "files": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "7f25464c6e621b906a6f35cefe6487c339fc9ae2930b2eb95afd86971838cca4",
+      "review_baseline_sha256": "4a8bd4df51fffc5eed5e9295ebe5c10b383e80d1447bcc8db52467bf773133c4",
+      "head_blob_matches_current_bytes": true,
+      "git_status": ""
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+      "sha256": "9ff7de96d91d1ba3a65ab2b9ef7938e4cb1abaec87e90b98d69d546b42bbbef8",
+      "review_baseline_sha256": "80faae5f0caf73e7a831c0d2569159aaf2af39e2c6a5df98cd1cfa5f3d7213ed",
+      "head_blob_matches_current_bytes": true,
+      "git_status": ""
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      "sha256": "ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7",
+      "review_baseline_sha256": "799517132dfca12903c79a3935a4363ff9d84e4bbbe058ca6580d20e146c022d",
+      "head_blob_matches_current_bytes": true,
+      "git_status": ""
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+      "sha256": "bd18ace93ff30f373bf2a7bc167cdcbb629a61bc5b446eebef984751b0f85d7b",
+      "review_baseline_sha256": null,
+      "head_blob_matches_current_bytes": true,
+      "git_status": ""
+    },
+    {
+      "path": "scripts/vdd/compile_plan.py",
+      "sha256": "e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77",
+      "review_baseline_sha256": "679442ba962e808fff3576a8c1fd32ec9e50135407191084ce6d62500e61167a",
+      "head_blob_matches_current_bytes": false,
+      "git_status": "M scripts/vdd/compile_plan.py"
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/adapter.py",
+      "sha256": "92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+      "review_baseline_sha256": "aa7b4984a22024bbd409def1e46254bbe4ffbc9040c28084a9565d667940cc39",
+      "head_blob_matches_current_bytes": false,
+      "git_status": "M scripts/toolchain/knowledge_query/adapter.py"
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "sha256": "54d54a090b26172ffd6205108a67caed87a33c9ca65d1d2f8d1a9a6af1b3a437",
+      "review_baseline_sha256": "71926958969db6cf07c0c636468585dfba31d46d03d190bcd55cdf97c880215d",
+      "head_blob_matches_current_bytes": false,
+      "git_status": "?? scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    },
+    {
+      "path": "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+      "sha256": "4a04d97d3b68e2968bf16c60888f4183693e347b7c1cb6e67086d9910e415690",
+      "review_baseline_sha256": "830f3f9f62913d8287a35d2e5fdf3e298a79447b5b08dd52bd5196f81646c480",
+      "head_blob_matches_current_bytes": false,
+      "git_status": "?? tests/toolchain/knowledge_query/test_planning_boundaries.py"
+    }
+  ],
+  "current_plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_canonical_sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "frozen_input_ref": {
+    "path": "logs/quick-dev-p1-proof-refresh-20261026/frozen-inputs.json",
+    "size_bytes": 1137,
+    "sha256": "f9f803ebd225108909ba1a3bf84e62c173b505a956e7ae9d2c897013a74a9e64"
+  },
+  "completion_summary_ref": {
+    "path": "logs/quick-dev-p1-proof-refresh-20261026/completion-summary.json",
+    "size_bytes": 43067,
+    "sha256": "0f38eb7c06e4073da9546bebe7b6ec8d70f25b99cef5eca66bee532f8a939d0d"
+  },
+  "Q8": {
+    "path": "logs/quick-dev-p1-proof-refresh-20261026/Q8/implementation-complete-result.v2.json",
+    "size_bytes": 316801,
+    "sha256": "bf0e81735a90fbaeb10dc7eeb0b4c1e739e217bd6c68b6c4c87ec6a9f5a63b3f"
+  },
+  "Windows_verified_original": "logs/windows-p1-result-40293104427/verified-original",
+  "Windows_commit": "cc70f153f1c4cded4a9dceca408d3faae54f8ad6",
+  "Windows_run": 40293104427,
+  "Windows_zip_sha256": "86428f5351e85929f348a07fca6506c2f9f9c1f9c1cef695bdfc69d404e96429",
+  "Windows_limitations_ref": "logs/windows-p1-result-40293104427/status-applicability.json",
+  "repair_provenance": [
+    "logs/stage5-p1-self-review-20261026",
+    "logs/stage5-p1-vdd-binding-fix-20261026",
+    "logs/stage5-p1-native-20261026"
+  ],
+  "old_plan_and_original_evidence_preserved": true,
+  "external_recheck": "pending; parent coordinates existing review session",
+  "Acceptance": "not executed",
+  "publication": "current reader update and refreshed proofs not pushed",
+  "excluded": [
+    "private Library transfer helper responses/signed URLs",
+    "unrelated dirty 2026-08-18 skill-input context",
+    "unrelated logs and BMAD installation files"
+  ]
+}

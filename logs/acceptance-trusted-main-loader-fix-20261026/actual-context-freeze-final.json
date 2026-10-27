@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-26T16:39:58.031723+00:00",
+  "main_and_HEAD_unchanged": true,
+  "frozen": {
+    "path": "acceptance-inputs/acceptance-20261026-main-isolated/knowledge-context.refactor-acceptance.current.v1.json",
+    "sha256": "sha256:13eb9160cc28b03bc93a6accd7e3c8a8211d44e1c76f713bea49fbcbb9be3ae5",
+    "contextHash": "sha256:837b70980a89d89034c900e929224203891d9f4a27181ab511bbeb6ee6dc1a5f",
+    "requestHash": "sha256:e2f9b9acdbc2aaf3c8543e2a049ab9da3c6c89b5cad6e49c58a1b0e641963c2d",
+    "resultHash": "sha256:c518c701a7ad4555792dfea845b7edd5641fc322e446928cf5f60da3e500effc",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+    "acceptedDecisions": [
+      {
+        "owner": "adapter",
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "a59041c2dd6a171169fa6653ab19df98bdb8ca7ab9623fd8c1f5a81d1ce58545"
+        },
+        "decision": "accepted",
+        "satisfies": [
+          "acceptance-scope"
+        ],
+        "rejection_reason": null
+      },
+      {
+        "owner": "adapter",
+        "candidate": {
+          "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+          "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+        },
+        "decision": "accepted",
+        "satisfies": [
+          "acceptance-scope"
+        ],
+        "rejection_reason": null
+      },
+      {
+        "owner": "adapter",
+        "candidate": {
+          "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          "source_sha256": "d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17"
+        },
+        "decision": "accepted",
+        "satisfies": [
+          "implementation-handoff"
+        ],
+        "rejection_reason": null
+      }
+    ],
+    "authorizes": []
+  },
+  "authorizes": []
+}

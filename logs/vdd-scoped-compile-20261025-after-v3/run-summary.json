@@ -1,0 +1,76 @@
+{
+  "status": "plan-ready",
+  "exit_code": 0,
+  "plan_directory": "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3",
+  "plan_id": "PLAN-5B165A844E5A",
+  "semantic_plan_sha256": "sha256:7aa75d0cfda1125fa9c6dab354032a4fe12f19085a56254256df20b46c5216a7",
+  "source_index_sha256": "sha256:4bdddaa521eca69d49354e1e801b18e16b6481b27f3a41f96a78b35673bba322",
+  "started_at": "2026-10-25T04:07:33.302976+00:00",
+  "finished_at": "2026-10-25T04:12:15.776436+00:00",
+  "elapsed_seconds": 282.47346,
+  "completed_stages": [
+    "V0",
+    "V0A",
+    "V1",
+    "V2",
+    "V3",
+    "V3A",
+    "V4",
+    "V5",
+    "V6",
+    "V6A",
+    "V7"
+  ],
+  "v1_unique_sources_reused": 61,
+  "native_v1_replay_lookups": 122,
+  "v3_checkpoint_reused": true,
+  "new_v1_requests": 0,
+  "new_v3_requests": 0,
+  "new_v4_requests": 61,
+  "v4_covered_obligations": 305,
+  "obligation_count": 305,
+  "acceptance_count": 305,
+  "slice_count": 12,
+  "agent_context_files": 12,
+  "candidate_or_code_repairs": 0,
+  "v4_repeat_bindings": 0,
+  "new_separate_model_processes": 0,
+  "review_identity": "Current caller V4 task, not an external A/B or separate model/process reviewer. 1 partition manually read in full; 60 partitions use verified exact whole-field and linked-intent retention, with independently validated native source-recall evidence.",
+  "max_current_worker_seconds": 156.69728978900002,
+  "old_cache_entries_unchanged": 251,
+  "slice_topological_order": [
+    "S2",
+    "S5",
+    "S6",
+    "S1",
+    "S3",
+    "S7",
+    "S11",
+    "S8",
+    "S12",
+    "S4",
+    "S10",
+    "S9"
+  ],
+  "gate_findings": {
+    "semantic-alignment.v1.json": {
+      "valid": true,
+      "findings": []
+    },
+    "atomic-recall-alignment.v1.json": {
+      "valid": true,
+      "findings": []
+    },
+    "feasibility.v1.json": {
+      "valid": true,
+      "findings": []
+    },
+    "semantic-chain-audit.v1.json": {
+      "valid": true,
+      "findings": []
+    }
+  },
+  "formal_artifact_count": 26,
+  "implementation_or_acceptance_executed": false,
+  "authorizes": []
+}

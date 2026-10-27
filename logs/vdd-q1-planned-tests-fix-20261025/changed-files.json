@@ -1,0 +1,32 @@
+{
+  "scripts/vdd/compile_plan.py": {
+    "before_sha256": "d6698e72fe40027c10c224c8d7120d99443748240bd2a7845857186310acb9ba",
+    "after_sha256": "4bcaacc2bc58b307e829cbc2cb7e0cfac4404d0836f27d7814d04768eb434183",
+    "bytes": 24044
+  },
+  ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py": {
+    "before_sha256": "f8c8544c492c27cdbcfbcf06c32781e1703548b31aee46a7c3591ad5a2c262ca",
+    "after_sha256": "799517132dfca12903c79a3935a4363ff9d84e4bbbe058ca6580d20e146c022d",
+    "bytes": 39902
+  },
+  ".agents/skills/vdd-execution-plan/SKILL.md": {
+    "before_sha256": "077007630285dc136f410c518c97e69af605ac32f320e594806fe816dfd90633",
+    "after_sha256": "4a8bd4df51fffc5eed5e9295ebe5c10b383e80d1447bcc8db52467bf773133c4",
+    "bytes": 19663
+  },
+  ".agents/skills/vdd-execution-plan/references/planning-operation.md": {
+    "before_sha256": "984db0b9713e10a1a69ab3ecdfac6ec916a8295fb01226b12b986097ff092e75",
+    "after_sha256": "80faae5f0caf73e7a831c0d2569159aaf2af39e2c6a5df98cd1cfa5f3d7213ed",
+    "bytes": 22576
+  },
+  "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": {
+    "before_sha256": "4b9d62818dd520ac6c8c9f6866e90a3957466aa0b015b4c4b2b7f03498ca559f",
+    "after_sha256": "dac68be0b622299e349d059329c84ca0c9413140d8b8c1fdb8f48c01c5190701",
+    "bytes": 44881
+  },
+  ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py": {
+    "before_sha256": null,
+    "after_sha256": "ec82a1f072807031fad4bc9a6dfd7fec3f1ef021bda78fe96e17730b3001dd09",
+    "bytes": 7881
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "kind": "local fixed-content handoff; not external approval or published commit",
+  "authorizes": [],
+  "created_at": "2026-10-26T11:39:10.591873+00:00",
+  "runtime_host_commit": "5b585094288f1958539d88261d78467865cfe8e7",
+  "review_baseline_commit": "2abfbccbe532f6d934d3bba36d00c915207f5e38",
+  "last_complete_published_candidate": "cc70f153f1c4cded4a9dceca408d3faae54f8ad6",
+  "HEAD_alone_is_not_complete_candidate": true,
+  "current_plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_canonical_sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "entry_files": [
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/REPORT.md",
+      "sha256": "3ba3c04b9b42f95332e2009ead6fe6a1cf8a918fe14683d490e558111db21b60",
+      "size_bytes": 5700
+    },
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/completion-summary.json",
+      "sha256": "0f38eb7c06e4073da9546bebe7b6ec8d70f25b99cef5eca66bee532f8a939d0d",
+      "size_bytes": 43067
+    },
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/evidence-index.json",
+      "sha256": "a7cfea413e371273e501ff5912f3e404731551e2b5c1c4481da34bd8fe270461",
+      "size_bytes": 351744
+    },
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/incremental-review-input.current.json",
+      "sha256": "33bd7706734a1b50090016d9124d50201da11fdb4bec6373e31ee1bd9b7d1b7c",
+      "size_bytes": 5009
+    },
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/Q8/implementation-complete-result.v2.json",
+      "sha256": "bf0e81735a90fbaeb10dc7eeb0b4c1e739e217bd6c68b6c4c87ec6a9f5a63b3f",
+      "size_bytes": 316801
+    },
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/Q8/terminal-input.v2.json",
+      "sha256": "6d34421c31975288c6a9eaafc2c88a23556941ee080b935e842ee3f0071fbcf2",
+      "size_bytes": 342958
+    },
+    {
+      "path": "logs/quick-dev-p1-proof-refresh-20261026/Q8/supervision-source-index.json",
+      "sha256": "dbd693445a8579bc5307d8fbd07e154e84e27d2484d3a0db6c36ae5ead26935b",
+      "size_bytes": 3485
+    }
+  ],
+  "source_delta_since_windows_publication": [
+    {
+      "path": "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "current_sha256": "54d54a090b26172ffd6205108a67caed87a33c9ca65d1d2f8d1a9a6af1b3a437",
+      "published_windows_sha256": "6711fcd3e01cee6ac6e90c399622f746402e479060dbdb7cb81b63964fb98d84"
+    }
+  ],
+  "original_scope_entry": "review-materials/vdd-quick-dev-scoped-plan-20261025",
+  "current_scoped_inputs": "logs/scoped-input-preparation-20261024-v3/inputs",
+  "causal_RED_GREEN_and_VDD_repair_records_already_published_in": "cc70f153f1c4cded4a9dceca408d3faae54f8ad6",
+  "causal_proofs": "logs/stage5-p1-native-20261026",
+  "VDD_targeted_regression": "logs/stage5-p1-vdd-binding-fix-20261026",
+  "new_original_evidence_index": "logs/quick-dev-p1-proof-refresh-20261026/evidence-index.json",
+  "publication_recommendation": {
+    "not_executed": true,
+    "base_content": "cc70f153f1c4cded4a9dceca408d3faae54f8ad6",
+    "source_delta": [
+      {
+        "path": "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+        "current_sha256": "54d54a090b26172ffd6205108a67caed87a33c9ca65d1d2f8d1a9a6af1b3a437",
+        "published_windows_sha256": "6711fcd3e01cee6ac6e90c399622f746402e479060dbdb7cb81b63964fb98d84"
+      }
+    ],
+    "new_plan_already_in_base": true,
+    "new_proof_root": "logs/quick-dev-p1-proof-refresh-20261026",
+    "Windows_original_root": "logs/windows-p1-result-40293104427/verified-original",
+    "Windows_supporting_records": [
+      "verified-result.json",
+      "reader-binding-static.json",
+      "reader-tests.xml",
+      "status-applicability.json"
+    ],
+    "exclude": [
+      "Library transport responses and signed download URLs",
+      "unrelated temporary/history logs",
+      "diagnostic bytecodes preserved under /tmp",
+      "unrelated 2026-08-18 skill-input context",
+      "BMAD installation additions"
+    ]
+  },
+  "remaining": [
+    "parent-coordinated two-P1 incremental recheck in existing review session",
+    "final Acceptance"
+  ],
+  "not_claimed": [
+    "external reviewer GO",
+    "Acceptance passed",
+    "full Windows repository acceptance",
+    "new P1 seven-case Windows execution"
+  ],
+  "local_content_manifest_sha256": "32eff1673fddafa184197192fb952450b389719851e55553d21239e1c41d7103"
+}

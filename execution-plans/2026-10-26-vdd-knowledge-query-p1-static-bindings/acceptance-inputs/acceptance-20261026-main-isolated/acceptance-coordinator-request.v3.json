@@ -1,0 +1,17 @@
+{
+  "authorizes": [],
+  "preparedRunInput": {
+    "path": "prepared-run-input.v1.json",
+    "sha256": "sha256:c686887ab33fb6f284b8a0d0a3855a8542b309b10a2c2e1674bbcd0c47d91dbd"
+  },
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "skillInputContract": {
+    "path": "skill-input-contract.v1.json",
+    "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+  },
+  "skillInputReceipt": {
+    "path": "skill-input-v2/acceptance/current.v1.json",
+    "sha256": "sha256:fcf127ffafd5c9fba22fe5857634985b09b497ab0dc27240c22999569dd04b08"
+  },
+  "targetPlan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings"
+}

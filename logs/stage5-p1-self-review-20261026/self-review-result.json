@@ -1,0 +1,86 @@
+{
+  "kind": "production self-review and isolated counterexamples; not native RED/GREEN or audit verdict",
+  "recorded_at": "2026-10-26T06:39:28.894108+00:00",
+  "review_publication_commit": "2abfbccbe532f6d934d3bba36d00c915207f5e38",
+  "execution_source_HEAD": "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+  "frozen_intake_hashes_unchanged": true,
+  "production_code_changed": false,
+  "active_planned_tests_changed": false,
+  "skills_or_contracts_changed": false,
+  "native_Q1_passes": [
+    "S1",
+    "S12"
+  ],
+  "diagnostic_pytest_attempts": 1,
+  "diagnostic_cases": [
+    {
+      "node": "test_public_vdd_missing_component[catalog]",
+      "outcome": "failed",
+      "failure_message": "AssertionError: Existing publication corruption reached semantic compilation\nassert (0 != 0)"
+    },
+    {
+      "node": "test_public_vdd_missing_component[policy]",
+      "outcome": "failed",
+      "failure_message": "AssertionError: Existing publication corruption reached semantic compilation\nassert (0 != 0)"
+    },
+    {
+      "node": "test_public_vdd_missing_component[projection]",
+      "outcome": "failed",
+      "failure_message": "AssertionError: Existing publication corruption reached semantic compilation\nassert (0 != 0)"
+    },
+    {
+      "node": "test_public_vdd_missing_component[uninstalled]",
+      "outcome": "passed",
+      "failure_message": null
+    },
+    {
+      "node": "test_current_permissions_before_reuse[same]",
+      "outcome": "passed",
+      "failure_message": null
+    },
+    {
+      "node": "test_current_permissions_before_reuse[unrelated-generation]",
+      "outcome": "passed",
+      "failure_message": null
+    },
+    {
+      "node": "test_current_permissions_before_reuse[permission-revoked]",
+      "outcome": "failed",
+      "failure_message": "AssertionError: A revoked candidate survived current policy/projection checks\nassert False"
+    }
+  ],
+  "formal_RED": false,
+  "Q4": false,
+  "GREEN": false,
+  "new_models_or_BMAD_calls": 0,
+  "roles": [
+    {
+      "acceptance_ids": [
+        "A-988348C16D10"
+      ],
+      "expected_outcome": "fail",
+      "failure_family": "semantic-contract-gap",
+      "failure_id": "KQ_2E09F07252E1",
+      "failure_intent_id": "FI-6BF12A63835A",
+      "selector_intent": "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1; preserve or author the exact scoped observable and denial cases before execution. Emit the runtime marker only for a failed bound assertion, never for setup/import/timeout, absent approval, or missing evidence. Never invoke any BMAD skill or reviewer. Existing marker spelling is a test alias, not inherited execution proof."
+    },
+    {
+      "acceptance_ids": [
+        "A-8692A88997B0"
+      ],
+      "expected_outcome": "fail",
+      "failure_family": "expected-red",
+      "failure_id": "KQ_C442B3B56FCE",
+      "failure_intent_id": "FI-A94AB82A3798",
+      "selector_intent": "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_c442b3b56fce; preserve or author the exact scoped observable and denial cases before execution. Emit the runtime marker only for a failed bound assertion, never for setup/import/timeout, absent approval, or missing evidence. Never invoke any BMAD skill or reviewer. Existing marker spelling is a test alias, not inherited execution proof."
+    }
+  ],
+  "blocked_before_production_change": true,
+  "blocking_scope_decisions": [
+    "S1 FI-6BF12A63835A remains semantic-contract-gap; only a formally derived VDD successor may add expected-red authority.",
+    "All twelve saved regression and terminal input manifests bind adapter.py and the shared test module; changing them invalidates at least 24 current positive originals. Additional probes/Q6 and missing-branch costs require the final successor/selector, not a guessed fixed 39.",
+    "Existing real-Windows proof is bound to the entire old adapter.py hash. Repairing that file cannot be validated as current Windows by those originals, and this step forbids pushing a new verification candidate."
+  ],
+  "old_Q7_Q8": "Original frozen-candidate execution facts and byte hashes retained; no coverage of a future repair, no override of current P1 findings. No new Q7/Q8 run.",
+  "authorizes": []
+}

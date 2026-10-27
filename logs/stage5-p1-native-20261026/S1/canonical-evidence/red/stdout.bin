@@ -1,0 +1,160 @@
+................FFF.                                                     [100%]
+=================================== FAILURES ===================================
+_____ test_contract_2e09f07252e1_public_caller_missing_component[catalog] ______
+
+published_vdd_base = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-15/published-vdd-base0')
+tmp_path = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-15/test_contract_2e09f07252e1_pub0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f93ddcdf050>
+capsys = <_pytest.capture.CaptureFixture object at 0x7f93ddcde9f0>
+missing = 'catalog'
+
+    @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+    @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+    def test_contract_2e09f07252e1_public_caller_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+        root = tmp_path / 'caller'
+        shutil.copytree(published_vdd_base, root)
+        requirement = _put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+        paths = [root / p for p in adapter._CANONICAL]
+        if missing == 'uninstalled':
+            for path in paths:
+                path.unlink()
+            shutil.rmtree(root / 'knowledge/indexes')
+        else:
+            paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+            assert (root / 'knowledge/indexes/current.json').is_file()
+        entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+        entry = importlib.util.module_from_spec(entry_spec)
+        entry_spec.loader.exec_module(entry)
+        monkeypatch.setattr(entry, 'ROOT', root)
+        reached = []
+        # Keep the real public CLI preparation/admission path. Stop at the semantic
+        # delegate; neither a model nor a compiler lifecycle is launched here.
+        def stop_at_semantic_delegate(**kwargs):
+            reached.append(True)
+            return {'status': 'recommendation-only', 'fixture_control': True}
+        monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+        monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+            '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+        code = entry.main()
+        result = json.loads(capsys.readouterr().out.splitlines()[-1])
+        print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+            'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+        try:
+            if missing == 'uninstalled':
+                assert code == 0 and reached == [True]
+            else:
+>               assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+E               AssertionError: Existing publication corruption reached semantic compilation
+E               assert (0 != 0)
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3884: AssertionError
+----------------------------- Captured stdout call -----------------------------
+PUBLIC_CALLER_OBSERVATION:{"missing": "catalog", "exit_code": 0, "semantic_delegate_reached": true, "result": {"fixture_control": true, "status": "recommendation-only", "worker_cache_reuse": {"legacy_v1_replays": 0, "source_content_replays": 0}}}
+FAILURE_ID:KQ_2E09F07252E1
+______ test_contract_2e09f07252e1_public_caller_missing_component[policy] ______
+
+published_vdd_base = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-15/published-vdd-base0')
+tmp_path = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-15/test_contract_2e09f07252e1_pub1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f93dddbe360>
+capsys = <_pytest.capture.CaptureFixture object at 0x7f93dddbe4b0>
+missing = 'policy'
+
+    @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+    @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+    def test_contract_2e09f07252e1_public_caller_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+        root = tmp_path / 'caller'
+        shutil.copytree(published_vdd_base, root)
+        requirement = _put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+        paths = [root / p for p in adapter._CANONICAL]
+        if missing == 'uninstalled':
+            for path in paths:
+                path.unlink()
+            shutil.rmtree(root / 'knowledge/indexes')
+        else:
+            paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+            assert (root / 'knowledge/indexes/current.json').is_file()
+        entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+        entry = importlib.util.module_from_spec(entry_spec)
+        entry_spec.loader.exec_module(entry)
+        monkeypatch.setattr(entry, 'ROOT', root)
+        reached = []
+        # Keep the real public CLI preparation/admission path. Stop at the semantic
+        # delegate; neither a model nor a compiler lifecycle is launched here.
+        def stop_at_semantic_delegate(**kwargs):
+            reached.append(True)
+            return {'status': 'recommendation-only', 'fixture_control': True}
+        monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+        monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+            '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+        code = entry.main()
+        result = json.loads(capsys.readouterr().out.splitlines()[-1])
+        print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+            'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+        try:
+            if missing == 'uninstalled':
+                assert code == 0 and reached == [True]
+            else:
+>               assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+E               AssertionError: Existing publication corruption reached semantic compilation
+E               assert (0 != 0)
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3884: AssertionError
+----------------------------- Captured stdout call -----------------------------
+PUBLIC_CALLER_OBSERVATION:{"missing": "policy", "exit_code": 0, "semantic_delegate_reached": true, "result": {"fixture_control": true, "status": "recommendation-only", "worker_cache_reuse": {"legacy_v1_replays": 0, "source_content_replays": 0}}}
+FAILURE_ID:KQ_2E09F07252E1
+____ test_contract_2e09f07252e1_public_caller_missing_component[projection] ____
+
+published_vdd_base = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-15/published-vdd-base0')
+tmp_path = PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-15/test_contract_2e09f07252e1_pub2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f93dddbfa10>
+capsys = <_pytest.capture.CaptureFixture object at 0x7f93dddbf830>
+missing = 'projection'
+
+    @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
+    @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
+    def test_contract_2e09f07252e1_public_caller_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
+        root = tmp_path / 'caller'
+        shutil.copytree(published_vdd_base, root)
+        requirement = _put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
+        paths = [root / p for p in adapter._CANONICAL]
+        if missing == 'uninstalled':
+            for path in paths:
+                path.unlink()
+            shutil.rmtree(root / 'knowledge/indexes')
+        else:
+            paths[['catalog', 'policy', 'projection'].index(missing)].unlink()
+            assert (root / 'knowledge/indexes/current.json').is_file()
+        entry_spec = importlib.util.spec_from_file_location('diagnostic_public_vdd', ROOT / 'scripts/vdd/compile_plan.py')
+        entry = importlib.util.module_from_spec(entry_spec)
+        entry_spec.loader.exec_module(entry)
+        monkeypatch.setattr(entry, 'ROOT', root)
+        reached = []
+        # Keep the real public CLI preparation/admission path. Stop at the semantic
+        # delegate; neither a model nor a compiler lifecycle is launched here.
+        def stop_at_semantic_delegate(**kwargs):
+            reached.append(True)
+            return {'status': 'recommendation-only', 'fixture_control': True}
+        monkeypatch.setattr(entry, 'compile_plan', stop_at_semantic_delegate)
+        monkeypatch.setattr(sys, 'argv', [str(ROOT / 'scripts/vdd/compile_plan.py'),
+            '--requirements', str(requirement), '--out-dir', str(root / 'execution-plans/diagnostic')])
+        code = entry.main()
+        result = json.loads(capsys.readouterr().out.splitlines()[-1])
+        print('PUBLIC_CALLER_OBSERVATION:' + json.dumps({'missing': missing,
+            'exit_code': code, 'semantic_delegate_reached': bool(reached), 'result': result}))
+        try:
+            if missing == 'uninstalled':
+                assert code == 0 and reached == [True]
+            else:
+>               assert code != 0 and reached == [], 'Existing publication corruption reached semantic compilation'
+E               AssertionError: Existing publication corruption reached semantic compilation
+E               assert (0 != 0)
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3884: AssertionError
+----------------------------- Captured stdout call -----------------------------
+PUBLIC_CALLER_OBSERVATION:{"missing": "projection", "exit_code": 0, "semantic_delegate_reached": true, "result": {"fixture_control": true, "status": "recommendation-only", "worker_cache_reuse": {"legacy_v1_replays": 0, "source_content_replays": 0}}}
+FAILURE_ID:KQ_2E09F07252E1
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[catalog]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[policy]
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1_public_caller_missing_component[projection]
+3 failed, 17 passed in 2.75s

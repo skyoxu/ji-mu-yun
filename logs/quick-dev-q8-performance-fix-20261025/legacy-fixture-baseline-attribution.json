@@ -1,0 +1,11 @@
+{
+  "kind": "read-only attribution of unrelated ADR-0058 fixture failure",
+  "authorizes": [],
+  "path": ".agents/skills/quick-dev-tdd-adapter/tools/behavior_routing.py",
+  "current_sha256": "26e967ece795d54cdc4df4ac6f181872a41b31f24315ba03d515fd8033317cf6",
+  "baseline_93d06e67_sha256": "26e967ece795d54cdc4df4ac6f181872a41b31f24315ba03d515fd8033317cf6",
+  "ADR0058_expected_sha256": "c5e6d9402e456866299c51be9f21d17c9f1a20c93dcdeb67459342994638750f",
+  "current_equals_baseline": true,
+  "baseline_matches_old_pin": false,
+  "baseline_test_rerun": false
+}

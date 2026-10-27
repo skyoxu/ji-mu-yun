@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -14,40 +11,35 @@ from acceptance_core import InputError, canonical_hash
 
 
 def _repository_root(target_root: Path) -> Path:
-    for candidate in (target_root, *target_root.parents):
-        if (candidate / ".git").exists() and (candidate / "knowledge").is_dir():
-            return candidate
+    roots = [candidate for candidate in (target_root, *target_root.parents)
+             if (candidate / ".git").exists() and (candidate / "knowledge").is_dir()]
+    if len(roots) > 1:
+        raise InputError("knowledge validation repository root is ambiguous")
+    if roots:
+        return roots[0]
     raise InputError("repository root for knowledge validation is unavailable")
 
 
 def _validator(repository_root: Path):
-    module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
-    for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
-        current = subprocess.run(
-            ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
-            capture_output=True,
-            check=False,
-        )
-        if current.returncode or (repository_root / relative).read_bytes() != current.stdout:
-            raise InputError("knowledge context validator is not bound to current main")
-    spec = importlib.util.spec_from_file_location("refactor_acceptance_knowledge_context_validation", module_path)
-    if spec is None or spec.loader is None:
-        raise InputError("knowledge context validator is unavailable")
-    module = importlib.util.module_from_spec(spec)
-    previous_path = list(sys.path)
+    # ADR-0053/0058: execute actual main bytes, never candidate validator code.
+    from trusted_knowledge_validator import TrustedMainValidator
     try:
-        sys.path.insert(0, str(module_path.parent))
-        spec.loader.exec_module(module)
-    finally:
-        sys.path[:] = previous_path
-    return module
+        return TrustedMainValidator(repository_root, error_type=InputError)
+    except (ValueError, OSError) as exc:
+        raise InputError(str(exc)) from exc
 
 
 def freeze_knowledge_context(target_root: Path, raw_path: str) -> dict[str, Any]:
     relative = Path(raw_path)
     if relative.is_absolute() or ".." in relative.parts:
         raise InputError("knowledge context path must stay inside the target root")
-    path = (target_root / relative).resolve()
+    unresolved = target_root / relative
+    current = target_root
+    for part in relative.parts:
+        current /= part
+        if current.is_symlink():
+            raise InputError("knowledge context path must not use symlinks")
+    path = unresolved.resolve()
     try:
         path.relative_to(target_root)
     except ValueError as exc:

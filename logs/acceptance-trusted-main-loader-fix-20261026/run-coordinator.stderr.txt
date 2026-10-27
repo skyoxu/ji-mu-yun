@@ -1,0 +1,1 @@
+Acceptance support: logs/acceptance-operator-support/53b6c43349b4d9c2a1a6b2d96ecd903d6115ae567e03e7223a875d3136aff8a8/summary.md

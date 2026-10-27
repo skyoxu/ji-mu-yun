@@ -1,0 +1,181 @@
+{
+  "read_only_binding_comparison": true,
+  "items": [
+    {
+      "slice_id": "S2",
+      "original_run": "logs/quick-dev-s2-env-v2-resume-20261025/S2-r4",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+        ],
+        "fixtures": [
+          "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+        ],
+        "targets": [
+          "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S5",
+      "original_run": "logs/quick-dev-s5-20261025/S5-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [],
+        "fixtures": [],
+        "targets": [],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S6",
+      "original_run": "logs/quick-dev-s6-20261025/S6-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S1",
+      "original_run": "logs/quick-dev-s1-20261025/S1-r4",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S3",
+      "original_run": "logs/quick-dev-s3-20261025/S3-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S7",
+      "original_run": "logs/quick-dev-s7-20261025/S7-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S8",
+      "original_run": "logs/quick-dev-s8-20261025/S8-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S4",
+      "original_run": "logs/quick-dev-s4-20261025/S4-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    },
+    {
+      "slice_id": "S11",
+      "original_run": "logs/quick-dev-s11-20261025/S11-r1",
+      "historical_Q7_terminal": "completed",
+      "current_binding_differences": {
+        "candidate_paths": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "fixtures": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "targets": [
+          "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+        ],
+        "engine_sha256": [
+          "regression_gate.py"
+        ]
+      },
+      "current_completion_revalidated": false
+    }
+  ],
+  "no_tests_run_for_this_comparison": true,
+  "authorizes": []
+}

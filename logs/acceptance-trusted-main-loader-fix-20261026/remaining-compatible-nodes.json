@@ -1,0 +1,13 @@
+[
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present1]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_q8_projection_and_real_coordinator_close_and_replay[present2]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_q8_replay_rejects_source_and_deferred_drift",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[final]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[events]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[registry]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[prepared]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_coordinator_replay_rejects_changed_owned_evidence[context]",
+  ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py::test_explicit_review_request_returns_handoff_without_actions_or_bootstrap"
+]

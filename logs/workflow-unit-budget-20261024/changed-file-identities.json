@@ -1,0 +1,127 @@
+[
+  {
+    "path": "scripts/workflow_unit_budget.py",
+    "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f",
+    "bytes": 14836
+  },
+  {
+    "path": "scripts/sc/tests/test_workflow_unit_budget.py",
+    "sha256": "a20368ffb5a0c27f79a2101a5016dbe6e07d17fbc3f97d1cd42a65a732d58891",
+    "bytes": 7902
+  },
+  {
+    "path": "scripts/vdd/compile_plan.py",
+    "sha256": "2287bf49a25eade64007afcb4585e128d7080973c6eb2d5077fbde0e9c2f16b1",
+    "bytes": 21509
+  },
+  {
+    "path": "scripts/quick_dev/run.py",
+    "sha256": "ebc25a28d978c585db4d103a189f5d0e302f63f7814e31656ef622ae39e0bbb4",
+    "bytes": 7625
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "sha256": "630823962ad5932eef290a7061f06eb4c25b09acd23073afd4e1c819ccef7019",
+    "bytes": 16829
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+    "sha256": "e546009d4acab17c4d440a72ec84e1e996bd91d007ea86178bba1e9ff6ac0172",
+    "bytes": 16372
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/scripts/semantic_progress.py",
+    "sha256": "2401551770589b1cc923984d90f0f7a3c4103554eec6fb9cb3bf477e7e551e43",
+    "bytes": 2661
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py",
+    "sha256": "9b2f5929e695a27b0b40517324b16694c055f5dbe587b71d4bb441de8d0a608f",
+    "bytes": 19363
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_semantic_worker_transport.py",
+    "sha256": "db486a3c13196753fe307a962e1e885a26d444fe6cd10fe49d06a1b511cbb782",
+    "bytes": 8352
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "sha256": "d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17",
+    "bytes": 9488
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+    "sha256": "1e3d3bae887f505f90d50488d2b4a8c63f210cf61b5c728a118eb059cf9eb060",
+    "bytes": 17280
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/references/recovery-operation.md",
+    "sha256": "e57ed9bc5d7427f7d597ac3db8d791c00e66bcec61995368ff8c76ff4730b0d9",
+    "bytes": 3435
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/references/session-operation.md",
+    "sha256": "89a3e6995f095322702873b525ffebc8785019855a4b3e15c8853ae31098ff53",
+    "bytes": 4544
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md",
+    "sha256": "8762d3939f7ce9f5394d2492413923356294c52ada87db9fa51af718840d5630",
+    "bytes": 6194
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    "sha256": "a8a80833e470bfb34dcbc029809db66521012033f6e35e0cd57684884fb78638",
+    "bytes": 13490
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+    "sha256": "21c368f2768e0488421be8356b7626207a8393edf3a4d76ff1d0aa91c245aff2",
+    "bytes": 9406
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py",
+    "sha256": "254268d5529786d24b4f7ebe98796cc10311a865a3c6fedc0ef15ab30b95ee04",
+    "bytes": 15805
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    "sha256": "13b40dfa724f1b833fc771f541511b606c8919b2b07766fbcba72fb71a3797f9",
+    "bytes": 47394
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+    "sha256": "a11b3212f1af1b2d980bd10751dc7c1a0d3dc771840eff3c8ee92d48f308fa79",
+    "bytes": 13874
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    "sha256": "2e239ec8436ca290d4603ee89fb5e8d217356cac79f18a92468434bcaf8c913f",
+    "bytes": 7196
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+    "sha256": "e3cbf3abc0df2dbee8befc6effdc2f22bcf6e0367454dd4da4bdc52b8791d227",
+    "bytes": 19315
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py",
+    "sha256": "b7e363f0b6d9acdd3973d66e2f15dff2172c4f9acb4fcc9d6eefb72977f0d8aa",
+    "bytes": 5293
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py",
+    "sha256": "3ad22a97a5d7e568283514adcc91368ac5ad48c14524dc4d3ded04384f07955e",
+    "bytes": 14596
+  },
+  {
+    "path": "docs/workflows/caller-session-execution.md",
+    "sha256": "e4dd9808a7bc9b73b5179b786a8fe8e63d1c79fc58b23c6f4e38a8af67002eea",
+    "bytes": 7047
+  },
+  {
+    "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "sha256": "af562b19a5983411a29df0a12a894b96fda47921838fbf57e2c9bc69ce1fa44b",
+    "bytes": 42096
+  }
+]

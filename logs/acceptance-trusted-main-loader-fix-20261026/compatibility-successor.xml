@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="4" time="1724.685" timestamp="2026-10-26T16:04:28.604011+00:00" hostname="01dcaac9a2f8"><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_q8_projection_and_real_coordinator_close_and_replay[present1]" time="648.336" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_q8_projection_and_real_coordinator_close_and_replay[present2]" time="553.305" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_current_handoff_preserves_crlf_catalog_bytes_with_user_autocrlf" time="172.148" /><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_current_acceptance_closeout" name="test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass" time="350.598"><failure message="acceptance_core.InputError: current Quick Dev proof cannot be replayed: Q8 original/input changed during validation">root = PosixPath('/tmp/pytest-of-agent/pytest-7/test_failed_acceptance_action_0')
+binding = {'baseCommit': '116d4457fcaaf5d5a8950106fdaf02a6a47b4e56', 'receipt': {'path': 'logs/RUN-1/complete.json', 'sha256': '...ture'}, {'inclusion_reason': 'test', 'repository_relative_posix_path': 'source.txt', 'root_kind': 'source'}, ...], ...}
+allowed_changed_paths = ['candidate.py']
+
+    def verify_current_handoff(root: Path, binding: dict[str, Any], *, allowed_changed_paths: list[str] | None = None) -&gt; dict[str, Any]:
+        required = {"semanticPlan", "receipt", "snapshotRoots", "sourceCommit", "baseCommit"}
+        if not isinstance(binding, dict) or set(binding) != required:
+            raise InputError("current Quick Dev handoff binding is incomplete")
+        for field in ("semanticPlan", "receipt"):
+            ref = binding[field]
+            if not isinstance(ref, dict) or set(ref) != {"path", "sha256"}:
+                raise InputError("current Quick Dev artifact binding is invalid")
+            path = _file(root, ref["path"])
+            if "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() != ref["sha256"]:
+                raise InputError("current Quick Dev artifact is stale: " + field)
+        for field in ("sourceCommit", "baseCommit"):
+            if not isinstance(binding[field], str) or not re.fullmatch(r"[0-9a-f]{40}", binding[field]):
+                raise InputError("current Quick Dev commit binding is invalid")
+        plan = _file(root, binding["semanticPlan"]["path"])
+        receipt_path = _file(root, binding["receipt"]["path"])
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        if (receipt.get("schema") != "quick-dev.implementation-complete-result.v2"
+                or receipt.get("status") != "pass" or receipt.get("authorizes") != []):
+            raise InputError("current Quick Dev completion is not a passed implementation result")
+        previous = list(sys.path)
+        try:
+            sys.path.insert(0, str(OWNER))
+            from coverage_predicates import publish_implementation_complete
+&gt;           return publish_implementation_complete(
+                workspace=root, semantic_plan=plan, predecessors=receipt["predecessors"],
+                snapshot_roots=binding["snapshotRoots"], source_commit=binding["sourceCommit"],
+                base_commit=binding["baseCommit"], out=receipt_path,
+                profile=receipt["profile"], detached_promotion_binding=receipt.get("detached_promotion_binding"),
+                verify_existing=True, allowed_changed_paths=allowed_changed_paths,
+            )
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:486: in publish_implementation_complete
+    return _publish_implementation_complete(
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:664: in _publish_implementation_complete
+    originals.finish()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;coverage_predicates._Q7OriginalChecks object at 0x7f019b5c0440&gt;
+
+    def finish(self):
+        for key, check in self.jobs.items():
+            check()
+            self.completed("original:" + key)
+        if sha256_value(execution_environment()) != self.environment:
+            raise ValueError(f"{self.label} environment changed during validation")
+        if any(self._stamp(path) != stamp for path, stamp in self.seals.items()):
+&gt;           raise ValueError(f"{self.label} original/input changed during validation")
+E           ValueError: Q8 original/input changed during validation
+
+.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:131: ValueError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-7/test_failed_acceptance_action_0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7f019cdaf020&gt;
+
+    def test_failed_acceptance_action_stops_once_and_cannot_borrow_q8_pass(tmp_path, monkeypatch):
+&gt;       request, output, _ = build(tmp_path, monkeypatch, (True, False), command_exit=3)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:280: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py:170: in build
+    projected = projection.project(root, request_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py:305: in project
+    verify_current_handoff(root, current, allowed_changed_paths=request["changedPaths"])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-agent/pytest-7/test_failed_acceptance_action_0')
+binding = {'baseCommit': '116d4457fcaaf5d5a8950106fdaf02a6a47b4e56', 'receipt': {'path': 'logs/RUN-1/complete.json', 'sha256': '...ture'}, {'inclusion_reason': 'test', 'repository_relative_posix_path': 'source.txt', 'root_kind': 'source'}, ...], ...}
+allowed_changed_paths = ['candidate.py']
+
+    def verify_current_handoff(root: Path, binding: dict[str, Any], *, allowed_changed_paths: list[str] | None = None) -&gt; dict[str, Any]:
+        required = {"semanticPlan", "receipt", "snapshotRoots", "sourceCommit", "baseCommit"}
+        if not isinstance(binding, dict) or set(binding) != required:
+            raise InputError("current Quick Dev handoff binding is incomplete")
+        for field in ("semanticPlan", "receipt"):
+            ref = binding[field]
+            if not isinstance(ref, dict) or set(ref) != {"path", "sha256"}:
+                raise InputError("current Quick Dev artifact binding is invalid")
+            path = _file(root, ref["path"])
+            if "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest() != ref["sha256"]:
+                raise InputError("current Quick Dev artifact is stale: " + field)
+        for field in ("sourceCommit", "baseCommit"):
+            if not isinstance(binding[field], str) or not re.fullmatch(r"[0-9a-f]{40}", binding[field]):
+                raise InputError("current Quick Dev commit binding is invalid")
+        plan = _file(root, binding["semanticPlan"]["path"])
+        receipt_path = _file(root, binding["receipt"]["path"])
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        if (receipt.get("schema") != "quick-dev.implementation-complete-result.v2"
+                or receipt.get("status") != "pass" or receipt.get("authorizes") != []):
+            raise InputError("current Quick Dev completion is not a passed implementation result")
+        previous = list(sys.path)
+        try:
+            sys.path.insert(0, str(OWNER))
+            from coverage_predicates import publish_implementation_complete
+            return publish_implementation_complete(
+                workspace=root, semantic_plan=plan, predecessors=receipt["predecessors"],
+                snapshot_roots=binding["snapshotRoots"], source_commit=binding["sourceCommit"],
+                base_commit=binding["baseCommit"], out=receipt_path,
+                profile=receipt["profile"], detached_promotion_binding=receipt.get("detached_promotion_binding"),
+                verify_existing=True, allowed_changed_paths=allowed_changed_paths,
+            )
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+&gt;           raise InputError("current Quick Dev proof cannot be replayed: " + str(exc)) from exc
+E           acceptance_core.InputError: current Quick Dev proof cannot be replayed: Q8 original/input changed during validation
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py:61: InputError</failure></testcase></testsuite></testsuites>

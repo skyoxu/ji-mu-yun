@@ -1,0 +1,359 @@
+--- scripts/vdd/compile_plan.py (before)
++++ scripts/vdd/compile_plan.py
+@@ -100,6 +100,8 @@
+     parser.add_argument("--repair-quick-dev-handoff-from", type=Path,
+                         help="Repair execution bindings of a reviewed plan into a distinct successor")
+     parser.add_argument("--handoff-test-root", default="scripts/sc/tests/tc_d1_cer")
++    parser.add_argument("--handoff-planned-test", action="append", default=[],
++                        help="Declare an already-bound absent Q2 test only; requires handoff repair")
+     parser.add_argument("--runtime-red-intent", action="append", default=[],
+                         help="Explicit reviewed runtime intent to bind as expected RED; requires handoff repair")
+     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
+@@ -125,6 +127,11 @@
+         parser.error("--v3-contract-repair-addendum requires --v3-contract-repair")
+     if (args.runtime_red_intent or args.handoff_windows_launcher_slice) and not args.repair_quick_dev_handoff_from:
+         parser.error("handoff runtime options require --repair-quick-dev-handoff-from")
++    if args.handoff_planned_test and not args.repair_quick_dev_handoff_from:
++        parser.error('--handoff-planned-test requires --repair-quick-dev-handoff-from')
++    if args.handoff_planned_test and (args.runtime_red_intent or args.handoff_windows_launcher_slice
++            or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
++        parser.error('planned-test declarations cannot combine role, launcher or test-root repair')
+     if args.repair_quick_dev_handoff_from:
+         if any((args.companion, args.worker_cache, args.recommendation_only, args.resume_from,
+                 args.v1_reuse_from_git_ref, args.v1_reuse_from_plan, args.repair_timeout_seconds,
+@@ -139,7 +146,8 @@
+             result = publish_repair(root=ROOT, requirements=args.requirements,
+                 predecessor=args.repair_quick_dev_handoff_from, out_dir=args.out_dir,
+                 test_root=args.handoff_test_root, runtime_red_intents=args.runtime_red_intent,
+-                windows_launcher_slices=args.handoff_windows_launcher_slice)
++                windows_launcher_slices=args.handoff_windows_launcher_slice,
++                planned_tests=args.handoff_planned_test)
+         except (OSError, ValueError, KeyError, TypeError) as exc:
+             result = {"status": "repair-vdd", "reason": str(exc)}
+         if args.result_json:
+--- .agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py (before)
++++ .agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py
+@@ -280,6 +280,81 @@
+     return result, {'added_expected_red_intents': added, 'command_dispositions': dispositions}
+ 
+ 
++def declare_planned_tests(bundle, workspace, paths):
++    """Declare already-bound absent Q2 tests, without new targets or write scope."""
++    import subprocess
++    import semantic_compiler as sc
++    root = Path(workspace).resolve()
++    if not paths or any(not isinstance(raw, str) or not raw for raw in paths):
++        raise ValueError('planned-test declarations must contain non-empty strings')
++    requested = set(paths)
++    if len(requested) != len(paths):
++        raise ValueError('planned-test declarations must be non-empty and unique')
++    contexts = {item['slice_id']: item for item in bundle['agent_contexts']}
++    owners = {p for item in bundle['slices'] for p in
++              [*item['production_owners'], *item['rollback_scope']['production_paths']]}
++    affected = {}
++    for raw in sorted(requested):
++        path = PurePosixPath(raw)
++        if (not path.parts or path.is_absolute() or '..' in path.parts
++                or str(path) != raw or '\\' in raw or ':' in raw
++                or path.parts[0].casefold() in {'.git', '.codex', '.aws', '.ssh'}
++                or 'tests' not in path.parts[:-1] or path.suffix != '.py'
++                or not path.name.startswith('test_')):
++            raise ValueError('planned-test path must be a normalized repository pytest file')
++        if any(_inside(raw, owner) or _inside(owner, raw) for owner in owners):
++            raise ValueError('planned-test cannot declare a production owner or rollback path')
++        full = root / raw
++        if any(p.is_symlink() for p in (full, *full.parents) if p.is_relative_to(root)):
++            raise ValueError('planned-test symlinks are forbidden')
++        if any(p.exists() and not p.is_dir() for p in full.parents if p.is_relative_to(root)):
++            raise ValueError('planned-test ancestor must be a directory')
++        if not full.resolve().is_relative_to(root) or full.exists():
++            raise ValueError('planned-test must be absent inside the repository')
++        # Both HEAD and index matter: staged deletion is not a genuinely new file.
++        tracked = subprocess.run(['git','-C',str(root),'ls-files','--error-unmatch','--',raw],
++                                 capture_output=True, check=False)
++        prior = subprocess.run(['git','-C',str(root),'ls-tree','HEAD','--',raw],
++                               capture_output=True, check=False)
++        if tracked.returncode not in {0, 1} or prior.returncode != 0:
++            raise ValueError('planned-test Git identity unavailable')
++        if tracked.returncode == 0 or prior.stdout.strip():
++            raise ValueError('planned-test cannot resurrect a tracked-deleted path')
++        selected = [item for item in bundle['slices'] if raw in item['execution_snapshot_paths']]
++        if not selected:
++            raise ValueError('planned-test path is not referenced by any slice snapshot')
++        for item in selected:
++            context = contexts[item['slice_id']]
++            if any(_inside(raw, p) for p in context.get('forbidden_paths', [])):
++                raise ValueError('planned-test path is forbidden by the frozen context')
++            commands = context.get('validation_commands', [])
++            pytest_targets = {part.split('::',1)[0] for argv in commands
++                              if isinstance(argv,list) and '-m' in argv
++                              and argv.index('-m')+1 < len(argv) and argv[argv.index('-m')+1]=='pytest'
++                              for part in argv[argv.index('-m')+2:]}
++            if raw not in pytest_targets or not any(raw in text for text in context['selector_intents']):
++                raise ValueError('planned-test must already bind pytest argv and selector intent')
++            affected.setdefault(item['slice_id'], set()).add(raw)
++    # A declaration-only successor must not retain another undeclared missing
++    # fixture: otherwise it would repeat the original Q1 publication defect.
++    for item in bundle['slices']:
++        planned = set(item['planned_new_files']) | requested
++        if any(not (root / ref).is_file() and ref not in planned
++               for ref in item['execution_snapshot_paths']):
++            raise ValueError('planned-test repair leaves an undeclared missing snapshot')
++    # Validate every declaration before changing the copy. No original is mutated.
++    result = deepcopy(bundle)
++    for item in result['slices']:
++        if item['slice_id'] not in affected:
++            continue
++        item['planned_new_files'] = sorted(set(item['planned_new_files']) | affected[item['slice_id']])
++        item['slice_input_hash'] = sc.sha256_value({k:v for k,v in item.items() if k!='slice_input_hash'})
++    return result, {'repair_mode':'declare-planned-tests-only',
++                    'declared_planned_tests':sorted(requested),
++                    'affected_slices':sorted(affected),
++                    'added_expected_red_intents':[], 'command_dispositions':[]}
++
++
+ def repair_runtime_red_roles(bundle, failure_intent_ids):
+     """Bind explicitly reviewed machine assertions, never infer human approval.
+ 
+@@ -422,7 +497,7 @@
+     return sc.sha256_value(value)
+ 
+ 
+-def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=()):
++def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runtime_red_intents=(), windows_launcher_slices=(), planned_tests=()):
+     import semantic_compiler as sc
+     from semantic_plan_contract import validate_semantic_bundle
+     from semantic_chain_audit import audit_bundle
+@@ -495,9 +570,14 @@
+     expected_original = _project_slice_dependencies(deepcopy(original), expected_dependencies)
+     if runtime_red_intents and windows_launcher_slices:
+         raise ValueError('runtime RED role repair cannot combine Windows launcher repair')
+-    repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
+-                       if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
+-                                                                 windows_launcher_slices=windows_launcher_slices))
++    if planned_tests and (runtime_red_intents or windows_launcher_slices):
++        raise ValueError('planned-test declarations cannot combine role or launcher repair')
++    if planned_tests:
++        repaired, delta = declare_planned_tests(original, root, planned_tests)
++    else:
++        repaired, delta = (repair_runtime_red_bindings(original, test_root, root, runtime_red_intents)
++                           if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
++                                                                     windows_launcher_slices=windows_launcher_slices))
+     repaired = _project_slice_dependencies(repaired, expected_dependencies)
+     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
+     if semantic_projection(expected_original) != semantic_projection(repaired):
+--- .agents/skills/vdd-execution-plan/SKILL.md (before)
++++ .agents/skills/vdd-execution-plan/SKILL.md
+@@ -85,6 +85,15 @@
+ semantic scope and records V1/V4 reuse; it performs no model calls. Read
+ [the planning guide](references/planning-operation.md) for its exact limits.
+ 
++For an existing handoff whose only defect is an absent test already bound by
++its snapshot, pytest argv and selector, repeat `--handoff-planned-test <path>`
++with `--repair-quick-dev-handoff-from`. This explicit mode changes only the
++affected `planned_new_files` and slice identities; it retains every oracle,
++owner, command, runtime role and dependency. It creates no file or execution
++proof. Existing, tracked-deleted, symlink, forbidden or unbound paths reject.
++Do not combine it with role, launcher or test-root repair. The normal handoff
++mode is unchanged. See the planning guide for source checks and reuse limits.
++
+ For a wrong V3 contract discovered after publication, use
+ `--repair-published-v3-from <plan-ready-predecessor> --v3-contract-repair <json>`
+ with the original requirements, predecessor profile, and a distinct empty
+--- .agents/skills/vdd-execution-plan/references/planning-operation.md (before)
++++ .agents/skills/vdd-execution-plan/references/planning-operation.md
+@@ -258,6 +258,33 @@
+ A constraints/governance failure still blocks; never manufacture expected RED
+ just to keep the implementation loop running.
+ 
++### Declare an already-bound absent test
++
++For a declarations-only defect, use the existing public handoff producer with
++one `--handoff-planned-test <repository-relative-test.py>` per explicit path.
++Keep the same requirements, predecessor profile and a distinct empty sibling
++successor. This mode does not call the normal dedicated-entry/RED-role repair:
++it retains commands, selectors, allowed writes, snapshots, owners, obligations,
++full Acceptance/oracles, roles, memberships, dependencies and terminal predicates.
++Only affected `planned_new_files` and derived slice/bundle identities change.
++
++Each requested path must be a normalized missing pytest file under a test
++segment, already bound by the owning slice's snapshot, pytest argv and selector.
++It must not be a production/rollback owner or overlap one, be forbidden by any
++owning context, exist, be tracked in HEAD/index (including staged deletion), or
++pass through a symlink. Arbitrary paths and duplicate declarations reject before
++a result is changed. A successor leaving another missing snapshot undeclared
++also rejects, so partial declarations cannot repeat the Q1 gap. This grants no new GREEN/write scope and restores no old
++BMAD-positive tests. Q2 must still author the actual retained-scope tests.
++
++The native producer reuses the valid V1/V4 predecessor and runs its existing
++source identity, semantic-scope, dependency, coverage, feasibility and handoff
++checks. It publishes a non-authorizing repair report with declared paths and
++unchanged commands/roles, plus genuine successor identities. Q1 is unchanged;
++run its read-only planned preflight on the actual successor workspace. A valid
++planned contract is not a materialized test, observed RED or implementation.
++Do not combine declarations with runtime-role, launcher or test-root repair.
++
+ ### Slice-local runtime-role correction
+ 
+ If a real machine assertion was excluded only because its requirement is
+--- docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md (before)
++++ docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md
+@@ -682,3 +682,16 @@
+ mandatory on resume; corrupt matching evidence fails closed. Existing unit
+ budgets and bounded retry ledgers are retained. No new plan lifecycle state or
+ execution permission is introduced.
++
++
++## Bound missing-test declarations (2026-10-25)
++
++Maintainer approval Sentinel_9834a5d1716c81918af8ea9399636fd0 permits the explicit
++--handoff-planned-test mode in the existing handoff repair producer. Only absent,
++previously snapshot/pytest/selector-bound test files may become planned; this
++never creates files, expands write scope, changes requirements/oracles/runtime
++roles, or weakens Q1. HEAD/index tracked deletion, existing paths, symlinks,
++forbidden/unbound/production paths and mixed repair modes reject. Original
++contracts remain immutable; the native producer reuses V1/V4, reruns its native
++checks and publishes a distinct successor with real hashes/report. Normal
++handoff behavior and lifecycle/implementation boundaries are unchanged.
+--- .agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py (before)
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py
+@@ -0,0 +1,139 @@
++"""ADR-0041: declarations-only handoff; no models, business tests or BMAD."""
++from copy import deepcopy
++import json
++from pathlib import Path
++import subprocess
++import sys
++
++import pytest
++
++SCRIPTS=Path(__file__).resolve().parents[1]
++sys.path.insert(0,str(SCRIPTS))
++from quick_dev_handoff import declare_planned_tests
++from test_public_source_cache_resume import fixture, run_public
++
++TARGET='tests/test_contract.py'
++
++
++def git(root,*args):
++    return subprocess.run(['git','-C',str(root),*args],check=True,capture_output=True,text=True)
++
++
++def small(root):
++    git(root,'init','-q')
++    (root/'base.txt').write_text('base')
++    git(root,'add','base.txt')
++    git(root,'-c','user.name=Fixture','-c','user.email=test@example.invalid','commit','-qm','base')
++    return {'slices':[{'slice_id':'S1','production_owners':['src/owner.py'],
++                     'rollback_scope':{'production_paths':['src/owner.py']},
++                     'execution_snapshot_paths':[TARGET],'planned_new_files':[],
++                     'allowed_write_paths':['src/owner.py'],'slice_input_hash':'old'}],
++            'agent_contexts':[{'slice_id':'S1','forbidden_paths':[],
++                              'selector_intents':[TARGET+'::test_contract'],
++                              'validation_commands':[['python3','-B','-m','pytest',TARGET,'-q']]}]}
++
++
++def test_only_planned_field_and_slice_identity_change_and_idempotent(tmp_path):
++    old=small(tmp_path);snapshot=deepcopy(old)
++    new,delta=declare_planned_tests(old,tmp_path,[TARGET])
++    assert old==snapshot and new['slices'][0]['planned_new_files']==[TARGET]
++    assert new['slices'][0]['slice_input_hash']!='old'
++    restored=deepcopy(new);restored['slices'][0]['planned_new_files']=[];restored['slices'][0]['slice_input_hash']='old'
++    assert restored==old
++    assert delta['added_expected_red_intents']==[] and delta['command_dispositions']==[]
++    assert declare_planned_tests(new,tmp_path,[TARGET])[0]==new
++    assert not (tmp_path/TARGET).exists()
++
++
++@pytest.mark.parametrize('path',['.','../tests/test_escape.py','/tmp/tests/test_escape.py',
++                                 'tests/../test_escape.py','tests//test_escape.py',
++                                 'tests\\test_escape.py','C:/tests/test_escape.py',
++                                 'tests/config.toml','scripts/production.py','tests/not_a_test.py'])
++def test_unsafe_or_non_test_paths_refused(tmp_path,path):
++    b=small(tmp_path)
++    with pytest.raises(ValueError):declare_planned_tests(b,tmp_path,[path])
++    assert b['slices'][0]['planned_new_files']==[]
++
++
++@pytest.mark.parametrize('case',['unreferenced','no-command','no-selector','forbidden','owner','rollback','existing','symlink','parent-symlink','tracked-deleted','staged-deleted','duplicate'])
++def test_denials_before_any_authority_mutation(tmp_path,case):
++    b=small(tmp_path);target=tmp_path/TARGET;target.parent.mkdir()
++    if case=='unreferenced':b['slices'][0]['execution_snapshot_paths']=[]
++    elif case=='no-command':b['agent_contexts'][0]['validation_commands']=[['python3','-m','pytest','tests/test_other.py']]
++    elif case=='no-selector':b['agent_contexts'][0]['selector_intents']=['tests/test_other.py::test_other']
++    elif case=='forbidden':b['agent_contexts'][0]['forbidden_paths']=['tests']
++    elif case=='owner':b['slices'][0]['production_owners']=[TARGET]
++    elif case=='rollback':b['slices'][0]['rollback_scope']['production_paths']=[TARGET]
++    elif case=='existing':target.write_text('not executed')
++    elif case=='symlink':target.symlink_to(tmp_path/'absent-target')
++    elif case=='parent-symlink':
++        target.parent.rmdir();(tmp_path/'other-tests').mkdir();target.parent.symlink_to(tmp_path/'other-tests',target_is_directory=True)
++    elif case in {'tracked-deleted','staged-deleted'}:
++        target.write_text('tracked original');git(tmp_path,'add',TARGET)
++        git(tmp_path,'-c','user.name=Fixture','-c','user.email=test@example.invalid','commit','-qm','tracked test')
++        if case=='staged-deleted':git(tmp_path,'rm',TARGET)
++        else:target.unlink()
++    before=deepcopy(b)
++    with pytest.raises(ValueError):declare_planned_tests(b,tmp_path,[TARGET,TARGET] if case=='duplicate' else [TARGET])
++    assert b==before
++
++
++def test_public_declarations_successor_reuses_semantics_without_workers(tmp_path):
++    req,expected=fixture(tmp_path)
++    git(tmp_path,'add','requirements.md','src/compiler.py')
++    git(tmp_path,'-c','user.name=Fixture','-c','user.email=test@example.invalid','commit','-qm','fixture inputs')
++    initial,_,_=run_public(tmp_path,expected,'initial')
++    assert initial['status']=='plan-ready',initial
++    target='tests/test_compile.py';(tmp_path/target).unlink()  # untracked fixture, not an actual business test
++    predecessor=tmp_path/'plan';original=json.loads((predecessor/'semantic-plan-bundle.v1.json').read_text())
++    successor=tmp_path/'repaired'
++    command=[sys.executable,'-B',str(tmp_path/'scripts/vdd/compile_plan.py'),
++             '--requirements',str(req),'--out-dir',str(successor),
++             '--repair-quick-dev-handoff-from',str(predecessor),'--handoff-planned-test',target]
++    result=subprocess.run(command,cwd=tmp_path,capture_output=True,text=True,timeout=30)
++    assert result.returncode==0,(result.stdout,result.stderr)
++    native=json.loads(result.stdout);assert native['status']=='plan-ready' and not native['model_called']
++    new=json.loads((successor/'semantic-plan-bundle.v1.json').read_text())
++    for key in original:
++        if key!='slices':assert new[key]==original[key],key
++    for old,current in zip(original['slices'],new['slices']):
++        assert {k:v for k,v in current.items() if k not in {'planned_new_files','slice_input_hash'}}=={k:v for k,v in old.items() if k not in {'planned_new_files','slice_input_hash'}}
++        assert current['planned_new_files']==[target]
++    report=json.loads((successor/'handoff-repair.v1.json').read_text())
++    assert report['repair_mode']=='declare-planned-tests-only'
++    assert report['reused_stages']==['V1','V4'] and not report['model_called']
++    assert not list((successor/'.compiler-work').glob('*'))
++    assert not (tmp_path/target).exists()
++
++
++@pytest.mark.parametrize('extra',[[],['--runtime-red-intent','FI-UNKNOWN'],['--handoff-test-root','scripts/sc/tests/another']])
++def test_public_option_boundaries(tmp_path,extra):
++    fixture(tmp_path)
++    command=[sys.executable,'-B',str(tmp_path/'scripts/vdd/compile_plan.py'),'--requirements',str(tmp_path/'requirements.md'),
++             '--out-dir',str(tmp_path/'new'),'--handoff-planned-test',TARGET]
++    if extra:command+=['--repair-quick-dev-handoff-from',str(tmp_path/'missing'),*extra]
++    result=subprocess.run(command,cwd=tmp_path,capture_output=True,text=True,timeout=10)
++    assert result.returncode==2 and not (tmp_path/'new').exists()
++
++
++@pytest.mark.parametrize('path',['.git/tests/test_contract.py','.codex/tests/test_contract.py','.aws/tests/test_contract.py'])
++def test_referenced_metadata_paths_still_refused(tmp_path,path):
++    b=small(tmp_path)
++    b['slices'][0]['execution_snapshot_paths']=[path]
++    b['agent_contexts'][0]['validation_commands']=[['python3','-m','pytest',path]]
++    b['agent_contexts'][0]['selector_intents']=[path+'::test_contract']
++    with pytest.raises(ValueError):declare_planned_tests(b,tmp_path,[path])
++
++
++def test_missing_child_of_existing_file_is_not_authorable(tmp_path):
++    b=small(tmp_path);(tmp_path/'tests').write_text('not a directory')
++    with pytest.raises(ValueError,match='ancestor'):declare_planned_tests(b,tmp_path,[TARGET])
++
++
++def test_partial_declarations_cannot_leave_another_q1_gap(tmp_path):
++    b=small(tmp_path);other='tests/test_other.py'
++    b['slices'][0]['execution_snapshot_paths'].append(other)
++    before=deepcopy(b)
++    with pytest.raises(ValueError,match='undeclared missing snapshot'):
++        declare_planned_tests(b,tmp_path,[TARGET])
++    assert b==before

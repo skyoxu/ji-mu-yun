@@ -1,0 +1,59 @@
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 34%]
+........................................................................ [ 46%]
+........................................................................ [ 58%]
+........................................................................ [ 69%]
+........................................................................ [ 81%]
+........................................................................ [ 93%]
+.......................F..................                               [100%]
+=================================== FAILURES ===================================
+__________________________ test_contract_f7fb563211e4 __________________________
+
+vdd_public_consumption = {'root': PosixPath('/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-8/vdd-public-consumption0'), 'pr...files': [{...}, {...}, {...}, {...}], 'schema': 'vdd.repository-path-context.v1', ...}, ...}, 'sandbox': 'read-only'}]}
+
+    @pytest.mark.cer_assertion('ASSERT_3DAF23250361')
+    @pytest.mark.cer_assertion('ASSERT_63783142FD7B')
+    @pytest.mark.cer_assertion('ASSERT_4C1B8DE3882C')
+    @pytest.mark.cer_assertion('ASSERT_9E29614CA1B7')
+    @pytest.mark.cer_assertion('ASSERT_C5739C9FC820')
+    @pytest.mark.cer_assertion('ASSERT_F7FB563211E4')
+    def test_contract_f7fb563211e4(vdd_public_consumption):
+        sample = vdd_public_consumption
+        query = _vdd_current_episode(sample)
+        record = (sample['root']/'execution-plans/sample/execution-record.md').read_text()
+        # The adapter cannot fabricate adoption. After the real native caller has
+        # accepted a contract, its existing record must contain its own decision.
+        import re
+        # Accept caller records in Markdown or structured form. Do not impose a new
+        # JSON schema. Remove only the adapter-owned observation comment so advice
+        # cannot stand in for a decision made by its native consumer.
+        caller_record = re.sub(r'<!-- planning-query\.v1 .*?-->', '', record, flags=re.S)
+        decision = re.search(r'\b(?:accepted|adopted|rejected)\b|\u91c7\u7eb3|\u62d2\u7edd', caller_record, re.I)
+        source_bound = any(read['path'] in caller_record and read['sha256'].removeprefix('sha256:') in caller_record
+                           for read in query['read_set'])
+        has_reason = re.search(r'reason|\u7406\u7531', caller_record, re.I)
+        has_use = re.search(r'actual.use|used.for|\u7528\u9014', caller_record, re.I)
+        if not (decision and source_bound and has_reason and has_use):
+            print('FAILURE_ID:KQ_3DAF23250361')
+            print('FAILURE_ID:KQ_63783142FD7B')
+            print('FAILURE_ID:KQ_4C1B8DE3882C')
+            print('FAILURE_ID:KQ_9E29614CA1B7')
+            print('FAILURE_ID:KQ_C5739C9FC820')
+            print('FAILURE_ID:KQ_F7FB563211E4')
+>       assert decision and source_bound and has_reason and has_use, (
+            'Native VDD accepted V3 but its execution record has no caller decision/reason/use bound to verified sources')
+E       AssertionError: Native VDD accepted V3 but its execution record has no caller decision/reason/use bound to verified sources
+E       assert (None)
+
+scripts/toolchain/knowledge_query/tests/test_planning_query.py:3554: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:KQ_3DAF23250361
+FAILURE_ID:KQ_63783142FD7B
+FAILURE_ID:KQ_4C1B8DE3882C
+FAILURE_ID:KQ_9E29614CA1B7
+FAILURE_ID:KQ_C5739C9FC820
+FAILURE_ID:KQ_F7FB563211E4
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7fb563211e4
+1 failed, 617 passed in 143.85s (0:02:23)

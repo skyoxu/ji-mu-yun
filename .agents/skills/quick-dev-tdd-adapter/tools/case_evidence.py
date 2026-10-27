@@ -106,8 +106,12 @@ def assertion_cases(descriptor, receipt, *, keys=None, expected=None):
         raise ValueError(receipt.get("case_report_error") or "case-report-missing")
     if report.get("schema") != "quick-dev.pytest-case-report.v1" or report.get("complete") is not True:
         raise ValueError("case-report-incomplete")
-    if (report.get("descriptor_sha256") != sha256_value(descriptor)
-            or report.get("run_id") != descriptor["run_id"] or report.get("stage") != descriptor["stage"]
+    report_descriptor = descriptor
+    if receipt.get("execution_reference") is not None:
+        from shared_execution import validate_use
+        report_descriptor = validate_use(descriptor, receipt)
+    if (report.get("descriptor_sha256") != sha256_value(report_descriptor)
+            or report.get("run_id") != report_descriptor["run_id"] or report.get("stage") != report_descriptor["stage"]
             or report.get("exit_code") != receipt.get("exit_code")
             or receipt.get("case_report_sha256") != sha256_value(report)):
         raise ValueError("stale-case-evidence")

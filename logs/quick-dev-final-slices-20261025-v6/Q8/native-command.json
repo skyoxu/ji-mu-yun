@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "/tmp/vdd-pause-tests/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-25-vdd-knowledge-query-caller-runtime-role",
+    "--slice",
+    "S2",
+    "--profile",
+    "standard",
+    "--action",
+    "implementation-complete",
+    "--run-dir",
+    "logs/quick-dev-final-slices-20261025-v6/Q8",
+    "--predecessors",
+    "logs/quick-dev-final-slices-20261025-v6/Q8/predecessors.json",
+    "--snapshot-roots",
+    "logs/quick-dev-final-slices-20261025-v6/Q8/snapshot-roots.json",
+    "--source-commit",
+    "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+    "--base-commit",
+    "965df2e34f71ef197fffd8afb68f037688486ca2",
+    "--out",
+    "logs/quick-dev-final-slices-20261025-v6/Q8/implementation-complete-result.v2.json"
+  ],
+  "supervision_limits": {
+    "unit_seconds": 1800,
+    "idle_seconds": 600
+  },
+  "report": "logs/workflow-unit-budgets/quick-dev/55382ed022fff5b50c649a803b5aa88c99bb67d7931c0f1a850a26a073e474b0/fdc1993c688d436b8c3a040e37b4c6f6.json"
+}

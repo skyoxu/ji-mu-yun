@@ -1,0 +1,29 @@
+{
+  "command": [
+    "C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python.exe",
+    "-B",
+    "-m",
+    "pytest",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[unicode-argv]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stdout]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stderr]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[combined]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[timeout]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[cancel]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[nonzero]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[unicode-argv]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline_timeout",
+    "-vv",
+    "-s",
+    "--junitxml=logs/windows-query-verification/junit.xml"
+  ],
+  "total_seconds": 1800,
+  "silence_seconds": 600,
+  "elapsed_seconds": 13.297000000000025,
+  "exit_code": 0,
+  "termination": null,
+  "progress": "actual child stdout/stderr bytes only",
+  "authorizes": []
+}

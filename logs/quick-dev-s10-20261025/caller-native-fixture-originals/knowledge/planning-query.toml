@@ -1,0 +1,7 @@
+[query]
+enabled = true
+stages = ["prd", "spec", "architecture", "vdd-create", "vdd-repair"]
+max_candidates = 1
+max_output_bytes = 65536
+max_calls = 3
+timeout_seconds = 30

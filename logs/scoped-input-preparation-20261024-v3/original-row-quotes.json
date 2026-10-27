@@ -1,0 +1,190 @@
+{
+  "status": "23 unchanged original row texts, provenance only; not selected by CLI as a separate input",
+  "authorizes": [],
+  "items": [
+    {
+      "anchor_id": "SM-K02",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K02",
+      "original_row_sha256": "sha256:2084131ebb97e6b4edc518695d3539028e2798b2d9380fc9b9af173eaa5dc3fe",
+      "exact_row_text": "| <a id=\"SM-K02\"></a>K02 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## Why<br><br>仓库维护者在增量规划中需要先了解已有能力、约束与真实实现，避免重复建设、遗漏消费者和沿用历史计划。本增量复用 Locator 定位，再读取有效来源与当前源码；查询辅助判断，不成为事实、实施完成或 Acceptance 权威。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K07",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K07",
+      "original_row_sha256": "sha256:a6742b833d3bcdf360012f8b28e35c9c4a2016f8d3bedce3040dd12d61cee34f",
+      "exact_row_text": "| <a id=\"SM-K07\"></a>K07 | CAP-5, FR-05, AC-06, AC-07 | AC-06, AC-07 | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>- **CAP-5**<br>  - **intent:** VDD 规划前利用查询线索核查当前源码、调用方与测试。<br>  - **success:** FR-05/AC-06/AC-07 中索引未覆盖的既有行为仍被发现并作为回归，直接核查不伪装成 Locator 结果。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K08",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K08",
+      "original_row_sha256": "sha256:ec6528adb97819e30c32ef4804b29718020fe6c38be74443a8a3ab963b2c0d98",
+      "exact_row_text": "| <a id=\"SM-K08\"></a>K08 | CAP-6, FR-06, AC-03, AC-08 | AC-03, AC-08 | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>- **CAP-6**<br>  - **intent:** 维护者能追溯采纳结论所读来源的真实身份。<br>  - **success:** FR-06/AC-03/AC-08 区分快照、main、分支及未提交字节；不伪造发布身份或新增全仓冻结。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K09",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K09",
+      "original_row_sha256": "sha256:6f984e1c7f5c3d57a5091436b28c7e922fd80b7967efe5257c3aa98d41440ea0",
+      "exact_row_text": "| <a id=\"SM-K09\"></a>K09 | CAP-7, FR-07 | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>- **CAP-7**<br>  - **intent:** 消费者能区分正常结果、可用性降级、不可信失败和取消。<br>  - **success:** FR-07/AC-07至AC-10 的语义按 failure-modes.md 执行，退出码 0 的 blocked 不被当成功或缺失。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K10",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K10",
+      "original_row_sha256": "sha256:cb11375b9a74a26bd086d47edb31ed8422b3f18fc7de8347fac75a007d5fcc2f",
+      "exact_row_text": "| <a id=\"SM-K10\"></a>K10 | CAP-8, FR-08, AC-06, AC-11 | AC-06, AC-11 | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>- **CAP-8**<br>  - **intent:** 默认查询与既有治理分别启用。<br>  - **success:** FR-08/AC-06/AC-11 保持 development/auto 治理关闭，on 模式 required gate 仍阻断。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K11",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K11",
+      "original_row_sha256": "sha256:5a43be511ba7f3acd7ecb7bc382e85b4f9f6ef609aceec60f35412d4c7555149",
+      "exact_row_text": "| <a id=\"SM-K11\"></a>K11 | CAP-9, FR-09, AC-09, AC-12 | AC-09, AC-12 | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>- **CAP-9**<br>  - **intent:** 恢复与来源变化时只补充必要且有界的上下文。<br>  - **success:** FR-09/AC-09/AC-12 允许有效复用、只更新相关结论；不自动重建、无限重试或启动其他流程。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K14",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K14",
+      "original_row_sha256": "sha256:dcf78c52e40e31fddcb4f853844666a2634a93034d4edf019961f64b7239b10e",
+      "exact_row_text": "| <a id=\"SM-K14\"></a>K14 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## Non-goals<br><br>- Package B 全面迁移、重做既有阶段、TC-D2/D4/D5/D6、S1/S2 游戏业务和沙箱重构。<br>- 新知识平台、通用 RAG/向量库、全仓索引重构、Codex 内核/app-server/SDK、Phase/Hosted 功能变更。<br>- 自动发布、自动 Bootstrap/总入口/内部 reviewer 平台/切片并行调度、历史证据改写或查询结果提升为完成权威。<br>- scope-and-decisions.md 中列出的其余明确排除项同样有效。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K16",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K16",
+      "original_row_sha256": "sha256:f51952f3f811ed16c65a84feef0ec3931ccb465405c3b6090a59c9e4171eca17",
+      "exact_row_text": "| <a id=\"SM-K16\"></a>K16 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md | Original role: canonical. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## Assumptions<br><br>- A1：沿用获批 PRD 的单维护者内部能力表达，不虚构 UI、市场指标或延迟目标。<br>- A2：预算采用经原生架构审查的保守工程起点，已由 SPEC owner 固化在 behavior-contracts.md；不是性能 SLA，后续调整须经 owner refresh。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K28",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K28",
+      "original_row_sha256": "sha256:d12e79fbfe7553daae3d52fecd81351ae65c59a2db989583232ef376b10f3dc4",
+      "exact_row_text": "| <a id=\"SM-K28\"></a>K28 | FR-05 | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/behavior-contracts.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>#### FR-05：VDD 规划前查询与源码核对<br><br>VDD create／实质性 repair 在界定实现、消费者、测试和依赖切片前先查询，再读取当前源码、调用方、测试与控制契约。Locator 只缩小范围，不能替代调用链核查。<br><br>索引外文件可在授权范围内直接检索，记录为直接源码核查，不伪造成 Locator 返回。计划表达可复用能力、真实缺口及需要联动的消费者/测试；已存在行为应做回归验证，不能为制造 RED 走旧路径或重复实现。<br><br>可观察结果：未命中但源码已有能力时，计划采用既有能力并保留发现途径；写入边界和消费者检查有依据。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K30",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K30",
+      "original_row_sha256": "sha256:3b9fd99fd1df2f2d191e65fe644bfa1104b9f11fd4e8ba1cb9e5d9a91cc5881c",
+      "exact_row_text": "| <a id=\"SM-K30\"></a>K30 | FR-07 | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/behavior-contracts.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>#### FR-07：可观察的失败与降级<br><br>消费者同时判断进程退出、超时/取消、输出可解析性、业务状态及来源完整性。退出码为 0、存在 JSON 输出或已生成文件，都不能单独证明查询成功。采用原始需求建议的以下产品语义；具体诊断/兼容映射由 SPEC 明确：<br><br>&#124; 情况 &#124; 普通规划查询或治理关闭 &#124; 既有强制门禁 &#124;<br>&#124; --- &#124; --- &#124; --- &#124;<br>&#124; 命中且有效 &#124; 读取后记录采纳/不采纳 &#124; 继续原有门禁 &#124;<br>&#124; 未命中、低置信或歧义 &#124; 定向核查源码，不能断言能力不存在 &#124; required module 不满足则按合同阻断 &#124;<br>&#124; 已识别过期或相关来源变化 &#124; 标记 degraded，核实当前来源，不消费失效候选 &#124; 仅走现行 source_refresh/修复路径 &#124;<br>&#124; 确认入口不可用、未配置或超时 &#124; 记录原因，改用独立源码核查；必要事实仍未知则停止依赖它的判断 &#124; 不绕过 required gate &#124;<br>&#124; 非法请求/配置、未知或损坏状态、发布绑定损坏、越界或策略拒绝 &#124; 停止消费并报错，修正后才继续受影响判断 &#124; fail-closed &#124;<br>&#124; 用户取消 &#124; 停止查询，保留未完成，不后台重试 &#124; 保持取消/恢复边界 &#124;<br><br>必要配置缺失可以被准确诊断后进入可用性处理；配置非法不得进入该降级通道。来源不能验证、约束冲突或事实缺口影响方案时应保留阻塞项。通用 blocked 无法判断原因时不能猜成未命中，需补最小只读诊断或适配。<br><br>可观察结果：退出码 0 的 blocked、损坏输出和越界不会被当成功或空结果；被拒绝内容不泄露。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K32",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K32",
+      "original_row_sha256": "sha256:d9bf835a772cf01c9eaa5896ed7c9aa992efdfd13bed44974a17fb5e53a822ec",
+      "exact_row_text": "| <a id=\"SM-K32\"></a>K32 | FR-09 | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/behavior-contracts.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>#### FR-09：局部刷新与有界上下文<br><br>任务意图和相关来源未变时可复用记录；进入新阶段或恢复时按实际依赖决定补查，不每轮加载全历史。相关变化只更新受影响结论和计划；无关代次/文件变化不单独触发整个需求重建、历史重写或全量重跑。正式计划有效性仍受原有范围绑定约束。<br><br>查询候选数、输出和调用次数必须有界，只装载支撑当前判断的片段。不得无限重试、自动发布或开启其他工作流修复查询。<br><br>可观察结果：相关变化产生局部更新；仅无关变化不触发重建；取消及预算耗尽不产生后台无限重试。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K35",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K35",
+      "original_row_sha256": "sha256:beaec24e90c1360daee677e1073405fd72478cb0e6706259357152f5591037f1",
+      "exact_row_text": "| <a id=\"SM-K35\"></a>K35 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/behavior-contracts.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## 预算规范（本次 owner 收敛）<br><br>&#124; 参数 &#124; 默认 &#124; 硬上限 &#124; 计量边界 &#124;<br>&#124; --- &#124; --- &#124; --- &#124; --- &#124;<br>&#124; max_candidates &#124; 12 &#124; 20 &#124; 同一判断 episode 累计返回候选行，重复也计数 &#124;<br>&#124; max_output_bytes &#124; 65536 &#124; 131072 &#124; 同 episode 累计交付 UTF-8 查询 JSON、诊断、源码摘录；最小合法值 4096 &#124;<br>&#124; max_calls &#124; 3 &#124; 5 &#124; 同 episode Locator 尝试，失败、超时及补查均计数 &#124;<br>&#124; timeout_seconds &#124; 30 &#124; 60 &#124; 每次子进程墙钟上限；取消立即终止 &#124;<br><br>有效额度取仓库硬上限、团队设置、已发布 policy 既有上限与调用方更小请求的交集；personal/model 只能下调。值须正整数，bool、零、负数、错误类型、越界或输出额度小于 4096 均为非法配置，不静默夹取。合法 policy 限额更小则记录后取交集。相同判断的重试、重复 hook、恢复共享计数，不新建 episode 绕过额度；仅相关任务意图/输入变化可新建并记录前驱原因。<br><br>输出额度内部预留 4096 字节交付一次完整终止 JSON，普通交付不得消耗该预留；终止报告的固定长度标识、枚举、计数及至多 512 字节受控摘要须保证完整报告不超过 4096 字节，候选/读取数组为空，可空索引身份，原始诊断引用留在本地既有记录。预留不是额外预算。预算不足先终止报告再关闭 episode，不输出部分 JSON，不再后台重试；未知必要事实继续阻断相关判断。<br><br>子进程 stdout/stderr 各缓冲至多 65536 字节，合计至多 131072；超限终止，不解析截断 JSON。完整来源 hash 可流式计算，交付摘录仍计输出额度。预算设计不新建治理开关、冻结或发布；后续真实样例不适用时显式回到 SPEC owner 修订。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K36",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K36",
+      "original_row_sha256": "sha256:b28970b43bc6be62967ffc14df7fe43ba147106030ddcc9fd811a36ba1340484",
+      "exact_row_text": "| <a id=\"SM-K36\"></a>K36 | CAP-7, FR-07 | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br># 查询结果与失败分流<br><br>本文件是 CAP-7 的规范 companion，沿用 FR-07 已批准的行为语义，不新建 Locator 公共 schema。以下名称描述消费者决策类别，不宣称是当前 CLI 已有状态字段。Architecture 必须把真实输出/只读诊断逐项映射到这些类别，并保留现有调用方兼容性；实施前不得以字符串猜测代替该映射。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K38",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K38",
+      "original_row_sha256": "sha256:1e436765616eef617cd5d57b2989214d93b3f7b42a17862fe3efffb952853239",
+      "exact_row_text": "| <a id=\"SM-K38\"></a>K38 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## 结果类别与允许动作<br><br>&#124; 类别 &#124; 普通规划查询 / governance off &#124; governance on 或既有完整性门禁 &#124;<br>&#124; --- &#124; --- &#124; --- &#124;<br>&#124; 有效命中 &#124; 读取相关原始来源，按合同核对 hash，记录采纳/不采纳 &#124; 继续满足全部原有门禁 &#124;<br>&#124; 未命中 / 低置信 / 歧义 &#124; 定向核查当前源码；不据此证明能力不存在 &#124; required module 未满足按原合同阻断 &#124;<br>&#124; 已识别过期 / 选中来源变化 &#124; 记录 degraded，核实当前相关来源，不把失效候选作为事实 &#124; 只允许现行 source_refresh/修复路径，不扩大选中集合或改发布身份 &#124;<br>&#124; 已确认未配置 / 不可用 / 超时 &#124; 有原因的独立源码核查；必要事实未知则保留未决并停止相关判断 &#124; 不绕过 required gate &#124;<br>&#124; 非法请求/配置 / 损坏或未知输出 / 损坏绑定 / 越界 / 策略拒绝 &#124; 停止消费并报错；修正后继续受影响判断 &#124; fail-closed &#124;<br>&#124; 用户取消 &#124; 停止、未完成、不自动重试 &#124; 保持已有取消/恢复边界 &#124;<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K39",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K39",
+      "original_row_sha256": "sha256:d395b52b542907856224a6ad9534bc7aa52a01883bac45289b37557c2133f8ce",
+      "exact_row_text": "| <a id=\"SM-K39\"></a>K39 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## 配置与诊断边界<br><br>缺失必要配置须明确诊断，不能报告成功；能确认“未配置”时适用可用性处理。非法或不可读/损坏的已有配置不是正常未配置。不支持的消费者不准冒用已支持身份；策略拒绝保持 fail-closed。Architecture 定义实际诊断如何区分这些情况，不能通过模型自行猜因或空候选推断。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K40",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K40",
+      "original_row_sha256": "sha256:863bc759ad5d0b4540aa9a483432d7417b491deb79258c897d6bb63bab63343a",
+      "exact_row_text": "| <a id=\"SM-K40\"></a>K40 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## 记录与恢复<br><br>记录查询主题、消费者、结果类别/原诊断、有关来源定位和读取身份、结论/用途或未完成原因。被拒绝的越界内容不得输出；安全诊断仅说明受影响范围与错误类型。预算耗尽、超时和取消不能启动无限重试或自动知识发布。<br><br>相关来源/意图未变化可复用有效记录；相关变化只补受影响部分。无关代次变化不单独使整个需求失效。需要强制治理修复时仍遵守已有合同，不借“轻量查询”跳过它。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K41",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K41",
+      "original_row_sha256": "sha256:a558141b02ff4c13987e15472aeb9ff165b57a37e9de4716ed5064331366c0bd",
+      "exact_row_text": "| <a id=\"SM-K41\"></a>K41 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## 兼容策略与诊断映射<br><br>既有 Locator 调用方继续得到原有字段、状态含义及退出码语义，不通过删除、重命名或重新解释现有返回值完成本增量。新增消费者可以在外置、显式接入的只读适配层得到细化诊断；原始业务状态和诊断依据必须保留。Architecture 确定实际表示与调用边界，不能改变以下映射或把新细化状态强塞给未迁移的消费者。<br><br>&#124; 已核实的诊断依据 &#124; 消费者归类 &#124; 停止/继续条件 &#124;<br>&#124; --- &#124; --- &#124; --- &#124;<br>&#124; 命中且结构/策略/发布/读取完整性成立 &#124; 有效命中 &#124; 来源核对后才能采纳 &#124;<br>&#124; 有效未命中、低置信或歧义 &#124; 未命中/低置信/歧义 &#124; 定向源码核查；required gate 仍按旧合同 &#124;<br>&#124; 能识别的索引过期或同一选中来源字节变化 &#124; 已识别过期/来源变化 &#124; degraded；只能核实当前来源或走已允许刷新 &#124;<br>&#124; 明确缺少配置项/入口；已确认不可用；已确认超时 &#124; 已确认未配置/不可用/超时 &#124; 停止使用本次结果；独立核查，必要事实仍未知则停 &#124;<br>&#124; 配置语法或范围非法、已有配置损坏/不可读、消费者不受支持/策略拒绝 &#124; 不可信失败 &#124; 报错，修正后才继续 &#124;<br>&#124; 发布/目录/策略/投影绑定损坏、越界、来源完整性校验不成立 &#124; 不可信失败 &#124; 不采纳、不披露越界内容，按原 gate 阻断 &#124;<br>&#124; 解析失败、未知状态、退出失败原因未知、只有通用 blocked 而无可信归因 &#124; 未识别失败 &#124; 与不可信失败相同，不推测可用性降级 &#124;<br>&#124; 用户取消 &#124; 取消 &#124; 未完成，无后台重试；保留先前已观察错误 &#124;<br><br>非零退出但原因确认为入口不可用或超时，才进入相应可用性类别；未知原因不能凭退出码降级。未经允许的来源/hash 不一致与已识别过期不同：只有合同允许且可归因的相关变化才适用 degraded/source_refresh，其余完整性失败保持阻断。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K42",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K42",
+      "original_row_sha256": "sha256:1e4867dbab72d1a18a083c0db267b875e61cabbe14eaba27364121ef4f611871",
+      "exact_row_text": "| <a id=\"SM-K42\"></a>K42 | AD-7, AD-6 | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md | Original role: normative_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## 合法零命中的唯一映射<br><br>依据 adopted architecture AD-7：先按 AD-6 完成请求、结构、完整性、权限及发布校验，并处理更高优先级的失败、过期、取消及预算状态。仅在此前置条件满足时，原始 status=insufficient_match 且 candidates=[] 唯一映射 no_match/empty；候选非空的 insufficient_match 才映射 degraded/insufficient_match。不得单凭空数组推断 no_match；未知或不一致状态仍 fail-closed。<br><br>两类均要求定向源码核查，不能证明能力不存在或绕过 required gate。原始 Locator 返回字段、status 和旧消费者语义保持不变。该规则明确未来适配器预期，不表示适配器已经实现。<br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K46",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K46",
+      "original_row_sha256": "sha256:e98f473c2b9644920470bd322da49256981686c94697086fdd8f09239e5d5c37",
+      "exact_row_text": "| <a id=\"SM-K46\"></a>K46 | source-bound constraint | derive from complete source | planning | _bmad-output/specs/spec-bmad-vdd-knowledge-query/scope-and-decisions.md | Original role: normative_companion. Interpretation: Preserve boundaries and decisions. Historical statements about which stage was paused or still under review do not reopen completed reviews or grant future stages. S2 scheduling remains unapproved; later parent authorization only permits projection authoring now. Verbatim source (UTF-8, reversible HTML escaping):<br>### 6.2 明确排除<br><br>- Package B 五个 Skill 的全面标准迁移；<br>- 重做 8-05、8-06、7-31；<br>- TC-D2/D4/D5/D6；<br>- Codex 内核、上下文压缩、自动新 thread、app-server/SDK；<br>- 新知识平台、向量库、通用 RAG、Memory/Miner、全仓索引重构或强制全量发布；<br>- Phase API/账号/生产节点/用户沙箱/Hosted 游戏功能；<br>- 自动 Bootstrap、总入口 Skill、内部 reviewer 平台或切片并行调度；<br>- 历史 plan/证据/代次改写；<br>- S1/S2 游戏业务和沙箱重构。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K51",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K51",
+      "original_row_sha256": "sha256:f64bfbade11083d1ac591ab9341df0693a381bc7e003c15eb8814eb6a2384436",
+      "exact_row_text": "| <a id=\"SM-K51\"></a>K51 | source-bound constraint | derive from complete source | planning | logs/bmad-wrappers/architecture-zero-match-2026-10-22/native/logs/bmad-wrappers/architecture-knowledge-query-2026-10-22/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md | Original role: adopted_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>## Design Paradigm<br><br>Ports and adapters：仓库拥有的阶段接入依赖共享只读查询适配层；适配层依赖现有 Locator core、配置解析和来源读取器。原生 BMAD 只消费外部传入的上下文，保持原始字节。正式治理、知识发布与 Acceptance 各自保留 owner。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K54",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K54",
+      "original_row_sha256": "sha256:f1032206609b6b6357df0c3d091a9848bfaa8826fb0df97cb8a8a9aa02eb3daa",
+      "exact_row_text": "| <a id=\"SM-K54\"></a>K54 | AD-3, CAP-1, CAP-9, AD-7 | derive from complete source | planning | logs/bmad-wrappers/architecture-zero-match-2026-10-22/native/logs/bmad-wrappers/architecture-knowledge-query-2026-10-22/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md | Original role: adopted_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>### AD-3 — 有界预算与 P2 owner 收敛<br><br>- **Binds:** CAP-1、CAP-9，SPEC owner、Architecture owner、shared adapter。<br>- **Prevents:** 不同阶段各选无限预算，或 Architecture 与 SPEC 同时成为规范写入者。<br>- **Rule:** Architecture 提出下表的技术设计，**SPEC owner 通过 jimuyun-spec 原生派生/refresh 固化为规范合同**；进入 VDD 前本次 P2 owner 表述和数值必须在 SPEC 收敛。Architecture 不直接编辑 SPEC/selection。后续预算合同变化也走 SPEC owner，不能运行时自动扩容。<br><br>&#124; 参数 &#124; 默认 &#124; 仓库硬上限 &#124; 计量边界 &#124;<br>&#124; --- &#124; --- &#124; --- &#124; --- &#124;<br>&#124; max_candidates &#124; 12 &#124; 20 &#124; 一个决策 episode 的 Locator 返回候选行总数，重复行也计数 &#124;<br>&#124; max_output_bytes &#124; 65536 &#124; 131072 &#124; 同 episode 累计交付给消费者的 UTF-8 查询 JSON、诊断与源码摘录字节总数 &#124;<br>&#124; max_calls &#124; 3 &#124; 5 &#124; 同 episode 的 Locator 尝试总数，失败、超时和补查均计数 &#124;<br>&#124; timeout_seconds &#124; 30 &#124; 60 &#124; 每次子进程尝试的墙钟上限，取消立即终止 &#124;<br><br>有效预算是仓库硬上限、仓库团队设置、已发布 consumer policy 中已有上限和调用方更小请求的交集；personal/model 只能下调。值须为正整数，且 max_output_bytes 不低于 4096；bool/零/负数/错误类型/越界配置均 invalid_config，不静默夹取错误配置。合法 policy 比设置更小则按交集生效并记录来源。单次候选额度不超过 episode 剩余额度。原生普通数组追加不改变预算或增加次数。<br><br>子进程 stdout/stderr 各最多缓冲 65536 字节、合计最多 131072 字节；超限终止且不解析截断 JSON。每个 episode 在 max_output_bytes 内预留 4096 字节用于一次终止 JSON（预留也计入上限，不是额外额度）；普通交付不得使用该预留，预算不足立即输出终止报告后关闭 episode。终止报告保持 AD-7 必需字段，candidates/read_set 为空，index_identity 可 null；标识使用固定长度 hash/枚举，diagnostic 仅有限枚举、计数和不超过 512 字节的受控摘要，保证完整报告不超过 4096 字节，不复制原始路径或无限异常。原始诊断引用保留在既有本地记录。交付前按剩余额度检查，不发送部分 JSON。来源 hash 可流式计算完整文件，传入模型的摘录消耗输出预算；预算不足不能把未读/未验证材料当事实。耗尽记录 `budget_exhausted`、保留未完成并停止依赖尚缺事实的判断，不后台重试、不另起 episode 绕过配额。<br><br>[ASSUMPTION A1] 候选默认 12 沿用当前 CLI 默认；其余数值是保守工程起点，不是测得的性能 SLA。它们通过本次 SPEC refresh 与阶段 3 外审确定；后续真实样例若不适用，显式回到 owner 修订，不能静默放宽。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K57",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K57",
+      "original_row_sha256": "sha256:9f4ddbdca48987c2591c15f45e5e82ab28d4b9685c3a2a15b8bd44b714e03893",
+      "exact_row_text": "| <a id=\"SM-K57\"></a>K57 | AD-6, CAP-2, CAP-7, CAP-8 | derive from complete source | planning | logs/bmad-wrappers/architecture-zero-match-2026-10-22/native/logs/bmad-wrappers/architecture-knowledge-query-2026-10-22/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md | Original role: adopted_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>### AD-6 — 兼容诊断与失败优先级<br><br>- **Binds:** CAP-2、CAP-7、CAP-8。<br>- **Prevents:** exit 0 blocked 被当成功、重复校验逻辑漂移或损坏候选被降级采纳。<br>- **Rule:** 从现有 CLI 的真实 preflight 分支抽取可复用只读诊断，使新适配器与旧 CLI 共用同一校验核心；旧 CLI 的字段、状态及退出码保持原义。仅新消费者接口返回 `planning-query.v1` 诊断，不向未迁移调用方强塞新状态。不能用 `--allow-unpublished-inputs`、`--allow-stale-catalog` 或自选非 canonical catalog 绕过正式路径。<br>一次调用固定一个正式 generation，验证 manifest/catalog/policy/projection 同代 hash；不能混用读取中途切换的 current。请求 snapshot 使用 catalog 的真实 ref/commit，绝不替换为 HEAD。发布绑定损坏、非法配置/请求、策略拒绝、越界、未知状态/未知退出失败优先 blocked，不能因同时 stale/no-hit 而降级。取消终止本次查询，不抹掉已观察错误。明确不可用/超时、未命中、低置信/歧义，以及完整性/权限校验通过后识别的过期或相关来源变化，允许独立源码核查；后几类不采纳不确定候选。未知错误仍 blocked，不能伪装上述已识别状态。必要事实仍未知则停。已识别 stale 只在完整性、策略和允许范围都已成立时 degraded，不采纳失效候选。on 模式仅走既有 source_refresh，保持 ADR-0059 Knowledge-system self-change 限制。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    },
+    {
+      "anchor_id": "SM-K59",
+      "original_source_ref": "logs/vdd-planning-input-2026-10-22/compiler-input.md#SM-K59",
+      "original_row_sha256": "sha256:f5fce8f308f47a22346b3d593a365df210ea0bfad46611c17087b0b54e8107ce",
+      "exact_row_text": "| <a id=\"SM-K59\"></a>K59 | AD-8, CAP-6, CAP-9 | derive from complete source | planning | logs/bmad-wrappers/architecture-zero-match-2026-10-22/native/logs/bmad-wrappers/architecture-knowledge-query-2026-10-22/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md | Original role: adopted_companion. Interpretation: Preserve all obligations, conditions, exceptions, quantities and prohibitions in the quoted source. Original IDs remain authority; SM is only a compiler anchor. Verbatim source (UTF-8, reversible HTML escaping):<br>### AD-8 — 记录、恢复与局部刷新<br><br>- **Binds:** CAP-6、CAP-9。<br>- **Prevents:** 每轮重新查询、无关 generation 导致整体重建、重启绕过预算。<br>- **Rule:** 结果摘要与消费决定进入阶段现有 memlog 或 VDD execution record，不强制新独立文件。episode_id 由共享 canonical hash 对 stage、operation、任务稳定标识、规范化 query scope、相关输入身份计算；同一判断重试/重复 hook/恢复共享计数，显式任务意图或相关输入改变才开新 episode并记录前驱原因。无关索引代次不进入 episode key。<br>复用需复核当前权限配置及实际依赖来源，保留旧 index_identity；若未重新查询，不宣称新 generation 已验证。相关来源改变只更新受影响结论和下游依赖；无关变化不自动重建历史目录或重跑全部流程。正式计划有效性仍由原有范围/绑定 owner 决定。恢复不得把失败/取消写成完成。<br><br> |",
+      "quote_prefix_outside_original_bytes": "> ",
+      "role_in_current_input": "historical source quotation only; not an unchanged active requirement hash"
+    }
+  ]
+}

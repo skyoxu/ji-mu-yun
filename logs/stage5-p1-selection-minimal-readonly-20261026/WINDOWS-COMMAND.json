@@ -1,0 +1,41 @@
+{
+  "kind": "current-source proposal only; not executed or declared complete Windows coverage",
+  "authorizes": [],
+  "workflow": ".github/workflows/ci-windows.yml",
+  "verification_branch": "verify/bmad-vdd-knowledge-query-windows",
+  "existing_verification_workflow_local_path": "/workspace/ji-mu-yun-windows-verification/.github/workflows/ci-windows.yml",
+  "runner": "windows-latest; record actual system version from new run",
+  "argv": [
+    "python",
+    "-B",
+    "-m",
+    "pytest",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[unicode-argv]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stdout]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[stderr]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[combined]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[timeout]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_f7401102fe99[cancel]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_295a1ed8402c",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[nonzero]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_8299476377c3[unicode-argv]",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_planning_attempt_deadline_timeout",
+    "-vv",
+    "-s",
+    "--junitxml=logs/windows-query-verification/junit.xml"
+  ],
+  "statically_identified_case_count": 11,
+  "excludes_old_evidence_validation_nodes": true,
+  "old_command_not_directly_reusable": [
+    "test_windows_planning_query_runtime no longer exists in active source",
+    "test_contract_fd756962a671 no longer exists in active source",
+    "whole test_contract_f7401102fe99 includes old Windows evidence validation and must not be used to bootstrap its replacement"
+  ],
+  "limits": {
+    "total_seconds": 1800,
+    "genuine_silence_seconds": 600
+  },
+  "needed_later_authorization": "Deliver the frozen final candidate to the existing verification branch/runner, then trigger once. User monitors; fetch only a specifically reported result. No push or dispatch occurred in this step.",
+  "coverage_limit": "The old 13 cases remain an immutable historical result. This current 11-node command is a concrete transport/cancel/timeout/deadline subset, not an assertion that 11 substitutes for every old scenario or the whole suite. Confirm the required behavior matrix and current source case set during the authorized Q2 freeze; add an equivalent missing required scenario there rather than dropping an oracle."
+}

@@ -1,0 +1,14 @@
+{
+  "predecessor_sha256": "sha256:955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c",
+  "successor_sha256": "sha256:7b4c69ff7e4a64bafbc3a8d6dd0ed4c83c1ab3c21935bd1f9d3e581f5e583276",
+  "unchanged_obligations": true,
+  "unchanged_acceptance_semantics": true,
+  "source_index_bytes_unchanged": true,
+  "changed_slices": [
+    "S10"
+  ],
+  "added_runtime_role": "FI-11B33D35D397",
+  "preserved_diagnostic": "FI-2BBFF848E3F3",
+  "model_calls": 0,
+  "authorizes": []
+}

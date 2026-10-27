@@ -153,7 +153,7 @@ def validate_planned_preflight(
         "argv": argv,
         "cwd": ".",
         "shell": False,
-        "timeout_seconds": min(timeout_seconds, 600),
+        "timeout_seconds": min(timeout_seconds, 1800),
         "target_refs": target_refs,
         "fixture_refs": fixture_refs,
         "required_next_action": "author-red",

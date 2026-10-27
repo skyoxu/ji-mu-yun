@@ -1,0 +1,1097 @@
+{
+  "kind": "derived local summary; not native evidence or external approval",
+  "generated_at": "2026-10-26T11:37:12.058826+00:00",
+  "host_commit": "5b585094288f1958539d88261d78467865cfe8e7",
+  "host_tree": "b0c44bfd9bd0b7edb4e9dc592e22b945510c6a37",
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_canonical_sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "slices": [
+    {
+      "slice_id": "S2",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 108,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 1.7065087859991763,
+          "started_at": "2026-10-26T09:40:55.391398Z",
+          "ended_at": "2026-10-26T09:40:57.097909Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S2-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 178430,
+            "sha256": "d97ecc169750fe3a763782d0436180c510637034ccbfe0833dae66b07bbef913"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 108,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 1.6521466619997227,
+          "started_at": "2026-10-26T09:41:04.477834Z",
+          "ended_at": "2026-10-26T09:41:06.129984Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S2-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 178440,
+            "sha256": "932d7da2305ca44979b7e2e0bdb6ebd4560bcf5eea0d220046c885418b1f91b1"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 108,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 1.666805363000094,
+          "started_at": "2026-10-26T09:41:22.322597Z",
+          "ended_at": "2026-10-26T09:41:23.989405Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S2-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 178435,
+            "sha256": "23ec3e099cbca330349d809016660b37c1b128cfd45079a9a8ef17efdebc9c5c"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 108,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "4b6564da688cf6f8c42f3934d3055f4d52d745454fbc85b25bf5fd07f7bc0d64",
+          "actual_selected_node_count": 108,
+          "actual_selected_nodes_sha256": "1e3a8165f86286eddfe464dcb4dc5df9d5a03ee22f800d4453a1bc0352549c69"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S2-slice-ready.json",
+        "size_bytes": 39872,
+        "sha256": "67941bdc191549f400397b9e957707907ec8176c46ae1e574ef64eb599d05854"
+      }
+    },
+    {
+      "slice_id": "S5",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 108,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 1.7244375699992815,
+          "started_at": "2026-10-26T09:41:26.507267Z",
+          "ended_at": "2026-10-26T09:41:28.231707Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S5-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 178430,
+            "sha256": "9f494ee711892262147b45190937c85eb405b11be05b8567a47b9d9bd7c2495c"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 108,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 1.7538362530012819,
+          "started_at": "2026-10-26T09:41:34.767787Z",
+          "ended_at": "2026-10-26T09:41:36.521625Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S5-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 178440,
+            "sha256": "0649195d01422dbccd53d13462cae922758690da32bd63778f9e104325f74f3a"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 108,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 1.6841605829995387,
+          "started_at": "2026-10-26T09:41:51.631885Z",
+          "ended_at": "2026-10-26T09:41:53.316047Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 108
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S5-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 178436,
+            "sha256": "f49522ff47152b42f2486a02fbfb897a8116d4d4af8950ada7bdc15374fb0e08"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 108,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "4b6564da688cf6f8c42f3934d3055f4d52d745454fbc85b25bf5fd07f7bc0d64",
+          "actual_selected_node_count": 108,
+          "actual_selected_nodes_sha256": "1e3a8165f86286eddfe464dcb4dc5df9d5a03ee22f800d4453a1bc0352549c69"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S5-slice-ready.json",
+        "size_bytes": 19268,
+        "sha256": "6d23bb282c42011ff629d4c40ffdef9f1bfa2416c5404ac492484e5e85224c53"
+      }
+    },
+    {
+      "slice_id": "S6",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 149.36085555499994,
+          "started_at": "2026-10-26T09:41:55.689062Z",
+          "ended_at": "2026-10-26T09:44:25.049923Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S6-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860517,
+            "sha256": "de2a38ba7f5d4e865a48816dbd640f1ab3c469fd6507a474f7521fc19a8b7403"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 151.4251309680003,
+          "started_at": "2026-10-26T09:44:31.784280Z",
+          "ended_at": "2026-10-26T09:47:03.209414Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S6-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860526,
+            "sha256": "df259d7b786b6d3961acffac3c51cbe0ad4de809937ec889e1d4d6b86726e83e"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 149.90648905799935,
+          "started_at": "2026-10-26T09:47:18.065262Z",
+          "ended_at": "2026-10-26T09:49:47.971753Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S6-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860523,
+            "sha256": "1c9a2ed3ebac43bde262de61317a98565ec637e34b0473381a08624ed043ad32"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S6-slice-ready.json",
+        "size_bytes": 19137,
+        "sha256": "8663e45f4cb1565a540f0d8691f1ac67defdda8d2552e4662acf09a9b3f35885"
+      }
+    },
+    {
+      "slice_id": "S1",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 20,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 2.9084030629983317,
+          "started_at": "2026-10-26T09:49:50.324486Z",
+          "ended_at": "2026-10-26T09:49:53.232891Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 20
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S1-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 120527,
+            "sha256": "82d29635dcd2a013cb058d0465a1de13244870d6953fbb512d3576e7cfa2f634"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 20,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 2.8264234279995435,
+          "started_at": "2026-10-26T09:49:59.324104Z",
+          "ended_at": "2026-10-26T09:50:02.150530Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 20
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S1-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 120537,
+            "sha256": "920d2fa3d0f73f7e0976ee69f3e659fe11ce3bffe4ccdac21971c1b2b0877f2d"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 148.19928749799874,
+          "started_at": "2026-10-26T09:52:58.999835Z",
+          "ended_at": "2026-10-26T09:55:27.199126Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S1-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 848745,
+            "sha256": "028054702364b153c284cb85a3aa7698a9a350c9afe13837d18d53cc8f0e73f9"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "pass",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": "logs/quick-dev-p1-proof-refresh-20261026/S1-current/canonical-evidence/regression/q6-executions/command-6e0249423b479bda/canonical-evidence/regression/process-receipt.v2.json",
+          "receipt_sha256": "sha256:ac1e0289ef542c02adae00a60314cb97e98fef2c4857e7e8ddef68f2ba1fdaf6",
+          "argv_sha256": "8752082db28e58c2cc90ae83b59452f5e6e6dcecdc24bc20ad2630b9f2ab9a4c",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S1-slice-ready.json",
+        "size_bytes": 19423,
+        "sha256": "cae8343253d9a54ef1aaa5994ca2eb5e0c3327d128786b38bdee3d966e573daa"
+      }
+    },
+    {
+      "slice_id": "S3",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 157.6438379680003,
+          "started_at": "2026-10-26T09:55:29.552795Z",
+          "ended_at": "2026-10-26T09:58:07.196634Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S3-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860516,
+            "sha256": "667029a9f32ca14f9e735b4f7fcfe8f57b1b143dec5bf7ec5debf1d6e106b3a8"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 155.8424833600002,
+          "started_at": "2026-10-26T09:58:14.018762Z",
+          "ended_at": "2026-10-26T10:00:49.861248Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S3-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860526,
+            "sha256": "473c32426b947f3c947c2445cc66e029e5d1e3a9bb0cd9e6697c4d2668ea5982"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 153.5069928849989,
+          "started_at": "2026-10-26T10:01:04.838865Z",
+          "ended_at": "2026-10-26T10:03:38.345860Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S3-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860522,
+            "sha256": "f4fff2b0a63ee7b3ab17e0ca639cce02d414706dd043c9211e8bd04f180040ca"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S3-slice-ready.json",
+        "size_bytes": 19099,
+        "sha256": "7e52113e334fbbf279ecc518515c3a50e85de090bd80cc4557800c7d1e0e8792"
+      }
+    },
+    {
+      "slice_id": "S7",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 153.09691458199995,
+          "started_at": "2026-10-26T10:03:40.647055Z",
+          "ended_at": "2026-10-26T10:06:13.743970Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S7-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860517,
+            "sha256": "f5edd0596b63781960f5bb21f05ec977120efadc6313742136a330005947372f"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 159.78740828000082,
+          "started_at": "2026-10-26T10:06:20.375722Z",
+          "ended_at": "2026-10-26T10:09:00.163133Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S7-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860527,
+            "sha256": "e34c44c30757213375d05f64247ff6b07b7825472c8034f9695037c8034248c6"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 150.29987029600306,
+          "started_at": "2026-10-26T10:09:15.437496Z",
+          "ended_at": "2026-10-26T10:11:45.737369Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S7-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860523,
+            "sha256": "cc2a06b8c93fb69b4eb15e977440fb797c6f82984e72d1fbf9fcb1ced72bdb96"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S7-slice-ready.json",
+        "size_bytes": 19691,
+        "sha256": "2f840de887c31a17326c2bd626754253c46f422b5d2367659e7b79acb4412230"
+      }
+    },
+    {
+      "slice_id": "S8",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 168.98466211100094,
+          "started_at": "2026-10-26T10:11:48.339166Z",
+          "ended_at": "2026-10-26T10:14:37.323830Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S8-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860517,
+            "sha256": "6090157fadad5d046ef85911c3b92a9e2bc921612bbf5e99ab6719d3126be39c"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 156.1944239939985,
+          "started_at": "2026-10-26T10:14:45.945149Z",
+          "ended_at": "2026-10-26T10:17:22.139575Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S8-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860526,
+            "sha256": "6231fbd2a8236dcc082fdf6bda18da5eb31903be151e780e4197dddb93df2c89"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 149.04393163699933,
+          "started_at": "2026-10-26T10:17:37.447355Z",
+          "ended_at": "2026-10-26T10:20:06.491290Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S8-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860523,
+            "sha256": "0f3fd87d67ac48ba50d7b7ac858084c3744af95b94f1561c6e0116e99f7eb998"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S8-slice-ready.json",
+        "size_bytes": 19067,
+        "sha256": "94cb0f4f4f4cd3c9dd342b64ca7ae60748e3803395f8258e575c1976be9adc80"
+      }
+    },
+    {
+      "slice_id": "S4",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 155.0554688230004,
+          "started_at": "2026-10-26T10:20:08.927090Z",
+          "ended_at": "2026-10-26T10:22:43.982562Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S4-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860516,
+            "sha256": "1d0ad1477b28ad723a7c87bfb956dcf0e5132f5e29e0a7af58bac00830b18c47"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 149.45209934000013,
+          "started_at": "2026-10-26T10:22:50.374856Z",
+          "ended_at": "2026-10-26T10:25:19.826957Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S4-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860527,
+            "sha256": "2d1c945418c6cdd949d16dad40b61ee1bfc1a2c5a0a8e9d03dc4409c7dceeba6"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 159.07642243200098,
+          "started_at": "2026-10-26T10:25:35.646290Z",
+          "ended_at": "2026-10-26T10:28:14.722715Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S4-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860523,
+            "sha256": "c174865b8cca692b94030fb3dc4038f21fb26a47ca94c900bfd887b08739c1ad"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S4-slice-ready.json",
+        "size_bytes": 19037,
+        "sha256": "ea030099bedee3ae0eea5d1eaf38408efa5e9c8c7a00164a3f0a3444f2757992"
+      }
+    },
+    {
+      "slice_id": "S11",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 155.63008203500067,
+          "started_at": "2026-10-26T10:28:17.071379Z",
+          "ended_at": "2026-10-26T10:30:52.701463Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S11-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860518,
+            "sha256": "b9b0825c12a39dde0350334ac113ca48a7804d50ba8136b872da131a7705d076"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 150.22574552800143,
+          "started_at": "2026-10-26T10:30:59.394559Z",
+          "ended_at": "2026-10-26T10:33:29.620307Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S11-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860528,
+            "sha256": "fb53e805bcf5c85d6f96b2b2ee585962008f2c4b3e1135944773936e4f117f67"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 154.62048239399883,
+          "started_at": "2026-10-26T10:33:46.512340Z",
+          "ended_at": "2026-10-26T10:36:21.132826Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S11-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860524,
+            "sha256": "3959226fdbbc6dd1b703dd5e4b228a62038ac3fd6d08ee46f4bca7c5d1b0c0b0"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S11-slice-ready.json",
+        "size_bytes": 20799,
+        "sha256": "962db813a8df8996ab4262381bbd4e34f8f4410f1f5789e43b52a763b27927a1"
+      }
+    },
+    {
+      "slice_id": "S12",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 525,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 141.13437776299907,
+          "started_at": "2026-10-26T10:36:23.928989Z",
+          "ended_at": "2026-10-26T10:38:45.063370Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 525
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 658324,
+            "sha256": "81f5149b5c96432082179b7ed2dcded907b5c3ba1a18e4cc9d7881345d6d079f"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 525,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 143.39450704900082,
+          "started_at": "2026-10-26T10:38:54.842538Z",
+          "ended_at": "2026-10-26T10:41:18.237049Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 525
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 658334,
+            "sha256": "25d5e046930d4629cb0da626ca2131676c7d49b286c43a8ed02514674d81b98b"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 156.29265744299846,
+          "started_at": "2026-10-26T10:53:01.945371Z",
+          "ended_at": "2026-10-26T10:55:38.238032Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 848746,
+            "sha256": "4f6877146544299a613e34aaec31540d577af0fe14c43c9cb7b80f5354c94382"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "pass",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-6e0249423b479bda/canonical-evidence/regression/process-receipt.v2.json",
+          "receipt_sha256": "sha256:f5f0c6a08b4f0052e48f7069db4530f6613f270ee32fcdbcfb5d98135941831a",
+          "argv_sha256": "8752082db28e58c2cc90ae83b59452f5e6e6dcecdc24bc20ad2630b9f2ab9a4c",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        },
+        {
+          "status": "pass",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-84702b9d559991f7/canonical-evidence/regression/process-receipt.v2.json",
+          "receipt_sha256": "sha256:90b204bf9bddbefab0611b0bfa3b723049222849ed0e714440cbe2bee6fc2447",
+          "argv_sha256": "27ef58e65212779379497888031ee2f9beaa9bc3d22674ff620b015176a04902",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        },
+        {
+          "status": "pass",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-db886674895e1b5f/canonical-evidence/regression/process-receipt.v2.json",
+          "receipt_sha256": "sha256:86740f3bbf198654a27383f203d4b646ec08488943e7595d57f88117b3c1cba6",
+          "argv_sha256": "46e55a86b62bc5024a211a6e91a596e023f8e699e932784421a31ba4885e7f4f",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        },
+        {
+          "status": "pass",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": "logs/quick-dev-p1-proof-refresh-20261026/S12-current/canonical-evidence/regression/q6-executions/command-e59eaee54de0d7da/canonical-evidence/regression/process-receipt.v2.json",
+          "receipt_sha256": "sha256:d88d5a931fef22997680414d11ae0762a58ae81f5368ca9a097b6776fe82b77c",
+          "argv_sha256": "c46c819e5ed16530d31162a1241830cd8bf06007420a52261b9c744a0aa83612",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S12-slice-ready.json",
+        "size_bytes": 46935,
+        "sha256": "2a8a1f3dbabb40a981b01529aa55ee840433f99d6a3a23739338dfa09614b572"
+      }
+    },
+    {
+      "slice_id": "S10",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 152.30005430700112,
+          "started_at": "2026-10-26T10:55:41.967983Z",
+          "ended_at": "2026-10-26T10:58:14.268040Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S10-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860518,
+            "sha256": "bbb3403a70ef53a9cc409b6aea221304e12c98106e11b3c64bb191f587ac0ea0"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 156.48989105700093,
+          "started_at": "2026-10-26T10:58:21.796580Z",
+          "ended_at": "2026-10-26T11:00:58.286474Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S10-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860528,
+            "sha256": "cfadd00753dec2a34b526016fd1ff811a749690a39146e043a8fa39c8906a242"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 157.0574213209984,
+          "started_at": "2026-10-26T11:01:17.579025Z",
+          "ended_at": "2026-10-26T11:03:54.636449Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S10-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860523,
+            "sha256": "ee20bc35e29ca35f2b65b93f3cefa63e5aa9500dc5d92bd6cd3ddd9e8a3ccec0"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S10-slice-ready.json",
+        "size_bytes": 25721,
+        "sha256": "f299831e087387e2ab410389e45bbf9d60f76dd1619521b02a52b63f63f0c1ae"
+      }
+    },
+    {
+      "slice_id": "S9",
+      "Q7": "pass",
+      "terminal": "pass",
+      "stages": {
+        "probe": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 157.11450389200036,
+          "started_at": "2026-10-26T11:03:57.448347Z",
+          "ended_at": "2026-10-26T11:06:34.562854Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S9-current/canonical-evidence/probe/process-receipt.v2.json",
+            "size_bytes": 860517,
+            "sha256": "106720cc90e247d50039936486b87204570a898e8cef1a801c87ffce91ae1faa"
+          },
+          "execution_kind": "primary"
+        },
+        "regression": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 162.3508076820035,
+          "started_at": "2026-10-26T11:06:41.319761Z",
+          "ended_at": "2026-10-26T11:09:23.670571Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S9-current/canonical-evidence/regression/process-receipt.v2.json",
+            "size_bytes": 860526,
+            "sha256": "651bacab20280ddd93f65abbcfb6f44df2bd24c4ff1eb1f7cad2fcf7323b471d"
+          },
+          "execution_kind": "primary"
+        },
+        "terminal": {
+          "cases": 626,
+          "test_executions": 1,
+          "process_attempts": 1,
+          "elapsed_seconds": 164.40575768300187,
+          "started_at": "2026-10-26T11:09:41.073476Z",
+          "ended_at": "2026-10-26T11:12:25.479237Z",
+          "exit_code": 0,
+          "call_outcomes": {
+            "passed": 626
+          },
+          "receipt": {
+            "path": "logs/quick-dev-p1-proof-refresh-20261026/S9-current/canonical-evidence/terminal/process-receipt.v2.json",
+            "size_bytes": 860523,
+            "sha256": "c1a776b528684329d4a7043b30bba020d7b607e884de42681a2e44fc9fcf31fb"
+          },
+          "execution_kind": "primary"
+        }
+      },
+      "Q6": [
+        {
+          "status": "covered-by-primary-refactor-selector",
+          "cases": 626,
+          "exit_code": 0,
+          "receipt_ref": null,
+          "receipt_sha256": null,
+          "argv_sha256": "c24a98826c589cce5395cebf74ad3a63c07d7808f9c593d1d2c1c8492ced9b2a",
+          "actual_selected_node_count": 626,
+          "actual_selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf"
+        }
+      ],
+      "q7_ref": {
+        "path": "logs/quick-dev-p1-proof-refresh-20261026/S9-slice-ready.json",
+        "size_bytes": 20245,
+        "sha256": "cf08fcd4ab603662766fc281a453dfdd0e5f95889c437b196a1e66464638aed5"
+      }
+    }
+  ],
+  "new_primary_stage_executions": 36,
+  "additional_Q6_executions": 5,
+  "test_execution_receipt_count": 41,
+  "new_test_executions": 41,
+  "actual_process_attempts": 41,
+  "same_run_Q6_references_without_new_execution": 10,
+  "case_executions_total": 21144,
+  "test_process_seconds_total": 5108.221211958004,
+  "Q8": {
+    "path": "logs/quick-dev-p1-proof-refresh-20261026/Q8/implementation-complete-result.v2.json",
+    "size_bytes": 316801,
+    "sha256": "bf0e81735a90fbaeb10dc7eeb0b4c1e739e217bd6c68b6c4c87ec6a9f5a63b3f"
+  },
+  "Q8_native_command": {
+    "argv": [
+      "/workspace/scratch/stage5-p1-tests-20261026/bin/python",
+      "-B",
+      "scripts/quick_dev/run.py",
+      "--plan",
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+      "--slice",
+      "S2",
+      "--profile",
+      "standard",
+      "--action",
+      "implementation-complete",
+      "--run-dir",
+      "logs/quick-dev-p1-proof-refresh-20261026/Q8",
+      "--unit-timeout-seconds",
+      "1734",
+      "--idle-timeout-seconds",
+      "600",
+      "--snapshot-roots",
+      "logs/quick-dev-p1-proof-refresh-20261026/Q8/snapshot-roots.json",
+      "--predecessors",
+      "logs/quick-dev-p1-proof-refresh-20261026/Q8/predecessors.canonical.json",
+      "--source-commit",
+      "5b585094288f1958539d88261d78467865cfe8e7",
+      "--base-commit",
+      "965df2e34f71ef197fffd8afb68f037688486ca2",
+      "--out",
+      "logs/quick-dev-p1-proof-refresh-20261026/Q8/implementation-complete-result.v2.json"
+    ],
+    "started_at": "2026-10-26T11:27:05.586208+00:00",
+    "unit_seconds": 1734,
+    "idle_seconds": 600,
+    "prior_same_unit_elapsed_seconds": 65.50740433000101,
+    "bounded_retry": 3
+  },
+  "Q8_execution": {
+    "exit_code": 0,
+    "elapsed_seconds": 533.0164712650003,
+    "completed_at": "2026-10-26T11:35:58.603342+00:00",
+    "status": "pass",
+    "stdout": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.stable-inputs.stdout.json",
+    "stderr": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.stable-inputs.stderr.txt",
+    "command_file": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.stable-inputs.command.json",
+    "prior_same_unit_elapsed_seconds": 65.50740433000101
+  },
+  "Q8_prior_native_rejections": {
+    "S2-implementation-complete.initial-assembly-error": {
+      "exit_code": 1,
+      "elapsed_seconds": 0.646095038002386,
+      "completed_at": "2026-10-26T11:12:26.659731+00:00",
+      "status": "blocked",
+      "predicate_result": null,
+      "stdout": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.stdout.json",
+      "stderr": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.stderr.txt"
+    },
+    "S2-implementation-complete.canonical-input-validator-error": {
+      "exit_code": 1,
+      "elapsed_seconds": 0.645829187000345,
+      "completed_at": "2026-10-26T11:21:45.270259+00:00",
+      "status": "blocked",
+      "stdout": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.canonical-predecessors.stdout.json",
+      "stderr": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.canonical-predecessors.stderr.txt",
+      "command_file": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.canonical-predecessors.command.json",
+      "prior_same_unit_elapsed_seconds": 0.646095038002386
+    },
+    "S2-implementation-complete.diagnostic-metadata-seal-error": {
+      "exit_code": 1,
+      "elapsed_seconds": 64.21548010499828,
+      "completed_at": "2026-10-26T11:24:56.350757+00:00",
+      "status": "blocked",
+      "stdout": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.restored-validator.stdout.json",
+      "stderr": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.restored-validator.stderr.txt",
+      "command_file": "logs/quick-dev-p1-proof-refresh-20261026/S2-implementation-complete.restored-validator.command.json",
+      "prior_same_unit_elapsed_seconds": 1.291924225002731
+    }
+  },
+  "Q8_runtime_closure_tuple_count": 610,
+  "Q6_same_actual_selection_groups": [
+    {
+      "slice_id": "S12",
+      "selected_nodes_sha256": "1e5340325e68ea11f6f9b91a45865e7809528de4b152b9b01df61fe7c8e674bf",
+      "command_count": 4
+    }
+  ],
+  "author_statuses": {
+    "S2": "probe-materialized",
+    "S5": "probe-materialized",
+    "S6": "probe-materialized",
+    "S1": "probe-materialized",
+    "S3": "probe-materialized",
+    "S7": "probe-materialized",
+    "S8": "probe-materialized",
+    "S4": "probe-materialized",
+    "S11": "probe-materialized",
+    "S12": "probe-materialized",
+    "S10": "probe-materialized",
+    "S9": "probe-materialized"
+  },
+  "notes": [
+    "Current proof follows native present/regression route; historical causal RED/GREEN remains in stage5-p1-native-20261026.",
+    "No old receipt or Windows original was upgraded or rewritten.",
+    "Git SHA alone did not invalidate evidence: adapter and shared test content/dependencies changed.",
+    "Same-run Q6 selector coverage reuses primary receipts; distinct full-module and extra commands remain required.",
+    "Some syntactically distinct frozen Q6 commands select the same nodes. The current native gate creates separate command-bound receipts; these are duplicate case executions, not additional unique coverage. No gate/protocol change was introduced to merge them.",
+    "Windows 11-node runtime subset is reused; it does not cover seven added P1 cases or whole-repository Windows acceptance.",
+    "Stage5 implementation-complete is not external incremental review or Acceptance approval."
+  ]
+}

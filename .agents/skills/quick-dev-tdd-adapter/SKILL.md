@@ -55,6 +55,14 @@ All current evidence writes are immutable create-if-absent and reference explici
 
 ## Failure And Stop-Loss
 
+Each independent slice execution stage/command defaults to a total budget of
+1800 seconds and 600 seconds without real progress. Different Q2/probe/RED/
+GREEN/Q6 regression/terminal units do not share an aggregate round deadline.
+Retries of the same content-bound unit share one cumulative allowance; a new
+worker does not renew it. The public entry accepts `--unit-timeout-seconds` and
+`--idle-timeout-seconds`; explicit shorter frozen descriptor limits remain in
+force. See execution guidance for progress, cancellation and recovery.
+
 Current classification must distinguish at least: `semantic-contract-gap`, `expected-red`, `unexpected-green`, `task-implementation-failure`, `test-harness-failure`, `target-binding-failure`, `repo-noise`, `timeout-no-observation`, `repeated-deterministic-failure`, and `artifact-integrity`.
 
 A successful lifecycle stage requires real observed execution and nonzero test/case counts. Current case counts come from structured pytest call events, never from a summary or arbitrary SUT markers. Counts alone do not authorize an assertion edge. Timeout, harness, repo-noise, zero-case, wrong target, unexpected-green and artifact-integrity failures cannot satisfy RED or completion. Deterministic failure fingerprints exclude timestamp/run-duration/output-byte noise; the same fingerprint twice routes `repair-vdd` or `stop`. Rerun is legal only after relevant input changes.
@@ -98,8 +106,27 @@ execution or acceptance evidence.
 For a genuinely absent planned production entry, use the deterministic
 `prepare-entry` action before Q2, with the hash-bound first-use input described
 in [execution guidance](references/execution-operation.md#first-use-entry-preparation).
-It can create only missing Python interfaces returning None and empty JSON
-interfaces inside the exact declared new production boundary. It cannot accept
+It can create only missing Python interfaces returning None, empty JSON
+interfaces and zero-byte TOML interfaces (exports=[]; no keys or defaults) inside the exact declared new production boundary. It cannot accept
 model-authored function bodies or data. It is not implementation, RED or
 completion authority. Existing local and online Q2/Q4 routes remain unchanged;
 Q2 still cannot write production, and Q4 still requires observed behavioral RED.
+
+## Content-bound shared execution
+
+For maintenance or reuse diagnostics, read [shared execution](references/shared-execution.md).
+Successful compatible Python pytest executions are shared by content across
+slices, Q6 and terminal. Uses reference immutable originals with zero new
+process attempts. Q7/Q8 reread originals and exact case coverage; Git provenance
+alone does not invalidate an otherwise identical execution. Legacy receipts
+without the shared input/original bindings are not upgraded or relabeled.
+
+## Delivered upstream inputs
+
+Consume delivered BMAD artifacts directly as inputs. Do not determine whether
+they need upstream review, require BMAD reviewer reports or approval evidence,
+or launch/repeat BMAD generation or review. Keep readability, format/schema,
+reference and input-content identity checks, plus this workflow's own contract
+and implementation checks. These checks must not become an upstream quality
+review gate. Explicit user-requested stage-end external A/B remains separate
+and is neither launched nor removed by this rule.

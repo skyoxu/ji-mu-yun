@@ -1,0 +1,13 @@
+{
+  "read_only": true,
+  "changed_binding_sections": [
+    "engine_sha256"
+  ],
+  "changed_engine_files": [
+    "regression_gate.py"
+  ],
+  "probe_reentry": "stage-reentry-blocked: incomplete or stale evidence; preserve this run and recover or start an explicit new run: execution input changed",
+  "old_primary_regression": "599 passed but no completed Q6/stage result; original partial evidence remains immutable",
+  "Git_only_invalidation": false,
+  "authorizes": []
+}

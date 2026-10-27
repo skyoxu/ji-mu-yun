@@ -1,0 +1,7 @@
+@pytest.mark.parametrize('stage,operation,scenario', [
+    (stage, operation, scenario)
+    for stage, operation in [('vdd-create', 'create'), ('vdd-repair', 'repair')]
+    for scenario in ['admitted', 'unknown', 'bootstrap', 'quick-dev',
+                     'refactor-acceptance', 'stage-as-consumer', 'policy-absent',
+                     'publication-absent', 'publication-corrupt']
+] + [(None, None, consumer) for consumer in ['vdd', 'bootstrap', 'refactor-acceptance', 'quick-dev']])

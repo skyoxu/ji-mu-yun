@@ -2,11 +2,51 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import importlib.util
+import os
 from pathlib import Path
 import re
 import sys
 
 import pytest
+
+
+class DependencyReads:
+    """Bounded observation, never an execution sandbox or a test verdict."""
+    def __init__(self):
+        self.reads = {}
+        self.writes = set()
+        self.errors = set()
+        self.busy = False
+        self.bytes = 0
+
+    def audit(self, event, args):
+        if self.busy:
+            return
+        if event in {"subprocess.Popen", "os.system", "os.posix_spawn", "socket.connect"}:
+            self.errors.add("reuse-unobserved-external-effect:" + event)
+        if event != "open" or not isinstance(args[0], (str, bytes)):
+            return
+        self.busy = True
+        try:
+            path = Path(os.fsdecode(args[0])).resolve()
+            mode, flags = args[1:3]
+            if (isinstance(mode, str) and any(c in mode for c in "wax+")) or flags & (os.O_WRONLY | os.O_RDWR):
+                self.writes.add(str(path))
+                return
+            if str(path) in self.writes or path.suffix == ".pyc" or not path.is_file():
+                return
+            if str(path) not in self.reads:
+                self.bytes += path.stat().st_size
+                if len(self.reads) >= 50000 or self.bytes > 512 * 1024 * 1024:
+                    self.errors.add("reuse-read-observation-budget-exceeded")
+                    return
+                self.reads[str(path)] = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+        except (OSError, ValueError):
+            self.errors.add("reuse-read-observation-incomplete")
+        finally:
+            self.busy = False
 
 
 class Collector:
@@ -55,8 +95,24 @@ def main():
     request_path, output_path, *args = sys.argv[1:]
     request = json.loads(Path(request_path).read_text(encoding="utf-8"))
     collector = Collector()
+    reads = DependencyReads()
+    sys.addaudithook(reads.audit)
     code = int(pytest.main(args, plugins=[collector]))
-    report = {**request, "schema": "quick-dev.pytest-case-report.v1", "complete": True,
+    reads.busy = True  # Freeze observation before hashing/report output.
+    dependencies = dict(reads.reads)
+    for module in list(sys.modules.values()):
+        raw = getattr(module, "__file__", None)
+        if not isinstance(raw, str):
+            continue
+        path = Path(raw)
+        if path.suffix == ".pyc":
+            try:
+                path = Path(importlib.util.source_from_cache(str(path)))
+            except ValueError:
+                pass
+        if path.is_file():
+            dependencies[str(path.resolve())] = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    report = {**request, "dependency_files": dependencies, "dependency_errors": sorted(reads.errors), "schema": "quick-dev.pytest-case-report.v1", "complete": True,
               "exit_code": code, "collected": collector.collected,
               "selected": collector.selected, "events": collector.events,
               "errors": collector.errors}

@@ -1,0 +1,19 @@
+{
+  "kind": "Publication selection, not a coverage waiver",
+  "excluded": [
+    "Credentials and secret-bearing data",
+    "Private Library/base64/chunk transfer wrappers and signed transport responses",
+    "Temporary process/test caches and unrelated untracked files",
+    "BMAD installations or newly excluded BMAD query work",
+    "Unrelated historical logs not already in the predecessor",
+    "Workflow or model configuration modifications"
+  ],
+  "preserved": [
+    "Previous review packages and failure originals",
+    "All current native proof and Acceptance lifecycle originals",
+    "Completed Skill-input attempt dependency files at original paths",
+    "The real Windows ZIP unchanged"
+  ],
+  "no_tests_models_or_CI_queries_for_publication": true,
+  "authorizes": []
+}

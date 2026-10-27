@@ -1,0 +1,44 @@
+[
+  {
+    "path": "scripts/vdd/compile_plan.py",
+    "before_sha256": "2287bf49a25eade64007afcb4585e128d7080973c6eb2d5077fbde0e9c2f16b1",
+    "after_sha256": "40ec9ef5796f6f246cb62e80464f8578baf3192526f3381644523659e762d9d9",
+    "new": false
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py",
+    "before_sha256": "9b2f5929e695a27b0b40517324b16694c055f5dbe587b71d4bb441de8d0a608f",
+    "after_sha256": "5f9e2453ad77513dae6b54ad02f520e1eba0ed66c580a93986b70511a5c42766",
+    "new": false
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py",
+    "before_sha256": null,
+    "after_sha256": "5866d970d62871fef30cd9388483246c64528432698ff2fa5269f0ea6077c19e",
+    "new": true
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    "before_sha256": null,
+    "after_sha256": "bc24cae30e9d87a2f5ee9d1373f06386ed096c29a9d03d7d5092d0a4d2a65440",
+    "new": true
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "before_sha256": "630823962ad5932eef290a7061f06eb4c25b09acd23073afd4e1c819ccef7019",
+    "after_sha256": "8c55aa4bdc0ff7464bcd4050d17b80b395bc142530e9000ba0f098957163341a",
+    "new": false
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+    "before_sha256": "e546009d4acab17c4d440a72ec84e1e996bd91d007ea86178bba1e9ff6ac0172",
+    "after_sha256": "b0f82be1dfa5e99e79cb061f13c27658d14a541f206503d6f564e9e2ab080d17",
+    "new": false
+  },
+  {
+    "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "before_sha256": "af562b19a5983411a29df0a12a894b96fda47921838fbf57e2c9bc69ce1fa44b",
+    "after_sha256": "66a730e7b7bec74438ed30ef28254aa007212feeec6a69c3692b053269be4de3",
+    "new": false
+  }
+]

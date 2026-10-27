@@ -1,0 +1,84 @@
+{
+  "mode": "offline draft copy; no request, receipt, test collection, test execution or native acceptance",
+  "approval": "Sentinel_f0f9db4aab6081919a55b1dd2f5a0aad",
+  "original_sha256": "49da496937898dfdceb01f96f62b94a9da684a7fe6750bd5b62678e4d5fd8965",
+  "corrected_sha256": "47cbf5528d6b85617d9198f0f9e4b954fe3a759935419dabb17ff6e2bfd7ed8e",
+  "contracts_total": 305,
+  "contracts_changed": 3,
+  "contracts_unchanged": 302,
+  "semantic_delta_paths": 9,
+  "command_sets_before": 2,
+  "command_sets_after": 5,
+  "native_checks": [
+    {
+      "obligation_id": "O-8223FCF6C8EC",
+      "assertion": "ASSERT_1B2DEF4F4ED8",
+      "retained_function": "test_planning_attempt_deadline",
+      "added_function": "test_contract_1b2def4f4ed8",
+      "marker_functions": [
+        "test_contract_1b2def4f4ed8",
+        "test_planning_attempt_deadline"
+      ],
+      "k_terms_before": 195,
+      "k_terms_after": 196,
+      "newly_selected_function_names": [
+        "test_contract_1b2def4f4ed8"
+      ],
+      "native_findings": [],
+      "schema_errors": [],
+      "current_path_refresh_required": false
+    },
+    {
+      "obligation_id": "O-CDC5AF544B86",
+      "assertion": "ASSERT_550968C7B8C5",
+      "retained_function": "test_planning_closed_episode_does_not_retry",
+      "added_function": "test_contract_550968c7b8c5",
+      "marker_functions": [
+        "test_contract_550968c7b8c5",
+        "test_planning_closed_episode_does_not_retry"
+      ],
+      "k_terms_before": 195,
+      "k_terms_after": 196,
+      "newly_selected_function_names": [
+        "test_contract_550968c7b8c5"
+      ],
+      "native_findings": [],
+      "schema_errors": [],
+      "current_path_refresh_required": false
+    },
+    {
+      "obligation_id": "O-07E8E988B1EA",
+      "assertion": "ASSERT_1907855D27FB",
+      "retained_function": "test_planning_request_structure",
+      "added_function": "test_contract_1907855d27fb",
+      "marker_functions": [
+        "test_contract_1907855d27fb",
+        "test_planning_request_structure"
+      ],
+      "k_terms_before": 195,
+      "k_terms_after": 196,
+      "newly_selected_function_names": [
+        "test_contract_1907855d27fb"
+      ],
+      "native_findings": [],
+      "schema_errors": [],
+      "current_path_refresh_required": false
+    }
+  ],
+  "preserved_file_hashes": {
+    "logs/vdd-scoped-compile-20261024-r3/authoring/v3-caller-candidates.json": "49da496937898dfdceb01f96f62b94a9da684a7fe6750bd5b62678e4d5fd8965",
+    "logs/vdd-scoped-compile-20261024-r3/authoring/v1-source-recall-caller-assessment.json": "ff06b1c02b1a14e83ace6897136993eb54e10b46582e5571a0a3d59b7b29953e",
+    "logs/scoped-input-preparation-20261024-v3/input-source-index.json": "cd58fba54c0ebf406adb517b303d9ff466c4600d17cf9624a2cd2db4195e89ef",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "c5d064136d6df802ec78e4db2120b85985ae506662fdee4d92367b901512d8f6",
+    "scripts/vdd/compile_plan.py": "40ec9ef5796f6f246cb62e80464f8578baf3192526f3381644523659e762d9d9",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_worker_transport_patch.py": "5f9e2453ad77513dae6b54ad02f520e1eba0ed66c580a93986b70511a5c42766",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py": "5866d970d62871fef30cd9388483246c64528432698ff2fa5269f0ea6077c19e",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py": "bc24cae30e9d87a2f5ee9d1373f06386ed096c29a9d03d7d5092d0a4d2a65440",
+    ".agents/skills/vdd-execution-plan/SKILL.md": "8c55aa4bdc0ff7464bcd4050d17b80b395bc142530e9000ba0f098957163341a",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md": "b0f82be1dfa5e99e79cb061f13c27658d14a541f206503d6f564e9e2ab080d17",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": "66a730e7b7bec74438ed30ef28254aa007212feeec6a69c3692b053269be4de3"
+  },
+  "forbidden_operations": [],
+  "elapsed_seconds": 0.4467369040000335,
+  "authorizes": []
+}

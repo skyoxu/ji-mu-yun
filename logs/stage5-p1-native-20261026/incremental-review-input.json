@@ -1,0 +1,61 @@
+{
+  "kind": "local incremental input only; not external review",
+  "authorizes": [],
+  "review_baseline_commit": "2abfbccbe532f6d934d3bba36d00c915207f5e38",
+  "host_commit": "5b585094288f1958539d88261d78467865cfe8e7",
+  "files": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "current_sha256": "7f25464c6e621b906a6f35cefe6487c339fc9ae2930b2eb95afd86971838cca4",
+      "review_baseline_sha256": "4a8bd4df51fffc5eed5e9295ebe5c10b383e80d1447bcc8db52467bf773133c4",
+      "in_host_commit": true
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+      "current_sha256": "9ff7de96d91d1ba3a65ab2b9ef7938e4cb1abaec87e90b98d69d546b42bbbef8",
+      "review_baseline_sha256": "80faae5f0caf73e7a831c0d2569159aaf2af39e2c6a5df98cd1cfa5f3d7213ed",
+      "in_host_commit": true
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      "current_sha256": "ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7",
+      "review_baseline_sha256": "799517132dfca12903c79a3935a4363ff9d84e4bbbe058ca6580d20e146c022d",
+      "in_host_commit": true
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+      "current_sha256": "bd18ace93ff30f373bf2a7bc167cdcbb629a61bc5b446eebef984751b0f85d7b",
+      "review_baseline_sha256": null,
+      "in_host_commit": true
+    },
+    {
+      "path": "scripts/vdd/compile_plan.py",
+      "current_sha256": "e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77",
+      "review_baseline_sha256": "679442ba962e808fff3576a8c1fd32ec9e50135407191084ce6d62500e61167a",
+      "in_host_commit": true
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/adapter.py",
+      "current_sha256": "92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+      "review_baseline_sha256": "aa7b4984a22024bbd409def1e46254bbe4ffbc9040c28084a9565d667940cc39",
+      "in_host_commit": false
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "current_sha256": "6711fcd3e01cee6ac6e90c399622f746402e479060dbdb7cb81b63964fb98d84",
+      "review_baseline_sha256": "71926958969db6cf07c0c636468585dfba31d46d03d190bcd55cdf97c880215d",
+      "in_host_commit": false
+    },
+    {
+      "path": "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+      "current_sha256": "4a04d97d3b68e2968bf16c60888f4183693e347b7c1cb6e67086d9910e415690",
+      "review_baseline_sha256": "830f3f9f62913d8287a35d2e5fdf3e298a79447b5b08dd52bd5196f81646c480",
+      "in_host_commit": false
+    }
+  ],
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_canonical_sha256": "aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "native_summary": "logs/stage5-p1-native-20261026/result-summary.json",
+  "vdd_report": "logs/stage5-p1-vdd-binding-fix-20261026/REPORT.md",
+  "limits": "No fresh current Windows/Q7/Q8 or Acceptance claim; not pushed."
+}

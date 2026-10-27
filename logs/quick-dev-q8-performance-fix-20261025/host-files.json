@@ -1,0 +1,9 @@
+{
+  "authorizes": [],
+  "host": "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+  "files": {
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py": "1d98150f7b23cf4df178c10941ecf02ab5b13a6982c4b049d966e193022bd620",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py": "ce91e481b3e35518c8384648a090390b29646bc71fb597dc27a3a9ab9aad1c39",
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md": "fe85f9d1dad13db73aa19e716ea65ac72f00c84cb2e0f8ac8a56699a8ede874a"
+  }
+}

@@ -1,0 +1,5 @@
+[acceptance/knowledge-query-final-content-20261026 d82a2385] fix(acceptance): isolate immutable main knowledge validation
+ 5 files changed, 616 insertions(+), 52 deletions(-)
+ create mode 100644 .agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py
+ create mode 100644 .agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py
+{"event": "native-preparation-completed", "candidate": "d82a2385a07672117eda6c6c90c6df4527d3bf45", "source_paths": 27, "attempt_retained": true, "pointer": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/skill-input-v2/acceptance/current.v1.json", "at": "2026-10-26T17:48:03.199056+00:00"}

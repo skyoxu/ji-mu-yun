@@ -726,7 +726,9 @@ def resolve_code_review_policy(policy: Any, candidate_manifest: Any, baseline_ma
         owned = tuple(rules["ownedPrefixes"])
         cross_domain = set(rules["crossDomainPaths"])
         triggered_paths = sorted(
-            path for path in paths if path.startswith(owned) or path in cross_domain
+            path for path in paths
+            if any(path.startswith(prefix) if prefix.endswith("/") else path == prefix
+                   for prefix in owned) or path in cross_domain
         )
         uncovered = sorted(path for path in paths if path not in triggered_paths)
         if uncovered:

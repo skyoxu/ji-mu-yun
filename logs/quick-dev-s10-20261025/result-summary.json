@@ -1,0 +1,32 @@
+{
+  "host_commit": "b908cb3915cb50c6860445e27c1e1012137e60bb",
+  "plan_sha256": "sha256:955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c",
+  "test_sha256": {
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py": "sha256:3cac44166ac1eb6c212273e71a5dd3fce80efc29c9e16d6edb0ca5d3f341e786"
+  },
+  "started_at": "2026-10-25T11:16:47.184007Z",
+  "ended_at": "2026-10-25T11:19:06.778339Z",
+  "elapsed_seconds": 139.59432961899802,
+  "process_attempts": 1,
+  "cases": 601,
+  "call_passed": 600,
+  "call_failed": 1,
+  "timed_out": false,
+  "output_budget_exhausted": false,
+  "predicate_result": false,
+  "required_next_action": "repair-vdd",
+  "dispositions": {
+    "present": 1,
+    "unverifiable": 33
+  },
+  "unverifiable_causes": {
+    "unbound_assertions_not_business_failures": 32,
+    "actual_unexpected_guard_failure": 1
+  },
+  "blocked_assertion": "ASSERT_F7FB563211E4",
+  "blocked_obligation": "O-FA843AFD3320",
+  "failure_intent": "FI-2BBFF848E3F3",
+  "expected_failure_ids": [],
+  "runtime_edges": [],
+  "authorizes": []
+}

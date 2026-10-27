@@ -1,0 +1,44 @@
+{
+  "bindings": {
+    "authority": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/acceptance-authority.v1.json",
+      "sha256": "sha256:930c40f7c4dbc2ac7faec1f55b3a3b616a612ae8f024021a690278bb7d3fbe4a"
+    },
+    "contract": {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/skill-input-contract.v1.json",
+      "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+    },
+    "knowledge_freeze": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:da0ebc237b5bbb096cf746f76c40e1f5da23e4e92af94b64d2c5102244c365fa"
+    },
+    "registry": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/command-registry.v1.json",
+      "sha256": "sha256:cde922c2b5065a9b19b05d6ff9f7b2b02519d4f99b539784d284a76edbe9680d"
+    }
+  },
+  "consumer": "run-refactor-implementation-acceptance",
+  "inputs": {
+    "acceptance_requirements": [
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/acceptance-input-projection.v1.json"
+    ],
+    "implementation_target": [
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/acceptance-input-projection.v1.json"
+    ]
+  },
+  "operation": "acceptance",
+  "plan_id": "knowledge-query-acceptance-20261026",
+  "policy_revision": "acceptance-v2",
+  "schema_version": "skill-input-request.v2",
+  "sources": [
+    {
+      "authority": "approved-vdd-canonical-inputs",
+      "module": "implementation_target",
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/acceptance-input-projection.v1.json",
+      "resource_set": "approved-scoped-plan-projection",
+      "role": "implementation_input",
+      "sha256": "sha256:d883bdeef1f56916b4af4ecafa965ecfbbf5f39bdfd100f6bd9160a95a234489"
+    }
+  ],
+  "storage": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-prepared-v2/skill-input-v2/acceptance"
+}

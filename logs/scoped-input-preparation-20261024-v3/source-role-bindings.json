@@ -1,0 +1,226 @@
+{
+  "authorizes": [],
+  "status": "source role inventory, not a canonical selection replacement",
+  "active_inputs": [
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/01-scope-and-reuse.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:2e9d61261e7c2158c9fea674f30c878affd630f798780dc58febe35abdb252b1",
+      "active_anchors": [
+        "SM-K01",
+        "SM-K02",
+        "SM-K03",
+        "SM-K04",
+        "SM-K06",
+        "SM-K07",
+        "SM-K08",
+        "SM-K09",
+        "SM-K10",
+        "SM-K11",
+        "SM-K12",
+        "SM-K13",
+        "SM-K14",
+        "SM-K15",
+        "SM-K16",
+        "SM-K17"
+      ]
+    },
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/02-historical-boundaries.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:7917123c647983f45f4d63a2579eb8ef2f51a6e0d6911a1f9337c2d6cce754ab",
+      "active_anchors": [
+        "SM-K22"
+      ]
+    },
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/03-behavior-contracts.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:9786df8c552fed20ae8b837e3208c910a297cf288288448782d37458c9429630",
+      "active_anchors": [
+        "SM-K23",
+        "SM-K24",
+        "SM-K25",
+        "SM-K26",
+        "SM-K27",
+        "SM-K28",
+        "SM-K29",
+        "SM-K30",
+        "SM-K31",
+        "SM-K32",
+        "SM-K33",
+        "SM-K34",
+        "SM-K35"
+      ]
+    },
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/04-failure-protection.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:3d66c8213310bb752c14e1ef953dc83edf454c60772868968bb83a02f793643c",
+      "active_anchors": [
+        "SM-K36",
+        "SM-K37",
+        "SM-K38",
+        "SM-K39",
+        "SM-K40",
+        "SM-K41",
+        "SM-K42"
+      ]
+    },
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/05-acceptance-boundaries.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:f33bfdd9ebf68f32894ad4aa923580372ca2b27483180f6fb40664d8a65a1e7f",
+      "active_anchors": [
+        "SM-K43"
+      ]
+    },
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/06-scope-exclusions.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:100a55420d314544c7aacff98a2ee551f12b691d1338476878a56065b694a16e",
+      "active_anchors": [
+        "SM-K44",
+        "SM-K45",
+        "SM-K46",
+        "SM-K47",
+        "SM-K48",
+        "SM-K49",
+        "SM-K50"
+      ]
+    },
+    {
+      "path": "logs/scoped-input-preparation-20261024-v3/inputs/07-shared-design.md",
+      "role": "pending-author-scoped-normative",
+      "sha256": "sha256:4bcf37c586a07a5cfe255812c198a09b2be31e263a55d04a2865a75e35119eab",
+      "active_anchors": [
+        "SM-K51",
+        "SM-K52",
+        "SM-K53",
+        "SM-K54",
+        "SM-K55",
+        "SM-K56",
+        "SM-K57",
+        "SM-K58",
+        "SM-K59",
+        "SM-K60",
+        "SM-K61",
+        "SM-K62",
+        "SM-K63",
+        "SM-K64",
+        "SM-K65",
+        "SM-K67"
+      ]
+    }
+  ],
+  "historical_sources": [
+    {
+      "path": "execution-plans/2026-10-23-bmad-vdd-knowledge-query-runtime-r23/semantic-plan-bundle.v1.json",
+      "sha256": "sha256:66919b3d4a2bc7eb53421fdcfd8620903fc35e04a1e70c2a262f4907ff19887e",
+      "original_role_boundary": "historical-derived-plan-or-index",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": []
+    },
+    {
+      "path": "execution-plans/2026-10-23-bmad-vdd-knowledge-query-runtime-r23/source-index.v1.json",
+      "sha256": "sha256:183394f8b115069a02e4af6c998f9553681797afe27b89297e92b9de442b73fa",
+      "original_role_boundary": "historical-derived-plan-or-index",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": []
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-bmad-vdd-knowledge-query-2026-10-22/sources/bmad-vdd-knowledge-query-requirements.md",
+      "sha256": "sha256:ce45693489d02227442c04c9b4e7220121a897d81dab03abc7867e6ceff11950",
+      "original_role_boundary": "original-provenance",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "provenance"
+      ]
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-bmad-vdd-knowledge-query-2026-10-22/prd.md",
+      "sha256": "sha256:d19fc0995ca6a486038dad19581252289c6e152c69950cc96e39008f3736da75",
+      "original_role_boundary": "original-provenance",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "provenance"
+      ]
+    },
+    {
+      "path": "_bmad-output/specs/spec-bmad-vdd-knowledge-query/SPEC.md",
+      "sha256": "sha256:b2a9d5f3682440891586778a3eca3c7d542c57857c84a4e49438708a7cde7d83",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "canonical"
+      ]
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-bmad-vdd-knowledge-query-2026-10-22/addendum.md",
+      "sha256": "sha256:3edca061b602888df6d9408a2704b49599e1fda9e44cf2ed023d304b4260c248",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "adopted_companion"
+      ]
+    },
+    {
+      "path": "_bmad-output/specs/spec-bmad-vdd-knowledge-query/behavior-contracts.md",
+      "sha256": "sha256:73d0b67ce697ac7fef2595ded5f6490de726e1c788e5bd4eae00d3156487db6e",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "normative_companion"
+      ]
+    },
+    {
+      "path": "_bmad-output/specs/spec-bmad-vdd-knowledge-query/failure-modes.md",
+      "sha256": "sha256:f3bbcd5665f3d90ac08c0b40ec2c6b527a41187ad8a74662e225b37c82885faa",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "normative_companion"
+      ]
+    },
+    {
+      "path": "_bmad-output/specs/spec-bmad-vdd-knowledge-query/acceptance.md",
+      "sha256": "sha256:4abb411b00cb57f5ce81cbfc04af53ef4bccd69f541b1135684c4f43c1a192f7",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "normative_companion"
+      ]
+    },
+    {
+      "path": "_bmad-output/specs/spec-bmad-vdd-knowledge-query/scope-and-decisions.md",
+      "sha256": "sha256:540976c163f2101d663d52f0d1b721e029c2ae2cebf0ed93443f90ecf9141220",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "normative_companion"
+      ]
+    },
+    {
+      "path": "logs/bmad-wrappers/architecture-zero-match-2026-10-22/native/logs/bmad-wrappers/architecture-knowledge-query-2026-10-22/native/_bmad-output/architecture/ARCHITECTURE-SPINE.md",
+      "sha256": "sha256:514d372320affd73a0c7b5e645aeb109b9af309bd56d2935414a69bdedaf62f3",
+      "original_role_boundary": "original-delivered-normative-or-adopted; retained portions only",
+      "current_use": "read-only lineage for scoped clauses; not CLI active input, not upstream reapproval",
+      "bmad_execution_authorized": false,
+      "original_typed_roles_as_recorded_in_old_projection": [
+        "adopted_companion"
+      ]
+    }
+  ],
+  "old_typed_current_record_selection_not_rewritten": true,
+  "no_new_upstream_approval_requirement": true
+}

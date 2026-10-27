@@ -1,0 +1,8 @@
+{"pid": 2847863, "state": "waiting-existing-compatibility", "at": "2026-10-26T16:59:29.673821+00:00", "authorizes": [], "existing_compatibility_pid": 2847004}
+{"event": "stage-start", "stage": "native-preparation", "at": "2026-10-26T17:47:58.166490+00:00"}
+{"event": "stage-finish", "stage": "native-preparation", "exit_code": 0, "at": "2026-10-26T17:48:03.215768+00:00"}
+{"event": "stage-start", "stage": "affected-proof-refresh", "at": "2026-10-26T17:48:03.216376+00:00"}
+{"event": "stage-finish", "stage": "affected-proof-refresh", "exit_code": 0, "at": "2026-10-26T19:10:08.569926+00:00"}
+{"event": "stage-start", "stage": "native-Acceptance", "at": "2026-10-26T19:10:08.570433+00:00"}
+{"event": "stage-finish", "stage": "native-Acceptance", "exit_code": 0, "at": "2026-10-26T19:38:33.930711+00:00"}
+{"pid": 2847863, "state": "acceptance-passed-unpublished", "at": "2026-10-26T19:38:33.930737+00:00", "authorizes": [], "existing_compatibility_pid": 2847004, "stage": "native-Acceptance", "started_at": "2026-10-26T19:10:08.569954+00:00", "active_pid": null, "completed_stages": [{"stage": "native-preparation", "exit_code": 0, "finished_at": "2026-10-26T17:48:03.215022+00:00"}, {"stage": "affected-proof-refresh", "exit_code": 0, "finished_at": "2026-10-26T19:10:08.569536+00:00"}, {"stage": "native-Acceptance", "exit_code": 0, "finished_at": "2026-10-26T19:38:33.930459+00:00"}]}

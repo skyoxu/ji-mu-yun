@@ -1,0 +1,18 @@
+{
+  "kind": "static evidence applicability; no old receipt mutated",
+  "authorizes": [],
+  "old_windows_archive": "logs/quick-dev-s4-20261025/windows-original/parent-original.zip",
+  "archive_sha256": "769b2604e69d2627018be8ccee9228fae4105f492cddda1889054e489bb2df21",
+  "original_adapter_sha256": "aa7b4984a22024bbd409def1e46254bbe4ffbc9040c28084a9565d667940cc39",
+  "current_adapter_sha256": "92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+  "compatible": false,
+  "required_historical_evidence_readers_preserved": [
+    "test_contract_f7401102fe99[windows-evidence]",
+    "test_contract_58d790ed2d22",
+    "test_windows_planning_query_runtime_evidence"
+  ],
+  "why_full_Q6_terminal_not_executed": "Current source checks require the actual current runtime original; known old adapter hash cannot pass. No Windows node omitted from the declared full-module command.",
+  "impact_inventory": "logs/stage5-p1-self-review-20261026/proof-impact-static.json",
+  "old_regression_terminal_originals_bound_to_changed_adapter_and_shared_test": 24,
+  "remaining": "New real Windows evidence and an explicit current-reader input binding, then native affected proof refresh/Q7/Q8; no publication/dispatch authorized in this step."
+}

@@ -1,0 +1,7 @@
+{"event": "acceptance-start", "label": "project-compact-vdd", "at": "2026-10-26T19:10:08.850909+00:00"}
+{"event": "acceptance-return", "label": "project-compact-vdd", "exit_code": 0, "seconds": 558.3147549249989, "finished_at": "2026-10-26T19:19:27.165694+00:00"}
+{"event": "acceptance-start", "label": "prepare-run", "at": "2026-10-26T19:19:27.166625+00:00"}
+{"event": "acceptance-return", "label": "prepare-run", "exit_code": 0, "seconds": 545.0363338380048, "finished_at": "2026-10-26T19:28:32.202978+00:00"}
+{"event": "acceptance-start", "label": "run-coordinator", "at": "2026-10-26T19:28:32.203913+00:00"}
+{"event": "acceptance-return", "label": "run-coordinator", "exit_code": 0, "seconds": 601.6980408149975, "finished_at": "2026-10-26T19:38:33.902115+00:00"}
+{"event": "acceptance-passed", "result": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-result.v4.json", "at": "2026-10-26T19:38:33.922133+00:00"}

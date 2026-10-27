@@ -1,0 +1,46 @@
+{
+  "Q8": {
+    "path": "logs/acceptance-main-isolated-proof-refresh-20261026/Q8/implementation-complete-result.v2.json",
+    "sha256": "sha256:b21898dbe0a58b558a1ac80d602491285d5a8b9170f5cb4f962a6f50c45a85a2"
+  },
+  "all_completed_attempt_files_retained_in_place": true,
+  "at": "2026-10-26T19:38:33.902838+00:00",
+  "authorizes": [],
+  "candidate": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "compatibility_scope": "logs/acceptance-trusted-main-loader-fix-20261026/compatibility-source-scope.json",
+  "coordinator_request": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-request.v3.json",
+    "sha256": "sha256:f0373d451951d5dd59337cef3b78447c869fad7af30deda3bd1aa02f68388d32"
+  },
+  "coordinator_result": {
+    "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-coordinator-result.v4.json",
+    "sha256": "sha256:0df6297acf086696af1c271c2bec96c47127493fa2cb129a1e4f50b395e80395"
+  },
+  "isolation_source_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md"
+  ],
+  "kind": "Actual native Acceptance, not publication authority",
+  "no_new_models_BMAD_AB_Windows_CI_or_push": true,
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_sha256": "sha256:aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "published": false,
+  "required_attempt_dependency_originals": [
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/attempt.json",
+      "sha256": "sha256:5aede7d8e58ab2e8ea16e61e4dab90ab41ebe68601a1a2e21984f913301dce59"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/observed.json",
+      "sha256": "sha256:1e4d518d632c7b665129c8147f54ad02f175f72c411c81095e4b22d869396e1d"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/prepared.json",
+      "sha256": "sha256:ceee05c870d20da785f4130fd8cce5677ada960eb8b9a20329597d05b621b52f"
+    }
+  ],
+  "run_directory": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-runs/acceptance-27cbb872d11fa729"
+}

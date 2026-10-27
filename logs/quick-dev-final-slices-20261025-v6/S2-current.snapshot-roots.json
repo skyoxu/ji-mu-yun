@@ -1,0 +1,82 @@
+[
+  {
+    "root_kind": "candidate_tree",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_paths": [
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+    ]
+  },
+  {
+    "root_kind": "plan",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_path": "execution-plans/2026-10-25-vdd-knowledge-query-caller-runtime-role"
+  },
+  {
+    "root_kind": "contract",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_path": "execution-plans/2026-10-25-vdd-knowledge-query-caller-runtime-role/semantic-plan-bundle.v1.json"
+  },
+  {
+    "root_kind": "descriptor",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_path": "logs/quick-dev-final-slices-20261025-v6/S2-current/descriptors"
+  },
+  {
+    "root_kind": "fixture",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_paths": [
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+    ]
+  },
+  {
+    "root_kind": "source",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_paths": [
+      "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "knowledge/contracts/knowledge-consumer-projections.v1.schema.json",
+      "knowledge/contracts/knowledge-locator-request.v1.schema.json",
+      "knowledge/evaluation/repository-knowledge-query-suite.v1.json",
+      "knowledge/indexes/current.json",
+      "knowledge/indexes/generations/088242399d9de0f1d8f6f2e1a44df229aac6745e16323484a2425538e5e665b9",
+      "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86",
+      "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/evaluation/query-report.v1.json",
+      "knowledge/indexes/generations/99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86/manifest.json",
+      "knowledge/planning-query.toml",
+      "knowledge/policies/consumer-policies.v2.json",
+      "knowledge/policies/source-exclusions.v1.json",
+      "knowledge/projections/consumer-projections.v1.json",
+      "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "logs/quick-dev-s12-20261025/existing-generation-B-pointer.json",
+      "logs/quick-dev-s4-20261025/windows-original",
+      "logs/scoped-input-preparation-20261024-v3/inputs/03-behavior-contracts.md",
+      "logs/scoped-input-preparation-20261024-v3/inputs/07-shared-design.md",
+      "scripts/python/_knowledge_catalog_builder.py",
+      "scripts/python/_knowledge_locator_core.py",
+      "scripts/python/knowledge_context_validation.py",
+      "scripts/python/knowledge_locator.py",
+      "scripts/toolchain/knowledge_query/adapter.py",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+      "scripts/vdd/compile_plan.py",
+      ".agents/skills/vdd-execution-plan/scripts",
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+      "review-materials/vdd-quick-dev-scoped-plan-20261025",
+      "logs/scoped-input-preparation-20261024-v3/inputs"
+    ]
+  },
+  {
+    "root_kind": "validator_judge",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools",
+      "scripts/quick_dev/run.py",
+      "scripts/workflow_unit_budget.py"
+    ]
+  },
+  {
+    "root_kind": "plan_state_transition",
+    "inclusion_reason": "S2 current retained source/contract/case/native proof",
+    "repository_relative_posix_path": "logs/quick-dev-final-slices-20261025-v6/S2-current/canonical-evidence/probe/observation.v2.json"
+  }
+]

@@ -29,6 +29,46 @@ New plans formally bootstrap the protocol. Historical plans may receive read-onl
 
 ## Consequences
 
+### Interrupted V1 source-cache recovery (2026-10-24)
+
+The maintainer approved a bounded public recovery repair, without restarting the
+real requirement compile. V1 extraction candidates may be replayed by frozen
+section/ref, supplied interpretation context and exact extraction/source-role
+policy. Query execution episode/time/stage and Git-only provenance are advisory,
+not new extraction semantics. V0 still verifies actual current input bytes and
+V2 still guards the current full obligation set. Full-domain source recall and
+V3/downstream gates retain their independent validation and dependency scope.
+
+For an old caller-session interruption, the public --resume-worker-session option
+selects one original repository/output-bound transcript. It requires the exact
+returned request/response, native output/cache and schema-valid native receipt;
+timeout, cancellation and unconsumed replies do not qualify. Corruption and
+conflicting matching candidates block. Source-content cache metadata is a raw
+candidate optimization, never accepted compiler state, implementation evidence,
+V2 authority or a published plan. Current native validation and current query
+security checks remain mandatory; historical bytes are not rewritten or injected.
+
+### Independent workflow execution budgets (2026-10-24)
+
+The maintainer approved per-unit execution supervision for VDD and Quick Dev:
+1800 seconds total and 600 seconds without genuine progress by default. VDD
+uses semantic extraction/check/contract batches before V6 creates slices;
+Quick Dev uses independent author/implementation/execution stages and Q6
+commands inside a slice. Container time excludes independently bounded child
+work. Round cumulative time is diagnostic cost, not an automatic whole-round
+1800-second cutoff. Same-unit retries/resume spend the same cumulative allowance.
+Native cache/reentry checks still decide whether completed work is reusable.
+
+The scoped public-entry supervisor and unit events own time/cancellation only,
+not plan readiness, RED, process receipts or Q7/Q8. Real subprocess bytes or
+completed native sub-units are progress; polling, touches and artificial
+heartbeats cannot renew inactivity. Timeout/cancel terminates the owned tree
+and preserves partial state/history. Diagnostic cost ledgers never authorize
+success. Historical frozen descriptors retain explicit shorter limits. Separate
+business query budgets and provider/model configuration remain unchanged. Normal
+recovery must not reuse an old aggregate per-run watchdog. The standalone quality
+benchmark's explicit aggregate cap is separate from normal workflow execution.
+
 ### VDD Verification Contract Projection (2026-09-05)
 
 Repository-owned V3 workers may share implementation owner, lane, paths and
@@ -561,3 +601,110 @@ declared scope; full terminal and required Q6 commands remain unchanged.
 Existing local and online caller-session worker routes remain supported. The
 reusable .NET/TRX helper stays deferred to pre-S2. This decision does not adopt
 ADR-0062 or perform Package A Acceptance.
+
+### Isolated VDD repair intake maintenance (2026-10-23)
+
+The maintainer authorized a separate repair branch for the failed candidate
+intake, subject to isolated regressions and independent A/B stabilization before
+any replacement of the hosting toolchain. Ordinary candidate repair can carry
+its original companions only with a complete source-index identity. Every
+companion byte hash must be represented; omitted or changed input fails before
+workers. No automatic companion discovery or cache authority is introduced.
+
+A bounded test-path mapping may be applied before the first execution-contract
+validation for ownerless constraint/governance contracts. Acceptance, oracle,
+kind, owner and other semantics cannot change through this form. Existing path,
+ownerless, fixture, execution, V4 and publication gates remain authoritative.
+Raw caches and failed history remain immutable; derived projection receipts are
+append-only. This maintenance does not authorize original requirement recovery,
+implementation, Acceptance, publication, or replacement of the stable host.
+
+### Isolated slice-dependency maintenance (2026-10-23)
+
+The maintainer authorized a second isolated fix, based on the reviewed intake
+repair, subject to independent A/B review before stable-host adoption. V6
+cohesion projects exact V1 dependency IDs through slice membership. Handoff
+derives the expected graph from the immutable predecessor before any repair.
+Only historical missing fields may be filled; explicit empty or wrong edges
+must reject without being overwritten. Obligation and slice cycles, dangling
+IDs and duplicate membership fail closed. Prose and successor-authored edges
+are not dependency authority. Existing semantic-scope and historical-intent
+checks remain mandatory. No replay of extraction, source rewrite, implementation
+or stable-host replacement is authorized by an isolated successful handoff.
+
+
+### Deterministic empty TOML first-use extension (2026-10-23)
+
+After the S7 public probe rejected its absent declared TOML production owner,
+independent A/B review confirmed no supported preparation route. The maintainer
+explicitly approved this limited extension on 2026-10-23. `prepare-entry` may
+now prepare a `.toml` entry only with `exports=[]`, emitting exactly zero bytes,
+a syntactically valid empty TOML document with no keys, values or defaults.
+Unknown input fields, supplied content and nonempty exports remain rejected;
+other file types remain unsupported. This extends only the file-type exception
+in the 2026-10-20 decision, not production implementation authority.
+
+Q1, plan/slice/actual HEAD binding, the owner/write/planned-new intersection,
+frozen/forbidden/path/symlink checks, no-overwrite and tracked-deleted protection
+remain unchanged. The native receipt binds the generated empty bytes and is
+revalidated before use. Empty TOML is not configured behavior, observed RED,
+or completion; Q2 remains test-only and Q4 requires actual behavioral RED.
+No current business plan, historical evidence or running host is rewritten.
+
+## Content-bound Quick Dev execution reuse (2026-10-24)
+
+The maintainer-authorized cross-slice repair separates semantic slice identity
+from actual execution inputs. Git commit provenance alone does not invalidate
+unchanged execution content. Quick Dev may reuse a successful controlled pytest
+original across slice/Q6/terminal consumers by explicit content-bound reference;
+it must retain the original process/report identity and record zero new process
+attempts for each use. VDD owns coverage and dependency declarations, augmented
+by the consumer's conservative repository/environment inventory.
+
+This narrowly supersedes mandatory duplicate process execution for an identical
+successful input. It does not remove RED causality, case/assertion coverage,
+Q6 required commands, Q7/Q8 snapshots or terminal exact cover. Readers revalidate
+original bytes and current execution inputs at closure. Failed, timed-out,
+missing, tampered or identity-incomplete proof cannot become reusable success.
+Historical receipts are never relabeled. See the Quick Dev shared-execution
+reference for bounded discovery, compatibility and rejection rules.
+
+### Quick Dev call metadata boundary (2026-10-25)
+
+Maintainer approval Sentinel_4476a30ec6a88191bb3c9b80cefabdf8 permits excluding
+only the demonstrated volatile `CODEX_TOOL_CALL_ID` executor identifier from
+the controlled Quick Dev pytest child and the matching environment fingerprint.
+One provider serves both boundaries. It does not change VDD environments or
+ignore arbitrary application, test, proxy, dependency or unknown variables.
+The parent environment remains intact. The explicit
+`quick-dev.pytest-environment.v2` rule rejects unversioned/older/unknown
+aggregate identities; historical receipts and source hashes are never rewritten
+or automatically upgraded. Actual subprocess dependency refusals, case coverage,
+current-content binding and Q6/Q7/terminal/Q8 predicates remain unchanged.
+
+
+## Explicit V3 compiler pause (2026-10-25)
+
+Maintainer approval Sentinel_994707de86808191a4ad36d536154631 authorizes a bounded
+public `--stop-after v3` boundary, after V3/V3A/execution preflight and before V4.
+Normal pause is a non-authorizing result, not failure or plan-ready publication.
+The default entry still runs through the existing gates. Only returned native
+V3 candidates can be saved; drafts and fixture imports do not publish pause
+checkpoints. Exact source/domain/profile/rule content binds replay. Current
+security/source/V2 and native V3 validation/normalization/preflights remain
+mandatory on resume; corrupt matching evidence fails closed. Existing unit
+budgets and bounded retry ledgers are retained. No new plan lifecycle state or
+execution permission is introduced.
+
+
+## Bound missing-test declarations (2026-10-25)
+
+Maintainer approval Sentinel_9834a5d1716c81918af8ea9399636fd0 permits the explicit
+--handoff-planned-test mode in the existing handoff repair producer. Only absent,
+previously snapshot/pytest/selector-bound test files may become planned; this
+never creates files, expands write scope, changes requirements/oracles/runtime
+roles, or weakens Q1. HEAD/index tracked deletion, existing paths, symlinks,
+forbidden/unbound/production paths and mixed repair modes reject. Original
+contracts remain immutable; the native producer reuses V1/V4, reruns its native
+checks and publishes a distinct successor with real hashes/report. Normal
+handoff behavior and lifecycle/implementation boundaries are unchanged.

@@ -1,0 +1,44 @@
+{
+  "bindings": {
+    "authority": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-authority.v1.json",
+      "sha256": "sha256:8cd1b554773f1628f5deb6c1ca926c5fd5d88e148cfe30cf19f90bc969608dd7"
+    },
+    "contract": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/skill-input-contract.v1.json",
+      "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+    },
+    "knowledge_freeze": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:775e22883828e536e6dd59ae98b135ac16e67408ad81dfd18b9a096baedce8fc"
+    },
+    "registry": {
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/command-registry.projection-input.v1.json",
+      "sha256": "sha256:a028dfe1592eba316d9406e470c0fa0764d195a7fc0b01ae6a360cd25cde2521"
+    }
+  },
+  "consumer": "run-refactor-implementation-acceptance",
+  "inputs": {
+    "acceptance_requirements": [
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-input-projection.v1.json"
+    ],
+    "implementation_target": [
+      "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-input-projection.v1.json"
+    ]
+  },
+  "operation": "acceptance",
+  "plan_id": "knowledge-query-main-isolated-20261026",
+  "policy_revision": "acceptance-v2",
+  "schema_version": "skill-input-request.v2",
+  "sources": [
+    {
+      "authority": "approved-vdd-canonical-inputs",
+      "module": "implementation_target",
+      "path": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/acceptance-input-projection.v1.json",
+      "resource_set": "approved-scoped-plan-projection",
+      "role": "implementation_input",
+      "sha256": "sha256:b67830258f036331dacaffd7c4c26d1d9b1b7ea3e8f79cd5fbb3f4fbce97e7ec"
+    }
+  ],
+  "storage": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/skill-input-v2/acceptance"
+}

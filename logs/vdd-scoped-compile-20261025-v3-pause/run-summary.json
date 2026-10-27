@@ -1,0 +1,33 @@
+{
+  "status": "paused",
+  "exit_code": 0,
+  "started_at": "2026-10-25T04:00:01.929618+00:00",
+  "finished_at": "2026-10-25T04:02:10.207266+00:00",
+  "elapsed_seconds": 128.277648,
+  "completed_checks": [
+    "V3",
+    "V3A",
+    "V3-execution-preflight"
+  ],
+  "legacy_v1_replays": 61,
+  "new_v1_requests": 0,
+  "new_v3_requests": 77,
+  "native_host_returns": 77,
+  "native_worker_exit0": 77,
+  "v3_contracts_accepted": 305,
+  "retries_or_duplicate_obligation_bindings": 0,
+  "body_regeneration_calls": 0,
+  "new_independent_model_processes_started_by_session": 0,
+  "note": "77 native host-session backend requests were handled by deterministic selection of previously authored bodies; this does not imply zero token cost for this work conversation.",
+  "old_cache_entries_preserved": 97,
+  "old_cache_all_byte_identical": true,
+  "v4_stage_started": false,
+  "canonical_compiler_state_exists": false,
+  "checkpoint": {
+    "authorizes": [],
+    "candidate_sha256": "sha256:14436cb2a3e190627af7317b4f3cddddacff2ed5bc55598494db37fefe90c80c",
+    "path": "execution-plans/2026-10-24-vdd-knowledge-query-scoped-v3-r3/.compiler-work/v3-checkpoints/0e519218119ed49c9f6cf56d6fac33f3cecef9686cd8071246291d88bf5ce564.json",
+    "sha256": "sha256:33a73b053412c1b6735517541d1c7375a02cfecd9d4ccc5a5b8e5aa51524715e"
+  },
+  "authorizes": []
+}

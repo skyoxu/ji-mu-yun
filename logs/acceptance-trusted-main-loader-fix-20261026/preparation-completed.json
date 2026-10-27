@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-26T17:48:03.197541+00:00",
+  "attempt_files": [
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/attempt.json",
+      "sha256": "sha256:5aede7d8e58ab2e8ea16e61e4dab90ab41ebe68601a1a2e21984f913301dce59"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/observed.json",
+      "sha256": "sha256:1e4d518d632c7b665129c8147f54ad02f175f72c411c81095e4b22d869396e1d"
+    },
+    {
+      "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/prepared.json",
+      "sha256": "sha256:ceee05c870d20da785f4130fd8cce5677ada960eb8b9a20329597d05b621b52f"
+    }
+  ],
+  "authorizes": [],
+  "candidate": "d82a2385a07672117eda6c6c90c6df4527d3bf45",
+  "changed_source_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md",
+    ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py",
+    ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+    ".agents/skills/vdd-execution-plan/SKILL.md",
+    ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+    ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+    "scripts/toolchain/knowledge_query/adapter.py",
+    "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
+    "scripts/vdd/compile_plan.py",
+    "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+  ],
+  "completed_attempt": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2",
+  "completed_attempt_retained_in_place": true,
+  "context_bytes": 3574,
+  "current_pointer": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated/skill-input-v2/acceptance/current.v1.json",
+  "four_registered_actions": true,
+  "isolation_source_paths": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_current_acceptance_closeout.py",
+    ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md"
+  ],
+  "prepared": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings/acceptance-inputs/acceptance-20261026-main-isolated"
+}

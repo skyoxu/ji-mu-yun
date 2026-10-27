@@ -8,6 +8,12 @@ import runpy
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+if __name__ == "__main__":
+    from workflow_unit_budget import public_entry
+    supervised_exit = public_entry("quick-dev", ROOT, sys.argv)
+    if supervised_exit is not None:
+        raise SystemExit(supervised_exit)
 TOOLS = ROOT / ".agents" / "skills" / "quick-dev-tdd-adapter" / "tools"
 TARGET = TOOLS / "stable_runner.py"
 if not TARGET.is_file():
@@ -101,7 +107,7 @@ def _public_q1_planned_contract_guard() -> int | None:
         return None  # Stable runner owns legacy/current plan routing diagnostics.
     timeout_raw = _peek_value("--worker-timeout-seconds")
     try:
-        timeout_seconds = int(timeout_raw) if timeout_raw is not None else 600
+        timeout_seconds = int(timeout_raw) if timeout_raw is not None else 1800
         bundle = json.loads(semantic.read_text(encoding="utf-8"))
         if not isinstance(bundle, dict):
             raise ValueError("semantic plan must be JSON object")

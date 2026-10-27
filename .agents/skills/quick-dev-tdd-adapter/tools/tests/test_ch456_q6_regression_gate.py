@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import sys
 
+import pytest
+
 TOOLS = Path(__file__).resolve().parents[1]
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
@@ -12,6 +14,57 @@ from current_router import materialize_descriptor, successor_descriptor
 from regression_gate import run_regression_gate
 from runtime_evidence import create_json
 from stage_pipeline import execute_stage
+
+
+def test_q6_long_keyword_value_is_not_probed_as_a_file(tmp_path, monkeypatch):
+    """Only test Q6 argv-to-dependency projection; no execution proof is made."""
+    import shared_execution
+    target = tmp_path / 'tests' / 'test_bound.py'
+    target.parent.mkdir()
+    target.write_text('def test_bound(): pass\n', encoding='utf-8')
+    config = tmp_path / 'pytest.ini'
+    config.write_text('[pytest]\n', encoding='utf-8')
+    keyword = ' or '.join('test_bound_' + str(i) for i in range(500))
+    argv = [sys.executable, '-m', 'pytest', str(target.relative_to(tmp_path)) + '::test_bound',
+            '-q', '-k', keyword, '-m', 'not slow', '-c', 'pytest.ini']
+    received = []
+    def capture(**kwargs):
+        received.append(kwargs['descriptor'])
+        return {'test_executions': 1, 'cases': 1}
+    monkeypatch.setattr(shared_execution, 'execute_with_reuse', capture)
+    monkeypatch.setattr(shared_execution, 'admissible', lambda receipt: None)
+    result = run_regression_gate(workspace=tmp_path, bundle=_bundle([argv]), slice_id='S1',
+        profile='standard', primary_argv=[sys.executable, '-m', 'pytest', 'other.py'],
+        primary_receipt={}, timeout_seconds=30, out=tmp_path/'gate.json',
+        semantic_plan=tmp_path/'plan.json', primary_descriptor={'cwd': '.', 'target_refs': []})
+    assert result['status'] == 'pass'
+    assert len(received) == 1 and received[0]['argv'] == argv
+    assert received[0]['target_refs'] == ['pytest.ini', 'tests/test_bound.py']
+
+
+def test_q6_filter_value_cannot_defer_a_real_slice_command():
+    from regression_gate import _terminal_scope_command
+    assert not _terminal_scope_command([sys.executable, '-m', 'pytest', 'test_local.py', '-k', 'scripts/sc'])
+
+
+@pytest.mark.parametrize('argv, expected', [
+    (['tests/a.py::test_one', '-k', 'test_other.py', 'tests/b.py'], ['tests/a.py', 'tests/b.py']),
+    (['-m', 'slow or file.py', '-c', 'pytest.ini', 'tests/a.py'], ['pytest.ini', 'tests/a.py']),
+    (['-o', 'x' * 6000, 'tests/a.py'], ['tests/a.py']),
+    (['--override-ini', 'cache_dir=cache', 'tests/a.py'], ['tests/a.py']),
+    (['--unknown-option', 'tests/data.txt', 'tests/a.py'], ['tests/data.txt', 'tests/a.py']),
+    (['--', '-literal.py'], ['-literal.py']),
+])
+def test_q6_pytest_argument_values_preserve_real_targets(argv, expected):
+    from regression_gate import _pytest_path_arguments
+    assert list(_pytest_path_arguments([sys.executable, '-m', 'pytest', *argv])) == expected
+
+
+@pytest.mark.parametrize('option', ['-k', '-m', '-o', '--override-ini'])
+def test_q6_missing_filter_value_fails_closed(option):
+    from regression_gate import _pytest_path_arguments
+    with pytest.raises(ValueError, match='missing value'):
+        list(_pytest_path_arguments([sys.executable, '-m', 'pytest', option]))
 
 
 def _bundle(validation_commands: list[list[str]] | None, *, include_context: bool = True) -> dict:

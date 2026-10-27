@@ -1,0 +1,65 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_q6_long_keyword_value_is_not_probed_as_a_file ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-39/test_q6_long_keyword_value_is_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f084c973c20>
+
+    def test_q6_long_keyword_value_is_not_probed_as_a_file(tmp_path, monkeypatch):
+        """Only test Q6 argv-to-dependency projection; no execution proof is made."""
+        import shared_execution
+        target = tmp_path / 'tests' / 'test_bound.py'
+        target.parent.mkdir()
+        target.write_text('def test_bound(): pass\n', encoding='utf-8')
+        config = tmp_path / 'pytest.ini'
+        config.write_text('[pytest]\n', encoding='utf-8')
+        keyword = ' or '.join('test_bound_' + str(i) for i in range(500))
+        argv = [sys.executable, '-m', 'pytest', str(target.relative_to(tmp_path)) + '::test_bound',
+                '-q', '-k', keyword, '-m', 'not slow', '-c', 'pytest.ini']
+        received = []
+        def capture(**kwargs):
+            received.append(kwargs['descriptor'])
+            return {'test_executions': 1, 'cases': 1}
+        monkeypatch.setattr(shared_execution, 'execute_with_reuse', capture)
+        monkeypatch.setattr(shared_execution, 'admissible', lambda receipt: None)
+>       result = run_regression_gate(workspace=tmp_path, bundle=_bundle([argv]), slice_id='S1',
+            profile='standard', primary_argv=[sys.executable, '-m', 'pytest', 'other.py'],
+            primary_receipt={}, timeout_seconds=30, out=tmp_path/'gate.json',
+            semantic_plan=tmp_path/'plan.json', primary_descriptor={'cwd': '.', 'target_refs': []})
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py:99: in run_regression_gate
+    if not part.startswith("-") and candidate.is_file():
+                                    ^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:892: in is_file
+    return S_ISREG(self.stat().st_mode)
+                   ^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-agent/pytest-39/test_q6_long_keyword_value_is_0/test_bound_0 or test_bound_1 or test_bound_2...bound_493 or test_bound_494 or test_bound_495 or test_bound_496 or test_bound_497 or test_bound_498 or test_bound_499')
+follow_symlinks = True
+
+    def stat(self, *, follow_symlinks=True):
+        """
+        Return the result of the stat() system call on this path, like
+        os.stat() does.
+        """
+>       return os.stat(self, follow_symlinks=follow_symlinks)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       OSError: [Errno 36] File name too long: '/tmp/pytest-of-agent/pytest-39/test_q6_long_keyword_value_is_0/test_bound_0 or test_bound_1 or test_bound_2 or test_bound_3 or test_bound_4 or test_bound_5 or test_bound_6 or test_bound_7 or test_bound_8 or test_bound_9 or test_bound_10 or test_bound_11 or test_bound_12 or test_bound_13 or test_bound_14 or test_bound_15 or test_bound_16 or test_bound_17 or test_bound_18 or test_bound_19 or test_bound_20 or test_bound_21 or test_bound_22 or test_bound_23 or test_bound_24 or test_bound_25 or test_bound_26 or test_bound_27 or test_bound_28 or test_bound_29 or test_bound_30 or test_bound_31 or test_bound_32 or test_bound_33 or test_bound_34 or test_bound_35 or test_bound_36 or test_bound_37 or test_bound_38 or test_bound_39 or test_bound_40 or test_bound_41 or test_bound_42 or test_bound_43 or test_bound_44 or test_bound_45 or test_bound_46 or test_bound_47 or test_bound_48 or test_bound_49 or test_bound_50 or test_bound_51 or test_bound_52 or test_bound_53 or test_bound_54 or test_bound_55 or test_bound_56 or test_bound_57 or test_bound_58 or test_bound_59 or test_bound_60 or test_bound_61 or test_bound_62 or test_bound_63 or test_bound_64 or test_bound_65 or test_bound_66 or test_bound_67 or test_bound_68 or test_bound_69 or test_bound_70 or test_bound_71 or test_bound_72 or test_bound_73 or test_bound_74 or test_bound_75 or test_bound_76 or test_bound_77 or test_bound_78 or test_bound_79 or test_bound_80 or test_bound_81 or test_bound_82 or test_bound_83 or test_bound_84 or test_bound_85 or test_bound_86 or test_bound_87 or test_bound_88 or test_bound_89 or test_bound_90 or test_bound_91 or test_bound_92 or test_bound_93 or test_bound_94 or test_bound_95 or test_bound_96 or test_bound_97 or test_bound_98 or test_bound_99 or test_bound_100 or test_bound_101 or test_bound_102 or test_bound_103 or test_bound_104 or test_bound_105 or test_bound_106 or test_bound_107 or test_bound_108 or test_bound_109 or test_bound_110 or test_bound_111 or test_bound_112 or test_bound_113 or test_bound_114 or test_bound_115 or test_bound_116 or test_bound_117 or test_bound_118 or test_bound_119 or test_bound_120 or test_bound_121 or test_bound_122 or test_bound_123 or test_bound_124 or test_bound_125 or test_bound_126 or test_bound_127 or test_bound_128 or test_bound_129 or test_bound_130 or test_bound_131 or test_bound_132 or test_bound_133 or test_bound_134 or test_bound_135 or test_bound_136 or test_bound_137 or test_bound_138 or test_bound_139 or test_bound_140 or test_bound_141 or test_bound_142 or test_bound_143 or test_bound_144 or test_bound_145 or test_bound_146 or test_bound_147 or test_bound_148 or test_bound_149 or test_bound_150 or test_bound_151 or test_bound_152 or test_bound_153 or test_bound_154 or test_bound_155 or test_bound_156 or test_bound_157 or test_bound_158 or test_bound_159 or test_bound_160 or test_bound_161 or test_bound_162 or test_bound_163 or test_bound_164 or test_bound_165 or test_bound_166 or test_bound_167 or test_bound_168 or test_bound_169 or test_bound_170 or test_bound_171 or test_bound_172 or test_bound_173 or test_bound_174 or test_bound_175 or test_bound_176 or test_bound_177 or test_bound_178 or test_bound_179 or test_bound_180 or test_bound_181 or test_bound_182 or test_bound_183 or test_bound_184 or test_bound_185 or test_bound_186 or test_bound_187 or test_bound_188 or test_bound_189 or test_bound_190 or test_bound_191 or test_bound_192 or test_bound_193 or test_bound_194 or test_bound_195 or test_bound_196 or test_bound_197 or test_bound_198 or test_bound_199 or test_bound_200 or test_bound_201 or test_bound_202 or test_bound_203 or test_bound_204 or test_bound_205 or test_bound_206 or test_bound_207 or test_bound_208 or test_bound_209 or test_bound_210 or test_bound_211 or test_bound_212 or test_bound_213 or test_bound_214 or test_bound_215 or test_bound_216 or test_bound_217 or test_bound_218 or test_bound_219 or test_bound_220 or test_bound_221 or test_bound_222 or test_bound_223 or test_bound_224 or test_bound_225 or test_bound_226 or test_bound_227 or test_bound_228 or test_bound_229 or test_bound_230 or test_bound_231 or test_bound_232 or test_bound_233 or test_bound_234 or test_bound_235 or test_bound_236 or test_bound_237 or test_bound_238 or test_bound_239 or test_bound_240 or test_bound_241 or test_bound_242 or test_bound_243 or test_bound_244 or test_bound_245 or test_bound_246 or test_bound_247 or test_bound_248 or test_bound_249 or test_bound_250 or test_bound_251 or test_bound_252 or test_bound_253 or test_bound_254 or test_bound_255 or test_bound_256 or test_bound_257 or test_bound_258 or test_bound_259 or test_bound_260 or test_bound_261 or test_bound_262 or test_bound_263 or test_bound_264 or test_bound_265 or test_bound_266 or test_bound_267 or test_bound_268 or test_bound_269 or test_bound_270 or test_bound_271 or test_bound_272 or test_bound_273 or test_bound_274 or test_bound_275 or test_bound_276 or test_bound_277 or test_bound_278 or test_bound_279 or test_bound_280 or test_bound_281 or test_bound_282 or test_bound_283 or test_bound_284 or test_bound_285 or test_bound_286 or test_bound_287 or test_bound_288 or test_bound_289 or test_bound_290 or test_bound_291 or test_bound_292 or test_bound_293 or test_bound_294 or test_bound_295 or test_bound_296 or test_bound_297 or test_bound_298 or test_bound_299 or test_bound_300 or test_bound_301 or test_bound_302 or test_bound_303 or test_bound_304 or test_bound_305 or test_bound_306 or test_bound_307 or test_bound_308 or test_bound_309 or test_bound_310 or test_bound_311 or test_bound_312 or test_bound_313 or test_bound_314 or test_bound_315 or test_bound_316 or test_bound_317 or test_bound_318 or test_bound_319 or test_bound_320 or test_bound_321 or test_bound_322 or test_bound_323 or test_bound_324 or test_bound_325 or test_bound_326 or test_bound_327 or test_bound_328 or test_bound_329 or test_bound_330 or test_bound_331 or test_bound_332 or test_bound_333 or test_bound_334 or test_bound_335 or test_bound_336 or test_bound_337 or test_bound_338 or test_bound_339 or test_bound_340 or test_bound_341 or test_bound_342 or test_bound_343 or test_bound_344 or test_bound_345 or test_bound_346 or test_bound_347 or test_bound_348 or test_bound_349 or test_bound_350 or test_bound_351 or test_bound_352 or test_bound_353 or test_bound_354 or test_bound_355 or test_bound_356 or test_bound_357 or test_bound_358 or test_bound_359 or test_bound_360 or test_bound_361 or test_bound_362 or test_bound_363 or test_bound_364 or test_bound_365 or test_bound_366 or test_bound_367 or test_bound_368 or test_bound_369 or test_bound_370 or test_bound_371 or test_bound_372 or test_bound_373 or test_bound_374 or test_bound_375 or test_bound_376 or test_bound_377 or test_bound_378 or test_bound_379 or test_bound_380 or test_bound_381 or test_bound_382 or test_bound_383 or test_bound_384 or test_bound_385 or test_bound_386 or test_bound_387 or test_bound_388 or test_bound_389 or test_bound_390 or test_bound_391 or test_bound_392 or test_bound_393 or test_bound_394 or test_bound_395 or test_bound_396 or test_bound_397 or test_bound_398 or test_bound_399 or test_bound_400 or test_bound_401 or test_bound_402 or test_bound_403 or test_bound_404 or test_bound_405 or test_bound_406 or test_bound_407 or test_bound_408 or test_bound_409 or test_bound_410 or test_bound_411 or test_bound_412 or test_bound_413 or test_bound_414 or test_bound_415 or test_bound_416 or test_bound_417 or test_bound_418 or test_bound_419 or test_bound_420 or test_bound_421 or test_bound_422 or test_bound_423 or test_bound_424 or test_bound_425 or test_bound_426 or test_bound_427 or test_bound_428 or test_bound_429 or test_bound_430 or test_bound_431 or test_bound_432 or test_bound_433 or test_bound_434 or test_bound_435 or test_bound_436 or test_bound_437 or test_bound_438 or test_bound_439 or test_bound_440 or test_bound_441 or test_bound_442 or test_bound_443 or test_bound_444 or test_bound_445 or test_bound_446 or test_bound_447 or test_bound_448 or test_bound_449 or test_bound_450 or test_bound_451 or test_bound_452 or test_bound_453 or test_bound_454 or test_bound_455 or test_bound_456 or test_bound_457 or test_bound_458 or test_bound_459 or test_bound_460 or test_bound_461 or test_bound_462 or test_bound_463 or test_bound_464 or test_bound_465 or test_bound_466 or test_bound_467 or test_bound_468 or test_bound_469 or test_bound_470 or test_bound_471 or test_bound_472 or test_bound_473 or test_bound_474 or test_bound_475 or test_bound_476 or test_bound_477 or test_bound_478 or test_bound_479 or test_bound_480 or test_bound_481 or test_bound_482 or test_bound_483 or test_bound_484 or test_bound_485 or test_bound_486 or test_bound_487 or test_bound_488 or test_bound_489 or test_bound_490 or test_bound_491 or test_bound_492 or test_bound_493 or test_bound_494 or test_bound_495 or test_bound_496 or test_bound_497 or test_bound_498 or test_bound_499'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py:840: OSError
+____________ test_q6_filter_value_cannot_defer_a_real_slice_command ____________
+
+    def test_q6_filter_value_cannot_defer_a_real_slice_command():
+        from regression_gate import _terminal_scope_command
+>       assert not _terminal_scope_command([sys.executable, '-m', 'pytest', 'test_local.py', '-k', 'scripts/sc'])
+E       AssertionError: assert not True
+E        +  where True = <function _terminal_scope_command at 0x7f084c88af20>(['/tmp/vdd-pause-tests/bin/python', '-m', 'pytest', 'test_local.py', '-k', 'scripts/sc'])
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py:47: AssertionError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_long_keyword_value_is_not_probed_as_a_file
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_filter_value_cannot_defer_a_real_slice_command
+2 failed, 16 deselected in 0.10s

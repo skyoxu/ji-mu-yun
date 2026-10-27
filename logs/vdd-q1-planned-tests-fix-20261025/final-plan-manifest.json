@@ -1,0 +1,106 @@
+{
+  "acceptances.v1.json": {
+    "size": 1111331,
+    "sha256": "892a41b2d8a21749cd28696cfa1cad81209e64115e314e6988b772d94c9f3dc3"
+  },
+  "agent-context/S1/agent-context.json": {
+    "size": 7435,
+    "sha256": "1680003ae4c86caf5e4c29ce392730d0741dbb0c45f57a8010e82abf356fc17e"
+  },
+  "agent-context/S10/agent-context.json": {
+    "size": 23906,
+    "sha256": "f910833444dc1f006c7bb79b18df6ec67da52ed2c580691e64c99c2c3990a09d"
+  },
+  "agent-context/S11/agent-context.json": {
+    "size": 11300,
+    "sha256": "d0adfbcdf76c2366f1d85ebbb1400d77444ed790513b1da1aac869a67fbacb4e"
+  },
+  "agent-context/S12/agent-context.json": {
+    "size": 90910,
+    "sha256": "9ff247d3a33d0296055f97953f75152ff5ebd9e027a12651c881c230361b4a18"
+  },
+  "agent-context/S2/agent-context.json": {
+    "size": 55692,
+    "sha256": "30a89481d2cb520b71811c2e355a8c6704ef92ad2121313461edc9a58497a223"
+  },
+  "agent-context/S3/agent-context.json": {
+    "size": 7273,
+    "sha256": "c182a77785bde2b07f12b5624e95ac83bda72fa1eb234976f54fba198f9ec5ba"
+  },
+  "agent-context/S4/agent-context.json": {
+    "size": 7242,
+    "sha256": "f34e49a1e28b2723eebfadb214197b0de5891b3b8947d496aaa5725c0a3c0827"
+  },
+  "agent-context/S5/agent-context.json": {
+    "size": 5656,
+    "sha256": "14c106fe65bc20cdb9f3e025dc645630ef7e5179b94d32fc697de7804b672c87"
+  },
+  "agent-context/S6/agent-context.json": {
+    "size": 7292,
+    "sha256": "97962806f34e95c23aad4cc0480df098e14d9feb0e58a885efa7a84f43882320"
+  },
+  "agent-context/S7/agent-context.json": {
+    "size": 8273,
+    "sha256": "1252eada8447e82941c580dd9e0da5daa333fefd3634366bdfdf0d46baba4af2"
+  },
+  "agent-context/S8/agent-context.json": {
+    "size": 7262,
+    "sha256": "579224a8e977751fa32d2ffbe1d8c4cf72240254b9301801eb0e879bc7ff0d9c"
+  },
+  "agent-context/S9/agent-context.json": {
+    "size": 9583,
+    "sha256": "ddafb5463d2d75242288dd7b3344ac8f6293a02db00032f5fa526263c37c1fba"
+  },
+  "atomic-recall-alignment.v1.json": {
+    "size": 5672,
+    "sha256": "d5e364bc4a0f0ddf80846042419f6060dedacf4558b8326ec4469600f85ccb33"
+  },
+  "compiler-state.v1.json": {
+    "size": 353,
+    "sha256": "6eda0d2580f153726dba556ac6e8eda1486a0a963934eb194ee7c19c67e0b867"
+  },
+  "failure-intents.v1.json": {
+    "size": 185507,
+    "sha256": "33e49613855954517c169bc0c45560a3044c12048b9286c5433661859ce28df4"
+  },
+  "feasibility.v1.json": {
+    "size": 63,
+    "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+  },
+  "final-plan-coverage.v1.json": {
+    "size": 189436,
+    "sha256": "e392f4942db158313ac77b8fb94ddb11a78ba89fa0b3694ef7a9383e037b040a"
+  },
+  "handoff-repair.v1.json": {
+    "size": 1936,
+    "sha256": "c5191d1166c3369fb2db15e349a68f936a758a02fc05b94ad6047625e22c3bd8"
+  },
+  "obligations.v1.json": {
+    "size": 743583,
+    "sha256": "790065c97f7c16370e8919c399d14b15d08d34598ef44f305c3f4f5a0b5c1742"
+  },
+  "pre-slice-coverage.v1.json": {
+    "size": 68959,
+    "sha256": "ff7c207467afa846f3746d21f62709e1abfaf124810679ab750835219e40d6f1"
+  },
+  "semantic-alignment.v1.json": {
+    "size": 5402,
+    "sha256": "68b2b9a8a3f533f20a2d9073880ac96e29ddb1d7c830d41be1111ebf8524f0aa"
+  },
+  "semantic-chain-audit.v1.json": {
+    "size": 368,
+    "sha256": "42fef784ac9371541bfecace6604a6f9343061e06de06c34be88004d010b8edd"
+  },
+  "semantic-plan-bundle.v1.json": {
+    "size": 16851515,
+    "sha256": "955bca2628a236468cb12b236d2d51f26a62944f18fbdb3d7f8c7716a3ce8b5c"
+  },
+  "slices.v1.json": {
+    "size": 594306,
+    "sha256": "069e972769a4c31207be0819820b811b327f655997f1668625c20d1a4fc05dad"
+  },
+  "source-index.v1.json": {
+    "size": 1624837,
+    "sha256": "b1410bb27c8a53641e80d34c9219f22256ddbf7a0148d282504e1063ed92efbc"
+  }
+}

@@ -1,0 +1,135 @@
+{"event": "native-start", "slice": "S2", "action": "preflight", "completed": 0, "at": "2026-10-26T17:48:03.511108+00:00"}
+{"event": "native-return", "slice": "S2", "action": "preflight", "exit_code": 0, "seconds": 1.161268083997129, "finished_at": "2026-10-26T17:48:04.672422+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S2", "action": "run-probe", "completed": 0, "at": "2026-10-26T17:48:04.710803+00:00"}
+{"event": "native-return", "slice": "S2", "action": "run-probe", "exit_code": 0, "seconds": 0.5786913560004905, "finished_at": "2026-10-26T17:48:05.289528+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S2", "action": "run-regression", "completed": 0, "at": "2026-10-26T17:48:05.325491+00:00"}
+{"event": "native-return", "slice": "S2", "action": "run-regression", "exit_code": 0, "seconds": 11.192203880003945, "finished_at": "2026-10-26T17:48:16.517730+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S2", "action": "validate-slice", "completed": 0, "at": "2026-10-26T17:48:16.540546+00:00"}
+{"event": "native-return", "slice": "S2", "action": "validate-slice", "exit_code": 0, "seconds": 11.430976432995521, "finished_at": "2026-10-26T17:48:27.971554+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S2", "action": "run-terminal", "completed": 0, "at": "2026-10-26T17:48:27.991806+00:00"}
+{"event": "native-return", "slice": "S2", "action": "run-terminal", "exit_code": 0, "seconds": 9.002540025001508, "finished_at": "2026-10-26T17:48:36.994378+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S2", "count": 1, "at": "2026-10-26T17:48:36.995452+00:00"}
+{"event": "native-start", "slice": "S5", "action": "preflight", "completed": 1, "at": "2026-10-26T17:48:37.016594+00:00"}
+{"event": "native-return", "slice": "S5", "action": "preflight", "exit_code": 0, "seconds": 1.0057742580029299, "finished_at": "2026-10-26T17:48:38.022402+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S5", "action": "run-probe", "completed": 1, "at": "2026-10-26T17:48:38.042501+00:00"}
+{"event": "native-return", "slice": "S5", "action": "run-probe", "exit_code": 0, "seconds": 0.4460496739993687, "finished_at": "2026-10-26T17:48:38.488583+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S5", "action": "run-regression", "completed": 1, "at": "2026-10-26T17:48:38.512841+00:00"}
+{"event": "native-return", "slice": "S5", "action": "run-regression", "exit_code": 0, "seconds": 8.904904735994933, "finished_at": "2026-10-26T17:48:47.417785+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S5", "action": "validate-slice", "completed": 1, "at": "2026-10-26T17:48:47.439218+00:00"}
+{"event": "native-return", "slice": "S5", "action": "validate-slice", "exit_code": 0, "seconds": 9.518136792001314, "finished_at": "2026-10-26T17:48:56.957387+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S5", "action": "run-terminal", "completed": 1, "at": "2026-10-26T17:48:56.976693+00:00"}
+{"event": "native-return", "slice": "S5", "action": "run-terminal", "exit_code": 0, "seconds": 8.419572304999747, "finished_at": "2026-10-26T17:49:05.396297+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S5", "count": 2, "at": "2026-10-26T17:49:05.397230+00:00"}
+{"event": "native-start", "slice": "S6", "action": "preflight", "completed": 2, "at": "2026-10-26T17:49:05.418660+00:00"}
+{"event": "native-return", "slice": "S6", "action": "preflight", "exit_code": 0, "seconds": 1.0021802759947604, "finished_at": "2026-10-26T17:49:06.420967+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S6", "action": "run-probe", "completed": 2, "at": "2026-10-26T17:49:06.441760+00:00"}
+{"event": "native-return", "slice": "S6", "action": "run-probe", "exit_code": 0, "seconds": 0.49607317199843237, "finished_at": "2026-10-26T17:49:06.937864+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S6", "action": "run-regression", "completed": 2, "at": "2026-10-26T17:49:06.958655+00:00"}
+{"event": "native-return", "slice": "S6", "action": "run-regression", "exit_code": 0, "seconds": 172.41070775199478, "finished_at": "2026-10-26T17:51:59.369394+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S6", "action": "validate-slice", "completed": 2, "at": "2026-10-26T17:51:59.392473+00:00"}
+{"event": "native-return", "slice": "S6", "action": "validate-slice", "exit_code": 0, "seconds": 9.770302545002778, "finished_at": "2026-10-26T17:52:09.162813+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S6", "action": "run-terminal", "completed": 2, "at": "2026-10-26T17:52:09.185853+00:00"}
+{"event": "native-return", "slice": "S6", "action": "run-terminal", "exit_code": 0, "seconds": 171.0407863520013, "finished_at": "2026-10-26T17:55:00.226673+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S6", "count": 3, "at": "2026-10-26T17:55:00.227586+00:00"}
+{"event": "native-start", "slice": "S1", "action": "preflight", "completed": 3, "at": "2026-10-26T17:55:00.249190+00:00"}
+{"event": "native-return", "slice": "S1", "action": "preflight", "exit_code": 0, "seconds": 1.0614545249991352, "finished_at": "2026-10-26T17:55:01.310679+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S1", "action": "run-probe", "completed": 3, "at": "2026-10-26T17:55:01.333451+00:00"}
+{"event": "native-return", "slice": "S1", "action": "run-probe", "exit_code": 0, "seconds": 0.4550299620022997, "finished_at": "2026-10-26T17:55:01.788520+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S1", "action": "run-regression", "completed": 3, "at": "2026-10-26T17:55:01.810410+00:00"}
+{"event": "native-return", "slice": "S1", "action": "run-regression", "exit_code": 0, "seconds": 181.00591314199846, "finished_at": "2026-10-26T17:58:02.816453+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S1", "action": "validate-slice", "completed": 3, "at": "2026-10-26T17:58:02.842480+00:00"}
+{"event": "native-return", "slice": "S1", "action": "validate-slice", "exit_code": 0, "seconds": 16.311653504999413, "finished_at": "2026-10-26T17:58:19.154167+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S1", "action": "run-terminal", "completed": 3, "at": "2026-10-26T17:58:19.176969+00:00"}
+{"event": "native-return", "slice": "S1", "action": "run-terminal", "exit_code": 0, "seconds": 175.30904026100325, "finished_at": "2026-10-26T18:01:14.486041+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S1", "count": 4, "at": "2026-10-26T18:01:14.486917+00:00"}
+{"event": "native-start", "slice": "S3", "action": "preflight", "completed": 4, "at": "2026-10-26T18:01:14.510280+00:00"}
+{"event": "native-return", "slice": "S3", "action": "preflight", "exit_code": 0, "seconds": 1.0026986359953298, "finished_at": "2026-10-26T18:01:15.513089+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S3", "action": "run-probe", "completed": 4, "at": "2026-10-26T18:01:15.535188+00:00"}
+{"event": "native-return", "slice": "S3", "action": "run-probe", "exit_code": 0, "seconds": 0.5014030059974175, "finished_at": "2026-10-26T18:01:16.036655+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S3", "action": "run-regression", "completed": 4, "at": "2026-10-26T18:01:16.064055+00:00"}
+{"event": "native-return", "slice": "S3", "action": "run-regression", "exit_code": 0, "seconds": 175.56182005799928, "finished_at": "2026-10-26T18:04:11.625916+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S3", "action": "validate-slice", "completed": 4, "at": "2026-10-26T18:04:11.649194+00:00"}
+{"event": "native-return", "slice": "S3", "action": "validate-slice", "exit_code": 0, "seconds": 9.61286516799737, "finished_at": "2026-10-26T18:04:21.262127+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S3", "action": "run-terminal", "completed": 4, "at": "2026-10-26T18:04:21.284971+00:00"}
+{"event": "native-return", "slice": "S3", "action": "run-terminal", "exit_code": 0, "seconds": 176.23735637599748, "finished_at": "2026-10-26T18:07:17.522362+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S3", "count": 5, "at": "2026-10-26T18:07:17.523227+00:00"}
+{"event": "native-start", "slice": "S7", "action": "preflight", "completed": 5, "at": "2026-10-26T18:07:17.543538+00:00"}
+{"event": "native-return", "slice": "S7", "action": "preflight", "exit_code": 0, "seconds": 1.0042583329995978, "finished_at": "2026-10-26T18:07:18.547829+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S7", "action": "run-probe", "completed": 5, "at": "2026-10-26T18:07:18.568923+00:00"}
+{"event": "native-return", "slice": "S7", "action": "run-probe", "exit_code": 0, "seconds": 0.44952271100191865, "finished_at": "2026-10-26T18:07:19.018478+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S7", "action": "run-regression", "completed": 5, "at": "2026-10-26T18:07:19.046456+00:00"}
+{"event": "native-return", "slice": "S7", "action": "run-regression", "exit_code": 0, "seconds": 170.7348447100012, "finished_at": "2026-10-26T18:10:09.781341+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S7", "action": "validate-slice", "completed": 5, "at": "2026-10-26T18:10:09.800991+00:00"}
+{"event": "native-return", "slice": "S7", "action": "validate-slice", "exit_code": 0, "seconds": 9.568606232998718, "finished_at": "2026-10-26T18:10:19.369630+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S7", "action": "run-terminal", "completed": 5, "at": "2026-10-26T18:10:19.393069+00:00"}
+{"event": "native-return", "slice": "S7", "action": "run-terminal", "exit_code": 0, "seconds": 175.17934535000677, "finished_at": "2026-10-26T18:13:14.572449+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S7", "count": 6, "at": "2026-10-26T18:13:14.573433+00:00"}
+{"event": "native-start", "slice": "S8", "action": "preflight", "completed": 6, "at": "2026-10-26T18:13:14.595981+00:00"}
+{"event": "native-return", "slice": "S8", "action": "preflight", "exit_code": 0, "seconds": 1.0049391220018151, "finished_at": "2026-10-26T18:13:15.600968+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S8", "action": "run-probe", "completed": 6, "at": "2026-10-26T18:13:15.621215+00:00"}
+{"event": "native-return", "slice": "S8", "action": "run-probe", "exit_code": 0, "seconds": 0.4930587640046724, "finished_at": "2026-10-26T18:13:16.114306+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S8", "action": "run-regression", "completed": 6, "at": "2026-10-26T18:13:16.134901+00:00"}
+{"event": "native-return", "slice": "S8", "action": "run-regression", "exit_code": 0, "seconds": 172.38066979900032, "finished_at": "2026-10-26T18:16:08.515602+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S8", "action": "validate-slice", "completed": 6, "at": "2026-10-26T18:16:08.538037+00:00"}
+{"event": "native-return", "slice": "S8", "action": "validate-slice", "exit_code": 0, "seconds": 9.670406409997668, "finished_at": "2026-10-26T18:16:18.208475+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S8", "action": "run-terminal", "completed": 6, "at": "2026-10-26T18:16:18.230495+00:00"}
+{"event": "native-return", "slice": "S8", "action": "run-terminal", "exit_code": 0, "seconds": 170.63139515399962, "finished_at": "2026-10-26T18:19:08.861996+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S8", "count": 7, "at": "2026-10-26T18:19:08.862946+00:00"}
+{"event": "native-start", "slice": "S4", "action": "preflight", "completed": 7, "at": "2026-10-26T18:19:08.883469+00:00"}
+{"event": "native-return", "slice": "S4", "action": "preflight", "exit_code": 0, "seconds": 1.006546127006004, "finished_at": "2026-10-26T18:19:09.890048+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S4", "action": "run-probe", "completed": 7, "at": "2026-10-26T18:19:09.909792+00:00"}
+{"event": "native-return", "slice": "S4", "action": "run-probe", "exit_code": 0, "seconds": 0.450622199998179, "finished_at": "2026-10-26T18:19:10.360447+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S4", "action": "run-regression", "completed": 7, "at": "2026-10-26T18:19:10.384933+00:00"}
+{"event": "native-return", "slice": "S4", "action": "run-regression", "exit_code": 0, "seconds": 172.56819011300104, "finished_at": "2026-10-26T18:22:02.953157+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S4", "action": "validate-slice", "completed": 7, "at": "2026-10-26T18:22:02.980991+00:00"}
+{"event": "native-return", "slice": "S4", "action": "validate-slice", "exit_code": 0, "seconds": 10.085250702002668, "finished_at": "2026-10-26T18:22:13.066285+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S4", "action": "run-terminal", "completed": 7, "at": "2026-10-26T18:22:13.086974+00:00"}
+{"event": "native-return", "slice": "S4", "action": "run-terminal", "exit_code": 0, "seconds": 171.718043218003, "finished_at": "2026-10-26T18:25:04.805050+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S4", "count": 8, "at": "2026-10-26T18:25:04.806089+00:00"}
+{"event": "native-start", "slice": "S11", "action": "preflight", "completed": 8, "at": "2026-10-26T18:25:04.825551+00:00"}
+{"event": "native-return", "slice": "S11", "action": "preflight", "exit_code": 0, "seconds": 0.9487494639979559, "finished_at": "2026-10-26T18:25:05.774334+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S11", "action": "run-probe", "completed": 8, "at": "2026-10-26T18:25:05.796410+00:00"}
+{"event": "native-return", "slice": "S11", "action": "run-probe", "exit_code": 0, "seconds": 0.45443542399880243, "finished_at": "2026-10-26T18:25:06.250878+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S11", "action": "run-regression", "completed": 8, "at": "2026-10-26T18:25:06.270227+00:00"}
+{"event": "native-return", "slice": "S11", "action": "run-regression", "exit_code": 0, "seconds": 177.11263637600496, "finished_at": "2026-10-26T18:28:03.382897+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S11", "action": "validate-slice", "completed": 8, "at": "2026-10-26T18:28:03.404557+00:00"}
+{"event": "native-return", "slice": "S11", "action": "validate-slice", "exit_code": 0, "seconds": 10.34284649699839, "finished_at": "2026-10-26T18:28:13.747438+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S11", "action": "run-terminal", "completed": 8, "at": "2026-10-26T18:28:13.766716+00:00"}
+{"event": "native-return", "slice": "S11", "action": "run-terminal", "exit_code": 0, "seconds": 167.4649947020007, "finished_at": "2026-10-26T18:31:01.231742+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S11", "count": 9, "at": "2026-10-26T18:31:01.233674+00:00"}
+{"event": "native-start", "slice": "S12", "action": "preflight", "completed": 9, "at": "2026-10-26T18:31:01.255300+00:00"}
+{"event": "native-return", "slice": "S12", "action": "preflight", "exit_code": 0, "seconds": 1.0241642530017998, "finished_at": "2026-10-26T18:31:02.279500+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S12", "action": "run-probe", "completed": 9, "at": "2026-10-26T18:31:02.300573+00:00"}
+{"event": "native-return", "slice": "S12", "action": "run-probe", "exit_code": 0, "seconds": 0.5052273320034146, "finished_at": "2026-10-26T18:31:02.805914+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S12", "action": "run-regression", "completed": 9, "at": "2026-10-26T18:31:02.839132+00:00"}
+{"event": "native-return", "slice": "S12", "action": "run-regression", "exit_code": 0, "seconds": 839.037342651005, "finished_at": "2026-10-26T18:45:01.876509+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S12", "action": "validate-slice", "completed": 9, "at": "2026-10-26T18:45:01.901783+00:00"}
+{"event": "native-return", "slice": "S12", "action": "validate-slice", "exit_code": 0, "seconds": 53.52749159499945, "finished_at": "2026-10-26T18:45:55.429308+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S12", "action": "run-terminal", "completed": 9, "at": "2026-10-26T18:45:55.449428+00:00"}
+{"event": "native-return", "slice": "S12", "action": "run-terminal", "exit_code": 0, "seconds": 174.00621502599824, "finished_at": "2026-10-26T18:48:49.455678+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S12", "count": 10, "at": "2026-10-26T18:48:49.457894+00:00"}
+{"event": "native-start", "slice": "S10", "action": "preflight", "completed": 10, "at": "2026-10-26T18:48:49.478253+00:00"}
+{"event": "native-return", "slice": "S10", "action": "preflight", "exit_code": 0, "seconds": 0.8999801820027642, "finished_at": "2026-10-26T18:48:50.378267+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S10", "action": "run-probe", "completed": 10, "at": "2026-10-26T18:48:50.398836+00:00"}
+{"event": "native-return", "slice": "S10", "action": "run-probe", "exit_code": 0, "seconds": 0.5006408170011127, "finished_at": "2026-10-26T18:48:50.899508+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S10", "action": "run-regression", "completed": 10, "at": "2026-10-26T18:48:50.921727+00:00"}
+{"event": "native-return", "slice": "S10", "action": "run-regression", "exit_code": 0, "seconds": 167.4696889650004, "finished_at": "2026-10-26T18:51:38.391449+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S10", "action": "validate-slice", "completed": 10, "at": "2026-10-26T18:51:38.414393+00:00"}
+{"event": "native-return", "slice": "S10", "action": "validate-slice", "exit_code": 0, "seconds": 12.830223738004861, "finished_at": "2026-10-26T18:51:51.244650+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S10", "action": "run-terminal", "completed": 10, "at": "2026-10-26T18:51:51.269084+00:00"}
+{"event": "native-return", "slice": "S10", "action": "run-terminal", "exit_code": 0, "seconds": 185.29780750500504, "finished_at": "2026-10-26T18:54:56.566933+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S10", "count": 11, "at": "2026-10-26T18:54:56.568364+00:00"}
+{"event": "native-start", "slice": "S9", "action": "preflight", "completed": 11, "at": "2026-10-26T18:54:56.592789+00:00"}
+{"event": "native-return", "slice": "S9", "action": "preflight", "exit_code": 0, "seconds": 1.0105328079953324, "finished_at": "2026-10-26T18:54:57.603355+00:00", "predicate_result": null, "status": "preflight-passed"}
+{"event": "native-start", "slice": "S9", "action": "run-probe", "completed": 11, "at": "2026-10-26T18:54:57.633953+00:00"}
+{"event": "native-return", "slice": "S9", "action": "run-probe", "exit_code": 0, "seconds": 0.5665834370010998, "finished_at": "2026-10-26T18:54:58.200574+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S9", "action": "run-regression", "completed": 11, "at": "2026-10-26T18:54:58.228631+00:00"}
+{"event": "native-return", "slice": "S9", "action": "run-regression", "exit_code": 0, "seconds": 173.9405361370009, "finished_at": "2026-10-26T18:57:52.169205+00:00", "predicate_result": true, "status": null}
+{"event": "native-start", "slice": "S9", "action": "validate-slice", "completed": 11, "at": "2026-10-26T18:57:52.190630+00:00"}
+{"event": "native-return", "slice": "S9", "action": "validate-slice", "exit_code": 0, "seconds": 10.340923099000065, "finished_at": "2026-10-26T18:58:02.531587+00:00", "predicate_result": null, "status": "pass"}
+{"event": "native-start", "slice": "S9", "action": "run-terminal", "completed": 11, "at": "2026-10-26T18:58:02.562951+00:00"}
+{"event": "native-return", "slice": "S9", "action": "run-terminal", "exit_code": 0, "seconds": 178.51684963399748, "finished_at": "2026-10-26T19:01:01.079838+00:00", "predicate_result": true, "status": null}
+{"event": "slice-current", "slice": "S9", "count": 12, "at": "2026-10-26T19:01:01.081351+00:00"}
+{"event": "native-start", "slice": "S2", "action": "implementation-complete", "completed": 12, "at": "2026-10-26T19:01:01.140218+00:00"}
+{"event": "native-return", "slice": "S2", "action": "implementation-complete", "exit_code": 0, "seconds": 547.4012169979978, "finished_at": "2026-10-26T19:10:08.541480+00:00", "predicate_result": null, "status": "pass"}
+{"event": "Q8-current", "at": "2026-10-26T19:10:08.542862+00:00", "completed": 12}

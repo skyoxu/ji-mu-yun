@@ -1,0 +1,37 @@
+{
+  "obligations_identical": true,
+  "obligation_count": 305,
+  "acceptance_changes": [
+    {
+      "acceptance_id": "A-988348C16D10",
+      "fields": [
+        "red_intent_ids"
+      ]
+    }
+  ],
+  "slice_changes": [
+    "S1"
+  ],
+  "new_failure_roles": [
+    {
+      "acceptance_ids": [
+        "A-988348C16D10"
+      ],
+      "expected_outcome": "fail",
+      "failure_family": "expected-red",
+      "failure_id": "KQ_2E09F07252E1",
+      "failure_intent_id": "FI-121539D49FA8",
+      "selector_intent": "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_contract_2e09f07252e1; preserve or author the exact scoped observable and denial cases before execution. Emit the runtime marker only for a failed bound assertion, never for setup/import/timeout, absent approval, or missing evidence. Never invoke any BMAD skill or reviewer. Existing marker spelling is a test alias, not inherited execution proof. Runtime test role: emit the existing failure ID only when a real assertion of this Acceptance oracle fails after invoking the production entry. A required subject rejection is a passing test. Human approval, Trust Approval, Consumer exceptions, setup/import errors, timeouts and harness binding errors cannot satisfy this role."
+    }
+  ],
+  "old_roles_preserved": true,
+  "source_index_bytes_identical": true,
+  "S1_S12_actual_selected_argv_equal": true,
+  "selection_fallback_reasons": {
+    "S1": "dynamic-parameter-values",
+    "S12": "dynamic-parameter-values"
+  },
+  "both_failure_functions_in_shared_expression": true,
+  "note": "Native read-only selection outputs, plus source-bound judge analysis. No new probe/RED was launched to repeat a deterministically predicted mismatch.",
+  "authorizes": []
+}

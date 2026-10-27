@@ -25,8 +25,8 @@ import semantic_compiler_gate as gate
 
 sc = gate.sc
 _BASE_INVOKE_WORKER = gate._ORIGINAL_INVOKE_WORKER
-_NORMAL_TIMEOUT_SECONDS = 180
-_REPAIR_TIMEOUT_SECONDS = 300
+_NORMAL_TIMEOUT_SECONDS = 1800
+_REPAIR_TIMEOUT_SECONDS = 1800
 _MAX_TRANSPORT_ATTEMPTS = 3  # user-approved automatic retry budget
 _TRACE_LIMIT = 500
 
@@ -334,10 +334,19 @@ def transport_invoke_worker(
     }
     cache_dir = out_dir / ".compiler-cache"
     cache_path = cache_dir / sc._worker_cache_key(stage, cache_payload)
+    import semantic_resume_cache as replay
+    identity = None
+    if worker_cache is None:
+        reused, identity = replay.lookup(root=root, out_dir=out_dir, stage=stage,
+            payload=payload, prompt=prompt, role_contract=role_contract)
+        if reused is not None:
+            return reused
     if cache_path.is_file():
         value = json.loads(cache_path.read_text(encoding="utf-8"))
         if not isinstance(value, Mapping):
             raise ValueError("worker cache is malformed")
+        if worker_cache is None:
+            replay.save(out_dir=out_dir, identity=identity, value=value, origin="exact-native-cache")
         return value
     if worker_cache and stage in worker_cache:
         value = worker_cache[stage]
@@ -404,6 +413,7 @@ def transport_invoke_worker(
 
     value = sc._parse_json_output(output.read_text(encoding="utf-8"))
     sc.atomic_json(cache_path, value)
+    replay.save(out_dir=out_dir, identity=identity, value=value, origin="native-worker-candidate")
     return value
 
 

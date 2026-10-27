@@ -1,0 +1,9 @@
+{
+  "unmodified_host": "b9c701c1cfe662d679d747533920f992379c4b06",
+  "existing_test": "test_standard_q6_runs_explicit_single_file_consumer_fixture",
+  "result": "Q6 regression/schema command failed",
+  "child_exit_codes": [
+    1
+  ],
+  "authorizes": []
+}

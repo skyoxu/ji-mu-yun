@@ -1,0 +1,11 @@
+{
+  "status": "stopped-at-Windows-dependent-proof-boundary",
+  "active_processes": [],
+  "summary": "logs/stage5-p1-native-20261026/result-summary.json",
+  "host": "5b585094288f1958539d88261d78467865cfe8e7",
+  "plan": "execution-plans/2026-10-26-vdd-knowledge-query-p1-static-bindings",
+  "plan_sha256": "aab95b0036eea778b6651714309c7f9e8d005b0eeabfd07185cf6584cd825c7e",
+  "author_input_hashes_unchanged": true,
+  "adapter_sha256": "92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+  "next_required": "Decide delivery/execution of current Windows subset and current original binding, then affected native proof refresh; no dispatch authorized here"
+}

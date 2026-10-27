@@ -1,0 +1,98 @@
+[
+  {
+    "slice_id": "S1",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:bc44a27ae8e85f75aac670f9aeba3aba0d9af5b02b104c8fe8c4d255d2de93da",
+    "after_slice_input_hash": "sha256:5050510b41a7f155ace1ff1415645c24ce3e4ace424823fa8eefb594f4272329"
+  },
+  {
+    "slice_id": "S2",
+    "planned_new_files": [
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+    ],
+    "before_slice_input_hash": "sha256:f2393badce626045398ec6b829925a6fc93256e031b05f255406dd2c71f65ce1",
+    "after_slice_input_hash": "sha256:f5ce5ed27abe7f779059a3766a58df5e42c2e240eb5e4e1fded69f0a21eed0e7"
+  },
+  {
+    "slice_id": "S3",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:2f808826a026eb04252ea827739b197bdf062df3c46513446b8dd6e012b30e2f",
+    "after_slice_input_hash": "sha256:bac1284071e198fb99cacf8e91fcad1ec631339ddfc24aef64893094fcd519be"
+  },
+  {
+    "slice_id": "S4",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:949e14c13af02fdd3fbed22476e82eae4d35a259edd3677e5e7343ac787eafdd",
+    "after_slice_input_hash": "sha256:9542d956532e27c6138b7cd9449f81df53d8a7feef0b942130b9c807a3213928"
+  },
+  {
+    "slice_id": "S5",
+    "planned_new_files": [
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+    ],
+    "before_slice_input_hash": "sha256:756ca5d22c34fea1350e9765b0394d8dd00fba799797a793fc75929a5afd075f",
+    "after_slice_input_hash": "sha256:396cf4809e0b50b53e3c1cd1cb5ab9d8d0e3ad7e7db835e95f2710feda3c5674"
+  },
+  {
+    "slice_id": "S6",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:10b527a70ef35139f48d5130406ee0c44f1611bb95f9dce302566a199d6bbbd1",
+    "after_slice_input_hash": "sha256:b4077de2e90f8cda3253426df5efb8b416d531c8034019d1b9165608fefd1735"
+  },
+  {
+    "slice_id": "S7",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:b1060d67030d4d550e088a25d81fe0193594af3ad4b86fd02178783431d0bae7",
+    "after_slice_input_hash": "sha256:83b5d2036cc5d4b6a01990f812602b55c358551aa97ae8175f244e1de133d8e7"
+  },
+  {
+    "slice_id": "S8",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:8554bc259aae5d96e4f50dda58594ed33309987cf62d34c0a71380ff0b050009",
+    "after_slice_input_hash": "sha256:f8d237a70f7e2a7b1958a9231d8cc463f59f218230dbefb84e237a0c4046a455"
+  },
+  {
+    "slice_id": "S9",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:ed1e6be9dce41713a9789942d2a8994dd8fb4653add280b10db7c225d85ecea3",
+    "after_slice_input_hash": "sha256:e9ce2122f89a6275af35ec9dca3485cf226fba0b19f490594d6480c7eb68d368"
+  },
+  {
+    "slice_id": "S10",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:948921d661b4514709f8efc9cc1cd4a51c47da8efa11c3e1bf53c44dd6e189c3",
+    "after_slice_input_hash": "sha256:b234b73a82cd13506c742f76b27e1c7009ad92dfa5e9ea9f12b7f4b8a0628f18"
+  },
+  {
+    "slice_id": "S11",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:c3f29a186e973dfcd9f5121c71cdc4182b448b236aae3f2b6ad774bef3739830",
+    "after_slice_input_hash": "sha256:33912590eecf7cdadc54ea35627964917ea85870f9311c5234fdbe4bfeb9a196"
+  },
+  {
+    "slice_id": "S12",
+    "planned_new_files": [
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py"
+    ],
+    "before_slice_input_hash": "sha256:41e684cc66e42d0e8a27f6a03695233a2b338565e3930e027acd87f8dd369d18",
+    "after_slice_input_hash": "sha256:9eec8b2c63d7c82d24580049dd43b8247505333a4da0c300e7069eed40f6596b"
+  }
+]

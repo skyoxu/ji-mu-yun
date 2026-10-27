@@ -1,0 +1,9 @@
+{
+  "native_report": "logs/workflow-unit-budgets/quick-dev/f3bbbdd9fba490773e1252df851ba147d8a1a2c9b6c06696a5a41006c2adeaca/07d949d15c094f28b8784f973225c263.json",
+  "exit_code": 0,
+  "reason": null,
+  "public_elapsed_seconds": 18.257684092001,
+  "q7_unit_elapsed_seconds": 16.431432884004607,
+  "genuine_completed_check_events": 145,
+  "unique_progress_digests": 145
+}

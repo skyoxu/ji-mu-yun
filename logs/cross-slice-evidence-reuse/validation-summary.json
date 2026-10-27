@@ -1,0 +1,26 @@
+{
+  "baseline": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "branch": "fix/cross-slice-evidence-reuse",
+  "broad_tests": {
+    "passed": 134,
+    "deselected": 1,
+    "subtests_passed": 6,
+    "seconds": 113.1
+  },
+  "final_affected_recheck": {
+    "passed": 45,
+    "seconds": 88.31
+  },
+  "vdd_package_tests": 22,
+  "vdd_package_validation": "passed",
+  "real_model_calls": 0,
+  "windows_execution": "not-run",
+  "original_requirement_acceptance": "not-claimed",
+  "evidence_sha256": {
+    "final-tests.txt": "b94bb352732d4e1e6e41a00e351fdb128204cfd3ce23e338a1dd45f15c103b1d",
+    "final-recheck.txt": "f9b6a52d9efb589dbb14308fe57e8d99739732213d6af2313be433c2005ad68e",
+    "vdd-package.txt": "b3bc1303d2f2ca051c4612f53d11c3cee784744f42262301fd3b6c52b0f5b74c",
+    "vdd-package-tests.txt": "bd94cbb5e84a89de51f28de4f660fe7d25250cfcf01aeb1ad7830d79df543fe4",
+    "legacy-loop-diagnostic.txt": "cd9568464458442e25913288088c61c744acf20dbc9cb9c9568a6d362405fd37"
+  }
+}

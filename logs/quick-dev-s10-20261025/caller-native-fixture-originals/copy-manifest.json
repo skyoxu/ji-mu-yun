@@ -1,0 +1,96 @@
+{
+  "source_process_receipt_sha256": "sha256:3c01d0d8872d21ef3543b6953782da686fb6164df130511cda65b14be53ae192",
+  "source_fixture": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0",
+  "files": {
+    "requirements.md": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/requirements.md",
+      "sha256": "3679a79f2aea222398219a05062c17c89408d0ad9319dbf1cb6683d45d6f0507"
+    },
+    "src/compiler.py": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/src/compiler.py",
+      "sha256": "e13df8c44af5dea1e412403910b99cc5a48f2ccbf68a66b3374d6ab9cef9fc65"
+    },
+    "tests/test_compile.py": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/tests/test_compile.py",
+      "sha256": "d8210a2d6513b760e481c54e349029345b337de908dd4944bf4e866c993ce75b"
+    },
+    "transport-trace.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/transport-trace.json",
+      "sha256": "adde0a23d8dd4f393087d2194ac7f5ce404161cfea8af5207f2ba1325d124b76"
+    },
+    "knowledge/planning-query.toml": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/knowledge/planning-query.toml",
+      "sha256": "666e42f69c41ea9cac142447e73244553c7f4a323b856cecf36c398060cba64f"
+    },
+    "execution-plans/sample/execution-record.md": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/execution-record.md",
+      "sha256": "3bf76d349c62b59b9e98a14e87476fda65782e35c33c9784fa3618aa45b2c088"
+    },
+    "execution-plans/sample/.compiler-cache/v4-atomic-recall-06838be7c59e43e5064a5cc9.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-cache/v4-atomic-recall-06838be7c59e43e5064a5cc9.json",
+      "sha256": "b43fd93b75a6cea8c7c23f5fa1cccfeaad0948693f12c624a5c27b9c23c8ab8b"
+    },
+    "execution-plans/sample/.compiler-cache/v3-a77deaabd138933e7ca7ea9d.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-cache/v3-a77deaabd138933e7ca7ea9d.json",
+      "sha256": "87c03ff49758c07bce6be0e7458b6690a1503090f7fbb3d2da5b91056dab8ad2"
+    },
+    "execution-plans/sample/.compiler-cache/v1-FR-1-dddb6d666620e4748a0614d5.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-cache/v1-FR-1-dddb6d666620e4748a0614d5.json",
+      "sha256": "9518e5d8ba99b7562a7951adc6a97b76808b1ea7ea665a8e08bdb9eb51406550"
+    },
+    "execution-plans/sample/.compiler-work/v4-atomic-recall-last-message.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/v4-atomic-recall-last-message.json",
+      "sha256": "c255bb5639cd4fd66308ea321308686c623cb917e2b74fc849aa0d683b91d936"
+    },
+    "execution-plans/sample/.compiler-work/compiler-progress.jsonl": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/compiler-progress.jsonl",
+      "sha256": "260621a6417efa3b7a0288d42b056790590c495c6c73c3b91c338b7bca7a48af"
+    },
+    "execution-plans/sample/.compiler-work/v1-FR-1-8116fc898b3e847def79b58d-last-message.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/v1-FR-1-8116fc898b3e847def79b58d-last-message.json",
+      "sha256": "bbe47a1d4e07b0ead036d06e2590f6c798a37c498bed1c1f4443a38e748f568b"
+    },
+    "execution-plans/sample/.compiler-work/v3-965c3d2135cc2e3cfe1ded5d-last-message.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/v3-965c3d2135cc2e3cfe1ded5d-last-message.json",
+      "sha256": "f2d92fee0cafd35b0e881494ecf9f3fc517230dd1bf57926e2e69ecb4f00edba"
+    },
+    "execution-plans/sample/.compiler-cache/source-replay/90cb49d20f92bbd89712b7830862eafffe9f09ed69a50e243730e5829e6eb53a.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-cache/source-replay/90cb49d20f92bbd89712b7830862eafffe9f09ed69a50e243730e5829e6eb53a.json",
+      "sha256": "f0992beefc6012b487ca9a113a734fba0530c0406b3295fb10cc3b63ee7c7f7b"
+    },
+    "execution-plans/sample/.compiler-work/worker-receipts/v3-965c3d2135cc-f5bacc1a7a97.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/worker-receipts/v3-965c3d2135cc-f5bacc1a7a97.json",
+      "sha256": "d4f97fcad33e028b574da577a80e492a2263aaba92ee53c5e4ae5385257f718a"
+    },
+    "execution-plans/sample/.compiler-work/worker-receipts/v4-atomic-recall-06838be7c59e-9a2e04b2cea4.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/worker-receipts/v4-atomic-recall-06838be7c59e-9a2e04b2cea4.json",
+      "sha256": "84dbd86366b1ce2a880654a49b15cd9d252a4c4d868216e354faba42439faed5"
+    },
+    "execution-plans/sample/.compiler-work/worker-receipts/v1-FR-1-8116fc898b3e-28d5e896ae2f.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/worker-receipts/v1-FR-1-8116fc898b3e-28d5e896ae2f.json",
+      "sha256": "7d1a67327b1f50ce8b41f3ee7e4a3dfec6a0e2d4edd30e3aeb2ff74c4deaf5cb"
+    },
+    "execution-plans/sample/.compiler-work/worker-schemas/v3-949a4e75132c.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/worker-schemas/v3-949a4e75132c.json",
+      "sha256": "949a4e75132caa365859ffa4c94ae1f1fc5c3f726bdbb30db4dcfbb045b46e81"
+    },
+    "execution-plans/sample/.compiler-work/worker-schemas/v1-49aa61cf315c.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/worker-schemas/v1-49aa61cf315c.json",
+      "sha256": "49aa61cf315c6aee5cbe8284a404338fb6bfebc23a375dbb0a700fee516454ff"
+    },
+    "execution-plans/sample/.compiler-work/worker-schemas/v4-atomic-recall-1871f566ecb4.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/worker-schemas/v4-atomic-recall-1871f566ecb4.json",
+      "sha256": "1871f566ecb440d8c00a417f220a2fb98e43d8aaf3aa03b10de63151dfeeee5b"
+    },
+    "execution-plans/sample/.compiler-work/v3-checkpoints/7428548df5fcb26959e099166d17360aad20ee33fa95e99366b867756697f5b4.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/v3-checkpoints/7428548df5fcb26959e099166d17360aad20ee33fa95e99366b867756697f5b4.json",
+      "sha256": "71bb780ff3c5f30a2ccc6d4a2dc8f9f7858a8fb3025238d0fd87a5a5e1f785b0"
+    },
+    "execution-plans/sample/.compiler-work/resolved-atomic-recall/93c032d5bdc22adfff011a1f2adeb8c4b445da24a308b2f34d394e13fa3dc3a9.json": {
+      "source": "/workspace/scratch/quick-dev-pytest-tmp-v2/pytest-of-agent/pytest-3/vdd-public-consumption0/execution-plans/sample/.compiler-work/resolved-atomic-recall/93c032d5bdc22adfff011a1f2adeb8c4b445da24a308b2f34d394e13fa3dc3a9.json",
+      "sha256": "92df2942e3c4c10184f137454289bdbea7af346d5c0cd354a03de6f0d4f4ad66"
+    }
+  },
+  "copies_only": true,
+  "authorizes": []
+}

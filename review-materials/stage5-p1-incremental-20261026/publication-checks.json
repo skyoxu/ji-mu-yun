@@ -1,0 +1,26 @@
+{
+  "kind": "static publication consistency only; not new tests or external review",
+  "authorizes": [],
+  "review_baseline": "2abfbccbe532f6d934d3bba36d00c915207f5e38",
+  "selected_paths": 1660,
+  "changed_paths": 1660,
+  "unchanged_baseline_entries": 41405,
+  "authorized_source_overlay_count": 8,
+  "selected_original_blob_hashes_match": true,
+  "original_scope_and_review_package_preserved": true,
+  "raw_Windows_index_byte_corrections": 5,
+  "high_confidence_secret_scan_findings": 0,
+  "workflow_changes": 0,
+  "tests_run": 0,
+  "CI_queries": 0,
+  "publication_only_attribute_file": "logs/.gitattributes",
+  "five_checkout_byte_roundtrips_match": true,
+  "attribute_outside_frozen_snapshot_roots": true,
+  "available_dependency_inventories_checked": 29,
+  "unavailable_shared_reuse_manifests": 12,
+  "original_prepared_selection_count": 1658,
+  "additional_publication_metadata_paths": [
+    "review-materials/stage5-p1-incremental-20261026/publication-checks.json",
+    "logs/.gitattributes"
+  ]
+}

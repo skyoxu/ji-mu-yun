@@ -1,0 +1,26 @@
+{
+  "recorded_at": "2026-10-25T18:47:09.281401+00:00",
+  "kind": "author checkpoint, not native gate receipt",
+  "status": "stopped-after-Q8-pass",
+  "completed_current_slices": [
+    "S2",
+    "S5",
+    "S6",
+    "S1",
+    "S3",
+    "S7",
+    "S8",
+    "S4",
+    "S11",
+    "S12",
+    "S10",
+    "S9"
+  ],
+  "Q8_result_ref": "logs/quick-dev-final-slices-20261025-v6/Q8/implementation-complete-result.v2.json",
+  "next_actions_not_run": [
+    "external AB",
+    "Acceptance",
+    "publication"
+  ],
+  "authorizes": []
+}

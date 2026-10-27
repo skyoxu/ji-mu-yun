@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.408" timestamp="2026-10-26T15:44:54.778330+00:00" hostname="01dcaac9a2f8"><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_trusted_knowledge_validator" name="test_candidate_core_is_data_and_cannot_execute" time="0.061"><failure message="acceptance_core.InputError: knowledge context validator is not bound to current main">repository = (PosixPath('/tmp/pytest-of-agent/pytest-1/test_candidate_core_is_data_an0/candidate'), PosixPath('/tmp/pytest-of-agent...1f48ef75c31c0aac618db', 'requestHash': 'sha256:b4131c7bfe0e004439fcc1589a4d4c6689c5efd13f16554a03ae9b5e3503b4e6', ...})
+
+    def test_candidate_core_is_data_and_cannot_execute(repository):
+        root, target, expected = repository
+        marker = root / "candidate-executed"
+        (root / "scripts/python/_knowledge_locator_core.py").write_text(
+            "from pathlib import Path\nPath(" + repr(str(marker)) + ").touch()\nraise RuntimeError('candidate code')\n",
+            encoding="utf-8",
+        )
+        before = git(root, "rev-parse", "main", "HEAD")
+&gt;       assert freeze_knowledge_context(target, "knowledge.json") == expected
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py:44: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py:61: in freeze_knowledge_context
+    validation = _validator(repository_root)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+repository_root = PosixPath('/tmp/pytest-of-agent/pytest-1/test_candidate_core_is_data_an0/candidate')
+
+    def _validator(repository_root: Path):
+        module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
+        for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
+            current = subprocess.run(
+                ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
+                capture_output=True,
+                check=False,
+            )
+            if current.returncode or (repository_root / relative).read_bytes() != current.stdout:
+&gt;               raise InputError("knowledge context validator is not bound to current main")
+E               acceptance_core.InputError: knowledge context validator is not bound to current main
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py:32: InputError</failure></testcase><testcase classname=".agents.skills.run-refactor-implementation-acceptance.tests.test_trusted_knowledge_validator" name="test_candidate_validator_is_never_executed" time="0.045"><failure message="acceptance_core.InputError: knowledge context validator is not bound to current main">repository = (PosixPath('/tmp/pytest-of-agent/pytest-1/test_candidate_validator_is_ne0/candidate'), PosixPath('/tmp/pytest-of-agent...1f48ef75c31c0aac618db', 'requestHash': 'sha256:b4131c7bfe0e004439fcc1589a4d4c6689c5efd13f16554a03ae9b5e3503b4e6', ...})
+
+    def test_candidate_validator_is_never_executed(repository):
+        root, target, expected = repository
+        (root / "scripts/python/knowledge_context_validation.py").write_text("raise RuntimeError('candidate validator')\n")
+&gt;       assert freeze_knowledge_context(target, "knowledge.json") == expected
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py:61: in freeze_knowledge_context
+    validation = _validator(repository_root)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+repository_root = PosixPath('/tmp/pytest-of-agent/pytest-1/test_candidate_validator_is_ne0/candidate')
+
+    def _validator(repository_root: Path):
+        module_path = repository_root / "scripts" / "python" / "knowledge_context_validation.py"
+        for relative in ("scripts/python/knowledge_context_validation.py", "scripts/python/_knowledge_locator_core.py"):
+            current = subprocess.run(
+                ["git", "-C", str(repository_root), "show", f"refs/heads/main:{relative}"],
+                capture_output=True,
+                check=False,
+            )
+            if current.returncode or (repository_root / relative).read_bytes() != current.stdout:
+&gt;               raise InputError("knowledge context validator is not bound to current main")
+E               acceptance_core.InputError: knowledge context validator is not bound to current main
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py:32: InputError</failure></testcase></testsuite></testsuites>
