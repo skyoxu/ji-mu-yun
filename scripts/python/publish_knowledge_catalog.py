@@ -534,7 +534,16 @@ def _validate_layers(
         for item in projections.get("projections", [])
         if isinstance(item, dict)
     }
-    if set(projection_values) != {"vdd", "quick-dev", "bootstrap", "refactor-acceptance"}:
+    legacy_consumers = {"vdd", "quick-dev", "bootstrap", "refactor-acceptance"}
+    policy_consumers = [item.get("consumer") for item in policies.get("policies", []) if isinstance(item, dict)]
+    # ADR-0048: retain legacy generations and admit only the explicit BMAD
+    # read-only extension; policy and projection registries must agree exactly.
+    if (
+        set(policy_consumers) not in (legacy_consumers, legacy_consumers | {"bmad-planning"})
+        or len(policy_consumers) != len(set(policy_consumers))
+        or set(projection_values) != set(policy_consumers)
+        or len(projections.get("projections", [])) != len(projection_values)
+    ):
         raise ValueError("projection_schema_invalid")
     if projection_values["quick-dev"].get("eligible_module_ids") != []:
         raise ValueError("quick_dev_projection_must_be_empty")

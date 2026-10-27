@@ -2,195 +2,182 @@
 
 ## 适用范围与当前结论
 
-本指引以远端 main `863ce37a80bc56b8cda37e4c3c4c839f3de72ee0` 为核对基线（2026-10-27），固定使用 BMAD-METHOD **v6.12.4**，不声称这是最新版本。它说明设备侧如何准备配置，以及当前尚不能靠配置完成的接入。本文不授予安装、部署、知识库发布、修改共享合同或运行任何交付流程的权限。
+本指引核对 main `2f8c28a0f045c814ec9b80fd01b309bbd047c679` 及其管理员只读接入补丁（2026-10-27），固定使用 BMAD-METHOD **v6.12.4**，不声称它是最新版本。适用于管理员配置 PRD、SPEC、Architecture 的知识查询；它不授权安装、业务生成、评审、知识库维护或发布。具体操作须有相应授权。
 
-先读 [仓库约束](../../AGENTS.md)、[工具链路由](../../knowledge/toolchain-workflow-index.md) 和 [原生 wrapper 指引](bmad-native-wrappers.md)。安装、字节锁和 wrapper 命令以最后一项为准，本文不重复安装历史。
+先读 [仓库约束](../../AGENTS.md)、[工具链路由](../../knowledge/toolchain-workflow-index.md) 和 [原生 wrapper 指引](bmad-native-wrappers.md)。保持两条边界：共享接入能力进入 Git；本机配置、原生安装和运行材料进入现有忽略范围。不要用设备补丁冒充共享能力，也不要直接修改 main。
 
-| 能力 | 当前实际状态 |
+| 能力 | 实际边界 |
 | --- | --- |
-| VDD 查询交付 | 已交付；`scripts/vdd/compile_plan.py` 调用 `adapter.prepare_consumption`。这不证明 BMAD 阶段已接线。 |
-| 本地 planning adapter | `scripts/toolchain/knowledge_query/adapter.py` 有 `prepare-consumption --repository-root` CLI，通过 UTF-8 stdin 接收 JSON；无须新增 MCP 服务。 |
-| 阶段与预算配置 | `knowledge/planning-query.toml` 保留 prd/spec/architecture/vdd-create/vdd-repair；enabled=true，候选12、输出65536字节、调用3次、超时30秒。配置存在不等于调用发生。 |
-| BMAD 消费身份 | adapter 将前三阶段映射为 `bmad-planning`，但当前请求 schema、projection schema 和 policy 不支持完整接入；禁止冒用 `vdd`。 |
-| PRD 接线 | 当前 tracked tree 没有 `_bmad/custom/bmad-prd.toml`；设备本地文件须另查。没有交付默认 PRD 查询 hook。 |
-| SPEC / Architecture | 已有 `jimuyun-spec` / `jimuyun-architecture` 原生包装；不自动执行知识库查询，不自动传递外层 per-skill 配置。 |
+| 两个 wrapper、三个阶段 | `jimuyun-spec` 包装官方 SPEC；`jimuyun-architecture` 包装官方 Architecture。PRD 使用独立官方安装，没有第三个仓库 wrapper。本次不修改两个 wrapper。 |
+| 只读查询 | 复用 `scripts/python/knowledge_locator.py`，固定合法身份 `bmad-planning`。官方 skill 须自己执行真实查询并读源，外层预查摘要不能替代。 |
+| 共享接入补丁 | 请求、projection、评估 schema 与 policy、builder、发布校验、测试接纳新 reader；不增加 daemon、MCP、数据库或新上下文协议，不改变 VDD/Quick Dev 职责。 |
+| 内容范围 | 管理员可查询现有正式知识库内全部合格 repository-source 内容，包括文档、相关代码、conditional 和 historical；不另设文档／源码／历史类别白名单。未索引文件不会因此变成可查询内容。 |
+| 权限边界 | 不授予知识库写入、维护或发布权限。现有源排除、semantic eligibility、snapshot、policy/projection、发布身份与哈希校验仍有效；不会开放仓库外凭据或 live workspace。consumer 字符串不是账号认证，设备和会话访问由管理员控制。 |
+| 当前验证状态 | 本轮官方安装和配置解析已完成；一次真实只读 CLI 返回 `blocked`，因为正式 main-bound 代次未接纳新身份／新 policy。**尚未证明官方 skill 成功查询、读源和采纳，也未验证 Windows 端到端。** |
 
-[部署侧台账](../../logs/scoped-input-preparation-20261024-v3/deployment-ledger.md) 和 [范围变更来源](../../logs/scoped-input-preparation-20261024-v3/SCOPE-SOURCE.md) 保留 25 项迁移去向。它们是溯源，不是已完成状态或当前可执行合同；不要把旧日志中的 PRD hook、SPEC 补查、Architecture 接线方案重新当作已交付要求。本文也不重新激活这些历史义务。
+[部署侧台账](../../logs/scoped-input-preparation-20261024-v3/deployment-ledger.md) 与 [范围变更来源](../../logs/scoped-input-preparation-20261024-v3/SCOPE-SOURCE.md) 只保留历史迁移去向，不重新激活旧义务或声称旧实现已交付。
 
 ## 设备前置检查
 
-1. 确认工作区、已有改动、当前分支与远端 main。知识库事实固定到本地 `refs/heads/main`，不会自动 fetch；`origin/main` 更新不代表本地 main 已更新。由维护者按设备现有 Git 策略同步，不重置工作区或覆盖改动。
-2. 区分仓库根与 wrapper 私有根。先检查源、schema、policy、current generation 是否齐全，再选择真实任务的显式输入。不要扫描凭据目录或 live Hosted 工作区。
-3. Python 必须为 3.11+，uv 已在 PATH。BMAD CLI 版本输出不证明项目原生 Skill 已安装。原生资源必须在该仓库 `.agents/skills/` 下，不能用 home/global 安装冒充。
-4. 两个 wrapper 的受控安装器只安装 `bmad-spec`、`bmad-architecture` 和锁定 runtime。**不安装 PRD、bmad-customize 或所有可选 reviewer 技能**。PRD 要另行授权安装同版完整官方技能及其实际依赖；不能仅复制一份 SKILL.md，也不能把两个 wrapper 的 verify 当 PRD 验证。
-5. 获准安装时复用 [既有安装入口](bmad-native-wrappers.md#clean-clone-and-explicit-installation)。保留原生 LF 和锁定字节，不改官方文件、Python launcher 或 manifest，不自动使用 `--replace-native`。
+1. 核对当前分支、HEAD、未提交内容与远端 main。知识事实固定到本地 `refs/heads/main`；更新 `origin/main` 不等于本地 main 已同步。保护原工作，不 reset、clean、自动 stash 或强制切换。
+2. 区分外层真实仓库与私有 native 根。外层拥有正式知识库；native 根拥有该次官方执行的安装、配置及产物。不要扫描凭据或 live Hosted 工作区。
+3. Python 3.11+、uv 与实际原生资源必须齐全。BMAD CLI 的版本输出不证明某项目已安装 skill，home/global 安装也不证明本次 native 根可用。
+4. 两个 wrapper 的受控安装器仅安装锁定 SPEC、Architecture 及 runtime，**不安装 PRD、bmad-customize 或所有可选技能**。复用已核对的同版官方源码和 [既有安装入口](bmad-native-wrappers.md#clean-clone-and-explicit-installation)，不要改原生文件或自动使用 `--replace-native`。
+5. PRD 用完整官方安装器安装到设备的 ignored 私有项目根，不能只复制 SKILL.md。本轮官方 Core+BMM 模块安装粒度为29个本地 skill；这不是运行过29个工作流。核对 PRD 全目录、必要 runtime 和有效配置中的实际技能依赖；不要把 SPEC/Architecture 的 verify 当作 PRD 验证。
 
-以下 PowerShell 仅为只读前置检查；`C:\src\ji-mu-yun` 是设备路径占位，先替换。此文档工作没有执行这些设备检查或安装。
+官方源码须锁定 v6.12.4 的 commit `bab9082c3e884e0d72c759bcd1a6d90bcc01be84`。源码已有且字节正确时直接复用。官方 Node 安装器需要其 lockfile 对应依赖；获准时使用 `npm ci --omit=dev --ignore-scripts --no-audit --no-fund`，不得下载另一版 BMAD 或执行未核准安装脚本。本轮固定依赖安装119个包；离线缓存不全与源版本错误应分别报告。安装器自带版本提示不授权更新。
+
+以下是**占位操作模板**，不是自动安装授权；变量必须由管理员设为已核实路径。私有 PRD 根应位于本仓库已忽略的 `_bmad/` 下，避免覆盖已有安装：
 
 ```powershell
-Set-Location 'C:\src\ji-mu-yun'
-git status --short
-git branch --show-current
-git rev-parse refs/heads/main
-git ls-remote origin refs/heads/main
-py -3 --version
-uv --version
-Test-Path '.agents/skills/bmad-prd/SKILL.md'
-Test-Path '.agents/skills/bmad-prd/customize.toml'
-git check-ignore -v _bmad/custom/bmad-prd.toml _bmad/custom/bmad-spec.user.toml
-$env:PYTHONUTF8='1'
-$env:PYTHONDONTWRITEBYTECODE='1'
-$env:UV_OFFLINE='1'
-py -3 -B -m scripts.toolchain.bmad_native verify
+# Run from the outer repository; set $BmadSource to verified official source.
+$RepoRoot = (Resolve-Path '.').Path
+$PrdRoot = Join-Path $RepoRoot '_bmad/prd-native'
+node (Join-Path $BmadSource 'tools/installer/bmad-cli.js') install --directory $PrdRoot --modules bmm --tools codex --yes --no-shims
 ```
 
-最后一条只验证两个锁定技能、runtime、版本及 central TOML；未安装时应明确报告未安装，不能因此假称 PRD 可用。该版本/字节验证不是查询执行，也不是原生方法执行。
+本轮已验证 PRD 的8个文件和4个 runtime 文件与官方源码一致，配置显式引用的 `bmad-review` 已安装但未执行。上述事实仅证明相应设备安装，不是查询成功或业务验收。
 
-## 必须先解决的消费者与发布阻塞
+`git status` 的 tracked 修改和 untracked 文件要分别说明。一个 `M` 也可能来自仓库保存的 CRLF 与当前 LF 过滤规则差异；先比较 HEAD、index、原始字节、过滤后 blob 和 attributes，再判断是否有语义改动。不要把它未经核实称为用户修改，也不要为清除标记覆盖原文件。
 
-当前 [请求 schema](../../knowledge/contracts/knowledge-locator-request.v1.schema.json) 的 consumer 枚举只有 `vdd`、`quick-dev`、`bootstrap`、`refactor-acceptance`；[projection schema](../../knowledge/contracts/knowledge-consumer-projections.v1.schema.json) 同样没有 `bmad-planning`。[消费者 policy](../../knowledge/policies/consumer-policies.v2.json) 无此身份。adapter 的映射不构成注册，单独添加设备 TOML 无法合法查询。
+## 消费者与正式发布前置
 
-以下是**尚需另行授权的实施工作**，本指引不执行，也没有一条现成的 BMAD setup 命令可以包办：
+共享补丁接纳 `bmad-planning` 的**直接 Locator 查询路径**；它不冒用 `vdd/bootstrap`，不声明新增 VDD 冻结上下文或通用 attestation。权限在 [policy](../../knowledge/policies/consumer-policies.v2.json) 中固定；[请求 schema](../../knowledge/contracts/knowledge-locator-request.v1.schema.json)、[projection schema](../../knowledge/contracts/knowledge-consumer-projections.v1.schema.json)、catalog 与评估接口须一致。仅在分支增加身份或本地 TOML，不会使现有发布代次自动有效。
 
-| 事项 | 真实负责入口与完成条件 |
+| 前置 | 真实 owner 与要求 |
 | --- | --- |
-| 消费合同与最小权限 | 仓库工具链维护者按 Accepted ADR-0044/0048 和 `knowledge/contracts/`、`knowledge/policies/` 的现有 owner 扩展合法身份；明确 domain、visibility、lifecycle、status、路径、候选上限、冻结点，复核所有消费/结果 schema 与验证器。不能只让 TOML 拼入 consumer 或跳过校验。 |
-| 同代派生与正式发布 | [知识库 README](../../knowledge/README.md) 与 [maintain-knowledge-base](../../.agents/skills/maintain-knowledge-base/SKILL.md) 是入口；正式 owner 是 `scripts/python/publish_knowledge_catalog.py`。catalog / policy / projection / snapshot / manifest / current 的 hash 必须同代并通过 owner 检查，不能手改 generation 或 current。 |
-| 发布授权材料 | `prepare_publication_request.py` 当前要求真实 target plan、hash 验证过的 stale-maintenance route、当前本地 main 和维护者确认。设备配置本身不满足这些前置。没有合法 route 时交由发布 owner 决定后续授权工作，不伪造 plan、route 或 `--ack-maintainer`。 |
-| BMAD 调用与结果传递 | 设备维护者明确 PRD 调用位置；SPEC/Architecture 的调用者需确定查询发生于外层真实仓库，并将获准结果/源文件送入私有原生执行。自动接线或修改 wrapper 是独立实施范围。 |
+| 同代正式数据 | [知识库 README](../../knowledge/README.md) 与 [维护 skill](../../.agents/skills/maintain-knowledge-base/SKILL.md) 规定维护入口；`scripts/python/publish_knowledge_catalog.py` 拥有正式发布。catalog、policy、projection、snapshot、manifest、current 必须一致，不手改派生产物。 |
+| main 身份 | 发布控制脚本必须匹配 pinned main。共享补丁经正常审核合入后，才可按实际 main 准备发布；不能把功能分支偷偷命名为 main 或让本地脏字节成为事实。 |
+| 授权请求 | `prepare_publication_request.py` 支持 `operator-requested`，该模式**不要求 stale route**；`catalog-stale-maintenance` 才要求真实、hash 验证的维护 route。两者均须真实的直接 target plan、其在当前 main 上的 `00-index.md`、当前 main 绑定及明确维护者确认。 |
+| 禁止替代 | 不伪造 plan、route、维护者 ack；不复制修改后的 schema/policy 到 ignored 目录；不传 stale/unpublished 绕过参数，不删除 current、不关闭校验、不自动发布。 |
 
-不要借 `build_knowledge_catalog.py`、改 policy_revision、换 consumer、删除 current 或关闭查询来绕过拒绝。`enabled=false` 仍检查 publication 和权限，且是仓库配置，不是本任务的回退按钮。发布控制脚本还须与 pinned main 一致；未提交的设备补丁不会成为可发布事实。维护/发布不是消费失败后的自动恢复步骤。
+设备配置和只读查询授权不等于正式发布授权。现有 [adapter](../../scripts/toolchain/knowledge_query/adapter.py) 及 `knowledge/planning-query.toml` 的阶段映射和预算仍保留，但映射存在不证明 BMAD 已接通；本次直接 Locator 路径不冒称 adapter 的全部冻结／消费合同已支持新身份。
 
 ## 官方配置层与本仓库差异
 
-固定版本来源：[团队采用指引](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/docs/customize/adopt-bmad-across-a-team.md)、[定制与合并规则](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/docs/customize/customize-bmad.md)。实际 schema 是各技能目录的 `customize.toml`，不要修改它。
+固定版本参考：[团队采用](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/docs/customize/adopt-bmad-across-a-team.md)、[定制合并规则](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/docs/customize/customize-bmad.md)。每个 skill 的官方 `customize.toml` 是支持字段来源，不修改它。
 
-每技能低到高：官方 `customize.toml` → `_bmad/custom/<真实 skill 名>.toml` → `_bmad/custom/<真实 skill 名>.user.toml`。标量后者覆盖；table 深合并；全带 code 或全带 id 的 table 数组按键替换/追加；其他数组按 base/team/user 顺序追加。空数组不能清除已有项，重复配置会重复追加。
+每技能低到高：官方 `customize.toml` → `_bmad/custom/<skill>.toml` → `_bmad/custom/<skill>.user.toml`。标量覆盖、table 深合并；全带 code/id 的 table 数组按键合并，其他数组追加。空数组不能清除已有项；不要把已完整合并结果再次叠回官方 base，导致重复追加。
 
-central config 低到高：`_bmad/config.toml` → `_bmad/config.user.toml` → `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml`。前两项由安装器管理，持久定制放后两项。central 身份/语言配置不是知识库权限，也不能代替 per-skill workflow 配置。
+central config 低到高：`_bmad/config.toml` → `_bmad/config.user.toml` → `_bmad/custom/config.toml` → `_bmad/custom/config.user.toml`。central 身份／语言不授予知识权限，也不能代替 per-skill workflow 规则。
 
-官方把不带 user 的文件作为团队共享文件；**本仓库 `.gitignore` 的 `_bmad/*` 将整个 custom 目录忽略**，所以两种文件目前都属于设备本地状态，不会随 Git pull 分发。不要 force-add 或修改 ignore；若需要团队分发，另行明确授权。不得在 TOML、查询、结果、memlog 中放 API key、token、用户凭据或敏感环境变量值。
+本仓库 `_bmad/*` 已忽略 custom、安装及设备辅助材料；原生技能和 wrapper 运行目录也有现有忽略规则。**不 force-add，不修改 tracked ignore，不用 skip-worktree/assume-unchanged 隐藏 tracked 改动，不自动 git rm --cached。** 共享合同／代码／测试进入独立分支；真实设备路径、启用选择、`.user.toml`、本地脚本、安装与日志不提交，不向查询、配置或 memlog 放入凭据和敏感环境值。
 
 ### PRD：按需来源与任务延迟触发
 
-先核对官方 [bmad-prd schema](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/src/bmm-skills/plan/bmad-prd/customize.toml)。它支持 `external_sources`，但这是自然语言的按需来源登记，**不是自动预查调度器**。需要事实判断时，必须在任务身份、输入已知之后，第一次仓库事实/复用范围结论之前实际执行查询并读源。交互模式尚未获得输入时应等待；headless 由调用者一开始提供输入。activation 仅加载规则不算调用。
+PRD 支持 `external_sources`，但它是自然语言规则，不是自动调度器。管理员给出真实 task、输入和外层查询命令后，官方 skill 必须在首次仓库事实判断前执行命令并读源；任务未知时等待，不能把加载规则算成查询。
 
-下面是获准接入后可采用的稀疏规则样例，不是当前已经生效的安装文件；无需新 MCP。英文指令遵守仓库代码/配置约定。若已有同名键，应合并内容，不能重复声明 TOML 键。
+以下仅为规则模板。`<device-query-command>` 必须替换为设备已验证的命令，真实路径只存 ignored 文件；已有相同键时合并内容，不重复声明 TOML 键：
 
 ```toml
-# _bmad/custom/bmad-prd.user.toml
+# In the actual PRD project's _bmad/custom/bmad-prd.user.toml
 [workflow]
 persistent_facts = [
-  "Never treat query output as adopted fact or delivery authority. Record actual source reads and adoption decisions in the native memlog.",
+  "Administrator-operated knowledge access is read-only. Never invoke maintenance or publication. Query output is not adopted fact or delivery authority.",
 ]
 activation_steps_append = [
-  "Load the local query procedure. If task identity or selected input paths are unknown, wait for them; do not claim a query. After inputs are known, apply the source rule before the first repository fact decision.",
+  "After actual task and inputs are known, execute the supplied outer-repository query procedure before factual decisions. Stop on blocked/integrity failure. For a query-only check, stop before generation or reviewers.",
 ]
 external_sources = [
-  "When a PRD scope or reuse decision needs repository facts, use scripts/toolchain/knowledge_query/adapter.py prepare-consumption against the real repository root, stage prd, with the actual task_id, operation, inputs and query as documented in docs/workflows/bmad-device-configuration.md. Require approved consumer admission first. Inspect the returned status and source hashes, read current sources, then record accepted/rejected reasons and scope impact. Stop on policy or integrity failure.",
+  "Execute <device-query-command> against the real outer repository with consumer bmad-planning. Read hash-verified sources and record adoption/rejection, reason and use in the native memlog.",
 ]
 ```
 
 ### SPEC 与 Architecture：分别使用支持的字段
 
-[SPEC schema](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/src/bmm-skills/plan/bmad-spec/customize.toml) **没有 external_sources**。用 `persistent_facts` / activation hooks 约束接收输入后补查；不要复制 PRD 的字段。上游已采纳依据保留来源与角色，仅新问题、缺依据或相关源变化触发必要补查；纯编辑复用需记录理由并重新核对当前权限和依赖，不以旧成功记录跳过权限。
+SPEC **没有 `external_sources`**。在该次 native 根的 `bmad-spec.user.toml` 使用 `persistent_facts` 与 activation hooks，让**官方 SPEC 自己执行**管理员提供的外层查询命令；不要把 PRD 字段复制进来，也不要仅检查外层预查摘要。
 
 ```toml
-# _bmad/custom/bmad-spec.user.toml
 [workflow]
 persistent_facts = [
-  "Preserve valid upstream capabilities, constraints, exclusions and unresolved questions. Keep provenance separate from normative companions.",
-  "After task inputs are known and before factual decisions, inspect supplied query evidence and actual sources. Supplement only for a new question, missing basis or relevant source change, using stage spec at the authorized outer repository. Record reuse or supplement reasons and native adoption decisions. Stop on permission or integrity failure.",
+  "Preserve upstream constraints and provenance. Execute the authorized outer-repository read-only query command yourself before new repository-fact decisions; reread verified sources and record decisions. Never maintain or publish knowledge.",
 ]
 activation_steps_append = [
-  "Confirm the caller supplied the real task and approved source evidence. Missing task inputs mean awaiting input, not a completed source check.",
+  "Wait for actual task/inputs if missing. Apply the supplied query procedure; stop on blocked. A query-only check must not start generation, finalization or reviewers.",
 ]
 ```
 
-[Architecture schema](https://github.com/bmad-code-org/BMAD-METHOD/blob/v6.12.4/src/bmm-skills/plan/bmad-architecture/customize.toml) 支持 `external_sources`。在 `_bmad/custom/bmad-architecture.user.toml` 的 `[workflow]` 中可使用下列条目：
-
-```toml
-[workflow]
-external_sources = [
-  "Before an implementation-affecting decision needing repository facts, use approved outer-repository planning evidence for stage architecture. Read relevant Accepted ADRs, current owners, interfaces and implementation, compare upstream adopted conclusions, and record conflicts, impact and owner resolution in native memory. Never let an index summary silently replace normative scope.",
-]
-```
-
-这些规则不删除原生 reviewer、coherence 或 preservation 要求。配置 `on_complete` / `external_handoffs` 不能补救事前缺失的事实核查，也不授权对外发布。
+Architecture 支持 `external_sources`；在实际 native 根的 `bmad-architecture.user.toml` 使用同样的只读原则，查询 stage 语义为 architecture，读取相关源并记录与上游结论的冲突。`on_complete` 或 `external_handoffs` 不能补救事前缺失的事实核查，也不授予发布权。配置不修改原生 reviewer/coherence/preservation 要求；本次查询验证不启动这些后续工作。
 
 ## wrapper 隔离与原生消费边界
 
-源码依据：[公共隔离构造](../../scripts/toolchain/bmad_native/__init__.py)、[SPEC bridge](../../.agents/skills/jimuyun-spec/scripts/bridge.py)、[Architecture invoke](../../.agents/skills/jimuyun-architecture/scripts/invoke.py)。
+依据：[隔离构造](../../scripts/toolchain/bmad_native/__init__.py)、[SPEC bridge](../../.agents/skills/jimuyun-spec/scripts/bridge.py)、[Architecture invoke](../../.agents/skills/jimuyun-architecture/scripts/invoke.py)。**两个 wrapper 均不修改。**
 
-- 两者新建 `logs/bmad-wrappers/<unique-run>/native`，复制锁定原生文件/runtime、AGENTS.md、工具链索引和显式选择的输入；不是复制整个仓库。查询器、catalog/policy/generation 不会自动出现在 native 根。
-- 外层 central config 由官方 resolver 合并后，只传递 `user_name`、`communication_language`、`document_output_language`、`project_name`；重新绑定 `core.output_folder` 与 `modules.bmm.planning_artifacts` 到私有输出。不是保留全部 central 键。
-- 外层 `_bmad/custom/bmad-*.toml` / `.user.toml` **不会自动复制**。SPEC prepare 自己生成私有 `bmad-spec.toml`，写入 spec_output_path 和 run_folder_pattern。Architecture 的 doc_workspace 由调用者入口绑定。不要覆盖这些隔离路径。
-- 私有根的 resolver 必须使用私有 `--project-root`，外层解析成功不能证明私有解析成功。`{project-root}` 在私有执行中指向 native，不是外层仓库，不能据此调用不存在的查询器。
-- 当前没有自动的查询结果注入/采纳接口。未来获准的设备操作可在 prepare 后、原生激活前显式补充私有 custom 规则、可读输入与调用者上下文，保留 wrapper 已生成字段，并分别验证外层查询证据和私有规则；这一步不是当前 prepare 自动完成的行为。若要持久自动传递，应另行修改/验证 wrapper 合同，不临时修改官方文件或绕过路径限制。
-- 查询针对获准的外层真实仓库，原生只写私有产物。不得把外层根当作原生写根来“解决”缺文件。SPEC 正式 typed 发布仍由 jimuyun-spec publish 拥有，Architecture 结果采纳为 companion 是独立显式操作；知识库发布是另一 owner。
+1. 按现有公开 `prepare` 创建新的 `logs/bmad-wrappers/<unique-run>/native`。SPEC 目标须为合法 `_bmad-output/specs/.../SPEC.md`，package id 使用 `SPEC-` 前缀；不要通过任意输出路径绕过检查。
+2. prepare 只复制锁定原生文件/runtime、必要仓库上下文和显式输入。外层的查询器、正式知识库和 per-skill `.user.toml` 不会自动复制。central 只传四个身份／语言字段并重绑私有输出。
+3. **prepare 完成后、官方 skill 激活前**，管理员或设备本地启动脚本将对应 `.user.toml` 放入这个新 run 的 `_bmad/custom/`。保留 SPEC 已生成的 spec_output_path/run_folder_pattern、Architecture doc_workspace 和所有 owner/path 约束；不覆盖已有配置，不重写已经执行的历史 run。
+4. 将实际 task/输入、真实外层根、可调用的绝对查询命令及只读限制作为明确调用者上下文。可以使用现存 ignored 本地辅助脚本组织这一步；本轮辅助命令接收 `--stage`、`--task-id`、`--query`，固定 reader，执行真实 CLI 并核对返回源。**它不是 Git 交付文件，也不是两个 wrapper 的新参数。** 其他设备不得假定此脚本随 pull 存在，可以按下节直接使用现有 CLI。
+5. 官方 resolver 的脚本路径、`--skill` 和 `--project-root` 都指向该次 native 根。验证合并规则确实包含外层只读命令，再按原 invocation 激活官方 skill。外层解析成功不能代替私有解析成功。
+6. 官方 skill 从私有根调用外层真实查询入口。不要让 native 冒充发布仓库，不把整个外层根当作可写原生根，不把外层摘要称为官方实际调用。SPEC typed 发布仍归 wrapper publish；知识库发布另归维护 owner。
 
 ## Windows 查询与解析示例
 
-**当前 BMAD 消费合同阻塞未解除，下面的 PRD 查询不具备成功前置，不应直接作为可用部署执行。** 获准接入、同代发布、任务授权和原生安装都满足后，再按实际任务替换路径与内容。CLI 的输入字段来自 `prepare_consumption`，不要给它发送底层 Locator 的 schema_version/consumer/snapshot/policy_revision；函数会从阶段和正式数据生成这些字段。
-
-示例 `logs/bmad-device/request.json` 内容如下；`requirements/example.md` 是占位，必须替换成真实、获准、仓库相对的现有 UTF-8 文档。所有 payload 路径用 `/`，不得用绝对路径、`..`、凭据路径。输入文件最大262144字节，stdin 最大65536字节，scope 最多64条；输入中显式反引号文件引用还可能扩展 scope。
-
-```json
-{
-  "stage": "prd",
-  "operation": "create",
-  "task_id": "device-prd-example-001",
-  "mode": "headless",
-  "inputs": ["requirements/example.md"],
-  "scope": ["requirements/example.md"],
-  "query": "Identify current implementation and reuse boundaries for the selected requirement",
-  "narrow_overrides": {"max_calls": 1}
-}
-```
-
-stage 对应 prd/spec/architecture；operation 为 create/repair/update/resume。不要为 BMAD 改成 vdd-create。mode 支持 headless/interactive，但不会自动实现聊天等待调度；缺 task_id 返回 awaiting-input、queried=false。显式 scope 不是绕过权限的白名单；缩小预算只能取仓库约束的交集。
-
-用编辑器或 Python `Path.write_text(..., encoding="utf-8", newline="\n")` 写 JSON/TOML；中文不得通过 PowerShell 文本写入命令保存。以下已核实接口示例通过 Python 传 UTF-8 字节，避开 PowerShell 管道编码；仅在上述前置全部满足后执行：
+**先满足合法 consumer、同代正式发布和任务前置；当前记录的真实查询仍 blocked。** 下面是现有只读 Locator 的调用模板，无需新 MCP 或通用 helper。管理员先在外层仓库取得 `$RepoRoot`，再将相应命令和真实路径作为设备本地输入提供给官方 skill。示例不发明新 API，也不把 Locator 请求与 adapter 的 stage/operation payload 混用。
 
 ```powershell
-py -3 -B -c "from pathlib import Path; import subprocess,sys; p=Path('logs/bmad-device/request.json'); r=subprocess.run([sys.executable,'-B','scripts/toolchain/knowledge_query/adapter.py','prepare-consumption','--repository-root','.'],input=p.read_bytes()); sys.exit(r.returncode)"
+$RepoRoot = (Resolve-Path '.').Path
+$QueryProcedure = @'
+from pathlib import Path
+import json, subprocess, sys
+root = Path(sys.argv[1]).resolve()
+catalog = json.loads((root / "knowledge/catalogs/repository-knowledge-catalog.v2.json").read_text(encoding="utf-8"))
+policy = json.loads((root / "knowledge/policies/consumer-policies.v2.json").read_text(encoding="utf-8"))
+request = {"schema_version": "jimuyun.knowledge-locator-request.v1",
+           "request_id": sys.argv[2], "consumer": "bmad-planning", "query": sys.argv[3],
+           "snapshot": {"ref": "refs/heads/main", "commit": catalog["source_snapshot"]["commit"]},
+           "policy_revision": policy["policy_revision"]}
+result = subprocess.run([sys.executable, "-B", str(root / "scripts/python/knowledge_locator.py"),
+                         "--repository-root", str(root)], cwd=root,
+                        input=json.dumps(request).encode("utf-8"), capture_output=True, timeout=30)
+if result.returncode:
+    sys.stderr.buffer.write(result.stderr)
+    raise SystemExit(result.returncode)
+value = json.loads(result.stdout)
+print(json.dumps(value, ensure_ascii=True))
+raise SystemExit(0 if value.get("status") == "matched" else 2)
+'@
+# Replace these task/query placeholders with the actual task and question.
+py -3 -B -c $QueryProcedure $RepoRoot 'actual-task-id' 'repository-rules'
 ```
 
-示例不含 `record_path`，查询不自动写记录；后续要留存可显式添加 `record_path: logs/bmad-device/<unique-run>/query.md`（替换占位）。adapter 会创建/追加调用者记录，故此选项不再是纯只读调用。允许的记录是 logs/ 或 execution-plans/ 下 Markdown，或 `.memlog.md`；不能用源码文件充当记录。源与正式知识库仍只读。不要向查询请求直接塞入凭据、真实密钥或整段不相关历史。
+这是**定位步骤**，不是自动采纳。matched 后仍须读取返回候选的真实源：用返回 path 在当前 pinned main 读字节，核对 source_sha256、main/read identity，再用于事实判断。不要把本地 dirty 文件冒充 main；拒绝路径越界和哈希漂移。需要当前工作树事实时单独标明身份，不能改写返回 receipt。
 
-安装完且依赖已备好时，可以只解析定制，不运行 BMAD：
+只解析配置而不运行 BMAD，可在**实际安装的 native 根**执行：
 
 ```powershell
-uv run .\_bmad\scripts\resolve_customization.py --skill .\.agents\skills\bmad-prd --project-root . --key workflow
+$Resolver = Join-Path $NativeRoot '_bmad/scripts/resolve_customization.py'
+$SkillRoot = Join-Path $NativeRoot '.agents/skills/bmad-spec'
+uv run $Resolver --skill $SkillRoot --project-root $NativeRoot --key workflow
 ```
 
-只有 PRD 真实安装后才使用此路径。SPEC/Architecture 换成各自真实技能目录；wrapper 则将脚本、skill、project-root 三者都明确指向该 run 的 native 根。解析 JSON 中出现规则，只证明合并结果，不能证明工具调用、读源或采纳发生。禁止把 native run 的不存在路径当成功配置。
+PRD/Architecture 换成各自实际安装根和技能名。`$NativeRoot` 由已完成的安装／prepare 返回，不是虚构目录。上述 Windows 示例只做语法核对，未在 Windows 实跑。中文文件用 Python 显式 UTF-8 写入，不用 PowerShell 文本写入命令保存；TOML、JSON 和 stdin 都保持 UTF-8。
 
 ## 结果解释、采纳与最小端到端核对
 
-| 观察 | 正确处理 |
+| 观察 | 能证明什么、如何处理 |
 | --- | --- |
-| NATIVE_INSTALLATION_MISSING 等 | BMAD 本地安装失败，按原生指引处理；不是知识库 no_match。版本冲突、字节漂移和 TOML 无效必须分别报告。 |
-| awaiting-input / queried=false | 尚无任务身份，不声称查过；获得任务后由调用者显式触发。 |
-| not_installed / queried=false | 知识库整套不存在才是可选未安装；仅在允许的直接源路径独立核查，不能声称知识库通过。 |
-| publication_incomplete / integrity_failed / publication_missing | 已有安装残迹或同代/hash/发布损坏；阻塞，不降级成未安装或空结果。 |
-| policy_denied / invalid_request / unknown_failure | 停止相应事实判断并保留原始错误。当前不支持的 consumer 可能被 schema 验证表现为错误，不能硬认定只会返回 policy_denied。 |
-| no_match / degraded / unavailable | 分别看 reason_code（如 empty、stale_verified、timeout、config_missing）；要求独立直接源核查，缺关键事实则停止结论。 |
-| cancelled / budget_exhausted | 终止该 episode，不通过换 task_id、重试或删记录绕过预算。 |
-| hit | 仍不是采纳；读实际源、验证当前身份/hash，再由原生作者判断。 |
+| CLI 版本、安装或字节 verify 通过 | 只证明相应安装范围；不证明查询、配置生效或业务执行。 |
+| resolver JSON 包含规则 | 只证明该执行根的合并结果；不证明官方 skill 实际调用。 |
+| prepare 返回 invocation | 只证明创建了私有执行材料；不是运行官方方法。 |
+| Locator `blocked` / 候选为空 | 保留原返回并停止事实判断；核对身份、发布、projection、snapshot 和哈希，不冒用其他 consumer 或降级伪称成功。 |
+| Locator `insufficient_match` | 知识库没有足够匹配；不能把零结果当事实成立，也不能冒称端到端通过。 |
+| Locator `matched` | 有候选位置；官方调用者还须实际读源、核对身份／哈希并自行决定采纳。 |
+| adapter awaiting-input / queried=false | 尚未执行查询；adapter 与 Locator 的退出码及字段语义分别解释，不混用。 |
+| timeout / cancelled / integrity failure | 保留失败，按其真实原因处理；不通过换身份、改 snapshot、忽略返回或无界重试制造通过。 |
 
-不要只看退出码：CLI 0 也可能是 awaiting-input 或 prepared 的降级结果，2 表示 blocked；`queried=true` 是尝试计数，不等于成功。读取 status、availability、query_result.outcome/reason_code、diagnostic.raw_status、permission_checked、incomplete、budget_usage 和 authorizes（应为空）。
+Locator CLI 的退出码0也可能携带 `blocked`，所以示例显式检查 payload status；不能只看进程退出。现有 adapter 的 `queried=true` 同样只表示尝试，不表示成功。本次共享接入不授予任何 authorizes，查询结果不能驱动自动维护或发布。
 
-未来获得端到端运行授权后，按同一真实任务留存以下最小证据，不运行 VDD/Quick Dev/Acceptance 来替代 BMAD 证明：
+获准部署后的最小真实验证，不运行完整 PRD/SPEC/Architecture 生成或额外 reviewer，也不以 VDD/Quick Dev/Acceptance 替代：
 
-1. 设备版本、实际原生路径/字节验证、配置前后备份与 resolver JSON；wrapper 另记私有根与私有合并结果。
-2. 任务与输入确定时间、事实判断前的真实查询返回、topic/consumer/原始状态、generation/index identity、source path/hash/read identity。分清 main、branch、dirty worktree、direct-source；索引片段不能替代当前源码、调用者、测试和合同读取。
-3. 原生 memlog 中逐项 accepted/rejected、原因、实际用途和复用/新增范围影响；区分已实现、仅计划、已排除、拟新增、未验证，明确上游结论冲突由哪个 owner 处理。adapter 不能预填“已采纳”。
-4. 至少核对一个真实成功链与一个缺身份/拒绝链；只有实际完整执行才可声称端到端通过。配置解析、prepare invocation、tree verify 各自只能证明自己的范围，不能证明 reviewer 或语义结果。
-5. 当前阶段若卡在消费者接入，就在此停止并记录阻塞；不要为凑成功样例篡改权限或发布。此文档仅做静态核对，未在 Windows 或任何原生 BMAD 流程做端到端验证。
+1. 保留实际根、版本／字节、配置备份与正确根的 resolver JSON。
+2. 满足正式发布后，选择一个真实、有限的问题，由**官方 skill 在激活规则中亲自调用**只读入口。记录 task、query、consumer、generation/snapshot、返回状态和源 path/hash，读取至少一个真实源并核验。
+3. 在原生 memlog 记录 accepted/rejected、理由及用途；不由 helper 预填采纳，不把索引摘要当源权威。
+4. 保留一个成功链和一个缺身份／拒绝链，明确阶段和平台覆盖。若仍 blocked，停在真实阻塞，不运行完整业务来掩盖。
+
+本轮已经验证安装、私有根配置解析和一次实际 CLI 拒绝；**官方 skill 成功查询／读源／采纳链及 Windows 端到端仍未完成**。合入共享补丁后，还需合法 main-bound 发布，再补这条最小验证。
 
 ## 回退配置
 
-在获准设备配置前，用 UTF-8/字节保真方式备份已有 custom 文件，记录文件路径与 hash。回退时恢复该设备原内容，或移走此次新建的 override；同时检查 team 和 user 两层，不能以空数组抵消追加规则。然后对实际执行根重新运行 resolver，确认回到预期合并值。
+配置前保全已有设备文件原字节和哈希。回退时恢复原 override 或移走此次新增文件，检查 team/user 两层；空数组不能抵消追加规则。对实际执行根重新解析，确认恢复预期合并值。
 
-wrapper 私有 run 保留为历史证据，不在已执行的 run 内重写配置/结果伪造旧状态；下一次使用新 run 并明确新配置。回退不得删除 generation、修改 policy/schema、回退官方原生字节或自动调用 restore-lkg。知识库恢复须走其独立发布 owner 和授权，且保留失败证据。
+私有 run、失败和原件保留为历史；新配置用新 run，不重写历史 receipt。回退不删除 generation、不篡改 policy/schema/current、不改官方字节，也不自动 restore-lkg。正式知识恢复仍须独立发布 owner 及其授权。

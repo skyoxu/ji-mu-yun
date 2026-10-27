@@ -37,20 +37,20 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
         cases = self.suite["cases"]
         counts = Counter(case["category"] for case in cases)
         self.assertEqual(
-            {"adr": 27, "execution-plan": 27, "architecture": 27, "toolchain": 27},
+            {"adr": 27, "execution-plan": 27, "architecture": 27, "toolchain": 29},
             dict(counts),
         )
         for category in counts:
             queries = [case["query"].casefold() for case in cases if case["category"] == category]
-            self.assertEqual(27, len(set(queries)), f"duplicate query in {category}")
+            self.assertEqual(counts[category], len(set(queries)), f"duplicate query in {category}")
 
     def test_suite_has_positive_and_negative_oracles_per_category(self) -> None:
         for category in self.suite["categories"]:
             cases = [case for case in self.suite["cases"] if case["category"] == category]
             positive = [case for case in cases if case["expected"].get("result_status", "matched") == "matched"]
             negative = [case for case in cases if case["expected"].get("result_status") == "insufficient_match"]
-            self.assertEqual(25, len(positive), category)
-            self.assertEqual(2, len(negative), category)
+            self.assertEqual(26 if category == "toolchain" else 25, len(positive), category)
+            self.assertEqual(3 if category == "toolchain" else 2, len(negative), category)
 
     def test_suite_is_distributed_across_expected_modules(self) -> None:
         modules = {
@@ -64,7 +64,7 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
         self.assertEqual(25, len(modules["adr"]))
         self.assertEqual(7, len(modules["execution-plan"]))
         self.assertEqual(25, len(modules["architecture"]))
-        self.assertEqual(6, len(modules["toolchain"]))
+        self.assertEqual(7, len(modules["toolchain"]))
 
     def test_canonical_toolchain_owner_queries_stay_within_rank_gate(self) -> None:
         # ADR-0048 requires deterministic ranking evidence for workflow consumers.
@@ -108,7 +108,7 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
             "cases": [
                 case
                 for case in self.suite["cases"]
-                if case["case_id"] not in {"TOOL-025", "TOOL-N01", "TOOL-N02"}
+                if case["case_id"] not in {"TOOL-025", "TOOL-N01", "TOOL-N02", "BMAD-RO-01"}
             ],
         }
         with self.assertRaisesRegex(ValueError, "coverage"):

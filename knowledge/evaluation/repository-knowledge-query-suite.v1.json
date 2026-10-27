@@ -115,6 +115,31 @@
     {"case_id":"ARCH-N01","category":"architecture","consumer":"bootstrap","query":"Apache Kafka geo replication quorum topology","expected":{"result_status":"insufficient_match"}},
     {"case_id":"ARCH-N02","category":"architecture","consumer":"refactor-acceptance","query":"MetalSL argument buffers tile shaders Apple GPU","expected":{"result_status":"insufficient_match"}},
     {"case_id":"TOOL-N01","category":"toolchain","consumer":"vdd","query":"PostgreSQL logical replication WAL slot failover topology","expected":{"result_status":"insufficient_match"}},
-    {"case_id":"TOOL-N02","category":"toolchain","consumer":"bootstrap","query":"Helm chart rollback Kubernetes namespace reconciliation","expected":{"result_status":"insufficient_match"}}
+    {"case_id":"TOOL-N02","category":"toolchain","consumer":"bootstrap","query":"Helm chart rollback Kubernetes namespace reconciliation","expected":{"result_status":"insufficient_match"}},
+    {
+      "case_id": "BMAD-RO-01",
+      "category": "toolchain",
+      "consumer": "bmad-planning",
+      "query": "repository-rules",
+      "expected": {
+        "module_id": "repository-rules",
+        "max_rank": 1,
+        "kind": "repository-guide",
+        "status": "active",
+        "path": "AGENTS.md",
+        "source_terms": [
+          "Repository Agent Contract"
+        ]
+      }
+    },
+    {
+      "case_id": "BMAD-RO-N01",
+      "category": "toolchain",
+      "consumer": "bmad-planning",
+      "query": "zzzxxyy-bmad-unregistered-content",
+      "expected": {
+        "result_status": "insufficient_match"
+      }
+    }
   ]
 }

@@ -61,6 +61,40 @@
       "max_candidates": 32,
       "minimum_confidence": "medium",
       "freeze_point": "acceptance-run-input"
+    },
+    {
+      "consumer": "bmad-planning",
+      "domains": [
+        "toolchain",
+        "phase",
+        "workspace",
+        "marketplace"
+      ],
+      "visibility": [
+        "active",
+        "dependency",
+        "conditional"
+      ],
+      "lifecycles": [
+        "repository-source"
+      ],
+      "statuses": [
+        "active",
+        "conditional",
+        "historical"
+      ],
+      "historical_mode": "allowed",
+      "path_prefixes": [
+        ""
+      ],
+      "exact_paths": [],
+      "required_modules": [
+        "repository-rules"
+      ],
+      "optional_modules": [],
+      "max_candidates": 12,
+      "minimum_confidence": "medium",
+      "freeze_point": "before-bmad-fact-decision"
     }
   ]
 }

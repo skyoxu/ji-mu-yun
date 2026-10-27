@@ -22,7 +22,7 @@
         "properties": {
           "case_id": {"type": "string", "pattern": "^(ADR|PLAN|ARCH|TOOL)-([0-9]{3}|N[0-9]{2})$"},
           "category": {"enum": ["adr", "execution-plan", "architecture", "toolchain"]},
-          "consumer": {"enum": ["vdd", "bootstrap", "refactor-acceptance"]},
+          "consumer": {"enum": ["vdd", "bootstrap", "refactor-acceptance", "bmad-planning"]},
           "query": {"type": "string", "minLength": 3},
           "expected": {
             "oneOf": [

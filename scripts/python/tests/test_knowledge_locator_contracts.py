@@ -29,7 +29,7 @@ class KnowledgeLocatorContractTests(unittest.TestCase):
 
         policies_v2 = json.loads(POLICY_V2_PATH.read_text(encoding="utf-8"))
         consumers_v2 = {item.get("consumer") for item in policies_v2.get("policies", [])}
-        self.assertEqual({"vdd", "quick-dev", "bootstrap", "refactor-acceptance"}, consumers_v2)
+        self.assertEqual({"vdd", "quick-dev", "bootstrap", "refactor-acceptance", "bmad-planning"}, consumers_v2)
 
     def test_catalog_binds_source_snapshot_not_its_own_commit(self) -> None:
         catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))

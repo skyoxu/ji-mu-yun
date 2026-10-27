@@ -310,7 +310,9 @@ class CatalogBuilder:
             "anchor": title,
             "anchors": _anchors(content, title),
             "relations": sorted(list(relations), key=lambda item: (item["type"], item["target"])),
-            "consumer_ids": sorted(set(consumer_ids or _consumer_ids(primary_domain))),
+            # ADR-0048: the administrator-operated BMAD reader may locate all
+            # otherwise eligible published modules, without changing route owners.
+            "consumer_ids": sorted(set(consumer_ids or _consumer_ids(primary_domain)) | {"bmad-planning"}),
             "semantic_eligible": semantic_eligible,
             "resources": sorted(bound_resources, key=lambda item: (item["role"], item["path"])),
             "content": content,
