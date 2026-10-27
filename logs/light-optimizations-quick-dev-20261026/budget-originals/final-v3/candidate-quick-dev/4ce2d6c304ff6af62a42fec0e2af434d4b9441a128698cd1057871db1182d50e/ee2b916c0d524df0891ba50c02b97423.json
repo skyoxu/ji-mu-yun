@@ -1,0 +1,49 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready",
+    "--slice",
+    "S3",
+    "--profile",
+    "standard",
+    "--action",
+    "run-regression",
+    "--run-dir",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03",
+    "--snapshot-roots",
+    "logs/light-optimizations-quick-dev-20261026/S3-final-v3-snapshot-roots.json",
+    "--source-commit",
+    "c6bb51fe2227000ec9c96e62aca810b22c5d4fc9",
+    "--base-commit",
+    "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+    "--out",
+    "logs/light-optimizations-quick-dev-20261026/S3-final-v3-ready.json"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 35.01956139399954,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "8a71cd25e7a536fb3ad203ef1cc3fa941773d81f5b6ec45e6ec497b21b89c846": 0.5452725350005494,
+    "8d61f27b973fadc75f5b6e832275fa8536c194d131fc07f5a94a30dc100171d8": 0.8188074789995881,
+    "adfd64acb888388ca8122c7ca5acbfad6a8c8cae0aa32891dc861f9b0aec47fb": 0.20188438999866776,
+    "aa5c7d0a73d46d21d463181ea76aa93be9da1f176b91297a6bf4975906b73320": 5.50909535199753,
+    "72708c65c37853328d2f3eef68b3368944ac1c99dcc91bb800d3060e9e1d5f17": 0.8182516670003679,
+    "9fa40e12765e9fc1eed35d22bc9a67f4add3e45f956fa63c24914084c842347d": 28.69175544400059
+  },
+  "active_at_stop": [
+    {
+      "key": "aa5c7d0a73d46d21d463181ea76aa93be9da1f176b91297a6bf4975906b73320",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.3584331329984707,
+      "container": true
+    }
+  ]
+}

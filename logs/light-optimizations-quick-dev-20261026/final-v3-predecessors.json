@@ -1,0 +1,26 @@
+[
+  {
+    "slice_id": "S4",
+    "run_root": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03",
+    "result_ref": "logs/light-optimizations-quick-dev-20261026/S4-final-v3-ready.json",
+    "result_sha256": "sha256:26beeca3622d9998dc3e934759c7360dc00feef9499d004fe3051d169989c39d"
+  },
+  {
+    "slice_id": "S3",
+    "run_root": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03",
+    "result_ref": "logs/light-optimizations-quick-dev-20261026/S3-final-v3-ready.json",
+    "result_sha256": "sha256:c5c546aa19084aa1d37568e6735bfe370e341c27198cc23907d3ac6790b9765a"
+  },
+  {
+    "slice_id": "S1",
+    "run_root": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03",
+    "result_ref": "logs/light-optimizations-quick-dev-20261026/S1-final-v3-ready.json",
+    "result_sha256": "sha256:bbea6c76de123a82b501758ef9915f2c12a1d338009559d71dbebd39721b72fd"
+  },
+  {
+    "slice_id": "S2",
+    "run_root": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03",
+    "result_ref": "logs/light-optimizations-quick-dev-20261026/S2-final-v3-ready.json",
+    "result_sha256": "sha256:d32db0f6a332302931cbe26f3c0af66b98ba941512334b80160358d415fbd7aa"
+  }
+]
