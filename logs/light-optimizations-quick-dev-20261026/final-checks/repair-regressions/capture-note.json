@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "stdout_txt": "Empty: the operator harness redirected Python streams, while the native supervisor forwarded bytes through FD 1. Full process stdout was returned in exec session 14292 (initial and final tool output); no rerun was performed.",
+  "complete_structured_original": "junit.xml",
+  "native_budget_originals": "budget/",
+  "result": "75 passed, exit 0; use the original JUnit and budget records for local verification, not the empty stdout.txt."
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "6f3ae279b86a43a59eeb0db8ee44d2f7",
+  "request_sha256": "sha256:d387bdb8a02020188624394263b950addf19466a38d97e5062dfaab58f4a975c",
+  "output_text": "Authored only the declared S4 test module. Seven bound CER assertions exercise real consumer inputs, legal absence and fallback, existing RED/dependency guards, and shared owning-call composition. No production or evidence files changed.",
+  "authorizes": []
+}

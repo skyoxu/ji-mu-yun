@@ -1,0 +1,20 @@
+.F....................
+======================================================================
+FAIL: test_excluded_recovery_architecture_is_absent (test_validate_skill_contract.SkillContractTests.test_excluded_recovery_architecture_is_absent) (forbidden='\\bgeneration\\b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/vdd-execution-plan/scripts/tests/test_validate_skill_contract.py", line 262, in test_excluded_recovery_architecture_is_absent
+    self.assertEqual([], offenders)
+AssertionError: Lists differ: [] != ['scripts/semantic_v3_contract_repair.py']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'scripts/semantic_v3_contract_repair.py'
+
+- []
++ ['scripts/semantic_v3_contract_repair.py']
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.475s
+
+FAILED (failures=1)

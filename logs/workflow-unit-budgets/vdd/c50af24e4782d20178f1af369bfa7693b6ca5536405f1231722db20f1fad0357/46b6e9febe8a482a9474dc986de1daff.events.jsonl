@@ -1,0 +1,14 @@
+{"at": 2716.749559559, "call": "4a9836ca7ac1409babe35829a2eda80d", "container": true, "event": "start", "key": "fdb654cb177a18b5df27bb89de1c7db30e8d56232d1d0a243d70a2a01d0e21ae", "label": "VDD stage V0A", "parent": "entry"}
+{"at": 2716.752420308, "call": "4a9836ca7ac1409babe35829a2eda80d", "event": "end"}
+{"at": 2716.752510011, "call": "960dc301404f434e9819139098cd2ded", "container": true, "event": "start", "key": "eaa5aa42685a747dc9b7fe8786833d0899a50812d34716276ead37cd59998ecf", "label": "VDD stage V1", "parent": "entry"}
+{"at": 2716.773223421, "call": "268cc7fa46b841dcb0c842f419db28e8", "container": false, "event": "start", "key": "d660951672cd6fca247d5747c72edd51a0d4a7126062f1920fe6e9f3da761bae", "label": "VDD worker v1-FR-1", "parent": "960dc301404f434e9819139098cd2ded"}
+{"at": 2744.940343093, "call": "268cc7fa46b841dcb0c842f419db28e8", "event": "end"}
+{"at": 2744.946167496, "call": "92c1adf0d7bb430284d1e15fe1955fe9", "container": false, "event": "start", "key": "2bd75717564a90e365881440f3a43bac278c1e37aaea807a1340d16719eb882b", "label": "VDD worker v4-atomic-recall-chunk-001", "parent": "960dc301404f434e9819139098cd2ded"}
+{"at": 2791.94321482, "call": "92c1adf0d7bb430284d1e15fe1955fe9", "event": "end"}
+{"at": 2791.94553053, "call": "6ca2d63dc3874ee3b93463512c073b23", "container": false, "event": "start", "key": "fe3ca57794b27da0ad4d03b6b83edeb5687ca24491f96a3a71dcd14a4eb43e72", "label": "VDD worker v4-atomic-recall-chunk-002", "parent": "960dc301404f434e9819139098cd2ded"}
+{"at": 2808.80851752, "call": "6ca2d63dc3874ee3b93463512c073b23", "event": "end"}
+{"at": 2808.811157844, "call": "396e6617239b4577ad2d26e6fbd64d76", "container": false, "event": "start", "key": "72ed0d02b103d53df9712eb06cc06cba8b0d44d9c6925f7fe7df063be0660df6", "label": "VDD worker v4-atomic-recall-source-001", "parent": "960dc301404f434e9819139098cd2ded"}
+{"at": 2826.557821643, "call": "396e6617239b4577ad2d26e6fbd64d76", "event": "end"}
+{"at": 2826.562778823, "call": "b663f811cb94452b82af93f12f8ec2c6", "container": false, "event": "start", "key": "8bc9ec54e8217619dd2686acada76d7b052502f2fdc355d6cececd41f2dfbb2e", "label": "VDD worker v4-atomic-recall-invented-entailment-recheck", "parent": "960dc301404f434e9819139098cd2ded"}
+{"at": 2867.940358855, "call": "b663f811cb94452b82af93f12f8ec2c6", "event": "end"}
+{"at": 2867.941308697, "call": "960dc301404f434e9819139098cd2ded", "event": "end"}

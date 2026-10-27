@@ -1,0 +1,105 @@
+{
+  "actionDag": {
+    "actions": [
+      {
+        "actionId": "validate-vdd-contract",
+        "activation": true,
+        "commandId": "validate-vdd-contract",
+        "dependsOn": [],
+        "order": 1
+      },
+      {
+        "actionId": "validate-code-review-route",
+        "activation": true,
+        "commandId": "validate-code-review-route",
+        "dependsOn": [
+          "validate-vdd-contract"
+        ],
+        "order": 2
+      },
+      {
+        "actionId": "validate-acceptance-routing",
+        "activation": true,
+        "commandId": "validate-acceptance-routing",
+        "dependsOn": [
+          "validate-code-review-route"
+        ],
+        "order": 3
+      },
+      {
+        "actionId": "validate-acceptance-package",
+        "activation": true,
+        "commandId": "validate-acceptance-package",
+        "dependsOn": [
+          "validate-acceptance-routing"
+        ],
+        "order": 4
+      }
+    ]
+  },
+  "actionDagHash": "sha256:867704e04cce7e8b972f7d2ce8601725a6325b326280079f4971c93c3a369ec5",
+  "authorizes": [],
+  "bootstrapInvoked": false,
+  "executedActionCount": 4,
+  "finalization": {
+    "authorizes": [
+      "acceptance-passed"
+    ],
+    "final": {
+      "path": "finalization/acceptance-passed.v1.json",
+      "sha256": "sha256:ba5f902663945fb62c87ae8825e7721fe3ef9741f43d80b04b4878f405535f22"
+    },
+    "status": "acceptance-passed",
+    "wrapper": {
+      "path": "finalization/acceptance-result-final.v1.json",
+      "sha256": "sha256:5112f8c2b358a15ece7dff3a394dcb35446d524464b82527d570a9b811f9521a"
+    }
+  },
+  "persistedActionState": {
+    "actionStates": {
+      "validate-acceptance-package": "completed",
+      "validate-acceptance-routing": "completed",
+      "validate-code-review-route": "completed",
+      "validate-vdd-contract": "completed"
+    },
+    "authorizes": [],
+    "dependencyClosed": {
+      "validate-acceptance-package": true,
+      "validate-acceptance-routing": true,
+      "validate-code-review-route": true,
+      "validate-vdd-contract": true
+    },
+    "missingDependencies": {
+      "validate-acceptance-package": [],
+      "validate-acceptance-routing": [],
+      "validate-code-review-route": [],
+      "validate-vdd-contract": []
+    },
+    "nextAction": null,
+    "readyActionIds": [],
+    "runId": "acceptance-4a66ec9c0c361a79",
+    "schemaVersion": "acceptance-run-inspection.v1",
+    "sortingBasis": "dependency-topology,action-order,command-registry-order,command-id"
+  },
+  "requestAuthority": "none",
+  "route": "deterministic_only",
+  "runBinding": {
+    "actionDagHash": "sha256:867704e04cce7e8b972f7d2ce8601725a6325b326280079f4971c93c3a369ec5",
+    "contractHash": "sha256:eada03600b8e49477091d9864bfd63685111290152159280dfef1c46944bc5dc",
+    "knowledgeContextHash": "sha256:48c1bd628ece33c32c249a8b9b2315a526e4947b13d985101830e7bbd0a2d6d7",
+    "runDirectory": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79",
+    "runId": "acceptance-4a66ec9c0c361a79",
+    "runInputHash": "sha256:ad28f830e8174cbf0b55523d9b5f09549936dfa4998f55c361e18cf0405ad8a8"
+  },
+  "runBindingHash": "sha256:7c269ff81803e9d0abac2126a534c663aedf67b22e55af0d4981d2e1555e4949",
+  "runDirectory": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79",
+  "runId": "acceptance-4a66ec9c0c361a79",
+  "runInputHash": "sha256:ad28f830e8174cbf0b55523d9b5f09549936dfa4998f55c361e18cf0405ad8a8",
+  "schemaVersion": "acceptance-coordinator-result.v4",
+  "status": "completed",
+  "telemetry": {
+    "path": "coordinator-telemetry.jsonl",
+    "schemaVersion": "acceptance-coordinator-telemetry.v1"
+  },
+  "typedHandoff": null
+}

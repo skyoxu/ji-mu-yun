@@ -1,0 +1,383 @@
+{
+  "schema": "light-optimizations.implementation-handoff.v1",
+  "authorizes": [],
+  "recorded_at": "2026-10-27T00:14:19.872764+00:00",
+  "completion_claim": false,
+  "code_commit": "0b61a4d00640672c2a8cec12d33277c3654ccc8c",
+  "code_tree": "564794a462dc7a3d093728c7f1ad356abe578bcb",
+  "branch": "toolchain/light-optimizations-20261026",
+  "original_delivery_source": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+  "trusted_VDD_compiler_commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+  "plan_id": "PLAN-80D11CC6CF83",
+  "bundle_sha256": "e9ca66fc079a6660fc5b777f580bb744cc92758e262fa135469330e585c9708e",
+  "plan_directory": "execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary",
+  "boundary_comparison": "logs/light-optimizations-quick-dev-20261026/q2-boundary-content-comparison.v1.json",
+  "frozen_inputs": "logs/light-optimizations-quick-dev-20261026/public-input-freeze.v2.json",
+  "trusted_fixed_file_count": 15,
+  "trusted_fixed_files_unchanged": true,
+  "changed_source_paths_since_reviewed_plan": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    "docs/2026-10-26-toolchain-light-optimizations-requirements-v3.md",
+    "scripts/vdd/compile_plan.py"
+  ],
+  "slices": [
+    {
+      "slice_id": "S1",
+      "obligation_ids": [
+        "O-D7E20C67151F"
+      ],
+      "depends_on": [],
+      "production_owners": [],
+      "execution_snapshot_paths": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py"
+      ],
+      "probe_ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S1/final-02/canonical-evidence/probe/stage-result.v2.json",
+      "probe_sha256": "271ce0e8bcc0c677843dbe0688a571a6090ed776252a10300eb3c68815d9eb19",
+      "probe_cases": 1,
+      "observed_dispositions": {
+        "present": 1
+      },
+      "Q7": null,
+      "terminal": null,
+      "closure_block": "Required Q6 regression group has the unchanged historical consumption-reference failure; no successful Q7/terminal exists."
+    },
+    {
+      "slice_id": "S2",
+      "obligation_ids": [
+        "O-150CF294CF82",
+        "O-3E1106AFC806",
+        "O-807E36F7703A",
+        "O-A8CE31B7FD12",
+        "O-C33021E45B33",
+        "O-CEE538F9F8C1",
+        "O-EA02F0FDAA2E",
+        "O-F461CEA9E96B",
+        "O-F5EB9569ECD3"
+      ],
+      "depends_on": [],
+      "production_owners": [
+        ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+        ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+        ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+        "scripts/vdd/compile_plan.py"
+      ],
+      "execution_snapshot_paths": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py"
+      ],
+      "probe_ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/final-02/canonical-evidence/probe/stage-result.v2.json",
+      "probe_sha256": "337b5d365df05614a8388e011af7f8f9bdcf133e8c31ca5098c87b44245498cf",
+      "probe_cases": 31,
+      "observed_dispositions": {
+        "present": 9
+      },
+      "Q7": null,
+      "terminal": null,
+      "closure_block": "Required Q6 regression group has the unchanged historical consumption-reference failure; no successful Q7/terminal exists."
+    },
+    {
+      "slice_id": "S3",
+      "obligation_ids": [
+        "O-03AEB4CD0425",
+        "O-0F5FBB0EA503",
+        "O-22898852B8DC",
+        "O-386DD34DD7E0",
+        "O-3F8420E869D4",
+        "O-AE588A35F50F",
+        "O-C00312DCB365"
+      ],
+      "depends_on": [
+        "S4"
+      ],
+      "production_owners": [
+        ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+        "scripts/vdd/compile_plan.py"
+      ],
+      "execution_snapshot_paths": [
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py"
+      ],
+      "probe_ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02/canonical-evidence/probe/stage-result.v2.json",
+      "probe_sha256": "06650b8a1aa029df35e099f5f0257c596fda2e704b002b9255ff51c6d9d86aff",
+      "probe_cases": 18,
+      "observed_dispositions": {
+        "present": 7
+      },
+      "Q7": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/S3-final-v2-ready.json",
+        "sha256": "65617043e4db048a0145bc57c366d1e42d7545665852e6fe58e9ab2374750bce",
+        "status": "pass"
+      },
+      "terminal": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02/canonical-evidence/terminal/stage-result.v2.json",
+        "sha256": "786f8af5bc924cad8cc5e870b7150e5bc34f47d84e3446f7a1219081a2fd057b",
+        "predicate_result": true
+      }
+    },
+    {
+      "slice_id": "S4",
+      "obligation_ids": [
+        "O-2608CFB66DD0",
+        "O-298CF498D377",
+        "O-5B2A93180FEB",
+        "O-A06E906AB742",
+        "O-BD81A1DD588C",
+        "O-E171445EC1D0",
+        "O-E32A7163D8D0"
+      ],
+      "depends_on": [],
+      "production_owners": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/case_selection.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+        ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+        ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py"
+      ],
+      "execution_snapshot_paths": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py"
+      ],
+      "probe_ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/probe/stage-result.v2.json",
+      "probe_sha256": "c5774759a1944703ecc55ed5c9f27ef737b1295b0bdb9ad98991590c0242b4b7",
+      "probe_cases": 15,
+      "observed_dispositions": {
+        "present": 7
+      },
+      "Q7": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/S4-final-v2-ready.json",
+        "sha256": "5eb4971aac850f2025afeb9412cb59801aaaeeaff16e22e7585ba66cf8f625aa",
+        "status": "pass"
+      },
+      "terminal": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/terminal/stage-result.v2.json",
+        "sha256": "18d5e7d2658d5b03b641ca88713a8a337b4640670f0b157c3d84cea364ec131c",
+        "predicate_result": true
+      }
+    }
+  ],
+  "Q8": {
+    "action": "scripts/quick_dev/run.py --action implementation-complete --slice S4",
+    "target": "logs/light-optimizations-quick-dev-20261026/Q8-final-v2/implementation-complete.json",
+    "exit_code": 1,
+    "native_result": {
+      "reason": "terminal predecessor set does not match slices",
+      "recommended_action": "repair-vdd",
+      "status": "blocked"
+    },
+    "console": "logs/light-optimizations-quick-dev-20261026/final-console/S4-final-02-implementation-complete.stdout.txt",
+    "canonical_completion_output_exists": false,
+    "predecessors": "logs/light-optimizations-quick-dev-20261026/final-v2-predecessors.json",
+    "snapshot_roots": "logs/light-optimizations-quick-dev-20261026/final-v2-snapshot-roots.json"
+  },
+  "targeted_other_checks": {
+    "repair_regressions": {
+      "cases": 75,
+      "exit_code": 0,
+      "junit": "logs/light-optimizations-quick-dev-20261026/final-checks/repair-regressions-v2/junit.xml"
+    },
+    "VDD_package_validator": {
+      "exit_code": 0,
+      "stdout": "logs/light-optimizations-quick-dev-20261026/final-checks/vdd-package-v2/stdout.txt"
+    },
+    "VDD_package_unittest": {
+      "cases": 22,
+      "exit_code": 0,
+      "stderr": "logs/light-optimizations-quick-dev-20261026/final-checks/vdd-package-tests-v2/stderr.txt"
+    },
+    "actual_public_readonly_entry": "logs/light-optimizations-quick-dev-20261026/final-checks/public-admission/observed.json"
+  },
+  "reuse": {
+    "scope": "Only final-02 canonical runtime trees after code freeze; not a whole-task cost estimate.",
+    "native_VDD_source_content_replays": 2,
+    "final_runtime_receipt_count": 17,
+    "final_runtime_process_attempts": 17,
+    "final_runtime_case_instances": 461,
+    "execution_reference_count": 0,
+    "reuse_decisions": {
+      "reuse-no-matching-content-key": 13,
+      "reuse-stage-ineligible": 4
+    },
+    "reuse_publication_refusals": {
+      "reuse-unbound-read-or-import:/workspace/ji-mu-yun-light-optimizations/execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary/semantic-plan-bundle.v1.json": 2,
+      "reuse-unsuccessful-or-incomplete-execution": 2,
+      "reuse-unbound-read-or-import:/workspace/ji-mu-yun-light-optimizations/execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary/.compiler-attempts/v4-published-recall-e9ca66fc079a6660fc5b777f580bb744cc92758e262fa135469330e585c9708e.json": 3,
+      "reuse-dependency-observation-incomplete:['reuse-unobserved-external-effect:subprocess.Popen']": 4,
+      "reuse-dependency-observation-incomplete:['reuse-read-observation-budget-exceeded', 'reuse-unobserved-external-effect:subprocess.Popen']": 2
+    },
+    "receipt_inventory": [
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S1/final-02/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "10e5a770e84574a0875e960337d7d97be36e84dac738e3b589237f66d96b9f43",
+        "cases": 1,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S1/final-02/canonical-evidence/probe/process-receipt.v2.json",
+        "sha256": "a656fcab0c9707389f515265f4d1e40c0e0aa4792641e3fbb813bac6ce5b26d6",
+        "cases": 1,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S1/final-02/canonical-evidence/regression/q6-executions/command-649c47174ad8fe3b/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "dfb2ff9a763dd973326916ba0f40ed384f8b02dd8a455fd3720f03fa8247179b",
+        "cases": 1,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S1/final-02/canonical-evidence/regression/q6-executions/command-a5218e0af7106fef/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "cb65ef7962c4fd61ec0e90f2d646130b9b9296547a8dccec06f0c240838e3418",
+        "cases": 84,
+        "exit_code": 1,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/final-02/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "af1935582cf8dfdd26c5ad9ab88180fabe69e28614e79da7692f4285245967ae",
+        "cases": 31,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/final-02/canonical-evidence/probe/process-receipt.v2.json",
+        "sha256": "5a553d1a5017437dd3ccf06744dd049e206976b17b75a08630e6633b92b4d03d",
+        "cases": 31,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/final-02/canonical-evidence/regression/q6-executions/command-a5218e0af7106fef/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "a5b1bfcec8f8cc52c747be79195a307e814d9784d1b17d87d3e8cbf07ac40fef",
+        "cases": 84,
+        "exit_code": 1,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "bd03e7d260415f83b6b1765b00f64e8eace1145b599ebd42d3646eb9dfbf834e",
+        "cases": 18,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02/canonical-evidence/terminal/process-receipt.v2.json",
+        "sha256": "18544ef1e37fb3bb67c2fd9a1661dff60981873015578d74b96617d883d0f31b",
+        "cases": 18,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02/canonical-evidence/probe/process-receipt.v2.json",
+        "sha256": "ffacadd925ea8e9ffcaaadbd2529d74e386bca23fd7ba36294e93dbf0de67e8c",
+        "cases": 18,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02/canonical-evidence/regression/q6-executions/command-69f2ec899fb8b120/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "daa1349c31e7c5f8c9c0d6724ca82cec8ac20f0ba5c5a711524f99518c337a03",
+        "cases": 48,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "d2e7d3e24d96582b43fae5117104105ad9a268fef9327587401484ddc4382d62",
+        "cases": 15,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/terminal/process-receipt.v2.json",
+        "sha256": "7cc71693dfa71ef030af967c4f9b6efc3c8d339e1321ff0dba1954e761b7460c",
+        "cases": 15,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/probe/process-receipt.v2.json",
+        "sha256": "401adbe6bf7cfcc2a36f5aeb2b322a015e684f91ae579f8b65d266f684c16ded",
+        "cases": 15,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/regression/q6-executions/command-e07192c872e357ab/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "df9b92fd8022b64cd68163e7a3276623f8fbaf79e310661a33bb267876c675e7",
+        "cases": 20,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/regression/q6-executions/command-43c90adde6e7bf1b/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "858b3cc1236fe29b8f3cd3376ba6db08bbc70075d18ef30869351a58454cf93e",
+        "cases": 15,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      },
+      {
+        "path": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02/canonical-evidence/regression/q6-executions/command-c85442c02f2094e4/canonical-evidence/regression/process-receipt.v2.json",
+        "sha256": "030c4cc18d02da5a5c9c3d27351fe0c60575e8786b0af89029ac874ee01ef807",
+        "cases": 46,
+        "exit_code": 0,
+        "process_attempts": 1,
+        "execution_reference": null
+      }
+    ],
+    "policy": "No fingerprint filters, trust roots or receipt identities were changed to force reuse. Prior source/RED/GREEN/failure originals remain historical."
+  },
+  "unique_current_failed_test_nodes": [
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py::test_real_0805_predecessor_reuses_v3_but_invokes_v4"
+  ],
+  "remaining_blocker": {
+    "status": "Native gate explicitly blocked; no permission denial or uncertain write.",
+    "test": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py:103",
+    "case": "test_real_0805_predecessor_reuses_v3_but_invokes_v4",
+    "actual_reason": "consumption_reference_denied",
+    "guard": "scripts/toolchain/knowledge_query/adapter.py:674",
+    "source_line": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md:579",
+    "current_diagnostic": "logs/light-optimizations-quick-dev-20261026/current-baseline-refusal-diagnostic.v1.json",
+    "impact": "The same required 84-case Q6 group has 83 passes/one historical failure in S1 and S2. Standalone 75-case successes cannot substitute for the missing native Q6/Q7 proof. Therefore only S3/S4 are terminal-ready and whole-plan Q8 cannot close.",
+    "boundary": "Current formal Q2 grants the first two fixture helpers only. There is no existing declaration that turns this historical directory reference into a legal file. The third test/source was not changed; no product refusal logic or permissions were weakened.",
+    "next_owner": "Parent coordinates a legally source-bound fixture/test-contract resolution; then recheck only its native affected scope. Do not start stage-end review or Acceptance while implementation is incomplete."
+  },
+  "limits": {
+    "platform": "Linux verification only; the previously retained real-Windows isolated-worker limitation remains.",
+    "VDD_V4": "Caller-session compiler alignment, not external independent review.",
+    "review": "No implementation A/B or Acceptance started.",
+    "remote": "No push, PR, merge or CI/Actions monitoring.",
+    "models": "No model policy/skill hardcoding changed; no capacity errors observed.",
+    "unrun": "Original PR21 full 15,375-case corpus and original Acceptance were intentionally not rerun."
+  },
+  "operator_scripts": "logs/light-optimizations-quick-dev-20261026/operator-scripts/manifest.json",
+  "budget_originals": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/manifest.json",
+  "final_fixed_candidate": "The final local evidence commit is reported to the parent after committing; functional source remains code_commit above."
+}

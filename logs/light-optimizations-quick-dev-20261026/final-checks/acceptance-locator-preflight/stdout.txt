@@ -1,0 +1,64 @@
+exit 0
+status matched
+[
+  {
+    "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    "modules": null,
+    "sha256": "87ada849e425fc9859999092d0b2c4e5e1194f06eb7601ffcc764a815592d8c0"
+  },
+  {
+    "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+    "modules": null,
+    "sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+  },
+  {
+    "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    "modules": null,
+    "sha256": "5ec7d2c419b19a6aa9a132d45f1119c9e79884919db5d31985214b2ce810f6d5"
+  },
+  {
+    "path": "execution-plans/2026-07-31-toolchain-workflow-evidence-catalog-v1/00-index.md",
+    "modules": null,
+    "sha256": "e11e0c2d75dbe7eef8434bb23f0f385b89dbf445c9f1842dc3ba947a0e1ea422"
+  },
+  {
+    "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+    "modules": null,
+    "sha256": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf"
+  },
+  {
+    "path": "execution-plans/2026-08-17-quick-dev-tdd-stage-recovery/00-index.md",
+    "modules": null,
+    "sha256": "91a182444b736e0684d01b84730b6d79ee02c4788c4b5f5bab769c65d716f8f1"
+  },
+  {
+    "path": "execution-plans/2026-08-17-acceptance-coordinator-efficiency/00-index.md",
+    "modules": null,
+    "sha256": "ad660446d29d9fdb2ee530ae49ceeefbe7a2d2b9e3ebf03947e7ef33abc4a945"
+  },
+  {
+    "path": "execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/s/execution-plans/2026-08-15-acceptance-review-bootstrap-efficiency/00-index.md",
+    "modules": null,
+    "sha256": "ccd50c498ff160c29372c476ae2bcc632f3df04e6522391cc5d227b5b720eb51"
+  },
+  {
+    "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart/execution-plans/2026-08-18-toolchain-workflow-repair/00-index.md",
+    "modules": null,
+    "sha256": "aad27ede87e033a11bd60604d54abe0070b8ff434294bdaa5be8ad58a196d439"
+  },
+  {
+    "path": "docs/adr/ADR-0054-refactor-acceptance-manual-pause-closure.md",
+    "modules": null,
+    "sha256": "25d18279176a6a43a7c8b66ca14f516876ae4a15fba20b36f77c022f53d702fe"
+  },
+  {
+    "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+    "modules": null,
+    "sha256": "3120b15497af9f83568bcbc90251e357336d383a4f3b7e352324597d84d1c3aa"
+  },
+  {
+    "path": "docs/adr/ADR-0052-bootstrap-review-calibration-and-exact-envelope-reuse.md",
+    "modules": null,
+    "sha256": "fd45958417226ba0041b2bcbe7e3d997e6d30cb91632e43eada91df80f2b8186"
+  }
+]

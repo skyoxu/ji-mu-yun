@@ -1,0 +1,34 @@
+Traceback (most recent call last):
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py", line 53, in verify_current_handoff
+    return publish_implementation_complete(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 486, in publish_implementation_complete
+    return _publish_implementation_complete(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 505, in _publish_implementation_complete
+    before = (_replay_snapshot(workspace, snapshot_roots, source_commit, base_commit, frozen_input, allowed_changed_paths)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 438, in _replay_snapshot
+    raise ValueError("completion runtime root stale: " + row["root_kind"])
+ValueError: completion runtime root stale: source
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1734, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1561, in main
+    print(json.dumps(project_compact_vdd_command(args.repository_root, args.request, args.out), sort_keys=True))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1369, in project_compact_vdd_command
+    result = project_or_quick_dev_recovery(Path(repository_root), Path(request_path))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", line 523, in project_or_quick_dev_recovery
+    return project(repository_root, request_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", line 305, in project
+    verify_current_handoff(root, current, allowed_changed_paths=request["changedPaths"])
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py", line 61, in verify_current_handoff
+    raise InputError("current Quick Dev proof cannot be replayed: " + str(exc)) from exc
+acceptance_core.InputError: current Quick Dev proof cannot be replayed: completion runtime root stale: source

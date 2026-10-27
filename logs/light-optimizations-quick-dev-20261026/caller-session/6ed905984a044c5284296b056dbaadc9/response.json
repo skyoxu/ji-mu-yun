@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "6ed905984a044c5284296b056dbaadc9",
+  "request_sha256": "sha256:3eb2db2b1135220e114e6dca5d87017b2c7a35114882e62a2e4779d9e78a20ac",
+  "output_text": "Fixed only the observed recovery misclassification: an existing plan-ready state without its required bundle is now blocked instead of treated as an unfinished pending candidate. Existing partial native recovery and future-contract pending behavior remain unchanged. Modified only execution_preflight.py; frozen test/fixture/descriptor bytes untouched.",
+  "authorizes": []
+}

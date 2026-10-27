@@ -1,0 +1,1 @@
+{"authorizes": [], "pointer": {"authorizes": [], "generation_id": "38d9030edee1adf399a57ee42dd2f87d91dd990ed046eb03a4e9b16a3c5b0849", "receipt_hash": "sha256:b578d580e6be8a0e0d5f25d5ea1bd6054b968e0afeab3fd075ff443545606123", "schema_version": "skill-input-current.v2"}, "status": "ready"}

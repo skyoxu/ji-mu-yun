@@ -13,7 +13,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-if __name__ == "__main__":
+if __name__ == "__main__" and "--admission-only" not in sys.argv:
     from workflow_unit_budget import public_entry
     supervised_exit = public_entry("vdd", ROOT, sys.argv)
     if supervised_exit is not None:
@@ -139,6 +139,10 @@ def main() -> int:
                         help="Split one explicitly reviewed source-bound V1 obligation into two complete contracts")
     parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
     parser.add_argument("--recommendation-only", action="store_true")
+    parser.add_argument("--admission-only", action="store_true",
+                        help="Read-only source/recovery/consumer admission; future contracts remain pending")
+    parser.add_argument("--execution-profile", default="standard",
+                        help="Independent Quick Dev execution profile, checked by its owning policy")
     parser.add_argument("--stop-after", choices=("v3",),
                         help="Pause normally after V3, V3A and execution preflight; never enter V4")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
@@ -173,6 +177,8 @@ def main() -> int:
     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
                         help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
     args = parser.parse_args()
+    if args.admission_only and args.repair_quick_dev_handoff_from:
+        parser.error("admission-only cannot combine handoff publication")
     if args.handoff_static_primary_slice and (not args.repair_quick_dev_handoff_from
             or args.handoff_planned_test or args.runtime_red_intent or args.handoff_windows_launcher_slice
             or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
@@ -248,6 +254,7 @@ def main() -> int:
     extension = None
     replacement = None
     split = None
+    dependency_revision = None
     if args.repair_published_v3_from:
         import semantic_v3_contract_repair as candidate_repair
         try:
@@ -258,8 +265,16 @@ def main() -> int:
             correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
             if args.v3_contract_repair_addendum:
                 extra = candidate_repair.load_repair(args.v3_contract_repair_addendum, args.requirements)
+                if "dependency_revision" in extra:
+                    raise ValueError("dependency revision cannot be supplied as an addendum")
                 correction = {**correction, "obligation_contracts": {
                     **correction["obligation_contracts"], **extra["obligation_contracts"]}}
+            if "dependency_revision" in correction:
+                if any((args.published_v1_gap_extension, args.published_v1_replacement,
+                        args.published_v1_split, args.v3_contract_repair_addendum,
+                        "test_path_replacements" in correction)):
+                    raise ValueError("dependency revision cannot combine other semantic or binding repairs")
+                dependency_revision = candidate_repair.prepare_dependency_revision(correction, published)
             published_v3 = candidate_repair.project_published_v3(published["bundle"])
             try:
                 candidate_repair.validate_published_v3_projection(
@@ -321,7 +336,8 @@ def main() -> int:
                 if set(replacement_map) & set(split_map):
                     raise ValueError("published V1 replacement and split overlap")
             candidate_repair.install_published_slice_partition(
-                published["bundle"], {**replacement_map, **split_map}
+                published["bundle"], {**replacement_map, **split_map},
+                dependency_revision=dependency_revision is not None,
             )
             semantic_compiler.configure_v1_reuse_predecessor_plan(args.repair_published_v3_from.resolve())
             floor_targets = set(correction["obligation_contracts"])
@@ -341,7 +357,10 @@ def main() -> int:
                 reviewed_additions.update(
                     item["obligation_id"] for item in split["normalized_obligations"]
                 )
-            candidate_repair.install_published_v4_reuse(published, reviewed_additions)
+            if dependency_revision is None:
+                candidate_repair.install_published_v4_reuse(published, reviewed_additions)
+            else:
+                candidate_repair.install_dependency_revision(published, dependency_revision)
             if replacement is not None:
                 candidate_repair.install_v1_replacement(replacement)
             if split is not None:
@@ -370,11 +389,24 @@ def main() -> int:
             if state_path.exists() and json.loads(state_path.read_text(encoding="utf-8")).get("state") == "plan-ready":
                 raise ValueError("V3 candidate repair requires a failed or unpublished output directory")
             correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
+            if "dependency_revision" in correction:
+                raise ValueError("dependency revision requires a validated published predecessor")
             if args.companion and "source_index_sha256" not in correction:
                 raise ValueError("V3 companion repair requires complete source-index identity and test path scope")
             candidate_repair.install(correction)
         except (OSError, ValueError, KeyError, TypeError) as exc:
             parser.error(str(exc))
+    # ADR-0041: a thin read-only admission before any semantic worker or query.
+    # Existing repair modes above retain their own no-worker admission contracts.
+    from execution_preflight import inspect_admission
+    admission = inspect_admission(semantic_compiler, ROOT, args.requirements,
+        args.companion, profile=args.profile, execution_profile=args.execution_profile,
+        recovery=args.out_dir if args.resume_from else None)
+    if args.admission_only or admission["status"] == "blocked":
+        result = {"status": "repair-vdd" if admission["status"] == "blocked" else "admission-only",
+                  "admission": admission, "authorizes": []}
+        print(json.dumps(result, sort_keys=True))
+        return 1 if admission["status"] == "blocked" else 0
     cache = None
     if args.worker_cache:
         value = json.loads(args.worker_cache.read_text(encoding="utf-8"))
@@ -430,15 +462,20 @@ def main() -> int:
             )
         if published is not None and result.get("status") == "plan-ready":
             current = json.loads((args.out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
-            candidate_repair.check_unaffected_published_semantics(
-                published["bundle"], current, set(correction["obligation_contracts"]),
-                set(extension["obligation_contracts"]) if extension else set(),
-                {
-                    **({old: item["obligation_id"] for old, item in replacement["normalized_replacements"].items()}
-                       if replacement else {}),
-                    **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
-                       if split else {}),
-                })
+            if dependency_revision is not None:
+                candidate_repair.check_dependency_revision(published["bundle"], current, dependency_revision)
+                result["dependency_revision"] = {**dependency_revision["input"],
+                    **dependency_revision["impact"], "authorizes": [], "v4_reuse": False}
+            else:
+                candidate_repair.check_unaffected_published_semantics(
+                    published["bundle"], current, set(correction["obligation_contracts"]),
+                    set(extension["obligation_contracts"]) if extension else set(),
+                    {
+                        **({old: item["obligation_id"] for old, item in replacement["normalized_replacements"].items()}
+                           if replacement else {}),
+                        **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
+                           if split else {}),
+                    })
         if prepared_query is not None:
             _record_planning_decisions(prepared=prepared_query, request=planning_request,
                                        result=result, out_dir=args.out_dir)
@@ -455,6 +492,7 @@ def main() -> int:
             _archive_repair_publications(args.out_dir)
         result = {"status": "repair-vdd", "reason": str(exc)}
     semantic_compiler.invoke_worker = previous_worker
+    result["admission"] = admission
     result["worker_cache_reuse"] = semantic_resume_cache.statistics()
     semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=None)
     if args.result_json:

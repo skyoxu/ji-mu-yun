@@ -1,0 +1,26 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/tmp/light-legal-context-precheck.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.30292843600000197,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "df6daac132ea629a745dccc7af2a2d181d637ff9f3b3e8f0eb534a7a896ec7ed": 0.30254936599885696
+  },
+  "active_at_stop": [
+    {
+      "key": "df6daac132ea629a745dccc7af2a2d181d637ff9f3b3e8f0eb534a7a896ec7ed",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.30254936599885696,
+      "container": true
+    }
+  ]
+}

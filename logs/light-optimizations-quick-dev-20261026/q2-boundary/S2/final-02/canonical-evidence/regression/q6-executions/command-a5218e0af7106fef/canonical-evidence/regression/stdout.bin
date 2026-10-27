@@ -1,0 +1,84 @@
+........................................................................ [ 85%]
+.F..........                                                             [100%]
+=================================== FAILURES ===================================
+_____________ test_real_0805_predecessor_reuses_v3_but_invokes_v4 ______________
+
+    def test_real_0805_predecessor_reuses_v3_but_invokes_v4() -> None:
+        # A temporary copy keeps the published plan and its evidence immutable.
+        with tempfile.TemporaryDirectory(dir=ROOT / "logs") as location:
+            predecessor = Path(location) / "predecessor"
+            successor = Path(location) / "successor"
+            predecessor.mkdir()
+            for name in (
+                "semantic-plan-bundle.v1.json", "compiler-state.v1.json",
+                "source-index.v1.json", "semantic-alignment.v1.json",
+                "atomic-recall-alignment.v1.json", "obligations.v1.json",
+            ):
+                shutil.copyfile(PLAN / name, predecessor / name)
+            bundle = json.loads((predecessor / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+            raw = repair.project_published_v3(bundle)
+            target = "O-530CF6DD124B"
+            acceptance = next(item for item in raw["acceptances"] if item["obligation_ids"] == [target])
+            failures = [item for item in raw["failure_intents"] if item["obligation_ids"] == [target]]
+            hint = next(item for item in raw["slice_hints"] if item["obligation_ids"] == [target])
+            correction = {
+                "schema": "vdd.v3-candidate-repair.v1",
+                "requirements_sha256": "sha256:" + hashlib.sha256(REQUIREMENTS.read_bytes()).hexdigest(),
+                "authorizes": [],
+                "obligation_contracts": {target: {
+                    "acceptance": {key: deepcopy(value) for key, value in acceptance.items()
+                                   if key != "obligation_ids"},
+                    "failure_intents": [{key: deepcopy(value) for key, value in item.items()
+                                         if key != "obligation_ids"} for item in failures],
+                    "slice_hint": {key: deepcopy(value) for key, value in hint.items()
+                                   if key != "obligation_ids"},
+                }},
+            }
+            repair_path = Path(location) / "correction.json"
+            repair_path.write_text(json.dumps(correction), encoding="utf-8")
+            calls = []
+    
+            def underlying_worker(**kwargs):
+                calls.append(kwargs["stage"])
+                return {"independent_v4": True}
+    
+            def compile_probe(**kwargs):
+                assert kwargs["out_dir"] == successor
+                source = json.loads((predecessor / "source-index.v1.json").read_text(encoding="utf-8"))
+                obligations = sc.compile_obligations(root=ROOT, out_dir=successor,
+                                                      source_index=source, worker_cache=None)
+                assert len(obligations) == 116
+                observed_v3 = sc.invoke_worker(root=ROOT, out_dir=successor, stage="v3",
+                                               payload={"obligations": obligations}, prompt="V3")
+                assert len(observed_v3["acceptances"]) == 116
+                assert len(observed_v3["failure_intents"]) == 155
+                observed_v4 = sc.invoke_worker(root=ROOT, out_dir=successor, stage="v4",
+                                               payload={}, prompt="V4")
+                assert observed_v4["valid"] is True
+                assert observed_v4["source_gap_claims"] == []
+                return {"status": "repair-vdd", "stage": "V4"}
+    
+            argv = ["compile_plan.py", "--requirements", str(REQUIREMENTS),
+                    "--out-dir", str(successor), "--profile", "self-hosted",
+                    "--repair-published-v3-from", str(predecessor),
+                    "--v3-contract-repair", str(repair_path),
+                    "--published-v1-gap-extension",
+                    str(PLAN.parent.parent / "published-v1-fr4-probe-outcomes.json")]
+            output = io.StringIO()
+            with (mock.patch.object(sc, "invoke_worker", side_effect=underlying_worker),
+                  mock.patch.object(sc, "semantic_align", sc.semantic_align),
+                  mock.patch.object(sc, "compile_obligations", sc.compile_obligations),
+                  mock.patch.object(sc, "_v1_reuse_predecessor_plan", sc._v1_reuse_predecessor_plan),
+                  mock.patch.object(cli, "compile_plan", side_effect=compile_probe),
+                  mock.patch.object(sys, "argv", argv), redirect_stdout(output)):
+                exit_code = cli.main()
+            assert exit_code == 1
+            assert calls == []
+>           assert json.loads(output.getvalue())["stage"] == "V4"
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'stage'
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py:103: KeyError
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py::test_real_0805_predecessor_reuses_v3_but_invokes_v4
+1 failed, 83 passed in 7.51s

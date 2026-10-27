@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "targetPlan": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready",
+  "preparedRunInput": {
+    "path": "prepared-run.v1.json",
+    "sha256": "sha256:9fc3f382a2c823913dae1eddf0eb586f2badae302f00a1310b9cda62ab6555d9"
+  },
+  "skillInputReceipt": {
+    "path": "skill-input-v2/acceptance/current.v1.json",
+    "sha256": "sha256:d5601c868089d0bf9a27746b983ea4ed4d4b0c530d3b3f3fccd9ab415df751d7"
+  },
+  "skillInputContract": {
+    "path": "skill-input-contract.v1.json",
+    "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+  },
+  "authorizes": []
+}

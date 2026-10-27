@@ -1,0 +1,91 @@
+{
+  "schema_version": "ria.command-registry.v1",
+  "commands": [
+    {
+      "id": "validate-vdd-contract",
+      "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+        "validate-vdd-contract",
+        "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+        "-B",
+        ".agents/skills/vdd-execution-plan/scripts/validate_plan.py",
+        "--plan-dir",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready",
+        "--input",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "shell": false
+    },
+    {
+      "id": "validate-code-review-route",
+      "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+        "validate-code-review-route",
+        "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resolve-code-review-policy",
+        "--policy",
+        ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+        "--baseline",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/baseline-content-manifest.v1.json",
+        "--candidate",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/candidate-content-manifest.v1.json",
+        "--adapter-hash",
+        "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "shell": false
+    },
+    {
+      "id": "validate-acceptance-routing",
+      "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+        "validate-acceptance-routing",
+        "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "shell": false
+    },
+    {
+      "id": "validate-acceptance-package",
+      "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+        "validate-acceptance-package",
+        "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+        "-B",
+        "scripts/sc/skill_package_replay.py",
+        "validate-package",
+        "--target",
+        ".agents/skills/run-refactor-implementation-acceptance",
+        "--capability",
+        "scripts/sc/config/skill-package-validator-capability.v1.json"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "shell": false
+    }
+  ]
+}

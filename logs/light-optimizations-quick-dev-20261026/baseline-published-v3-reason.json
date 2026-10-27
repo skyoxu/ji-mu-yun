@@ -1,0 +1,7 @@
+{
+  "source_commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+  "kind": "non-authoritative targeted baseline diagnostic",
+  "exit_code": 1,
+  "raw_native_stdout": "{\"reason\": \"consumption_reference_denied\", \"status\": \"repair-vdd\", \"worker_cache_reuse\": {\"legacy_v1_replays\": 0, \"source_content_replays\": 0}}\n",
+  "test_exception": "KeyError: 'stage'"
+}

@@ -1,0 +1,1 @@
+/tmp/ji-mu-yun-light-qd-venv/bin/python: can't open file '/workspace/ji-mu-yun-light-acceptance/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py': [Errno 2] No such file or directory

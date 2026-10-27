@@ -260,6 +260,7 @@ def install_published_v4_reuse(predecessor: Mapping[str, Any], additions: set[st
 def install_published_slice_partition(
     predecessor: Mapping[str, Any],
     obligation_replacements: Mapping[str, Any] | None = None,
+    *, dependency_revision: bool = False,
 ) -> None:
     """Freeze the predecessor Acceptance->slice partition for a published repair.
 
@@ -404,6 +405,9 @@ def install_published_slice_partition(
             result.append(materialize([(acceptance_by_id[aid], hint)], f"REPAIR-R{index}"))
         if {aid for item in result for aid in item["acceptance_ids"]} != set(acceptance_by_id):
             raise ValueError("published V3 repair slice partition does not cover all Acceptance")
+        if dependency_revision:
+            from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+            bind_slice_dependencies(result, derive_slice_dependencies(obligations, result))
         return result, hints_by_acceptance
 
     group.sc.partition_slices = frozen_partition
@@ -738,7 +742,8 @@ def check_unaffected_published_semantics(predecessor: Mapping[str, Any],
 
 def load_repair(path: Path, requirements: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict) or set(value) not in (
+    fields = set(value) - {"dependency_revision"} if isinstance(value, dict) else set()
+    if not isinstance(value, dict) or fields not in (
         {"schema", "requirements_sha256", "authorizes", "obligation_contracts"},
         {"schema", "requirements_sha256", "authorizes", "obligation_contracts",
          "source_index_sha256", "test_path_replacements"},
@@ -962,3 +967,92 @@ def apply_early_test_paths(root, out_dir, stage, payload, value):
     else:
         group.sc.atomic_json(target, receipt)
     return result
+
+
+def prepare_dependency_revision(correction, predecessor):
+    """ADR-0041: only explicit edges may change under this published repair input.
+
+    Source and semantic authority remain the published loader and a new V4.
+    This input cannot replace requirements, oracles, runtime roles or write scope.
+    """
+    from execution_contract import dependency_revision_impact
+    value = correction.get('dependency_revision')
+    if not isinstance(value, dict) or set(value) != {'predecessor_sha256', 'source_index_sha256', 'changes'}:
+        raise ValueError('dependency revision fields are invalid')
+    bundle = predecessor['bundle']
+    if value['predecessor_sha256'] != group.sc.sha256_value(bundle):
+        raise ValueError('dependency revision predecessor identity is stale')
+    if value['source_index_sha256'] != predecessor['source_index']['sha256']:
+        raise ValueError('dependency revision source identity is stale')
+    changes = value['changes']
+    if not isinstance(changes, list) or not changes:
+        raise ValueError('dependency revision requires explicit changes')
+    prior = {o['obligation_id']: o for o in bundle['obligations']}
+    revised = deepcopy(prior)
+    selected = set()
+    for change in changes:
+        if (not isinstance(change, dict) or set(change) != {'obligation_id', 'old_depends_on', 'new_depends_on'}
+                or not isinstance(change['obligation_id'], str)):
+            raise ValueError('dependency revision change fields are invalid')
+        oid = change['obligation_id']
+        if oid not in prior or oid in selected:
+            raise ValueError('dependency revision target is unknown or duplicated')
+        selected.add(oid)
+        if (change['old_depends_on'] != prior[oid].get('depends_on', [])
+                or (isinstance(change['new_depends_on'], list)
+                    and all(isinstance(dep, str) for dep in change['new_depends_on'])
+                    and set(change['new_depends_on']) == set(change['old_depends_on']))):
+            raise ValueError('dependency revision old edges differ or change is empty')
+        revised[oid]['depends_on'] = deepcopy(change['new_depends_on'])
+    # A dependency-only request may repeat existing V3 bytes for its selected
+    # objects; it cannot combine an oracle/write/role repair under this permission.
+    if set(correction['obligation_contracts']) != selected:
+        raise ValueError('dependency revision contracts must exactly name changed obligations')
+    raw = project_published_v3(bundle)
+    expected = {}
+    for oid in selected:
+        acceptance = next(x for x in raw['acceptances'] if x['obligation_ids'] == [oid])
+        hint = next(x for x in raw['slice_hints'] if x['obligation_ids'] == [oid])
+        expected[oid] = {'acceptance': {k: v for k, v in acceptance.items() if k != 'obligation_ids'},
+                         'failure_intents': [{k: v for k, v in f.items() if k != 'obligation_ids'}
+                                             for f in raw['failure_intents'] if f['obligation_ids'] == [oid]],
+                         'slice_hint': {k: v for k, v in hint.items() if k != 'obligation_ids'}}
+        # Native authoring normally omits deterministic Acceptance IDs.
+        supplied = deepcopy(correction['obligation_contracts'][oid])
+        supplied['acceptance'].pop('acceptance_id', None)
+        expected[oid]['acceptance'].pop('acceptance_id', None)
+        if supplied != expected[oid]:
+            raise ValueError('dependency revision has unrelated contract drift: ' + oid)
+    obligations = [revised[o['obligation_id']] for o in bundle['obligations']]
+    impact = dependency_revision_impact(bundle['obligations'], obligations, bundle['slices'])
+    return {'obligations': obligations, 'impact': impact, 'input': deepcopy(value), 'authorizes': []}
+
+
+def install_dependency_revision(predecessor, revision):
+    """Rebind only the reused V1 edge fields; every downstream stage stays live."""
+    original = group.sc.compile_obligations
+    expected = predecessor['bundle']['obligations']
+    def revised_obligations(**kwargs):
+        values = original(**kwargs)
+        if ({o['obligation_id']: o for o in values} != {o['obligation_id']: o for o in expected}
+                or kwargs['source_index']['sha256'] != revision['input']['source_index_sha256']):
+            raise ValueError('dependency revision reused V1 input drift')
+        return deepcopy(revision['obligations'])
+    group.sc.compile_obligations = revised_obligations
+
+
+def check_dependency_revision(predecessor, successor, revision):
+    """Reject all drift except the declared V1 relations and derived slice IDs."""
+    expected = deepcopy(predecessor)
+    expected['obligations'] = deepcopy(revision['obligations'])
+    check_unaffected_published_semantics(expected, successor, set())
+    old_slices = {s['slice_id']: s for s in predecessor['slices']}
+    new_slices = {s['slice_id']: s for s in successor['slices']}
+    if set(old_slices) != set(new_slices) or predecessor['agent_contexts'] != successor['agent_contexts']:
+        raise ValueError('dependency revision changed slice membership or consumer context')
+    for sid, old in old_slices.items():
+        current = new_slices[sid]
+        if ({k: v for k, v in old.items() if k not in {'depends_on', 'slice_input_hash'}}
+                != {k: v for k, v in current.items() if k not in {'depends_on', 'slice_input_hash'}}
+                or current.get('depends_on') != revision['impact']['new_slice_dependencies'][sid]):
+            raise ValueError('dependency revision has unrelated slice drift: ' + sid)

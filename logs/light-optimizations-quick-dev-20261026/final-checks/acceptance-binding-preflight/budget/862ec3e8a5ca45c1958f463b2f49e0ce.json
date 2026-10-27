@@ -1,0 +1,26 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/tmp/light-acceptance-preflight-bindings.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.6047714140004246,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "ac1a08a9abe46e8398e457ab9f94734a2f4b9431a82271a859448d19e6793c89": 0.6043576039992331
+  },
+  "active_at_stop": [
+    {
+      "key": "ac1a08a9abe46e8398e457ab9f94734a2f4b9431a82271a859448d19e6793c89",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.6043576039992331,
+      "container": true
+    }
+  ]
+}

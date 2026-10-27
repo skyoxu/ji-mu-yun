@@ -1,0 +1,32 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_runtime_role_only_handoff.py",
+    "-q"
+  ],
+  "exit_code": 1,
+  "reason": null,
+  "elapsed_seconds": 5.22721074600031,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "2899c6a1abb79527c8f1ed8135298b457fc2f2a2f7d050e06e578d9da286ccae": 5.226870673999656
+  },
+  "active_at_stop": [
+    {
+      "key": "2899c6a1abb79527c8f1ed8135298b457fc2f2a2f7d050e06e578d9da286ccae",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 5.226870673999656,
+      "container": true
+    }
+  ]
+}

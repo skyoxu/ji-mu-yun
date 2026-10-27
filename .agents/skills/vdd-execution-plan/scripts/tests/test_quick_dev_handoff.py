@@ -155,7 +155,7 @@ def cli_root(tmp_path):
     root = tmp_path / 'repo'
     for directory in ['.agents/skills/vdd-execution-plan/scripts', 'scripts/vdd']:
         shutil.copytree(ROOT / directory, root / directory, ignore=shutil.ignore_patterns('__pycache__', 'tests'))
-    files = ['AGENTS.md', str(SCOPE / 'assembled-requirements.md')]
+    files = ['AGENTS.md', 'scripts/workflow_unit_budget.py', str(SCOPE / 'assembled-requirements.md')]
     files += [str(PRIOR / name) for name in ['source-index.v1.json', 'compiler-state.v1.json',
         'semantic-plan-bundle.v1.json', 'semantic-alignment.v1.json', 'atomic-recall-alignment.v1.json']]
     for item in original()['slices']:

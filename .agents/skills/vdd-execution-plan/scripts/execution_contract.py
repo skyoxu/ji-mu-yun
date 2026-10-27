@@ -97,3 +97,34 @@ def bind_slice_dependencies(slices, expected):
         if 'depends_on' not in item:
             item['depends_on'] = list(expected[item['slice_id']])
     return slices
+
+
+def dependency_revision_impact(before, after, slices):
+    """ADR-0041: validate both explicit graphs and close their downstream union."""
+    def strict(records):
+        ids = [item['obligation_id'] for item in records]
+        if len(ids) != len(set(ids)):
+            raise ValueError('dependency:duplicate-obligation')
+        for item in records:
+            edges = item.get('depends_on', [])
+            if (not isinstance(edges, list) or any(not isinstance(dep, str) for dep in edges)
+                    or len(edges) != len(set(edges)) or not set(edges) <= set(ids)):
+                raise ValueError('dependency:invalid-revision-edges')
+        return derive_slice_dependencies(records, slices)
+    old, new = strict(before), strict(after)
+    prior = {o['obligation_id']: o for o in before}
+    current = {o['obligation_id']: o for o in after}
+    if set(prior) != set(current):
+        raise ValueError('dependency:obligation-domain-changed')
+    changed = sorted(oid for oid in prior if set(prior[oid].get('depends_on', [])) != set(current[oid].get('depends_on', [])))
+    owners = {oid: s['slice_id'] for s in slices for oid in s['obligation_ids']}
+    if not set(changed) <= owners.keys():
+        raise ValueError('dependency:changed-obligation-has-no-slice')
+    affected = {owners[oid] for oid in changed}
+    while True:
+        expanded = affected | {sid for sid in old if (set(old[sid]) | set(new[sid])) & affected}
+        if expanded == affected:
+            break
+        affected = expanded
+    return {'changed_obligation_ids': changed, 'old_slice_dependencies': old,
+            'new_slice_dependencies': new, 'affected_slices': sorted(affected)}

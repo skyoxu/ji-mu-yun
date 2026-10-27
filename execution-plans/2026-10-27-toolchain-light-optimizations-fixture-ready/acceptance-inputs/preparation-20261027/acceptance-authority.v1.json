@@ -1,0 +1,7 @@
+{
+  "schema_version": "jimuyun.acceptance-authority.v1",
+  "authorizes": [],
+  "plan_id": "light-optimizations-acceptance-20261027",
+  "target_plan": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready",
+  "skill_input_baseline": "d2fd7405513b90c516e7f65f1771be67efcb1b95"
+}

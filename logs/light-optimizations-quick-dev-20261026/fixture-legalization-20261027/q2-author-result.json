@@ -1,0 +1,18 @@
+{
+  "schema": "quick-dev.worker-result.v1",
+  "stage": "red-author",
+  "status": "worker-changes-valid",
+  "backend": "host-session",
+  "changed_paths": [
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py"
+  ],
+  "before_sha256": "sha256:b9a7cfb0d7448c5b37bc93c32f58f84c7cb4a85a7516466ed8d26c72a296eeb8",
+  "after_sha256": "sha256:f6565ebe33ed05b5332ab81cfae27c9cfe771456ae107c8d9c13c1eb68bc88c4",
+  "duration_ms": 42770,
+  "trace_sha256": "sha256:c9e401edd109d6b270847d0a8ec64ab6b27882db8eba1a687be12b9386f29bf5",
+  "argv_sha256": "sha256:95209dd1b1bf23bc6f232c20bcbf1331f57310233da75b0d4cd24e84b350ca84",
+  "output_sha256": "sha256:ad6cb50f399b22050f339dca06a5cffcb59d85fd24b22b9aa0f474ce5843874f",
+  "authorizes_evidence": false,
+  "authorizes": []
+}

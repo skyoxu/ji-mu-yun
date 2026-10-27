@@ -1,0 +1,6 @@
+{"at": 14850.069147755, "call": "31934e5531634ab283bd1a8f9dc94b61", "container": false, "event": "start", "key": "01dd54e0b00175501f760fab7280183e13a6ca0929153139a4cba848117444e4", "label": "Quick Dev terminal", "parent": "entry"}
+{"at": 14850.084153935, "call": "31934e5531634ab283bd1a8f9dc94b61", "event": "owned", "pid": 23397}
+{"at": 14850.473612623, "call": "31934e5531634ab283bd1a8f9dc94b61", "digest": "7d44b6916f65c131ede6114c527559babd0bd84cf8394b5d4bdcd5f612faf175", "event": "progress"}
+{"at": 14850.503693147, "call": "31934e5531634ab283bd1a8f9dc94b61", "digest": "3045d6630be7efd28942e15a6bccc5b84770bec2577bb28208dc654876749556", "event": "progress"}
+{"at": 14850.537489472, "call": "31934e5531634ab283bd1a8f9dc94b61", "event": "reaped", "pid": 23397}
+{"at": 14850.538013839, "call": "31934e5531634ab283bd1a8f9dc94b61", "event": "end"}

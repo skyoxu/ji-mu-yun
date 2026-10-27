@@ -1,0 +1,26 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/tmp/light-baseline-refusal-check.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.20275566099917341,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "5cd90f7be377b5de946c5c1af99659de2714114c78dac414b5be5c8120711ba9": 0.202125874999183
+  },
+  "active_at_stop": [
+    {
+      "key": "5cd90f7be377b5de946c5c1af99659de2714114c78dac414b5be5c8120711ba9",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.202125874999183,
+      "container": true
+    }
+  ]
+}

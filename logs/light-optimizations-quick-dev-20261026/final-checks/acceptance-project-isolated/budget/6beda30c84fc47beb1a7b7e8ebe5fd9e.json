@@ -1,0 +1,34 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    "project-compact-vdd",
+    "--repository-root",
+    "/tmp/light-acceptance-c5db5a0",
+    "--request",
+    "/tmp/light-acceptance-c5db5a0/execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/compact-vdd-projection-request.v1.json",
+    "--out",
+    "/tmp/light-acceptance-c5db5a0/logs/light-optimizations-acceptance-20261027/projection-result.json"
+  ],
+  "exit_code": 1,
+  "reason": null,
+  "elapsed_seconds": 2.121114116998797,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "11ab769bb03caab556af7d192a3641f418561be8eda05820a5a2a5a8875a1e60": 2.0815592740000284,
+    "4c7029dcc774e48c4e9c7ff233693a30dbb97f1afae998e55589f6a24b11a04f": 0.03892161299881991
+  },
+  "active_at_stop": [
+    {
+      "key": "11ab769bb03caab556af7d192a3641f418561be8eda05820a5a2a5a8875a1e60",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.0561012739999569,
+      "container": true
+    }
+  ]
+}

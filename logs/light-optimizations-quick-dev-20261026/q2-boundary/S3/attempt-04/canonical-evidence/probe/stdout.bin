@@ -1,0 +1,46 @@
+..............F...                                                       [100%]
+=================================== FAILURES ===================================
+____________________ test_light_964924bbdac1[handoff-mode] _____________________
+
+local = PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-admission-6s1mkluc')
+kind = 'handoff-mode'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-EE30987A8DDE')
+    @pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery', 'handoff-mode'])
+    def test_light_964924bbdac1(local, kind):
+        source, out, extra = REQUIREMENTS, local / 'out', []
+        if kind == 'invalid':
+            source = local / 'missing.md'
+        if kind == 'recovery':
+            shutil.copytree(PLAN, out)
+            extra = ['--resume-from', 'first-failed-stage']
+        if kind == 'handoff-mode':
+            prior = local / 'predecessor'
+            shutil.copytree(PLAN, prior)
+            extra = ['--repair-quick-dev-handoff-from', str(prior)]
+        before = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+        with mock.patch.object(cli, 'compile_plan') as compiler:
+            rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if kind == 'recovery' else 'standard', extra=extra)
+        after = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
+        untouched = workers == queries == compiler.call_count == 0 and before == after
+        if kind == 'handoff-mode':
+>           expect(rc != 0 and untouched and not out.exists(), 'LIGHT-EE30987A8DDE')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-EE30987A8DDE'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-EE30987A8DDE
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py:28: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-EE30987A8DDE
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py::test_light_964924bbdac1[handoff-mode]
+1 failed, 17 passed in 0.69s

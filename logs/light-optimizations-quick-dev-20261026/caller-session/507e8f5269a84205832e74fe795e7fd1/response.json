@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "507e8f5269a84205832e74fe795e7fd1",
+  "request_sha256": "sha256:2b36610789e29c6b622d15418d1498485808fcf67e0c81581defbaa5c33f49a6",
+  "output_text": "Added a bounded read-only public admission result before semantic dispatch/advisory consumption. It composes existing source, completed-recovery/chain, exact consumer dependency/context readers and execution profile policy. New inputs explicitly leave future contracts pending, and admission-only returns before compiler, query, run, cache or result-file writes. Existing V3/final gates remain in their original compiler path; no model selection or evidence authority changed.",
+  "authorizes": []
+}

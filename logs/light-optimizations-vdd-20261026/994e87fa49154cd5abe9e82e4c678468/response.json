@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "9ceb4335ec6b43a79a02d5e3636af656",
+  "request_id": "994e87fa49154cd5abe9e82e4c678468",
+  "request_sha256": "sha256:2e7d3ecaef1582fb222cf6974dac12d29c1d5028f49aec9036e25c6094a3bb41",
+  "output_text": "{\"source_gap_claims\": []}",
+  "authorizes": []
+}

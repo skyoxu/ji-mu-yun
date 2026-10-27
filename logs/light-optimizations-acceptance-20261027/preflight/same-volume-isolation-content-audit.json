@@ -1,0 +1,94 @@
+{
+  "authorizes": [],
+  "original_root": "/workspace/ji-mu-yun-light-optimizations",
+  "acceptance_root": "/workspace/ji-mu-yun-light-acceptance",
+  "snapshot_roots": [
+    {
+      "kind": "candidate_tree",
+      "content_sha256": "sha256:2db036081e94c5607b7a4634c1c8e5c4147fff9b50788ba2adec376aeb901a8c",
+      "matched": true
+    },
+    {
+      "kind": "plan",
+      "content_sha256": "sha256:4e5dbe4fe51545355b2b8a2db604866597a76ed29fbd87bd5c285a353af2c6f6",
+      "matched": true
+    },
+    {
+      "kind": "contract",
+      "content_sha256": "sha256:f0519661615b42b48a34310fa6dc56c2169a1e45fc59f4d00663c2222f7cf65e",
+      "matched": true
+    },
+    {
+      "kind": "descriptor",
+      "content_sha256": "sha256:917900acb421f07dbdb451b0ee5467a257a7e52f8d7b3f641be3b66e8ce1c423",
+      "matched": true
+    },
+    {
+      "kind": "fixture",
+      "content_sha256": "sha256:3eaddfa155836417aad434297ae71f310edca552dce67c8919ba60d54e4bba29",
+      "matched": true
+    },
+    {
+      "kind": "source",
+      "content_sha256": "sha256:52123c3373e2f5ff5cadd20e434249c43c11417f47837eccf27c791812941cad",
+      "matched": true
+    },
+    {
+      "kind": "validator_judge",
+      "content_sha256": "sha256:e4b90219bd493d5b4666789aa15c1a22d9f4fc436a3e961adc56b9356e25da8a",
+      "matched": true
+    },
+    {
+      "kind": "plan_state_transition",
+      "content_sha256": "sha256:29ea25133f7ba03f1c97fb99041e9b94ad71a6138329d5783bca49efc4e375cd",
+      "matched": true
+    }
+  ],
+  "missing_original_runtime_files_copied": [
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/__pycache__/execution_contract.cpython-312.pyc",
+      "sha256": "8031d3067ab45509d54a2eae1cb21e0364977c23a16762521aff1444b7d784d7"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/__pycache__/semantic_plan_contract.cpython-312.pyc",
+      "sha256": "dac49f6167ec462102f6ef8e4cbdc191c8ccc70c25e42e596f16d0a20fa6ef50"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/__pycache__/semantic_compiler.cpython-312.pyc",
+      "sha256": "47bd83f407768eb3fccd8f892eb7762925ea2d1abd4675f4a22654aabaaed985"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/scripts/__pycache__/semantic_progress.cpython-312.pyc",
+      "sha256": "f3ee26fe97d6cb6660661b7a9cef0218ab572300c0c863048922f3d73f536c6b"
+    },
+    {
+      "path": "scripts/sc/__pycache__/host_session.cpython-312.pyc",
+      "sha256": "dcf8f797624ef02d83560c3bc6de1c61cc4f638e693484fdb3ee0bed1e9150ba"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/__pycache__/runtime_evidence.cpython-312.pyc",
+      "sha256": "04ed31acd702f724d70dcae8b7f0effff6eecba5d6c60600970e8406a583dc8c"
+    }
+  ],
+  "native_manifest_replays_matched": [
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/q6-executions/command-2d8fbc5953b4554e/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/q6-executions/command-649c47174ad8fe3b/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/q6-executions/command-a5218e0af7106fef/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/terminal/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/q6-executions/command-2d8fbc5953b4554e/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/q6-executions/command-a5218e0af7106fef/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/terminal/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/regression/q6-executions/command-69f2ec899fb8b120/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/terminal/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/q6-executions/command-43c90adde6e7bf1b/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/q6-executions/command-c85442c02f2094e4/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/q6-executions/command-e07192c872e357ab/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/reuse-request.v1.json",
+    "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/terminal/reuse-request.v1.json"
+  ],
+  "original_skill_attempts_retained": true,
+  "note": "Tracked historical .skill-input-work files remain present; only new Acceptance preparation attempts are outside this replay checkout."
+}

@@ -1,0 +1,8 @@
+..........                                                               [100%]
+=============================== warnings summary ===============================
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py:21
+  /workspace/ji-mu-yun-light-optimizations/.agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py:21: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-9ECB9EABF5D9')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+10 passed, 1 warning in 0.64s

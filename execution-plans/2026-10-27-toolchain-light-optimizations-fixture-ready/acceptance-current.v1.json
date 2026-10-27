@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79",
+  "finalResult": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:ba5f902663945fb62c87ae8825e7721fe3ef9741f43d80b04b4878f405535f22"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:5112f8c2b358a15ece7dff3a394dcb35446d524464b82527d570a9b811f9521a"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

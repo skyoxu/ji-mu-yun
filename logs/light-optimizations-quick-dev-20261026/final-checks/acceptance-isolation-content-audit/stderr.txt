@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/tmp/light-acceptance-isolation-audit.py", line 25, in <module>
+    desc_path=new/receipt['descriptor_ref'];desc=json.loads(desc_path.read_text());reason=invalidation_reason(manifest,input_manifest(new,bundle,desc));assert reason is None,(str(path),reason);checks.append(path.relative_to(new).as_posix())
+                                                            ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/light-acceptance-c5db5a0/frozen-descriptor'

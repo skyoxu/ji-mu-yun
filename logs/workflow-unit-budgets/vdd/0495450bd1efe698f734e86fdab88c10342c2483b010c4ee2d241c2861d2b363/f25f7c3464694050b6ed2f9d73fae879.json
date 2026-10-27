@@ -1,0 +1,53 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "-B",
+    "/workspace/ji-mu-yun-light-optimizations/scripts/vdd/compile_plan.py",
+    "--requirements",
+    "docs/2026-10-26-toolchain-light-optimizations-requirements.md",
+    "--out-dir",
+    "execution-plans/2026-10-26-toolchain-light-optimizations",
+    "--profile",
+    "self-hosted",
+    "--result-json",
+    "logs/light-optimizations-vdd-20261026/compiler-result-after-main-ref.json"
+  ],
+  "exit_code": 1,
+  "reason": null,
+  "elapsed_seconds": 493.72731092799995,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "c10dbf9b3ad6139b44f0baec8fa5a38c7c244530bc7cde097f8942ae56bc50af": 0.2524014260000058,
+    "0ce6cdfbba72fe2750e094ff5b757aefa6b0dcf842cc93824cbcc230f46fb446": 0.6954522040000484,
+    "91805b9c986f447e3fd2b860487443e9204982c8598528b0a559148d584f353b": 0.0032310020000068107,
+    "bf7b033b4a3b9566f9ee485430f848d67fdcb268226dd6400be095a43806d787": 0.053784210999992865,
+    "06d1a498de1667507b98c33749efe4a488b47747c0c67ea0afc7f80d3b20a11f": 65.99927467400005,
+    "7fce5056745a0d38777dd1839aebc2a1b6146e62a6fbb9e2ee9a1228cfb8ebed": 35.980901783000036,
+    "037322231203593c7016fd69d5713d2325370f2c39ce7442ed4ffebe58f9c244": 79.98109250699997,
+    "e2534afcb263b192be957d6b85ce65274ee11ce366abe1f29f49d386b0d8b052": 61.52013255300005,
+    "e8654f8ea4cd09d97aef0adff61aeda5ecefc64352cad1c55cff5e5c2e8d5e2f": 13.026832411999976,
+    "01803427a72cd39e55960bc3d789f7ebdf3ca637bcbe392e503862cc20e6247e": 12.023774680999963,
+    "91c0b426f004e9c19fd419f54c509e10ccdd9cefdd0aa6f991fb55326fc7d7d5": 0.0006716390000747197,
+    "04599bc83cc977694d7f1bbcfb81f2866f5276c5459edb9a9b1b7cd5e8c2b8c1": 0.7675733639998725,
+    "4502e15c532b44ed3554e392660659f89dd0cf4089fa198175d662ee21cc4dfc": 177.319754074,
+    "7ff78151889c159a19c79997d7a5e8b09a33627defd775edd9bbdedf8e22483e": 177.41630827300003,
+    "687cf5d5e1278ec7643e1b8c396316d0b1c9a4c6e59142c2a736aa8c0dfb371b": 177.41107880899995,
+    "2c60c4127b8c834ca4ed084bfb0f8cf14717d1298653a7b686ce0955227b4df0": 177.413556631,
+    "e85d8d0ad98fd3c586cf2264c2437bd738e8c1effaf05487b3aa2037fb386f9c": 46.20925239200005,
+    "3ea530c0c633168b78c2e579f15ac14c4ce01ab8ee6412e7584569c08602d230": 46.078122842000084,
+    "f768ec3f2a2a82f45e0b916cb790f6241d0041778e8c390458cf114514b794dc": 0.0009514710000075866,
+    "e9dcf5fdf2add568f29f5b0d5117c392d9a9cc98fab71b2156c4b18a547b4449": 0.12503819899984592
+  },
+  "active_at_stop": [
+    {
+      "key": "0ce6cdfbba72fe2750e094ff5b757aefa6b0dcf842cc93824cbcc230f46fb446",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.04846304400007284,
+      "container": true
+    }
+  ]
+}

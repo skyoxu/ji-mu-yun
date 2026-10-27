@@ -1,0 +1,32 @@
+{
+  "authorizes": [],
+  "old_plan_id": "PLAN-6F8ECBD1CED1",
+  "new_plan_id": "PLAN-80D11CC6CF83",
+  "counts": {
+    "obligations": 24,
+    "acceptances": 24,
+    "failure_intents": 24
+  },
+  "content_equivalence": "All records match after source-path and deterministic-ID rebind; assertion IDs, oracles, failure families, selectors and failure IDs retained.",
+  "additional_Q2_snapshots": {
+    "S1": [
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py"
+    ],
+    "S2": [
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py"
+    ],
+    "S3": [
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py"
+    ],
+    "S4": []
+  },
+  "dependencies": {
+    "S1": [],
+    "S2": [],
+    "S3": [
+      "S4"
+    ],
+    "S4": []
+  },
+  "source_delta": "--- requirements-v2.md\n+++ requirements-v3.md\n@@ -68,6 +68,11 @@\n - Verify no model/test/process-evidence/cache/state writes on admission.\n - Retain applicable source-resume and V3-pause regressions; do not replay the\n   original knowledge-query delivery.\n+- The existing fixture in `.agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py`\n+  is an explicit Q2 fixture write/snapshot boundary, solely to copy the actual\n+  shared Quick Dev entry and consumer dependencies into its isolated test repo.\n+  Preserve its assertions, security rejection and source/resume/pause oracles.\n+  This clarifies test ownership and adds no product obligation.\n \n ## FR-2: Validate what the actual Quick Dev consumer reads\n \n@@ -151,6 +156,11 @@\n   `.agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py`\n   for test-only retained execution/delivery guards. These declarations create\n   no test bytes, runtime evidence or additional production write authority.\n+- The existing fixture in `.agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py`\n+  is an explicit Q2 fixture write/snapshot boundary for S1/S2, solely to copy\n+  the existing `scripts/workflow_unit_budget.py` dependency into its isolated\n+  CLI repo. Preserve every role, oracle and permission check. This clarifies\n+  test ownership and adds no product obligation.\n - Extend dependency projection and native successor-repair tests.\n - Explicit add/remove edges yield the old/new downstream closure.\n - Source/predecessor drift, unsafe output, cycle/dangling edges and nonselected\n"
+}

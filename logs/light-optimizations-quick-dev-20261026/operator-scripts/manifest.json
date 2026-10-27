@@ -1,0 +1,25 @@
+{
+  "authorizes": [],
+  "files": [
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/operator-scripts/light-native-final.py",
+      "sha256": "934068b3ab56ab39710db568f4384d68dec7077ec98d03d0c7d4de207f1dc4cc",
+      "role": "Non-authorizing operator launcher/diagnostic; invokes unchanged native gates, not a completion writer."
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/operator-scripts/light-budget-final.py",
+      "sha256": "1f0104c0324240382b970e095a8005eae0c1d784950b7fb13a3c92622307298a",
+      "role": "Non-authorizing operator launcher/diagnostic; invokes unchanged native gates, not a completion writer."
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/operator-scripts/light-public-admission-check.py",
+      "sha256": "5ad38766424b5715aeb5a0873b52b0534005575c1137147468f1ba5ae9950337",
+      "role": "Non-authorizing operator launcher/diagnostic; invokes unchanged native gates, not a completion writer."
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/operator-scripts/light-baseline-refusal-check.py",
+      "sha256": "694b4a84ed41b34ac792608e932b074160b7db5b5a144084377fa7e75aca1677",
+      "role": "Non-authorizing operator launcher/diagnostic; invokes unchanged native gates, not a completion writer."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+    "--skill-root",
+    ".agents/skills/vdd-execution-plan"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.10221786699912627,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "55eec8830f055779b8d090596321de090c86c457f670b44d421874bdc0f3aed4": 0.10153536700090626
+  },
+  "active_at_stop": [
+    {
+      "key": "55eec8830f055779b8d090596321de090c86c457f670b44d421874bdc0f3aed4",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.10153536700090626,
+      "container": true
+    }
+  ]
+}

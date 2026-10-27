@@ -1,0 +1,55 @@
+{
+  "adapter_hash": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+  "adapter_id": "run-refactor-implementation-acceptance",
+  "adapter_version": "compact-vdd-projection.v1",
+  "affected_consumer_refs": [
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+    ".agents/skills/vdd-execution-plan/SKILL.md"
+  ],
+  "allowed_write_roots": [],
+  "baseline_content_manifest_hash": "sha256:fcdf35f8c01b4c86bf0a324b6f0dd10b59b09f26d6d55591df4aa828656718b4",
+  "baseline_content_manifest_path": "acceptance-inputs/acceptance-light-20261027/baseline-content-manifest.v1.json",
+  "baseline_revision": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+  "candidate_content_manifest_hash": "sha256:fe59e76139059419143aaac80c101c80319630b706d4cf9bda79f7ebcddc76f0",
+  "candidate_content_manifest_path": "acceptance-inputs/acceptance-light-20261027/candidate-content-manifest.v1.json",
+  "candidate_mode": "commit",
+  "candidate_revision": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+  "candidate_scope_manifest": {
+    "candidate_source_root": "sha256:e8823ed4039bd0e3e3277c99743138b6b7f6ecc5c4098f04233bc6f1dbe27127",
+    "path": "acceptance-inputs/acceptance-light-20261027/candidate-source-manifest.v1.json",
+    "sha256": "sha256:00d14654f22b9f7dcf69a64cd8cd2d91e29ac89ccee520a519f70fe97080275a"
+  },
+  "change_id": "toolchain-three-light-optimizations",
+  "changed_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    "scripts/vdd/compile_plan.py"
+  ],
+  "code_review_domain": "toolchain",
+  "code_review_policy_hash": "sha256:0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502",
+  "code_review_policy_path": "acceptance-inputs/acceptance-light-20261027/toolchain-code-review.v1.json",
+  "created_utc": "2026-08-01T00:00:00Z",
+  "execution_mode": "evidence_only",
+  "forbidden_write_roots": [
+    "logs/phase-a-innernet/",
+    "runtime/phase-a/"
+  ],
+  "run_id": "acceptance-light-20261027",
+  "target": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready",
+  "target_plan_hash": "sha256:25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9",
+  "target_plan_paths": [
+    "semantic-plan-bundle.v1.json"
+  ],
+  "validator_hash": "sha256:1d98150f7b23cf4df178c10941ecf02ab5b13a6982c4b049d966e193022bd620"
+}

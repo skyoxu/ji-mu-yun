@@ -1,0 +1,14 @@
+{
+  "authorizes": [],
+  "native_host_commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+  "plan_id": "PLAN-87F445B767D0",
+  "bundle_bytes_sha256": "25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9",
+  "obligations_preserved": 24,
+  "new_snapshot_only": "test_published_v3_compiler_integration.py in S1/S2",
+  "external_review": false,
+  "acceptances_preserved": 24,
+  "failure_intents_preserved": 24,
+  "assertion_ids_unchanged": true,
+  "oracles_selectors_families_unchanged": true,
+  "production_and_allowed_write_paths_unchanged": true
+}

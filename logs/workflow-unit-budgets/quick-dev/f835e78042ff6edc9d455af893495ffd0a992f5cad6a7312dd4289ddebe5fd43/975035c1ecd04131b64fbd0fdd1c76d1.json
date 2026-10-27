@@ -1,0 +1,47 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-26-toolchain-light-optimizations-ready",
+    "--slice",
+    "S4",
+    "--profile",
+    "standard",
+    "--action",
+    "run-terminal",
+    "--run-dir",
+    "logs/light-optimizations-quick-dev-20261026/S4/attempt-04"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 5.132740904000457,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "2012935934432d343cc5ce94583b5ca8962311b7143ad7fd0e90b594a2cda5d5": 0.15141317199959303,
+    "2140335c480f9fb6d290dd309cd9bdc28eb178932b38e9276c0d3c0a86a0ba46": 101.66335028699996,
+    "3ad8fed3522477dd4593a4d719581e0114564dff11b3676636c6ffa43c6cd69f": 0.8427128059993265,
+    "5bd0e6bec974f4ca40f2754f74642d7bb29dffbc458436ae3fc7ab948e0fb200": 9.555127476000052,
+    "600a324ec7b090626dda31e48ffbb26f1d4b532fe3e587cdb9e1eabd2f7ef837": 0.5754379759991934,
+    "675c7f2e2a96880f28e8a542bd897fb42bfeb8b95efe7a2e645486dc2ad4fd9c": 0.7993843779995586,
+    "97b78938bbef15915fe093ee73aed14159177a540eb5c8438eb76621f8741f5c": 0.8419566410002517,
+    "aca59342f1086f076cb43e4bf93270c8253b1f78d1fbcde758e1a22cee301dc4": 0.2024266839998745,
+    "dd9e4d9f570bebf4d641a4102e32ef3d2b05eee3051b7b0f190dbe144277050f": 57.54313320500023,
+    "f9128088782cc3e1f5b7fb1e7c987417024ba740a0519e59d57e79770665235b": 8.761510894000821,
+    "474453982b2cbb3e3c5308fe1142083d4df2a0d0f8d6749f244103d1d198a9b9": 4.278904455000884,
+    "d4d1ad607ba6a5407f693a0d53192f6aa0aebd254745d2f974e4baca4c96f178": 0.8524328509993211
+  },
+  "active_at_stop": [
+    {
+      "key": "474453982b2cbb3e3c5308fe1142083d4df2a0d0f8d6749f244103d1d198a9b9",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.204517484000462,
+      "container": true
+    }
+  ]
+}

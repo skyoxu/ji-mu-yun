@@ -1,0 +1,573 @@
+F...FFFFFFFFFF.......FFF....F.                                           [100%]
+=================================== FAILURES ===================================
+________________________ test_light_e8c955695910[none] _________________________
+
+setup_revision = (PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-revision-0nkhbl_1'), PosixPath('/workspace/ji-mu-yun-l...input binding', 'Fresh semantic dependency gates', 'Generation reuse without execution relabeling', ...], ...}}}, ...})
+drift = 'none'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-6F1AEDA1DBC8')
+    @pytest.mark.parametrize('drift', ['none', 'predecessor', 'source', 'old-edges'])
+    def test_light_e8c955695910(setup_revision, drift):
+        root, prior, bundle, value = setup_revision
+        path = root / 'input.json'
+        if drift == 'predecessor':
+            value['dependency_revision']['predecessor_sha256'] = 'sha256:' + '0' * 64
+        if drift == 'source':
+            value['dependency_revision']['source_index_sha256'] = 'sha256:' + '0' * 64
+        if drift == 'old-edges':
+            value['dependency_revision']['changes'][0]['old_depends_on'] = ['O-NOT-OLD']
+        path.write_text(json.dumps(value))
+        accepted = False
+        try:
+            loaded = repair.load_repair(path, REQ)
+            prepare = getattr(repair, 'prepare_dependency_revision', None)
+            if prepare:
+                prepare(loaded, {'bundle': bundle, 'source_index': json.loads((prior / 'source-index.v1.json').read_text())})
+                accepted = True
+        except ValueError:
+            pass
+>       expect(accepted == (drift == 'none'), 'LIGHT-6F1AEDA1DBC8')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-6F1AEDA1DBC8'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-6F1AEDA1DBC8
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-6F1AEDA1DBC8
+_____________________ test_light_c88bf08ef42b[unknown-old] _____________________
+
+side = 'old', defect = 'unknown'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+_____________________ test_light_c88bf08ef42b[unknown-new] _____________________
+
+side = 'new', defect = 'unknown'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+____________________ test_light_c88bf08ef42b[duplicate-old] ____________________
+
+side = 'old', defect = 'duplicate'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+____________________ test_light_c88bf08ef42b[duplicate-new] ____________________
+
+side = 'new', defect = 'duplicate'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+____________________ test_light_c88bf08ef42b[dangling-old] _____________________
+
+side = 'old', defect = 'dangling'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+____________________ test_light_c88bf08ef42b[dangling-new] _____________________
+
+side = 'new', defect = 'dangling'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+______________________ test_light_c88bf08ef42b[cycle-old] ______________________
+
+side = 'old', defect = 'cycle'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+______________________ test_light_c88bf08ef42b[cycle-new] ______________________
+
+side = 'new', defect = 'cycle'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
+    @pytest.mark.parametrize('side', ['old', 'new'])
+    @pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
+    def test_light_c88bf08ef42b(side, defect):
+        old, new, slices = graphs()
+        target = old if side == 'old' else new
+        if defect == 'unknown':
+            target[0]['depends_on'] = ['FR-UNKNOWN']
+        if defect == 'duplicate':
+            target[2]['depends_on'] = ['O-B', 'O-B']
+        if defect == 'dangling':
+            target[0]['depends_on'] = ['O-ABSENT']
+        if defect == 'cycle':
+            target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
+        function = getattr(graph, 'dependency_revision_impact', None)
+        rejected = False
+        if function:
+            try:
+                function(old, new, slices)
+            except ValueError:
+                rejected = True
+>       expect(rejected, 'LIGHT-8B877C540FC4')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:168: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-8B877C540FC4'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-8B877C540FC4
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-8B877C540FC4
+_______________________ test_light_b0f66ffcfc79[remove] ________________________
+
+operation = 'remove'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-2768B5FD436D')
+    @pytest.mark.parametrize('operation', ['remove', 'add'])
+    def test_light_b0f66ffcfc79(operation):
+        old, new, slices = graphs()
+        if operation == 'add':
+            old, new = new, old
+        function = getattr(graph, 'dependency_revision_impact', None)
+        result = function(old, new, slices) if function else {}
+>       expect(result.get('affected_slices') == ['B', 'C'] and result.get('changed_obligation_ids') == ['O-B'], 'LIGHT-2768B5FD436D')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:179: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-2768B5FD436D'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-2768B5FD436D
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-2768B5FD436D
+_________________________ test_light_b0f66ffcfc79[add] _________________________
+
+operation = 'add'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-2768B5FD436D')
+    @pytest.mark.parametrize('operation', ['remove', 'add'])
+    def test_light_b0f66ffcfc79(operation):
+        old, new, slices = graphs()
+        if operation == 'add':
+            old, new = new, old
+        function = getattr(graph, 'dependency_revision_impact', None)
+        result = function(old, new, slices) if function else {}
+>       expect(result.get('affected_slices') == ['B', 'C'] and result.get('changed_obligation_ids') == ['O-B'], 'LIGHT-2768B5FD436D')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:179: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-2768B5FD436D'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-2768B5FD436D
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-2768B5FD436D
+________________________ test_light_008838d2f51b[True] _________________________
+
+setup_revision = (PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-revision-l5f4umvd'), PosixPath('/workspace/ji-mu-yun-l...input binding', 'Fresh semantic dependency gates', 'Generation reuse without execution relabeling', ...], ...}}}, ...})
+valid = True
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-1268DA5EAF2C')
+    @pytest.mark.parametrize('valid', [True, False])
+    def test_light_008838d2f51b(setup_revision, valid):
+        rc, result, calls, _ = public(setup_revision, valid_v4=valid)
+>       expect(any(s.startswith('v4') for s in calls) and ((rc == 0 and result.get('status') == 'plan-ready') == valid),
+               'LIGHT-1268DA5EAF2C')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-1268DA5EAF2C'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-1268DA5EAF2C
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-1268DA5EAF2C
+________________________ test_light_008838d2f51b[False] ________________________
+
+setup_revision = (PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-revision-d3h7oi44'), PosixPath('/workspace/ji-mu-yun-l...input binding', 'Fresh semantic dependency gates', 'Generation reuse without execution relabeling', ...], ...}}}, ...})
+valid = False
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-1268DA5EAF2C')
+    @pytest.mark.parametrize('valid', [True, False])
+    def test_light_008838d2f51b(setup_revision, valid):
+        rc, result, calls, _ = public(setup_revision, valid_v4=valid)
+>       expect(any(s.startswith('v4') for s in calls) and ((rc == 0 and result.get('status') == 'plan-ready') == valid),
+               'LIGHT-1268DA5EAF2C')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-1268DA5EAF2C'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-1268DA5EAF2C
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-1268DA5EAF2C
+________________________ test_light_cbed8d28dd7b[valid] ________________________
+
+setup_revision = (PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-revision-7ei0vkhu'), PosixPath('/workspace/ji-mu-yun-l...input binding', 'Fresh semantic dependency gates', 'Generation reuse without execution relabeling', ...], ...}}}, ...})
+output = 'valid'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-18D1FC191242')
+    @pytest.mark.parametrize('output', ['valid', 'same', 'nonempty', 'outside'])
+    def test_light_cbed8d28dd7b(setup_revision, output):
+        root, prior, bundle, value = setup_revision
+        before = manifest(prior)
+        out = root / 'successor'
+        if output == 'same': out = prior
+        if output == 'nonempty':
+            out.mkdir(); (out / 'preserve').write_text('preserve')
+        if output == 'outside': out = root / 'nested/successor'
+        rc, result, _, _ = public(setup_revision, successor=out)
+>       expect(before == manifest(prior) and ((rc == 0 and result.get('status') == 'plan-ready') == (output == 'valid')),
+               'LIGHT-18D1FC191242')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:224: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-18D1FC191242'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-18D1FC191242
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-18D1FC191242
+___________________________ test_light_c20a9174d21a ____________________________
+
+setup_revision = (PosixPath('/workspace/ji-mu-yun-light-optimizations/logs/light-revision-vp_k8myt'), PosixPath('/workspace/ji-mu-yun-l...input binding', 'Fresh semantic dependency gates', 'Generation reuse without execution relabeling', ...], ...}}}, ...})
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-52B78C7AFF3E')
+    def test_light_c20a9174d21a(setup_revision):
+        root, prior, _, _ = setup_revision
+        historical = prior / 'historical-execution.json'
+        historical.write_text('{"historical":true}')
+        before = manifest(prior)
+        rc, result, calls, out = public(setup_revision)
+>       expect(rc == 0 and result.get('status') == 'plan-ready' and calls and all(s.startswith('v4') for s in calls)
+               and before == manifest(prior) and not (out / historical.name).exists(), 'LIGHT-52B78C7AFF3E')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-52B78C7AFF3E'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-52B78C7AFF3E
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-52B78C7AFF3E
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_e8c955695910[none]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[unknown-old]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[unknown-new]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[duplicate-old]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[duplicate-new]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[dangling-old]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[dangling-new]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[cycle-old]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c88bf08ef42b[cycle-new]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_b0f66ffcfc79[remove]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_b0f66ffcfc79[add]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_008838d2f51b[True]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_008838d2f51b[False]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_cbed8d28dd7b[valid]
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_c20a9174d21a
+15 failed, 15 passed in 0.96s

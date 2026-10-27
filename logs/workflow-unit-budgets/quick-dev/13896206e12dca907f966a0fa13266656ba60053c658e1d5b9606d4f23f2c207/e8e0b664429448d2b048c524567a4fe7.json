@@ -1,0 +1,38 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-26-toolchain-light-optimizations-ready",
+    "--slice",
+    "S4",
+    "--profile",
+    "standard",
+    "--action",
+    "run-probe",
+    "--run-dir",
+    "logs/light-optimizations-quick-dev-20261026/S4/attempt-02"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 1.362729303999913,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "1a8c2996a05f6694aab017590f3cd1cb30cb343567f829d1a63b97f29ec51959": 0.15182308499970532,
+    "ea39a332f163e3b13cf476d31e45db30f5add3136898a629d12dd3afd382fdbf": 0.5095434750001004,
+    "e6275df3c241d7aa7c318cd080e7572d6a13162271dbfdca63c7883d017d3b91": 0.8528028629998516
+  },
+  "active_at_stop": [
+    {
+      "key": "ea39a332f163e3b13cf476d31e45db30f5add3136898a629d12dd3afd382fdbf",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.2252749320005023,
+      "container": true
+    }
+  ]
+}

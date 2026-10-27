@@ -16,6 +16,7 @@ from scripts.vdd import compile_plan as cli
 import semantic_compiler as sc
 import semantic_compiler_authority as authority
 import semantic_v3_contract_repair as repair
+from scripts.toolchain.knowledge_query import adapter
 
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -27,6 +28,22 @@ REQUIREMENTS = ROOT / (
     "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/"
     "repair/round-7/recompilation-4/assembled-requirements.md"
 )
+INDEX = ROOT / (
+    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md"
+)
+
+
+def advisory_fixture(location: Path, *, directory: bool = False) -> dict:
+    """Use real file inputs for advice; frozen compiler requirements stay intact."""
+    context = location / "planning-context.md"
+    asset = INDEX.parent.relative_to(ROOT).as_posix() + "/" if directory else INDEX.relative_to(ROOT).as_posix()
+    requirements = REQUIREMENTS.relative_to(ROOT).as_posix()
+    context.write_text(
+        "# Published V3 advisory fixture\n\n"
+        f"Frozen normative requirements: `{requirements}`.\n"
+        f"Existing asset: `{asset}`.\n", encoding="utf-8")
+    relative = context.relative_to(ROOT).as_posix()
+    return {"inputs": [relative], "scope": [relative, requirements]}
 
 
 def test_real_0805_predecessor_reuses_v3_but_invokes_v4() -> None:
@@ -91,7 +108,23 @@ def test_real_0805_predecessor_reuses_v3_but_invokes_v4() -> None:
                 "--published-v1-gap-extension",
                 str(PLAN.parent.parent / "published-v1-fr4-probe-outcomes.json")]
         output = io.StringIO()
+        advisory = advisory_fixture(Path(location))
+        actual_prepare = adapter.prepare_consumption
+
+        def prepare_advice(payload, root):
+            # This test isolates the advisory dependency, not source/V4 identity.
+            assert payload["inputs"] == [REQUIREMENTS.relative_to(ROOT).as_posix()]
+            prepared = actual_prepare({**payload, **advisory}, root)
+            assert prepared["status"] == "prepared" and prepared["authorizes"] == []
+            reads = {item["path"]: item["sha256"] for item in prepared["query_result"]["read_set"]}
+            for path in (REQUIREMENTS, INDEX):
+                assert reads[path.relative_to(ROOT).as_posix()] == hashlib.sha256(path.read_bytes()).hexdigest()
+            return prepared
+
         with (mock.patch.object(sc, "invoke_worker", side_effect=underlying_worker),
+              mock.patch.object(adapter, "prepare_consumption", side_effect=prepare_advice),
+              mock.patch.object(repair.group.gate, "_resolved_atomic_recall_worker",
+                                repair.group.gate._resolved_atomic_recall_worker),
               mock.patch.object(sc, "semantic_align", sc.semantic_align),
               mock.patch.object(sc, "compile_obligations", sc.compile_obligations),
               mock.patch.object(sc, "_v1_reuse_predecessor_plan", sc._v1_reuse_predecessor_plan),
@@ -102,6 +135,28 @@ def test_real_0805_predecessor_reuses_v3_but_invokes_v4() -> None:
         assert calls == []
         assert json.loads(output.getvalue())["stage"] == "V4"
         assert not (successor / "compiler-state.v1.json").exists()
+
+
+def test_advisory_directory_reference_remains_denied() -> None:
+    with tempfile.TemporaryDirectory(dir=ROOT / "logs") as location:
+        request = {"stage": "vdd-repair", "operation": "repair",
+                   "task_id": Path(location).relative_to(ROOT).as_posix(),
+                   "query": "current source callers tests contracts",
+                   **advisory_fixture(Path(location), directory=True)}
+        with __import__("pytest").raises(ValueError, match="^consumption_reference_denied$"):
+            adapter.prepare_consumption(request, ROOT)
+        assert not (Path(location) / "compiler-state.v1.json").exists()
+
+
+def test_unchanged_historical_advisory_input_remains_denied() -> None:
+    # Legalizing this test's advisory boundary does not approve the old raw input.
+    original = REQUIREMENTS.read_bytes()
+    relative = REQUIREMENTS.relative_to(ROOT).as_posix()
+    with __import__("pytest").raises(ValueError, match="^consumption_reference_denied$"):
+        adapter.prepare_consumption({"stage": "vdd-repair", "operation": "repair",
+            "task_id": "published-v3-historical-input", "inputs": [relative],
+            "scope": [relative], "query": "current source callers tests contracts"}, ROOT)
+    assert REQUIREMENTS.read_bytes() == original
 
 
 def test_published_v3_repair_stops_at_new_v4_source_gap() -> None:

@@ -1,0 +1,1312 @@
+--- .agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py
++++ .agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py
+@@ -8,6 +8,8 @@
+ """
+ from __future__ import annotations
+ 
++from copy import deepcopy
++import json
+ from pathlib import Path
+ from typing import Any, Mapping
+ 
+@@ -69,6 +71,7 @@
+     bundle: Mapping[str, Any],
+     slice_id: str,
+     timeout_seconds: int,
++    plan_dir: Path | None = None,
+ ) -> dict[str, Any]:
+     """Validate Q1's planned command/identity contract without side effects."""
+     if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+@@ -78,6 +81,25 @@
+ 
+     selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+     context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
++    if "behavior_routing" in bundle:
++        from behavior_routing import validate_plan
++        validate_plan(bundle)
++        from execution_contract import bind_slice_dependencies, derive_slice_dependencies
++        # Reuse the exact owning graph rule on copies. Consumer admission
++        # never repairs the supplied semantic bundle or a disk projection.
++        bind_slice_dependencies(deepcopy(bundle["slices"]),
++                                derive_slice_dependencies(bundle["obligations"], bundle["slices"]))
++    if plan_dir is not None:
++        path = Path(plan_dir) / "agent-context" / slice_id / "agent-context.json"
++        try:
++            path.resolve().relative_to(workspace.resolve())
++            if path.is_symlink() or not path.is_file():
++                raise ValueError("materialized agent-context missing or unsafe")
++            disk = json.loads(path.read_text(encoding="utf-8"))
++        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
++            raise ValueError("materialized agent-context unreadable") from exc
++        if disk != context:
++            raise ValueError("materialized agent-context projection drift")
+ 
+     acceptance_ids = _string_list(selected.get("acceptance_ids"), "slice acceptance_ids")
+     if context.get("acceptance_ids") != acceptance_ids:
+@@ -104,6 +126,8 @@
+     for index, raw in enumerate(commands):
+         if not isinstance(raw, list) or not raw or any(not isinstance(item, str) or not item for item in raw):
+             raise ValueError(f"validation command[{index}] must be non-empty argv array")
++        if any("\x00" in item for item in raw):
++            raise ValueError(f"validation command[{index}] contains NUL")
+         normalized_commands.append(list(raw))
+     argv = normalized_commands[0]
+ 
+@@ -114,19 +138,13 @@
+     if context.get("selector_intents") != selector_intents:
+         raise ValueError("agent-context selector projection drift")
+ 
+-    selector_text = " ".join([*argv, *selector_intents])
+-    # Match the runtime descriptor: prose fixture references are not targets.
+-    argv_paths = {part.split("::", 1)[0] for part in argv}
+-    target_refs = [ref for ref in snapshots if ref in argv_paths]
+-    if not target_refs:
+-        target_refs = [ref for ref in snapshots if ref in selector_text]
+-    if not target_refs:
+-        target_refs = [ref for ref in snapshots if Path(ref).suffix.lower() in _CODE_SUFFIXES]
+-    if not target_refs:
+-        target_refs = [snapshots[0]]
+-    fixture_refs = [ref for ref in snapshots if ref not in target_refs]
+-    if not fixture_refs:
+-        fixture_refs = [target_refs[0]]
++    # The projected and materialized entries consume the same actual reader.
++    # Literal selection remains conservative; unsupported/planned inputs retain
++    # their declared selector and never gain a runtime assertion mapping here.
++    from stable_runner import _descriptor_inputs
++    argv, target_refs, fixture_refs = _descriptor_inputs(
++        bundle, Path(plan_dir) if plan_dir is not None else workspace,
++        slice_id, context=context, workspace=workspace)
+ 
+     planned_or_existing = set(planned)
+     root = workspace.resolve()
+--- .agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py
++++ .agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py
+@@ -113,14 +113,15 @@
+     return value
+ 
+ 
+-def _literal_cer_nodes(targets, required):
++def _literal_cer_nodes(targets, required, *, workspace=None):
+     from case_selection import literal_nodes
+-    return literal_nodes(ROOT, targets, required)[0]
+-
+-
+-def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True) -> tuple[list[str], list[str], list[str]]:
++    return literal_nodes(workspace if workspace is not None else ROOT, targets, required)[0]
++
++
++def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True, context=None, workspace=None) -> tuple[list[str], list[str], list[str]]:
+     selected = _slice(bundle, slice_id)
+-    context = _agent_context(plan_dir, slice_id)
++    context = _agent_context(plan_dir, slice_id) if context is None else context
++    reader_root = ROOT if workspace is None else workspace
+     commands = context.get("validation_commands")
+     if not isinstance(commands, list) or not commands or not isinstance(commands[0], list) or not commands[0]:
+         raise ValueError("agent-context validation command missing")
+@@ -168,7 +169,7 @@
+             if item == "-q":
+                 continue
+             ref = safe_relative(item.split("::", 1)[0])
+-            path = ROOT / ref
++            path = reader_root / ref
+             if path.suffix != ".py" or not path.is_file() or path.is_symlink():
+                 continue
+             try:
+@@ -214,7 +215,7 @@
+     if resolve_literal and offset is not None and "behavior_routing" in bundle:
+         required={assertion for a in bundle.get("acceptances",[])
+                   if a["acceptance_id"] in selected["acceptance_ids"] for assertion in a["assertion_ids"]}
+-        literal=_literal_cer_nodes([part for part in argv[offset+2:] if part!="-q"],required)
++        literal=_literal_cer_nodes([part for part in argv[offset+2:] if part!="-q"],required, workspace=reader_root)
+         if literal:
+             argv=[*argv[:offset],"-m","pytest",*literal,"-q"]
+     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
+@@ -303,6 +304,9 @@
+ 
+ def q1_preflight(*, semantic: Path, slice_id: str, profile: str) -> dict[str, Any]:
+     bundle = load_json(semantic)
++    from q1_planned_preflight import validate_planned_preflight
++    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
++                               timeout_seconds=1800, plan_dir=semantic.parent)
+     identity = candidate_identity(ROOT, bundle, slice_id)
+     result = preflight(workspace=ROOT, semantic_plan=semantic, slice_id=slice_id, candidate_hash=identity["candidate_hash"], profile=profile)
+     return {**result, "candidate_identity": identity, "plan_sha256": sha256_bytes(semantic.read_bytes()), "slice_id": slice_id, "profile": profile, "authorizes": []}
+--- /dev/null
++++ .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py
+@@ -0,0 +1,163 @@
++"""ADR-0041: the real readonly consumers must inspect their actual inputs."""
++from copy import deepcopy
++import json
++from pathlib import Path
++import sys
++from unittest import mock
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[5]
++TOOLS = ROOT / '.agents/skills/quick-dev-tdd-adapter/tools'
++sys.path.insert(0, str(TOOLS))
++sys.path.insert(0, str(ROOT))
++import stable_runner as runner
++import q1_planned_preflight as planned
++import current_router
++from behavior_routing import production_hashes, validate_plan
++from case_selection import literal_nodes
++
++PLAN = ROOT / 'execution-plans/2026-10-26-toolchain-light-optimizations-ready'
++
++
++def expect(condition, failure_id):
++    if not condition:
++        print('FAILURE_ID:' + failure_id)
++    assert condition, failure_id
++
++
++def fixture(tmp_path):
++    bundle = json.loads((PLAN / 'semantic-plan-bundle.v1.json').read_text())
++    for item in bundle['slices']:
++        for ref in item['production_owners']:
++            path = tmp_path / ref
++            path.parent.mkdir(parents=True, exist_ok=True)
++            path.write_text('# candidate identity fixture\n', encoding='utf-8')
++        ref = item['execution_snapshot_paths'][0]
++        path = tmp_path / ref
++        path.parent.mkdir(parents=True, exist_ok=True)
++        assertions = [v for a in bundle['acceptances'] if a['acceptance_id'] in item['acceptance_ids'] for v in a['assertion_ids']]
++        text = "raise RuntimeError('admission must never import this test')\nimport pytest\n"
++        for n, assertion in enumerate(assertions):
++            text += f"@pytest.mark.cer_assertion({assertion!r})\ndef test_case_{n}(): pass\n"
++        path.write_text(text, encoding='utf-8')
++    plan = tmp_path / 'plan'
++    save(plan, bundle)
++    return plan, bundle
++
++
++def save(plan, bundle):
++    plan.mkdir(parents=True, exist_ok=True)
++    (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
++    for context in bundle['agent_contexts']:
++        path = plan / 'agent-context' / context['slice_id'] / 'agent-context.json'
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_text(json.dumps(context), encoding='utf-8')
++
++
++def admit(workspace, plan):
++    with mock.patch.object(runner, 'ROOT', workspace), mock.patch.object(current_router, 'environment_probe', return_value={'available': True}):
++        try:
++            return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
++        except (ValueError, OSError) as exc:
++            return {'status': 'blocked', 'reason': str(exc)}
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
++@pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
++def test_light_2186eab31aa1(tmp_path, kind):
++    plan, bundle = fixture(tmp_path)
++    path = plan / 'agent-context/S4/agent-context.json'
++    disk = json.loads(path.read_text())
++    if kind == 'missing':
++        path.unlink()
++    elif kind in {'command', 'selector', 'acceptance'}:
++        key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
++        disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
++        path.write_text(json.dumps(disk), encoding='utf-8')
++    elif kind == 'ambiguous':
++        bundle['agent_contexts'].append(deepcopy(disk))
++        (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
++    result = admit(tmp_path, plan)
++    expect((result['status'] == 'preflight-passed') == (kind == 'matching'), 'LIGHT-77EEE6DD9C66')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-BB99F694D6BB')
++@pytest.mark.parametrize('kind', ['valid', 'shell-command', 'unbound-target', 'nul-selector'])
++def test_light_b01c33d730ee(tmp_path, kind):
++    plan, bundle = fixture(tmp_path)
++    context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == 'S4')
++    target = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')['execution_snapshot_paths'][0]
++    argv = ['python', '-B', '-m', 'pytest', target, '-q']
++    if kind == 'shell-command': argv = ['python -m pytest ' + target]
++    if kind == 'unbound-target': argv[4] = 'tests/unbound.py'
++    if kind == 'nul-selector': argv[4] += '::test_\x00invalid'
++    context['validation_commands'][0] = argv
++    save(plan, bundle)
++    result = admit(tmp_path, plan)
++    expect((result['status'] == 'preflight-passed') == (kind == 'valid'), 'LIGHT-BB99F694D6BB')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-D9E930D6957F')
++def test_light_8888741bb36f(tmp_path):
++    plan, bundle = fixture(tmp_path)
++    selected = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')
++    target = tmp_path / selected['execution_snapshot_paths'][0]
++    target.unlink()
++    result = admit(tmp_path, plan)
++    expect(result['status'] == 'preflight-passed' and not target.exists(), 'LIGHT-D9E930D6957F')
++    expect(not list(plan.glob('**/stage-result*.json')), 'LIGHT-D9E930D6957F')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-D7B4E29286C5')
++def test_light_e16830860490(tmp_path):
++    plan, bundle = fixture(tmp_path)
++    selected = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')
++    target = selected['execution_snapshot_paths'][0]
++    (tmp_path / target).write_text("raise RuntimeError('no import')\nimport pytest\n@pytest.mark.cer_assertion(dynamic)\ndef test_dynamic(): pass\n", encoding='utf-8')
++    with mock.patch.object(runner, 'ROOT', tmp_path):
++        selected_argv, _, _ = runner._descriptor_inputs(bundle, plan, 'S4')
++    nodes, reason = literal_nodes(tmp_path, [target], {'ANY'})
++    expect(nodes is None and reason == 'dynamic-marker' and target in selected_argv, 'LIGHT-D7B4E29286C5')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-CCCC9778C3EC')
++def test_light_33f5fd4e59ad(tmp_path):
++    plan, bundle = fixture(tmp_path)
++    valid = admit(tmp_path, plan)
++    acceptance = next(a for a in bundle['acceptances'] if a['obligation_ids'] == ['O-0F5BEB365D58'])
++    acceptance['red_intent_ids'] = []
++    save(plan, bundle)
++    rejected = admit(tmp_path, plan)
++    expect(valid['status'] == 'preflight-passed' and rejected['status'] != 'preflight-passed', 'LIGHT-CCCC9778C3EC')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-104D8E0F76C4')
++def test_light_d07a4a77480c(tmp_path):
++    plan, bundle = fixture(tmp_path)
++    validate_plan(bundle)
++    before = production_hashes(tmp_path, bundle, 'S3')
++    dependency = tmp_path / '.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py'
++    dependency.write_text('# changed transitive production dependency\n', encoding='utf-8')
++    after = production_hashes(tmp_path, bundle, 'S3')
++    changed = deepcopy(bundle)
++    next(s for s in changed['slices'] if s['slice_id'] == 'S3')['depends_on'] = []
++    frozen = deepcopy(changed)
++    save(plan, changed)
++    rejected = admit(tmp_path, plan)['status'] != 'preflight-passed'
++    expect(before != after and rejected and changed == frozen, 'LIGHT-104D8E0F76C4')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-C35D920B20D8')
++def test_light_3a295774a883():
++    from scripts.vdd import compile_plan as cli
++    import semantic_v3_contract_repair as repair
++    from execution_preflight import inspect_candidate
++    bundle = json.loads((PLAN / 'semantic-plan-bundle.v1.json').read_text())
++    raw = repair.project_published_v3(bundle)
++    with mock.patch.object(planned, 'validate_planned_preflight', wraps=planned.validate_planned_preflight) as owning:
++        vdd = inspect_candidate(cli.semantic_compiler, ROOT, bundle['obligations'], bundle['acceptances'], bundle['failure_intents'], raw['slice_hints'], profile='self-hosted')
++        vdd_calls = owning.call_count
++        quick = runner.q1_preflight(semantic=PLAN / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
++        quick_calls = owning.call_count - vdd_calls
++    expect(vdd['valid'] and quick['status'] == 'preflight-passed' and vdd_calls > 0 and quick_calls > 0, 'LIGHT-C35D920B20D8')
+--- .agents/skills/vdd-execution-plan/scripts/execution_contract.py
++++ .agents/skills/vdd-execution-plan/scripts/execution_contract.py
+@@ -97,3 +97,34 @@
+         if 'depends_on' not in item:
+             item['depends_on'] = list(expected[item['slice_id']])
+     return slices
++
++
++def dependency_revision_impact(before, after, slices):
++    """ADR-0041: validate both explicit graphs and close their downstream union."""
++    def strict(records):
++        ids = [item['obligation_id'] for item in records]
++        if len(ids) != len(set(ids)):
++            raise ValueError('dependency:duplicate-obligation')
++        for item in records:
++            edges = item.get('depends_on', [])
++            if (not isinstance(edges, list) or any(not isinstance(dep, str) for dep in edges)
++                    or len(edges) != len(set(edges)) or not set(edges) <= set(ids)):
++                raise ValueError('dependency:invalid-revision-edges')
++        return derive_slice_dependencies(records, slices)
++    old, new = strict(before), strict(after)
++    prior = {o['obligation_id']: o for o in before}
++    current = {o['obligation_id']: o for o in after}
++    if set(prior) != set(current):
++        raise ValueError('dependency:obligation-domain-changed')
++    changed = sorted(oid for oid in prior if set(prior[oid].get('depends_on', [])) != set(current[oid].get('depends_on', [])))
++    owners = {oid: s['slice_id'] for s in slices for oid in s['obligation_ids']}
++    if not set(changed) <= owners.keys():
++        raise ValueError('dependency:changed-obligation-has-no-slice')
++    affected = {owners[oid] for oid in changed}
++    while True:
++        expanded = affected | {sid for sid in old if (set(old[sid]) | set(new[sid])) & affected}
++        if expanded == affected:
++            break
++        affected = expanded
++    return {'changed_obligation_ids': changed, 'old_slice_dependencies': old,
++            'new_slice_dependencies': new, 'affected_slices': sorted(affected)}
+--- .agents/skills/vdd-execution-plan/scripts/execution_preflight.py
++++ .agents/skills/vdd-execution-plan/scripts/execution_preflight.py
+@@ -5,6 +5,8 @@
+ """
+ from copy import deepcopy
+ import json
++from pathlib import Path
++import sys
+ 
+ 
+ def inspect_candidate(sc, root, obligations, acceptances, failures, hints, *, profile="standard"):
+@@ -26,6 +28,13 @@
+         findings.extend(sc.feasibility(root, slices, acceptances, failures, by_acceptance)["findings"])
+         findings.extend(sc.validate_semantic_bundle(bundle)[1])
+         findings.extend(handoff_findings(bundle, workspace=root))
++        tools = Path(__file__).resolve().parents[2] / "quick-dev-tdd-adapter" / "tools"
++        if str(tools) not in sys.path:
++            sys.path.insert(0, str(tools))
++        from q1_planned_preflight import validate_planned_preflight
++        for item in slices:
++            validate_planned_preflight(workspace=root, bundle=bundle,
++                slice_id=item["slice_id"], timeout_seconds=1800)
+         for item in slices:
+             absent = sorted(owner for owner in item["production_owners"]
+                             if owner in item["planned_new_files"] and not (root / owner).is_file())
+@@ -53,3 +62,89 @@
+             raise ValueError("execution preflight diagnostic collision")
+         result["diagnostic"] = {"path": path.relative_to(out_dir).as_posix(), "sha256": digest}
+     return result
++
++
++def inspect_admission(sc, root, requirements, companions=(), *, profile="standard",
++                      execution_profile="standard", recovery=None):
++    """ADR-0041: compose owning read-only checks; future contracts stay pending.
++
++    This result never publishes a plan or evaluates execution proof. An unfinished
++    native recovery still revalidates its content caches at their owning stages.
++    """
++    import ast
++    root = Path(root).resolve()
++    checks = {name: {"status": "pending"} for name in
++              ("inputs", "recovery", "dependencies", "quick_dev")}
++    checks["recovery"] = {"status": "not-selected"}
++    findings = []
++    result = {"schema": "vdd.admission.v1", "plan_profile": profile,
++              "execution_profile": execution_profile, "checks": checks,
++              "findings": findings, "authorizes": []}
++    try:
++        # The public compiler parser owns VDD profile admission.
++        for raw in [requirements, *companions]:
++            path = Path(raw)
++            path.resolve().relative_to(root)
++            if path.is_symlink() or not path.is_file():
++                raise ValueError("source is missing or unsafe: " + str(path))
++        source = sc.build_source_index(root, Path(requirements), companions)
++        source_result = sc.source_preflight(root, source)
++        checks["inputs"] = {"status": "passed" if source_result["valid"] else "blocked",
++                            "source_index_sha256": source["sha256"],
++                            "findings": source_result["findings"]}
++        if not source_result["valid"]:
++            raise ValueError("source preflight failed")
++        tools = root / ".agents/skills/quick-dev-tdd-adapter/tools"
++        # Do not execute the public CLI, import tests, or probe the environment.
++        # Resolve the real entry and the same consumer-owned pure reader instead.
++        for path in (root / "scripts/quick_dev/run.py", tools / "stable_runner.py",
++                     tools / "q1_planned_preflight.py"):
++            if path.is_symlink() or not path.is_file():
++                raise ValueError("Quick Dev entry is missing or unsafe: " + str(path))
++            ast.parse(path.read_text(encoding="utf-8-sig"))
++        if str(tools) not in sys.path:
++            sys.path.insert(0, str(tools))
++        from current_router import profile_contract
++        from q1_planned_preflight import validate_planned_preflight
++        profile_contract(execution_profile)
++        checks["quick_dev"] = {"status": "passed", "entry": "scripts/quick_dev/run.py",
++                               "consumer": "validate_planned_preflight"}
++        if recovery is not None:
++            recovery = Path(recovery)
++            recovery.resolve().relative_to(root)
++            if recovery.is_symlink() or not recovery.is_dir():
++                raise ValueError("selected recovery is missing or unsafe")
++            from semantic_compiler_gate import _completed_resume
++            from semantic_compiler_authority import _published_recall_matches_obligations
++            from semantic_chain_audit import audit_bundle
++            completed = _completed_resume(recovery, source_index_sha256=source["sha256"], profile=profile)
++            if completed is None:
++                # A partial candidate is not current plan authority. Syntax-check
++                # explicit current state if present; native caches retain ownership.
++                state = recovery / "compiler-state.v1.json"
++                if state.exists():
++                    value = json.loads(state.read_text(encoding="utf-8"))
++                    if not isinstance(value, dict):
++                        raise ValueError("selected recovery state is malformed")
++                    if value.get("state") == "plan-ready":
++                        raise ValueError("selected completed recovery is missing required artifacts")
++                checks["recovery"] = {"status": "pending", "reason": "native-candidate-revalidation-required"}
++            else:
++                if completed.get("status") != "plan-ready":
++                    raise ValueError(completed.get("reason", "selected recovery is invalid"))
++                if not _published_recall_matches_obligations(recovery):
++                    raise ValueError("selected recovery source recall is invalid")
++                bundle = json.loads((recovery / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
++                audit = audit_bundle(bundle)
++                if not audit["valid"]:
++                    raise ValueError("selected recovery semantic chain is invalid")
++                for item in bundle["slices"]:
++                    validate_planned_preflight(workspace=root, bundle=bundle,
++                        slice_id=item["slice_id"], timeout_seconds=1800, plan_dir=recovery)
++                checks["recovery"] = {"status": "passed", "plan_id": bundle["plan_id"]}
++                checks["dependencies"] = {"status": "passed", "scope": "selected-materialized-plan"}
++    except (OSError, UnicodeError, ValueError, KeyError, TypeError, ImportError, SyntaxError) as exc:
++        findings.append(str(exc))
++    result["status"] = ("blocked" if findings else "pending" if
++                        any(check["status"] == "pending" for check in checks.values()) else "passed")
++    return result
+--- .agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py
++++ .agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py
+@@ -260,6 +260,7 @@
+ def install_published_slice_partition(
+     predecessor: Mapping[str, Any],
+     obligation_replacements: Mapping[str, Any] | None = None,
++    *, dependency_revision: bool = False,
+ ) -> None:
+     """Freeze the predecessor Acceptance->slice partition for a published repair.
+ 
+@@ -404,6 +405,9 @@
+             result.append(materialize([(acceptance_by_id[aid], hint)], f"REPAIR-R{index}"))
+         if {aid for item in result for aid in item["acceptance_ids"]} != set(acceptance_by_id):
+             raise ValueError("published V3 repair slice partition does not cover all Acceptance")
++        if dependency_revision:
++            from execution_contract import bind_slice_dependencies, derive_slice_dependencies
++            bind_slice_dependencies(result, derive_slice_dependencies(obligations, result))
+         return result, hints_by_acceptance
+ 
+     group.sc.partition_slices = frozen_partition
+@@ -738,7 +742,8 @@
+ 
+ def load_repair(path: Path, requirements: Path) -> dict[str, Any]:
+     value = json.loads(path.read_text(encoding="utf-8"))
+-    if not isinstance(value, dict) or set(value) not in (
++    fields = set(value) - {"dependency_revision"} if isinstance(value, dict) else set()
++    if not isinstance(value, dict) or fields not in (
+         {"schema", "requirements_sha256", "authorizes", "obligation_contracts"},
+         {"schema", "requirements_sha256", "authorizes", "obligation_contracts",
+          "source_index_sha256", "test_path_replacements"},
+@@ -962,3 +967,92 @@
+     else:
+         group.sc.atomic_json(target, receipt)
+     return result
++
++
++def prepare_dependency_revision(correction, predecessor):
++    """ADR-0041: only explicit edges may change under this published repair input.
++
++    Source and semantic authority remain the published loader and a new V4.
++    This input cannot replace requirements, oracles, runtime roles or write scope.
++    """
++    from execution_contract import dependency_revision_impact
++    value = correction.get('dependency_revision')
++    if not isinstance(value, dict) or set(value) != {'predecessor_sha256', 'source_index_sha256', 'changes'}:
++        raise ValueError('dependency revision fields are invalid')
++    bundle = predecessor['bundle']
++    if value['predecessor_sha256'] != group.sc.sha256_value(bundle):
++        raise ValueError('dependency revision predecessor identity is stale')
++    if value['source_index_sha256'] != predecessor['source_index']['sha256']:
++        raise ValueError('dependency revision source identity is stale')
++    changes = value['changes']
++    if not isinstance(changes, list) or not changes:
++        raise ValueError('dependency revision requires explicit changes')
++    prior = {o['obligation_id']: o for o in bundle['obligations']}
++    revised = deepcopy(prior)
++    selected = set()
++    for change in changes:
++        if (not isinstance(change, dict) or set(change) != {'obligation_id', 'old_depends_on', 'new_depends_on'}
++                or not isinstance(change['obligation_id'], str)):
++            raise ValueError('dependency revision change fields are invalid')
++        oid = change['obligation_id']
++        if oid not in prior or oid in selected:
++            raise ValueError('dependency revision target is unknown or duplicated')
++        selected.add(oid)
++        if (change['old_depends_on'] != prior[oid].get('depends_on', [])
++                or (isinstance(change['new_depends_on'], list)
++                    and all(isinstance(dep, str) for dep in change['new_depends_on'])
++                    and set(change['new_depends_on']) == set(change['old_depends_on']))):
++            raise ValueError('dependency revision old edges differ or change is empty')
++        revised[oid]['depends_on'] = deepcopy(change['new_depends_on'])
++    # A dependency-only request may repeat existing V3 bytes for its selected
++    # objects; it cannot combine an oracle/write/role repair under this permission.
++    if set(correction['obligation_contracts']) != selected:
++        raise ValueError('dependency revision contracts must exactly name changed obligations')
++    raw = project_published_v3(bundle)
++    expected = {}
++    for oid in selected:
++        acceptance = next(x for x in raw['acceptances'] if x['obligation_ids'] == [oid])
++        hint = next(x for x in raw['slice_hints'] if x['obligation_ids'] == [oid])
++        expected[oid] = {'acceptance': {k: v for k, v in acceptance.items() if k != 'obligation_ids'},
++                         'failure_intents': [{k: v for k, v in f.items() if k != 'obligation_ids'}
++                                             for f in raw['failure_intents'] if f['obligation_ids'] == [oid]],
++                         'slice_hint': {k: v for k, v in hint.items() if k != 'obligation_ids'}}
++        # Native authoring normally omits deterministic Acceptance IDs.
++        supplied = deepcopy(correction['obligation_contracts'][oid])
++        supplied['acceptance'].pop('acceptance_id', None)
++        expected[oid]['acceptance'].pop('acceptance_id', None)
++        if supplied != expected[oid]:
++            raise ValueError('dependency revision has unrelated contract drift: ' + oid)
++    obligations = [revised[o['obligation_id']] for o in bundle['obligations']]
++    impact = dependency_revision_impact(bundle['obligations'], obligations, bundle['slices'])
++    return {'obligations': obligations, 'impact': impact, 'input': deepcopy(value), 'authorizes': []}
++
++
++def install_dependency_revision(predecessor, revision):
++    """Rebind only the reused V1 edge fields; every downstream stage stays live."""
++    original = group.sc.compile_obligations
++    expected = predecessor['bundle']['obligations']
++    def revised_obligations(**kwargs):
++        values = original(**kwargs)
++        if ({o['obligation_id']: o for o in values} != {o['obligation_id']: o for o in expected}
++                or kwargs['source_index']['sha256'] != revision['input']['source_index_sha256']):
++            raise ValueError('dependency revision reused V1 input drift')
++        return deepcopy(revision['obligations'])
++    group.sc.compile_obligations = revised_obligations
++
++
++def check_dependency_revision(predecessor, successor, revision):
++    """Reject all drift except the declared V1 relations and derived slice IDs."""
++    expected = deepcopy(predecessor)
++    expected['obligations'] = deepcopy(revision['obligations'])
++    check_unaffected_published_semantics(expected, successor, set())
++    old_slices = {s['slice_id']: s for s in predecessor['slices']}
++    new_slices = {s['slice_id']: s for s in successor['slices']}
++    if set(old_slices) != set(new_slices) or predecessor['agent_contexts'] != successor['agent_contexts']:
++        raise ValueError('dependency revision changed slice membership or consumer context')
++    for sid, old in old_slices.items():
++        current = new_slices[sid]
++        if ({k: v for k, v in old.items() if k not in {'depends_on', 'slice_input_hash'}}
++                != {k: v for k, v in current.items() if k not in {'depends_on', 'slice_input_hash'}}
++                or current.get('depends_on') != revision['impact']['new_slice_dependencies'][sid]):
++            raise ValueError('dependency revision has unrelated slice drift: ' + sid)
+--- /dev/null
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py
+@@ -0,0 +1,159 @@
++"""ADR-0041: public bounded admission, with real owning readers and no execution."""
++from contextlib import redirect_stdout, redirect_stderr
++from copy import deepcopy
++import io
++import json
++from pathlib import Path
++import shutil
++import sys
++import tempfile
++from unittest import mock
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[5]
++for directory in (ROOT, ROOT / 'scripts', ROOT / '.agents/skills/vdd-execution-plan/scripts'):
++    sys.path.insert(0, str(directory))
++from scripts.vdd import compile_plan as cli
++import execution_preflight
++from scripts.toolchain.knowledge_query import adapter
++
++PLAN = ROOT / 'execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary'
++REQUIREMENTS = ROOT / 'docs/2026-10-26-toolchain-light-optimizations-requirements-v3.md'
++
++
++def expect(condition, failure_id):
++    if not condition:
++        print('FAILURE_ID:' + failure_id)
++    assert condition, failure_id
++
++
++def invoke(out, *, source=REQUIREMENTS, profile='standard', extra=()):
++    args = ['compile_plan.py', '--requirements', str(source), '--out-dir', str(out),
++            '--profile', profile, *extra]
++    stdout, stderr = io.StringIO(), io.StringIO()
++    advisory = {'status': 'disabled', 'queried': False, 'authorizes': [], 'query_result': {'read_set': []}}
++    with mock.patch.object(sys, 'argv', args), mock.patch.object(adapter, 'prepare_consumption', return_value=advisory) as query, mock.patch.object(cli.semantic_compiler, 'invoke_worker') as worker, redirect_stdout(stdout), redirect_stderr(stderr):
++        try:
++            rc = cli.main()
++        except SystemExit as exc:
++            rc = exc.code
++    lines = stdout.getvalue().splitlines()
++    result = json.loads(lines[-1]) if lines else {'status': 'cli-rejected'}
++    return rc, result, worker.call_count, query.call_count
++
++
++def admission(out, **kwargs):
++    return invoke(out, extra=['--admission-only', *kwargs.pop('extra', ())], **kwargs)
++
++
++@pytest.fixture
++def local():
++    with tempfile.TemporaryDirectory(dir=ROOT / 'logs', prefix='light-admission-') as name:
++        yield Path(name)
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-03FC732FF336')
++def test_light_3151dcccab85(local):
++    # Existing recommendation is a real public read-only route, not a test stub.
++    rc, result, workers, _ = invoke(local / 'out', extra=['--recommendation-only'])
++    value = result.get('admission', {})
++    expect(rc == 0 and set(value.get('checks', {})) == {'inputs', 'recovery', 'dependencies', 'quick_dev'}
++           and value.get('authorizes') == [] and workers == 0, 'LIGHT-03FC732FF336')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-D10FAB14076E')
++@pytest.mark.parametrize('defect', ['missing', 'corrupt', 'recovery-source', 'recovery-bundle', 'recovery-missing-bundle', 'consumer'])
++def test_light_1622025eedfb(local, defect):
++    source = REQUIREMENTS
++    extra = []
++    out = local / 'out'
++    if defect in {'missing', 'corrupt'}:
++        source = local / 'requirements.md'
++        if defect == 'corrupt':
++            source.write_bytes(b'\xff')
++    if defect.startswith('recovery'):
++        shutil.copytree(PLAN, out)
++        extra = ['--resume-from', 'first-failed-stage']
++        path = out / ('source-index.v1.json' if defect == 'recovery-source' else 'semantic-plan-bundle.v1.json')
++        if defect == 'recovery-missing-bundle':
++            path.unlink()
++        else:
++            value = json.loads(path.read_text())
++            value['sha256' if defect == 'recovery-source' else 'plan_id'] = 'wrong-current-identity'
++            path.write_text(json.dumps(value))
++    original_is_file = Path.is_file
++    def visible(path):
++        if defect == 'consumer' and path == ROOT / 'scripts/quick_dev/run.py':
++            return False
++        return original_is_file(path)
++    with mock.patch.object(Path, 'is_file', visible):
++        rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if defect.startswith('recovery') else 'standard', extra=extra)
++    expect(rc != 0 and result.get('admission', {}).get('status') == 'blocked' and workers == queries == 0,
++           'LIGHT-D10FAB14076E')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-D33AF6125B46')
++@pytest.mark.parametrize('plan_profile,execution,allowed', [('resumable', 'standard', True), ('standard', 'fast-ship', True), ('self-hosted', 'standard', True), ('standard', 'resumable', False)])
++def test_light_51007ee5cc9c(local, plan_profile, execution, allowed):
++    rc, result, _, _ = admission(local / 'out', profile=plan_profile, extra=['--execution-profile', execution])
++    value = result.get('admission', {})
++    expect((rc == 0) == allowed and value.get('plan_profile') == plan_profile
++           and value.get('execution_profile') == execution and value.get('status') == ('pending' if allowed else 'blocked'),
++           'LIGHT-D33AF6125B46')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-EE30987A8DDE')
++@pytest.mark.parametrize('kind', ['valid', 'invalid', 'recovery', 'handoff-mode'])
++def test_light_964924bbdac1(local, kind):
++    source, out, extra = REQUIREMENTS, local / 'out', []
++    if kind == 'invalid':
++        source = local / 'missing.md'
++    if kind == 'recovery':
++        shutil.copytree(PLAN, out)
++        extra = ['--resume-from', 'first-failed-stage']
++    if kind == 'handoff-mode':
++        prior = local / 'predecessor'
++        shutil.copytree(PLAN, prior)
++        extra = ['--repair-quick-dev-handoff-from', str(prior)]
++    before = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
++    with mock.patch.object(cli, 'compile_plan') as compiler:
++        rc, result, workers, queries = admission(out, source=source, profile='self-hosted' if kind == 'recovery' else 'standard', extra=extra)
++    after = {str(p.relative_to(local)): p.read_bytes() for p in local.rglob('*') if p.is_file()}
++    untouched = workers == queries == compiler.call_count == 0 and before == after
++    if kind == 'handoff-mode':
++        expect(rc != 0 and untouched and not out.exists(), 'LIGHT-EE30987A8DDE')
++    else:
++        expect('admission' in result and untouched
++               and (kind == 'recovery' or not (out / 'compiler-state.v1.json').exists()),
++               'LIGHT-EE30987A8DDE')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-6BE79070B34A')
++def test_light_6c636a19f2df(local):
++    # Admission composes the existing source owner and leaves later compiler gates owned.
++    sc = cli.semantic_compiler
++    original = sc.source_preflight
++    with mock.patch.object(sc, 'source_preflight', wraps=original) as source_check, mock.patch.object(cli, 'compile_plan', return_value={'status': 'repair-vdd', 'stage': 'V3-execution-preflight'}) as compiler:
++        rc, result, workers, _ = invoke(local / 'out')
++    expect(source_check.call_count >= 1 and compiler.call_count == 1 and result.get('stage') == 'V3-execution-preflight'
++           and rc != 0 and result.get('admission', {}).get('status') == 'pending' and workers == 0,
++           'LIGHT-6BE79070B34A')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-EB921B27E2BA')
++def test_light_c660ed94c51c(local):
++    config = ROOT / 'scripts/sc/model_config.py'
++    before = config.read_bytes()
++    rc, result, workers, queries = admission(local / 'out')
++    expect(rc == 0 and result.get('admission', {}).get('authorizes') == [] and workers == queries == 0
++           and config.read_bytes() == before, 'LIGHT-EB921B27E2BA')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-B96B2954D606')
++def test_light_112e17a2606e(local):
++    rc, result, _, _ = admission(local / 'out')
++    value = result.get('admission', {})
++    expect(rc == 0 and value.get('status') == 'pending' and value.get('checks', {}).get('dependencies', {}).get('status') == 'pending'
++           and value.get('checks', {}).get('recovery', {}).get('status') == 'not-selected'
++           and result.get('status') != 'plan-ready' and not (local / 'out').exists(), 'LIGHT-B96B2954D606')
+--- /dev/null
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py
+@@ -0,0 +1,53 @@
++"""ADR-0041: characterize retained delivery guards without synthetic RED."""
++from contextlib import redirect_stdout
++import inspect
++import io
++import json
++from pathlib import Path
++import sys
++import tempfile
++from unittest import mock
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[5]
++sys.path.insert(0, str(ROOT))
++sys.path.insert(0, str(ROOT / 'scripts'))
++from scripts.vdd import compile_plan as cli
++from execution_contract import ownerless_guard
++from workflow_unit_budget import Budget, supervise
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-9ECB9EABF5D9')
++def test_light_d353d902f43c():
++    plan = ROOT / 'execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready'
++    bundle = json.loads((plan / 'semantic-plan-bundle.v1.json').read_text())
++    guard = next(s for s in bundle['slices'] if s['slice_id'] == 'S1')
++    obligations = [o for o in bundle['obligations'] if o['obligation_id'] in guard['obligation_ids']]
++    failures = [f for f in bundle['failure_intents'] if f['failure_intent_id'] in guard['failure_intent_ids']]
++    assert ownerless_guard(guard, obligations, failures)
++    assert {f['failure_family'] for f in failures} == {'artifact-integrity'}
++    assert len(bundle['obligations']) == len(bundle['acceptances']) == len(bundle['failure_intents']) == 24
++    for item in bundle['slices']:
++        assert set(item['production_owners']) <= set(item['allowed_write_paths'])
++        assert not set(item['production_owners']) & set(item['execution_snapshot_paths'])
++        assert all(not p.startswith(('PhaseA.Platform', 'runtime/phase-a')) for p in item['allowed_write_paths'])
++        context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == item['slice_id'])
++        assert context['validation_commands'] and all(isinstance(a, list) and a for a in context['validation_commands'])
++    budget = Budget()
++    assert (budget.total, budget.idle) == (1800, 600)
++    defaults = inspect.signature(supervise).parameters
++    assert defaults['total'].default == 1800 and defaults['idle'].default == 600
++    # Exercise the real public compiler's rejection path with a missing input.
++    # The advisory query is an isolated dependency; it is not feature authority.
++    from scripts.toolchain.knowledge_query import adapter
++    with tempfile.TemporaryDirectory(dir=ROOT / 'logs', prefix='light-guard-') as name:
++        temporary = Path(name)
++        args = ['compile_plan.py', '--requirements', str(temporary / 'missing.md'), '--out-dir', str(temporary / 'out')]
++        advisory = {'status': 'disabled', 'queried': False, 'authorizes': [], 'query_result': {'read_set': []}}
++        original = (plan / 'semantic-plan-bundle.v1.json').read_bytes()
++        with mock.patch.object(sys, 'argv', args), mock.patch.object(adapter, 'prepare_consumption', return_value=advisory), mock.patch.object(cli.semantic_compiler, 'invoke_worker') as worker, redirect_stdout(io.StringIO()):
++            result = cli.main()
++        assert result != 0 and worker.call_count == 0
++        assert not (temporary / 'out/compiler-state.v1.json').exists()
++        assert (plan / 'semantic-plan-bundle.v1.json').read_bytes() == original
+--- /dev/null
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py
+@@ -0,0 +1,264 @@
++"""ADR-0041: bounded source-stable dependency revision, never execution authority."""
++from contextlib import ExitStack, redirect_stdout, redirect_stderr
++from copy import deepcopy
++import hashlib
++import io
++import json
++from pathlib import Path
++import shutil
++import sys
++import tempfile
++from unittest import mock
++
++import pytest
++
++ROOT = Path(__file__).resolve().parents[5]
++for path in (ROOT, ROOT / 'scripts', ROOT / '.agents/skills/vdd-execution-plan/scripts'):
++    sys.path.insert(0, str(path))
++from scripts.vdd import compile_plan as cli
++import execution_contract as graph
++import semantic_compiler as sc
++import semantic_v3_contract_repair as repair
++from quick_dev_handoff import repair_runtime_red_roles, semantic_projection
++from scripts.toolchain.knowledge_query import adapter
++
++PLAN = ROOT / 'execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary'
++REQ = ROOT / 'docs/2026-10-26-toolchain-light-optimizations-requirements-v3.md'
++
++
++def expect(value, fid):
++    if not value:
++        print('FAILURE_ID:' + fid)
++    assert value, fid
++
++
++def manifest(path):
++    return {p.relative_to(path).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
++            for p in path.rglob('*') if p.is_file()}
++
++
++@pytest.fixture
++def setup_revision():
++    with tempfile.TemporaryDirectory(dir=ROOT / 'logs', prefix='light-revision-') as name:
++        root = Path(name)
++        prior = root / 'predecessor'
++        shutil.copytree(PLAN, prior)
++        bundle = json.loads((prior / 'semantic-plan-bundle.v1.json').read_text())
++        # Within FR-3, validating fresh gates depends on the exact input binding.
++        # This is a controlled compiler fixture, not a revision of our running plan.
++        oid = next(o['obligation_id'] for o in bundle['obligations'] if o['subject'] == 'Fresh semantic dependency gates')
++        dep = next(o['obligation_id'] for o in bundle['obligations'] if o['subject'] == 'Explicit dependency revision input binding')
++        source = json.loads((prior / 'source-index.v1.json').read_text())
++        raw = repair.project_published_v3(bundle)
++        contracts = {}
++        for field, key in [('acceptances', 'acceptance'), ('failure_intents', 'failure_intents'), ('slice_hints', 'slice_hint')]:
++            entries = [x for x in raw[field] if x['obligation_ids'] == [oid]]
++            if key == 'failure_intents':
++                contracts[key] = [{k: v for k, v in x.items() if k != 'obligation_ids'} for x in entries]
++            else:
++                contracts[key] = {k: v for k, v in entries[0].items() if k != 'obligation_ids'}
++        value = {'schema': 'vdd.v3-candidate-repair.v1',
++                 'requirements_sha256': 'sha256:' + hashlib.sha256(REQ.read_bytes()).hexdigest(),
++                 'authorizes': [], 'obligation_contracts': {oid: contracts},
++                 'dependency_revision': {'predecessor_sha256': sc.sha256_value(bundle),
++                     'source_index_sha256': source['sha256'],
++                     'changes': [{'obligation_id': oid, 'old_depends_on': [], 'new_depends_on': [dep]}]}}
++        yield root, prior, bundle, value
++
++
++def public(fixture, *, value=None, successor=None, valid_v4=True):
++    root, prior, bundle, original = fixture
++    value = deepcopy(original if value is None else value)
++    correction = root / 'correction.json'
++    correction.write_text(json.dumps(value))
++    successor = root / 'successor' if successor is None else successor
++    argv = ['compile_plan.py', '--requirements', str(REQ), '--out-dir', str(successor),
++            '--profile', 'self-hosted', '--repair-published-v3-from', str(prior),
++            '--v3-contract-repair', str(correction)]
++    calls = []
++    def model(**kwargs):
++        stage, data = kwargs['stage'], kwargs['payload']
++        calls.append(stage)
++        while isinstance(data.get('input'), dict):
++            data = data['input']
++        if 'source-gap' in stage:
++            return {'source_gap_claims': []}
++        ids = [o['obligation_id'] for o in data.get('obligations', []) if o.get('status') == 'active']
++        if 'atomic-recall' in stage:
++            return {'supported_obligation_ids': ids, 'invented_obligation_ids': [], 'source_gap_claims': []}
++        if stage.startswith('v4'):
++            return {'covered_obligation_ids': ids if valid_v4 else [],
++                    'missing_obligation_ids': [] if valid_v4 else ids,
++                    'invented_obligation_ids': [], 'misaligned_acceptance_ids': [],
++                    'oracle_alignment': {a['acceptance_id']: 'aligned' for a in data.get('acceptances', [])}, 'repairs': []}
++        raise AssertionError('Unchanged generation unexpectedly invoked: ' + stage)
++    out, err = io.StringIO(), io.StringIO()
++    advisory = {'status': 'disabled', 'queried': False, 'authorizes': [], 'query_result': {'read_set': []}}
++    with ExitStack() as stack:
++        for obj, attr in ((sc, 'compile_obligations'), (sc, 'partition_slices'), (sc, 'semantic_align'),
++                          (sc, '_v1_reuse_predecessor_plan'), (repair.group.gate, '_resolved_atomic_recall_worker')):
++            stack.enter_context(mock.patch.object(obj, attr, getattr(obj, attr)))
++        stack.enter_context(mock.patch.object(sc, 'invoke_worker', side_effect=model))
++        stack.enter_context(mock.patch.object(adapter, 'prepare_consumption', return_value=advisory))
++        stack.enter_context(mock.patch.object(sys, 'argv', argv))
++        with redirect_stdout(out), redirect_stderr(err):
++            try:
++                rc = cli.main()
++            except SystemExit as exc:
++                rc = exc.code
++    lines = out.getvalue().splitlines()
++    result = json.loads(lines[-1]) if lines else {'reason': err.getvalue(), 'status': 'cli-rejected'}
++    return rc, result, calls, successor
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-6F1AEDA1DBC8')
++@pytest.mark.parametrize('drift', ['none', 'predecessor', 'source', 'old-edges'])
++def test_light_e8c955695910(setup_revision, drift):
++    root, prior, bundle, value = setup_revision
++    path = root / 'input.json'
++    if drift == 'predecessor':
++        value['dependency_revision']['predecessor_sha256'] = 'sha256:' + '0' * 64
++    if drift == 'source':
++        value['dependency_revision']['source_index_sha256'] = 'sha256:' + '0' * 64
++    if drift == 'old-edges':
++        value['dependency_revision']['changes'][0]['old_depends_on'] = ['O-NOT-OLD']
++    path.write_text(json.dumps(value))
++    accepted = False
++    try:
++        loaded = repair.load_repair(path, REQ)
++        prepare = getattr(repair, 'prepare_dependency_revision', None)
++        if prepare:
++            prepare(loaded, {'bundle': bundle, 'source_index': json.loads((prior / 'source-index.v1.json').read_text())})
++            accepted = True
++    except ValueError:
++        pass
++    expect(accepted == (drift == 'none'), 'LIGHT-6F1AEDA1DBC8')
++
++
++def graphs():
++    old = [{'obligation_id': 'O-A', 'depends_on': []}, {'obligation_id': 'O-B', 'depends_on': ['O-A']},
++           {'obligation_id': 'O-C', 'depends_on': ['O-B']}, {'obligation_id': 'O-D', 'depends_on': []}]
++    slices = [{'slice_id': name, 'obligation_ids': ['O-' + name]} for name in 'ABCD']
++    new = deepcopy(old)
++    new[1]['depends_on'] = []
++    return old, new, slices
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-8B877C540FC4')
++@pytest.mark.parametrize('side', ['old', 'new'])
++@pytest.mark.parametrize('defect', ['unknown', 'duplicate', 'dangling', 'cycle'])
++def test_light_c88bf08ef42b(side, defect):
++    old, new, slices = graphs()
++    target = old if side == 'old' else new
++    if defect == 'unknown':
++        target[0]['depends_on'] = ['FR-UNKNOWN']
++    if defect == 'duplicate':
++        target[2]['depends_on'] = ['O-B', 'O-B']
++    if defect == 'dangling':
++        target[0]['depends_on'] = ['O-ABSENT']
++    if defect == 'cycle':
++        target[0]['depends_on'] = ['O-C']; target[1]['depends_on'] = ['O-A']
++    function = getattr(graph, 'dependency_revision_impact', None)
++    rejected = False
++    if function:
++        try:
++            function(old, new, slices)
++        except ValueError:
++            rejected = True
++    expect(rejected, 'LIGHT-8B877C540FC4')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-2768B5FD436D')
++@pytest.mark.parametrize('operation', ['remove', 'add', 'reorder'])
++def test_light_b0f66ffcfc79(operation):
++    old, new, slices = graphs()
++    if operation == 'add':
++        old, new = new, old
++    if operation == 'reorder':
++        old[2]['depends_on'] = ['O-A', 'O-B']
++        new = deepcopy(old)
++        new[2]['depends_on'].reverse()
++    function = getattr(graph, 'dependency_revision_impact', None)
++    result = function(old, new, slices) if function else {}
++    expected_slices, expected_ids = ([], []) if operation == 'reorder' else (['B', 'C'], ['O-B'])
++    expect(result.get('affected_slices') == expected_slices and result.get('changed_obligation_ids') == expected_ids, 'LIGHT-2768B5FD436D')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-0CC55D3C196E')
++@pytest.mark.parametrize('field', ['requirements', 'oracle', 'owners', 'writes', 'selector', 'terminal', 'failure'])
++def test_light_7f086cf4da00(setup_revision, field):
++    root, prior, bundle, value = setup_revision
++    before = manifest(prior)
++    contract = next(iter(value['obligation_contracts'].values()))
++    if field == 'requirements':
++        value['requirements_sha256'] = 'sha256:' + '0' * 64
++    elif field == 'oracle':
++        contract['acceptance']['then'] = 'unapproved'
++    elif field in {'owners', 'writes'}:
++        contract['slice_hint']['production_owners' if field == 'owners' else 'allowed_write_paths'] = ['scripts/sc/_llm_backend.py']
++    elif field == 'selector':
++        contract['slice_hint']['validation_commands'] = [['python', '-m', 'pytest', 'unapproved.py']]
++    elif field == 'terminal':
++        contract['slice_hint']['terminal_predicate'] = 'unapproved'
++    else:
++        contract['failure_intents'][0]['failure_id'] = 'UNAPPROVED'
++    rc, result, _, out = public(setup_revision)
++    expect(rc != 0 and result.get('status') != 'plan-ready' and not (out / 'compiler-state.v1.json').exists()
++           and before == manifest(prior), 'LIGHT-0CC55D3C196E')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-1268DA5EAF2C')
++@pytest.mark.parametrize('valid', [True, False])
++def test_light_008838d2f51b(setup_revision, valid):
++    rc, result, calls, _ = public(setup_revision, valid_v4=valid)
++    expect(any(s.startswith('v4') for s in calls) and ((rc == 0 and result.get('status') == 'plan-ready') == valid),
++           'LIGHT-1268DA5EAF2C')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-18D1FC191242')
++@pytest.mark.parametrize('output', ['valid', 'same', 'nonempty', 'outside'])
++def test_light_cbed8d28dd7b(setup_revision, output):
++    root, prior, bundle, value = setup_revision
++    before = manifest(prior)
++    out = root / 'successor'
++    if output == 'same': out = prior
++    if output == 'nonempty':
++        out.mkdir(); (out / 'preserve').write_text('preserve')
++    if output == 'outside': out = root / 'nested/successor'
++    rc, result, _, _ = public(setup_revision, successor=out)
++    expect(before == manifest(prior) and ((rc == 0 and result.get('status') == 'plan-ready') == (output == 'valid')),
++           'LIGHT-18D1FC191242')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-F6C303667A95')
++def test_light_eb373fbd3f25(setup_revision):
++    _, _, bundle, _ = setup_revision
++    prior = deepcopy(bundle)
++    intent = next(f for f in prior['failure_intents'] if f['failure_family'] == 'expected-red')
++    intent['failure_family'] = 'artifact-integrity'
++    changed, report = repair_runtime_red_roles(prior, [intent['failure_intent_id']])
++    expect(semantic_projection(changed) == semantic_projection(prior)
++           and all(f in changed['failure_intents'] for f in prior['failure_intents'])
++           and len(changed['failure_intents']) == len(prior['failure_intents']) + 1,
++           'LIGHT-F6C303667A95')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-52B78C7AFF3E')
++def test_light_c20a9174d21a(setup_revision):
++    root, prior, _, _ = setup_revision
++    historical = prior / 'historical-execution.json'
++    historical.write_text('{"historical":true}')
++    before = manifest(prior)
++    rc, result, calls, out = public(setup_revision)
++    expect(rc == 0 and result.get('status') == 'plan-ready' and calls and all(s.startswith('v4') for s in calls)
++           and before == manifest(prior) and not (out / historical.name).exists(), 'LIGHT-52B78C7AFF3E')
++
++
++@pytest.mark.cer_assertion('ASSERT-LIGHT-CA6D769917C2')
++def test_light_9b9f1488f81b(setup_revision):
++    root, prior, _, value = setup_revision
++    value['unapproved_semantic_authority'] = True
++    before = manifest(prior)
++    rc, result, calls, out = public(setup_revision)
++    expect(rc != 0 and 'fields are invalid' in result.get('reason', '') and before == manifest(prior)
++           and not (out / 'compiler-state.v1.json').exists(), 'LIGHT-CA6D769917C2')
+--- .agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py
+@@ -30,6 +30,12 @@
+     _, req, owner, selector = _repo(root)
+     shutil.copytree(SCRIPTS, root / '.agents/skills/vdd-execution-plan/scripts',
+                     ignore=shutil.ignore_patterns('tests', '__pycache__'))
++    # ADR-0041: use the actual shared consumer in the isolated public repo.
++    shutil.copytree(REPO / '.agents/skills/quick-dev-tdd-adapter/tools',
++                    root / '.agents/skills/quick-dev-tdd-adapter/tools',
++                    ignore=shutil.ignore_patterns('tests', '__pycache__'))
++    shutil.copytree(REPO / 'scripts/quick_dev', root / 'scripts/quick_dev',
++                    ignore=shutil.ignore_patterns('__pycache__'))
+     for name in ('vdd/compile_plan.py', 'workflow_unit_budget.py',
+                  'sc/_llm_backend.py', 'sc/model_config.py', 'sc/host_session.py'):
+         target = root / 'scripts' / name
+--- .agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py
+@@ -16,6 +16,7 @@
+ import semantic_compiler as sc
+ import semantic_compiler_authority as authority
+ import semantic_v3_contract_repair as repair
++from scripts.toolchain.knowledge_query import adapter
+ 
+ 
+ ROOT = Path(__file__).resolve().parents[5]
+@@ -27,6 +28,22 @@
+     "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/"
+     "repair/round-7/recompilation-4/assembled-requirements.md"
+ )
++INDEX = ROOT / (
++    "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md"
++)
++
++
++def advisory_fixture(location: Path, *, directory: bool = False) -> dict:
++    """Use real file inputs for advice; frozen compiler requirements stay intact."""
++    context = location / "planning-context.md"
++    asset = INDEX.parent.relative_to(ROOT).as_posix() + "/" if directory else INDEX.relative_to(ROOT).as_posix()
++    requirements = REQUIREMENTS.relative_to(ROOT).as_posix()
++    context.write_text(
++        "# Published V3 advisory fixture\n\n"
++        f"Frozen normative requirements: `{requirements}`.\n"
++        f"Existing asset: `{asset}`.\n", encoding="utf-8")
++    relative = context.relative_to(ROOT).as_posix()
++    return {"inputs": [relative], "scope": [relative, requirements]}
+ 
+ 
+ def test_real_0805_predecessor_reuses_v3_but_invokes_v4() -> None:
+@@ -91,7 +108,23 @@
+                 "--published-v1-gap-extension",
+                 str(PLAN.parent.parent / "published-v1-fr4-probe-outcomes.json")]
+         output = io.StringIO()
++        advisory = advisory_fixture(Path(location))
++        actual_prepare = adapter.prepare_consumption
++
++        def prepare_advice(payload, root):
++            # This test isolates the advisory dependency, not source/V4 identity.
++            assert payload["inputs"] == [REQUIREMENTS.relative_to(ROOT).as_posix()]
++            prepared = actual_prepare({**payload, **advisory}, root)
++            assert prepared["status"] == "prepared" and prepared["authorizes"] == []
++            reads = {item["path"]: item["sha256"] for item in prepared["query_result"]["read_set"]}
++            for path in (REQUIREMENTS, INDEX):
++                assert reads[path.relative_to(ROOT).as_posix()] == hashlib.sha256(path.read_bytes()).hexdigest()
++            return prepared
++
+         with (mock.patch.object(sc, "invoke_worker", side_effect=underlying_worker),
++              mock.patch.object(adapter, "prepare_consumption", side_effect=prepare_advice),
++              mock.patch.object(repair.group.gate, "_resolved_atomic_recall_worker",
++                                repair.group.gate._resolved_atomic_recall_worker),
+               mock.patch.object(sc, "semantic_align", sc.semantic_align),
+               mock.patch.object(sc, "compile_obligations", sc.compile_obligations),
+               mock.patch.object(sc, "_v1_reuse_predecessor_plan", sc._v1_reuse_predecessor_plan),
+@@ -102,6 +135,28 @@
+         assert calls == []
+         assert json.loads(output.getvalue())["stage"] == "V4"
+         assert not (successor / "compiler-state.v1.json").exists()
++
++
++def test_advisory_directory_reference_remains_denied() -> None:
++    with tempfile.TemporaryDirectory(dir=ROOT / "logs") as location:
++        request = {"stage": "vdd-repair", "operation": "repair",
++                   "task_id": Path(location).relative_to(ROOT).as_posix(),
++                   "query": "current source callers tests contracts",
++                   **advisory_fixture(Path(location), directory=True)}
++        with __import__("pytest").raises(ValueError, match="^consumption_reference_denied$"):
++            adapter.prepare_consumption(request, ROOT)
++        assert not (Path(location) / "compiler-state.v1.json").exists()
++
++
++def test_unchanged_historical_advisory_input_remains_denied() -> None:
++    # Legalizing this test's advisory boundary does not approve the old raw input.
++    original = REQUIREMENTS.read_bytes()
++    relative = REQUIREMENTS.relative_to(ROOT).as_posix()
++    with __import__("pytest").raises(ValueError, match="^consumption_reference_denied$"):
++        adapter.prepare_consumption({"stage": "vdd-repair", "operation": "repair",
++            "task_id": "published-v3-historical-input", "inputs": [relative],
++            "scope": [relative], "query": "current source callers tests contracts"}, ROOT)
++    assert REQUIREMENTS.read_bytes() == original
+ 
+ 
+ def test_published_v3_repair_stops_at_new_v4_source_gap() -> None:
+--- .agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py
++++ .agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py
+@@ -155,7 +155,7 @@
+     root = tmp_path / 'repo'
+     for directory in ['.agents/skills/vdd-execution-plan/scripts', 'scripts/vdd']:
+         shutil.copytree(ROOT / directory, root / directory, ignore=shutil.ignore_patterns('__pycache__', 'tests'))
+-    files = ['AGENTS.md', str(SCOPE / 'assembled-requirements.md')]
++    files = ['AGENTS.md', 'scripts/workflow_unit_budget.py', str(SCOPE / 'assembled-requirements.md')]
+     files += [str(PRIOR / name) for name in ['source-index.v1.json', 'compiler-state.v1.json',
+         'semantic-plan-bundle.v1.json', 'semantic-alignment.v1.json', 'atomic-recall-alignment.v1.json']]
+     for item in original()['slices']:
+--- scripts/vdd/compile_plan.py
++++ scripts/vdd/compile_plan.py
+@@ -13,7 +13,7 @@
+ 
+ ROOT = Path(__file__).resolve().parents[2]
+ sys.path.insert(0, str(ROOT / "scripts"))
+-if __name__ == "__main__":
++if __name__ == "__main__" and "--admission-only" not in sys.argv:
+     from workflow_unit_budget import public_entry
+     supervised_exit = public_entry("vdd", ROOT, sys.argv)
+     if supervised_exit is not None:
+@@ -139,6 +139,10 @@
+                         help="Split one explicitly reviewed source-bound V1 obligation into two complete contracts")
+     parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
+     parser.add_argument("--recommendation-only", action="store_true")
++    parser.add_argument("--admission-only", action="store_true",
++                        help="Read-only source/recovery/consumer admission; future contracts remain pending")
++    parser.add_argument("--execution-profile", default="standard",
++                        help="Independent Quick Dev execution profile, checked by its owning policy")
+     parser.add_argument("--stop-after", choices=("v3",),
+                         help="Pause normally after V3, V3A and execution preflight; never enter V4")
+     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
+@@ -173,6 +177,8 @@
+     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
+                         help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
+     args = parser.parse_args()
++    if args.admission_only and args.repair_quick_dev_handoff_from:
++        parser.error("admission-only cannot combine handoff publication")
+     if args.handoff_static_primary_slice and (not args.repair_quick_dev_handoff_from
+             or args.handoff_planned_test or args.runtime_red_intent or args.handoff_windows_launcher_slice
+             or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
+@@ -248,6 +254,7 @@
+     extension = None
+     replacement = None
+     split = None
++    dependency_revision = None
+     if args.repair_published_v3_from:
+         import semantic_v3_contract_repair as candidate_repair
+         try:
+@@ -258,8 +265,16 @@
+             correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
+             if args.v3_contract_repair_addendum:
+                 extra = candidate_repair.load_repair(args.v3_contract_repair_addendum, args.requirements)
++                if "dependency_revision" in extra:
++                    raise ValueError("dependency revision cannot be supplied as an addendum")
+                 correction = {**correction, "obligation_contracts": {
+                     **correction["obligation_contracts"], **extra["obligation_contracts"]}}
++            if "dependency_revision" in correction:
++                if any((args.published_v1_gap_extension, args.published_v1_replacement,
++                        args.published_v1_split, args.v3_contract_repair_addendum,
++                        "test_path_replacements" in correction)):
++                    raise ValueError("dependency revision cannot combine other semantic or binding repairs")
++                dependency_revision = candidate_repair.prepare_dependency_revision(correction, published)
+             published_v3 = candidate_repair.project_published_v3(published["bundle"])
+             try:
+                 candidate_repair.validate_published_v3_projection(
+@@ -321,7 +336,8 @@
+                 if set(replacement_map) & set(split_map):
+                     raise ValueError("published V1 replacement and split overlap")
+             candidate_repair.install_published_slice_partition(
+-                published["bundle"], {**replacement_map, **split_map}
++                published["bundle"], {**replacement_map, **split_map},
++                dependency_revision=dependency_revision is not None,
+             )
+             semantic_compiler.configure_v1_reuse_predecessor_plan(args.repair_published_v3_from.resolve())
+             floor_targets = set(correction["obligation_contracts"])
+@@ -341,7 +357,10 @@
+                 reviewed_additions.update(
+                     item["obligation_id"] for item in split["normalized_obligations"]
+                 )
+-            candidate_repair.install_published_v4_reuse(published, reviewed_additions)
++            if dependency_revision is None:
++                candidate_repair.install_published_v4_reuse(published, reviewed_additions)
++            else:
++                candidate_repair.install_dependency_revision(published, dependency_revision)
+             if replacement is not None:
+                 candidate_repair.install_v1_replacement(replacement)
+             if split is not None:
+@@ -370,11 +389,24 @@
+             if state_path.exists() and json.loads(state_path.read_text(encoding="utf-8")).get("state") == "plan-ready":
+                 raise ValueError("V3 candidate repair requires a failed or unpublished output directory")
+             correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
++            if "dependency_revision" in correction:
++                raise ValueError("dependency revision requires a validated published predecessor")
+             if args.companion and "source_index_sha256" not in correction:
+                 raise ValueError("V3 companion repair requires complete source-index identity and test path scope")
+             candidate_repair.install(correction)
+         except (OSError, ValueError, KeyError, TypeError) as exc:
+             parser.error(str(exc))
++    # ADR-0041: a thin read-only admission before any semantic worker or query.
++    # Existing repair modes above retain their own no-worker admission contracts.
++    from execution_preflight import inspect_admission
++    admission = inspect_admission(semantic_compiler, ROOT, args.requirements,
++        args.companion, profile=args.profile, execution_profile=args.execution_profile,
++        recovery=args.out_dir if args.resume_from else None)
++    if args.admission_only or admission["status"] == "blocked":
++        result = {"status": "repair-vdd" if admission["status"] == "blocked" else "admission-only",
++                  "admission": admission, "authorizes": []}
++        print(json.dumps(result, sort_keys=True))
++        return 1 if admission["status"] == "blocked" else 0
+     cache = None
+     if args.worker_cache:
+         value = json.loads(args.worker_cache.read_text(encoding="utf-8"))
+@@ -430,15 +462,20 @@
+             )
+         if published is not None and result.get("status") == "plan-ready":
+             current = json.loads((args.out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+-            candidate_repair.check_unaffected_published_semantics(
+-                published["bundle"], current, set(correction["obligation_contracts"]),
+-                set(extension["obligation_contracts"]) if extension else set(),
+-                {
+-                    **({old: item["obligation_id"] for old, item in replacement["normalized_replacements"].items()}
+-                       if replacement else {}),
+-                    **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
+-                       if split else {}),
+-                })
++            if dependency_revision is not None:
++                candidate_repair.check_dependency_revision(published["bundle"], current, dependency_revision)
++                result["dependency_revision"] = {**dependency_revision["input"],
++                    **dependency_revision["impact"], "authorizes": [], "v4_reuse": False}
++            else:
++                candidate_repair.check_unaffected_published_semantics(
++                    published["bundle"], current, set(correction["obligation_contracts"]),
++                    set(extension["obligation_contracts"]) if extension else set(),
++                    {
++                        **({old: item["obligation_id"] for old, item in replacement["normalized_replacements"].items()}
++                           if replacement else {}),
++                        **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
++                           if split else {}),
++                    })
+         if prepared_query is not None:
+             _record_planning_decisions(prepared=prepared_query, request=planning_request,
+                                        result=result, out_dir=args.out_dir)
+@@ -455,6 +492,7 @@
+             _archive_repair_publications(args.out_dir)
+         result = {"status": "repair-vdd", "reason": str(exc)}
+     semantic_compiler.invoke_worker = previous_worker
++    result["admission"] = admission
+     result["worker_cache_reuse"] = semantic_resume_cache.statistics()
+     semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=None)
+     if args.result_json:

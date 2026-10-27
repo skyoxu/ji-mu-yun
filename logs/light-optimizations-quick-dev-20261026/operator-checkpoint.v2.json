@@ -1,0 +1,30 @@
+{
+  "schema": "light-optimizations.operator-checkpoint.v2",
+  "authorizes": [],
+  "recorded_at": "2026-10-26T23:18:19.183463+00:00",
+  "not_completion": true,
+  "plan_id": "PLAN-80D11CC6CF83",
+  "bundle_sha256": "e9ca66fc079a6660fc5b777f580bb744cc92758e262fa135469330e585c9708e",
+  "source_rebind": "24 obligations/acceptances/failure intents content equivalent after derived ID/source rebind; only two declared fixture snapshots added; S3 depends on S4 preserved",
+  "S2": {
+    "RED": "expected-red, 6 missing / 3 present",
+    "GREEN": "native pass; 30 cases",
+    "Q6": "30 primary pass; 83 old regressions pass; 1 baseline consumption_reference_denied failure; native closure blocked"
+  },
+  "S3": {
+    "RED": "expected-red all 7 obligations",
+    "current_probe": "16 cases pass",
+    "Q6": "46 passed / 2 baseline public-entry temporary-directory containment failures; use fixed repository-contained TMPDIR for final serial validation",
+    "self_review_next": "Add a focused regression for a claimed completed recovery missing its bundle; current unfinished-candidate pending branch requires refinement. Preserve current source snapshot before Q2 test change."
+  },
+  "Q8": "not run; no completion claim",
+  "capacity_errors": [],
+  "third_fixture": "Unmodified. Existing discovery accepts files only, no declaration can legalize the historical directory reference; do not alter adapter/security/source authority.",
+  "environment": {
+    "pytest": "9.1.1",
+    "TMPDIR": "/workspace/ji-mu-yun-light-optimizations/logs/light-optimizations-quick-dev-20261026/tmp",
+    "serial": true,
+    "unit_seconds": 1800,
+    "idle_seconds": 600
+  }
+}

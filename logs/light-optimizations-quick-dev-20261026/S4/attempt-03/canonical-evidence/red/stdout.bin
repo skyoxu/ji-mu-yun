@@ -1,0 +1,302 @@
+.FFFFF...F...FF                                                          [100%]
+=================================== FAILURES ===================================
+_______________________ test_light_2186eab31aa1[missing] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_2186eab31aa1_missin0')
+kind = 'missing'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        result = admit(tmp_path, plan)
+>       expect((result['status'] == 'preflight-passed') == (kind == 'matching'), 'LIGHT-77EEE6DD9C66')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-77EEE6DD9C66'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-77EEE6DD9C66
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-77EEE6DD9C66
+_______________________ test_light_2186eab31aa1[command] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_2186eab31aa1_comman0')
+kind = 'command'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        result = admit(tmp_path, plan)
+>       expect((result['status'] == 'preflight-passed') == (kind == 'matching'), 'LIGHT-77EEE6DD9C66')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-77EEE6DD9C66'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-77EEE6DD9C66
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-77EEE6DD9C66
+______________________ test_light_2186eab31aa1[selector] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_2186eab31aa1_select0')
+kind = 'selector'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        result = admit(tmp_path, plan)
+>       expect((result['status'] == 'preflight-passed') == (kind == 'matching'), 'LIGHT-77EEE6DD9C66')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-77EEE6DD9C66'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-77EEE6DD9C66
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-77EEE6DD9C66
+_____________________ test_light_2186eab31aa1[acceptance] ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_2186eab31aa1_accept0')
+kind = 'acceptance'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        result = admit(tmp_path, plan)
+>       expect((result['status'] == 'preflight-passed') == (kind == 'matching'), 'LIGHT-77EEE6DD9C66')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-77EEE6DD9C66'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-77EEE6DD9C66
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-77EEE6DD9C66
+______________________ test_light_2186eab31aa1[ambiguous] ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_2186eab31aa1_ambigu0')
+kind = 'ambiguous'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+        result = admit(tmp_path, plan)
+>       expect((result['status'] == 'preflight-passed') == (kind == 'matching'), 'LIGHT-77EEE6DD9C66')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-77EEE6DD9C66'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-77EEE6DD9C66
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-77EEE6DD9C66
+____________________ test_light_b01c33d730ee[nul-selector] _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_b01c33d730ee_nul_se0')
+kind = 'nul-selector'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-BB99F694D6BB')
+    @pytest.mark.parametrize('kind', ['valid', 'shell-command', 'unbound-target', 'nul-selector'])
+    def test_light_b01c33d730ee(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == 'S4')
+        target = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')['execution_snapshot_paths'][0]
+        argv = ['python', '-B', '-m', 'pytest', target, '-q']
+        if kind == 'shell-command': argv = ['python -m pytest ' + target]
+        if kind == 'unbound-target': argv[4] = 'tests/unbound.py'
+        if kind == 'nul-selector': argv[4] += '::test_\x00invalid'
+        context['validation_commands'][0] = argv
+        save(plan, bundle)
+        result = admit(tmp_path, plan)
+>       expect((result['status'] == 'preflight-passed') == (kind == 'valid'), 'LIGHT-BB99F694D6BB')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-BB99F694D6BB'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-BB99F694D6BB
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-BB99F694D6BB
+___________________________ test_light_d07a4a77480c ____________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-2/test_light_d07a4a77480c0')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-104D8E0F76C4')
+    def test_light_d07a4a77480c(tmp_path):
+        plan, bundle = fixture(tmp_path)
+        validate_plan(bundle)
+        before = production_hashes(tmp_path, bundle, 'S3')
+        dependency = tmp_path / '.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py'
+        dependency.write_text('# changed transitive production dependency\n', encoding='utf-8')
+        after = production_hashes(tmp_path, bundle, 'S3')
+        changed = deepcopy(bundle)
+        next(s for s in changed['slices'] if s['slice_id'] == 'S3')['depends_on'] = []
+        frozen = deepcopy(changed)
+        save(plan, changed)
+        rejected = admit(tmp_path, plan)['status'] != 'preflight-passed'
+>       expect(before != after and rejected and changed == frozen, 'LIGHT-104D8E0F76C4')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:148: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-104D8E0F76C4'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-104D8E0F76C4
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-104D8E0F76C4
+___________________________ test_light_3a295774a883 ____________________________
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-C35D920B20D8')
+    def test_light_3a295774a883():
+        from scripts.vdd import compile_plan as cli
+        import semantic_v3_contract_repair as repair
+        from execution_preflight import inspect_candidate
+        bundle = json.loads((PLAN / 'semantic-plan-bundle.v1.json').read_text())
+        raw = repair.project_published_v3(bundle)
+        with mock.patch.object(planned, 'validate_planned_preflight', wraps=planned.validate_planned_preflight) as owning:
+            vdd = inspect_candidate(cli.semantic_compiler, ROOT, bundle['obligations'], bundle['acceptances'], bundle['failure_intents'], raw['slice_hints'], profile='self-hosted')
+            vdd_calls = owning.call_count
+            quick = runner.q1_preflight(semantic=PLAN / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+            quick_calls = owning.call_count - vdd_calls
+>       expect(vdd['valid'] and quick['status'] == 'preflight-passed' and vdd_calls > 0 and quick_calls > 0, 'LIGHT-C35D920B20D8')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+condition = False, failure_id = 'LIGHT-C35D920B20D8'
+
+    def expect(condition, failure_id):
+        if not condition:
+            print('FAILURE_ID:' + failure_id)
+>       assert condition, failure_id
+E       AssertionError: LIGHT-C35D920B20D8
+E       assert False
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:26: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-C35D920B20D8
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[missing]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[command]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[selector]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[acceptance]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[ambiguous]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee[nul-selector]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_d07a4a77480c
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_3a295774a883
+8 failed, 7 passed in 0.59s

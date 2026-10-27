@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py", line 53, in verify_current_handoff
+    return publish_implementation_complete(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 486, in publish_implementation_complete
+    return _publish_implementation_complete(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 664, in _publish_implementation_complete
+    originals.finish()
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 126, in finish
+    check()
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py", line 105, in check
+    validate_saved_request(self.workspace, evidence, descriptor, receipt)
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py", line 364, in validate_saved_request
+    raise ValueError(reason)
+ValueError: reuse-dependency-content-changed:.skill-input-work/light-optimizations-acceptance-20261027/a0d015415bbf40de82d7ea8513fe5860/attempt.json,.skill-input-work/light-optimizations-acceptance-20261027/a0d015415bbf40de82d7ea8513fe5860/observed.json,.skill-input-work/light-optimizations-acceptance-20261027/a0d015415bbf40de82d7ea8513fe5860/prepared.json
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1734, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1561, in main
+    print(json.dumps(project_compact_vdd_command(args.repository_root, args.request, args.out), sort_keys=True))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1369, in project_compact_vdd_command
+    result = project_or_quick_dev_recovery(Path(repository_root), Path(request_path))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", line 523, in project_or_quick_dev_recovery
+    return project(repository_root, request_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", line 305, in project
+    verify_current_handoff(root, current, allowed_changed_paths=request["changedPaths"])
+  File "/workspace/ji-mu-yun-light-optimizations/.agents/skills/run-refactor-implementation-acceptance/scripts/current_quick_dev_handoff.py", line 61, in verify_current_handoff
+    raise InputError("current Quick Dev proof cannot be replayed: " + str(exc)) from exc
+acceptance_core.InputError: current Quick Dev proof cannot be replayed: reuse-dependency-content-changed:.skill-input-work/light-optimizations-acceptance-20261027/a0d015415bbf40de82d7ea8513fe5860/attempt.json,.skill-input-work/light-optimizations-acceptance-20261027/a0d015415bbf40de82d7ea8513fe5860/observed.json,.skill-input-work/light-optimizations-acceptance-20261027/a0d015415bbf40de82d7ea8513fe5860/prepared.json

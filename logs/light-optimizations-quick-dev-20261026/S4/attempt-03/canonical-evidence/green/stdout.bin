@@ -1,0 +1,629 @@
+FFFFF.FFFFF.F..                                                          [100%]
+=================================== FAILURES ===================================
+______________________ test_light_2186eab31aa1[matching] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_matchi0')
+kind = 'matching'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_matchi0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_matchi0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+_______________________ test_light_2186eab31aa1[missing] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_missin0')
+kind = 'missing'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_missin0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_missin0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+_______________________ test_light_2186eab31aa1[command] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_comman0')
+kind = 'command'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_comman0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_comman0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+______________________ test_light_2186eab31aa1[selector] _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_select0')
+kind = 'selector'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_select0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_select0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+_____________________ test_light_2186eab31aa1[acceptance] ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_accept0')
+kind = 'acceptance'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-77EEE6DD9C66')
+    @pytest.mark.parametrize('kind', ['matching', 'missing', 'command', 'selector', 'acceptance', 'ambiguous'])
+    def test_light_2186eab31aa1(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        path = plan / 'agent-context/S4/agent-context.json'
+        disk = json.loads(path.read_text())
+        if kind == 'missing':
+            path.unlink()
+        elif kind in {'command', 'selector', 'acceptance'}:
+            key = {'command': 'validation_commands', 'selector': 'selector_intents', 'acceptance': 'acceptance_ids'}[kind]
+            disk[key] = [['python', '-c', 'pass']] if kind == 'command' else ['DRIFT']
+            path.write_text(json.dumps(disk), encoding='utf-8')
+        elif kind == 'ambiguous':
+            bundle['agent_contexts'].append(deepcopy(disk))
+            (plan / 'semantic-plan-bundle.v1.json').write_text(json.dumps(bundle), encoding='utf-8')
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_accept0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_2186eab31aa1_accept0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+________________________ test_light_b01c33d730ee[valid] ________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_valid_0')
+kind = 'valid'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-BB99F694D6BB')
+    @pytest.mark.parametrize('kind', ['valid', 'shell-command', 'unbound-target', 'nul-selector'])
+    def test_light_b01c33d730ee(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == 'S4')
+        target = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')['execution_snapshot_paths'][0]
+        argv = ['python', '-B', '-m', 'pytest', target, '-q']
+        if kind == 'shell-command': argv = ['python -m pytest ' + target]
+        if kind == 'unbound-target': argv[4] = 'tests/unbound.py'
+        if kind == 'nul-selector': argv[4] += '::test_\x00invalid'
+        context['validation_commands'][0] = argv
+        save(plan, bundle)
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_valid_0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_valid_0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+____________________ test_light_b01c33d730ee[shell-command] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_shell_0')
+kind = 'shell-command'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-BB99F694D6BB')
+    @pytest.mark.parametrize('kind', ['valid', 'shell-command', 'unbound-target', 'nul-selector'])
+    def test_light_b01c33d730ee(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == 'S4')
+        target = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')['execution_snapshot_paths'][0]
+        argv = ['python', '-B', '-m', 'pytest', target, '-q']
+        if kind == 'shell-command': argv = ['python -m pytest ' + target]
+        if kind == 'unbound-target': argv[4] = 'tests/unbound.py'
+        if kind == 'nul-selector': argv[4] += '::test_\x00invalid'
+        context['validation_commands'][0] = argv
+        save(plan, bundle)
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_shell_0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_shell_0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+___________________ test_light_b01c33d730ee[unbound-target] ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_unboun0')
+kind = 'unbound-target'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-BB99F694D6BB')
+    @pytest.mark.parametrize('kind', ['valid', 'shell-command', 'unbound-target', 'nul-selector'])
+    def test_light_b01c33d730ee(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == 'S4')
+        target = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')['execution_snapshot_paths'][0]
+        argv = ['python', '-B', '-m', 'pytest', target, '-q']
+        if kind == 'shell-command': argv = ['python -m pytest ' + target]
+        if kind == 'unbound-target': argv[4] = 'tests/unbound.py'
+        if kind == 'nul-selector': argv[4] += '::test_\x00invalid'
+        context['validation_commands'][0] = argv
+        save(plan, bundle)
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_unboun0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_unboun0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+____________________ test_light_b01c33d730ee[nul-selector] _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_nul_se0')
+kind = 'nul-selector'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-BB99F694D6BB')
+    @pytest.mark.parametrize('kind', ['valid', 'shell-command', 'unbound-target', 'nul-selector'])
+    def test_light_b01c33d730ee(tmp_path, kind):
+        plan, bundle = fixture(tmp_path)
+        context = next(c for c in bundle['agent_contexts'] if c['slice_id'] == 'S4')
+        target = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')['execution_snapshot_paths'][0]
+        argv = ['python', '-B', '-m', 'pytest', target, '-q']
+        if kind == 'shell-command': argv = ['python -m pytest ' + target]
+        if kind == 'unbound-target': argv[4] = 'tests/unbound.py'
+        if kind == 'nul-selector': argv[4] += '::test_\x00invalid'
+        context['validation_commands'][0] = argv
+        save(plan, bundle)
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_nul_se0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_b01c33d730ee_nul_se0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+___________________________ test_light_8888741bb36f ____________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_8888741bb36f0')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-D9E930D6957F')
+    def test_light_8888741bb36f(tmp_path):
+        plan, bundle = fixture(tmp_path)
+        selected = next(s for s in bundle['slices'] if s['slice_id'] == 'S4')
+        target = tmp_path / selected['execution_snapshot_paths'][0]
+        target.unlink()
+>       result = admit(tmp_path, plan)
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_8888741bb36f0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_8888741bb36f0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+___________________________ test_light_33f5fd4e59ad ____________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_33f5fd4e59ad0')
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-CCCC9778C3EC')
+    def test_light_33f5fd4e59ad(tmp_path):
+        plan, bundle = fixture(tmp_path)
+>       valid = admit(tmp_path, plan)
+                ^^^^^^^^^^^^^^^^^^^^^
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py:61: in admit
+    return runner.q1_preflight(semantic=plan / 'semantic-plan-bundle.v1.json', slice_id='S4', profile='standard')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py:308: in q1_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+workspace = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_33f5fd4e59ad0')
+bundle = {'acceptances': [{'acceptance_id': 'A-01AA49F0291F', 'assertion_ids': ['ASSERT-LIGHT-D33AF6125B46'], 'complexity_class...8'], 'expected_outcome': 'fail', 'failure_family': 'expected-red', 'failure_id': 'LIGHT-D9E930D6957F', ...}, ...], ...}
+slice_id = 'S4', timeout_seconds = 1800
+plan_dir = PosixPath('/tmp/pytest-of-agent/pytest-3/test_light_33f5fd4e59ad0/plan')
+
+    def validate_planned_preflight(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        timeout_seconds: int,
+        plan_dir: Path | None = None,
+    ) -> dict[str, Any]:
+        """Validate Q1's planned command/identity contract without side effects."""
+        if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
+            raise ValueError("plan identity missing")
+        if not isinstance(timeout_seconds, int) or timeout_seconds <= 0:
+            raise ValueError("planned timeout must be positive")
+    
+        selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
+        context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+        if "behavior_routing" in bundle:
+            from behavior_routing import validate_plan
+>           from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+E           ModuleNotFoundError: No module named 'execution_contract'
+
+.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:86: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[matching]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[missing]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[command]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[selector]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1[acceptance]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee[valid]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee[shell-command]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee[unbound-target]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee[nul-selector]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_8888741bb36f
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_33f5fd4e59ad
+11 failed, 4 passed in 0.76s

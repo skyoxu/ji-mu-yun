@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1734, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1561, in main
+    print(json.dumps(project_compact_vdd_command(args.repository_root, args.request, args.out), sort_keys=True))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py", line 1369, in project_compact_vdd_command
+    result = project_or_quick_dev_recovery(Path(repository_root), Path(request_path))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", line 523, in project_or_quick_dev_recovery
+    return project(repository_root, request_path)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/light-acceptance-c5db5a0/.agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py", line 503, in project
+    os.replace(stage_input, final_input_dir)
+OSError: [Errno 18] Invalid cross-device link: '/workspace/ji-mu-yun-light-optimizations/logs/light-optimizations-quick-dev-20261026/tmp/acceptance-projection-5m2x88oo/input' -> '/tmp/light-acceptance-c5db5a0/execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027'

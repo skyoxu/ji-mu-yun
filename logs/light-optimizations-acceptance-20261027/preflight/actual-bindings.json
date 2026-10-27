@@ -1,0 +1,320 @@
+{
+  "authorizes": [],
+  "actual_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "executed_validator_git_blobs": {
+    "knowledge_context_validation.py": "94f4006b41d05bff9054d052fd057755968641b27dcb1131be785e5315acc95f",
+    "_knowledge_locator_core.py": "41cd902ff272468eb97129a13ea6b578dea9d54f5381cb5389590ae138e0e934"
+  },
+  "knowledge_context_summary": {
+    "path": "acceptance-inputs/preparation-20261027/knowledge-context.refactor-acceptance.v1.json",
+    "sha256": "sha256:48c1bd628ece33c32c249a8b9b2315a526e4947b13d985101830e7bbd0a2d6d7",
+    "contextHash": "sha256:e7dddf2815106c474304874a05c6c77560f9d26e318c5bbd24a17ee26121d174",
+    "requestHash": "sha256:c8a976edf3fdeabb274a78ef080ad7dbc3c05f7dd18ffca8b3e27bfea2b464ac",
+    "resultHash": "sha256:0d26f116bfe608d358ce386252cb8840f79fae292670a7a1a2ef760655ee4deb",
+    "sourceSnapshotId": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+    "acceptedDecisions": [
+      {
+        "owner": "adapter",
+        "candidate": {
+          "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          "source_sha256": "a59041c2dd6a171169fa6653ab19df98bdb8ca7ab9623fd8c1f5a81d1ce58545"
+        },
+        "decision": "accepted",
+        "satisfies": [
+          "acceptance-scope"
+        ],
+        "rejection_reason": null
+      },
+      {
+        "owner": "adapter",
+        "candidate": {
+          "path": "docs/adr/ADR-0053-refactor-acceptance-toolchain-compact-vdd.md",
+          "source_sha256": "5362f50de6c1875f3680ced3c2727ad7c856a1860ba4623be1d34f58b43e32c3"
+        },
+        "decision": "accepted",
+        "satisfies": [
+          "acceptance-scope"
+        ],
+        "rejection_reason": null
+      },
+      {
+        "owner": "adapter",
+        "candidate": {
+          "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          "source_sha256": "d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17"
+        },
+        "decision": "accepted",
+        "satisfies": [
+          "implementation-handoff"
+        ],
+        "rejection_reason": null
+      }
+    ],
+    "authorizes": []
+  },
+  "policy_binding": {
+    "schemaVersion": "code-review-policy-binding.v1",
+    "policyId": "toolchain-code-review",
+    "policyRevision": "sha256:6876d81e879d8e7148224f0adec15ba41349331713a2238360de18e711b0809b",
+    "policyHash": "sha256:c41c62bdbb69173f4745d72e661397d7c09e933383ac22e0d6f10e1acfd5bd3d",
+    "candidateManifestHash": "sha256:98aa674594f72f2684a15069a03122185a7a4fc80a491b69d2ae9a761e7b6d21",
+    "adapterHash": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+    "triggeredPaths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+      ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+      ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      "scripts/vdd/compile_plan.py"
+    ],
+    "unreviewedExternalDomainPaths": [],
+    "activatedCheckIds": [
+      "TOOLCHAIN-CR-AUTH-001",
+      "TOOLCHAIN-CR-SCOPE-001",
+      "TOOLCHAIN-CR-COMPAT-001",
+      "TOOLCHAIN-CR-TEST-001",
+      "TOOLCHAIN-CR-EVIDENCE-001"
+    ],
+    "authorizes": [],
+    "crossDomainDependencyPaths": [],
+    "bindingHash": "sha256:a5bead13c3da37c8d782fe5ca511476f932b4896c30e8b1f7d31646182b8c3f8"
+  },
+  "baseline_manifest": {
+    "schemaVersion": "acceptance-baseline-content-manifest.v1",
+    "status": "complete",
+    "coverageGaps": [],
+    "authorizes": [],
+    "files": [
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:2e239ec8436ca290d4603ee89fb5e8d217356cac79f18a92468434bcaf8c913f",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:13b40dfa724f1b833fc771f541511b606c8919b2b07766fbcba72fb71a3797f9",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:45c811b6f1625db94b9631bc3ae1250f0b60bd511db77bb704229465d8a1f0ad",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:df04a26453bc60912ca6471b0ac1513c4f6e961b16e0a67db6b03279370817db",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:886df061086734292cdfb658d0a9bc4f87b8a23e106ea33ade83314b82edeb68",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:bc24cae30e9d87a2f5ee9d1373f06386ed096c29a9d03d7d5092d0a4d2a65440",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:d09893f2717b35cdb28dd81402b952dbd98787c0787da356b73fcb42122e0de4",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:59f856725061cc53d20953ba45480620ea95bcc2cadcc34e3eb40ea584ea42b3",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      },
+      {
+        "path": "scripts/vdd/compile_plan.py",
+        "roles": [
+          "implementation"
+        ],
+        "sha256": "sha256:e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77",
+        "inclusion_reason": "Actual immutable baseline Git blob"
+      }
+    ]
+  },
+  "candidate_manifest": {
+    "schemaVersion": "acceptance-candidate-content-manifest.v1",
+    "status": "complete",
+    "coverageGaps": [],
+    "authorizes": [],
+    "files": [
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+        "baseline_sha256": "sha256:2e239ec8436ca290d4603ee89fb5e8d217356cac79f18a92468434bcaf8c913f",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+        "candidate_sha256": "sha256:5267488dc0545350df49ad0b114a4de8a053a2f4c9106585a6ce60b4fffc3544",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+        "baseline_sha256": "sha256:13b40dfa724f1b833fc771f541511b606c8919b2b07766fbcba72fb71a3797f9",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+        "candidate_sha256": "sha256:8ebf8eafd0553cb26f18474ed698ac63ab3f10a36bdafb9c17bc5d0f02cff6b1",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "added",
+        "baseline_path": null,
+        "baseline_sha256": null,
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+        "candidate_sha256": "sha256:01979c39183f818e8a420fde28fe4b72e51afff62182b2a204b0f62360940079",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+        "baseline_sha256": "sha256:45c811b6f1625db94b9631bc3ae1250f0b60bd511db77bb704229465d8a1f0ad",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+        "candidate_sha256": "sha256:f5a8ea8a17d40a6c84f7f14e0d6534ff7e7f45660645aacfe49331ba2317b218",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+        "baseline_sha256": "sha256:df04a26453bc60912ca6471b0ac1513c4f6e961b16e0a67db6b03279370817db",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+        "candidate_sha256": "sha256:3399f2fb1c840fab59e37d1a6b1308678d453100e4c021cce0916b9ed6847ccd",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+        "baseline_sha256": "sha256:886df061086734292cdfb658d0a9bc4f87b8a23e106ea33ade83314b82edeb68",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+        "candidate_sha256": "sha256:68b90cbf4349339049f983228622d5a7c652fdb6de5b69043b7092d51c759d1c",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "added",
+        "baseline_path": null,
+        "baseline_sha256": null,
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+        "candidate_sha256": "sha256:41fe8c611a5b4e8dd9098351a63a839e1eda4803a325530e01117617f060c75a",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "added",
+        "baseline_path": null,
+        "baseline_sha256": null,
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+        "candidate_sha256": "sha256:b37e97f7a38bbbb5b633be44765c2d3fa13314d3a6e02e3b332937b16fc9c26b",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "added",
+        "baseline_path": null,
+        "baseline_sha256": null,
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+        "candidate_sha256": "sha256:8d484cc96e5a44f48637c5aaca1beeac87016a54b50701c2a26919499aa12a2b",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+        "baseline_sha256": "sha256:bc24cae30e9d87a2f5ee9d1373f06386ed096c29a9d03d7d5092d0a4d2a65440",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+        "candidate_sha256": "sha256:ca3b358fea2e8772dd16b0934d365a147977ac8cc7a47980b8588f7422d5dd62",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+        "baseline_sha256": "sha256:d09893f2717b35cdb28dd81402b952dbd98787c0787da356b73fcb42122e0de4",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+        "candidate_sha256": "sha256:8286e4a1dc9040df50296e753338b77c08f5586af6dd0c636d83f32ebf9bcf53",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+        "baseline_sha256": "sha256:59f856725061cc53d20953ba45480620ea95bcc2cadcc34e3eb40ea584ea42b3",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+        "candidate_sha256": "sha256:2d5e40ec95d096508b7ddcbef4a1867994793123fef9004cf3eac24c3e106593",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      },
+      {
+        "change_type": "modified",
+        "baseline_path": "scripts/vdd/compile_plan.py",
+        "baseline_sha256": "sha256:e847a0dbc373ba5977f9aacfd41a9fe69ec6b65911476fc1a943b19e9d4b6d77",
+        "roles": [
+          "implementation"
+        ],
+        "candidate_path": "scripts/vdd/compile_plan.py",
+        "candidate_sha256": "sha256:34570a860bacf18bcdfbebfe693705b90d0926d2fbd29a4772ef5c1d8c3d2a9e",
+        "inclusion_reason": "Actual immutable candidate Git blob"
+      }
+    ]
+  }
+}

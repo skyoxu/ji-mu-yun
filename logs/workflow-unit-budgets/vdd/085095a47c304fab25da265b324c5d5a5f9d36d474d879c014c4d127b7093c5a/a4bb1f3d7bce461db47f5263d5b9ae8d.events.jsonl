@@ -1,0 +1,58 @@
+{"at": 3173.011304209, "call": "4bfc53d25b394951bde2e738de05ed62", "container": true, "event": "start", "key": "8a2e533d83d46f4ec421ea695bb1a45d53e0fc8e4d6bb27652212a461675e91d", "label": "VDD stage V0A", "parent": "entry"}
+{"at": 3173.014003524, "call": "4bfc53d25b394951bde2e738de05ed62", "event": "end"}
+{"at": 3173.014124328, "call": "218be1f33029405bbf2cef622c0b5cd5", "container": true, "event": "start", "key": "ee3b7750b42bf419464ee151c8df6f54e15d42ac2e9cfc24c7a2f856bafc34e7", "label": "VDD stage V1", "parent": "entry"}
+{"at": 3173.037058635, "call": "a527d2796c634f07b9e273b979448949", "container": false, "event": "start", "key": "80ae20caa6a3b14703c2bfc6d8691a29a85023ff105816f22f116fb5eed47795", "label": "VDD worker v4-atomic-recall-chunk-001", "parent": "218be1f33029405bbf2cef622c0b5cd5"}
+{"at": 3191.68048776, "call": "a527d2796c634f07b9e273b979448949", "event": "end"}
+{"at": 3191.683093102, "call": "085f3f1b12594386aaec23b0b22c35b3", "container": false, "event": "start", "key": "2f2248631243a7bf78db426543c4c3904e403ff0ffceb978b20d1c873a090548", "label": "VDD worker v4-atomic-recall-chunk-002", "parent": "218be1f33029405bbf2cef622c0b5cd5"}
+{"at": 3203.210616928, "call": "085f3f1b12594386aaec23b0b22c35b3", "event": "end"}
+{"at": 3203.2129104, "call": "b629be1a98fb4d74ab984bddc71188bf", "container": false, "event": "start", "key": "ebbeb35e626f7a7a9e339f3263337d4a37d67b30f9749e6a5b384c4b83a29885", "label": "VDD worker v4-atomic-recall-source-001", "parent": "218be1f33029405bbf2cef622c0b5cd5"}
+{"at": 3222.451020022, "call": "b629be1a98fb4d74ab984bddc71188bf", "event": "end"}
+{"at": 3222.457188335, "call": "218be1f33029405bbf2cef622c0b5cd5", "event": "end"}
+{"at": 3222.457349701, "call": "0035986928a040a7a883a11b1c1e369b", "container": true, "event": "start", "key": "6448a7c6449bc4ed272afd0b89d14e8823826424bce4e6f89ed952786299bb8c", "label": "VDD stage V2", "parent": "entry"}
+{"at": 3222.458032352, "call": "0035986928a040a7a883a11b1c1e369b", "event": "end"}
+{"at": 3222.458174473, "call": "e600640c029c4592b62ac429cf6a2746", "container": true, "event": "start", "key": "32c8c476d2e053a6061db3c8bc2eb1ecc8c2d470dd7d8568d78f475caf5592ae", "label": "VDD stage V3", "parent": "entry"}
+{"at": 3223.026590442, "call": "a941e29af89043a496088bf95428547c", "container": false, "event": "start", "key": "f868180896a9b3453a613e84169bf0f29fd2729c923e758b8addf200a46fb62a", "label": "VDD worker v3-schema-repair-chunk-01", "parent": "entry"}
+{"at": 3223.028477607, "call": "7c4873224dc54c89a8cf7e063d13c459", "container": false, "event": "start", "key": "b99bbab497a3bf7118df5f6ca6baf48bbb231dcfd83830af2ad236299d9ba408", "label": "VDD worker v3-schema-repair-chunk-01", "parent": "entry"}
+{"at": 3223.030862241, "call": "31b7a99b1a79458a8a4ae79ca989e092", "container": false, "event": "start", "key": "c39221fcad3809a45f328e81d608c5d704138ba64e61630f553864009e421d06", "label": "VDD worker v3-schema-repair-chunk-01", "parent": "entry"}
+{"at": 3223.031673029, "call": "13665b550d894515b4218279aca82998", "container": false, "event": "start", "key": "a1c0a8934e8ea0ba219badd23d6988181db80e6fe765b77e5549cd522c4647e7", "label": "VDD worker v3-schema-repair-chunk-01", "parent": "entry"}
+{"at": 3234.57800825, "call": "31b7a99b1a79458a8a4ae79ca989e092", "event": "end"}
+{"at": 3234.592133315, "call": "58a188125af040799ce05cdbe66e9aa3", "container": false, "event": "start", "key": "b5945094cd1507fdf6ab26a414934175dda5bb07ac137c54c702d135287df01d", "label": "VDD worker v3-schema-repair-chunk-01", "parent": "entry"}
+{"at": 3234.66373656, "call": "a941e29af89043a496088bf95428547c", "event": "end"}
+{"at": 3234.6643861, "call": "13665b550d894515b4218279aca82998", "event": "end"}
+{"at": 3234.664773998, "call": "7c4873224dc54c89a8cf7e063d13c459", "event": "end"}
+{"at": 3234.69618105, "call": "16960f9d9d0e4e4d8c2751f539950c5f", "container": false, "event": "start", "key": "382dd5003fb36ddd0bf456a67f16af7c83f75c1efc57ff12e5a440976ea8ca4e", "label": "VDD worker v3-schema-repair-chunk-01", "parent": "entry"}
+{"at": 3243.814599601, "call": "58a188125af040799ce05cdbe66e9aa3", "event": "end"}
+{"at": 3243.819661045, "call": "16960f9d9d0e4e4d8c2751f539950c5f", "event": "end"}
+{"at": 3243.865416933, "call": "e600640c029c4592b62ac429cf6a2746", "event": "end"}
+{"at": 3243.86553882, "call": "ca063d2ebf574e6f9699b49892ecc87f", "container": true, "event": "start", "key": "dd243ab1cb6fe1408b5b88a40a6c407e408a9934d635e5cff48fc37c3a69b532", "label": "VDD stage V3A", "parent": "entry"}
+{"at": 3243.866559542, "call": "ca063d2ebf574e6f9699b49892ecc87f", "event": "end"}
+{"at": 3243.867937673, "call": "156e7869b9684dd3978876d3b9f18c0d", "container": true, "event": "start", "key": "a83026e2213ba0c7b7e23f40208932add7598a30801083b8bf162ba9eb74d39a", "label": "VDD stage V3-execution-preflight", "parent": "entry"}
+{"at": 3243.936546203, "call": "156e7869b9684dd3978876d3b9f18c0d", "event": "end"}
+{"at": 3243.936763279, "call": "6c6f95b56d8845d1ab12c899a6be4a3f", "container": true, "event": "start", "key": "1ceba1418c6189fd1094eb6fbb5e6a6f021a55ab1f717116a3b128cd479f1ad7", "label": "VDD stage V4-atomic-recall", "parent": "entry"}
+{"at": 3243.938302468, "call": "6c6f95b56d8845d1ab12c899a6be4a3f", "event": "end"}
+{"at": 3243.939847531, "call": "baa09cabf49c4f7bb92cd7d3f47d9221", "container": true, "event": "start", "key": "ee3b7750b42bf419464ee151c8df6f54e15d42ac2e9cfc24c7a2f856bafc34e7", "label": "VDD stage V1", "parent": "entry"}
+{"at": 3243.942937315, "call": "baa09cabf49c4f7bb92cd7d3f47d9221", "event": "end"}
+{"at": 3243.943032416, "call": "6b4b829b97594d98b2de522f5082847b", "container": true, "event": "start", "key": "6448a7c6449bc4ed272afd0b89d14e8823826424bce4e6f89ed952786299bb8c", "label": "VDD stage V2", "parent": "entry"}
+{"at": 3243.943774768, "call": "6b4b829b97594d98b2de522f5082847b", "event": "end"}
+{"at": 3243.943855827, "call": "210437ca122d474c8e9e433e85a26874", "container": true, "event": "start", "key": "32c8c476d2e053a6061db3c8bc2eb1ecc8c2d470dd7d8568d78f475caf5592ae", "label": "VDD stage V3", "parent": "entry"}
+{"at": 3244.517511444, "call": "210437ca122d474c8e9e433e85a26874", "event": "end"}
+{"at": 3244.517623283, "call": "34044c7d1da84988bf0777a325cbb09a", "container": true, "event": "start", "key": "dd243ab1cb6fe1408b5b88a40a6c407e408a9934d635e5cff48fc37c3a69b532", "label": "VDD stage V3A", "parent": "entry"}
+{"at": 3244.518378224, "call": "34044c7d1da84988bf0777a325cbb09a", "event": "end"}
+{"at": 3244.51845676, "call": "353f74a023994395b00c9101818b361e", "container": true, "event": "start", "key": "e459f004a2664df7568ebf576c28aa487159c79be514c20f9bacb1470eb3ab8e", "label": "VDD stage V4", "parent": "entry"}
+{"at": 3244.523557676, "call": "954572f82f6048cc846c89faab93e14c", "container": false, "event": "start", "key": "a806cec5ebb57df40706c36b2edf6efce12922c97d5af4802f644aba7ee2a233", "label": "VDD worker v4", "parent": "353f74a023994395b00c9101818b361e"}
+{"at": 3259.654226332, "call": "954572f82f6048cc846c89faab93e14c", "event": "end"}
+{"at": 3259.657895202, "call": "353f74a023994395b00c9101818b361e", "event": "end"}
+{"at": 3259.658011745, "call": "19a3e664bc0a4cd8ba966119c2398570", "container": true, "event": "start", "key": "225ab39d77c994cacbe5236ae58456345d045200055b7dc40995c81c813b1a28", "label": "VDD stage V5", "parent": "entry"}
+{"at": 3259.658791178, "call": "19a3e664bc0a4cd8ba966119c2398570", "event": "end"}
+{"at": 3259.658874855, "call": "79ff5416ac78485a8dea8bbf0d3775f9", "container": true, "event": "start", "key": "842757a42dcbbc806773fb4eb28fb9ef11cf74b2f6400ccdecb97ddef0de26bf", "label": "VDD stage V6", "parent": "entry"}
+{"at": 3259.66578537, "call": "79ff5416ac78485a8dea8bbf0d3775f9", "event": "end"}
+{"at": 3259.665893593, "call": "b0d766a6f9064e62af69a7de5d152db9", "container": true, "event": "start", "key": "5fbc2cbad2b11be628031d23016a09581341fd570c0ce0aa4dcb452967bcfba0", "label": "VDD stage V6A", "parent": "entry"}
+{"at": 3259.666673348, "call": "b0d766a6f9064e62af69a7de5d152db9", "event": "end"}
+{"at": 3259.66676159, "call": "979be7bd23684e95b1c9a5c516c77969", "container": true, "event": "start", "key": "89a0396e7f9a0186a4b5bd5c79e0941ecdcf3b5708cc60a129b941e87844d0e3", "label": "VDD stage agent-context", "parent": "entry"}
+{"at": 3259.667960419, "call": "979be7bd23684e95b1c9a5c516c77969", "event": "end"}
+{"at": 3259.668077871, "call": "65faff1d1b354e9b9cd40477f992cbe2", "container": true, "event": "start", "key": "3c75190067e8e31f213012c43ac66f101dce5c0f9d154a8e4a370f3f2f441ce5", "label": "VDD stage V7", "parent": "entry"}
+{"at": 3259.669952369, "call": "65faff1d1b354e9b9cd40477f992cbe2", "event": "end"}
+{"at": 3259.67027001, "call": "880281854efd423a9f8d5554c6c09be2", "container": true, "event": "start", "key": "b664b05c4601d9bd64cc1908b75d6c0a99157151b9eace23052460844eb0aaf9", "label": "VDD stage final-validation", "parent": "entry"}
+{"at": 3259.672181853, "call": "880281854efd423a9f8d5554c6c09be2", "event": "end"}
+{"at": 3259.732727645, "call": "30d169e40b374c49b006bf632932c756", "container": true, "event": "start", "key": "01baac93189b78270fe5147ffdfa211cd221e2092169cebf10986a751a0420c3", "label": "VDD stage V4-published-obligations", "parent": "entry"}
+{"at": 3259.734282756, "call": "30d169e40b374c49b006bf632932c756", "event": "end"}

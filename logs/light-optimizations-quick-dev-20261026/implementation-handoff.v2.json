@@ -1,0 +1,615 @@
+{
+  "schema": "light-optimizations.implementation-handoff.v2",
+  "authorizes": [],
+  "recorded_at": "2026-10-27T00:49:20.424533+00:00",
+  "completion_claim": "Native Quick Dev implementation-complete only; stop before external implementation review and Acceptance.",
+  "branch": "toolchain/light-optimizations-20261026",
+  "original_delivery_source": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+  "frozen_source_commit": "c6bb51fe2227000ec9c96e62aca810b22c5d4fc9",
+  "trusted_VDD_compiler_commit": "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec",
+  "plan_id": "PLAN-87F445B767D0",
+  "bundle": {
+    "ref": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json",
+    "bytes": 203303,
+    "sha256": "25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9"
+  },
+  "requirements": {
+    "ref": "docs/2026-10-27-toolchain-light-optimizations-requirements-v4.md",
+    "bytes": 11564,
+    "sha256": "59a2b248b0c72ac2160521a5ac7503931482b1414abb6388a3e74ae051c7c20e"
+  },
+  "native_compiler_result": {
+    "ref": "logs/light-optimizations-fixture-boundary-vdd-20261027/compiler-result.json",
+    "bytes": 1058,
+    "sha256": "39bbe9cbbe3ca07357b94a83130d4ba1d1c3e55a2a8b502b5ccdeeb8f4002c1c"
+  },
+  "boundary_comparison": {
+    "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary-content-comparison.v1.json",
+    "bytes": 559,
+    "sha256": "7a14732fd8d7e6271f1edf2f44b75050697349ecd3d27fd86b6d9c1671b09815"
+  },
+  "frozen_inputs": {
+    "ref": "logs/light-optimizations-quick-dev-20261026/public-input-freeze.v3.json",
+    "bytes": 4029,
+    "sha256": "2dcdcab251e782ac6db9988f8e1976e974646be4c2ae9c3a2554946f1f1f2f77"
+  },
+  "trusted_fixed_file_count": 15,
+  "trusted_fixed_files_unchanged": true,
+  "source_paths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    "scripts/vdd/compile_plan.py"
+  ],
+  "production_files_changed": 6,
+  "test_files_changed": 7,
+  "current_fixture_repair": {
+    "original_intent": "The existing positive test exercises published V3 reuse and the V4 seam with original semantic assertions, not directory denial.",
+    "legal_advisory_shape": "Temporary Markdown references unchanged assembled-requirements.md and real 00-index.md; saved real adapter prepares the context with exact raw file hashes and authorizes=[]. Compiler normative source and predecessor identities are unchanged.",
+    "positive_oracles_retained": [
+      "116 obligations",
+      "116 acceptances",
+      "155 failure intents",
+      "V4 valid=true",
+      "source_gap_claims=[]",
+      "calls=[] for unchanged frozen legacy path",
+      "public result stage=V4",
+      "no compiler-state publication by compile_probe"
+    ],
+    "negative_coverage": [
+      "Actual directory reference raises exactly consumption_reference_denied",
+      "Unchanged historical raw requirements still raises consumption_reference_denied"
+    ],
+    "Q2_owner": "S1/S2 snapshot boundary declared in native PLAN-87F445B767D0; bounded native red-author validates actual two-test-file delta.",
+    "Q2_author_result": {
+      "ref": "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/q2-author-result.json",
+      "bytes": 888,
+      "sha256": "8f859f1f33da37d59706c652d0fa3da9a042faedfc826818c7f7d4cf579183c8"
+    },
+    "actual_precheck": {
+      "ref": "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/actual-consumer-results.json",
+      "bytes": 12040,
+      "sha256": "bcf2685fcf89d4b94508fa3fa84c709f879c4f0e4cb7fdcba9ef73c7c99c29b6"
+    },
+    "targeted_cases": 10,
+    "targeted_junit": {
+      "ref": "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/targeted-junit.xml",
+      "bytes": 2104,
+      "sha256": "ad67defaa72cb27e569fa4e7863600fd7cb18081637565dc9a10893bd765db77"
+    },
+    "production_permissions_oracles_changed": false
+  },
+  "slices": [
+    {
+      "slice_id": "S1",
+      "obligations": 1,
+      "depends_on": [],
+      "Q7": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/S1-final-v3-ready.json",
+        "bytes": 42173,
+        "sha256": "bbea6c76de123a82b501758ef9915f2c12a1d338009559d71dbebd39721b72fd",
+        "status": "pass"
+      },
+      "stages": {
+        "probe": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/probe/stage-result.v2.json",
+          "bytes": 1457,
+          "sha256": "4e6d21f2372108e055fa67982e3341f7ce03fba8629887cf0b8684a4734badbd",
+          "predicate_result": true
+        },
+        "regression": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/stage-result.v2.json",
+          "bytes": 1603,
+          "sha256": "55137108ec542237b14bd2771a23613e0380ee8bdf752e2a00c20b439abbbe79",
+          "predicate_result": true
+        },
+        "terminal": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/terminal/stage-result.v2.json",
+          "bytes": 1394,
+          "sha256": "4b0d81fd863178d805c224e4cc7db03e84c4edc3f643ed5518f11cf0fc646d27",
+          "predicate_result": true
+        }
+      }
+    },
+    {
+      "slice_id": "S2",
+      "obligations": 9,
+      "depends_on": [],
+      "Q7": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/S2-final-v3-ready.json",
+        "bytes": 43837,
+        "sha256": "d32db0f6a332302931cbe26f3c0af66b98ba941512334b80160358d415fbd7aa",
+        "status": "pass"
+      },
+      "stages": {
+        "probe": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/probe/stage-result.v2.json",
+          "bytes": 7312,
+          "sha256": "7d62c0110a36daeeca3ba65bec86f3b92c8190c9abf6446a4a1f8c75ac4ca15e",
+          "predicate_result": true
+        },
+        "regression": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/stage-result.v2.json",
+          "bytes": 4254,
+          "sha256": "e0c8b4bba46b79c7d2d00c1c1ddbb62b29a7b39bfb50a4933eff253c6272c1bb",
+          "predicate_result": true
+        },
+        "terminal": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/terminal/stage-result.v2.json",
+          "bytes": 4029,
+          "sha256": "87d71dbfd65f83984d638517b6a82f253f9d6ef663a43de69e7008115b0aadc6",
+          "predicate_result": true
+        }
+      }
+    },
+    {
+      "slice_id": "S3",
+      "obligations": 7,
+      "depends_on": [
+        "S4"
+      ],
+      "Q7": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/S3-final-v3-ready.json",
+        "bytes": 43421,
+        "sha256": "c5c546aa19084aa1d37568e6735bfe370e341c27198cc23907d3ac6790b9765a",
+        "status": "pass"
+      },
+      "stages": {
+        "probe": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/probe/stage-result.v2.json",
+          "bytes": 5492,
+          "sha256": "f1234e7f9d94968567d283b5e2f0622e12520e700a54e6912cae306019ea4f65",
+          "predicate_result": true
+        },
+        "regression": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/regression/stage-result.v2.json",
+          "bytes": 3993,
+          "sha256": "fb862ebf47fb7074d6599f317d0c5e94cee4b737600254030ee8341979b3edee",
+          "predicate_result": true
+        },
+        "terminal": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/terminal/stage-result.v2.json",
+          "bytes": 3772,
+          "sha256": "270698d59fe7b0d88060ee69bf7e917a6bd1dddd11302ddc5d942ad762093843",
+          "predicate_result": true
+        }
+      }
+    },
+    {
+      "slice_id": "S4",
+      "obligations": 7,
+      "depends_on": [],
+      "Q7": {
+        "ref": "logs/light-optimizations-quick-dev-20261026/S4-final-v3-ready.json",
+        "bytes": 43421,
+        "sha256": "26beeca3622d9998dc3e934759c7360dc00feef9499d004fe3051d169989c39d",
+        "status": "pass"
+      },
+      "stages": {
+        "probe": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/probe/stage-result.v2.json",
+          "bytes": 5124,
+          "sha256": "a94a072681cde933692fc117ff7bfd2c926c0db77167a68419235eef5e4b0276",
+          "predicate_result": true
+        },
+        "regression": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/stage-result.v2.json",
+          "bytes": 3889,
+          "sha256": "25f167d46bdaf93681e190942cbe94f16d72bb96e2157432aa8f34b513a5b9b2",
+          "predicate_result": true
+        },
+        "terminal": {
+          "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/terminal/stage-result.v2.json",
+          "bytes": 3668,
+          "sha256": "a9da11b112fa3a077a6b0b468385a8ae464a75f1a571ff29d404063f48182874",
+          "predicate_result": true
+        }
+      }
+    }
+  ],
+  "Q8": {
+    "ref": "logs/light-optimizations-quick-dev-20261026/implementation-complete.v3.json",
+    "bytes": 26724,
+    "sha256": "9fa802e380a423890c1936993292724bb32a1275d73fa8f439127455d3723baf",
+    "status": "pass",
+    "predicate": "implementation-complete",
+    "runtime_closure_tuples": 48,
+    "acceptances": 24,
+    "terminal_input": {
+      "ref": "logs/light-optimizations-quick-dev-20261026/terminal-input.v2.json",
+      "bytes": 66399,
+      "sha256": "6b320d4a7160a5ae7ea613259e43479ba464479646367e2df1ec273397ebd0e8"
+    },
+    "predecessors": {
+      "ref": "logs/light-optimizations-quick-dev-20261026/final-v3-predecessors.json",
+      "bytes": 1227,
+      "sha256": "edc93319f9c76543c8809041e32c93bdf7c41e4106e741fd90e4de0658d7bddc"
+    },
+    "all_snapshot_root_kinds": 8
+  },
+  "current_execution": {
+    "native_pytest_process_receipts": 21,
+    "case_instances": 647,
+    "passed_call_instances": 647,
+    "unique_pytest_nodes": 340,
+    "process_attempts": 21,
+    "execution_references": 0,
+    "receipts": [
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 61393,
+        "sha256": "005fb986e816a0adffc09d219dd21e5657ade63936076220815399e96e8b1fcd",
+        "cases": 1,
+        "passed_call_cases": 1,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:00.364060Z",
+        "ended_at": "2026-10-27T00:45:00.804013Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/terminal/process-receipt.v2.json",
+        "bytes": 61339,
+        "sha256": "a94bb82ed4b43a11b7855087fb894cd612dbcea89174af7896d70f9e5cd2d98c",
+        "cases": 1,
+        "passed_call_cases": 1,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:45.852637Z",
+        "ended_at": "2026-10-27T00:45:46.321668Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/probe/process-receipt.v2.json",
+        "bytes": 61382,
+        "sha256": "025db4574b2fd3651473251f473c9e80a119bc7c14f7ce4676ee733bac145dc3",
+        "cases": 1,
+        "passed_call_cases": 1,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:44:56.411778Z",
+        "ended_at": "2026-10-27T00:44:56.971358Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/q6-executions/command-2d8fbc5953b4554e/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 164148,
+        "sha256": "72a5fa7630c0954ca81a3075ea1cbf7a54c2a803f139e871c8413386feb2f4e2",
+        "cases": 75,
+        "passed_call_cases": 75,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:20.438843Z",
+        "ended_at": "2026-10-27T00:45:29.871053Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/q6-executions/command-649c47174ad8fe3b/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 61359,
+        "sha256": "e5e04678dd5bf69fddb9c30accf8569ebbb16315b43267523a6bdf8eb7671ee8",
+        "cases": 1,
+        "passed_call_cases": 1,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:02.877914Z",
+        "ended_at": "2026-10-27T00:45:03.314501Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/canonical-evidence/regression/q6-executions/command-a5218e0af7106fef/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 185813,
+        "sha256": "b660dd1a54f13e4c186194b46bb669afea427fcbb15e27f9bc16c6f4ede96523",
+        "cases": 86,
+        "passed_call_cases": 86,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:06.550511Z",
+        "ended_at": "2026-10-27T00:45:16.089322Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 128265,
+        "sha256": "7cfdd969ab143fdcf74726a084c572870a7cdc33aa1a4328ed760991426be534",
+        "cases": 31,
+        "passed_call_cases": 31,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:57.753185Z",
+        "ended_at": "2026-10-27T00:46:00.522644Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/terminal/process-receipt.v2.json",
+        "bytes": 128262,
+        "sha256": "ad239dfbb3d9e6e43de11fa5209bd6dc5d62ddc02620bea3d5b13dab7bdc770b",
+        "cases": 31,
+        "passed_call_cases": 31,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:46:34.439079Z",
+        "ended_at": "2026-10-27T00:46:37.756420Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/probe/process-receipt.v2.json",
+        "bytes": 128256,
+        "sha256": "64c65bdc43c50154af54d487ed3d8f8194978f4cc3c1deed3a31c77cc5f56bfb",
+        "cases": 31,
+        "passed_call_cases": 31,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:45:52.290520Z",
+        "ended_at": "2026-10-27T00:45:54.901753Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/q6-executions/command-2d8fbc5953b4554e/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 164148,
+        "sha256": "86ca7885a266f7a84615b4cd6d2ee52d7b50819532ab22aa6f50d31be42c5aa1",
+        "cases": 75,
+        "passed_call_cases": 75,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:46:16.164038Z",
+        "ended_at": "2026-10-27T00:46:23.987398Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/canonical-evidence/regression/q6-executions/command-a5218e0af7106fef/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 185814,
+        "sha256": "356527a1c650ded22bc2a1724080a4f605496e0cf2bf1d80d855c1811f1e058a",
+        "cases": 86,
+        "passed_call_cases": 86,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:46:03.683371Z",
+        "ended_at": "2026-10-27T00:46:13.770357Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 107949,
+        "sha256": "84ee9e534a274452ef7b77f7121e9d7248d3edd211d9a6ca4a50c00d73a94218",
+        "cases": 18,
+        "passed_call_cases": 18,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:44:06.718525Z",
+        "ended_at": "2026-10-27T00:44:07.536949Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/terminal/process-receipt.v2.json",
+        "bytes": 107945,
+        "sha256": "83c7bf27a2b587dfdb0c5d2741fb6fe1fa8d704a11712c1b9987ee3cc72c6a06",
+        "cases": 18,
+        "passed_call_cases": 18,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:44:47.704646Z",
+        "ended_at": "2026-10-27T00:44:48.688073Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/probe/process-receipt.v2.json",
+        "bytes": 107939,
+        "sha256": "bbf808cd0b2b6d49a7534f22ca93a6accfc9bdb2aa1c8b101cf0ee93d0ba894f",
+        "cases": 18,
+        "passed_call_cases": 18,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:44:02.733622Z",
+        "ended_at": "2026-10-27T00:44:03.552578Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/canonical-evidence/regression/q6-executions/command-69f2ec899fb8b120/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 174431,
+        "sha256": "43524830ce0120b85cc00edeab72a44c4da7ce6b8df3be01922fbf73e6d3f679",
+        "cases": 48,
+        "passed_call_cases": 48,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:44:09.788673Z",
+        "ended_at": "2026-10-27T00:44:38.480680Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 85799,
+        "sha256": "077cc0ebc5e83468042de388db5aa2d6b64361f73101a8d2686803912b167bb2",
+        "cases": 15,
+        "passed_call_cases": 15,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:40:21.970630Z",
+        "ended_at": "2026-10-27T00:40:22.969947Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/terminal/process-receipt.v2.json",
+        "bytes": 82467,
+        "sha256": "3a32aabfc993e925424d3ff4b2b076ee6e0be760a9e6856f29582ba2c96f9f99",
+        "cases": 15,
+        "passed_call_cases": 15,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:43:55.148067Z",
+        "ended_at": "2026-10-27T00:43:56.759754Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/probe/process-receipt.v2.json",
+        "bytes": 85911,
+        "sha256": "ec9440c944530dd876e24478b43fabbb72ed0ba4e2d34bcf27f9ab5f36a34f3d",
+        "cases": 15,
+        "passed_call_cases": 15,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:40:17.309753Z",
+        "ended_at": "2026-10-27T00:40:18.271004Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/q6-executions/command-e07192c872e357ab/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 312327,
+        "sha256": "9718fb97c0c3f6e61b9fdd70f10a261b5969c4bb6c018efa088693d9709e4331",
+        "cases": 20,
+        "passed_call_cases": 20,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:40:30.471681Z",
+        "ended_at": "2026-10-27T00:41:36.281238Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/q6-executions/command-43c90adde6e7bf1b/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 82487,
+        "sha256": "d26506ca6cdc6bcc84d44abd3838fa70656a8c5c7c6ad3aa0b046feafc435b99",
+        "cases": 15,
+        "passed_call_cases": 15,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:40:26.056677Z",
+        "ended_at": "2026-10-27T00:40:27.131362Z"
+      },
+      {
+        "ref": "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/canonical-evidence/regression/q6-executions/command-c85442c02f2094e4/canonical-evidence/regression/process-receipt.v2.json",
+        "bytes": 334510,
+        "sha256": "c110cc4d49ecbd0f92f76242fde6ff16c9fe59ced31e8c3f8f951ef825e7e5ff",
+        "cases": 46,
+        "passed_call_cases": 46,
+        "process_attempts": 1,
+        "execution_reference": null,
+        "started_at": "2026-10-27T00:41:39.234418Z",
+        "ended_at": "2026-10-27T00:43:41.427152Z"
+      }
+    ]
+  },
+  "reuse": {
+    "native_VDD_source_content_replays": 1,
+    "execution_references": 0,
+    "reuse_publication_rejections": {
+      "reuse-unbound-read-or-import:/workspace/ji-mu-yun-light-optimizations/execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json": 3,
+      "reuse-dependency-observation-incomplete:['reuse-unobserved-external-effect:subprocess.Popen']": 8,
+      "reuse-unbound-read-or-import:/workspace/ji-mu-yun-light-optimizations/execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary/.compiler-attempts/v4-published-recall-e9ca66fc079a6660fc5b777f580bb744cc92758e262fa135469330e585c9708e.json": 4,
+      "reuse-dependency-observation-incomplete:['reuse-read-observation-budget-exceeded', 'reuse-unobserved-external-effect:subprocess.Popen']": 2
+    },
+    "interpretation": "Compatible existing generation/content and historical causal RED/GREEN artifacts remain available under their original identities. Current successor uses fresh present-route regression/terminal proofs. No historical execution was relabeled and no evidence fingerprint/engine was changed. Native conservative observation limits required actual current Q6 processes."
+  },
+  "historical_causal_proof_catalog": [
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/S4/attempt-03/canonical-evidence/red/stage-result.v2.json",
+      "bytes": 2965,
+      "sha256": "21863060a82f1702d56fba7105a26463b55ed5b19027f7c7615cf5ee11430ba0",
+      "stage": "red",
+      "failure_family": "expected-red",
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/attempt-01/canonical-evidence/green/stage-result.v2.json",
+      "bytes": 3654,
+      "sha256": "5596b3900911bba8dd7a80a4fc93dd76e5bc3d7451773105c7735f2d7c405c0b",
+      "stage": "green",
+      "failure_family": null,
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/attempt-01/canonical-evidence/red/stage-result.v2.json",
+      "bytes": 3316,
+      "sha256": "75db33b5b1a1a673756dc3a9dad0cef1ede69d7457ad025c54a99e6943153c79",
+      "stage": "red",
+      "failure_family": "expected-red",
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/attempt-02/canonical-evidence/green/stage-result.v2.json",
+      "bytes": 2354,
+      "sha256": "31b498005e133f5ade31a558f4822b4f895acb46100de64ea021f4d695dbbc5e",
+      "stage": "green",
+      "failure_family": null,
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S2/attempt-02/canonical-evidence/red/stage-result.v2.json",
+      "bytes": 2026,
+      "sha256": "4822d65110cb44214046d009f387eaf5f1c27c298430e9bbe6cca032b09e852a",
+      "stage": "red",
+      "failure_family": "expected-red",
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-01/canonical-evidence/red/stage-result.v2.json",
+      "bytes": 3843,
+      "sha256": "b2f3bec72afdd941205e31711870b317e4158f31e77901a725af52ae59ac3b39",
+      "stage": "red",
+      "failure_family": "expected-red",
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-03/canonical-evidence/green/stage-result.v2.json",
+      "bytes": 2623,
+      "sha256": "ffe61ff49eb22f3a129780d7e599971cf21b88b8bde4e552c2689a740c5ec9f2",
+      "stage": "green",
+      "failure_family": null,
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-03/canonical-evidence/red/stage-result.v2.json",
+      "bytes": 2295,
+      "sha256": "6a4be1ede15a94113d4e9d4d51131b64890f322809e162c71f2afb6e569b9d4b",
+      "stage": "red",
+      "failure_family": "expected-red",
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-03/canonical-evidence/refactor/stage-result.v2.json",
+      "bytes": 2792,
+      "sha256": "68428964dad1ce634480312cd698b583a2fe993601bf2c12a40374183e25cad5",
+      "stage": "refactor",
+      "failure_family": null,
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-04/canonical-evidence/green/stage-result.v2.json",
+      "bytes": 2623,
+      "sha256": "84c232b18c1fb2e52451f70a90a11dad91f178b81350f8f39941ef6c1bb92a08",
+      "stage": "green",
+      "failure_family": null,
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-04/canonical-evidence/red/stage-result.v2.json",
+      "bytes": 2295,
+      "sha256": "efa6a45408582d114d496a8a308bd3c375deaaab53f2575695e9d6a1998d3085",
+      "stage": "red",
+      "failure_family": "expected-red",
+      "predicate_result": true
+    },
+    {
+      "ref": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/attempt-04/canonical-evidence/refactor/stage-result.v2.json",
+      "bytes": 2792,
+      "sha256": "76caffe45fa7728ca861ce302a8c6ac9fd0b4c22d0345ab4037491c3720b1a44",
+      "stage": "refactor",
+      "failure_family": null,
+      "predicate_result": true
+    }
+  ],
+  "historical_proof_boundary": "Original successful RED/GREEN/REFACTOR artifacts establish their original behavior/candidate transition only. They are not current successor completion authority; current Q8 rereads the new plan and all present-route proofs.",
+  "retained_previous_handoff": {
+    "ref": "logs/light-optimizations-quick-dev-20261026/implementation-handoff.v1.json",
+    "bytes": 19320,
+    "sha256": "3cbdcae13073560a94dddf81252891206212b90c4403840d41df7f610531cca6"
+  },
+  "valid_unchanged_source_checks_reused": {
+    "package_validation": "final-checks/vdd-package-v2/stdout.txt: 10 package checks passed before this fixture-only amendment",
+    "package_unittest": "final-checks/vdd-package-tests-v2/stderr.txt: 22 passed before this fixture-only amendment",
+    "production_bytes_unchanged_since": "0b61a4d00640672c2a8cec12d33277c3654ccc8c"
+  },
+  "budget_originals": {
+    "ref": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v3/manifest.json",
+    "bytes": 33797,
+    "sha256": "0ec860680d05ee0c5f951bfcb8a0dd4c54323b252b427458fcec710266853ccb"
+  },
+  "limits": {
+    "platform": "Linux verification only; real Windows isolated-worker limitation remains.",
+    "VDD_V4": "Actual caller-session alignment, not an external independent reviewer.",
+    "review": "Implementation stage-end A/B and Acceptance not started. Parent coordinates next stage.",
+    "unrun": "Original PR21 15,375-case corpus and original Acceptance intentionally not rerun.",
+    "remote": "No push, PR, merge, CI or Actions monitoring.",
+    "models": "No policy/skill model hardcoding; no capacity errors observed."
+  },
+  "remaining_implementation_blockers": [],
+  "next_owner_action": "Parent may arrange one implementation-stage-end independent A/B review of the fixed final local candidate; do not start Acceptance or remote delivery implicitly."
+}

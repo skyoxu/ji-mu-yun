@@ -1,0 +1,44 @@
+{
+  "schema_version": "skill-input-request.v2",
+  "plan_id": "light-optimizations-acceptance-20261027",
+  "consumer": "run-refactor-implementation-acceptance",
+  "operation": "acceptance",
+  "policy_revision": "acceptance-v2",
+  "storage": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/skill-input-v2/acceptance",
+  "inputs": {
+    "implementation_target": [
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/acceptance-input-projection.v1.json"
+    ],
+    "acceptance_requirements": [
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/acceptance-input-projection.v1.json"
+    ]
+  },
+  "sources": [
+    {
+      "role": "implementation_input",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/acceptance-input-projection.v1.json",
+      "module": "implementation_target",
+      "resource_set": "approved-three-package-plan-projection",
+      "authority": "approved-vdd-canonical-inputs",
+      "sha256": "sha256:a9bdb6e87ac8f88bba2d51097ce28b8574881769fa226918870b5e6ddb307084"
+    }
+  ],
+  "bindings": {
+    "contract": {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/skill-input-contract.v1.json",
+      "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+    },
+    "registry": {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/command-registry.projection-input.v1.json",
+      "sha256": "sha256:e828cb2b4523a8676fe94b4e5398b1ed6e08509b375cb2b632e5024772ecd401"
+    },
+    "authority": {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/acceptance-authority.v1.json",
+      "sha256": "sha256:f838d079db6d49f517c6e431a0afeb5c2f9d5919a3fb55722e02dcf6eae560dd"
+    },
+    "knowledge_freeze": {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:c200345a399be946b01cf970ee9f32d43f9129baa7253860c353914a8057de69"
+    }
+  }
+}

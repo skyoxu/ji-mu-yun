@@ -1,0 +1,8 @@
+{
+  "backend": "host-session",
+  "status": "cancelled",
+  "request_id": "6110aa8b9977471c8595aad85e9644ee",
+  "request_sha256": "sha256:d66356effcaa06d4017cb564a207f854bbdaa372ede4071eaaaad2a2eeb58e72",
+  "caller": "chatgpt-current-session",
+  "authorizes": []
+}

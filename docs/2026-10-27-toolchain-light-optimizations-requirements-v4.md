@@ -1,0 +1,194 @@
+# Three bounded toolchain optimizations
+
+Status: implementation input; no generated execution plan or lifecycle authority.
+
+Baseline: `d2fd7405513b90c516e7f65f1771be67efcb1b95`.
+Local branch: `toolchain/light-optimizations-20261026`.
+Controlling decision: Accepted ADR-0041 and its existing execution ownership,
+source freshness, bounded repair, evidence reuse and execution budget rules.
+
+This input records the three optimizations authorized after the knowledge-query
+delivery. PR #21 and its branch are outside the write boundary. This input does
+not extend that delivery's scope or relabel its execution/Acceptance evidence.
+
+## FR-1: Read-only admission before VDD compilation
+
+Before the first semantic worker starts, provide one bounded admission result
+covering readable source inputs, an explicitly selected recovery candidate,
+available dependency projection, and the actual Quick Dev public entry.
+Keep VDD plan-shape and Quick Dev execution profiles separate and validate each
+against its existing policy. Do not infer a model or change model routing.
+
+Reuse current source preflight, native recovery validation, dependency rules and
+consumer checks. Admission must not invoke models, execute tests, create run
+state, publish a plan, or mutate caches. Missing or corrupt required current
+inputs block. Contracts that do not exist before V3 are explicitly pending;
+pending does not mean successful end-to-end validation or plan readiness.
+V3 execution preflight and final publication gates remain mandatory.
+
+Package owner: VDD public compiler/admission; Quick Dev supplies its existing
+consumer-owned read-only checks.
+
+Shared-consumer clarification of FR-1/FR-2 (no additional behavior): FR-2
+owns the shared stage-appropriate consumer check, including strict comparison
+when a materialized recovery context exists and actual argv/selector resolution
+through the existing consumer readers. FR-1's bounded admission-result behavior
+consumes that FR-2 behavior and therefore depends on it. In the current four-slice
+partition this means the admission slice S3 depends on the consumer slice S4;
+shared file ownership alone creates no other dependency. Bind the behavioral
+edge from the admission-result obligation to the shared stage-appropriate
+consumer-check obligation, without creating additional obligations.
+
+FR-2 must expose/reuse its checks at the existing VDD projected-candidate entry
+(`execution_preflight.inspect_candidate`) and the materialized Quick Dev entry.
+It can implement and verify both without the new FR-1 pre-worker admission
+orchestration. FR-1 only composes those owning results; it does not duplicate
+argv, selector, context-identity or profile policy. Pre-V3 future contracts
+remain pending; a selected materialized recovery input uses the strict shared
+check rather than treating unavailable comparison as passed. The existing
+static-reader fallback remains diagnostic and does not become execution proof.
+
+Production boundary:
+
+- `scripts/vdd/compile_plan.py`
+- `.agents/skills/vdd-execution-plan/scripts/execution_preflight.py`
+- One narrowly scoped admission helper in that same scripts directory, only if
+  needed to keep the public CLI small.
+- Consumer helper changes shared with FR-2; no duplicated argv/profile policy.
+
+Test boundary:
+
+- Quick Dev must create `.agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py`
+  as the dedicated primary assertion surface; existing tests below are retained
+  regressions rather than pre-existing proof of this plan's assertions.
+- Extend `test_execution_preflight.py` or one adjacent focused admission test.
+- Public entry: invalid input, explicit corrupt/stale recovery and unavailable
+  consumer entry block before any worker; the two profiles remain independent.
+- New compilation reports missing future contracts as pending.
+- Verify no model/test/process-evidence/cache/state writes on admission.
+- Retain applicable source-resume and V3-pause regressions; do not replay the
+  original knowledge-query delivery.
+- The existing fixture in `.agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py`
+  is an explicit Q2 fixture write/snapshot boundary, solely to copy the actual
+  shared Quick Dev entry and consumer dependencies into its isolated test repo.
+  Preserve its assertions, security rejection and source/resume/pause oracles.
+  This clarifies test ownership and adds no product obligation.
+
+## FR-2: Validate what the actual Quick Dev consumer reads
+
+At read-only admission, compare each materialized disk agent-context projection
+with the semantic bundle's corresponding projection. Reject missing, ambiguous
+or changed context before worker execution. Use the actual consumer's command,
+target, fixture and static selector resolution to prove consumability without
+importing tests or observing product behavior. A legal planned absent test
+remains Q2 work, not a fabricated assertion mapping or RED observation.
+
+Reuse current legal expected-red binding and exact obligation-to-slice dependency
+rules. Check explicit dependency projection against the existing authoritative
+obligation graph without silently repairing it at the consumer boundary.
+Unsupported static mappings retain the existing declared-selector fallback and
+must never be promoted to runtime case proof.
+
+Package owner: Quick Dev read-only consumer; VDD calls the same checks for the
+candidate representation available at its current stage.
+
+Production boundary:
+
+- `.agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py`
+- `.agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py`
+- `.agents/skills/quick-dev-tdd-adapter/tools/case_selection.py`, only if needed
+  to expose the existing pure reader without copying its implementation.
+- `.agents/skills/quick-dev-tdd-adapter/tools/execution_session.py`, only to use
+  the shared reader.
+- Existing VDD execution preflight and dependency helpers, only for reuse.
+
+Test boundary:
+
+- Quick Dev must create `.agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py`
+  as the dedicated primary assertion surface; the existing Q1/session tests
+  remain required regressions and may be extended within their current purpose.
+- Extend `test_ch456_q1_planned_preflight.py` and `test_execution_session.py`.
+- Bundle-valid but disk-missing/changed context blocks before a run is created.
+- Bundle-valid but unconsumable actual argv/selector blocks; legal planned
+  targets and existing static fallback retain their established behavior.
+- Wrong explicit slice dependencies reject through the existing graph rule.
+- Add one cross-slice transitive dependency drift regression if not already
+  covered; retain shared-execution and stage-reentry reuse regressions.
+
+## FR-3: Explicit dependency revisions with bounded impact
+
+Extend an existing successor-repair route only where its authority permits an
+explicit dependency revision. Bind the exact predecessor/source identities and
+declared old/new edges. Preserve all unselected requirements, oracles, production
+owners, slice memberships, write sets, selectors, terminal predicates and
+historical failure intents. Reuse existing runtime-role-only repair rather than
+introducing another failure-role protocol.
+
+Validate both graphs, reject unknown/duplicate/dangling/cyclic relations and
+compute affected slices plus transitive downstream closure across the union of
+old and new edges. Removed edges must not hide former dependents. Record the
+actual changed contracts and scope; reject unrelated drift. Preserve the
+predecessor and publish only to a distinct empty legal successor.
+
+Unchanged source does not authorize reuse of V4 after a semantic dependency
+change. Such a change must enter the already-owned semantic repair/gates with
+fresh applicable V4 evidence. Projection-only historical omissions continue to
+use existing handoff repair. Never relax ordinary dependency-binding validation
+or forge plan-ready/semantic-review receipts to make this package fit.
+
+If the current authority cannot safely express this revision, report the exact
+boundary after FR-1/FR-2; do not add a general plan mutation protocol.
+
+Package owner: existing VDD successor repair and dependency validation.
+
+Candidate production boundary, subject to authority resolution:
+
+- `scripts/vdd/compile_plan.py`
+- `.agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py`
+- `.agents/skills/vdd-execution-plan/scripts/execution_contract.py`
+- `.agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py`
+  only where an existing semantic repair route is necessary and sufficient.
+
+Test boundary:
+
+- Quick Dev must create `.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py`
+  for the dependency-revision assertions and must create
+  `.agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py`
+  for test-only retained execution/delivery guards. These declarations create
+  no test bytes, runtime evidence or additional production write authority.
+- The existing fixture in `.agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py`
+  is an explicit Q2 fixture write/snapshot boundary for S1/S2, solely to copy
+  the existing `scripts/workflow_unit_budget.py` dependency into its isolated
+  CLI repo. Preserve every role, oracle and permission check. This clarifies
+  test ownership and adds no product obligation.
+- The existing `.agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py`
+  is an explicit Q2 fixture write/snapshot boundary for S1/S2 only. Legalize its
+  advisory dependency fixture with a real consumer-produced context referring
+  to the unchanged frozen requirements file and an actual execution-plan index
+  file. Preserve the original positive V3/V4 semantic assertions and add real
+  directory-reference rejection coverage. This does not declare the unchanged
+  historical raw input consumable, alter its source/plan identities, weaken
+  consumption permissions, or add product behavior/production write authority.
+- Extend dependency projection and native successor-repair tests.
+- Explicit add/remove edges yield the old/new downstream closure.
+- Source/predecessor drift, unsafe output, cycle/dangling edges and nonselected
+  contract changes reject without predecessor mutation or successful publication.
+- Semantic changes cannot reuse old V4; role-only and projection-only paths keep
+  their existing evidence reuse and permissions.
+- Unaffected generation inputs remain reusable where existing checks permit;
+  cross-successor execution receipts are never relabeled as current proof.
+
+## Validation and delivery boundary
+
+Every new executable behavior needs actual failing behavioral assertions against
+its production entry, then minimal implementation and GREEN with frozen tests.
+Setup/import errors, artificial failures and plan/admission status are not RED.
+Reuse verified applicable evidence; run affected old regressions serially after
+freezing shared inputs. Preserve independent-unit budgets of 1800 seconds total
+and 600 seconds without genuine progress and the existing evidence engine.
+
+This requirements file is not a Quick Dev `strict_tdd_plan` contract. Native
+Quick Dev execution awaits a valid compiler-produced plan for these packages.
+Do not use the old knowledge-query bundle, hand-author plan-ready, invoke BMAD,
+launch A/B or Acceptance, push, open/merge a PR, or monitor remote CI/Actions.
+Model-backed VDD planning, if needed, is coordinated with the parent first.

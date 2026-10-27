@@ -113,14 +113,15 @@ def _load_json_object(path: Path, label: str, *, inside_repo: bool = True) -> Ma
     return value
 
 
-def _literal_cer_nodes(targets, required):
+def _literal_cer_nodes(targets, required, *, workspace=None):
     from case_selection import literal_nodes
-    return literal_nodes(ROOT, targets, required)[0]
+    return literal_nodes(workspace if workspace is not None else ROOT, targets, required)[0]
 
 
-def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True) -> tuple[list[str], list[str], list[str]]:
+def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str, *, resolve_literal: bool = True, context=None, workspace=None) -> tuple[list[str], list[str], list[str]]:
     selected = _slice(bundle, slice_id)
-    context = _agent_context(plan_dir, slice_id)
+    context = _agent_context(plan_dir, slice_id) if context is None else context
+    reader_root = ROOT if workspace is None else workspace
     commands = context.get("validation_commands")
     if not isinstance(commands, list) or not commands or not isinstance(commands[0], list) or not commands[0]:
         raise ValueError("agent-context validation command missing")
@@ -168,7 +169,7 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str,
             if item == "-q":
                 continue
             ref = safe_relative(item.split("::", 1)[0])
-            path = ROOT / ref
+            path = reader_root / ref
             if path.suffix != ".py" or not path.is_file() or path.is_symlink():
                 continue
             try:
@@ -214,7 +215,7 @@ def _descriptor_inputs(bundle: Mapping[str, Any], plan_dir: Path, slice_id: str,
     if resolve_literal and offset is not None and "behavior_routing" in bundle:
         required={assertion for a in bundle.get("acceptances",[])
                   if a["acceptance_id"] in selected["acceptance_ids"] for assertion in a["assertion_ids"]}
-        literal=_literal_cer_nodes([part for part in argv[offset+2:] if part!="-q"],required)
+        literal=_literal_cer_nodes([part for part in argv[offset+2:] if part!="-q"],required, workspace=reader_root)
         if literal:
             argv=[*argv[:offset],"-m","pytest",*literal,"-q"]
     snapshots = [safe_relative(str(item)) for item in selected.get("execution_snapshot_paths", [])]
@@ -303,6 +304,9 @@ def q0_recommendation(
 
 def q1_preflight(*, semantic: Path, slice_id: str, profile: str) -> dict[str, Any]:
     bundle = load_json(semantic)
+    from q1_planned_preflight import validate_planned_preflight
+    validate_planned_preflight(workspace=ROOT, bundle=bundle, slice_id=slice_id,
+                               timeout_seconds=1800, plan_dir=semantic.parent)
     identity = candidate_identity(ROOT, bundle, slice_id)
     result = preflight(workspace=ROOT, semantic_plan=semantic, slice_id=slice_id, candidate_hash=identity["candidate_hash"], profile=profile)
     return {**result, "candidate_identity": identity, "plan_sha256": sha256_bytes(semantic.read_bytes()), "slice_id": slice_id, "profile": profile, "authorizes": []}

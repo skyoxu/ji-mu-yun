@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "4e40a554c899447689d935c00f2d2235",
+  "request_sha256": "sha256:3b3f9e2cffff38b193f45aa1d8dde7724e5de59eb90f1782d049ec35ee0a764b",
+  "output_text": "Implemented only the declared readonly consumer owners: shared exact graph validation and optional disk-context equality in planned preflight, reuse of the actual descriptor reader for projected inputs, materialized Q1 composition and VDD projected-candidate composition. Frozen test and evidence-writer bytes were not changed.",
+  "authorizes": []
+}

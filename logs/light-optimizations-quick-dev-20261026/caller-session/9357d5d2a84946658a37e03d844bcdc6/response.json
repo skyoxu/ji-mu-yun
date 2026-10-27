@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "9357d5d2a84946658a37e03d844bcdc6",
+  "request_sha256": "sha256:cc83a06771191fa37ee8e7afa2c2b846f7d9ff12a2c075c6807e5fda75531d80",
+  "output_text": "Blocked the observed mutation-capable handoff publication mode when admission-only is selected, before entering the legacy publisher. This preserves the read-only action contract without changing ordinary handoff repair, source/role permissions or existing publication gates. Modified only the declared public compiler owner; frozen tests and fixtures unchanged.",
+  "authorizes": []
+}

@@ -1,0 +1,282 @@
+{
+  "authorizes": [],
+  "captured_at": "2026-10-27T00:14:19.850315+00:00",
+  "copies": [
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/budget-ledger.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/budget-ledger.json",
+      "sha256": "0c45e0bbe99141c056473e831651a76191ceafbb78dd3dc29456329a14272b60",
+      "bytes": 630
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/b60c223d44d7463f897b34cf476fad9a.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/b60c223d44d7463f897b34cf476fad9a.json",
+      "sha256": "d8f79428382c15aeeff18afca5d681637e1f441ef570827aa9b517ebe8994f02",
+      "bytes": 912
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/4a571fcaa94b4a30a195b7bf4c01b40c.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/4a571fcaa94b4a30a195b7bf4c01b40c.json",
+      "sha256": "50c3a2b4cdff3b57deec2af15c68b37692d83b3172760d7cbb5ce35519d41848",
+      "bytes": 1097
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/cbc3f17055e34bc69b821246004f8a9b.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/cbc3f17055e34bc69b821246004f8a9b.events.jsonl",
+      "sha256": "41bb573b78b8f794b1ddfb4691ae210ed9c8ff5c5ec657c7b6ee9dc671a6aabc",
+      "bytes": 16900
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/b60c223d44d7463f897b34cf476fad9a.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/b60c223d44d7463f897b34cf476fad9a.events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/cbc3f17055e34bc69b821246004f8a9b.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/cbc3f17055e34bc69b821246004f8a9b.json",
+      "sha256": "08ac8be028ea9ac1d1d8d550134cef336d0c2c170dbb5316994574429624363a",
+      "bytes": 1470
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/73bcaa8590b8934fea2bd803d4bc24bc03e352884251f4bfdae32b3ea2f7b954/4a571fcaa94b4a30a195b7bf4c01b40c.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S1/4a571fcaa94b4a30a195b7bf4c01b40c.events.jsonl",
+      "sha256": "3983cfd5dad719124f284df5c2976056b1e86a62f741b4e104277ae7417e8bcd",
+      "bytes": 1013
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/99d990817c8c45d0aa60420cb0412613.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/99d990817c8c45d0aa60420cb0412613.events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/budget-ledger.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/budget-ledger.json",
+      "sha256": "5a8d91b63bc37689c25e4aae73262b2fb4a538f44be18ca415a8d255546ef2a6",
+      "bytes": 538
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/83e528e8580e483da994c44118b12b32.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/83e528e8580e483da994c44118b12b32.events.jsonl",
+      "sha256": "be18841a618e80df498357ba03e2aebee4cf919fa7631a0982ecf0e04356ae99",
+      "bytes": 6018
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/2cd1c4c497624d17834d19241ed32cfe.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/2cd1c4c497624d17834d19241ed32cfe.json",
+      "sha256": "3e87c2702dfaf0b09f178084e5ac39aa1e4e619a818a8b3535d180e4bbc0bd64",
+      "bytes": 1373
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/2cd1c4c497624d17834d19241ed32cfe.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/2cd1c4c497624d17834d19241ed32cfe.events.jsonl",
+      "sha256": "3eb247294476cabaa85d7f9003a62386e210630f40fd249d27372a0d898d5e67",
+      "bytes": 20730
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/99d990817c8c45d0aa60420cb0412613.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/99d990817c8c45d0aa60420cb0412613.json",
+      "sha256": "6d5cd469998234c1b9ad8563f7d0621195f175fdf00ea32dde5c0dc0479b383a",
+      "bytes": 914
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/549e897319df00dafd8c262acc5319f3ea2193ad7716e2b79c396412d44f1ef9/83e528e8580e483da994c44118b12b32.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S2/83e528e8580e483da994c44118b12b32.json",
+      "sha256": "4e972433995300a1b607b488023b153773f59a3da5a927a5a54ce1078d6221c8",
+      "bytes": 1095
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/9d46d1f2c3e74d1b98cd887b9e2b6af3.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/9d46d1f2c3e74d1b98cd887b9e2b6af3.json",
+      "sha256": "ceed00633296c55ef85df0ff1e7638d9b45fed0d12f29c8b8a49e5220db9b6ae",
+      "bytes": 1893
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/budget-ledger.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/budget-ledger.json",
+      "sha256": "1936beb8d7610d49e59f422afbfb92bdd647eef3248a99addf62c83fbbbea7d5",
+      "bytes": 890
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/d62ee5321d7d420e97a035c215aea8d5.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/d62ee5321d7d420e97a035c215aea8d5.events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/d62ee5321d7d420e97a035c215aea8d5.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/d62ee5321d7d420e97a035c215aea8d5.json",
+      "sha256": "759d0d05d5b248c7212c4e97a2f27f860f9aeac1fe909b33cfe3f65489ef6511",
+      "bytes": 1250
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/9d46d1f2c3e74d1b98cd887b9e2b6af3.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/9d46d1f2c3e74d1b98cd887b9e2b6af3.events.jsonl",
+      "sha256": "0373da4be06e6a76a843af0e9c2a3d57413f1c2d50f981f01df5510bb680bd95",
+      "bytes": 2155
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/912012c38e944885af1417178fe316ff.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/912012c38e944885af1417178fe316ff.events.jsonl",
+      "sha256": "a8c7ea74fd59717b769e5fc1e8c48a1e124096717c5dfae270e28a9eeb9bbbe5",
+      "bytes": 12717
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/fc75d91bbb4542a5b34438efacc78bc4.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/fc75d91bbb4542a5b34438efacc78bc4.json",
+      "sha256": "c77d8650b0e136393a4d423ef50b00695fd0b87dabb4b598e0e0459f02a3ee9b",
+      "bytes": 2076
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/81707d09c75b4f0ebfd9ed09ae406f8d.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/81707d09c75b4f0ebfd9ed09ae406f8d.events.jsonl",
+      "sha256": "353ac55f206bf34c083f69ed87a2321a934024a7534fd84854ac72c502bbeafa",
+      "bytes": 3852
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/81707d09c75b4f0ebfd9ed09ae406f8d.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/81707d09c75b4f0ebfd9ed09ae406f8d.json",
+      "sha256": "88a61bd81811de7b9f097872eac28913fa0a4de096636843cef4e19d36639d43",
+      "bytes": 1432
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/fc75d91bbb4542a5b34438efacc78bc4.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/fc75d91bbb4542a5b34438efacc78bc4.events.jsonl",
+      "sha256": "f6dceaf2e05ec60378b5cf890aff5b95b49d267aee7b8eae529a5977a46eb4f5",
+      "bytes": 3854
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/93acbdc399de8d62f796201b0cbf1e95a0d1d323b4c26be16bb448ec381e79f9/912012c38e944885af1417178fe316ff.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S3/912012c38e944885af1417178fe316ff.json",
+      "sha256": "9c1f26bd7522384bf301ede339e7bc18f0a8549586e998c59ebd5fb4b18f747d",
+      "bytes": 1709
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/bc179c05183c42499591a7fce0629d46.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/bc179c05183c42499591a7fce0629d46.json",
+      "sha256": "03dd08d1e005d90da26d4c2501199b74f3fea8ad82f4d0da52df62fa7754fcd0",
+      "bytes": 1895
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/budget-ledger.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/budget-ledger.json",
+      "sha256": "ef461823721ba117a65598ac3643d247ff73c81845366dda23ee87c83731c7a8",
+      "bytes": 1242
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/8f150e708d244bc1b3c7ce6593aa4edb.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/8f150e708d244bc1b3c7ce6593aa4edb.json",
+      "sha256": "cc1b495bfcfea2ac626c0b6e225ec48387db1d78dc082c9fda91d9346049cf3f",
+      "bytes": 2259
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/e3a76c35ef9d437aabc1c05aa878254f.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/e3a76c35ef9d437aabc1c05aa878254f.json",
+      "sha256": "a300dfe02f59c252a299c2de9b9f858f445d5e10b04b42a42a6452981982fc91",
+      "bytes": 1251
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/98183a8651e643068b3ae9554b0a4a74.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/98183a8651e643068b3ae9554b0a4a74.json",
+      "sha256": "6a34819a072e3a6103f73585ee5c92a124b3f1559bdd0d3f7737a9d4b6073777",
+      "bytes": 2568
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/59c287fcb3dd40ef953b99c188e405d8.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/59c287fcb3dd40ef953b99c188e405d8.events.jsonl",
+      "sha256": "b221f05d00416cb961601fbf5edc7e4c7adf9b6398e67828cb8bbed8bb759c1f",
+      "bytes": 2489
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/8f150e708d244bc1b3c7ce6593aa4edb.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/8f150e708d244bc1b3c7ce6593aa4edb.events.jsonl",
+      "sha256": "f6f3684a2b09032a47d821fd3e09d532dfeb4298ea8596025d7053d3ae12241b",
+      "bytes": 3353
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/bc179c05183c42499591a7fce0629d46.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/bc179c05183c42499591a7fce0629d46.events.jsonl",
+      "sha256": "4e6db2b50b6d33521c80df181565b03f94cde0716f352b470b73703e9da6a01d",
+      "bytes": 19425
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/e3a76c35ef9d437aabc1c05aa878254f.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/e3a76c35ef9d437aabc1c05aa878254f.events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/262cdb8010a545caadeaf7fc8b2d1d42.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/262cdb8010a545caadeaf7fc8b2d1d42.events.jsonl",
+      "sha256": "6f3727aa711e923f9cdd6f1d40ef5b59a82448dc668bad39d1af7e7c2550ddb5",
+      "bytes": 3351
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/59c287fcb3dd40ef953b99c188e405d8.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/59c287fcb3dd40ef953b99c188e405d8.json",
+      "sha256": "6efcdbedb8963fa73edf44de9673dea608c6a3098a5faf835bf40ccbfc719db4",
+      "bytes": 2079
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/98183a8651e643068b3ae9554b0a4a74.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/98183a8651e643068b3ae9554b0a4a74.events.jsonl",
+      "sha256": "4c4e95d5d2a79642938e51eed8ddfe7a2cab30270a9434e055b47e451b200c14",
+      "bytes": 14177
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/a3a620add932e166141fe102c10311998735b76d2b4b836b746c0c8c4c24bb52/262cdb8010a545caadeaf7fc8b2d1d42.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-S4/262cdb8010a545caadeaf7fc8b2d1d42.json",
+      "sha256": "aab34470486cebd34625c135cd57143a932db83cc2307ab3b01e310b938756d8",
+      "bytes": 1433
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/20edfd9cd79e9b4d196417b1d1a01bc87e53e27f960886c0cefc01e99d1f1ae9/budget-ledger.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-plan-entry/budget-ledger.json",
+      "sha256": "99e89f200fa2c3c32f2befa4050027e790ff41c50708d53360349ea29dd85e57",
+      "bytes": 277
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/20edfd9cd79e9b4d196417b1d1a01bc87e53e27f960886c0cefc01e99d1f1ae9/4bfd2b2395f446d7bedfbb477ee4d3e8.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-plan-entry/4bfd2b2395f446d7bedfbb477ee4d3e8.json",
+      "sha256": "a6a0ec0886575f08dd7c29213c5e1f09f8118f60cc0f7cff02319b123c24f25e",
+      "bytes": 1464
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/20edfd9cd79e9b4d196417b1d1a01bc87e53e27f960886c0cefc01e99d1f1ae9/a5902b44a82443058f004cb9faad055e.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-plan-entry/a5902b44a82443058f004cb9faad055e.json",
+      "sha256": "4a5855d7f2f52eea957c8a3e36642f754ae59e14c7b507cfc33e150cc956082a",
+      "bytes": 1257
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/20edfd9cd79e9b4d196417b1d1a01bc87e53e27f960886c0cefc01e99d1f1ae9/a5902b44a82443058f004cb9faad055e.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-plan-entry/a5902b44a82443058f004cb9faad055e.events.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "source": "/workspace/ji-mu-yun-light-optimizations/logs/workflow-unit-budgets/quick-dev/20edfd9cd79e9b4d196417b1d1a01bc87e53e27f960886c0cefc01e99d1f1ae9/4bfd2b2395f446d7bedfbb477ee4d3e8.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/quick-dev-plan-entry/4bfd2b2395f446d7bedfbb477ee4d3e8.events.jsonl",
+      "sha256": "01a7ed5e90e6120fc497148a3ba2c45ea9f9e0035e22f7563e95e8ae74204c73",
+      "bytes": 6662
+    },
+    {
+      "source": "/tmp/light-qd-baseline-99144af7/logs/workflow-unit-budgets/vdd/2320ed6330c02d836822ea94cf2c7a77ff7ad3d94aa3be7588435e469a7d16a3/76a4282768f549bfb7c73c6091e892a6.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/trusted-vdd-99144af7/76a4282768f549bfb7c73c6091e892a6.json",
+      "sha256": "c64777c27e1ceeb0fa6625ca130ac5aa9497c5cd22570284fc02cc0b855ba154",
+      "bytes": 4463
+    },
+    {
+      "source": "/tmp/light-qd-baseline-99144af7/logs/workflow-unit-budgets/vdd/2320ed6330c02d836822ea94cf2c7a77ff7ad3d94aa3be7588435e469a7d16a3/budget-ledger.json",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/trusted-vdd-99144af7/budget-ledger.json",
+      "sha256": "c456bc771263146eb4522f96367d7b6af2abdb8f512a0d18a8c1c78175c22e2d",
+      "bytes": 3215
+    },
+    {
+      "source": "/tmp/light-qd-baseline-99144af7/logs/workflow-unit-budgets/vdd/2320ed6330c02d836822ea94cf2c7a77ff7ad3d94aa3be7588435e469a7d16a3/76a4282768f549bfb7c73c6091e892a6.events.jsonl",
+      "copy": "logs/light-optimizations-quick-dev-20261026/budget-originals/final-v2/trusted-vdd-99144af7/76a4282768f549bfb7c73c6091e892a6.events.jsonl",
+      "sha256": "0057a96c548987682c344f391da4ee4540c985dbd7176b6c9e7fc93f47be8df8",
+      "bytes": 12621
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Current admission is pending; actual unchanged consumer rejects the historical reference before query-record creation: consumption_reference_denied

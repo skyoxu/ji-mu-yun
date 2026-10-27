@@ -1,0 +1,1889 @@
+{
+  "actionStates": {
+    "validate-acceptance-package": "completed",
+    "validate-acceptance-routing": "completed",
+    "validate-code-review-route": "completed",
+    "validate-vdd-contract": "completed"
+  },
+  "authorizes": [],
+  "blocker": null,
+  "candidate": {
+    "authorizes": [],
+    "baselineResolvedCommit": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "changedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    "scripts/vdd/compile_plan.py"
+  ],
+  "coordinatorResult": {
+    "actionDag": {
+      "actions": [
+        {
+          "actionId": "validate-vdd-contract",
+          "activation": true,
+          "commandId": "validate-vdd-contract",
+          "dependsOn": [],
+          "order": 1
+        },
+        {
+          "actionId": "validate-code-review-route",
+          "activation": true,
+          "commandId": "validate-code-review-route",
+          "dependsOn": [
+            "validate-vdd-contract"
+          ],
+          "order": 2
+        },
+        {
+          "actionId": "validate-acceptance-routing",
+          "activation": true,
+          "commandId": "validate-acceptance-routing",
+          "dependsOn": [
+            "validate-code-review-route"
+          ],
+          "order": 3
+        },
+        {
+          "actionId": "validate-acceptance-package",
+          "activation": true,
+          "commandId": "validate-acceptance-package",
+          "dependsOn": [
+            "validate-acceptance-routing"
+          ],
+          "order": 4
+        }
+      ]
+    },
+    "actionDagHash": "sha256:867704e04cce7e8b972f7d2ce8601725a6325b326280079f4971c93c3a369ec5",
+    "authorizes": [],
+    "bootstrapInvoked": false,
+    "executedActionCount": 4,
+    "finalization": {
+      "authorizes": [
+        "acceptance-passed"
+      ],
+      "final": {
+        "path": "finalization/acceptance-passed.v1.json",
+        "sha256": "sha256:ba5f902663945fb62c87ae8825e7721fe3ef9741f43d80b04b4878f405535f22"
+      },
+      "status": "acceptance-passed",
+      "wrapper": {
+        "path": "finalization/acceptance-result-final.v1.json",
+        "sha256": "sha256:5112f8c2b358a15ece7dff3a394dcb35446d524464b82527d570a9b811f9521a"
+      }
+    },
+    "persistedActionState": {
+      "actionStates": {
+        "validate-acceptance-package": "completed",
+        "validate-acceptance-routing": "completed",
+        "validate-code-review-route": "completed",
+        "validate-vdd-contract": "completed"
+      },
+      "authorizes": [],
+      "dependencyClosed": {
+        "validate-acceptance-package": true,
+        "validate-acceptance-routing": true,
+        "validate-code-review-route": true,
+        "validate-vdd-contract": true
+      },
+      "missingDependencies": {
+        "validate-acceptance-package": [],
+        "validate-acceptance-routing": [],
+        "validate-code-review-route": [],
+        "validate-vdd-contract": []
+      },
+      "nextAction": null,
+      "readyActionIds": [],
+      "runId": "acceptance-4a66ec9c0c361a79",
+      "schemaVersion": "acceptance-run-inspection.v1",
+      "sortingBasis": "dependency-topology,action-order,command-registry-order,command-id"
+    },
+    "requestAuthority": "none",
+    "route": "deterministic_only",
+    "runBinding": {
+      "actionDagHash": "sha256:867704e04cce7e8b972f7d2ce8601725a6325b326280079f4971c93c3a369ec5",
+      "contractHash": "sha256:eada03600b8e49477091d9864bfd63685111290152159280dfef1c46944bc5dc",
+      "knowledgeContextHash": "sha256:48c1bd628ece33c32c249a8b9b2315a526e4947b13d985101830e7bbd0a2d6d7",
+      "runDirectory": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79",
+      "runId": "acceptance-4a66ec9c0c361a79",
+      "runInputHash": "sha256:ad28f830e8174cbf0b55523d9b5f09549936dfa4998f55c361e18cf0405ad8a8"
+    },
+    "runBindingHash": "sha256:7c269ff81803e9d0abac2126a534c663aedf67b22e55af0d4981d2e1555e4949",
+    "runDirectory": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79",
+    "runId": "acceptance-4a66ec9c0c361a79",
+    "runInputHash": "sha256:ad28f830e8174cbf0b55523d9b5f09549936dfa4998f55c361e18cf0405ad8a8",
+    "schemaVersion": "acceptance-coordinator-result.v4",
+    "status": "completed",
+    "telemetry": {
+      "path": "coordinator-telemetry.jsonl",
+      "schemaVersion": "acceptance-coordinator-telemetry.v1"
+    },
+    "typedHandoff": null
+  },
+  "diffHash": "sha256:7bb4f8606c9e3e548b8654342fc44626096bfa42b082acf352979e29d7caead4",
+  "diffNote": "Hash-checked baseline Git bytes versus declared candidate commit/snapshot bytes.",
+  "impact": {
+    "checks": [
+      {
+        "argv": [
+          "-B",
+          "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+          "validate-code-review-route",
+          "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+          "-B",
+          ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+          "resolve-code-review-policy",
+          "--policy",
+          ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+          "--baseline",
+          "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/baseline-content-manifest.v1.json",
+          "--candidate",
+          "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/candidate-content-manifest.v1.json",
+          "--adapter-hash",
+          "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110"
+        ],
+        "commandId": "validate-code-review-route",
+        "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json"
+        ],
+        "reason": "Registered argv names an affected file."
+      },
+      {
+        "argv": [
+          "-B",
+          "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+          "validate-acceptance-routing",
+          "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+          "-B",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py"
+        ],
+        "commandId": "validate-acceptance-routing",
+        "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py"
+        ],
+        "reason": "Registered argv names an affected file."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q1_planned_preflight.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q1_planned_preflight.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compile_watchdog.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compile_watchdog.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_runtime_role_only_handoff.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_runtime_role_only_handoff.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_candidate_contract_repair.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_candidate_contract_repair.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_test_path_input_repair.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_test_path_input_repair.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      },
+      {
+        "argv": [
+          "-3",
+          "-m",
+          "pytest",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py",
+          "-q"
+        ],
+        "commandId": null,
+        "executable": "py",
+        "executedBySupport": false,
+        "paths": [
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py"
+        ],
+        "reason": "Affected Python test; suggestion is not a registered required check."
+      }
+    ],
+    "consumers": [
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              100
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+        "sha256": "sha256:a11b3212f1af1b2d980bd10751dc7c1a0d3dc771840eff3c8ee92d48f308fa79"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              196,
+              247,
+              272,
+              288,
+              306,
+              323,
+              339
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py",
+        "sha256": "sha256:080f60e387e4cc18fc4d0d53602978525b39f9fb95236f5dc5817ad540005f0a"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              252
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py",
+        "sha256": "sha256:a8add31e11463c5eedbf5155e4b529fa0dfc6904f0739c5367d8f0c0d4ba6ad5"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              19
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_fresh_medium_task.py",
+        "sha256": "sha256:46d00faf1f4308e0db1666b3010254d1b0e24970af344449ed640839861e3879"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              11
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q1_planned_preflight.py",
+        "sha256": "sha256:0c9a121cc03c881c0a868196a994288c307e1cdc392202d13b1d4e5e6986a82e"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              11
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_stable_runner.py",
+        "sha256": "sha256:79932643cc431fc979b21d2d7a05592bbe77135f7ae6480945e1d604e42112ac"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              9
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py",
+        "sha256": "sha256:4630249b83c49a3b56848f0867ea352f6a785eb2cc7381eb55da7674d8a26cfc"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              10
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py",
+        "sha256": "sha256:92c2f0738e964cc4cfe01dceee425e683c2c332828833951fe7ff6d3c2fee0cc"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              11
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py",
+        "sha256": "sha256:a5ea41e80894bee0b57908e1245af206aac411cf41d3ee6e01eafc68684bd188"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              76,
+              97
+            ]
+          }
+        ],
+        "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py",
+        "sha256": "sha256:766cd765eb15c5b8bddad68762a28b439f3a1ab35f2c648af9fb71028bb8991f"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              25
+            ]
+          }
+        ],
+        "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+        "sha256": "sha256:0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              80,
+              95
+            ]
+          }
+        ],
+        "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+        "sha256": "sha256:a56193fbc52ea5bd87e0cad53c46e92bee2e3cf113709caaa5db43ac3d5ccb55"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              42,
+              47
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+        "sha256": "sha256:7f25464c6e621b906a6f35cefe6487c339fc9ae2930b2eb95afd86971838cca4"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              20
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/references/planning-operation.md",
+        "sha256": "sha256:9ff7de96d91d1ba3a65ab2b9ef7938e4cb1abaec87e90b98d69d546b42bbbef8"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              551,
+              639
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+        "sha256": "sha256:ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              19
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+        "sha256": "sha256:5b4e0be1b8bbb136295e8d11d8cf8676cb8da45d3d4bbf108899c37bc1329250"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              361
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              285,
+              300
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_authority.py",
+        "sha256": "sha256:926adbce0150d2c2e627ba64e223862113cd47791c3dece1adccf5720b902bd2"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              856
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_gate.py",
+        "sha256": "sha256:5ded1cc8f7977b14073947bdc2c4bb0d136970b8400607aa6431ef67a8eec725"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              23
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_feasibility_patch.py",
+        "sha256": "sha256:464dc9938299649960c06304c67bef2e2e983a1dd6d308855d9f6553ecbc59ad"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              8
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_plan_contract.py",
+        "sha256": "sha256:1a15807740de02ea619d0e771529b8c35d53a2a89d4caf176ab27d98ec2b35ec"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              151
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_slice_cohesion_patch.py",
+        "sha256": "sha256:27265e72721732d6b6d1aa3632cbaea660be109b92b14e5976977e42ddf37783"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              20
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              886
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              121
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+        "sha256": "sha256:0be556e5968fd4c64084d2ce10be06073fc7647ec1263e98a01036cfa6bced6c"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              69,
+              70,
+              71,
+              72
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_path_grounding_patch.py",
+        "sha256": "sha256:177f5d9643769b11a83389c48e97070b1497748763ee9500714e6c1cbb2d9372"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              4
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/skill-contract.json",
+        "sha256": "sha256:5fb3d68f4b09ab89cce98f88f882376305f5f546252e8861d1f7b5c435b6940e"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              73,
+              102
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compile_watchdog.py",
+        "sha256": "sha256:51a6d125a40c9cd8f730bcc6ed0d491184e1609f7508073f4386b0cabec2f193"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              14
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py",
+        "sha256": "sha256:595e8ed66a708391c1a52df36599e2e0bb86bf08fdee22957208344d9e12195e"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              15
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py",
+        "sha256": "sha256:dcb42a2d58e004c1937d638b3a579fba31e9929d4f14313ab430c21eeb3ffa2b"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              19
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              18
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              13
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              166
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py",
+        "sha256": "sha256:1cb29fe458788abb544dfadc4638d587611ee58303465952b1ec6c01cf6b8941"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              13
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              90,
+              112
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py",
+        "sha256": "sha256:ec82a1f072807031fad4bc9a6dfd7fec3f1ef021bda78fe96e17730b3001dd09"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              11
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              17,
+              202
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py",
+        "sha256": "sha256:dadfedf51ee12e8f1004ff0bc2defbbe20e61da66525abba7eb73e80b947dd3b"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              12
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              11
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v1_source_bound_split.py",
+        "sha256": "sha256:8096a488021e7f9d7ed392fdeeabe0008814b92d0173df210ed4ed1efae99bff"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              9
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_runtime_role_only_handoff.py",
+        "sha256": "sha256:453ae37f2b57cc44060c40676220d87f9406680ef0710f42150aea13d3a9b03a"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              19
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py",
+        "sha256": "sha256:e8a220a7cbc6dc0bc58d530e6770ee4b3fbd384e052baa5c081f8363b4d22b08"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              9
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py",
+        "sha256": "sha256:2f74e4b0162b3c0114250616774259fb7cd42c82b847055494ce1bf8606a5202"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              13
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              92,
+              115
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+        "sha256": "sha256:bd18ace93ff30f373bf2a7bc167cdcbb629a61bc5b446eebef984751b0f85d7b"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              13
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              145,
+              154,
+              162
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_candidate_contract_repair.py",
+        "sha256": "sha256:6f9f47e28e62339208182a3843479e4c203e740a816474b4499a792de46cb801"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "python-import-name-hint",
+            "lines": [
+              14
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              116
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_test_path_input_repair.py",
+        "sha256": "sha256:c312855754c5449e202850a45b8650a2f7465789d81a8644fccc240e539fa265"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              33
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py",
+        "sha256": "sha256:723c08e089d3346aae5229c7cba7729cd32c9d7d9bc66d0932b83881468b652b"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              108,
+              114
+            ]
+          }
+        ],
+        "path": ".agents/skills/vdd-execution-plan/scripts/validate_skill_contract.py",
+        "sha256": "sha256:147850ca0bdde67d30f8130680d3388af2f4b41d602073430f4657b698dc4777"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              1
+            ]
+          }
+        ],
+        "path": ".skill-input-work/knowledge-query-main-isolated-20261026/0411432b57114bfda634a47f402667c2/prepared.json",
+        "sha256": "sha256:ceee05c870d20da785f4130fd8cce5677ada960eb8b9a20329597d05b621b52f"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              25
+            ]
+          }
+        ],
+        "path": "docs/2026-09-07-vdd-quick-dev-case-evidence-and-regression-routing-requirements.md",
+        "sha256": "sha256:675fc58aedb126218b6158a0e91b35485077f2c4758b7a27908591062148241c"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              92
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              93
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              102
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              143
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              54
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              144
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              61
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              151
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              149
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              53,
+              141
+            ]
+          }
+        ],
+        "path": "docs/2026-10-26-toolchain-light-optimizations-requirements-v2.md",
+        "sha256": "sha256:4ba6b1eb66be06344e28cd2191b00b37c3279f1ea3466307b8d0728e5c5ca260"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              97
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              98
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              107
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              148
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              54
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              149
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              61
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              156
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              154
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              71
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              159
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              53,
+              146
+            ]
+          }
+        ],
+        "path": "docs/2026-10-26-toolchain-light-optimizations-requirements-v3.md",
+        "sha256": "sha256:3c353f4d69dbea496e16f0e0dae4fd5d6a6b48d398d0148fd37444797f991dd7"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              73
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              74
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              83
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              124
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              35
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              125
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              42
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              132
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              130
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              34,
+              122
+            ]
+          }
+        ],
+        "path": "docs/2026-10-26-toolchain-light-optimizations-requirements.md",
+        "sha256": "sha256:afddc7297b788fb2a6740b16dd421299d2c642d674ce5f799062151df153d642"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              97
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              98
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              107
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              148
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              54
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              149
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              61
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              156
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              154
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              71
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              164
+            ]
+          },
+          {
+            "changedPath": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              159
+            ]
+          },
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              53,
+              146
+            ]
+          }
+        ],
+        "path": "docs/2026-10-27-toolchain-light-optimizations-requirements-v4.md",
+        "sha256": "sha256:59a2b248b0c72ac2160521a5ac7503931482b1414abb6388a3e74ae051c7c20e"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              31
+            ]
+          }
+        ],
+        "path": "docs/ch456-practical-closeout.md",
+        "sha256": "sha256:3aa921546fff7825717924c742e3e6c20ed0eaad581dbece875898aed543d4c9"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              664,
+              684,
+              685
+            ]
+          }
+        ],
+        "path": "docs/vdd-quick-dev-chapter-4-5-6-capability-upgrade-draft.md",
+        "sha256": "sha256:226bb95bb49d811557f5cd9c9496ea6507e0ab0c86ce6e8dae39c75d68dc56b5"
+      },
+      {
+        "matches": [
+          {
+            "changedPath": "scripts/vdd/compile_plan.py",
+            "kind": "literal-path-reference",
+            "lines": [
+              98
+            ]
+          }
+        ],
+        "path": "docs/workflows/caller-session-execution.md",
+        "sha256": "sha256:e4dd9808a7bc9b73b5179b786a8fe8e63d1c79fc58b23c6f4e38a8af67002eea"
+      }
+    ],
+    "limitations": [
+      "One-hop hints only; dynamic imports and runtime wiring may be absent.",
+      "Name-only Python matches are heuristic; inspect their source before adding checks.",
+      "Source inventory truncated to 5000 files.",
+      "Oversize source not scanned: .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Source not scanned: .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_inline_context_repair.py",
+      "Oversize source not scanned: .skill-input-work/acceptance-08-05-c15c2839-budget3/54bf3609b2474498ade77afa4f27cac2/prepared.json",
+      "Oversize source not scanned: .skill-input-work/acceptance-08-05-c15c2839-budget3/65b417fc8d06474387047f66cd6238cd/prepared.json",
+      "Oversize source not scanned: .skill-input-work/acceptance-08-05-c15c2839-budget3/d3181296941d498b98d63a970ce639e7/prepared.json",
+      "Oversize source not scanned: PhaseA.Platform.Tests/Browser/BrowserUiRendererTests.cs",
+      "Oversize source not scanned: PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: PhaseA.Platform/Browser/BrowserUiRenderer.cs",
+      "Oversize source not scanned: PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/100-implementation-acceptance-matrix.md",
+      "Oversize source not scanned: execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/godot-ui-style-contract.v1.field-map.json",
+      "Oversize source not scanned: execution-plans/2026-07-07-phase-a-frontend-gdd-to-module-workflow-hardening/schemas/implementation-acceptance-matrix.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r10/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r10/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r10/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r11/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r11/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r11/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r12/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r12/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r12/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r13/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r13/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r13/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r3/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r3/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r3/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r4/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r4/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r4/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r5/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r5/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r5/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r6/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r6/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r6/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r7/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r7/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r7/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r8/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r8/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r8/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r9/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r9/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/.acceptance-snapshots/2026-08-04-rmap-acceptance-r9/execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-15-repository-maintenance-tdd-adapter/schemas/predicate-artifact-closure.v1.json",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair01/PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair01/PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair01/PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair02/PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair02/PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair02/PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair03/PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair03/PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair03/PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair04/PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair04/PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-07-31-b823ab2-repair04/PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p1/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p1/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p1/PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p1/PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p1/PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p2/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p2/.agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p2/PhaseA.Platform.Tests/Runs/PrototypeQuickFixServiceTests.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p2/PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "Oversize source not scanned: execution-plans/2026-07-25-four-domain-knowledge-context-engineering-plan/.acceptance-snapshots/2026-08-02-afaed9a-r1p2/PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "Oversize source not scanned: execution-plans/2026-07-27-refactor-implementation-acceptance-skill/.acceptance-snapshots/2026-07-29-r3/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-27-refactor-implementation-acceptance-skill/.acceptance-snapshots/2026-07-30-r4/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-27-refactor-implementation-acceptance-skill/.acceptance-snapshots/2026-07-30-successor-r4/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+      "Oversize source not scanned: execution-plans/2026-07-27-refactor-implementation-acceptance-skill/.acceptance-snapshots/2026-07-31-complete/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py"
+    ],
+    "scannedSource": "current tracked worktree bytes; individual matches carry hashes"
+  },
+  "inputValidation": "coordinator-validated",
+  "missingInputs": [],
+  "nextStep": "No recovery required. Suggested additional checks are advisory. Share the reviewer packet if review is desired.",
+  "notCompletedActions": [],
+  "references": [
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/coordinator-request.v3.json",
+      "role": "coordinator request",
+      "sha256": "sha256:37a8fae4ed844a691b9672c0c87ac292501ca824ec6b3c42d90b6df9c52783db"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/skill-input-v2/acceptance/current.v1.json",
+      "role": "skillInputReceipt",
+      "sha256": "sha256:d5601c868089d0bf9a27746b983ea4ed4d4b0c530d3b3f3fccd9ab415df751d7"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/skill-input-contract.v1.json",
+      "role": "skillInputContract",
+      "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/prepared-run.v1.json",
+      "role": "prepared input",
+      "sha256": "sha256:9fc3f382a2c823913dae1eddf0eb586f2badae302f00a1310b9cda62ab6555d9"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/baseline-content-manifest.v1.json",
+      "role": "baseline_content_manifest_path",
+      "sha256": "sha256:c385499c350670d4a8bf7f39e1c78442b22d931974e2d9e808ec73fe8f0fc4d4"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/candidate-content-manifest.v1.json",
+      "role": "candidate_content_manifest_path",
+      "sha256": "sha256:415afaa3174a7ad6e0521db1ab25f5358b5ee83ff17e9c9bcc828aea30410dac"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json",
+      "role": "requirement/plan input",
+      "sha256": "sha256:25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "role": "prerequisite bundle",
+      "sha256": "sha256:13d71c59d9b4e91c8d59b6abeb035953aac9a9ad4279eeb2d41278a57bc0895d"
+    },
+    {
+      "path": "logs/light-optimizations-acceptance-20261027/q8-owner-replay/implementation-complete.json",
+      "role": "Quick Dev receipt",
+      "sha256": "sha256:1cc0487f678533eee1164b24910ed3b0b5145c12776e42a1056d9a6a1a13f498"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json",
+      "role": "Quick Dev semanticPlan",
+      "sha256": "sha256:25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/command-registry.v1.json",
+      "role": "command registry",
+      "sha256": "sha256:1cc659f8c1e0de3f969a75e92a5092e4a1a733a541106bc867f941f39a92cae7"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/run-state.json",
+      "role": "persisted run-state.json",
+      "sha256": "sha256:c9bc66fbc2382e283d7aa1fb5335f989dad6649804565e2599c78f92cf5393a5"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/acceptance-events.jsonl",
+      "role": "persisted acceptance-events.jsonl",
+      "sha256": "sha256:f3fdf2fddaf653c9b4738de0fe4da65ef32cbc0c1aa5402dbaf64918a13e714a"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/prepare-run.v1.json",
+      "role": "persisted prepare-run.v1.json",
+      "sha256": "sha256:9fc3f382a2c823913dae1eddf0eb586f2badae302f00a1310b9cda62ab6555d9"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-vdd-contract/attempt-001/result.json",
+      "role": "action receipt validate-vdd-contract",
+      "sha256": "sha256:f0770080d6caff6f0fea6e10bc2ebaa2f1834d5ae6740cc7cdbe321ccc13e7b1"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-code-review-route/attempt-001/result.json",
+      "role": "action receipt validate-code-review-route",
+      "sha256": "sha256:35e75f78a8984a6b778e608f755f05bfe8209ad53823cb1d2f0f07b40d96fa2a"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-acceptance-routing/attempt-001/result.json",
+      "role": "action receipt validate-acceptance-routing",
+      "sha256": "sha256:4666412d4a4f2d47cafc1e16c58bc429b9a84030c882926da5b42dbc180b43c1"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-acceptance-package/attempt-001/result.json",
+      "role": "action receipt validate-acceptance-package",
+      "sha256": "sha256:4a78d53eececde1869dd70b7b85818f51a552c9f7229ce5529182c07801379b9"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/acceptance-passed.v1.json",
+      "role": "Acceptance final",
+      "sha256": "sha256:ba5f902663945fb62c87ae8825e7721fe3ef9741f43d80b04b4878f405535f22"
+    },
+    {
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/acceptance-result-final.v1.json",
+      "role": "Acceptance wrapper",
+      "sha256": "sha256:5112f8c2b358a15ece7dff3a394dcb35446d524464b82527d570a9b811f9521a"
+    }
+  ],
+  "resultSource": "current coordinator invocation",
+  "schema": "acceptance-operator-support.v1",
+  "status": "completed"
+}

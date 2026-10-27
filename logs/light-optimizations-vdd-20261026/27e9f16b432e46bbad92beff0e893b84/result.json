@@ -1,0 +1,8 @@
+{
+  "backend": "host-session",
+  "status": "returned",
+  "request_id": "27e9f16b432e46bbad92beff0e893b84",
+  "request_sha256": "sha256:21f3b5eca436254c22c4783a9fc603f519863909c58737a6f8402af1aefd4acd",
+  "caller": "chatgpt-current-session",
+  "authorizes": []
+}

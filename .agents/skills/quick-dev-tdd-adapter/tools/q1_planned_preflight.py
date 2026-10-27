@@ -8,6 +8,8 @@ before the runtime/environment preflight.
 """
 from __future__ import annotations
 
+from copy import deepcopy
+import json
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -69,6 +71,7 @@ def validate_planned_preflight(
     bundle: Mapping[str, Any],
     slice_id: str,
     timeout_seconds: int,
+    plan_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Validate Q1's planned command/identity contract without side effects."""
     if not isinstance(bundle.get("plan_id"), str) or not bundle["plan_id"]:
@@ -78,6 +81,25 @@ def validate_planned_preflight(
 
     selected = _one(bundle.get("slices"), "slice_id", slice_id, "slice")
     context = _one(bundle.get("agent_contexts"), "slice_id", slice_id, "agent-context")
+    if "behavior_routing" in bundle:
+        from behavior_routing import validate_plan
+        validate_plan(bundle)
+        from execution_contract import bind_slice_dependencies, derive_slice_dependencies
+        # Reuse the exact owning graph rule on copies. Consumer admission
+        # never repairs the supplied semantic bundle or a disk projection.
+        bind_slice_dependencies(deepcopy(bundle["slices"]),
+                                derive_slice_dependencies(bundle["obligations"], bundle["slices"]))
+    if plan_dir is not None:
+        path = Path(plan_dir) / "agent-context" / slice_id / "agent-context.json"
+        try:
+            path.resolve().relative_to(workspace.resolve())
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("materialized agent-context missing or unsafe")
+            disk = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("materialized agent-context unreadable") from exc
+        if disk != context:
+            raise ValueError("materialized agent-context projection drift")
 
     acceptance_ids = _string_list(selected.get("acceptance_ids"), "slice acceptance_ids")
     if context.get("acceptance_ids") != acceptance_ids:
@@ -104,6 +126,8 @@ def validate_planned_preflight(
     for index, raw in enumerate(commands):
         if not isinstance(raw, list) or not raw or any(not isinstance(item, str) or not item for item in raw):
             raise ValueError(f"validation command[{index}] must be non-empty argv array")
+        if any("\x00" in item for item in raw):
+            raise ValueError(f"validation command[{index}] contains NUL")
         normalized_commands.append(list(raw))
     argv = normalized_commands[0]
 
@@ -114,19 +138,13 @@ def validate_planned_preflight(
     if context.get("selector_intents") != selector_intents:
         raise ValueError("agent-context selector projection drift")
 
-    selector_text = " ".join([*argv, *selector_intents])
-    # Match the runtime descriptor: prose fixture references are not targets.
-    argv_paths = {part.split("::", 1)[0] for part in argv}
-    target_refs = [ref for ref in snapshots if ref in argv_paths]
-    if not target_refs:
-        target_refs = [ref for ref in snapshots if ref in selector_text]
-    if not target_refs:
-        target_refs = [ref for ref in snapshots if Path(ref).suffix.lower() in _CODE_SUFFIXES]
-    if not target_refs:
-        target_refs = [snapshots[0]]
-    fixture_refs = [ref for ref in snapshots if ref not in target_refs]
-    if not fixture_refs:
-        fixture_refs = [target_refs[0]]
+    # The projected and materialized entries consume the same actual reader.
+    # Literal selection remains conservative; unsupported/planned inputs retain
+    # their declared selector and never gain a runtime assertion mapping here.
+    from stable_runner import _descriptor_inputs
+    argv, target_refs, fixture_refs = _descriptor_inputs(
+        bundle, Path(plan_dir) if plan_dir is not None else workspace,
+        slice_id, context=context, workspace=workspace)
 
     planned_or_existing = set(planned)
     root = workspace.resolve()
