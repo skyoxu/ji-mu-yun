@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+"""Stable VDD Chapter 4/5/6 compiler CLI."""
+from __future__ import annotations
+
+import argparse
+from copy import deepcopy
+import json
+import hashlib
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+if __name__ == "__main__" and "--admission-only" not in sys.argv:
+    from workflow_unit_budget import public_entry
+    supervised_exit = public_entry("vdd", ROOT, sys.argv)
+    if supervised_exit is not None:
+        raise SystemExit(supervised_exit)
+SCRIPTS = ROOT / ".agents" / "skills" / "vdd-execution-plan" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+import semantic_feasibility_patch  # noqa: F401  # installs normative planned-new-file V7 rule
+from semantic_compiler_authority import compile_plan
+import semantic_compiler as semantic_compiler
+from semantic_worker_transport_patch import HostWorkerStopped
+from semantic_worker_errors import WorkerTransportError
+
+
+def _configure_v1_reuse_from_git(ref: str, requirements: Path) -> None:
+    """Bind V1 peer reuse to exact predecessor anchor text, never only a file path."""
+    if not re.fullmatch(r"[A-Za-z0-9._/-]+", ref):
+        raise ValueError("V1 reuse Git reference is invalid")
+    relative = requirements.resolve().relative_to(ROOT.resolve()).as_posix()
+    completed = subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{ref}:{relative}"],
+        check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    if completed.returncode != 0:
+        raise ValueError("V1 reuse predecessor source is unavailable")
+    try:
+        text = completed.stdout.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError("V1 reuse predecessor source is not UTF-8") from exc
+    identities = {
+        f"{relative}#{requirement_id}": semantic_compiler.sha256_bytes(source_text.encode("utf-8"))
+        for requirement_id, source_text, _line in semantic_compiler._sections(text)
+    }
+    if not identities:
+        raise ValueError("V1 reuse predecessor has no requirement anchors")
+    semantic_compiler.configure_v1_reuse_predecessor_text_hashes(identities)
+
+
+def _record_planning_decisions(*, prepared, request, result, out_dir):
+    """AD-5: the native consumer records its own validated use, never adapter adoption."""
+    if result.get('status') not in {'paused', 'plan-ready'}:
+        return
+    out_dir = out_dir.resolve()
+    query = prepared.get('query_result', {})
+    if not query.get('read_set'):
+        return
+    checkpoint = result.get('checkpoint')
+    candidate_path = (Path(checkpoint['path']) if checkpoint else
+                      out_dir / 'semantic-plan-bundle.v1.json')
+    if not candidate_path.resolve().is_relative_to(out_dir.resolve()):
+        raise ValueError('planning decision candidate outside compiler output')
+    candidate = json.loads(candidate_path.read_text(encoding='utf-8'))
+    if checkpoint:
+        candidate = candidate['candidate']
+    scopes = candidate.get('slice_hints', candidate.get('slices', []))
+    uses = {}
+    for scope in scopes:
+        for key in ('production_owners', 'execution_snapshot_paths'):
+            for name in scope.get(key, []):
+                uses.setdefault(name.split('::', 1)[0], []).extend(scope['obligation_ids'])
+    inputs = set(request['inputs'])
+    record = out_dir / 'execution-record.md'
+    if record.is_symlink() or not record.resolve().is_relative_to(out_dir.resolve()):
+        raise ValueError('planning decision record outside compiler output')
+    existing = record.read_text(encoding='utf-8') if record.exists() else ''
+    lines = []
+    for read in query['read_set']:
+        name = read['path']
+        source = (ROOT / name).resolve()
+        if not source.is_relative_to(ROOT.resolve()):
+            raise ValueError('planning decision source outside repository')
+        current = None
+        if source.is_file():
+            with source.open('rb') as stream:
+                current = 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest()
+        observed = 'sha256:' + read['sha256'].removeprefix('sha256:')
+        used = name in uses or name in inputs
+        accepted = used and current == observed
+        reason = ('verified source participates in validated contract scope' if accepted else
+                  'source changed after observation; advice was not adopted' if current != observed else
+                  'verified advice is not used by the validated contract scope')
+        row = {'kind': 'planning-source-decision', 'consumer': 'vdd',
+               'stage': query['stage'], 'task_id': request['task_id'],
+               'episode_id': query['episode_id'], 'query_topic': request['query'],
+               'raw_status': query.get('diagnostic', {}).get('raw_status'),
+               'outcome': query['outcome'], 'path': name, 'sha256': read['sha256'],
+               'read_identity': read['read_identity'], 'origin': read['origin'],
+               'decision': 'accepted' if accepted else 'rejected', 'reason': reason,
+               'actual_use': {'contract': candidate_path.relative_to(out_dir).as_posix(),
+                   'effect': 'retained input/source/test scope' if accepted else 'excluded from scope adoption',
+                   'obligation_ids': sorted(set(uses.get(name, [])))},
+               'authority': 'observation-only', 'authorizes': []}
+        line = json.dumps(row, ensure_ascii=False, sort_keys=True) + '\n'
+        if line not in existing:
+            lines.append(line)
+    if lines:
+        record.parent.mkdir(parents=True, exist_ok=True)
+        with record.open('a', encoding='utf-8', newline='\n') as stream:
+            stream.writelines(lines)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--unit-timeout-seconds", type=int, default=1800,
+                        help="Public supervisor total budget per independent unit (not whole compile)")
+    parser.add_argument("--idle-timeout-seconds", type=int, default=600,
+                        help="Public supervisor genuine-inactivity budget per unit")
+    parser.add_argument("--requirements", type=Path, required=True)
+    parser.add_argument("--out-dir", type=Path, required=True)
+    parser.add_argument("--profile", choices=("standard", "resumable", "self-hosted"), default="standard")
+    parser.add_argument("--companion", type=Path, action="append", default=[])
+    parser.add_argument("--worker-cache", type=Path)
+    parser.add_argument("--v3-contract-repair", type=Path,
+                        help="Explicit source-bound V3 candidate corrections; independent V4 remains required")
+    parser.add_argument("--v3-contract-repair-addendum", type=Path,
+                        help="Additional source-bound V3 corrections merged with the primary repair input")
+    parser.add_argument("--repair-published-v3-from", type=Path,
+                        help="Reuse validated V3 contracts of a plan-ready predecessor in a distinct successor")
+    parser.add_argument("--published-v1-gap-extension", type=Path,
+                        help="Append reviewed source-bound V1 gaps and inline V3 contracts to published repair")
+    parser.add_argument("--published-v1-replacement", type=Path,
+                        help="Replace explicitly reviewed source-bound V1 obligations with complete new V3 contracts")
+    parser.add_argument("--published-v1-split", type=Path,
+                        help="Split one explicitly reviewed source-bound V1 obligation into two complete contracts")
+    parser.add_argument("--result-json", type=Path, help="Write the compiler result even on a caught failure")
+    parser.add_argument("--recommendation-only", action="store_true")
+    parser.add_argument("--admission-only", action="store_true",
+                        help="Read-only source/recovery/consumer admission; future contracts remain pending")
+    parser.add_argument("--execution-profile", default="standard",
+                        help="Independent Quick Dev execution profile, checked by its owning policy")
+    parser.add_argument("--stop-after", choices=("v3",),
+                        help="Pause normally after V3, V3A and execution preflight; never enter V4")
+    parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
+    parser.add_argument("--resume-worker-session", type=Path,
+                        help="Explicit original caller-session transcript for validated legacy V1 cache replay")
+    parser.add_argument(
+        "--v1-reuse-from-git-ref",
+        help="Explicit Git predecessor whose unchanged requirement-anchor text may reuse V1 cache entries",
+    )
+    parser.add_argument(
+        "--v1-reuse-from-plan", type=Path,
+        help="Explicit plan-ready predecessor bundle whose V4-supported V1 obligations may be rebound per unchanged anchor",
+    )
+    parser.add_argument("--repair-timeout-seconds", type=int, help="Explicit per-repair worker budget")
+    parser.add_argument(
+        "--approved-v4-repair-cycles", type=int, default=0,
+        help="Explicit maintainer-approved follow-up V4 repair cycles; each cycle permits three closed repairs",
+    )
+    parser.add_argument(
+        "--v4-repair-approval-reference",
+        help="Required non-empty maintainer approval reference when approving follow-up V4 repair cycles",
+    )
+    parser.add_argument("--repair-quick-dev-handoff-from", type=Path,
+                        help="Repair execution bindings of a reviewed plan into a distinct successor")
+    parser.add_argument("--handoff-test-root", default="scripts/sc/tests/tc_d1_cer")
+    parser.add_argument("--handoff-static-primary-slice", action="append", default=[],
+                        help="Drop a redundant primary pytest OR filter for an explicitly bound slice only")
+    parser.add_argument("--handoff-planned-test", action="append", default=[],
+                        help="Declare an already-bound absent Q2 test only; requires handoff repair")
+    parser.add_argument("--runtime-red-intent", action="append", default=[],
+                        help="Explicit reviewed runtime intent to bind as expected RED; requires handoff repair")
+    parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
+                        help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
+    args = parser.parse_args()
+    if args.admission_only and args.repair_quick_dev_handoff_from:
+        parser.error("admission-only cannot combine handoff publication")
+    if args.handoff_static_primary_slice and (not args.repair_quick_dev_handoff_from
+            or args.handoff_planned_test or args.runtime_red_intent or args.handoff_windows_launcher_slice
+            or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
+        parser.error('static-primary repair requires handoff repair without other binding modes')
+    if args.stop_after and any((args.worker_cache, args.recommendation_only,
+            args.v3_contract_repair, args.repair_published_v3_from,
+            args.repair_quick_dev_handoff_from)):
+        parser.error("--stop-after requires ordinary compilation/resume, without fixture or contract repair modes")
+    if args.resume_worker_session and (not args.resume_from or args.worker_cache or args.recommendation_only):
+        parser.error("--resume-worker-session requires normal --resume-from without fixture/recommendation mode")
+    if args.resume_worker_session and (args.repair_published_v3_from or args.repair_quick_dev_handoff_from or args.v3_contract_repair):
+        parser.error("--resume-worker-session is limited to ordinary failed/unpublished compilation resume")
+    if args.repair_published_v3_from and not args.v3_contract_repair:
+        parser.error("--repair-published-v3-from requires --v3-contract-repair")
+    if args.published_v1_gap_extension and not args.repair_published_v3_from:
+        parser.error("--published-v1-gap-extension requires --repair-published-v3-from")
+    if args.published_v1_replacement and not args.repair_published_v3_from:
+        parser.error("--published-v1-replacement requires --repair-published-v3-from")
+    if args.published_v1_split and not args.repair_published_v3_from:
+        parser.error("--published-v1-split requires --repair-published-v3-from")
+    if args.v3_contract_repair_addendum and not args.v3_contract_repair:
+        parser.error("--v3-contract-repair-addendum requires --v3-contract-repair")
+    if (args.runtime_red_intent or args.handoff_windows_launcher_slice) and not args.repair_quick_dev_handoff_from:
+        parser.error("handoff runtime options require --repair-quick-dev-handoff-from")
+    if args.handoff_planned_test and not args.repair_quick_dev_handoff_from:
+        parser.error('--handoff-planned-test requires --repair-quick-dev-handoff-from')
+    if args.handoff_planned_test and (args.runtime_red_intent or args.handoff_windows_launcher_slice
+            or args.handoff_test_root != 'scripts/sc/tests/tc_d1_cer'):
+        parser.error('planned-test declarations cannot combine role, launcher or test-root repair')
+    if args.repair_quick_dev_handoff_from:
+        if any((args.companion, args.worker_cache, args.recommendation_only, args.resume_from,
+                args.v1_reuse_from_git_ref, args.v1_reuse_from_plan, args.repair_timeout_seconds,
+                args.approved_v4_repair_cycles, args.v4_repair_approval_reference,
+                args.v3_contract_repair, args.repair_published_v3_from,
+        args.published_v1_gap_extension, args.published_v1_replacement,
+        args.published_v1_split,
+        args.v3_contract_repair_addendum)):
+            parser.error("handoff repair cannot combine semantic compilation or worker overrides")
+        from quick_dev_handoff import publish_repair
+        try:
+            result = publish_repair(root=ROOT, requirements=args.requirements,
+                predecessor=args.repair_quick_dev_handoff_from, out_dir=args.out_dir,
+                test_root=args.handoff_test_root, runtime_red_intents=args.runtime_red_intent,
+                windows_launcher_slices=args.handoff_windows_launcher_slice,
+                planned_tests=args.handoff_planned_test,
+                static_primary_slices=args.handoff_static_primary_slice)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            result = {"status": "repair-vdd", "reason": str(exc)}
+        if args.result_json:
+            args.result_json.parent.mkdir(parents=True, exist_ok=True)
+            args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
+        print(json.dumps(result, sort_keys=True))
+        return 0 if result.get("status") == "plan-ready" else 1
+    if args.repair_timeout_seconds is not None:
+        if args.repair_timeout_seconds <= 0:
+            parser.error("repair timeout must be positive")
+        import semantic_worker_transport_patch as transport
+        transport._REPAIR_TIMEOUT_SECONDS = args.repair_timeout_seconds
+    if args.approved_v4_repair_cycles < 0:
+        parser.error("approved V4 repair cycles must be non-negative")
+    if args.approved_v4_repair_cycles and not (
+        isinstance(args.v4_repair_approval_reference, str) and args.v4_repair_approval_reference.strip()
+    ):
+        parser.error("approved V4 repair cycles require --v4-repair-approval-reference")
+    if args.v4_repair_approval_reference and not args.approved_v4_repair_cycles:
+        parser.error("V4 repair approval reference requires approved V4 repair cycles")
+    if args.repair_published_v3_from and any((
+        args.companion, args.worker_cache, args.recommendation_only,
+        args.v1_reuse_from_git_ref, args.v1_reuse_from_plan,
+    )):
+        parser.error("published V3 repair cannot combine worker, resume or source overrides")
+    published = None
+    extension = None
+    replacement = None
+    split = None
+    dependency_revision = None
+    if args.repair_published_v3_from:
+        import semantic_v3_contract_repair as candidate_repair
+        try:
+            published = candidate_repair.load_published_predecessor(
+                args.repair_published_v3_from, args.out_dir, args.requirements, ROOT)
+            if args.profile != published["bundle"]["profile"]:
+                raise ValueError("published V3 repair profile differs from predecessor")
+            correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
+            if args.v3_contract_repair_addendum:
+                extra = candidate_repair.load_repair(args.v3_contract_repair_addendum, args.requirements)
+                if "dependency_revision" in extra:
+                    raise ValueError("dependency revision cannot be supplied as an addendum")
+                correction = {**correction, "obligation_contracts": {
+                    **correction["obligation_contracts"], **extra["obligation_contracts"]}}
+            if "dependency_revision" in correction:
+                if any((args.published_v1_gap_extension, args.published_v1_replacement,
+                        args.published_v1_split, args.v3_contract_repair_addendum,
+                        "test_path_replacements" in correction)):
+                    raise ValueError("dependency revision cannot combine other semantic or binding repairs")
+                dependency_revision = candidate_repair.prepare_dependency_revision(correction, published)
+            published_v3 = candidate_repair.project_published_v3(published["bundle"])
+            try:
+                candidate_repair.validate_published_v3_projection(
+                    published_v3, published["bundle"]["obligations"], ROOT)
+            except ValueError as exc:
+                # A published successor may contain a defect explicitly named
+                # by this bounded V3 correction.  Defer only findings whose
+                # obligation IDs are correction targets; the corrected
+                # contract is still validated by the normal V3 worker gate
+                # and all downstream stages.  Never suppress unrelated
+                # predecessor findings.
+                message = str(exc)
+                targets = set(correction["obligation_contracts"])
+                marker = "runtime-marker-ineligible:"
+                if not message.startswith("published V3 projection is invalid: "):
+                    raise
+                findings = message.split(": ", 1)[1].split("; ")
+                if not findings or any(
+                    not item.startswith("v3-expected-red:failure_intents[")
+                    or marker not in item
+                    or item.rsplit(marker, 1)[1].split("=", 1)[0] not in targets
+                    for item in findings
+                ):
+                    raise
+            candidate_repair.install_published_v3_reuse(published_v3)
+            replacement = None
+            if args.published_v1_replacement:
+                replacement = candidate_repair.load_v1_replacement(
+                    args.published_v1_replacement, args.requirements,
+                    published["source_index"], published["bundle"])
+            if args.published_v1_split:
+                split = candidate_repair.load_v1_split(
+                    args.published_v1_split, args.requirements,
+                    published["source_index"], published["bundle"])
+                split_old = str(split["replaced_obligation_id"])
+                if split_old in correction["obligation_contracts"]:
+                    # The reviewed S34 correction was authored against the
+                    # predecessor identity.  Once the bounded source split is
+                    # admitted, project that correction only onto the
+                    # source-bound replacement contracts; no other correction
+                    # target may be rewritten implicitly.
+                    translated = dict(correction["obligation_contracts"])
+                    translated.pop(split_old, None)
+                    translated.update(split["v3_contracts"])
+                    correction = {
+                        **correction,
+                        "obligation_contracts": translated,
+                    }
+            replacement_map = {
+                str(old_id): str(item["obligation_id"])
+                for old_id, item in (replacement or {}).get("normalized_replacements", {}).items()
+            }
+            split_map = {
+                str(split["replaced_obligation_id"]): [
+                    str(item["obligation_id"]) for item in split["normalized_obligations"]
+                ]
+            } if split else {}
+            if replacement and split:
+                if set(replacement_map) & set(split_map):
+                    raise ValueError("published V1 replacement and split overlap")
+            candidate_repair.install_published_slice_partition(
+                published["bundle"], {**replacement_map, **split_map},
+                dependency_revision=dependency_revision is not None,
+            )
+            semantic_compiler.configure_v1_reuse_predecessor_plan(args.repair_published_v3_from.resolve())
+            floor_targets = set(correction["obligation_contracts"])
+            if split:
+                floor_targets -= set(split_map[split["replaced_obligation_id"]])
+            floor_targets &= {item["obligation_id"] for item in published["bundle"]["obligations"]}
+            candidate_repair.install_published_v1_target_floor(published["bundle"], floor_targets)
+            if args.published_v1_gap_extension:
+                extension = candidate_repair.load_gap_extension(
+                    args.published_v1_gap_extension, args.requirements,
+                    published["source_index"], published["bundle"])
+                candidate_repair.install_gap_extension(extension)
+            reviewed_additions = set()
+            if extension:
+                reviewed_additions.update(extension["obligation_contracts"])
+            if split:
+                reviewed_additions.update(
+                    item["obligation_id"] for item in split["normalized_obligations"]
+                )
+            if dependency_revision is None:
+                candidate_repair.install_published_v4_reuse(published, reviewed_additions)
+            else:
+                candidate_repair.install_dependency_revision(published, dependency_revision)
+            if replacement is not None:
+                candidate_repair.install_v1_replacement(replacement)
+            if split is not None:
+                candidate_repair.install_v1_split(split)
+            candidate_repair.install(correction)
+        except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            parser.error(str(exc))
+    if args.v1_reuse_from_git_ref:
+        try:
+            _configure_v1_reuse_from_git(args.v1_reuse_from_git_ref, args.requirements)
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
+            parser.error(str(exc))
+    if args.v1_reuse_from_plan:
+        try:
+            semantic_compiler.configure_v1_reuse_predecessor_plan(args.v1_reuse_from_plan.resolve())
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            parser.error(str(exc))
+    import semantic_alignment_repair_patch as alignment
+    alignment.configure_approved_v4_repair_cycles(args.approved_v4_repair_cycles)
+    if args.v3_contract_repair and not args.repair_published_v3_from:
+        if args.worker_cache or args.recommendation_only:
+            parser.error("V3 candidate repair cannot combine fixtures or recommendation-only")
+        import semantic_v3_contract_repair as candidate_repair
+        try:
+            state_path = args.out_dir / "compiler-state.v1.json"
+            if state_path.exists() and json.loads(state_path.read_text(encoding="utf-8")).get("state") == "plan-ready":
+                raise ValueError("V3 candidate repair requires a failed or unpublished output directory")
+            correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
+            if "dependency_revision" in correction:
+                raise ValueError("dependency revision requires a validated published predecessor")
+            if args.companion and "source_index_sha256" not in correction:
+                raise ValueError("V3 companion repair requires complete source-index identity and test path scope")
+            candidate_repair.install(correction)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            parser.error(str(exc))
+    # ADR-0041: a thin read-only admission before any semantic worker or query.
+    # Existing repair modes above retain their own no-worker admission contracts.
+    from execution_preflight import inspect_admission
+    admission = inspect_admission(semantic_compiler, ROOT, args.requirements,
+        args.companion, profile=args.profile, execution_profile=args.execution_profile,
+        recovery=args.out_dir if args.resume_from else None)
+    if args.admission_only or admission["status"] == "blocked":
+        result = {"status": "repair-vdd" if admission["status"] == "blocked" else "admission-only",
+                  "admission": admission, "authorizes": []}
+        print(json.dumps(result, sort_keys=True))
+        return 1 if admission["status"] == "blocked" else 0
+    cache = None
+    if args.worker_cache:
+        value = json.loads(args.worker_cache.read_text(encoding="utf-8"))
+        if not isinstance(value, dict):
+            raise SystemExit("worker cache must be a JSON object")
+        cache = value
+    prepared_query = None
+    planning_request = None
+    try:
+        # ADR-0048/AD-5: read-only advice precedes semantic scope, independent of governance.
+        # Recommendation-only retains its existing side-effect-free contract.
+        previous_worker = semantic_compiler.invoke_worker
+        import semantic_resume_cache
+        semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=args.resume_worker_session)
+        if not args.recommendation_only and not args.worker_cache:
+            sys.path.insert(0, str(ROOT))
+            from scripts.toolchain.knowledge_query import adapter
+            inputs = [p.resolve().relative_to(ROOT.resolve()).as_posix()
+                      for p in [args.requirements, *(args.companion or [])]]
+            planning_request = {
+                "stage": "vdd-repair" if args.resume_from or args.v3_contract_repair or published else "vdd-create",
+                "operation": "repair" if args.resume_from or args.v3_contract_repair or published else "create",
+                "task_id": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix(),
+                "inputs": inputs, "scope": inputs,
+                "query": "current source callers tests contracts " + " ".join(inputs),
+                "record_path": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix() + "/execution-record.md"}
+            prepared_query = adapter.prepare_consumption(planning_request, ROOT)
+            if prepared_query["status"] == "blocked":
+                raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
+            def with_planning_context(**kwargs):
+                kwargs["payload"] = {**kwargs["payload"], "planning_source_observations": prepared_query}
+                kwargs["prompt"] += adapter.consumption_instructions(prepared_query)
+                return previous_worker(**kwargs)
+            semantic_compiler.invoke_worker = with_planning_context
+        import semantic_v3_checkpoint
+        with semantic_v3_checkpoint.session(
+            root=ROOT, out_dir=args.out_dir,
+            enabled=bool((args.stop_after or args.resume_from) and not args.worker_cache
+                         and not published and not args.v3_contract_repair),
+            resume=bool(args.resume_from),
+        ):
+            result = compile_plan(
+                requirements=args.requirements,
+                out_dir=args.out_dir,
+                companions=args.companion,
+                profile=args.profile,
+                worker_cache=cache,
+                recommendation_only=args.recommendation_only,
+                resume_from=args.resume_from,
+                stop_after=args.stop_after,
+                published_v3_repair=published is not None,
+                candidate_v3_repair=args.v3_contract_repair is not None,
+            )
+        if published is not None and result.get("status") == "plan-ready":
+            current = json.loads((args.out_dir / "semantic-plan-bundle.v1.json").read_text(encoding="utf-8"))
+            if dependency_revision is not None:
+                candidate_repair.check_dependency_revision(published["bundle"], current, dependency_revision)
+                result["dependency_revision"] = {**dependency_revision["input"],
+                    **dependency_revision["impact"], "authorizes": [], "v4_reuse": False}
+            else:
+                candidate_repair.check_unaffected_published_semantics(
+                    published["bundle"], current, set(correction["obligation_contracts"]),
+                    set(extension["obligation_contracts"]) if extension else set(),
+                    {
+                        **({old: item["obligation_id"] for old, item in replacement["normalized_replacements"].items()}
+                           if replacement else {}),
+                        **({split["replaced_obligation_id"]: [item["obligation_id"] for item in split["normalized_obligations"]]}
+                           if split else {}),
+                    })
+        if prepared_query is not None:
+            _record_planning_decisions(prepared=prepared_query, request=planning_request,
+                                       result=result, out_dir=args.out_dir)
+    except WorkerTransportError as exc:
+        result = {"status": "repair-vdd", "stage": exc.stage, "repair_class": "transport",
+                  "transport_category": exc.category, "attempts": exc.attempts,
+                  "reason": str(exc), "authorizes": []}
+    except HostWorkerStopped as exc:
+        result = {"status": "repair-vdd", "stage": exc.stage, "reason": str(exc),
+                  "transport_exit_code": exc.code, "authorizes": []}
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError, RuntimeError) as exc:
+        if published is not None and (args.out_dir / "compiler-state.v1.json").is_file():
+            from semantic_compiler_authority import _archive_repair_publications
+            _archive_repair_publications(args.out_dir)
+        result = {"status": "repair-vdd", "reason": str(exc)}
+    semantic_compiler.invoke_worker = previous_worker
+    result["admission"] = admission
+    result["worker_cache_reuse"] = semantic_resume_cache.statistics()
+    semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=None)
+    if args.result_json:
+        args.result_json.parent.mkdir(parents=True, exist_ok=True)
+        args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
+    print(json.dumps(result, sort_keys=True))
+    return result.get("transport_exit_code", 0 if result.get("status") in {"plan-ready", "recommendation-only", "paused"} else 1)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,22 @@
+{
+  "actionId": "validate-acceptance-routing",
+  "actionType": "run-command",
+  "attemptId": "attempt-001",
+  "authorizes": [],
+  "commandId": "validate-acceptance-routing",
+  "eventType": "action-reserved",
+  "formalWriteSet": [],
+  "inputHashes": {
+    "contractHash": "sha256:eada03600b8e49477091d9864bfd63685111290152159280dfef1c46944bc5dc",
+    "knowledgeContextHash": "sha256:48c1bd628ece33c32c249a8b9b2315a526e4947b13d985101830e7bbd0a2d6d7",
+    "runInputHash": "sha256:ad28f830e8174cbf0b55523d9b5f09549936dfa4998f55c361e18cf0405ad8a8",
+    "skillInputBindingHash": "sha256:d5601c868089d0bf9a27746b983ea4ed4d4b0c530d3b3f3fccd9ab415df751d7",
+    "skillInputContextHash": "sha256:86b8a75b39c0ebcbbb40c0ab41d6ecf3dfe881906ab367766d4a69252d586f3b"
+  },
+  "ownerToken": "owner-acceptance-4a66ec9c0c361a79",
+  "processId": 28477,
+  "recordedUtc": "2026-10-27T01:41:58.451924Z",
+  "runId": "acceptance-4a66ec9c0c361a79",
+  "schemaVersion": "acceptance-lifecycle-event.v1",
+  "sequence": 7
+}

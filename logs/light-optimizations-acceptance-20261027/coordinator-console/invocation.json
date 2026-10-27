@@ -1,0 +1,19 @@
+{
+  "native_exit_code": 0,
+  "actual_root": "/workspace/ji-mu-yun-light-acceptance",
+  "candidateRevision": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/workspace/ji-mu-yun-light-acceptance/.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    "run-coordinator",
+    "--request",
+    "/workspace/ji-mu-yun-light-acceptance/execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/coordinator-request.v3.json",
+    "--out",
+    "/workspace/ji-mu-yun-light-acceptance/execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/coordinator-result.v1.json"
+  ],
+  "aggregate_watchdog": false,
+  "per_action_budget": "Native existing supervise, 1800/600, through bound operator wrapper",
+  "stdout": "/workspace/ji-mu-yun-light-optimizations/logs/light-optimizations-acceptance-20261027/coordinator-console/stdout.txt",
+  "stderr": "/workspace/ji-mu-yun-light-optimizations/logs/light-optimizations-acceptance-20261027/coordinator-console/stderr.txt"
+}

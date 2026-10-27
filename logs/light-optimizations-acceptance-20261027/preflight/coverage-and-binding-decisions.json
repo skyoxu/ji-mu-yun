@@ -1,0 +1,86 @@
+{
+  "authorizes": [],
+  "candidateRevision": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+  "implementationChangedPaths": [
+    ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+    ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+    ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    "scripts/vdd/compile_plan.py"
+  ],
+  "normative_inputs": "Four approved raw requirement versions and full native plan are controlling inputs, not product implementation; hashes remain frozen in candidate and current proof. Historical logs/VDD attempts are preserved, not replacement source manifest entries.",
+  "coverageRoute": "toolchain policy exact path binding for all 13 implementation files; Phase executable C# denominator absent, so Phase Cobertura is not an applicable target action. Full 24 assertion/case coverage remains mandatory in native Q8.",
+  "mainTrust": "Existing actual refs/heads/main only; no caller-selected revision or candidate validator substitute.",
+  "Q8Preparation": "Every one of 62 original plan files retained explicitly by native Q7/Q8; no new process or test invocation; original receipts remain current proof.",
+  "runtimeMain": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "actionCommands": [
+    [
+      "validate-vdd-contract",
+      [
+        "-B",
+        ".agents/skills/vdd-execution-plan/scripts/validate_plan.py",
+        "--plan-dir",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready",
+        "--input",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json"
+      ]
+    ],
+    [
+      "validate-code-review-route",
+      [
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resolve-code-review-policy",
+        "--policy",
+        ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+        "--baseline",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/baseline-content-manifest.v1.json",
+        "--candidate",
+        "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/candidate-content-manifest.v1.json",
+        "--adapter-hash",
+        "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110"
+      ]
+    ],
+    [
+      "validate-acceptance-routing",
+      [
+        "-B",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py"
+      ]
+    ],
+    [
+      "validate-acceptance-package",
+      [
+        "-B",
+        "scripts/sc/skill_package_replay.py",
+        "validate-package",
+        "--target",
+        ".agents/skills/run-refactor-implementation-acceptance",
+        "--capability",
+        "scripts/sc/config/skill-package-validator-capability.v1.json"
+      ]
+    ]
+  ],
+  "supervisionWrapper": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+    "sha256": "sha256:1dee66e5bd19064211b14efe4333b02dcf20925a5fd8fd1ee311626c29979c08"
+  },
+  "runtimeCandidate": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+  "checkoutPreparationCommits": "If needed for native clean-worktree gate, contain only generated Acceptance transport; they do not alter candidateRevision or source/test/plan contract bytes."
+}

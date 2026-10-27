@@ -1,0 +1,145 @@
+[
+  {
+    "root_kind": "candidate_tree",
+    "repository_relative_posix_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/case_selection.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+      ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+      ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+      ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+      "scripts/vdd/compile_plan.py"
+    ],
+    "inclusion_reason": "Declared current candidate_tree inputs and actual execution dependencies for the bounded light optimizations"
+  },
+  {
+    "root_kind": "plan",
+    "repository_relative_posix_paths": [
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-attempts/v4-published-recall-25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/source-replay/3618560aacae3b99865cc9a434d08c6e6556ae8030932ed20a17dc6521861f87.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v1-FR-3-64799f4879a417f250db451c.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-1df550f2d474e16b76c30d61.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-428198291f211b68b2509ef8.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-54d9f0dd577ca57105a55db8.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-6659193289d6814ca3f9e286.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-b6d35c1972b5bb595a0941fc.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-cc8aa859b673d770bfa9a218.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-01212a04cf13261873d6ef8a.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6c539212b85b9b8c7e2580b2.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-839015aba7b41c1a8cffebf6.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b7ea012051d4fe01ac2e12de.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-c3f29eac7546ad70058ff0de.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-dfa366e882cbea3bdba8cd1a.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-8373141bae61d06f988d4205.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-c7a797c99ad92c5ae0ca63fc.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-chunk-001-f93ca4dc69d57fdbe705402f.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-chunk-002-9fcccf897824a0e776cf17af.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-source-001-39298003c86add838aa963e8.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/candidate-repairs/a03c9b4a138fdc4d75de7e5bb9cece2eb36fc2d68f40f1df2a9b5182c8e0561a.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/compiler-progress.jsonl",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/resolved-atomic-recall/a70fc0467cdf3d13e6f850f70ab4fb36925d1dbf9f253ee2b5b9c35b1d6cbb0c.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v1-FR-3-170104bd5efb689a7ddbd581-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-1df550f2d474e16b76c30d61-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-428198291f211b68b2509ef8-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-54d9f0dd577ca57105a55db8-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6659193289d6814ca3f9e286-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b6d35c1972b5bb595a0941fc-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-cc8aa859b673d770bfa9a218-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-362583993c4f2e72e3774732-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-atomic-recall-source-001-last-message.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v1-FR-3-170104bd5efb-60f491728d67.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v3-0e7fe82bb01a-c2f94092501d.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v4-362583993c4f-35534482ffde.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v4-atomic-recall-c7a797c99ad9-c394bba0948b.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-1cf47955733e.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-55875f89799d.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-9d3258072039.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-a9cd4a3518e9.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-e2f2762bef6c.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-edf3589a138a.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptances.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S1/agent-context.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S2/agent-context.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S3/agent-context.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S4/agent-context.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/atomic-recall-alignment.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/compiler-state.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/execution-record.md",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/failure-intents.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/feasibility.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/final-plan-coverage.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/obligations.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/pre-slice-coverage.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-alignment.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-chain-audit.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/slices.v1.json",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/source-index.v1.json"
+    ],
+    "inclusion_reason": "Every original frozen plan file retained explicitly; later Acceptance transport is not a runtime plan input"
+  },
+  {
+    "root_kind": "contract",
+    "repository_relative_posix_paths": [
+      "docs/2026-10-27-toolchain-light-optimizations-requirements-v4.md",
+      "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      ".agents/skills/vdd-execution-plan/SKILL.md"
+    ],
+    "inclusion_reason": "Declared current contract inputs and actual execution dependencies for the bounded light optimizations"
+  },
+  {
+    "root_kind": "descriptor",
+    "repository_relative_posix_paths": [
+      "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S1/final-03/descriptors",
+      "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S2/final-03/descriptors",
+      "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S3/final-03/descriptors",
+      "logs/light-optimizations-quick-dev-20261026/fixture-boundary/S4/final-03/descriptors"
+    ],
+    "inclusion_reason": "Declared current descriptor inputs and actual execution dependencies for the bounded light optimizations"
+  },
+  {
+    "root_kind": "fixture",
+    "repository_relative_posix_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      "execution-plans/2026-10-26-toolchain-light-optimizations-ready",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py"
+    ],
+    "inclusion_reason": "Current dedicated assertions and explicitly owned fixtures, including the immutable prior contract fixture used by actual consumer tests; no historical execution proof is imported"
+  },
+  {
+    "root_kind": "source",
+    "repository_relative_posix_paths": [
+      ".agents/skills/vdd-execution-plan/scripts",
+      "scripts/vdd",
+      "scripts/sc"
+    ],
+    "inclusion_reason": "Declared current source inputs and actual execution dependencies for the bounded light optimizations"
+  },
+  {
+    "root_kind": "validator_judge",
+    "repository_relative_posix_paths": [
+      ".agents/skills/quick-dev-tdd-adapter/tools",
+      "scripts/quick_dev",
+      "scripts/workflow_unit_budget.py"
+    ],
+    "inclusion_reason": "Declared current validator_judge inputs and actual execution dependencies for the bounded light optimizations"
+  },
+  {
+    "root_kind": "plan_state_transition",
+    "repository_relative_posix_paths": [
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/compiler-state.v1.json",
+      ".agents/skills/vdd-execution-plan/references/lifecycle-state-contract.json"
+    ],
+    "inclusion_reason": "Declared current plan_state_transition inputs and actual execution dependencies for the bounded light optimizations"
+  }
+]

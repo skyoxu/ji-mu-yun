@@ -1,0 +1,26 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/tmp/light-acceptance-same-volume-audit.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 26.985438785999577,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "653f1ff9bce8c4412b63c331662d42580b36de2229be21df3da986dd88adcf31": 26.985065409000526
+  },
+  "active_at_stop": [
+    {
+      "key": "653f1ff9bce8c4412b63c331662d42580b36de2229be21df3da986dd88adcf31",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 26.985065409000526,
+      "container": true
+    }
+  ]
+}

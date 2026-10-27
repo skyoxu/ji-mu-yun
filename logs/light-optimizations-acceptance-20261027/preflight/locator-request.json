@@ -1,0 +1,13 @@
+{
+  "schema_version": "jimuyun.knowledge-locator-request.v1",
+  "request_id": "light-optimizations-acceptance-preflight-20261027",
+  "consumer": "refactor-acceptance",
+  "query": "refactor implementation acceptance toolchain scope current Quick Dev Q8 candidate custody",
+  "max_candidates": 12,
+  "snapshot": {
+    "ref": "refs/heads/main",
+    "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+  },
+  "policy_revision": "knowledge-consumer-policies.v2",
+  "allow_stale_catalog": true
+}

@@ -1,0 +1,80 @@
+{
+  "authorizes": [],
+  "commandId": "validate-code-review-route",
+  "commandRegistryHash": "sha256:5af20ea2ffc708508ec9a59e1ef3f859890a2ad21dcb42d8bc2accad35f5461d",
+  "environmentIdentity": {
+    "hash": "sha256:813232fda9e92b6a0d14dbeec03cdeebbc439b2be9a12c4959ad6d132429c37c",
+    "names": [
+      "HOME",
+      "PATH",
+      "TMPDIR",
+      "USER"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+      "validate-code-review-route",
+      "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+      "-B",
+      ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+      "resolve-code-review-policy",
+      "--policy",
+      ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "--baseline",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/baseline-content-manifest.v1.json",
+      "--candidate",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/acceptance-light-20261027/candidate-content-manifest.v1.json",
+      "--adapter-hash",
+      "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110"
+    ],
+    "commandId": "validate-code-review-route",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:2ae796bd1921eee1908b853d0033cf587c57d192ed7134013c7a849ac0c08837",
+  "processResult": {
+    "commandId": "validate-code-review-route",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"activatedCheckIds\": [\"TOOLCHAIN-CR-AUTH-001\", \"TOOLCHAIN-CR-SCOPE-001\", \"TOOLCHAIN-CR-COMPAT-001\", \"TOOLCHAIN-CR-TEST-001\", \"TOOLCHAIN-CR-EVIDENCE-001\"], \"adapterHash\": \"sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110\", \"authorizes\": [], \"bindingHash\": \"sha256:f8a345b5f970f0c7b623b265ddb47e3d37795f4ca541b2cf00bf90d9f638defc\", \"candidateManifestHash\": \"sha256:fe59e76139059419143aaac80c101c80319630b706d4cf9bda79f7ebcddc76f0\", \"crossDomainDependencyPaths\": [], \"policyHash\": \"sha256:c41c62bdbb69173f4745d72e661397d7c09e933383ac22e0d6f10e1acfd5bd3d\", \"policyId\": \"toolchain-code-review\", \"policyRevision\": \"sha256:6876d81e879d8e7148224f0adec15ba41349331713a2238360de18e711b0809b\", \"schemaVersion\": \"code-review-policy-binding.v1\", \"triggeredPaths\": [\".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py\", \".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py\", \".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py\", \".agents/skills/vdd-execution-plan/scripts/execution_contract.py\", \".agents/skills/vdd-execution-plan/scripts/execution_preflight.py\", \".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py\", \".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py\", \".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py\", \".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py\", \".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py\", \".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py\", \".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py\", \"scripts/vdd/compile_plan.py\"], \"unreviewedExternalDomainPaths\": []}\n",
+    "stdoutSha256": "sha256:0313ce1b2035da9fbfb71fa7909311e53acdbb02d65caf598d5cfac548063d0f"
+  },
+  "processResultHash": "sha256:a2e6ee1667c5b8d1f5d6604496d90107cac6830939c0c3f83134c2a9dc3c1460",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

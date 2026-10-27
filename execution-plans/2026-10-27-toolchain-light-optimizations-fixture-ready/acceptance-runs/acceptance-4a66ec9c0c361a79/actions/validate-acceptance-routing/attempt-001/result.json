@@ -1,0 +1,79 @@
+{
+  "authorizes": [],
+  "commandId": "validate-acceptance-routing",
+  "commandRegistryHash": "sha256:5af20ea2ffc708508ec9a59e1ef3f859890a2ad21dcb42d8bc2accad35f5461d",
+  "environmentIdentity": {
+    "hash": "sha256:813232fda9e92b6a0d14dbeec03cdeebbc439b2be9a12c4959ad6d132429c37c",
+    "names": [
+      "HOME",
+      "PATH",
+      "TMPDIR",
+      "USER"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/unit-budget.py",
+      "validate-acceptance-routing",
+      "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+      ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py"
+    ],
+    "commandId": "validate-acceptance-routing",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:e002e685f0799d36570ef0bd73fe4bca8588ba62d08d41531c10c96fc289ee62",
+  "processResult": {
+    "commandId": "validate-acceptance-routing",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "..........................................     [100%]\n42 passed, 26 subtests passed in 10.33s\n",
+    "stdoutSha256": "sha256:414bae84bfc43554a439fbcb67074d78540d2dd5bf6ad31d3eb0a2cd815c4504"
+  },
+  "processResultHash": "sha256:2711e111a8698d5315f7fc1f3ac010a0b97ab707c25c9b7410dbb56a3590bfd2",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

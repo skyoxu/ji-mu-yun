@@ -1,0 +1,36 @@
+[
+  {
+    "actionId": "validate-vdd-contract",
+    "activation": true,
+    "commandId": "validate-vdd-contract",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "validate-code-review-route",
+    "activation": true,
+    "commandId": "validate-code-review-route",
+    "dependsOn": [
+      "validate-vdd-contract"
+    ],
+    "order": 2
+  },
+  {
+    "actionId": "validate-acceptance-routing",
+    "activation": true,
+    "commandId": "validate-acceptance-routing",
+    "dependsOn": [
+      "validate-code-review-route"
+    ],
+    "order": 3
+  },
+  {
+    "actionId": "validate-acceptance-package",
+    "activation": true,
+    "commandId": "validate-acceptance-package",
+    "dependsOn": [
+      "validate-acceptance-routing"
+    ],
+    "order": 4
+  }
+]

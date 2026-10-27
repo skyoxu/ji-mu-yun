@@ -1,0 +1,55 @@
+{
+  "authorizes": [],
+  "candidate": {
+    "actionReceipts": [
+      {
+        "path": "actions/validate-acceptance-package/attempt-001/result.json",
+        "sha256": "sha256:4a78d53eececde1869dd70b7b85818f51a552c9f7229ce5529182c07801379b9"
+      },
+      {
+        "path": "actions/validate-acceptance-routing/attempt-001/result.json",
+        "sha256": "sha256:4666412d4a4f2d47cafc1e16c58bc429b9a84030c882926da5b42dbc180b43c1"
+      },
+      {
+        "path": "actions/validate-code-review-route/attempt-001/result.json",
+        "sha256": "sha256:35e75f78a8984a6b778e608f755f05bfe8209ad53823cb1d2f0f07b40d96fa2a"
+      },
+      {
+        "path": "actions/validate-vdd-contract/attempt-001/result.json",
+        "sha256": "sha256:f0770080d6caff6f0fea6e10bc2ebaa2f1834d5ae6740cc7cdbe321ccc13e7b1"
+      }
+    ],
+    "authorizes": [],
+    "candidateCustodyHash": "sha256:42b50a00311a844c4ada5d14e197026c127ea04a5308a21bf03e985618601727",
+    "implementationReceiptBinding": {
+      "path": "logs/light-optimizations-acceptance-20261027/q8-owner-replay/implementation-complete.json",
+      "sha256": "sha256:1cc0487f678533eee1164b24910ed3b0b5145c12776e42a1056d9a6a1a13f498",
+      "terminalCommandId": "terminal-full"
+    },
+    "inputBindings": {
+      "candidateCustodyHash": "sha256:42b50a00311a844c4ada5d14e197026c127ea04a5308a21bf03e985618601727",
+      "contractHash": "sha256:eada03600b8e49477091d9864bfd63685111290152159280dfef1c46944bc5dc",
+      "knowledgeContextHash": "sha256:48c1bd628ece33c32c249a8b9b2315a526e4947b13d985101830e7bbd0a2d6d7",
+      "runInputHash": "sha256:ad28f830e8174cbf0b55523d9b5f09549936dfa4998f55c361e18cf0405ad8a8",
+      "skillInputBindingHash": "sha256:d5601c868089d0bf9a27746b983ea4ed4d4b0c530d3b3f3fccd9ab415df751d7",
+      "skillInputContextHash": "sha256:86b8a75b39c0ebcbbb40c0ab41d6ecf3dfe881906ab367766d4a69252d586f3b"
+    },
+    "prerequisiteBundle": {
+      "bundleHash": "sha256:00610ad7d72d6d637a7cf49983299ad7159fb17b7bc44d5616aae076b7ebd363",
+      "implementationReceipt": {
+        "path": "logs/light-optimizations-acceptance-20261027/q8-owner-replay/implementation-complete.json",
+        "sha256": "sha256:1cc0487f678533eee1164b24910ed3b0b5145c12776e42a1056d9a6a1a13f498",
+        "terminalCommandId": "terminal-full"
+      },
+      "path": "acceptance-inputs/acceptance-light-20261027/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+      "sha256": "sha256:13d71c59d9b4e91c8d59b6abeb035953aac9a9ad4279eeb2d41278a57bc0895d"
+    },
+    "route": "deterministic_only",
+    "schemaVersion": "acceptance-deterministic-evaluation.v1",
+    "status": "passed",
+    "terminalResultHash": "sha256:606aa23daa74023d4c7d30cc13b44b1b2a274ebaa55ef071cb76c63184004f4f"
+  },
+  "candidateHash": "sha256:7a80c99500e5ded059325876177b7a235d97c1b5f433f6574b51b693cf79503b",
+  "candidateInputHash": "sha256:f73924f5b68d037a467a6d971d564afc0960f96446341e030fdcb351532320d1",
+  "schemaVersion": "acceptance-result-candidate.v1"
+}

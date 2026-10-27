@@ -1,0 +1,688 @@
+{
+  "authorizes": [],
+  "recordedUtc": "2026-10-27T01:45:33.642637+00:00",
+  "candidate": {
+    "authorizes": [],
+    "baselineResolvedCommit": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "actual_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "acceptance_checkout_HEAD": "065ca0814e57c3f9242876f094f1e2c4b6237acb",
+  "frozen_input_count": 20,
+  "protected_file_count": 15,
+  "candidate_blob_count": 13,
+  "original_plan_file_count": 62,
+  "checks": [
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "sha256": "d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/case_selection.py",
+      "sha256": "2e72bf8a6b6fb74bf6023123ce12a2638379018376dfb89d5c118f90fab9fb53",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py",
+      "sha256": "a11b3212f1af1b2d980bd10751dc7c1a0d3dc771840eff3c8ee92d48f308fa79",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+      "sha256": "5267488dc0545350df49ad0b114a4de8a053a2f4c9106585a6ce60b4fffc3544",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      "sha256": "8ebf8eafd0553cb26f18474ed698ac63ab3f10a36bdafb9c17bc5d0f02cff6b1",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      "sha256": "01979c39183f818e8a420fde28fe4b72e51afff62182b2a204b0f62360940079",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "sha256": "7f25464c6e621b906a6f35cefe6487c339fc9ae2930b2eb95afd86971838cca4",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+      "sha256": "f5a8ea8a17d40a6c84f7f14e0d6534ff7e7f45660645aacfe49331ba2317b218",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+      "sha256": "3399f2fb1c840fab59e37d1a6b1308678d453100e4c021cce0916b9ed6847ccd",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+      "sha256": "ca2259d53e7f7a0b55f3c3bfe8305149fc75a21148020e312878e74ce666f7e7",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+      "sha256": "68b90cbf4349339049f983228622d5a7c652fdb6de5b69043b7092d51c759d1c",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      "sha256": "41fe8c611a5b4e8dd9098351a63a839e1eda4803a325530e01117617f060c75a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      "sha256": "b37e97f7a38bbbb5b633be44765c2d3fa13314d3a6e02e3b332937b16fc9c26b",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+      "sha256": "8d484cc96e5a44f48637c5aaca1beeac87016a54b50701c2a26919499aa12a2b",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+      "sha256": "ca3b358fea2e8772dd16b0934d365a147977ac8cc7a47980b8588f7422d5dd62",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+      "sha256": "8286e4a1dc9040df50296e753338b77c08f5586af6dd0c636d83f32ebf9bcf53",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      "sha256": "2d5e40ec95d096508b7ddcbef4a1867994793123fef9004cf3eac24c3e106593",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": "docs/2026-10-27-toolchain-light-optimizations-requirements-v4.md",
+      "sha256": "59a2b248b0c72ac2160521a5ac7503931482b1414abb6388a3e74ae051c7c20e",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "sha256": "3c48ba395316daf371aa119d8f254b1f0a55a1ad6136e6ebfa446a8017806b18",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "frozen-input",
+      "path": "scripts/vdd/compile_plan.py",
+      "sha256": "34570a860bacf18bcdfbebfe693705b90d0926d2fbd29a4772ef5c1d8c3d2a9e",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": "scripts/quick_dev/run.py",
+      "sha256": "ebc25a28d978c585db4d103a189f5d0e302f63f7814e31656ef622ae39e0bbb4",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": "scripts/workflow_host.py",
+      "sha256": "20f02582b6f3365fa31e1e1045d7d84f7a2a9c76fb69ef9cd8e1ca90392711a7",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": "scripts/sc/host_session.py",
+      "sha256": "dfc67459cf380494e942b903563736a08833095b27bbbef953a66c6d9af609a7",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": "scripts/workflow_unit_budget.py",
+      "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py",
+      "sha256": "254268d5529786d24b4f7ebe98796cc10311a865a3c6fedc0ef15ab30b95ee04",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "sha256": "9ce4579fa4f3d3a3598aac4b1e32038cadc530882713012f7d79088a4b98abe7",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
+      "sha256": "99d980984378fc269b4e555d478666f4e427975355ffe0abf1091b095b9caf2c",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py",
+      "sha256": "a2745753e3a0a44847508930165fb8f396d1ae1e9cc6db6c4b74175caa8113be",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py",
+      "sha256": "f46dedcde6ee6a139eb77db55b62c5787576b60d67309026b063d5f207cc2923",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+      "sha256": "1d98150f7b23cf4df178c10941ecf02ab5b13a6982c4b049d966e193022bd620",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py",
+      "sha256": "b7e363f0b6d9acdd3973d66e2f15dff2172c4f9acb4fcc9d6eefb72977f0d8aa",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py",
+      "sha256": "05bc627f5013a1135bd00e8bcd6703621eea746622c663df8835e38fd1b34ac2",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/pytest_case_collector.py",
+      "sha256": "237d2d854cc9610e055b328bc6bf648c748bf2dd0052c3562e95ecf3949fd054",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py",
+      "sha256": "e2c193bd6ebe63061572aeb7f8525cefb943250be1157885be5ec37a9b449c9d",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "trusted-fixed",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
+      "sha256": "c6f53d7784d51c798d7a6ca85c204dece2f52db4be465329d1032b5ac12171fe",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+      "sha256": "5267488dc0545350df49ad0b114a4de8a053a2f4c9106585a6ce60b4fffc3544",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+      "sha256": "8ebf8eafd0553cb26f18474ed698ac63ab3f10a36bdafb9c17bc5d0f02cff6b1",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+      "sha256": "01979c39183f818e8a420fde28fe4b72e51afff62182b2a204b0f62360940079",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+      "sha256": "f5a8ea8a17d40a6c84f7f14e0d6534ff7e7f45660645aacfe49331ba2317b218",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+      "sha256": "3399f2fb1c840fab59e37d1a6b1308678d453100e4c021cce0916b9ed6847ccd",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+      "sha256": "68b90cbf4349339049f983228622d5a7c652fdb6de5b69043b7092d51c759d1c",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      "sha256": "41fe8c611a5b4e8dd9098351a63a839e1eda4803a325530e01117617f060c75a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+      "sha256": "b37e97f7a38bbbb5b633be44765c2d3fa13314d3a6e02e3b332937b16fc9c26b",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+      "sha256": "8d484cc96e5a44f48637c5aaca1beeac87016a54b50701c2a26919499aa12a2b",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+      "sha256": "ca3b358fea2e8772dd16b0934d365a147977ac8cc7a47980b8588f7422d5dd62",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+      "sha256": "8286e4a1dc9040df50296e753338b77c08f5586af6dd0c636d83f32ebf9bcf53",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+      "sha256": "2d5e40ec95d096508b7ddcbef4a1867994793123fef9004cf3eac24c3e106593",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "candidate-blob",
+      "path": "scripts/vdd/compile_plan.py",
+      "sha256": "34570a860bacf18bcdfbebfe693705b90d0926d2fbd29a4772ef5c1d8c3d2a9e",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-attempts/v4-published-recall-25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9.json",
+      "sha256": "f47ece4031743d3c23cb20083eeaf707bd5bd8faa1324e0b3a482d078a49afce",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/source-replay/3618560aacae3b99865cc9a434d08c6e6556ae8030932ed20a17dc6521861f87.json",
+      "sha256": "173f9f99f5f22eee3827842477646df4c375c115cde3fd872f67c221ba8f351c",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v1-FR-3-64799f4879a417f250db451c.json",
+      "sha256": "98750377907cbda482f1e7f5451d8c8f31e0977ae4aa53ca1af08a666fa523bf",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-1df550f2d474e16b76c30d61.json",
+      "sha256": "eaf089cc7a0f94ea961c39d693fa1c87ecbdc42b9e08d8ee237b046960682299",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-428198291f211b68b2509ef8.json",
+      "sha256": "141585d5a99be66deec7a01b3d63feaeed8edb11576f5f728463c96062f09942",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-54d9f0dd577ca57105a55db8.json",
+      "sha256": "657799af29f93906c3b086dd4e495f99eab3ac34e456532087e3e83074a9b687",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-6659193289d6814ca3f9e286.json",
+      "sha256": "fc638696b8f53dfba7e9eaf832e5e7506d7aa138bbc22e078d3319f5b1d1cbf9",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-b6d35c1972b5bb595a0941fc.json",
+      "sha256": "947d538ac7a5f6c50810876fe816f9b50f37efd2767ca56b0b63f72713b028da",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-cc8aa859b673d770bfa9a218.json",
+      "sha256": "a50df61d97c5165fdc226d21c223e4087ad386f1f824d065a893f556c2c2cc9a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-01212a04cf13261873d6ef8a.json",
+      "sha256": "a50df61d97c5165fdc226d21c223e4087ad386f1f824d065a893f556c2c2cc9a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6c539212b85b9b8c7e2580b2.json",
+      "sha256": "141585d5a99be66deec7a01b3d63feaeed8edb11576f5f728463c96062f09942",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-839015aba7b41c1a8cffebf6.json",
+      "sha256": "fc638696b8f53dfba7e9eaf832e5e7506d7aa138bbc22e078d3319f5b1d1cbf9",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b7ea012051d4fe01ac2e12de.json",
+      "sha256": "947d538ac7a5f6c50810876fe816f9b50f37efd2767ca56b0b63f72713b028da",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-c3f29eac7546ad70058ff0de.json",
+      "sha256": "657799af29f93906c3b086dd4e495f99eab3ac34e456532087e3e83074a9b687",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-dfa366e882cbea3bdba8cd1a.json",
+      "sha256": "eaf089cc7a0f94ea961c39d693fa1c87ecbdc42b9e08d8ee237b046960682299",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-8373141bae61d06f988d4205.json",
+      "sha256": "25ea7a34fcf76bea891ae3a8bc98315bfe1f6c1856e39298612d7abd9efe9a58",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-c7a797c99ad92c5ae0ca63fc.json",
+      "sha256": "bb8f585462773681efc970521841ba919ad9c2def14b04c5221cf34a21ad61a8",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-chunk-001-f93ca4dc69d57fdbe705402f.json",
+      "sha256": "260467051fb27a895092e00fbb3267ddb262bb2ec4bd41cd497533a610598fe2",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-chunk-002-9fcccf897824a0e776cf17af.json",
+      "sha256": "26528bd9ee532551797fde796ca3493d3e7a29aa2b9f6b1015952c6f54ea51ef",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-cache/v4-atomic-recall-source-001-39298003c86add838aa963e8.json",
+      "sha256": "c90794365796be0923ff42c5824789a3203a8f1a97585bd483fbd1287e5b12ac",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/candidate-repairs/a03c9b4a138fdc4d75de7e5bb9cece2eb36fc2d68f40f1df2a9b5182c8e0561a.json",
+      "sha256": "a03c9b4a138fdc4d75de7e5bb9cece2eb36fc2d68f40f1df2a9b5182c8e0561a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/compiler-progress.jsonl",
+      "sha256": "1a54cf8aeb36da21412ee6256b67428a641622c215a8a42bca782a8fc80729b6",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/resolved-atomic-recall/a70fc0467cdf3d13e6f850f70ab4fb36925d1dbf9f253ee2b5b9c35b1d6cbb0c.json",
+      "sha256": "abb3da8535323a4fd3af038efb5998f761c68b4d02c7ba7e7d49b95a7d938219",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v1-FR-3-170104bd5efb689a7ddbd581-last-message.json",
+      "sha256": "95b0d788b4d4b3fa96268a12cdaddd172fb22263ed4af4b2ed63ce37f2a39d5e",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-1df550f2d474e16b76c30d61-last-message.json",
+      "sha256": "87c18055ecaddc7e75ab5a8df18524cb5ceec99b1afd400d8005d2b2f565c173",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-428198291f211b68b2509ef8-last-message.json",
+      "sha256": "fa5f1057bf5ead206b6e856686290a3ca325e7d0c426d6e7cbb870d6912e644c",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-54d9f0dd577ca57105a55db8-last-message.json",
+      "sha256": "1cfb55942d0461bcb2a625e0cbafe3f11ca45c594daed15614747158d84a3686",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6659193289d6814ca3f9e286-last-message.json",
+      "sha256": "7de94fc5e79345dbdca40df0ceeed7a31c3a8fa587e4ecd21eb8f1c2fd098ac8",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b6d35c1972b5bb595a0941fc-last-message.json",
+      "sha256": "084fe02d3646d27f75de734c2ef03cf61251d6b7e1f909255f8957c845cd1d57",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-cc8aa859b673d770bfa9a218-last-message.json",
+      "sha256": "c30d80e0d31a6893baa2634622059f550b80437d46eb4ddae24a66a757dfe2be",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-362583993c4f2e72e3774732-last-message.json",
+      "sha256": "cbe2d95f6c3eebba73837cbbb210d2da4c1feb5698590c7f56edd32223cffd46",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "sha256": "6ee03732ab13c7bf41058676777d0bfd1e2d6437e7c7758b4b8700dd45e87089",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "sha256": "1c98384dbf2a2d2efe93a144333dafa23a9df51a58b9b9f47a5d33ee1efa9524",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/v4-atomic-recall-source-001-last-message.json",
+      "sha256": "41f0667daf3a63e91008155d631bf711e5335ae0c52d788c60e6c385f8038b66",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v1-FR-3-170104bd5efb-60f491728d67.json",
+      "sha256": "67090718c86046b9e7f55ece2ecc8f354bb9d1cdc4508e292689d647a00f4bc4",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v3-0e7fe82bb01a-c2f94092501d.json",
+      "sha256": "9a057ab0ad13a6628f35eef01282df788511e95663a6bffbb8bbbe08a08f0f81",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v4-362583993c4f-35534482ffde.json",
+      "sha256": "9b809b5fb4f592cc76b70eac65ea584893c34c3c3818709716112b0c923274b6",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-receipts/v4-atomic-recall-c7a797c99ad9-c394bba0948b.json",
+      "sha256": "87024a668fbb8ca895a4df4f905bae6b06b31ad4f07db9b3e3548d7c1ffbe209",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-1cf47955733e.json",
+      "sha256": "1cf47955733ed1eb0f6ab967e2d6d05060eb459e4028d9ac6e764050ef1f506a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-55875f89799d.json",
+      "sha256": "55875f89799d32f2a9d35ea9750e13142086200480365bda6441f184002bf3ae",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-9d3258072039.json",
+      "sha256": "9d325807203929d560da8f3416bf2dc2dc6e4e13fca4f67224804437276fed96",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-a9cd4a3518e9.json",
+      "sha256": "a9cd4a3518e90728c07c1391a32010406e80fa68fafa71cc42d9fba39786fa9a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-e2f2762bef6c.json",
+      "sha256": "e2f2762bef6c50f2c53f87bb6990de09ca87af976f892cf90a3a38abba64e4ba",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/.compiler-work/worker-schemas/v3-edf3589a138a.json",
+      "sha256": "edf3589a138a876bbc17835b277ce7b3fb8d1fd51abff2c4fe8d32f5a6ce2c49",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptances.v1.json",
+      "sha256": "df67224178d0bc059c8dc79bfd743559489d86a2e3eae04e0ad985a8fdd6866f",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S1/agent-context.json",
+      "sha256": "8d734981343cc62e77c2f91288595dbde1fcffdf16739e436e958cf826fc923e",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S2/agent-context.json",
+      "sha256": "b275141006f692a1ac4429a764bd04ab2dc502fbcecebcdfe1cc461ad09ff715",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S3/agent-context.json",
+      "sha256": "800bc5609156c9356b030d01a27a7ca2ed7f0bc1ab9ffd3f8821196806893ba5",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/agent-context/S4/agent-context.json",
+      "sha256": "0f5f6f40e2ef5b6d04adc48653f25ab50d63bd6910590e3303fccfc8e9384b3f",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/atomic-recall-alignment.v1.json",
+      "sha256": "958a94fab21867c9ecda09a020d0b3a0bf534a555fdf38b251f7a7aa58ea9452",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/compiler-state.v1.json",
+      "sha256": "eafc031766fef41512b4facb54b54ca5120b34c561933ea8fb4bfaedb17be1bd",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/execution-record.md",
+      "sha256": "b741ce95c4ca36424d22c1f45ba7f511f86329b88691cfd3cda9577d6bfeac69",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/failure-intents.v1.json",
+      "sha256": "07b59d17a8d2402de7593dd9e7d4dbb5722c2b09e51802819c170b10400956fb",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/feasibility.v1.json",
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/final-plan-coverage.v1.json",
+      "sha256": "637fa77b76543719e10311bd24dbda2b75f7febedbae278379fe35046857974e",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/obligations.v1.json",
+      "sha256": "881004aafd07e978ed6867a46ccd5e5a09f7a5583f5678c0594f01cf30024580",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/pre-slice-coverage.v1.json",
+      "sha256": "af30a8ac0922d0aea9d555431dc8c3931049664c0354c0e8d44e44dc1a4360e8",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-alignment.v1.json",
+      "sha256": "33cccb4bbc172f998e7c824cb79e3b6fbd2364a2228740400f42a04c1c5f325a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-chain-audit.v1.json",
+      "sha256": "88bdf6c80101b1fc304e8483ed597d267175fae3fea2577ba1320d235bfa547a",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json",
+      "sha256": "25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/slices.v1.json",
+      "sha256": "fb0c28d4a98134dd2705f4d4522513da5c2ac3fcfb903e00b7234f789ec74123",
+      "both_worktrees_match": true
+    },
+    {
+      "kind": "original-plan-file",
+      "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/source-index.v1.json",
+      "sha256": "ed345881ae120a8918d286625f90fdbf7e231021c73b0e341929ab6c103c0e8b",
+      "both_worktrees_match": true
+    }
+  ],
+  "native_ref_checks": [
+    "acceptance-current.finalResult",
+    "acceptance-current.finalWrapper",
+    "candidate-evaluation.actionReceipts[4]",
+    "candidate-evaluation.implementationReceiptBinding"
+  ],
+  "all_checked_bindings_match": true
+}

@@ -1,0 +1,1 @@
+{"authorizes": [], "output": "/workspace/ji-mu-yun-light-optimizations/execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/knowledge-context.refactor-acceptance.v1.json", "status": "ready"}

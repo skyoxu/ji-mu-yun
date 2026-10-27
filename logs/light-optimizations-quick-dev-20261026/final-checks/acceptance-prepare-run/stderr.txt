@@ -1,0 +1,4 @@
+usage: acceptance_cli.py prepare [-h] --input INPUT --out OUT
+                                 --knowledge-context KNOWLEDGE_CONTEXT
+                                 [--prerequisite-bundle PREREQUISITE_BUNDLE]
+acceptance_cli.py prepare: error: the following arguments are required: --knowledge-context

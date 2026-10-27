@@ -1,0 +1,34 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_trusted_knowledge_validator.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_context.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_knowledge_degraded_execution.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 10.58679736099657,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "54f9e7835c9f9a7d8d79c11d7296f5dc4708d2d8884fdb12762a57a7d9a84886": 10.586625922998792
+  },
+  "active_at_stop": [
+    {
+      "key": "54f9e7835c9f9a7d8d79c11d7296f5dc4708d2d8884fdb12762a57a7d9a84886",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 10.586625922998792,
+      "container": true
+    }
+  ]
+}

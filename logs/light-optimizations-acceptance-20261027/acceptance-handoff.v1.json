@@ -1,0 +1,243 @@
+{
+  "schema": "light-optimizations.acceptance-handoff.v1",
+  "authorizes": [],
+  "recordedUtc": "2026-10-27T01:45:33.648226+00:00",
+  "completion": "Native Acceptance owner published acceptance-passed. No external review or Bootstrap launched. Stop at phase boundary.",
+  "candidate_commit": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+  "candidate_tree": "a4ab62c627ef0dfa1369c86e6c7d9abb35f758b0",
+  "baseline_commit": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+  "plan_id": "PLAN-87F445B767D0",
+  "semantic_bundle": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/semantic-plan-bundle.v1.json",
+    "bytes": 203303,
+    "sha256": "sha256:25a1b15bd67b076556d32e6a4100af71fac5ac13a193c264eb1fb00b7e748ec9"
+  },
+  "execution_root": "/workspace/ji-mu-yun-light-acceptance",
+  "archive_root": "/workspace/ji-mu-yun-light-optimizations",
+  "checkout_preparation_commit": "065ca0814e57c3f9242876f094f1e2c4b6237acb",
+  "checkout_preparation_scope": "12 generated transport files only; separate from immutable candidate custody. Later archive commit is evidence only.",
+  "run_id": "acceptance-4a66ec9c0c361a79",
+  "native_coordinator_exit": 0,
+  "coordinator_invocation": {
+    "path": "logs/light-optimizations-acceptance-20261027/coordinator-console/invocation.json",
+    "bytes": 1158,
+    "sha256": "sha256:1d7df41b4b534762e196830bf049f5ec9ddc4a002a0a09a4f4b79b755a8c1bf8"
+  },
+  "coordinator_result": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-inputs/preparation-20261027/coordinator-result.v1.json",
+    "bytes": 3719,
+    "sha256": "sha256:9ad17d87d092762fec65d60ba61481024f1c9ae612b29d167e719e87ec8126d2"
+  },
+  "current": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-current.v1.json",
+    "bytes": 770,
+    "sha256": "sha256:716840e0c5e60647296d046a091277f3061bd9f3c73c0ac5a1bd67e3b85d9829"
+  },
+  "final_predicate": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/acceptance-passed.v1.json",
+    "bytes": 319,
+    "sha256": "sha256:ba5f902663945fb62c87ae8825e7721fe3ef9741f43d80b04b4878f405535f22"
+  },
+  "wrapper": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/acceptance-result-final.v1.json",
+    "bytes": 689,
+    "sha256": "sha256:5112f8c2b358a15ece7dff3a394dcb35446d524464b82527d570a9b811f9521a"
+  },
+  "candidate_evaluation": {
+    "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/finalization/candidate-evaluation.v1.json",
+    "bytes": 2584,
+    "sha256": "sha256:24f3ba4f99be9bc60dd201857d537bf7198152c1fe3537d5b37300b999c9dd4c"
+  },
+  "candidateCustody": {
+    "authorizes": [],
+    "baselineResolvedCommit": "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+    "candidateMode": "commit",
+    "candidateResolvedCommit": "c5db5a0dbf9b56235842eace039553f8a6763c4b",
+    "schemaVersion": "acceptance-candidate-custody.v1",
+    "snapshotManifestHash": "",
+    "snapshotPath": ""
+  },
+  "actions": [
+    {
+      "id": "validate-vdd-contract",
+      "exit_code": 0,
+      "receipt": {
+        "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-vdd-contract/attempt-001/result.json",
+        "bytes": 2349,
+        "sha256": "sha256:f0770080d6caff6f0fea6e10bc2ebaa2f1834d5ae6740cc7cdbe321ccc13e7b1"
+      },
+      "write_delta": {
+        "added": [],
+        "changedPaths": [],
+        "deleted": [],
+        "modified": []
+      },
+      "actual_output": {
+        "findings": [],
+        "valid": true
+      }
+    },
+    {
+      "id": "validate-code-review-route",
+      "exit_code": 0,
+      "receipt": {
+        "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-code-review-route/attempt-001/result.json",
+        "bytes": 4596,
+        "sha256": "sha256:35e75f78a8984a6b778e608f755f05bfe8209ad53823cb1d2f0f07b40d96fa2a"
+      },
+      "write_delta": {
+        "added": [],
+        "changedPaths": [],
+        "deleted": [],
+        "modified": []
+      },
+      "actual_output": {
+        "activatedCheckIds": [
+          "TOOLCHAIN-CR-AUTH-001",
+          "TOOLCHAIN-CR-SCOPE-001",
+          "TOOLCHAIN-CR-COMPAT-001",
+          "TOOLCHAIN-CR-TEST-001",
+          "TOOLCHAIN-CR-EVIDENCE-001"
+        ],
+        "adapterHash": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+        "authorizes": [],
+        "bindingHash": "sha256:f8a345b5f970f0c7b623b265ddb47e3d37795f4ca541b2cf00bf90d9f638defc",
+        "candidateManifestHash": "sha256:fe59e76139059419143aaac80c101c80319630b706d4cf9bda79f7ebcddc76f0",
+        "crossDomainDependencyPaths": [],
+        "policyHash": "sha256:c41c62bdbb69173f4745d72e661397d7c09e933383ac22e0d6f10e1acfd5bd3d",
+        "policyId": "toolchain-code-review",
+        "policyRevision": "sha256:6876d81e879d8e7148224f0adec15ba41349331713a2238360de18e711b0809b",
+        "schemaVersion": "code-review-policy-binding.v1",
+        "triggeredPaths": [
+          ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py",
+          ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py",
+          ".agents/skills/vdd-execution-plan/scripts/execution_contract.py",
+          ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+          ".agents/skills/vdd-execution-plan/scripts/semantic_v3_contract_repair.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_delivery_boundaries.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_published_v3_compiler_integration.py",
+          ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+          "scripts/vdd/compile_plan.py"
+        ],
+        "unreviewedExternalDomainPaths": []
+      }
+    },
+    {
+      "id": "validate-acceptance-routing",
+      "exit_code": 0,
+      "receipt": {
+        "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-acceptance-routing/attempt-001/result.json",
+        "bytes": 2616,
+        "sha256": "sha256:4666412d4a4f2d47cafc1e16c58bc429b9a84030c882926da5b42dbc180b43c1"
+      },
+      "write_delta": {
+        "added": [],
+        "changedPaths": [],
+        "deleted": [],
+        "modified": []
+      },
+      "actual_output": "..........................................     [100%]\n42 passed, 26 subtests passed in 10.33s\n"
+    },
+    {
+      "id": "validate-acceptance-package",
+      "exit_code": 0,
+      "receipt": {
+        "path": "execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready/acceptance-runs/acceptance-4a66ec9c0c361a79/actions/validate-acceptance-package/attempt-001/result.json",
+        "bytes": 35165,
+        "sha256": "sha256:4a78d53eececde1869dd70b7b85818f51a552c9f7229ce5529182c07801379b9"
+      },
+      "write_delta": {
+        "added": [],
+        "changedPaths": [],
+        "deleted": [],
+        "modified": []
+      },
+      "package_status": "pass",
+      "validator_trust_commit": "e289d7d3f8572595ca28c498adc798d1fa2a2bf7",
+      "probes": [
+        {
+          "id": "requested-target",
+          "exit_code": 0,
+          "status": "pass"
+        },
+        {
+          "id": "detached-positive",
+          "exit_code": 0,
+          "status": "pass"
+        },
+        {
+          "id": "detached-negative",
+          "exit_code": 1,
+          "status": "expected-failure"
+        }
+      ]
+    }
+  ],
+  "trusted_main": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+  "main_validator_binding": {
+    "path": "logs/light-optimizations-acceptance-20261027/preflight/actual-bindings.json",
+    "bytes": 14274,
+    "sha256": "sha256:9c1513ea09bee4e2fcb2fb4c4ab0426fd96bf9ada3b688aeab1d8218c72e1e07"
+  },
+  "Q8": {
+    "path": "logs/light-optimizations-acceptance-20261027/q8-owner-replay/implementation-complete.json",
+    "bytes": 26709,
+    "sha256": "sha256:1cc0487f678533eee1164b24910ed3b0b5145c12776e42a1056d9a6a1a13f498"
+  },
+  "prior_full_implementation_handoff": {
+    "path": "logs/light-optimizations-quick-dev-20261026/implementation-handoff.v2.json",
+    "bytes": 29409,
+    "sha256": "sha256:b7ca4a11f6c54539326c54d0391570357d9760a3464961024a20d9da49f11c52"
+  },
+  "reuse": {
+    "prior_process_receipts_revalidated": 21,
+    "prior_completed_case_instances_reused": 647,
+    "prior_case_instances_rerun_for_acceptance": 0,
+    "original_execution_cache_hits": 0,
+    "reason": "Native Q7/Q8 read-only proof replay retained 62 exact frozen plan files and all runtime inputs; full 24 assertion/case coverage remains owner-validated. This is proof reuse, not relabeling original execution cache hits.",
+    "new_acceptance_only_tests": {
+      "passed": 42,
+      "subtests_passed": 26
+    },
+    "native_replay_basis": {
+      "path": "logs/light-optimizations-acceptance-20261027/preflight/same-volume-isolation-content-audit.json",
+      "bytes": 5791,
+      "sha256": "sha256:89ded542fb0bde843d6b9214f29944cab896d289f1cae17609196a79a8133267"
+    }
+  },
+  "coverage_route": {
+    "path": "logs/light-optimizations-acceptance-20261027/preflight/coverage-and-binding-decisions.json",
+    "bytes": 4653,
+    "sha256": "sha256:5ec6f429e4401119f3561abfd4634db7a1df8d6467e29f389df988bd2c93e829"
+  },
+  "knowledge": "Canonical Locator; actual-main immutable validator bytes; catalog_stale degraded continuation is existing allowed behavior; no publication.",
+  "preparation_failures_preserved": "Unique acceptance-* labels under logs/light-optimizations-quick-dev-20261026/final-checks retain Skill-input pollution, missing frozen ignored pyc, cross-device publication, diagnostic helper errors and missing CLI argument attempts. None is a registered-action failure or success.",
+  "native_action_failures": 0,
+  "budgets": "Four separate unchanged native supervise records under action-budgets, 1800 total / 600 genuine idle. No aggregate watchdog. All exit0 without timeout.",
+  "identity_audit": {
+    "path": "logs/light-optimizations-acceptance-20261027/final-identity-audit.v1.json",
+    "bytes": 32884,
+    "sha256": "sha256:bf8cb99977ba86f0ffe8d7c4137f2ef4118a18049a877d4656ad9a4aca814342"
+  },
+  "archive_manifest": {
+    "path": "logs/light-optimizations-acceptance-20261027/archive-byte-manifest.v1.json",
+    "bytes": 39597,
+    "sha256": "sha256:80d64d4675666dba617da01aa810611e59d21259f78dd7a8659e29e11ec82e41"
+  },
+  "windows": "No real Windows isolated-worker run. This limitation remains bound to the current frozen contract and is not marked passed.",
+  "inherited_implementation_limits": {
+    "platform": "Linux verification only; real Windows isolated-worker limitation remains.",
+    "VDD_V4": "Actual caller-session alignment, not an external independent reviewer.",
+    "review": "Implementation stage-end A/B and Acceptance not started. Parent coordinates next stage.",
+    "unrun": "Original PR21 15,375-case corpus and original Acceptance intentionally not rerun.",
+    "remote": "No push, PR, merge, CI or Actions monitoring.",
+    "models": "No policy/skill model hardcoding; no capacity errors observed."
+  },
+  "support": "Native operator summary/diff/hints are advisory, not final predicate or consumer closure. Full support retained byte-identical.",
+  "remaining_acceptance_blockers": [],
+  "next_owner_action": "Parent coordinates one phase-end independent A/B review. Do not rerun or mutate frozen candidate; no push/PR/CI/merge."
+}
