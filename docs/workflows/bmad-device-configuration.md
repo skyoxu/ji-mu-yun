@@ -8,12 +8,12 @@
 
 | 能力 | 实际边界 |
 | --- | --- |
-| 两个 wrapper、三个阶段 | `jimuyun-spec` 包装官方 SPEC；`jimuyun-architecture` 包装官方 Architecture。PRD 使用独立官方安装，没有第三个仓库 wrapper。本次不修改两个 wrapper。 |
+| 两个 wrapper、三个阶段 | `jimuyun-spec` 包装官方 SPEC；`jimuyun-architecture` 包装官方 Architecture。PRD 使用独立官方安装，没有第三个仓库 wrapper。本次不修改两个 wrapper 文件，仅补共享运行层的本机配置传递。 |
 | 只读查询 | 复用 `scripts/python/knowledge_locator.py`，固定合法身份 `bmad-planning`。官方 skill 须自己执行真实查询并读源，外层预查摘要不能替代。 |
 | 共享接入补丁 | 请求、projection、评估 schema 与 policy、builder、发布校验、测试接纳新 reader；不增加 daemon、MCP、数据库或新上下文协议，不改变 VDD/Quick Dev 职责。 |
 | 内容范围 | 管理员可查询现有正式知识库内全部合格 repository-source 内容，包括文档、相关代码、conditional 和 historical；不另设文档／源码／历史类别白名单。未索引文件不会因此变成可查询内容。 |
 | 权限边界 | 不授予知识库写入、维护或发布权限。现有源排除、semantic eligibility、snapshot、policy/projection、发布身份与哈希校验仍有效；不会开放仓库外凭据或 live workspace。consumer 字符串不是账号认证，设备和会话访问由管理员控制。 |
-| 当前验证状态 | 本轮官方安装和配置解析已完成；一次真实只读 CLI 返回 `blocked`，因为正式 main-bound 代次未接纳新身份／新 policy。**尚未证明官方 skill 成功查询、读源和采纳，也未验证 Windows 端到端。** |
+| 当前验证状态 | 原 SPEC、Architecture 入口连续两个全新 run 已自动携带本机配置，官方 resolver 加载后，本会话按各自官方激活规则完成真实 main 来源全文读取和哈希核验。**这是直接读源验证，不是正式 Locator 查询成功或完整业务流程通过；正式代次仍待合法 main-bound 更新，Windows 端到端未验证。** |
 
 [部署侧台账](../../logs/scoped-input-preparation-20261024-v3/deployment-ledger.md) 与 [范围变更来源](../../logs/scoped-input-preparation-20261024-v3/SCOPE-SOURCE.md) 只保留历史迁移去向，不重新激活旧义务或声称旧实现已交付。
 
@@ -101,24 +101,26 @@ Architecture 支持 `external_sources`；在实际 native 根的 `bmad-architect
 
 ## wrapper 隔离与原生消费边界
 
-依据：[隔离构造](../../scripts/toolchain/bmad_native/__init__.py)、[SPEC bridge](../../.agents/skills/jimuyun-spec/scripts/bridge.py)、[Architecture invoke](../../.agents/skills/jimuyun-architecture/scripts/invoke.py)。**两个 wrapper 均不修改。**
+依据：[隔离构造](../../scripts/toolchain/bmad_native/__init__.py)、[SPEC bridge](../../.agents/skills/jimuyun-spec/scripts/bridge.py)、[Architecture invoke](../../.agents/skills/jimuyun-architecture/scripts/invoke.py)。**两个 wrapper 目录所有文件均保持原样；配置传递由共享运行层完成。**
 
 1. 按现有公开 `prepare` 创建新的 `logs/bmad-wrappers/<unique-run>/native`。SPEC 目标须为合法 `_bmad-output/specs/.../SPEC.md`，package id 使用 `SPEC-` 前缀；不要通过任意输出路径绕过检查。
-2. prepare 只复制锁定原生文件/runtime、必要仓库上下文和显式输入。外层的查询器、正式知识库和 per-skill `.user.toml` 不会自动复制。central 只传四个身份／语言字段并重绑私有输出。
-3. **prepare 完成后、官方 skill 激活前**，管理员或设备本地启动脚本将对应 `.user.toml` 放入这个新 run 的 `_bmad/custom/`。保留 SPEC 已生成的 spec_output_path/run_folder_pattern、Architecture doc_workspace 和所有 owner/path 约束；不覆盖已有配置，不重写已经执行的历史 run。
+2. prepare 复制锁定原生文件/runtime、必要仓库上下文和显式输入。外层查询器、正式知识库不会复制到 native；central 只传四个身份／语言字段并重绑私有输出。共享 `invocation()` 在生成官方激活文本前，自动携带外层对应 `_bmad/custom/<skill>.user.toml`，不依赖宿主临时指令或另一个 wrapper。
+3. 管理员只在外层现有 ignored 目录维护对应 `.user.toml`，**无需每次手工复制或补 prompt**。正常 prepare 自动带入相同原始字节，仅作用于本次 skill、新私有根；没有本机文件时行为不变。不要把设备配置放进共享代码、提交或原生 skill 目录，也不通过重新 prepare 覆盖历史 run。
 4. 将实际 task/输入、真实外层根、可调用的绝对查询命令及只读限制作为明确调用者上下文。可以使用现存 ignored 本地辅助脚本组织这一步；本轮辅助命令接收 `--stage`、`--task-id`、`--query`，固定 reader，执行真实 CLI 并核对返回源。**它不是 Git 交付文件，也不是两个 wrapper 的新参数。** 其他设备不得假定此脚本随 pull 存在，可以按下节直接使用现有 CLI。
 5. 官方 resolver 的脚本路径、`--skill` 和 `--project-root` 都指向该次 native 根。验证合并规则确实包含外层只读命令，再按原 invocation 激活官方 skill。外层解析成功不能代替私有解析成功。
 6. 官方 skill 从私有根调用外层真实查询入口。不要让 native 冒充发布仓库，不把整个外层根当作可写原生根，不把外层摘要称为官方实际调用。SPEC typed 发布仍归 wrapper publish；知识库发布另归维护 owner。
 
-### 新 run 自动继承的真实前置
+### 新 run 自动继承与验证
 
-官方 resolver 只读取显式 `--project-root` 下的配置；`new_workspace` 不会继承外层 per-skill TOML。因此，上面的逐 run 安装步骤本身不是自动继承。两个 wrapper 与官方 BMAD 文件保持不变时，必须由**已加载设备规则的宿主**在正常 prepare 成功后、官方激活前，自动完成第3步，再运行原 resolver。不得另造替代 wrapper 或把旧 run 的手工配置称为新 run 自动加载。
+官方 resolver 只读取显式 `--project-root` 下的配置。共享 [运行层](../../scripts/toolchain/bmad_native/__init__.py) 在两个原 wrapper 的正常 `prepare` 内，于官方激活前完成所需传递：只读取与实际锁定 skill 同名的 `.user.toml`，按原字节放入新的 `logs/bmad-wrappers/<run>/native/_bmad/custom/`，随后由原官方 resolver 合并。两个 wrapper 文件和官方 BMAD 字节不改，不新建替代入口，不要求用户每次增加 prompt。
 
-Codex 的 `developer_instructions` 可承载本机规则（[配置说明](https://learn.chatgpt.com/docs/config-file/config-reference)）。规则与辅助脚本必须保持 Git ignored；设备负责让**实际云端宿主会话**加载该规则，不能只在另一个 checkout 写入 `.codex/config.toml` 就宣称生效。规则应要求：从 prepare 原始结果取得新的 native 根，仅向合法新 run 安装对应配置，遇到已有冲突或已开始执行的 run 拒绝覆盖，随后按原官方激活路径解析并执行真实只读查询。
+设备 TOML 仅接受 `[workflow]` 定制。共享层拒绝无效 TOML、符号链接／路径逃逸、非文件来源、不同内容的目标冲突以及修改 `spec_output_path`、`spec_filename`、`spine_output_path`、`run_folder_pattern`、`doc_workspace`、`output_folder`、`planning_artifacts`。中央 config 不在此次传递范围；SPEC 的私有目标绑定、Architecture 显式 doc_workspace 及原有 owner/path 约束继续有效。相同目标字节不重复追加，配置缺失时不创建 user 文件。失败可能保留已创建的私有准备目录，但不会产生新的可激活 invocation 或改写外层业务输出；保留现场，用新的唯一 run 修复重试。
 
-最低验证是从正常入口连续创建两个全新 run，无额外 prompt 或手工复制，分别证明宿主自动安装、官方 resolver 实际加载、官方 skill 自行查询并读源。配置文件解析或外层预查摘要都不能替代这三个事实。
+2026-10-27 已连续从原 SPEC 和 Architecture 入口各创建一个全新 run：prepare 自动携带对应 user 文件；实际私有根的官方 customization/config resolver 成功加载；当前 Codex agent 完整读取各自原 invocation，并按加载到的官方激活规则实际读取 ADR-0044 的 main 原文，每次9476字节，SHA256 为 `2412a580b0630ca866348ccfab47f9278c3f4d71298788227ee42b343b043254`。官方 memlog 在各自私有根记录理由、用途与边界，随后停在配置核验范围。没有手工向新 run 注入配置、外层预查摘要替代读源、完整 SPEC／Architecture 生成或 reviewer 执行；也没有另起独立模型会话。
 
-2026-10-27 云端检查尚未证明自动继承。`codex -C <checkout> debug prompt-input` 在**嵌套 CLI 初始化**时，因只读 Codex home 的 `installation_id` 创建失败而退出；它没有进入指令加载验证，不能据此断言正在运行的云端宿主不支持该配置。不得改认证、权限或 Codex home 来绕过此失败。需要宿主侧确认其实际加载的设备指令，再进行上述两次真实验证；未确认前保留未完成状态。
+这一验证证明自动传递、官方解析和实际**直接读源**；不证明正式 Locator 命中。真实查询仍须满足前述正式发布门禁，不能把两者混写。安装和设备规则仍为 ignored 数据，不随 Git pull 自动部署到另一台设备；部署者先建立本机文件，此后正常新 run 自动继承。
+
+不再依赖原先未证实的项目 `developer_instructions` 方案。本轮已将本机试验文件保全到 ignored 历史目录，未改宿主配置。此前嵌套 CLI 在只读 `installation_id` 初始化失败的记录仍保留；它既不代表宿主加载成功，也不构成绕过认证／权限的理由。
 
 ## Windows 查询与解析示例
 
@@ -184,7 +186,7 @@ Locator CLI 的退出码0也可能携带 `blocked`，所以示例显式检查 pa
 3. 在原生 memlog 记录 accepted/rejected、理由及用途；不由 helper 预填采纳，不把索引摘要当源权威。
 4. 保留一个成功链和一个缺身份／拒绝链，明确阶段和平台覆盖。若仍 blocked，停在真实阻塞，不运行完整业务来掩盖。
 
-2026-10-27 已在合并后的真实 main 核对安装、私有根配置解析与原生手工激活读源。直接读取来源不等于 Locator 查询成功，更不等于未来 run 自动继承。正式维护检查为106/110：三个既有 Quick Dev/Acceptance 查询在入口精简后出现过时术语或漏绑操作指南，BMAD 正例只有标题证据；另有两个 BMAD case ID 不合现有 schema。修复应保留原排名、来源哈希、正文证据和负例门禁，不改发布信任规则。修复分支的候选评估不授权正式发布：发布入口仍要求控制代码和输入字节与真实本地 main 匹配。修复合法进入 main 后，重新准备当前 main 绑定请求、通过发布检查，再更新本地派生代次并补真实查询。不得把分支冒充 main；不推送派生代次或设备配置。**自动继承、正式 Locator 成功查询与 Windows 端到端仍未完成。**
+2026-10-27 已在合并后的真实 main 核对安装、私有根配置解析与原生手工激活读源。直接读取来源不等于 Locator 查询成功，更不等于未来 run 自动继承。正式维护检查为106/110：三个既有 Quick Dev/Acceptance 查询在入口精简后出现过时术语或漏绑操作指南，BMAD 正例只有标题证据；另有两个 BMAD case ID 不合现有 schema。修复应保留原排名、来源哈希、正文证据和负例门禁，不改发布信任规则。修复分支的候选评估不授权正式发布：发布入口仍要求控制代码和输入字节与真实本地 main 匹配。修复合法进入 main 后，重新准备当前 main 绑定请求、通过发布检查，再更新本地派生代次并补真实查询。不得把分支冒充 main；不推送派生代次或设备配置。**自动传递和实际直接读源已完成上述窄验证；正式 Locator 成功查询与 Windows 端到端仍未完成。**
 
 ## 回退配置
 

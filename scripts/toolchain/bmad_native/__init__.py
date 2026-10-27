@@ -211,9 +211,52 @@ def new_workspace(root, run):
     return folder, native
 
 
+def _copy_user_customization(root, native, skill):
+    """ADR-0062: carry device data, never native code or output authority."""
+    relative = f"_bmad/custom/{skill}.user.toml"
+    source = contained(root, relative)
+    if not source.exists():
+        return
+    if not source.is_file():
+        raise ValueError("NATIVE_CUSTOMIZATION_INVALID")
+    import tomllib  # Invocation's native preflight has already required 3.11+.
+    data = source.read_bytes()
+    try:
+        document = tomllib.loads(data.decode("utf-8"))
+    except (UnicodeError, tomllib.TOMLDecodeError):
+        raise ValueError("NATIVE_CUSTOMIZATION_INVALID") from None
+    workflow = document.get("workflow", {})
+    if not isinstance(workflow, dict):
+        raise ValueError("NATIVE_CUSTOMIZATION_INVALID")
+    # These values belong to the wrapper's private target, not device setup.
+    protected = {"spec_output_path", "spec_filename", "spine_output_path",
+                 "run_folder_pattern", "doc_workspace", "output_folder",
+                 "planning_artifacts"}
+    if set(document) - {"workflow"} or protected.intersection(workflow):
+        raise ValueError("NATIVE_CUSTOMIZATION_OUTPUT_CONFLICT")
+    try:
+        private = Path(native).absolute().relative_to(Path(root).absolute()).as_posix()
+    except ValueError:
+        raise ValueError("RUN_OUTSIDE_LOGS") from None
+    if not private.startswith("logs/bmad-wrappers/") or not private.endswith("/native"):
+        raise ValueError("RUN_OUTSIDE_LOGS")
+    contained(root, private)
+    target = contained(native, relative)
+    if target.exists():
+        if not target.is_file() or target.read_bytes() != data:
+            raise ValueError("NATIVE_CUSTOMIZATION_CONFLICT")
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("xb") as stream:
+        stream.write(data)
+
+
 def invocation(root, folder, native, skill, instructions):
-    verify(root)
+    lock = verify(root)
     verify(native)
+    if skill not in lock["trees"]:
+        raise ValueError("UNSUPPORTED_NATIVE_SKILL")
+    _copy_user_customization(root, native, skill)
     source = contained(native, f".agents/skills/{skill}/SKILL.md")
     contexts = json.loads((folder / "context.json").read_text(encoding="utf-8"))
     text = ("# Caller contract (effective before native activation)\n\n" + instructions
