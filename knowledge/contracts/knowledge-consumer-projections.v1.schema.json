@@ -17,7 +17,7 @@
         "additionalProperties": false,
         "required": ["consumer", "eligible_module_ids", "required_modules", "optional_modules", "max_candidates", "freeze_point"],
         "properties": {
-          "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance"]},
+          "consumer": {"enum": ["vdd", "quick-dev", "bootstrap", "refactor-acceptance", "bmad-planning"]},
           "eligible_module_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
           "required_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
           "optional_modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},

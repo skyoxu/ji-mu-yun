@@ -63,7 +63,7 @@
         "properties": {
           "case_id": {"type": "string"},
           "category": {"enum": ["adr", "execution-plan", "architecture", "toolchain"]},
-          "consumer": {"enum": ["vdd", "bootstrap", "refactor-acceptance"]},
+          "consumer": {"enum": ["vdd", "bootstrap", "refactor-acceptance", "bmad-planning"]},
           "query": {"type": "string"},
           "expected_result_status": {"enum": ["matched", "insufficient_match"]},
           "actual_result_status": {"enum": ["matched", "insufficient_match", "blocked", null]},

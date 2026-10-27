@@ -36,6 +36,20 @@ need a narrow repository-local consumption contract.
 
 ## Relationships
 
+### Administrator-operated BMAD reader (2026-10-27)
+
+The `bmad-planning` identity is a read-only consumer for administrator-operated
+PRD, SPEC and Architecture sessions. It may locate every otherwise eligible
+published repository-source module, including conditional and historical
+content, without an additional document/code category restriction. Existing
+source exclusions, snapshot, publication and source-hash checks still apply.
+This identity grants no knowledge maintenance, write or publication authority
+and is not an authentication mechanism. Device access remains administrator
+controlled. Native BMAD and repository wrappers remain unchanged; local
+customization may invoke the real outer-repository Locator from private runs.
+A branch-only policy does not activate this reader before authorized
+main-bound publication.
+
 This ADR **Extends ADR-0044** for repository-local deterministic knowledge
 consumption.
 

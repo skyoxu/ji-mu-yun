@@ -81,7 +81,7 @@ def _validate_suite(suite: dict[str, Any]) -> None:
             raise ValueError(f"query suite case {index} is incomplete")
         if case["category"] not in EXPECTED_CATEGORIES:
             raise ValueError(f"query suite case {case['case_id']} has an invalid category")
-        if case["consumer"] not in {"vdd", "bootstrap", "refactor-acceptance"}:
+        if case["consumer"] not in {"vdd", "bootstrap", "refactor-acceptance", "bmad-planning"}:
             raise ValueError(f"query suite case {case['case_id']} has an invalid consumer")
         if not isinstance(case["query"], str) or not case["query"].strip():
             raise ValueError(f"query suite case {case['case_id']} has an empty query")
