@@ -1,0 +1,42 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary",
+    "--slice",
+    "S1",
+    "--profile",
+    "standard",
+    "--action",
+    "run-regression",
+    "--run-dir",
+    "logs/light-optimizations-quick-dev-20261026/q2-boundary/S1/final-02"
+  ],
+  "exit_code": 1,
+  "reason": null,
+  "elapsed_seconds": 14.542948443000569,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "8a6024cfb67f49a4bd8221e1a96e4340eff191441ee25995221e2ed4daae5375": 0.39642912599992997,
+    "b1d4a0304cddc4c1310331671a98d789c675ebb220962ad4c405ddd1134995df": 0.15256553499966685,
+    "f079a9ecc01643356b00f530235fea06cc84f7095537e118a601e6773c5c3b2b": 0.4631068399994547,
+    "4d9485905cb8b1b98a1a1546ecd651efc703fe3345533f8dc4837823a1e08a2f": 6.1735473059979995,
+    "11c4fa63619baf93c9def17b6de0a7884fee4aae9615f0cabfe224a9d20a12b2": 0.5773863829999755,
+    "512abe130f8531d2bc1ac38cb1084b61c2669c236ed4de736e1f2c114ca8bf65": 0.38511649900101474,
+    "5022ae477398fc68cc3d5b7085ef3d7376d26bb0efd97e6d5a03bb7db4a3fc5c": 7.406477565000387
+  },
+  "active_at_stop": [
+    {
+      "key": "4d9485905cb8b1b98a1a1546ecd651efc703fe3345533f8dc4837823a1e08a2f",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.31013698399874556,
+      "container": true
+    }
+  ]
+}

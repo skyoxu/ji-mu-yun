@@ -1,0 +1,14 @@
+[
+  {
+    "slice_id": "S4",
+    "run_root": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02",
+    "result_ref": "logs/light-optimizations-quick-dev-20261026/S4-final-v2-ready.json",
+    "result_sha256": "sha256:5eb4971aac850f2025afeb9412cb59801aaaeeaff16e22e7585ba66cf8f625aa"
+  },
+  {
+    "slice_id": "S3",
+    "run_root": "logs/light-optimizations-quick-dev-20261026/q2-boundary/S3/final-02",
+    "result_ref": "logs/light-optimizations-quick-dev-20261026/S3-final-v2-ready.json",
+    "result_sha256": "sha256:65617043e4db048a0145bc57c366d1e42d7545665852e6fe58e9ab2374750bce"
+  }
+]

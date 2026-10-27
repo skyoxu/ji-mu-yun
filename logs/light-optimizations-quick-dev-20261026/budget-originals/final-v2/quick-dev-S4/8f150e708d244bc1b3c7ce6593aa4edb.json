@@ -1,0 +1,55 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary",
+    "--slice",
+    "S4",
+    "--profile",
+    "standard",
+    "--action",
+    "run-terminal",
+    "--run-dir",
+    "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-02",
+    "--snapshot-roots",
+    "logs/light-optimizations-quick-dev-20261026/q2-boundary/S4/final-v2-roots.json",
+    "--source-commit",
+    "0b61a4d00640672c2a8cec12d33277c3654ccc8c",
+    "--base-commit",
+    "d2fd7405513b90c516e7f65f1771be67efcb1b95",
+    "--out",
+    "logs/light-optimizations-quick-dev-20261026/S4-final-v2-ready.json"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 3.13346439399902,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "501c5a293dc8d736cdd5280c6bab64ba79f398ca1debd79f3c650e725497a8df": 8.592750921001425,
+    "581f07abbda32bc48feaad76606c947771bd97056487284e92e01887cdd6bd2f": 0.9009467920004681,
+    "6b512fcf357e1541d2359a65aa9cd5d590a0c0851b3ff8993b5b000a8f0d7e96": 0.9713307580004766,
+    "72bb0d17b24222f2ec2cd2fca5f7c9c264455ee38ad708999ef9bc5006c45498": 0.15160327600096934,
+    "778607e8a47f557651173c323118bd841ddeed0156a6fe7892456c4e70e766f5": 0.5193202650007152,
+    "7d158b6c1a99eb27b9cee8b023d25dc039cdea99a7c30d17727a7bd0635e1b5c": 0.1954680989983899,
+    "922052da74bbff63fac9ce4adbdb6dc7b9858a6aef486f24b6085f09759c8711": 8.557523016001142,
+    "a49e8fbaa462442ea3bfbe85e190bd0b18d6811330bf77114425fe928b7b247d": 0.9956140039994352,
+    "c0658abf767cbaa4feb527ad0f33b78118cb2a35f23e3280061bbdda88b1c243": 105.13203743099984,
+    "c6fb40f63d6bdb176cd09bf5923259774b9d9182dece674cffc64998437c7824": 60.056196092999016,
+    "fdeccfcae7a6a279db0690baa7b2a404ceebffc39e6477c68d5b8c240efb1d4f": 2.212714727000275,
+    "6407e111f61daa410d94f20642bf1b964f5f5d7fefda190f4d820b1cc464a018": 0.9203699390000111
+  },
+  "active_at_stop": [
+    {
+      "key": "fdeccfcae7a6a279db0690baa7b2a404ceebffc39e6477c68d5b8c240efb1d4f",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.25292860999979894,
+      "container": true
+    }
+  ]
+}

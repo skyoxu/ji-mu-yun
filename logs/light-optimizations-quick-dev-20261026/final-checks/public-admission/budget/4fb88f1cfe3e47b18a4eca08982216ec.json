@@ -1,0 +1,26 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/tmp/ji-mu-yun-light-qd-venv/bin/python",
+    "-B",
+    "/tmp/light-public-admission-check.py"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.3043283179995342,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "a87098a5afa07eac4fbe2d84538e66714a566285b34ac74a56b821ae777789bf": 0.3035193089999666
+  },
+  "active_at_stop": [
+    {
+      "key": "a87098a5afa07eac4fbe2d84538e66714a566285b34ac74a56b821ae777789bf",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.3035193089999666,
+      "container": true
+    }
+  ]
+}

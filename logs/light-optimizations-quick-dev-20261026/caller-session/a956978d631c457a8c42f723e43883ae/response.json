@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "a956978d631c457a8c42f723e43883ae",
+  "request_sha256": "sha256:e1878377c3abb74cf07a9c81cbe200a79f8e401f635353591ae4f4b5c96316ad",
+  "output_text": "Fixed the observed order-only false impact by comparing validated relation sets in the existing pure impact helper. The dependency-only loader also rejects semantic no-op relation requests rather than producing unnecessary V4/invalidation work. No ordinary dependency rule, source authority, test/fixture or evidence bytes changed; only the two declared production owners were modified.",
+  "authorizes": []
+}

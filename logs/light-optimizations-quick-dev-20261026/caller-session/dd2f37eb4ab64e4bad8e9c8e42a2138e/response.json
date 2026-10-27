@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "dd2f37eb4ab64e4bad8e9c8e42a2138e",
+  "request_sha256": "sha256:d35ca84754341f1739dc2c0675c7e99885577b23eba2c35408c4a3d0c5ef4f26",
+  "output_text": "Removed only the redundant second VDD profile policy set from the internal admission composer. Its sole public caller already enforces the original argparse profile choices, while execution_profile continues to use Quick Dev profile_contract. Public behavior, frozen selectors and all tests remain unchanged. No other production or evidence edits.",
+  "authorizes": []
+}

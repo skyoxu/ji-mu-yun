@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "014be213bff54f418c49e95df65d5134",
+  "request_id": "b41909eb63c748bc95d367a57113afdb",
+  "request_sha256": "sha256:a15c610f9f4835dfe239f85d8edc2aa2ef305d714b994785a2abbc388cc3846a",
+  "output_text": "The already-GREEN recovery fix is minimal and keeps the original owning checks. No refactor changes are needed. Preserve all current production/test/fixture/contract bytes and proceed with native required regressions; no evidence was written by the worker.",
+  "authorizes": []
+}

@@ -1,0 +1,39 @@
+..............F................                                          [100%]
+=================================== FAILURES ===================================
+_______________________ test_light_b0f66ffcfc79[reorder] _______________________
+
+operation = 'reorder'
+
+    @pytest.mark.cer_assertion('ASSERT-LIGHT-2768B5FD436D')
+    @pytest.mark.parametrize('operation', ['remove', 'add', 'reorder'])
+    def test_light_b0f66ffcfc79(operation):
+        old, new, slices = graphs()
+        if operation == 'add':
+            old, new = new, old
+        if operation == 'reorder':
+            old[2]['depends_on'] = ['O-A', 'O-B']
+            new = deepcopy(old)
+            new[2]['depends_on'].reverse()
+        function = getattr(graph, 'dependency_revision_impact', None)
+        result = function(old, new, slices) if function else {}
+        expected_slices, expected_ids = ([], []) if operation == 'reorder' else (['B', 'C'], ['O-B'])
+>       expect(result.get('affected_slices') == expected_slices and result.get('changed_obligation_ids') == expected_ids, 'LIGHT-2768B5FD436D')
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:184: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, fid = 'LIGHT-2768B5FD436D'
+
+    def expect(value, fid):
+        if not value:
+            print('FAILURE_ID:' + fid)
+>       assert value, fid
+E       AssertionError: LIGHT-2768B5FD436D
+E       assert False
+
+.agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py:32: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:LIGHT-2768B5FD436D
+=========================== short test summary info ============================
+FAILED .agents/skills/vdd-execution-plan/scripts/tests/test_light_dependency_revision.py::test_light_b0f66ffcfc79[reorder]
+1 failed, 30 passed in 2.18s

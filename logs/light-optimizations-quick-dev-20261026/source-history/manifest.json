@@ -6,6 +6,12 @@
       "source_path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
       "sha256": "31ae33e299d7e0d2da51bf289057535f83a9771b0f216accd2c58a8f35e92d32",
       "method": "Inverse of the recorded later refactor, exact native hash verified before saving; not relabeled as current."
+    },
+    {
+      "path": "logs/light-optimizations-quick-dev-20261026/source-history/a45fa604eb9673c6012533a96b8f7cc8152349f469a2b7c5eff22aa7460343ff.py",
+      "source_path": ".agents/skills/vdd-execution-plan/scripts/tests/test_light_admission.py",
+      "sha256": "a45fa604eb9673c6012533a96b8f7cc8152349f469a2b7c5eff22aa7460343ff",
+      "method": "Inverse of the recorded later test patch; exact native hash verified before saving. Historical, not current proof."
     }
   ],
   "other_source_versions": "Committed 01d4bc57d29e3dcbc9369e71bf98619507fe7bf4 and 47047841d6c2d4072c4bd7d6ee18f9043a327793 preserve earlier full test and production snapshots."
