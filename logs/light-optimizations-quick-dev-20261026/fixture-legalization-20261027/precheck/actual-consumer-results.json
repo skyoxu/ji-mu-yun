@@ -1,0 +1,173 @@
+{
+  "authorizes": [],
+  "observations": [
+    {
+      "mode": "file",
+      "payload": {
+        "stage": "vdd-repair",
+        "operation": "repair",
+        "task_id": "fixture-legalization-file",
+        "inputs": [
+          "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/file.md"
+        ],
+        "scope": [
+          "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/file.md",
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md"
+        ],
+        "query": "current source callers tests contracts execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+        "record_path": "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/file-record.md"
+      },
+      "prepared": {
+        "status": "prepared",
+        "queried": true,
+        "query_result": {
+          "schema": "planning-query.v1",
+          "episode_id": "edd7327889a837785b97992e46a5312af8ae3f7be46fdbcc589c7de16ddcba4a",
+          "stage": "vdd-repair",
+          "operation": "repair",
+          "consumer": "vdd",
+          "outcome": "degraded",
+          "reason_code": "stale_verified",
+          "index_identity": {
+            "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc",
+            "exclusion_policy_revision": "knowledge-source-exclusions.v1",
+            "ref": "refs/heads/main",
+            "schema_version": "jimuyun.repository-source-snapshot.v1",
+            "snapshot_id": "sha256:67d2077c7c5210551f7dfab09aafffcdbbbc201ab1eb809cda86c3e34fbf6df4",
+            "generation_id": "99dbc0e319ed9ea9a27f8322980b2f99a88a8267f13a396f32718216e459fb86",
+            "policy_revision": "knowledge-consumer-policies.v2"
+          },
+          "candidates": [],
+          "read_set": [
+            {
+              "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md",
+              "origin": "direct-source",
+              "sha256": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+              "read_identity": {
+                "kind": "branch",
+                "commit": "424f51d875d93dd1f1e167e11161c00373c2ac45"
+              },
+              "excerpt_range": {
+                "start_byte": 0,
+                "end_byte": 2048
+              },
+              "excerpt": "# Toolchain Core Skill Replay Portability And Evaluation Seed\n\n- Status: `implementation-authorized`\n- Profile: `self-hosted`\n- Profile reason: this plan changes a shared Toolchain validator capability and the VDD and Refactor Acceptance contracts that consume it.\n- Plan ID: `toolchain-core-skill-replay-portability-and-evaluation-seed`\n- Source brief ID: `TC-D1`\n- Git baseline: `8c47a52fc8f241f76da9ccb5d936b0fafe807f0f`\n- Baseline tree: `6963a7c3ef477ddabd0acd9459d268a8f2ceb982`\n- Current step: begin `RMAP-S0` through the plan-owned Quick Dev TDD route; no slice has started yet.\n- Recovery command: `py -3 -B execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/tools/validate_plan.py --implementation-state`\n\n## Outcome\n\nReplace future machine-specific Skill-package validation calls with one\nrepository-owned replay entrypoint. The entrypoint resolves an installed\nvalidator through a bounded capability contract, proves compatibility with\ndetached positive and negative probes, records the resolved path, version and\ncontent identity, and fails closed on missing, substituted, drifted or\nincompatible capability.\n\nPreserve the 2026-08-01 Refactor Acceptance plan byte-for-byte. Add a separate\ncompatibility replay record for its machine-bound terminal step, then convert\nits three repaired failure families into explicitly non-authorizing evaluation\nseed candidates. Re-run the workflow-model-routing terminal consumer as a\nhigher-level replay without claiming universal Skill quality.\n\n## Scope\n\n- One shared Toolchain Skill-package validation/replay CLI under `scripts/sc/`.\n- A bounded capability descriptor and machine-readable replay receipt consumed\n  by current terminal validators.\n- Detached positive, negative, missing, substitution, drift and compatibility\n  fixtures and tests.\n- One append-only compatibility replay record for the historical 8-01 command.\n- One evaluation-seed manifest and one stable-versus-candidate replay matrix.\n- Minimal VDD and Refactor Acceptance instructions needed"
+            },
+            {
+              "path": "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+              "origin": "direct-source",
+              "sha256": "d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+              "read_identity": {
+                "kind": "branch",
+                "commit": "424f51d875d93dd1f1e167e11161c00373c2ac45"
+              },
+              "excerpt_range": {
+                "start_byte": 0,
+                "end_byte": 2048
+              },
+              "excerpt": "# FR-1\nTarget package identity and effective inspection are independently verified; missing, illegal, unsupported, escaping, substituted, or wrong targets fail closed.\n# FR-2\nSupported VDD and Acceptance package routes remain available and successful evidence binds the effective inspected content.\n# FR-3\nValidator source, content, semantic-dependency closure, compatibility, support policy, and candidate-external trust are independently verified.\n# FR-4\nDetached positive and negative Probes execute as real independent processes with bound inputs and outputs; always-success and infrastructure-failure false negatives fail.\n# FR-5\nHistorical tracked membership, repository-relative paths, native command identity, and bytes remain unchanged; repair evidence is append-only and historical evidence is non-authorizing.\n# FR-6\nThe three named evaluation seeds occur exactly once with provenance, applicability, missing labels, counterexample or explicit absence, and approved non-baseline classification.\n# FR-7\nAll six materially distinct Matrix Cases execute immutable Stable and Candidate subjects with distinct fixtures/state and attributable evidence.\n# FR-8\nMissing, copied, mislabeled, stale, reused, wrong-target, infrastructure-failed, or non-executed matrix evidence invalidates the aggregate.\n# FR-9\nThe complete current Consumer Manifest is reconciled bidirectionally with repository callers, including VDD, Acceptance, and workflow-model-routing.\n# FR-10\nEvery applicable Consumer executes enable, disable, behavioral rollback, and re-enable through real call surfaces, restoring Prior Route identity and verdict/diagnostic baseline.\n# FR-11\nEvery Atomic Obligation has bidirectional Exact Cover to assertions, selectors, commands, witnesses, and runtime evidence, with no orphan nodes.\n# FR-12\nReplay results bind a complete Current Snapshot and reproduce from a fresh checkout; unexplained result-determining input drift makes the result stale or fail closed.\n# FR-13\nReplay, seed, matrix, review, and Quick Dev artifacts expose an "
+            },
+            {
+              "path": "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/file.md",
+              "origin": "direct-source",
+              "sha256": "37e22908adacdaf08ef4424a0f262986432b7ec6cfa9e520321efd468b5affd0",
+              "read_identity": {
+                "kind": "branch",
+                "commit": "424f51d875d93dd1f1e167e11161c00373c2ac45"
+              },
+              "excerpt_range": {
+                "start_byte": 0,
+                "end_byte": 329
+              },
+              "excerpt": "# Published V3 advisory fixture\n\nFrozen normative requirements: `execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md`.\nExisting asset: `execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md`.\n"
+            }
+          ],
+          "budget_usage": {
+            "calls": 1,
+            "candidates": 0,
+            "output_bytes": 8037
+          },
+          "diagnostic": {
+            "incomplete": true,
+            "exit_code": null,
+            "raw_status": "blocked",
+            "recorded_at": "2026-10-27T00:26:36.342205+00:00",
+            "effective_config": {
+              "enabled": true,
+              "stages": [
+                "prd",
+                "spec",
+                "architecture",
+                "vdd-create",
+                "vdd-repair"
+              ],
+              "max_candidates": 12,
+              "max_output_bytes": 65536,
+              "max_calls": 3,
+              "timeout_seconds": 30,
+              "origins": {
+                "enabled": "knowledge/planning-query.toml",
+                "stages": "knowledge/planning-query.toml",
+                "max_candidates": "knowledge/planning-query.toml",
+                "max_output_bytes": "knowledge/planning-query.toml",
+                "max_calls": "knowledge/planning-query.toml",
+                "timeout_seconds": "knowledge/planning-query.toml"
+              },
+              "consumer": "vdd"
+            },
+            "intent_hash": "5d780dfef6017a6d86fc9bcd160fd549c2437ddbb5edf52248525497ac68729a",
+            "source_hashes": {
+              "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/00-index.md": "ef2159a0e464693dee5cc770f16fa3621f69ff280bbe899a276c363eb6808aaf",
+              "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md": "d52b8c108be6761c24854bce7bba6741532ee55975ca95025946d1898d7cc941",
+              "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/file.md": "37e22908adacdaf08ef4424a0f262986432b7ec6cfa9e520321efd468b5affd0"
+            },
+            "permission_checked": true,
+            "evidence_refs": [
+              {
+                "sha256": "501a153b83155b867537d4d160ac80727085cfd425ac79b55d7aa99b2681981a"
+              }
+            ],
+            "requires_source_check": true,
+            "closed": false
+          },
+          "result": {
+            "schema_version": "jimuyun.knowledge-locator-result.v1",
+            "request_id": "planning-fb667edb9fa3a4da3cd356ad",
+            "status": "blocked",
+            "snapshot": {
+              "ref": "refs/heads/main",
+              "commit": "9fce3aa8af1144f50a80bf12d8695321f596e3bc"
+            },
+            "candidates": []
+          },
+          "diagnostics": [
+            {
+              "code": "stale"
+            }
+          ]
+        },
+        "authorizes": []
+      },
+      "exception": null
+    },
+    {
+      "mode": "directory",
+      "payload": {
+        "stage": "vdd-repair",
+        "operation": "repair",
+        "task_id": "fixture-legalization-directory",
+        "inputs": [
+          "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/directory.md"
+        ],
+        "scope": [
+          "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/directory.md",
+          "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md"
+        ],
+        "query": "current source callers tests contracts execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/repair/round-7/recompilation-4/assembled-requirements.md",
+        "record_path": "logs/light-optimizations-quick-dev-20261026/fixture-legalization-20261027/precheck/directory-record.md"
+      },
+      "prepared": null,
+      "exception": "consumption_reference_denied"
+    }
+  ]
+}

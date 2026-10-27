@@ -20,7 +20,7 @@ from workflow_unit_budget import Budget, supervise
 
 @pytest.mark.cer_assertion('ASSERT-LIGHT-9ECB9EABF5D9')
 def test_light_d353d902f43c():
-    plan = ROOT / 'execution-plans/2026-10-26-toolchain-light-optimizations-q2-boundary'
+    plan = ROOT / 'execution-plans/2026-10-27-toolchain-light-optimizations-fixture-ready'
     bundle = json.loads((plan / 'semantic-plan-bundle.v1.json').read_text())
     guard = next(s for s in bundle['slices'] if s['slice_id'] == 'S1')
     obligations = [o for o in bundle['obligations'] if o['obligation_id'] in guard['obligation_ids']]

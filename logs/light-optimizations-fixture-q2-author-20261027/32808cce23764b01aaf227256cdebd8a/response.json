@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "c7ab428e9e424a8bafcc03576379f3d8",
+  "request_id": "32808cce23764b01aaf227256cdebd8a",
+  "request_sha256": "sha256:f55e4396afc218eb9b4ad3f03042c5d82559e55048f6542a9ce0947ae709d0f9",
+  "output_text": "{\"summary\": \"Legalized only the advisory fixture using real prepare_consumption on a Markdown file referencing unchanged normative requirements and actual 00-index.md; original V3/V4 assertions retained. Added actual directory and unchanged-raw-source rejection cases; rebound the retained guard to this native plan. No production, authority, evidence, or selector-oracle changes.\", \"authorizes\": []}",
+  "authorizes": []
+}
