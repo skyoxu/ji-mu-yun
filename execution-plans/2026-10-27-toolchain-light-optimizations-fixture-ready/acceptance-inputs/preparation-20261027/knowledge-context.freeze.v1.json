@@ -1,0 +1,6 @@
+{
+  "schema_version": "jimuyun.knowledge-consumer-freeze.v1",
+  "authorizes": [],
+  "context_path": "knowledge-context.refactor-acceptance.v1.json",
+  "context_sha256": "sha256:48c1bd628ece33c32c249a8b9b2315a526e4947b13d985101830e7bbd0a2d6d7"
+}
