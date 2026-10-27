@@ -101,6 +101,60 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
             rank = ranked_ids.index(expected["module_id"]) + 1
             self.assertLessEqual(rank, expected["max_rank"], case_id)
 
+    def test_refactored_workflow_queries_retain_source_evidence(self) -> None:
+        # ADR-0048: ranking alone cannot replace reread, byte-bound body evidence.
+        policies = json.loads(POLICY_PATH.read_text())
+        _, catalog, projections, _ = build_layers(
+            REPOSITORY_ROOT, policy=policies,
+            exclusions=json.loads(EXCLUSIONS_PATH.read_text()))
+        policy_by_consumer = {p["consumer"]: p for p in policies["policies"]}
+        eligible = {p["consumer"]: set(p["eligible_module_ids"]) for p in projections["projections"]}
+        evaluator = _load_evaluator()
+        selected_ids = {"TOOL-006", "TOOL-015", "TOOL-016", "TOOL-026"}
+        selected = [c for c in self.suite["cases"] if c["case_id"] in selected_ids]
+        self.assertEqual(selected_ids, {c["case_id"] for c in selected})
+        for case in selected:
+            with self.subTest(case=case["case_id"]):
+                expected = case["expected"]
+                result = locate({"query": case["query"]}, catalog,
+                                policy=policy_by_consumer[case["consumer"]],
+                                eligible_module_ids=eligible[case["consumer"]])
+                ids = [c["module_id"] for c in result["candidates"]]
+                self.assertIn(expected["module_id"], ids)
+                self.assertLessEqual(ids.index(expected["module_id"]) + 1, expected["max_rank"])
+                failures, _, _ = evaluator._check_hashes_and_terms(
+                    REPOSITORY_ROOT, catalog["source_snapshot"]["commit"],
+                    result["candidates"], expected["module_id"], expected["source_terms"])
+                self.assertEqual([], failures)
+
+    def test_source_evidence_still_rejects_corruption_and_missing_terms(self) -> None:
+        # ADR-0048: the repaired positive oracle does not waive source integrity.
+        import hashlib
+        blob = (REPOSITORY_ROOT / "AGENTS.md").read_bytes()
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "refs/heads/main"], cwd=REPOSITORY_ROOT).decode().strip()
+        candidate = {"module_id": "repository-rules", "path": "AGENTS.md", "read_set": [
+            {"role": "primary", "path": "AGENTS.md", "source_sha256": hashlib.sha256(blob).hexdigest()}]}
+        evaluator = _load_evaluator()
+        failures, _, _ = evaluator._check_hashes_and_terms(
+            REPOSITORY_ROOT, commit, [candidate], "repository-rules", ["Repository Agent Contract"])
+        self.assertIn("semantic evidence is title-only", failures)
+        failures, _, _ = evaluator._check_hashes_and_terms(
+            REPOSITORY_ROOT, commit, [candidate], "repository-rules", ["missing-source-term-for-negative-check"])
+        self.assertTrue(any("expected source term not found" in failure for failure in failures))
+        candidate["read_set"][0]["source_sha256"] = "0" * 64
+        failures, _, _ = evaluator._check_hashes_and_terms(
+            REPOSITORY_ROOT, commit, [candidate], "repository-rules", ["Preserve user changes"])
+        self.assertIn("source hash mismatch: AGENTS.md", failures)
+
+    def test_suite_ids_match_published_schema(self) -> None:
+        import re
+        schema = json.loads((REPOSITORY_ROOT / "knowledge/contracts/repository-knowledge-query-suite.v1.schema.json").read_text())
+        pattern = schema["properties"]["cases"]["items"]["properties"]["case_id"]["pattern"]
+        ids = [c["case_id"] for c in self.suite["cases"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertTrue(all(re.fullmatch(pattern, case_id) for case_id in ids))
+
     def test_suite_validator_rejects_undercovered_category(self) -> None:
         evaluator = _load_evaluator()
         broken = {
@@ -108,7 +162,7 @@ class KnowledgeQueryEvaluationTests(unittest.TestCase):
             "cases": [
                 case
                 for case in self.suite["cases"]
-                if case["case_id"] not in {"TOOL-025", "TOOL-N01", "TOOL-N02", "BMAD-RO-01"}
+                if case["case_id"] not in {"TOOL-025", "TOOL-N01", "TOOL-N02", "TOOL-026"}
             ],
         }
         with self.assertRaisesRegex(ValueError, "coverage"):

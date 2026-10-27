@@ -107,7 +107,9 @@ class BmadReadonlyConsumerTests(unittest.TestCase):
         suite = json.loads((ROOT / "knowledge/evaluation/repository-knowledge-query-suite.v1.json").read_text())
         previous = [case for case in suite["cases"] if case["consumer"] != "bmad-planning"]
         self.assertEqual(108, len(previous))
-        self.assertEqual("1ffcd25dde7286a09e3dff6ec7ddf2acb4500be228d67dffbe302df35f942b56", hashlib.sha256(json.dumps(previous, sort_keys=True, separators=(",", ":")).encode()).hexdigest())
+        untouched = [c for c in previous if c["case_id"] not in {"TOOL-006", "TOOL-016"}]
+        self.assertEqual(106, len(untouched))
+        self.assertEqual("75216ae9642041a3d060a8a911a6b05bb5f53dd077346f8ce4b35492c2353d47", hashlib.sha256(json.dumps(untouched, sort_keys=True, separators=(",", ":")).encode()).hexdigest())
         evaluation._validate_suite(suite)
         cases = [c for c in suite["cases"] if c["consumer"] == "bmad-planning"]
         self.assertGreaterEqual(len(cases), 2)

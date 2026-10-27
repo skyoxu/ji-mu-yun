@@ -87,7 +87,7 @@
     {"case_id":"TOOL-003","category":"toolchain","consumer":"refactor-acceptance","query":"VDD knowledge preflight plan readiness","expected":{"module_id":"governance.vdd-execution-plan","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/vdd-execution-plan/SKILL.md","source_terms":["knowledge"]}},
     {"case_id":"TOOL-004","category":"toolchain","consumer":"vdd","query":"VDD profile resumable self-hosted execution plan","expected":{"module_id":"governance.vdd-execution-plan","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/vdd-execution-plan/SKILL.md","source_terms":["execution-plan"]}},
     {"case_id":"TOOL-005","category":"toolchain","consumer":"bootstrap","query":"Repository Maintenance TDD Adapter verify-bound knowledge consumption","expected":{"module_id":"governance.quick-dev-tdd-adapter","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","source_terms":["Verify-Bound Knowledge Consumption"]}},
-    {"case_id":"TOOL-006","category":"toolchain","consumer":"refactor-acceptance","query":"Quick Dev immutable Slice Capsule expected nonzero RED","expected":{"module_id":"governance.quick-dev-tdd-adapter","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","source_terms":["immutable Slice Capsule", "expected nonzero"]}},
+    {"case_id":"TOOL-006","category":"toolchain","consumer":"refactor-acceptance","query":"Quick Dev frozen RED predecessor nonzero evidence","expected":{"module_id":"governance.quick-dev-tdd-adapter","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","source_terms":["frozen RED predecessor","nonzero test/case evidence"]}},
     {"case_id":"TOOL-007","category":"toolchain","consumer":"vdd","query":"quick-dev-tdd-adapter RED GREEN REFACTOR evidence chain","expected":{"module_id":"governance.quick-dev-tdd-adapter","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","source_terms":["RED", "GREEN", "REFACTOR"]}},
     {"case_id":"TOOL-008","category":"toolchain","consumer":"bootstrap","query":"quick-dev-tdd-adapter persistent loop resume execution plan","expected":{"module_id":"governance.quick-dev-tdd-adapter","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/quick-dev-tdd-adapter/SKILL.md","source_terms":["resume"]}},
     {"case_id":"TOOL-009","category":"toolchain","consumer":"refactor-acceptance","query":"Run Phase Bootstrap Review prepare Artifact View","expected":{"module_id":"governance.bootstrap-review","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/run-phase-bootstrap-review/SKILL.md","source_terms":["Run Phase Bootstrap Review"]}},
@@ -97,7 +97,7 @@
     {"case_id":"TOOL-013","category":"toolchain","consumer":"vdd","query":"Refactor Implementation Acceptance inspect plan directory","expected":{"module_id":"governance.refactor-implementation-acceptance","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","source_terms":["Refactor Implementation Acceptance"]}},
     {"case_id":"TOOL-014","category":"toolchain","consumer":"bootstrap","query":"implementation acceptance matrix source clauses","expected":{"module_id":"governance.refactor-implementation-acceptance","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","source_terms":["Implementation Acceptance Matrix"]}},
     {"case_id":"TOOL-015","category":"toolchain","consumer":"refactor-acceptance","query":"refactor acceptance phase graph Bootstrap routing","expected":{"module_id":"governance.refactor-implementation-acceptance","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","source_terms":["Acceptance Phase Graph", "Bootstrap Routing"]}},
-    {"case_id":"TOOL-016","category":"toolchain","consumer":"vdd","query":"implementation conformance evidence source requirement clauses","expected":{"module_id":"governance.refactor-implementation-acceptance","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","source_terms":["source"]}},
+    {"case_id":"TOOL-016","category":"toolchain","consumer":"vdd","query":"Refactor implementation acceptance conformance evidence source requirement clauses","expected":{"module_id":"governance.refactor-implementation-acceptance","max_rank":3,"kind":"governance-component","status":"active","path":".agents/skills/run-refactor-implementation-acceptance/SKILL.md","source_terms":["implementation-conformance classes","source"]}},
     {"case_id":"TOOL-017","category":"toolchain","consumer":"bootstrap","query":"knowledge_locator.py JSON stdin stdout location-only","expected":{"module_id":"governance.knowledge-locator","max_rank":3,"kind":"governance-component","status":"active","path":"scripts/python/knowledge_locator.py","source_terms":["json.load(sys.stdin)"]}},
     {"case_id":"TOOL-018","category":"toolchain","consumer":"refactor-acceptance","query":"Knowledge Locator binds result to request and catalog source snapshot","expected":{"module_id":"governance.knowledge-locator","max_rank":3,"kind":"governance-component","status":"active","path":"scripts/python/knowledge_locator.py","source_terms":["bind_result_to_request", "catalog_source_snapshot"]}},
     {"case_id":"TOOL-019","category":"toolchain","consumer":"vdd","query":"Knowledge Locator snapshot source hash freshness","expected":{"module_id":"governance.knowledge-locator","max_rank":3,"kind":"governance-component","status":"active","path":"scripts/python/knowledge_locator.py","source_terms":["source_snapshot", "source_sha256"]}},
@@ -117,7 +117,7 @@
     {"case_id":"TOOL-N01","category":"toolchain","consumer":"vdd","query":"PostgreSQL logical replication WAL slot failover topology","expected":{"result_status":"insufficient_match"}},
     {"case_id":"TOOL-N02","category":"toolchain","consumer":"bootstrap","query":"Helm chart rollback Kubernetes namespace reconciliation","expected":{"result_status":"insufficient_match"}},
     {
-      "case_id": "BMAD-RO-01",
+      "case_id": "TOOL-026",
       "category": "toolchain",
       "consumer": "bmad-planning",
       "query": "repository-rules",
@@ -128,12 +128,12 @@
         "status": "active",
         "path": "AGENTS.md",
         "source_terms": [
-          "Repository Agent Contract"
+          "Preserve user changes and avoid destructive Git or filesystem operations."
         ]
       }
     },
     {
-      "case_id": "BMAD-RO-N01",
+      "case_id": "TOOL-N03",
       "category": "toolchain",
       "consumer": "bmad-planning",
       "query": "zzzxxyy-bmad-unregistered-content",

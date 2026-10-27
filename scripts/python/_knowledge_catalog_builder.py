@@ -483,6 +483,7 @@ class CatalogBuilder:
                 "title": "Quick Dev TDD adapter",
                 "primary": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
                 "resources": (
+                    ("execution-guide", ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md"),
                     ("cli", ".agents/skills/quick-dev-tdd-adapter/tools/adapter.py"),
                     ("orchestrator", ".agents/skills/quick-dev-tdd-adapter/tools/route_plan_directory.py"),
                     ("validator", ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py"),
@@ -513,6 +514,8 @@ class CatalogBuilder:
                 "title": "Refactor implementation acceptance",
                 "primary": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
                 "resources": (
+                    ("prepare-guide", ".agents/skills/run-refactor-implementation-acceptance/references/prepare-and-run.md"),
+                    ("bootstrap-guide", ".agents/skills/run-refactor-implementation-acceptance/references/bootstrap-operation.md"),
                     ("cli", ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py"),
                     ("knowledge-adapter", ".agents/skills/run-refactor-implementation-acceptance/scripts/prepare_knowledge_context.py"),
                     ("knowledge-validator", ".agents/skills/run-refactor-implementation-acceptance/scripts/knowledge_context.py"),
