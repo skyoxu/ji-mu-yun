@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 
@@ -119,6 +120,86 @@ class CompactVddProjectionTests(unittest.TestCase):
         self.request["candidateRevision"] = candidate
         self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
         return candidate
+
+    # ADR-0053: byte-identical normalization status is not a dirty candidate.
+    def normalization_marker_candidate(self) -> Path:
+        self.freeze_commit_candidate()
+        marker = self.root / "legacy.txt"
+        marker.write_bytes(b"historical\r\ncontent\r\n")
+        subprocess.run(["git", "add", "legacy.txt"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "--quiet", "-m", "historical bytes"], cwd=self.root, check=True)
+        (self.root / ".gitattributes").write_text("legacy.txt text eol=lf\n", encoding="utf-8")
+        subprocess.run(["git", "add", ".gitattributes"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "--quiet", "-m", "normalization rule"], cwd=self.root, check=True)
+        revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.root, text=True).strip()
+        self.request["candidateRevision"] = revision
+        receipt = json.loads(self.receipt_path.read_text())
+        receipt["candidate_custody"]["candidate_revision"] = revision
+        self.receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        self.request["implementationReceiptHash"] = "sha256:" + hashlib.sha256(self.receipt_path.read_bytes()).hexdigest()
+        self.write_request()
+        status = subprocess.check_output(["git", "status", "--porcelain"], cwd=self.root, text=True)
+        self.assertIn(" M legacy.txt", status)
+        return marker
+
+    def test_byte_identical_normalization_status_preserves_file_index_and_status(self) -> None:
+        marker = self.normalization_marker_candidate()
+        before_bytes = marker.read_bytes()
+        before_index = (self.root / ".git/index").read_bytes()
+        before_status = subprocess.check_output(["git", "status", "--porcelain"], cwd=self.root)
+        # git status may refresh stat metadata; compare the index after observation.
+        before_index = (self.root / ".git/index").read_bytes()
+        result = project(self.root, self.request_path)
+        self.assertEqual("ready", result["status"])
+        self.assertEqual(before_bytes, marker.read_bytes())
+        self.assertEqual(before_index, (self.root / ".git/index").read_bytes())
+        self.assertEqual(before_status, subprocess.check_output(["git", "status", "--porcelain"], cwd=self.root))
+
+    def test_normalization_observation_rejects_change_during_read(self) -> None:
+        marker = self.normalization_marker_candidate()
+        read_bytes = Path.read_bytes
+        def changed_during_read(path):
+            payload = read_bytes(path)
+            if path == marker:
+                marker.write_bytes(payload + b"concurrent change")
+            return payload
+        with patch.object(Path, "read_bytes", changed_during_read):
+            with self.assertRaisesRegex(InputError, "clean worktree"):
+                project(self.root, self.request_path)
+
+    def test_normalization_exception_rejects_actual_custody_changes(self) -> None:
+        marker = self.normalization_marker_candidate()
+        original = marker.read_bytes()
+        for variant in ("byte", "staged", "mode", "symlink", "extra", "candidate"):
+            with self.subTest(variant=variant):
+                revision = self.request["candidateRevision"]
+                if variant == "byte":
+                    marker.write_bytes(original + b"actual change")
+                elif variant == "staged":
+                    subprocess.run(["git", "add", "legacy.txt"], cwd=self.root, check=True, capture_output=True)
+                elif variant == "mode":
+                    subprocess.run(["git", "update-index", "--chmod=+x", "legacy.txt"], cwd=self.root, check=True)
+                elif variant == "symlink":
+                    marker.unlink()
+                    marker.symlink_to(self.root / "unrelated.txt")
+                elif variant == "extra":
+                    (self.root / "extra.txt").write_text("untracked", encoding="utf-8")
+                else:
+                    self.request["candidateRevision"] = self.request["baselineRevision"]
+                    self.write_request()
+                try:
+                    with self.assertRaisesRegex(InputError, "clean worktree"):
+                        project(self.root, self.request_path)
+                finally:
+                    self.request["candidateRevision"] = revision
+                    self.write_request()
+                    if marker.is_symlink(): marker.unlink()
+                    marker.write_bytes(original)
+                    # Restore only this isolated fixture's index entry to its HEAD.
+                    subprocess.run(["git", "update-index", "--cacheinfo", "100644",
+                                    subprocess.check_output(["git", "rev-parse", "HEAD:legacy.txt"], cwd=self.root, text=True).strip(),
+                                    "legacy.txt"], cwd=self.root, check=True)
+                    (self.root / "extra.txt").unlink(missing_ok=True)
 
     def test_projection_freezes_only_explicit_paths_and_reproduces_manifest_custody(self) -> None:
         self.freeze_commit_candidate()

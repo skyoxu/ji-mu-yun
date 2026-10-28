@@ -1,0 +1,44 @@
+{
+  "bindings": {
+    "authority": {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/acceptance-authority.v1.json",
+      "sha256": "sha256:252d940c2ad13d4a4fa2162028dbae110f2dba58fd25a1cb340517dd08e47874"
+    },
+    "contract": {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/skill-input-contract.v1.json",
+      "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+    },
+    "knowledge_freeze": {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/knowledge-context.freeze.v1.json",
+      "sha256": "sha256:d35d6d210bb36c165e75fe1a859d58acd30fbbb01e549632e545e4ffeb88d5f0"
+    },
+    "registry": {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/command-registry.projection-input.v1.json",
+      "sha256": "sha256:2de46deefffd68743c6fce31ae238d0f6c8313804f89ba16539bc44e25065bac"
+    }
+  },
+  "consumer": "run-refactor-implementation-acceptance",
+  "inputs": {
+    "acceptance_requirements": [
+      "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/acceptance-input-projection.v1.json"
+    ],
+    "implementation_target": [
+      "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/acceptance-input-projection.v1.json"
+    ]
+  },
+  "operation": "acceptance",
+  "plan_id": "package-b-acceptance-20261028",
+  "policy_revision": "acceptance-v2",
+  "schema_version": "skill-input-request.v2",
+  "sources": [
+    {
+      "authority": "owner-approved-reviewed-checkpoint-and-canonical-vdd",
+      "module": "implementation_target",
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/acceptance-input-projection.v1.json",
+      "resource_set": "approved-package-b-complete-plan",
+      "role": "implementation_input",
+      "sha256": "sha256:290cbe3b1cc52f36d772abb73445f0848a2e1c735383f256ef1ecfc4398f120e"
+    }
+  ],
+  "storage": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/skill-input-v2/acceptance"
+}

@@ -1,0 +1,64 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_baseline_tracked_deletion_with_ignored_recreated_mutex_requires_review[False] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-23/test_baseline_tracked_deletion0')
+commit_deletion = False
+
+    @pytest.mark.parametrize('commit_deletion', [False, True])
+    def test_baseline_tracked_deletion_with_ignored_recreated_mutex_requires_review(tmp_path, commit_deletion):
+        request, path = setup_mutex(tmp_path)
+        path.write_bytes(b'x')
+        subprocess.run(['git', '-C', str(tmp_path), 'add', '-f', MUTEX], check=True)
+        identity = ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid']
+        subprocess.run(['git', '-C', str(tmp_path), *identity, 'commit', '-qm', 'fixture tracked lock'], check=True)
+        authority = read_json(tmp_path / 'authority.json')
+        authority['skill_input_baseline'] = subprocess.check_output(
+            ['git', '-C', str(tmp_path), 'rev-parse', 'HEAD'], text=True).strip()
+        (tmp_path / 'authority.json').write_text(json.dumps(authority), encoding='utf-8')
+        request['bindings']['authority']['sha256'] = digest((tmp_path / 'authority.json').read_bytes())
+        # Only this isolated Git fixture's index changes; keep the physical mutex.
+        subprocess.run(['git', '-C', str(tmp_path), 'rm', '--cached', '-f', MUTEX], check=True)
+        if commit_deletion:
+            subprocess.run(['git', '-C', str(tmp_path), *identity, 'commit', '-qm', 'fixture untracked lock'], check=True)
+        path.write_bytes(b'\0')
+        observed = observe_candidate(tmp_path, tmp_path / 'authority.json', request['storage'])
+>       assert MUTEX in observed['changed_paths']
+E       AssertionError: assert 'knowledge/indexes/.publication-acquire.lock' in ['authority.json', 'contract.json', 'freeze.json', 'registry.json', 'requirements.md']
+
+scripts/python/tests/test_skill_input_publication_mutex.py:108: AssertionError
+----------------------------- Captured stdout call -----------------------------
+rm 'knowledge/indexes/.publication-acquire.lock'
+_ test_baseline_tracked_deletion_with_ignored_recreated_mutex_requires_review[True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-23/test_baseline_tracked_deletion1')
+commit_deletion = True
+
+    @pytest.mark.parametrize('commit_deletion', [False, True])
+    def test_baseline_tracked_deletion_with_ignored_recreated_mutex_requires_review(tmp_path, commit_deletion):
+        request, path = setup_mutex(tmp_path)
+        path.write_bytes(b'x')
+        subprocess.run(['git', '-C', str(tmp_path), 'add', '-f', MUTEX], check=True)
+        identity = ['-c', 'user.name=fixture', '-c', 'user.email=fixture@example.invalid']
+        subprocess.run(['git', '-C', str(tmp_path), *identity, 'commit', '-qm', 'fixture tracked lock'], check=True)
+        authority = read_json(tmp_path / 'authority.json')
+        authority['skill_input_baseline'] = subprocess.check_output(
+            ['git', '-C', str(tmp_path), 'rev-parse', 'HEAD'], text=True).strip()
+        (tmp_path / 'authority.json').write_text(json.dumps(authority), encoding='utf-8')
+        request['bindings']['authority']['sha256'] = digest((tmp_path / 'authority.json').read_bytes())
+        # Only this isolated Git fixture's index changes; keep the physical mutex.
+        subprocess.run(['git', '-C', str(tmp_path), 'rm', '--cached', '-f', MUTEX], check=True)
+        if commit_deletion:
+            subprocess.run(['git', '-C', str(tmp_path), *identity, 'commit', '-qm', 'fixture untracked lock'], check=True)
+        path.write_bytes(b'\0')
+        observed = observe_candidate(tmp_path, tmp_path / 'authority.json', request['storage'])
+>       assert MUTEX in observed['changed_paths']
+E       AssertionError: assert 'knowledge/indexes/.publication-acquire.lock' in ['authority.json', 'contract.json', 'freeze.json', 'registry.json', 'requirements.md']
+
+scripts/python/tests/test_skill_input_publication_mutex.py:108: AssertionError
+----------------------------- Captured stdout call -----------------------------
+rm 'knowledge/indexes/.publication-acquire.lock'
+=========================== short test summary info ============================
+FAILED scripts/python/tests/test_skill_input_publication_mutex.py::test_baseline_tracked_deletion_with_ignored_recreated_mutex_requires_review[False]
+FAILED scripts/python/tests/test_skill_input_publication_mutex.py::test_baseline_tracked_deletion_with_ignored_recreated_mutex_requires_review[True]
+2 failed, 20 deselected in 0.18s

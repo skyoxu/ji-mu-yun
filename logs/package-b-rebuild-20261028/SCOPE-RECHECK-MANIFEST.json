@@ -1,0 +1,299 @@
+{
+  "schema": "package-b.scope-recheck-candidate.v1",
+  "created_utc": "2026-10-28T08:55:26.557702+00:00",
+  "baseline_commit": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "branch": "work",
+  "predecessor_archive": {
+    "path": "logs/package-b-rebuild-20261028/stage-p2-repaired-current-proof-008.zip",
+    "bytes": 17416122,
+    "sha256": "2b654dc08b63f8ef15c98e9dfb978621891c64451f8b1e056efada42f98b3cae"
+  },
+  "scope": "Bounded lexical scope and capture-name correction in existing fixed quality validator admission only. No changes to oracle, public entrypoints, package sidecars, declared permissions, plan or business scope. Primary Bootstrap predicate remains first-repair bytes.",
+  "current_implementation_files": [
+    {
+      "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "bytes": 5641,
+      "sha256": "3d5eeebdc13f06eea7a6af7ee02200164f4b4fb399772613d4cd1193d69e5187"
+    },
+    {
+      "path": ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+      "bytes": 447,
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c"
+    },
+    {
+      "path": ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+      "bytes": 6734,
+      "sha256": "bad075afc9862cb365943bf0c18dfbd5121e7f8fd452b89dbd5c921de50a6db5"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "bytes": 10115,
+      "sha256": "38780746ff91869fb368446e70d71b3b0ffd646b450bbcc1d98e75f8a3b15230"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "bytes": 18035,
+      "sha256": "756aab26e76ca9b80addb8b8d09484655f5730c2c052f0b2bb79b7182d5b67e5"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+      "bytes": 447,
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+      "bytes": 6548,
+      "sha256": "6e664bc97336411a490e2fce53039153d616b3ced6089e5d4283b49e3a4271c5"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "bytes": 16348,
+      "sha256": "118a234e4ee28f0f0caf19bd2f6525407342a6c1e12fa41a0814fa6edfb53f54"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "bytes": 13624,
+      "sha256": "fdd17178131065507adc5e2f5a650190ade82dce979d88b25de7faacce30eb52"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+      "bytes": 6498,
+      "sha256": "b42a0343f359bdc962455abfe84378a7476d37a03d10d515ad04469cf2b97391"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "bytes": 12655,
+      "sha256": "a0a9215188aa43088d6f8eb431ac71b5c977113032f7505e74de4bf5c1a62235"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "bytes": 37567,
+      "sha256": "4d4a3a22e0ae8bff61df3d1b68b30188483bfba75d33e0da02baf58a9fc1c08f"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+      "bytes": 447,
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+      "bytes": 6559,
+      "sha256": "88b9e944dca6efd3ddd6c7a4c791e125afb970e20325db4a62b39179d05135a2"
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      "bytes": 2015,
+      "sha256": "7daee413ebc3e5b980df87e4bd35d7a70de6230473d80fcb99ecb4648ce45ad7"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "bytes": 6922,
+      "sha256": "4fdecf2aa2e824901a2079c90f20e8681915a6eb3e5f16a8a7c92607d7dcdfab"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+      "bytes": 447,
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+      "bytes": 6589,
+      "sha256": "28a97fb455ac8b25d4d2ef75330c8d2b4acb8f6a37d884841a9166e5c4974dca"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "bytes": 21315,
+      "sha256": "f8ac95353263f8b39d0b3b86af929969d86b1a104756f33dbe7f9aebab817573"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+      "bytes": 447,
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c"
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+      "bytes": 6559,
+      "sha256": "6e681f47a125284d8fb6d20e0a69b20f2cde663780e170da2f7acc60af9865d0"
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "bytes": 46998,
+      "sha256": "c3fb2f2f69fb05000b4d5e0fc8e6b8fff7aff69fd41544d34517e2fece9b132a"
+    },
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "bytes": 7140,
+      "sha256": "8a1ddb84bf21020e58f61416c1100fab574e6378a25a116c2c34a9e2824a3c03"
+    },
+    {
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "bytes": 14939,
+      "sha256": "a4a7c492ed6e03a1a4da672f3e53435fc0e8314cf48e5f672a6f6a4f16ced73a"
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_quality_package_b.py",
+      "bytes": 27966,
+      "sha256": "adf7bf645274f47ed8c2b014ad1bf4540b1a1e4ae8f5f4c7885c208fbc58df57"
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/adapter.py",
+      "bytes": 42564,
+      "sha256": "01700fda09c8a6e57739e726b9f74fde476d89678dc60428012193da2ae26edf"
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py",
+      "bytes": 7469,
+      "sha256": "e77d95f22972819d060d6e65b25667094543eb698919bd558fadef168deaead9"
+    }
+  ],
+  "delta_from_008": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "bytes": 16348,
+      "sha256": "118a234e4ee28f0f0caf19bd2f6525407342a6c1e12fa41a0814fa6edfb53f54"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "bytes": 12655,
+      "sha256": "a0a9215188aa43088d6f8eb431ac71b5c977113032f7505e74de4bf5c1a62235"
+    }
+  ],
+  "plan": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3",
+  "plan_sha256": "sha256:98915252cdf287151a7116fb84bcef93842b5831b914c8a6c64000bfe38a8812",
+  "plan_files": [
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-attempts/v4-published-recall-98915252cdf287151a7116fb84bcef93842b5831b914c8a6c64000bfe38a8812.json",
+      "bytes": 444,
+      "sha256": "2452e169c2d5c826e5052ac9eb89307ef66bdb5f7919e7c59ea74074e7e726c7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-work/candidate-repairs/1c591f6000c4a20901f6ef2eff4c16dd74f5a4a1eaf5993405fa084b41c1d4e9.json",
+      "bytes": 603550,
+      "sha256": "1c591f6000c4a20901f6ef2eff4c16dd74f5a4a1eaf5993405fa084b41c1d4e9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-work/compiler-progress.jsonl",
+      "bytes": 9236,
+      "sha256": "b3e3512097d6dbce4ccba2037617912886d7d2f9ca41795c26f0d22934561735"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-work/published-v3-repair-active.json",
+      "bytes": 16,
+      "sha256": "fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptances.v1.json",
+      "bytes": 114576,
+      "sha256": "2d907dc050b1da356d3740837ba7f7f0fa6a450d13d62b6400614524309f290b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/agent-context/S1/agent-context.json",
+      "bytes": 11382,
+      "sha256": "172fa38e43e767daed9bf57437aab1ce5300b059e9e4f8acfa2f8db3e40e0487"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/atomic-recall-alignment.v1.json",
+      "bytes": 4834,
+      "sha256": "0022f181e4417c7ddbfb75d9552c06a1bce19dfa9c8fbab9bcce2d8bb442cae1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/compiler-state.v1.json",
+      "bytes": 262,
+      "sha256": "180159128e78f2dce1189475519624cb3dc2ea21376f9366fff750e9733ccae0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/execution-record.md",
+      "bytes": 67773,
+      "sha256": "d6824ceb09228319a0625fbac33ea1a2323cc37395e5a0cab7fd706113974154"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/failure-intents.v1.json",
+      "bytes": 20818,
+      "sha256": "9333935efaa98dfd1db34a3c8fa86ecba9981f0fa3772efb28480dcf8a1a2f42"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/feasibility.v1.json",
+      "bytes": 63,
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/final-plan-coverage.v1.json",
+      "bytes": 37193,
+      "sha256": "2c936e0037a2d1446e6129c40b9255b87ff8238e87c4f48007e1c5c2193bc7f4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/obligations.v1.json",
+      "bytes": 71875,
+      "sha256": "405f0d9977dcfe50ff59e0e1fe58efbaa42b70ba86e675d87811e32c053eed54"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/pre-slice-coverage.v1.json",
+      "bytes": 16788,
+      "sha256": "ff0b82de3c05a899955ee0559667786f171218f3a91bc0383efa7ec8f3e3df38"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-alignment.v1.json",
+      "bytes": 4470,
+      "sha256": "293a932e3c370930ddae19dd173d34420a92dd103d4b4bdd813fd5e00de5865d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-chain-audit.v1.json",
+      "bytes": 360,
+      "sha256": "21cacc87484d9d7c67e606a2d36a2f03a439e263aff2dc554d3e8149466ac3d9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-plan-bundle.v1.json",
+      "bytes": 932450,
+      "sha256": "98915252cdf287151a7116fb84bcef93842b5831b914c8a6c64000bfe38a8812"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/slices.v1.json",
+      "bytes": 18332,
+      "sha256": "56dc222629d96ea67607009ec640858c4e9eac421836a0a7b897690a775e055c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/source-index.v1.json",
+      "bytes": 25108,
+      "sha256": "ccc813be035084fab7868141c57684e666fa427cf83fed40d66e0f996d809af0"
+    }
+  ],
+  "Q8": {
+    "path": "logs/package-b-rebuild-20261028/proof-refresh-scope-r9/Q8.json",
+    "bytes": 79560,
+    "sha256": "bafd90aaa96af5e99f720fc3c1151344310feee2acf11ccb5a446885bcad5c85"
+  },
+  "current_snapshot_sha256": "sha256:b26baf3e7ff3b7312e903bde81a19d86e47e09495c41f1b0f6fc7218f27c26a3",
+  "closure_tuple_count": 154,
+  "raw_test_evidence": [
+    {
+      "path": "logs/package-b-rebuild-20261028/scope-repair-causal-red.log",
+      "bytes": 106698,
+      "sha256": "5745565f66dea17d6ac19ef46ca09f64046b8be4520b3ef70ff7e5c8f3f6c0cd"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/scope-repair-local-closure-red.log",
+      "bytes": 11191,
+      "sha256": "a6aa68d78186e8da827e9e553a676b2083a05fae0082d966434c230541d83f28"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/scope-repair-default-evaluation-red.log",
+      "bytes": 7584,
+      "sha256": "8ceba14ed5b4b80bc4a9a610f682d640065e746257dcd19214df00a3ffc6e987"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/scope-repair-targeted-final-green.log",
+      "bytes": 83118,
+      "sha256": "0a12a64ce980c44051859938e19d626e7eb6ef0e4f2aaf05612624b2b05ad127"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/scope-repair-direct-regression.log",
+      "bytes": 180,
+      "sha256": "1768875d1ff86fbc108cdea21e2b0b74488519925bab3b7260859d68c4230ace"
+    }
+  ],
+  "native_run": "logs/package-b-rebuild-20261028/quick-dev-s1-r9",
+  "native_proof_directory": "logs/package-b-rebuild-20261028/proof-refresh-scope-r9",
+  "read_only_review_constraints": "Original arms own context only; no other-arm reports, comparison/disposition conclusions, project code execution, tests, writes, install, CLI, worktree or Git mutation. Directly verify claims against current source and raw originals.",
+  "Acceptance_started": false,
+  "commit_or_baseline_changed": false
+}

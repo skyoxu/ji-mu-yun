@@ -1,0 +1,8 @@
+{
+  "schema": "package-b.approval-record.v1",
+  "user_message": "Sentinel_10909df3f14081919ec9256618702f5f",
+  "time_utc": "2026-10-28T06:50:49Z",
+  "response": "Approved",
+  "scope": "Fixed read-only strict validator binding for declared JSON sidecars; no new executor, write permission or writable path; separate first-descriptor bug fix; fresh guarded RED required before Q4",
+  "source": "Parent relayed exact user exchange; this record is not execution or lifecycle evidence"
+}

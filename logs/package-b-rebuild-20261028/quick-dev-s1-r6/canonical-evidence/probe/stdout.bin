@@ -1,0 +1,467 @@
+....F.F..F.........F..F........F..F...FF...FFF.F.FF..FF....F..FF.....F.. [ 93%]
+.....                                                                    [100%]
+=================================== FAILURES ===================================
+____________________________ test_bootstrap_quality ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_0E6D98559F6B')
+    def test_bootstrap_quality():
+>       _check(_quality(2), 'PKGB_0E6D98559F6B_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:372: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_0E6D98559F6B_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_0E6D98559F6B_FAIL
+_______________________________ test_vdd_quality _______________________________
+
+    @pytest.mark.cer_assertion('PKGB_106E49892C1C')
+    def test_vdd_quality():
+>       _check(_quality(0), 'PKGB_106E49892C1C_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:382: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_106E49892C1C_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_106E49892C1C_FAIL
+________________________ test_dependency_documentation _________________________
+
+    @pytest.mark.cer_assertion('PKGB_1370E773AD67')
+    def test_dependency_documentation():
+>       _check(_dependency_table(), 'PKGB_1370E773AD67_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:397: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_1370E773AD67_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_1370E773AD67_FAIL
+___________________________ test_dependency_records ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_31BB4B73B2E0')
+    def test_dependency_records():
+>       _check(_dependency_records(), 'PKGB_31BB4B73B2E0_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:455: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_31BB4B73B2E0_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_31BB4B73B2E0_FAIL
+__________________________ test_operator_publication ___________________________
+
+    @pytest.mark.cer_assertion('PKGB_33A58D56A240')
+    def test_operator_publication():
+>       _check(_operator_docs(), 'PKGB_33A58D56A240_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:470: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_33A58D56A240_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_33A58D56A240_FAIL
+_____________________________ test_quick_examples ______________________________
+
+    @pytest.mark.cer_assertion('PKGB_520D0E5EA4C7')
+    def test_quick_examples():
+>       _check(_examples(1, [('strict',), ('upgrade',), ('invalid',)]), 'PKGB_520D0E5EA4C7_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:515: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_520D0E5EA4C7_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_520D0E5EA4C7_FAIL
+___________________________ test_bootstrap_examples ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_56A33BF13918')
+    def test_bootstrap_examples():
+>       _check(_examples(2, [('clean',), ('round',), ('access',)]), 'PKGB_56A33BF13918_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:530: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_56A33BF13918_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_56A33BF13918_FAIL
+___________________________ test_quality_invariants ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_5AAFB946671F')
+    def test_quality_invariants():
+>       _check(_all_quality() and _capabilities(), 'PKGB_5AAFB946671F_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:550: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_5AAFB946671F_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_5AAFB946671F_FAIL
+___________________________ test_acceptance_quality ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_6AC1654A3B38')
+    def test_acceptance_quality():
+>       _check(_quality(3), 'PKGB_6AC1654A3B38_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:555: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_6AC1654A3B38_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_6AC1654A3B38_FAIL
+__________________________ test_knowledge_boundaries ___________________________
+
+    @pytest.mark.cer_assertion('PKGB_7ACD9F289FDE')
+    def test_knowledge_boundaries():
+>       _check(_operator_docs() and _native_boundary(), 'PKGB_7ACD9F289FDE_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:575: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_7ACD9F289FDE_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_7ACD9F289FDE_FAIL
+______________________________ test_sidecar_shape ______________________________
+
+    @pytest.mark.cer_assertion('PKGB_7EDC585984AC')
+    def test_sidecar_shape():
+>       _check(_frontmatter(), 'PKGB_7EDC585984AC_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:580: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_7EDC585984AC_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_7EDC585984AC_FAIL
+___________________________ test_acceptance_examples ___________________________
+
+    @pytest.mark.cer_assertion('PKGB_80316CD17E3B')
+    def test_acceptance_examples():
+>       _check(_examples(3, [('deterministic',), ('repair',), ('stale',)]), 'PKGB_80316CD17E3B_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:585: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_80316CD17E3B_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_80316CD17E3B_FAIL
+___________________________ test_knowledge_examples ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_8AFEC64253D3')
+    def test_knowledge_examples():
+>       _check(_examples(4, [('existing-only',), ('provisional',), ('publication',)]), 'PKGB_8AFEC64253D3_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:595: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_8AFEC64253D3_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_8AFEC64253D3_FAIL
+______________________________ test_vdd_examples _______________________________
+
+    @pytest.mark.cer_assertion('PKGB_95DA69640268')
+    def test_vdd_examples():
+>       _check(_examples(0, [('create',), ('direct',), ('invalid',)]), 'PKGB_95DA69640268_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:605: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_95DA69640268_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_95DA69640268_FAIL
+__________________________ test_standalone_preflight ___________________________
+
+    @pytest.mark.cer_assertion('PKGB_97205C679D05')
+    def test_standalone_preflight():
+>       _check(_entrypoints(), 'PKGB_97205C679D05_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:610: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_97205C679D05_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_97205C679D05_FAIL
+____________________________ test_knowledge_quality ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_9FDC53051B14')
+    def test_knowledge_quality():
+>       _check(_quality(4), 'PKGB_9FDC53051B14_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:625: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_9FDC53051B14_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_9FDC53051B14_FAIL
+______________________________ test_typed_errors _______________________________
+
+    @pytest.mark.cer_assertion('PKGB_A4FF42287EF4')
+    def test_typed_errors():
+>       _check(all(bool(_declaration(p).get("error_ids")) for p in PACKAGES), 'PKGB_A4FF42287EF4_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:630: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_A4FF42287EF4_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_A4FF42287EF4_FAIL
+______________________________ test_quick_quality ______________________________
+
+    @pytest.mark.cer_assertion('PKGB_C9ED9E3E46B5')
+    def test_quick_quality():
+>       _check(_quality(1), 'PKGB_C9ED9E3E46B5_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:655: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_C9ED9E3E46B5_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_C9ED9E3E46B5_FAIL
+___________________________ test_portable_bootstrap ____________________________
+
+    @pytest.mark.cer_assertion('PKGB_D435CEAE6CBD')
+    def test_portable_bootstrap():
+>       _check(_portable_bootstrap(), 'PKGB_D435CEAE6CBD_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:670: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_D435CEAE6CBD_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_D435CEAE6CBD_FAIL
+____________________________ test_routing_diagrams _____________________________
+
+    @pytest.mark.cer_assertion('PKGB_D4FDDB15D79E')
+    def test_routing_diagrams():
+>       _check(_diagram(), 'PKGB_D4FDDB15D79E_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:675: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_D4FDDB15D79E_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_D4FDDB15D79E_FAIL
+_______________________________ test_five_strict _______________________________
+
+    @pytest.mark.cer_assertion('PKGB_F308EA0BD0A3')
+    def test_five_strict():
+>       _check(_all_quality(), 'PKGB_F308EA0BD0A3_FAIL')
+
+scripts/sc/tests/test_skill_quality_package_b.py:705: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+value = False, failure_id = 'PKGB_F308EA0BD0A3_FAIL'
+
+    def _check(value,failure_id):
+        if not value:
+            print('FAILURE_ID:'+failure_id)
+>       assert value, 'The current production contract does not satisfy the bound Package B observable'
+E       AssertionError: The current production contract does not satisfy the bound Package B observable
+E       assert False
+
+scripts/sc/tests/test_skill_quality_package_b.py:347: AssertionError
+----------------------------- Captured stdout call -----------------------------
+FAILURE_ID:PKGB_F308EA0BD0A3_FAIL
+=========================== short test summary info ============================
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_bootstrap_quality
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_vdd_quality - A...
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_dependency_documentation
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_dependency_records
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_operator_publication
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_quick_examples
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_bootstrap_examples
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_quality_invariants
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_acceptance_quality
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_knowledge_boundaries
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_sidecar_shape
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_acceptance_examples
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_knowledge_examples
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_vdd_examples - ...
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_standalone_preflight
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_knowledge_quality
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_typed_errors - ...
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_quick_quality
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_portable_bootstrap
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_routing_diagrams
+FAILED scripts/sc/tests/test_skill_quality_package_b.py::test_five_strict - A...
+21 failed, 56 passed in 2.05s

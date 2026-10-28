@@ -1,0 +1,105 @@
+{
+  "schema": "package-b.acceptance-preflight-stage.v1",
+  "scope": "Approved bounded acceptance preflight and exact routing source/test changes with raw causal/final25tests; no Acceptance execution or new authority",
+  "source_base_archive_library_file_id": "libfile_29b2153fd1e881918832cbef8c0bd56d",
+  "review_reports_library_file_id": "libfile_9cec7611b5d48191966684e51df259c6",
+  "original_baseline": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "files": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "bytes": 3541,
+      "sha256": "7ac509ffc8ce9ee26fbef71664643964c64733d89421deceb87749d96f8b3211"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "bytes": 36644,
+      "sha256": "6a3c108cc8af441bebb8ca18959f0559b2a1accb5a286be761a959bcdc5ce926"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "bytes": 23344,
+      "sha256": "bd645a3500377d07e8f4ec8ae7ddc2c5d76f58a2e50ea66cfcf50e0c1923ee46"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "bytes": 10748,
+      "sha256": "d9e3fd6fdf14df7682776700776486763cde88b07da1fdce6f58d73e8eedf9dd"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/ACCEPTANCE-PREFLIGHT-TEST-RECORD.json",
+      "bytes": 1821,
+      "sha256": "01f2418053536c9376c950e423ec2199aa1564f8abb64912bf3cd872d2296e3e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/ACCEPTANCE-PREFLIGHT-USER-SCOPE.json",
+      "bytes": 883,
+      "sha256": "1277e1b290f6741d9001bcebd85560ced6ad0b8831e5f6f2e5f8aa38eaed54cb"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/CHECKPOINT-PROPOSED-PATHS.json",
+      "bytes": 53987,
+      "sha256": "69c7c0a7056edf01028323f49379757f9b8e3a1b786975b58c30c0963daa9d52"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/LIBRARY-STAGE011-DURABLE-RECEIPT.json",
+      "bytes": 1036,
+      "sha256": "4294b254597acb3ac53ca04330116804d450073d9d7f4e7679e07ae8a6e470a4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/LIBRARY-STAGE013-DURABLE-RECEIPT.json",
+      "bytes": 586,
+      "sha256": "8934b4df3704e4b707d9eca5747fda7ff5808497149a830b979e81f17f95a3de"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/acceptance-preflight-before-compact_vdd_projection.py.snapshot",
+      "bytes": 33613,
+      "sha256": "debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/acceptance-preflight-before-test_compact_vdd_projection.py.snapshot",
+      "bytes": 18377,
+      "sha256": "6aca810edba4def30ef8a8013b02232bc1bebd61d221048bdc3efbd27e36d866"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/acceptance-preflight-before-test_toolchain_domain.py.snapshot",
+      "bytes": 7541,
+      "sha256": "a56193fbc52ea5bd87e0cad53c46e92bee2e3cf113709caaa5db43ac3d5ccb55"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/acceptance-preflight-before-toolchain-code-review.v1.json.snapshot",
+      "bytes": 1482,
+      "sha256": "0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/acceptance-preflight-causal-red.log",
+      "bytes": 5923,
+      "sha256": "a14d2881567cade96ee26e0dca6a2984af6f090a1890e308af39a93bee607dc6"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/acceptance-preflight-frozen-green-and-compatibility.log",
+      "bytes": 99,
+      "sha256": "a76f779bd910cb37821f6c2107b5d83f672b64fd6e7b845ff4a3a915975659be"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/A.md",
+      "bytes": 4412,
+      "sha256": "a8dc1167fb404cacbc150ceeefc6d6b0a8ee32876af7412bb83169fe08cc8d70"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/B.md",
+      "bytes": 4211,
+      "sha256": "43de85c2dce9e09c1dcb043fa093f9743139aa96c2715f05167040d4c0504c3f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/CANDIDATE-POSTCHECK.json",
+      "bytes": 385,
+      "sha256": "211b3d5ed716448e8f895f67adb12ba80bf7bb1f467332d43f9bb90a40e26b9c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/RECHECK-METADATA.json",
+      "bytes": 1046,
+      "sha256": "eeb6ada5da5ddc03b365e24136414ba4f6be2165be5be473de7a8c4367b21576"
+    }
+  ],
+  "strong_credential_pattern_hits": []
+}

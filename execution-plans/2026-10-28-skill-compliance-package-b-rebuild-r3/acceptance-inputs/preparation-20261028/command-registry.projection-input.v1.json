@@ -1,0 +1,183 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "validate-vdd-contract",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        ".agents/skills/vdd-execution-plan/scripts/validate_plan.py",
+        "--plan-dir",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3",
+        "--input",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-plan-bundle.v1.json"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "validate-vdd-contract",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "validate-code-review-route",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "resolve-code-review-policy",
+        "--policy",
+        ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+        "--baseline",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/acceptance-package-b-20261028/baseline-content-manifest.v1.json",
+        "--candidate",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/acceptance-package-b-20261028/candidate-content-manifest.v1.json",
+        "--adapter-hash",
+        "sha256:6a3c108cc8af441bebb8ca18959f0559b2a1accb5a286be761a959bcdc5ce926"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "validate-code-review-route",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "validate-acceptance-package",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "scripts/sc/skill_package_replay.py",
+        "validate-package",
+        "--target",
+        ".agents/skills/run-refactor-implementation-acceptance",
+        "--capability",
+        "scripts/sc/config/skill-package-validator-capability.v1.json"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "validate-acceptance-package",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "strict-vdd-execution-plan",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "scripts/sc/validate_skill_quality.py",
+        "--repository-root",
+        ".",
+        "--policy",
+        "scripts/sc/config/skill-authoring-standard.v1.json",
+        "--skill-root",
+        ".agents/skills/vdd-execution-plan",
+        "--mode",
+        "strict"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "strict-vdd-execution-plan",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "strict-quick-dev-tdd-adapter",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "scripts/sc/validate_skill_quality.py",
+        "--repository-root",
+        ".",
+        "--policy",
+        "scripts/sc/config/skill-authoring-standard.v1.json",
+        "--skill-root",
+        ".agents/skills/quick-dev-tdd-adapter",
+        "--mode",
+        "strict"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "strict-quick-dev-tdd-adapter",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "strict-run-phase-bootstrap-review",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "scripts/sc/validate_skill_quality.py",
+        "--repository-root",
+        ".",
+        "--policy",
+        "scripts/sc/config/skill-authoring-standard.v1.json",
+        "--skill-root",
+        ".agents/skills/run-phase-bootstrap-review",
+        "--mode",
+        "strict"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "strict-run-phase-bootstrap-review",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "strict-run-refactor-implementation-acceptance",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "scripts/sc/validate_skill_quality.py",
+        "--repository-root",
+        ".",
+        "--policy",
+        "scripts/sc/config/skill-authoring-standard.v1.json",
+        "--skill-root",
+        ".agents/skills/run-refactor-implementation-acceptance",
+        "--mode",
+        "strict"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "strict-run-refactor-implementation-acceptance",
+      "shell": false,
+      "timeout_seconds": 1800
+    },
+    {
+      "argv": [
+        "-B",
+        "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+        "strict-maintain-knowledge-base",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "-B",
+        "scripts/sc/validate_skill_quality.py",
+        "--repository-root",
+        ".",
+        "--policy",
+        "scripts/sc/config/skill-authoring-standard.v1.json",
+        "--skill-root",
+        ".agents/skills/maintain-knowledge-base",
+        "--mode",
+        "strict"
+      ],
+      "cwd": ".",
+      "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+      "id": "strict-maintain-knowledge-base",
+      "shell": false,
+      "timeout_seconds": 1800
+    }
+  ],
+  "schema_version": "ria.command-registry.v1"
+}

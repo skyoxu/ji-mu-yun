@@ -1,0 +1,9 @@
+{
+  "approved_original_scope": "Sixrequests,fivepackages,77obligations unchanged; separate narrow Acceptance prerequisite repair",
+  "authorizes": [],
+  "predecessor_Q8": "logs/package-b-rebuild-20261028/proof-refresh-acceptance-r14/Q8.json",
+  "predecessor_run": "logs/package-b-rebuild-20261028/quick-dev-s1-r14",
+  "reason": "Six reviewed source/contract/test bytes changed after real mutex classification defect and tracked-deletionP2 fix. Existing shared input inventory binds them and current judge roots explicitly include all six. Refresh only same S1 existing-present probe/regression/terminal under current stable environment; no newRED or implementation and no rerun merely for commitSHA.",
+  "reviews": "logs/package-b-rebuild-20261028/PUBLICATION-MUTEX-REPAIR-MANIFEST.json",
+  "schema": "package-b.proof-successor-reason.v1"
+}

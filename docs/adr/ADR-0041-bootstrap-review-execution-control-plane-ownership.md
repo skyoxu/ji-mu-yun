@@ -708,3 +708,25 @@ forbidden/unbound/production paths and mixed repair modes reject. Original
 contracts remain immutable; the native producer reuses V1/V4, reruns its native
 checks and publishes a distinct successor with real hashes/report. Normal
 handoff behavior and lifecycle/implementation boundaries are unchanged.
+
+
+## 2026-10-28 Read-only quality artifact RED binding
+
+Package B migrates Skill JSON declarations through the already adopted,
+read-only Package A validator. RED admission can bind an exact declared
+`.agents/skills/<name>/skill-quality.v1.json` owner to a literal strict call
+of `scripts.sc.validate_skill_quality.validate_package` using the fixed local
+policy and repository root. The validator/helper/policy/schema bytes must
+match Git HEAD, remain outside the candidate write set, and retain the declared
+frozen inspection inputs. No arbitrary validator, dynamic target, alternate
+policy, inventory result, path escape, symlink or rebound callable qualifies.
+This extends static production binding only: structured case observations,
+exact failure IDs, causal expected RED and the original Q4 write scope remain
+mandatory. It grants no workflow, publication or filesystem permission.
+
+The owned stage dispatcher performs RED production admission before either
+reentry or execution. The public wrapper's early check alone was insufficient
+when the first call had not yet materialized its descriptor. Rejected or
+historical executions are preserved; no old receipt is relabeled as an execution
+under the repaired dispatcher. Ordinary Python/.NET bindings and non-RED
+stage routes retain their existing contracts.

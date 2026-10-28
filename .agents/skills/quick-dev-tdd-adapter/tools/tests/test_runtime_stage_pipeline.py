@@ -37,6 +37,7 @@ def bundle() -> dict:
             "failure_intent_ids": ["FI-RED-1", "FI-HARNESS", "FI-SCOPE", "FI-SIGNAL", "FI-RED-2"],
             "execution_snapshot_paths": ["tests/test_one.py", "tests/test_slow.py", "tests/fixture.py"],
             "allowed_write_paths": ["src/value.py"],
+            "production_owners": ["src/value.py"],
         }],
         "final_plan_coverage": [{"slice_id": "S1", "acceptance_id": "A-ONE", "stage_scope": ["red", "green", "refactor", "terminal"]}],
         "agent_contexts": [],
@@ -47,7 +48,8 @@ def setup(tmp_path: Path) -> Path:
     (tmp_path / "tests").mkdir()
     (tmp_path / "src").mkdir()
     (tmp_path / "tests" / "fixture.py").write_text("fixture = True\n", encoding="utf-8")
-    (tmp_path / "src" / "value.py").write_text("VALUE = 0\n", encoding="utf-8")
+    (tmp_path / "src" / "value.py").write_text(
+        "VALUE = 0\ndef observed_value(): return VALUE\n", encoding="utf-8")
     semantic = tmp_path / "semantic.json"
     semantic.write_text(json.dumps(bundle()), encoding="utf-8")
     return semantic
@@ -88,10 +90,10 @@ def test_failure_intent_family_is_required() -> None:
 def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
     semantic = setup(tmp_path)
     (tmp_path / "tests" / "test_one.py").write_text(
-        "import pytest\n@pytest.mark.cer_assertion('AS-1')\n"
+        "import pytest\nfrom src.value import observed_value\n@pytest.mark.cer_assertion('AS-1')\n"
         "def test_one():\n"
         "    print('FAILURE_ID:EXPECTED-RED')\n"
-        "    assert False\n",
+        "    assert observed_value() == 1\n",
         encoding="utf-8",
     )
     path = _red_descriptor(tmp_path, run_id="RUN-1", target="tests/test_one.py")
@@ -115,11 +117,11 @@ def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
 def test_red_rejects_extra_guard_failure_marker(tmp_path: Path) -> None:
     semantic = setup(tmp_path)
     (tmp_path / "tests" / "test_one.py").write_text(
-        "import pytest\n@pytest.mark.cer_assertion('AS-1')\n"
+        "import pytest\nfrom src.value import observed_value\n@pytest.mark.cer_assertion('AS-1')\n"
         "def test_one():\n"
         "    print('FAILURE_ID:EXPECTED-RED')\n"
         "    print('FAILURE_ID:SCOPE-FAILURE')\n"
-        "    assert False\n",
+        "    assert observed_value() == 1\n",
         encoding="utf-8",
     )
     path = _red_descriptor(tmp_path, run_id="RUN-GUARD", target="tests/test_one.py")
@@ -138,11 +140,11 @@ def test_red_rejects_extra_guard_failure_marker(tmp_path: Path) -> None:
 def test_timeout_has_zero_cases(tmp_path: Path) -> None:
     semantic = setup(tmp_path)
     (tmp_path / "tests" / "test_slow.py").write_text(
-        "import time\n"
+        "import time\nfrom src.value import observed_value\n"
         "def test_slow():\n"
         "    time.sleep(5)\n"
         "    print('FAILURE_ID:EXPECTED-RED')\n"
-        "    assert False\n",
+        "    assert observed_value() == 1\n",
         encoding="utf-8",
     )
     path = _red_descriptor(tmp_path, run_id="RUN-2", target="tests/test_slow.py", timeout_seconds=1)

@@ -1,0 +1,17 @@
+{
+  "schema": "package-b.private-library-preservation.v1",
+  "library_file_id": "libfile_b958f20125308191b25975b11ed33f2e",
+  "file_id": "file_00000000ce7082118a5803e39a978a5d",
+  "version": 0,
+  "filename": "stage-acceptance-prerequisite-blocked-017.zip",
+  "archive_bytes": 5919219,
+  "archive_sha256": "e6b808c5d6aa211973240cc3a9a4c0b4792835ede4182de6a49659c5882e2846",
+  "remote_create": "official succeeded with exact reported size/identity",
+  "local_crc_restore": "883payloads independently restored/hash verified",
+  "remote_downloaded_byte_hash": "not verified; create acknowledgement not equivalent to downloaded bytes",
+  "metadata_helper_exit": 0,
+  "metadata_helper_stdout": "/workspace/ji-mu-yun/logs/package-b-rebuild-20261028/stage-acceptance-prerequisite-blocked-017.zip\n",
+  "metadata_helper_stderr": "",
+  "requires_source_snapshot": "stage015 libfile_5f3f20d611308191a7b63e95f0e8d861 and genuineFB prerequisite",
+  "authorizes": []
+}

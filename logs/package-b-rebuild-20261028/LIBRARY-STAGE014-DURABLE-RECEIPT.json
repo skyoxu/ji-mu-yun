@@ -1,0 +1,21 @@
+{
+  "archive": {
+    "path": "logs/package-b-rebuild-20261028/stage-acceptance-preflight-014.zip",
+    "bytes": 52105,
+    "sha256": "3aabcffcfea48df85d48f24603d3c233f8f1ff3effc4f702a802dc7278df4249"
+  },
+  "manifest": {
+    "path": "logs/package-b-rebuild-20261028/stage-acceptance-preflight-014-manifest.json",
+    "bytes": 4615,
+    "sha256": "660981a40fb55a15bd34be09d025771a3315481719fbe084794c356246b34a52"
+  },
+  "files": 19,
+  "CRC_and_payload_hashes": "pass",
+  "library_upload": "not yet attempted",
+  "create": "succeeded",
+  "library_file_id": "libfile_a84e054f6ff08191b57a3a4adc5cad6b",
+  "file_id": "file_0000000039988230a4897f88065bc3a9",
+  "version": 0,
+  "metadata_applied": true,
+  "remote_readback_hash": "not claimed"
+}

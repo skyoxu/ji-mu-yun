@@ -1,0 +1,31 @@
+{
+  "affected_review_reports": [
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/publication-mutex-r2-019/A.md",
+      "sha256": "sha256:1787247afbf3626b67a94b67bbfb77f436c8833acd2671cfebff84cdbf78407d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/publication-mutex-r2-019/B.md",
+      "sha256": "sha256:203dcb420f2df947ec2a279a32429ba9ff968076d019c71490b8bd4c7fc7c0af"
+    }
+  ],
+  "authorizes": [],
+  "baseline_note": "Baseline remains the expressly owner-approved82ee complete review epoch. New6file repair stays visible relative to it and has two actual independent affected reviews; no rebase or review waiver.",
+  "original_delivery_baseline": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "owner_confirmation": {
+    "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/owner-confirmation.v1.json",
+    "sha256": "sha256:d7932a5cf6cc2a4b59378fc4a46082293ae0353fe3433dfe744917eb100da3a0"
+  },
+  "plan_id": "package-b-acceptance-20261028",
+  "predecessor_input_authority": {
+    "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/acceptance-authority.v1.json",
+    "sha256": "sha256:a2425ee82ea42fbb53b9a6303e213e54775f755a3f87e8847e7bd68d8757b7d6"
+  },
+  "repair_scope": {
+    "path": "logs/package-b-rebuild-20261028/PUBLICATION-MUTEX-REPAIR-MANIFEST-r2.json",
+    "sha256": "sha256:bc492772de0d3db1bf3774ffb3624636c8009325d74c2f41a71582d5cb814835"
+  },
+  "schema_version": "jimuyun.acceptance-authority.v1",
+  "skill_input_baseline": "82ee682bcc5279729b4a9ea87eba6ccbf086e351",
+  "target_plan": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3"
+}

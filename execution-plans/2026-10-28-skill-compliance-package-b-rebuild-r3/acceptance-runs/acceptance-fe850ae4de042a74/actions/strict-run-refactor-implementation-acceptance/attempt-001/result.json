@@ -1,0 +1,79 @@
+{
+  "authorizes": [],
+  "commandId": "strict-run-refactor-implementation-acceptance",
+  "commandRegistryHash": "sha256:1ad7b592848724b5af9cbe86c747f3766fca69b46b65ec196d8b0f0d0ae0cd53",
+  "environmentIdentity": {
+    "hash": "sha256:813232fda9e92b6a0d14dbeec03cdeebbc439b2be9a12c4959ad6d132429c37c",
+    "names": [
+      "HOME",
+      "PATH",
+      "TMPDIR",
+      "USER"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/unit-budget.py",
+      "strict-run-refactor-implementation-acceptance",
+      "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+      "-B",
+      "scripts/sc/validate_skill_quality.py",
+      "--repository-root",
+      ".",
+      "--policy",
+      "scripts/sc/config/skill-authoring-standard.v1.json",
+      "--skill-root",
+      ".agents/skills/run-refactor-implementation-acceptance",
+      "--mode",
+      "strict"
+    ],
+    "commandId": "strict-run-refactor-implementation-acceptance",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:eea409c246f4a6bbb2a8c29d07ce1f69e7cfc7944d5748c56ce5c0d268595587",
+  "processResult": {
+    "commandId": "strict-run-refactor-implementation-acceptance",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authorizes\": [], \"diagnostics\": [], \"exit_code\": 0, \"mode\": \"strict\", \"package\": \".agents/skills/run-refactor-implementation-acceptance\", \"schema\": \"skill-quality-result.v1\", \"status\": \"pass\"}\n",
+    "stdoutSha256": "sha256:94c7495f6d5761a96636290169598070c15e7b3904c8106568db8bed34457bc7"
+  },
+  "processResultHash": "sha256:7f7b63b40adeb12e1143360a17126f6dcbb5716c36809de92203f63103df2cae",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

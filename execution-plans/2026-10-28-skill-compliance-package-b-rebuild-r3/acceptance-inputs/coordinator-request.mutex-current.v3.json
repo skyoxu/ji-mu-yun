@@ -1,0 +1,17 @@
+{
+  "authorizes": [],
+  "preparedRunInput": {
+    "path": "preparation-mutex-20261028/prepared-run.v1.json",
+    "sha256": "sha256:4190df7c814601bdd76d67dcd6d8b2d4a542939bdabcadd3a0b45da52ccde238"
+  },
+  "schemaVersion": "jimuyun.acceptance-coordinator-request.v3",
+  "skillInputContract": {
+    "path": "preparation-mutex-20261028/skill-input-contract.v1.json",
+    "sha256": "sha256:57a6c2d4a8b08fafd9ab158a0bb87a1a1f1b1bfc7bca7b33897e488739cf68fc"
+  },
+  "skillInputReceipt": {
+    "path": "preparation-20261028/skill-input-v2/acceptance/current.v1.json",
+    "sha256": "sha256:24869774b1232af236594c4ff8e68e5aaca1b1f8bf179851c61040a94332ab8a"
+  },
+  "targetPlan": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3"
+}

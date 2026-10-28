@@ -1,0 +1,59 @@
+FF.......F                                                               [100%]
+=================================== FAILURES ===================================
+_________ test_ordinary_references_are_metadata_not_mandatory_excerpts _________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red2-20261028/test_ordinary_references_are_m0'), [{'consumer': 'vdd', 'operation': 'create', 'policy_revision': 'fixture', 'query': 'docs/input.md', ...}])
+
+    def test_ordinary_references_are_metadata_not_mandatory_excerpts(prepared_root):
+        root, seen = prepared_root
+        names = [f'scripts/module_{i}.py' for i in range(40)]
+        for n in names:
+            put(root, n, '# Reference implementation.\n' * 100)
+        put(root, 'docs/input.md', '\n'.join('Reference `' + n + '`.' for n in names))
+        prepare(root)
+>       assert seen[0]['scope'] == ['docs/input.md']
+E       AssertionError: assert ['docs/input....le_4.py', ...] == ['docs/input.md']
+E         
+E         Left contains 40 more items, first extra item: 'scripts/module_0.py'
+E         Use -v to get more diff
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:42: AssertionError
+__________ test_explicit_required_sources_do_not_drop_normative_input __________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red2-20261028/test_explicit_required_sources0'), [{'consumer': 'vdd', 'operation': 'create', 'policy_revision': 'fixture', 'query': 'docs/input.md', ...}])
+
+    def test_explicit_required_sources_do_not_drop_normative_input(prepared_root):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', 'Background `scripts/reference.py`.')
+        put(root, 'scripts/reference.py', '# Reference only\n')
+        put(root, 'docs/mandatory.md', '# Mandatory companion\n')
+        prepare(root, scope=['docs/mandatory.md'])
+>       assert set(seen[0]['scope']) == {'docs/input.md', 'docs/mandatory.md'}
+E       AssertionError: assert {'docs/mandat...reference.py'} == {'docs/input....mandatory.md'}
+E         
+E         Extra items in the left set:
+E         'scripts/reference.py'
+E         Extra items in the right set:
+E         'docs/input.md'
+E         Use -v to get more diff
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:55: AssertionError
+_________ test_reference_hash_and_mentioning_inputs_track_real_change __________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red2-20261028/test_reference_hash_and_mentio0'), [{'consumer': 'vdd', 'operation': 'create', 'policy_revision': 'fixture', 'query': 'docs/input.md docs/second.md', ...}])
+
+    def test_reference_hash_and_mentioning_inputs_track_real_change(prepared_root):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', 'Reference `scripts/dep.py`.')
+        put(root, 'docs/second.md', 'Reference `scripts/dep.py`.')
+        p=put(root, 'scripts/dep.py', '# First\n')
+        prepare(root, inputs=['docs/input.md', 'docs/second.md'])
+>       first=seen[-1]['relevant_inputs']['source_references'][0]
+E       KeyError: 'relevant_inputs'
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:99: KeyError
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_ordinary_references_are_metadata_not_mandatory_excerpts
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_explicit_required_sources_do_not_drop_normative_input
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_reference_hash_and_mentioning_inputs_track_real_change
+3 failed, 7 passed in 0.07s

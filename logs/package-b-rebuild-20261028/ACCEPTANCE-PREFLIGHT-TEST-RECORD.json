@@ -1,0 +1,42 @@
+{
+  "schema": "package-b.acceptance-prerequisite-test-record.v1",
+  "at": "2026-10-28T09:38:05.020686+00:00",
+  "causal_red": {
+    "path": "logs/package-b-rebuild-20261028/acceptance-preflight-causal-red.log",
+    "observed_exit_code": 1,
+    "result": "2failed2passed20deselected; normalization positive and exact routing positive fail against old implementations"
+  },
+  "frozen_green": {
+    "path": "logs/package-b-rebuild-20261028/acceptance-preflight-frozen-green-and-compatibility.log",
+    "observed_exit_code": 0,
+    "result": "25passed0.82s"
+  },
+  "unchanged_boundaries": [
+    "No production Git configuration/index flag or historical CRLF bytes modified",
+    "Existing missing candidateRevision,real dirty,mode,index,symlink,unknown-path and schema/check revisions remain fail-closed",
+    "No Knowledge review gate or Acceptance authority/baseline changed"
+  ],
+  "changed_files": [
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "bytes": 3541,
+      "sha256": "7ac509ffc8ce9ee26fbef71664643964c64733d89421deceb87749d96f8b3211"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "bytes": 36644,
+      "sha256": "6a3c108cc8af441bebb8ca18959f0559b2a1accb5a286be761a959bcdc5ce926"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "bytes": 23344,
+      "sha256": "bd645a3500377d07e8f4ec8ae7ddc2c5d76f58a2e50ea66cfcf50e0c1923ee46"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "bytes": 10748,
+      "sha256": "d9e3fd6fdf14df7682776700776486763cde88b07da1fdce6f58d73e8eedf9dd"
+    }
+  ],
+  "authorizes": []
+}

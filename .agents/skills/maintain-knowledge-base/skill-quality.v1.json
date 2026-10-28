@@ -1,0 +1,179 @@
+{
+  "schema": "skill-quality.v1",
+  "standard_version": "1.0",
+  "name": "maintain-knowledge-base",
+  "authorizes": [],
+  "responsibility": "Maintain derived repository knowledge from pinned main sources through existing maintenance and publication owners.",
+  "triggers": [
+    "Explicit request matching this Skill responsibility and an existing supported input route."
+  ],
+  "non_goals": [
+    "No Phase/BMAD/GDS/Chapter2-7 behavior changes, new global runtime, credential handling, deployment or implicit upstream review.",
+    "Static quality declarations grant no filesystem, subprocess, model, publication or lifecycle authority."
+  ],
+  "inputs": [
+    "Explicit source/plan/request and actual prerequisite receipts described by SKILL.md; unavailable or stale required input blocks."
+  ],
+  "outputs": [
+    "Existing native typed outputs and immutable source-bound evidence; never assistant-authored successful runtime receipts."
+  ],
+  "dependencies": [
+    {
+      "id": "repository-skill-authoring-standard",
+      "version": "1.0",
+      "required": true,
+      "authority": "references/package-dependencies.v1.json",
+      "when_missing": "block",
+      "when_mismatch": "block",
+      "kind": "local-contract"
+    }
+  ],
+  "references": [
+    {
+      "ref": "SKILL.md#package-quality-and-routing"
+    }
+  ],
+  "tests": [
+    "tests/test_prepare_publication_request.py",
+    "Repository migration: scripts/sc/tests/test_skill_quality_package_b.py; run through the frozen native plan."
+  ],
+  "evidence": "Native per-run controlled process originals and predicates under repository logs; quality JSON alone is never completion evidence.",
+  "lifecycle": {
+    "owner": "Maintenance owns derived results; the existing native publisher alone owns current/LKG promotion.",
+    "completion_owner": "Maintenance owns derived results; the existing native publisher alone owns current/LKG promotion."
+  },
+  "capabilities": {
+    "routing": true,
+    "version_lookup": false,
+    "secrets": false,
+    "destructive": false,
+    "database_write": false,
+    "untrusted_content": true,
+    "filesystem": true,
+    "subprocess": true,
+    "network": false
+  },
+  "lookup": {
+    "kind": "not-applicable"
+  },
+  "controls": {
+    "untrusted_content": {
+      "owner": "Maintenance owns derived results; the existing native publisher alone owns current/LKG promotion.",
+      "role": "data-only",
+      "prohibit_expansion": [
+        "targets",
+        "commands",
+        "tools",
+        "authority"
+      ]
+    },
+    "filesystem": {
+      "owner": "Existing native controller owns repository-contained request/output roots. Listed package paths bound static inspection and explicit package-maintenance changes only; they grant no workflow write/delete permission. Runtime plans/logs retain their existing argument-bound owner checks.",
+      "roots": [
+        "."
+      ],
+      "read": [
+        "."
+      ],
+      "write": [
+        "SKILL.md",
+        "skill-quality.v1.json",
+        "references/package-dependencies.v1.json"
+      ],
+      "delete": [
+        "skill-quality.v1.json",
+        "references/package-dependencies.v1.json"
+      ],
+      "traversal": "reject",
+      "symlinks": "reject"
+    },
+    "subprocess": {
+      "owner": "Existing workflow host and command supervisor; this declaration describes only a bounded read-only startup preflight. Real execution units retain1800-second total/600-second idle limits.",
+      "argv": [
+        "python",
+        "-B",
+        "scripts/maintain_knowledge.py",
+        "--help"
+      ],
+      "shell": false,
+      "cwd": ".",
+      "timeout": 60,
+      "output_limit": 65536,
+      "cancellation_owner": "Existing host supervisor terminates the owned process tree; no replacement runner."
+    }
+  },
+  "entrypoints": [
+    {
+      "id": "native-workflow",
+      "inputs": [
+        "Explicit arguments for .agents/skills/maintain-knowledge-base/scripts/maintain_knowledge.py",
+        "Existing native input contracts and required child/profile/consumer prerequisites; see the operation guide."
+      ],
+      "outputs": [
+        "Native typed result or typed blocking diagnostic; preserve immutable failure sidecars."
+      ],
+      "preflight": "From repository root, verify Python, required modules, exact target/contract and all declared prerequisites. Use the existing native CLI validation; do not install or silently skip dependencies.",
+      "standalone": true,
+      "dependencies": [
+        "repository-skill-authoring-standard"
+      ],
+      "caller_setup": "Run from repository root with Python3 and required declared modules. Online callers explicitly initialize the existing caller-session transport. Optional model/child workflows retain their native authority; quality inspection does not launch them.",
+      "install_missing": false,
+      "skip_missing": false
+    }
+  ],
+  "examples": [
+    {
+      "outcome": "typical",
+      "branch": "existing",
+      "input": "Existing-only: explicit request pins current local main and supplies the current registered catalog.",
+      "output": "Derived existing-only refresh and append-only source/hash result.",
+      "expected_result": "No unregistered discovery, branch fetch or source editing; no implicit publication."
+    },
+    {
+      "outcome": "boundary",
+      "branch": "provisional",
+      "input": "Provisional: targeted request names one valid repository target present only in the worktree.",
+      "output": "Typed provisional candidate with actual source location and hash.",
+      "expected_result": "Provisional bytes cannot become published main facts or replace the current LKG."
+    },
+    {
+      "outcome": "error",
+      "branch": "publication",
+      "input": "Publication: request lacks maintainer confirmation, real main-bound target or required catalog-stale-maintenance route.",
+      "output": "Typed authority failure; current/LKG remain unchanged and failure sidecar is retained.",
+      "expected_result": "Operator-requested needs real target/main and confirmation but no stale-route artifact; only the native publisher may promote a generation."
+    }
+  ],
+  "outcomes": [
+    "typical",
+    "boundary",
+    "error"
+  ],
+  "routing": {
+    "kind": "conditional",
+    "entry": "input",
+    "branches": [
+      "existing",
+      "provisional",
+      "publication"
+    ],
+    "diagram": {
+      "ref": "SKILL.md#package-quality-and-routing"
+    }
+  },
+  "error_ids": [
+    "DEPENDENCY_UNRESOLVED_AUTHORITY",
+    "DEPENDENCY_VERSION_CONFLICT",
+    "INVALID_INSPECTION",
+    "INVALID_LOCAL_REFERENCE"
+  ],
+  "faq": [
+    {
+      "from": "DEPENDENCY_UNRESOLVED_AUTHORITY",
+      "target": {
+        "ref": "SKILL.md#package-quality-and-routing"
+      }
+    }
+  ]
+}

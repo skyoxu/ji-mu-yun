@@ -1,0 +1,14 @@
+{
+  "archive": "logs/package-b-rebuild-20261028/stage-vdd-plan-ready-002.zip",
+  "archive_bytes": 2547830,
+  "archive_sha256": "0a80cbc7fbd9106969833ec8a8cc07b8cba1220ffe7ffd1b00be703cfa0bfb67",
+  "manifest": "logs/package-b-rebuild-20261028/stage-vdd-plan-ready-002-manifest.json",
+  "manifest_sha256": "1a154090335b6179fb4cba8ecdf225754512eb9cd950429303970575961b9f4c",
+  "file_count": 379,
+  "uncompressed_bytes": 15639614,
+  "crc": "passed",
+  "restoration": "All selected file bytes independently restored and verified",
+  "restore_directory": "logs/package-b-rebuild-20261028/stage-vdd-plan-ready-002-restore-validation",
+  "external_persistence": "NOT uploaded; baseline Library checkpoint does not cover this new snapshot",
+  "source_deletion": "None"
+}

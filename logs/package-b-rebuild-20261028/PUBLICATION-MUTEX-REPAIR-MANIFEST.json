@@ -1,0 +1,60 @@
+{
+  "schema": "package-b.publisher-mutex-repair-scope.v1",
+  "at": "2026-10-28T10:58:55.979281+00:00",
+  "workspace": "/workspace/ji-mu-yun",
+  "branch": "work",
+  "head": "2d68e7c1d7ec2afcd9c8ea9b145781d84b4a33f5",
+  "reviewed_checkpoint": "82ee682bcc5279729b4a9ea87eba6ccbf086e351",
+  "original_baseline": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "files": [
+    {
+      "path": "scripts/python/skill_input_candidate.py",
+      "bytes": 5432,
+      "sha256": "de09ffd066941cac88c7b2608a15fc562b18273d03d0ab0eb8b0dd7d89d8591f",
+      "predecessor_sha256": "4c0120980da903cf560dae2108c1e3ea786d5496939cf5d2cdfd0e63cae989af"
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_publication_mutex.py",
+      "bytes": 6361,
+      "sha256": "3aebfe1d1d838caeced7f04fec4745f263a6cd69ad589e8e47069513c7103565",
+      "predecessor_sha256": null
+    },
+    {
+      "path": "docs/workflows/skill-input-v2.md",
+      "bytes": 14089,
+      "sha256": "6272ed3204d8991ed4cafcc20ee1b7b154c3f02091675f273d2c44b6682f6103",
+      "predecessor_sha256": "db06f4ae3bdb0b5397917a63809ea93ed8e225133f6a1f5083de057e99c3cbc7"
+    },
+    {
+      "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+      "bytes": 5888,
+      "sha256": "d624c6960b7f4988dbbf85f4a7810b6d54108de6822f9c79106f2935c1aa2a87",
+      "predecessor_sha256": "2ce6f4b51571be0fa65d3e40a1eba60b6fbd06984d5b157a8ee7bea215f94fd5"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "bytes": 3700,
+      "sha256": "fafa82e77d887db92172e70a816d2a31bac8826178ad4d526e36dc4a994ec639",
+      "predecessor_sha256": "7ac509ffc8ce9ee26fbef71664643964c64733d89421deceb87749d96f8b3211"
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "bytes": 10901,
+      "sha256": "cfee05cad93b35cad58c3ed40fcb8176853215c4b324455703b7d8b04662ace3",
+      "predecessor_sha256": "d9e3fd6fdf14df7682776700776486763cde88b07da1fdce6f58d73e8eedf9dd"
+    }
+  ],
+  "scope": "Recognize only exact publisher-created untracked ignored regular single-link one-NUL-byte acquisition mutex as non-authority metadata; verify stable identity before/open/read/after; no mutation or broad exclusion. Preserve actual umask-dependent modes; publisher defaults os.open to0777,actualdevice mode0700,so nonexecutable criterion would wrongly reject producer output. Tracked changes and unsafe/unexpected shapes remain candidate authority or errors.",
+  "coverage_route": "Exactly3 additional source/test/doc paths; existing21+3=24. No new checks,rights,consumerpermissions,dirprefixes or Knowledge review waiver.",
+  "causal_RED": "Oldcode4failed13passed:actualproducer positive and directory/FIFO fail-closed behaviors plus missing-new-helper test; the helper-absence row is not claimed businessRED. Raworiginal preserved.",
+  "targeted_compatibility": "116passed after explicit existing test fixture config/PYTHONPATH. First113pass3module/model prerequisites failures retained; no old assertion/source changes.",
+  "route_causal": "1failed1passed with oldpolicy;10route tests pass with exactpaths",
+  "current_Q8": "r14 remains historical after6sourcebytes change; must refresh affected native proof after reviewed freeze,not relabel.",
+  "reviewer_boundaries": [
+    "Read-only same original workspace;do not run code/tests/workflows or modify any file",
+    "Inspect only this6file delta and direct regressions; no new whole-program/static-analysis framework scope",
+    "Review original producer/native gates and rawpytestlogs; no otherarmreport",
+    "ReturnP0/P1/P2,exactevidence,limits; never grantAcceptanceauthority"
+  ],
+  "authorizes": []
+}

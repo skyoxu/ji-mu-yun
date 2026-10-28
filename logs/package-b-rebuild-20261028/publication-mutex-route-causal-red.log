@@ -1,0 +1,48 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_ ToolchainDomainTests.test_package_b_exact_paths_are_owned_without_new_authority _
+
+self = <test_toolchain_domain.ToolchainDomainTests testMethod=test_package_b_exact_paths_are_owned_without_new_authority>
+
+    def test_package_b_exact_paths_are_owned_without_new_authority(self) -> None:
+>       binding = resolve_code_review_policy(self.policy(), candidate(*PACKAGE_B_EXACT_PATHS), baseline(), "sha256:" + "b" * 64)
+
+.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+policy = {'authorityRefs': ['AGENTS.md', 'docs/adr/ADR-0037-phase-shared-llm-codex-entrypoints.md', 'docs/adr/ADR-0041-bootstra...tion-plans/', 'decision-logs/', 'docs/PROJECT_DOCUMENTATION_INDEX.md', ...]}, 'policyId': 'toolchain-code-review', ...}
+candidate_manifest = {'authorizes': [], 'coverageGaps': [], 'files': [{'baseline_path': None, 'baseline_sha256': None, 'candidate_path': 'd...000000000000000000000000000000000000006', ...}, ...], 'schemaVersion': 'acceptance-candidate-content-manifest.v1', ...}
+baseline_manifest = {'authorizes': [], 'coverageGaps': [], 'files': [], 'schemaVersion': 'acceptance-baseline-content-manifest.v1', ...}
+adapter_hash = 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    def resolve_code_review_policy(policy: Any, candidate_manifest: Any, baseline_manifest: Any, adapter_hash: str) -> dict[str, Any]:
+        validate_policy_pack(policy)
+        validate_candidate_manifest(candidate_manifest, baseline_manifest)
+        _hash(adapter_hash, "adapter_hash")
+        paths = [_normalized_relative(path, "Changed path") for path in candidate_changed_paths(candidate_manifest)]
+        cross_domain_paths: list[str] = []
+        if policy["targetDomain"] == "phase_service":
+            triggered_paths = phase_changed_paths(candidate_manifest)
+            external_paths = sorted(path for path in paths if path not in triggered_paths)
+            if external_paths and not triggered_paths:
+                raise InputError("unsupported_code_review_domain")
+            if not triggered_paths:
+                raise InputError("phase policy was not triggered")
+        else:
+            rules = policy["pathRules"]
+            owned = tuple(rules["ownedPrefixes"])
+            cross_domain = set(rules["crossDomainPaths"])
+            triggered_paths = sorted(
+                path for path in paths
+                if any(path.startswith(prefix) if prefix.endswith("/") else path == prefix
+                       for prefix in owned) or path in cross_domain
+            )
+            uncovered = sorted(path for path in paths if path not in triggered_paths)
+            if uncovered:
+>               raise InputError("toolchain policy changed-path coverage is incomplete")
+E               acceptance_core.InputError: toolchain policy changed-path coverage is incomplete
+
+.agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_core.py:735: InputError
+=========================== short test summary info ============================
+FAILED .agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py::ToolchainDomainTests::test_package_b_exact_paths_are_owned_without_new_authority
+1 failed, 1 passed, 9 deselected in 0.08s

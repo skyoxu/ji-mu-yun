@@ -190,6 +190,17 @@ setup errors, unconditional failures, fake implementations and file-existence
 assertions remain invalid RED. Q4 remains the first feature-implementation step.
 The entry receipt cannot satisfy Q4, Q7, Q8 or Acceptance.
 
+For an adopted Skill quality sidecar, an exact literal call to the existing
+`scripts.sc.validate_skill_quality.validate_package` is also a supported
+read-only production binding. It requires `repository_root="."`, the exact
+declared `.agents/skills/<name>` package, the checked-in quality policy and
+`mode="strict"`. The validator, helper, policy and schemas must retain their
+Git HEAD bytes and remain outside production writes; required inspection
+inputs stay frozen. Dynamic targets, alternate/rebound validators, inventory,
+symlink paths and arbitrary JSON owners do not qualify. This is admission,
+not RED proof or new write authority. The stage dispatcher checks it before
+RED reuse or launch, including a descriptor created during the first call.
+
 Current stage selection also recognizes Python `-B`. Combine compatible pytest
 commands only for frozen snapshot files; broader agent-context commands remain
 required Q6 regressions. An assertion marker elsewhere in the same file does

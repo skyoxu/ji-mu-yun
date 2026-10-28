@@ -1,0 +1,121 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_nested_class_binding_skips_enclosing_class_namespace[outer-class-canonical-is-not-visible] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-15/test_nested_class_binding_skip0')
+module_canonical = False
+
+    @pytest.mark.parametrize("module_canonical", [False, True], ids=["outer-class-canonical-is-not-visible", "module-canonical-survives-outer-class-replacement"])
+    def test_nested_class_binding_skips_enclosing_class_namespace(tmp_path, module_canonical):
+        canonical = "from scripts.sc.validate_skill_quality import validate_package\n"
+        replacement = "def validate_package(**kwargs): return {'status': 'fail'}\n"
+        call = _source().split("    result=", 1)[1].split("\n", 1)[0]
+        module = canonical if module_canonical else replacement
+        outer = replacement if module_canonical else canonical
+        source = (module + "class TestGroup:\n    " + outer +
+                  "    class TestQuality:\n        def test_quality(self, result=" + call + "):\n" +
+                  "            assert result['status'] == 'pass'\n")
+        root, bundle, descriptor = _fixture(tmp_path, source)
+        if module_canonical:
+            assert _run(root, bundle, descriptor)["status"] == "pass"
+        else:
+>           with pytest.raises(ValueError):
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:250: Failed
+_ test_nested_class_binding_skips_enclosing_class_namespace[module-canonical-survives-outer-class-replacement] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-15/test_nested_class_binding_skip1')
+module_canonical = True
+
+    @pytest.mark.parametrize("module_canonical", [False, True], ids=["outer-class-canonical-is-not-visible", "module-canonical-survives-outer-class-replacement"])
+    def test_nested_class_binding_skips_enclosing_class_namespace(tmp_path, module_canonical):
+        canonical = "from scripts.sc.validate_skill_quality import validate_package\n"
+        replacement = "def validate_package(**kwargs): return {'status': 'fail'}\n"
+        call = _source().split("    result=", 1)[1].split("\n", 1)[0]
+        module = canonical if module_canonical else replacement
+        outer = replacement if module_canonical else canonical
+        source = (module + "class TestGroup:\n    " + outer +
+                  "    class TestQuality:\n        def test_quality(self, result=" + call + "):\n" +
+                  "            assert result['status'] == 'pass'\n")
+        root, bundle, descriptor = _fixture(tmp_path, source)
+        if module_canonical:
+>           assert _run(root, bundle, descriptor)["status"] == "pass"
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:55: in _run
+    return validate_red_production_entry(workspace=root,bundle=bundle,slice_id='S1',descriptor=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def validate_red_production_entry(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        descriptor: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if descriptor.get("stage") != "red":
+            raise ValueError("production-entry guard only accepts RED descriptor")
+        if descriptor.get("slice_id") != slice_id or descriptor.get("plan_id") != bundle.get("plan_id"):
+            raise ValueError("RED descriptor plan/slice identity mismatch")
+    
+        selected = _slice(bundle, slice_id)
+        owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
+        python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
+    
+        candidate_refs: list[str] = []
+        for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
+            if not isinstance(raw, str):
+                continue
+            ref = safe_relative(raw)
+            if ref.endswith(".py") and ref not in owners and ref not in candidate_refs:
+                candidate_refs.append(ref)
+        if not candidate_refs:
+            raise ValueError("RED production-entry guard found no bound Python test source")
+    
+        root = workspace.resolve()
+        parsed: list[tuple[str, str, ast.AST]] = []
+        for ref in candidate_refs:
+            path = (root / ref).resolve()
+            try:
+                path.relative_to(root)
+            except ValueError as exc:
+                raise ValueError("RED test path escapes repository") from exc
+            if not path.is_file() or path.is_symlink():
+                continue
+            source = path.read_text(encoding="utf-8")
+            try:
+                tree = ast.parse(source, filename=ref)
+            except SyntaxError as exc:
+                raise ValueError(f"RED test source is not valid Python: {ref}") from exc
+            if _constant_failure(tree):
+                raise ValueError(f"RED test contains unconditional assert False: {ref}")
+            self_judging = _self_judging_source(source)
+            if self_judging:
+                raise ValueError(f"RED test reads plan/evidence completion bytes: {ref}:{self_judging}")
+            parsed.append((ref, source, tree))
+    
+        if not parsed:
+            raise ValueError("RED test source is missing; run author-red first")
+    
+        bindings: list[dict[str, str]] = []
+        for owner, module in python_owners:
+            for ref, _source, tree in parsed:
+                if _owner_called(tree, module):
+                    bindings.append({"production_owner": owner, "module": module, "test_ref": ref})
+        if not bindings and any(owner.endswith(".cs") for owner in owners):
+            from dotnet_production_entry import dotnet_bindings
+            bindings.extend(dotnet_bindings(workspace=root, selected=selected, parsed=parsed))
+        if not bindings:
+            bindings.extend(_quality_bindings(root, selected, parsed))
+        if not bindings:
+            if not python_owners:
+>               raise ValueError("RED production-entry guard has no supported Python production owner or verified .NET test binding")
+E               ValueError: RED production-entry guard has no supported Python production owner or verified .NET test binding
+
+.agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py:370: ValueError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_nested_class_binding_skips_enclosing_class_namespace[outer-class-canonical-is-not-visible]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_nested_class_binding_skips_enclosing_class_namespace[module-canonical-survives-outer-class-replacement]
+2 failed, 38 deselected in 0.29s

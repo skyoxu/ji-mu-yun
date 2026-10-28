@@ -34,6 +34,33 @@ def candidate(*paths: str) -> dict:
     }
 
 
+PACKAGE_B_EXACT_PATHS = (
+    'docs/workflows/inputs/package-b-rebuild-20261028-r2/requirements.md',
+    'docs/workflows/inputs/package-b-rebuild-20261028-r2/source-map.json',
+    'docs/workflows/inputs/package-b-rebuild-20261028/requirements.md',
+    'docs/workflows/inputs/package-b-rebuild-20261028/source-map.json',
+    'docs/workflows/skill-control-plane-evolution-requirements.md',
+    'knowledge/catalogs/repository-knowledge-catalog.v1.json',
+    'knowledge/catalogs/repository-knowledge-catalog.v2.json',
+    'knowledge/indexes/current.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/evaluation/query-report.v1.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/consumer-policies.v2.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/repository-knowledge-query-suite.v1.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/source-exclusions.v1.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/consumer-projections.v1.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v1.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v2.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-source-snapshot.v1.json',
+    'knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/manifest.json',
+    'knowledge/indexes/last-known-good.json',
+    'knowledge/projections/consumer-projections.v1.json',
+    'knowledge/snapshots/repository-source-snapshot.v1.json',
+    'scripts/toolchain/knowledge_query/tests/test_reference_materialization.py',
+    'scripts/python/skill_input_candidate.py',
+    'scripts/python/tests/test_skill_input_publication_mutex.py',
+    'docs/workflows/skill-input-v2.md',
+)
+
 class ToolchainDomainTests(unittest.TestCase):
     def policy(self) -> dict:
         return json.loads((SKILL_ROOT / "policies" / "toolchain-code-review.v1.json").read_text(encoding="utf-8"))
@@ -55,6 +82,21 @@ class ToolchainDomainTests(unittest.TestCase):
         self.assertEqual([], binding["unreviewedExternalDomainPaths"])
         self.assertEqual(["scripts/sc/_llm_backend.py"], binding["crossDomainDependencyPaths"])
         self.assertEqual([], binding["authorizes"])
+
+    # ADR-0053: approved exact source and derived paths retain closed routing.
+    def test_package_b_exact_paths_are_owned_without_new_authority(self) -> None:
+        binding = resolve_code_review_policy(self.policy(), candidate(*PACKAGE_B_EXACT_PATHS), baseline(), "sha256:" + "b" * 64)
+        self.assertEqual(sorted(PACKAGE_B_EXACT_PATHS), binding["triggeredPaths"])
+        self.assertEqual([], binding["unreviewedExternalDomainPaths"])
+        self.assertEqual([], binding["authorizes"])
+
+    def test_package_b_exact_routes_do_not_cover_neighbors(self) -> None:
+        for path in PACKAGE_B_EXACT_PATHS:
+            for changed in (path + ".backup", path + "-other", path + "/child.py"):
+                with self.subTest(changed=changed), self.assertRaisesRegex(InputError, "coverage is incomplete"):
+                    resolve_code_review_policy(self.policy(), candidate(changed), baseline(), "sha256:" + "b" * 64)
+        with self.assertRaisesRegex(InputError, "coverage is incomplete"):
+            resolve_code_review_policy(self.policy(), candidate("knowledge/indexes/generations/unapproved/manifest.json"), baseline(), "sha256:" + "b" * 64)
 
     def test_uncovered_path_fails_closed(self) -> None:
         with self.assertRaisesRegex(InputError, "coverage is incomplete"):

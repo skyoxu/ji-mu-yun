@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/workspace/ji-mu-yun/scripts/workflow_host.py", line 49, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/workspace/ji-mu-yun/scripts/workflow_host.py", line 31, in main
+    directory, _ = session(args.session, ROOT)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun/scripts/sc/host_session.py", line 67, in session
+    data = read(directory / "session.json")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ji-mu-yun/scripts/sc/host_session.py", line 45, in read
+    return json.loads(path.read_text(encoding="utf-8"))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/logs/package-b-rebuild-20261028/quick-dev-host-session/session.json'

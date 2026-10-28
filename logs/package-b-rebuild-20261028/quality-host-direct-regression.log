@@ -1,0 +1,235 @@
+..FFF................................................................... [ 97%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+___________________ test_red_receipt_and_judge_are_separate ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_red_receipt_and_judge_are0')
+
+    def test_red_receipt_and_judge_are_separate(tmp_path: Path) -> None:
+        semantic = setup(tmp_path)
+        (tmp_path / "tests" / "test_one.py").write_text(
+            "import pytest\n@pytest.mark.cer_assertion('AS-1')\n"
+            "def test_one():\n"
+            "    print('FAILURE_ID:EXPECTED-RED')\n"
+            "    assert False\n",
+            encoding="utf-8",
+        )
+        path = _red_descriptor(tmp_path, run_id="RUN-1", target="tests/test_one.py")
+        run = tmp_path / "RUN-1"
+>       result = execute_stage(
+            workspace=tmp_path,
+            semantic_plan=semantic,
+            run_dir=run,
+            descriptor_path=path,
+            profile_identity="standard",
+        )
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:104: in execute_stage
+    validate_red_production_entry(workspace=workspace, bundle=bundle,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def validate_red_production_entry(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        descriptor: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if descriptor.get("stage") != "red":
+            raise ValueError("production-entry guard only accepts RED descriptor")
+        if descriptor.get("slice_id") != slice_id or descriptor.get("plan_id") != bundle.get("plan_id"):
+            raise ValueError("RED descriptor plan/slice identity mismatch")
+    
+        selected = _slice(bundle, slice_id)
+        owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
+        python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
+    
+        candidate_refs: list[str] = []
+        for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
+            if not isinstance(raw, str):
+                continue
+            ref = safe_relative(raw)
+            if ref.endswith(".py") and ref not in owners and ref not in candidate_refs:
+                candidate_refs.append(ref)
+        if not candidate_refs:
+            raise ValueError("RED production-entry guard found no bound Python test source")
+    
+        root = workspace.resolve()
+        parsed: list[tuple[str, str, ast.AST]] = []
+        for ref in candidate_refs:
+            path = (root / ref).resolve()
+            try:
+                path.relative_to(root)
+            except ValueError as exc:
+                raise ValueError("RED test path escapes repository") from exc
+            if not path.is_file() or path.is_symlink():
+                continue
+            source = path.read_text(encoding="utf-8")
+            try:
+                tree = ast.parse(source, filename=ref)
+            except SyntaxError as exc:
+                raise ValueError(f"RED test source is not valid Python: {ref}") from exc
+            if _constant_failure(tree):
+>               raise ValueError(f"RED test contains unconditional assert False: {ref}")
+E               ValueError: RED test contains unconditional assert False: tests/test_one.py
+
+.agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py:253: ValueError
+_________________ test_red_rejects_extra_guard_failure_marker __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_red_rejects_extra_guard_f0')
+
+    def test_red_rejects_extra_guard_failure_marker(tmp_path: Path) -> None:
+        semantic = setup(tmp_path)
+        (tmp_path / "tests" / "test_one.py").write_text(
+            "import pytest\n@pytest.mark.cer_assertion('AS-1')\n"
+            "def test_one():\n"
+            "    print('FAILURE_ID:EXPECTED-RED')\n"
+            "    print('FAILURE_ID:SCOPE-FAILURE')\n"
+            "    assert False\n",
+            encoding="utf-8",
+        )
+        path = _red_descriptor(tmp_path, run_id="RUN-GUARD", target="tests/test_one.py")
+        run = tmp_path / "RUN-GUARD"
+>       result = execute_stage(
+            workspace=tmp_path,
+            semantic_plan=semantic,
+            run_dir=run,
+            descriptor_path=path,
+            profile_identity="standard",
+        )
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:104: in execute_stage
+    validate_red_production_entry(workspace=workspace, bundle=bundle,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def validate_red_production_entry(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        descriptor: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if descriptor.get("stage") != "red":
+            raise ValueError("production-entry guard only accepts RED descriptor")
+        if descriptor.get("slice_id") != slice_id or descriptor.get("plan_id") != bundle.get("plan_id"):
+            raise ValueError("RED descriptor plan/slice identity mismatch")
+    
+        selected = _slice(bundle, slice_id)
+        owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
+        python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
+    
+        candidate_refs: list[str] = []
+        for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
+            if not isinstance(raw, str):
+                continue
+            ref = safe_relative(raw)
+            if ref.endswith(".py") and ref not in owners and ref not in candidate_refs:
+                candidate_refs.append(ref)
+        if not candidate_refs:
+            raise ValueError("RED production-entry guard found no bound Python test source")
+    
+        root = workspace.resolve()
+        parsed: list[tuple[str, str, ast.AST]] = []
+        for ref in candidate_refs:
+            path = (root / ref).resolve()
+            try:
+                path.relative_to(root)
+            except ValueError as exc:
+                raise ValueError("RED test path escapes repository") from exc
+            if not path.is_file() or path.is_symlink():
+                continue
+            source = path.read_text(encoding="utf-8")
+            try:
+                tree = ast.parse(source, filename=ref)
+            except SyntaxError as exc:
+                raise ValueError(f"RED test source is not valid Python: {ref}") from exc
+            if _constant_failure(tree):
+>               raise ValueError(f"RED test contains unconditional assert False: {ref}")
+E               ValueError: RED test contains unconditional assert False: tests/test_one.py
+
+.agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py:253: ValueError
+_________________________ test_timeout_has_zero_cases __________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-3/test_timeout_has_zero_cases0')
+
+    def test_timeout_has_zero_cases(tmp_path: Path) -> None:
+        semantic = setup(tmp_path)
+        (tmp_path / "tests" / "test_slow.py").write_text(
+            "import time\n"
+            "def test_slow():\n"
+            "    time.sleep(5)\n"
+            "    print('FAILURE_ID:EXPECTED-RED')\n"
+            "    assert False\n",
+            encoding="utf-8",
+        )
+        path = _red_descriptor(tmp_path, run_id="RUN-2", target="tests/test_slow.py", timeout_seconds=1)
+        run = tmp_path / "RUN-2"
+>       result = execute_stage(
+            workspace=tmp_path,
+            semantic_plan=semantic,
+            run_dir=run,
+            descriptor_path=path,
+            profile_identity="standard",
+        )
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:104: in execute_stage
+    validate_red_production_entry(workspace=workspace, bundle=bundle,
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def validate_red_production_entry(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        descriptor: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if descriptor.get("stage") != "red":
+            raise ValueError("production-entry guard only accepts RED descriptor")
+        if descriptor.get("slice_id") != slice_id or descriptor.get("plan_id") != bundle.get("plan_id"):
+            raise ValueError("RED descriptor plan/slice identity mismatch")
+    
+        selected = _slice(bundle, slice_id)
+        owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
+        python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
+    
+        candidate_refs: list[str] = []
+        for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
+            if not isinstance(raw, str):
+                continue
+            ref = safe_relative(raw)
+            if ref.endswith(".py") and ref not in owners and ref not in candidate_refs:
+                candidate_refs.append(ref)
+        if not candidate_refs:
+            raise ValueError("RED production-entry guard found no bound Python test source")
+    
+        root = workspace.resolve()
+        parsed: list[tuple[str, str, ast.AST]] = []
+        for ref in candidate_refs:
+            path = (root / ref).resolve()
+            try:
+                path.relative_to(root)
+            except ValueError as exc:
+                raise ValueError("RED test path escapes repository") from exc
+            if not path.is_file() or path.is_symlink():
+                continue
+            source = path.read_text(encoding="utf-8")
+            try:
+                tree = ast.parse(source, filename=ref)
+            except SyntaxError as exc:
+                raise ValueError(f"RED test source is not valid Python: {ref}") from exc
+            if _constant_failure(tree):
+>               raise ValueError(f"RED test contains unconditional assert False: {ref}")
+E               ValueError: RED test contains unconditional assert False: tests/test_slow.py
+
+.agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py:253: ValueError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py::test_red_receipt_and_judge_are_separate
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py::test_red_rejects_extra_guard_failure_marker
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py::test_timeout_has_zero_cases
+3 failed, 71 passed in 11.22s

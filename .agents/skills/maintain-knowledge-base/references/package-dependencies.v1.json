@@ -1,0 +1,9 @@
+{
+  "id": "repository-skill-authoring-standard",
+  "version": "1.0",
+  "authorizes": [],
+  "standard": "docs/standards/skill-authoring-standard.md",
+  "decision": "docs/adr/ADR-0062-repository-skill-authoring-contract.md",
+  "policy": "scripts/sc/config/skill-authoring-standard.v1.json",
+  "owner": "Repository maintainer; this package-local record identifies the adopted standard, not runtime dependency installation or execution permission."
+}

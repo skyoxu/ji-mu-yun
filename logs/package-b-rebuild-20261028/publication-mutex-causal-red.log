@@ -1,0 +1,97 @@
+F...........FF..F                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_actual_publisher_mutex_is_metadata_without_mutating_it __________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-18/test_actual_publisher_mutex_is0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fec71aee2d0>
+
+    def test_actual_publisher_mutex_is_metadata_without_mutating_it(tmp_path, monkeypatch):
+        request, path = setup_mutex(tmp_path)
+        monkeypatch.syspath_prepend(str(ROOT / 'scripts/python'))
+        from publish_knowledge_catalog import _acquisition_guard
+        with _acquisition_guard(path.parent):
+            assert path.read_bytes() == b'\0'
+        before = path.stat()
+        observed = observe_candidate(tmp_path, tmp_path / 'authority.json', request['storage'])
+>       assert MUTEX not in observed['changed_paths']
+E       AssertionError: assert 'knowledge/indexes/.publication-acquire.lock' not in ['authority.json', 'contract.json', 'freeze.json', 'knowledge/indexes/.publication-acquire.lock', 'registry.json', 'requirements.md']
+
+scripts/python/tests/test_skill_input_publication_mutex.py:35: AssertionError
+________ test_unsafe_mutex_shapes_do_not_qualify_as_metadata[directory] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-18/test_unsafe_mutex_shapes_do_no1')
+kind = 'directory'
+
+    @pytest.mark.parametrize('kind', ['symlink', 'directory', 'fifo', 'hardlink', 'executable'])
+    def test_unsafe_mutex_shapes_do_not_qualify_as_metadata(tmp_path, kind):
+        request, path = setup_mutex(tmp_path)
+        if kind == 'symlink':
+            other = tmp_path / 'real-lock'
+            other.write_bytes(b'\0')
+            path.symlink_to(other)
+        elif kind == 'directory':
+            path.mkdir()
+        elif kind == 'fifo':
+            if not hasattr(os, 'mkfifo'):
+                pytest.skip('POSIX FIFO verification is not a Windows execution claim')
+            os.mkfifo(path)
+        elif kind == 'hardlink':
+            other = tmp_path / 'real-lock'
+            other.write_bytes(b'\0')
+            os.link(other, path)
+        else:
+            path.write_bytes(b'\0')
+            path.chmod(0o700)
+>       with pytest.raises(ValueError, match='review-required|unsupported candidate object|symlink|reparse'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+scripts/python/tests/test_skill_input_publication_mutex.py:109: Failed
+__________ test_unsafe_mutex_shapes_do_not_qualify_as_metadata[fifo] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-18/test_unsafe_mutex_shapes_do_no2')
+kind = 'fifo'
+
+    @pytest.mark.parametrize('kind', ['symlink', 'directory', 'fifo', 'hardlink', 'executable'])
+    def test_unsafe_mutex_shapes_do_not_qualify_as_metadata(tmp_path, kind):
+        request, path = setup_mutex(tmp_path)
+        if kind == 'symlink':
+            other = tmp_path / 'real-lock'
+            other.write_bytes(b'\0')
+            path.symlink_to(other)
+        elif kind == 'directory':
+            path.mkdir()
+        elif kind == 'fifo':
+            if not hasattr(os, 'mkfifo'):
+                pytest.skip('POSIX FIFO verification is not a Windows execution claim')
+            os.mkfifo(path)
+        elif kind == 'hardlink':
+            other = tmp_path / 'real-lock'
+            other.write_bytes(b'\0')
+            os.link(other, path)
+        else:
+            path.write_bytes(b'\0')
+            path.chmod(0o700)
+>       with pytest.raises(ValueError, match='review-required|unsupported candidate object|symlink|reparse'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+scripts/python/tests/test_skill_input_publication_mutex.py:109: Failed
+____________ test_mutex_replacement_during_observation_fails_closed ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-18/test_mutex_replacement_during_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fec719aba10>
+
+    def test_mutex_replacement_during_observation_fails_closed(tmp_path, monkeypatch):
+        request, path = setup_mutex(tmp_path)
+        path.write_bytes(b'\0')
+        import scripts.python.skill_input_candidate as candidate
+        if not hasattr(candidate, '_is_publisher_mutex_metadata'):
+>           pytest.fail('Publisher metadata classifier is missing')
+E           Failed: Publisher metadata classifier is missing
+
+scripts/python/tests/test_skill_input_publication_mutex.py:118: Failed
+=========================== short test summary info ============================
+FAILED scripts/python/tests/test_skill_input_publication_mutex.py::test_actual_publisher_mutex_is_metadata_without_mutating_it
+FAILED scripts/python/tests/test_skill_input_publication_mutex.py::test_unsafe_mutex_shapes_do_not_qualify_as_metadata[directory]
+FAILED scripts/python/tests/test_skill_input_publication_mutex.py::test_unsafe_mutex_shapes_do_not_qualify_as_metadata[fifo]
+FAILED scripts/python/tests/test_skill_input_publication_mutex.py::test_mutex_replacement_during_observation_fails_closed
+4 failed, 13 passed in 0.46s

@@ -1,0 +1,79 @@
+{
+  "authorizes": [],
+  "commandId": "strict-quick-dev-tdd-adapter",
+  "commandRegistryHash": "sha256:1ad7b592848724b5af9cbe86c747f3766fca69b46b65ec196d8b0f0d0ae0cd53",
+  "environmentIdentity": {
+    "hash": "sha256:813232fda9e92b6a0d14dbeec03cdeebbc439b2be9a12c4959ad6d132429c37c",
+    "names": [
+      "HOME",
+      "PATH",
+      "TMPDIR",
+      "USER"
+    ]
+  },
+  "exitCode": 0,
+  "invocation": {
+    "argv": [
+      "-B",
+      "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/unit-budget.py",
+      "strict-quick-dev-tdd-adapter",
+      "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+      "-B",
+      "scripts/sc/validate_skill_quality.py",
+      "--repository-root",
+      ".",
+      "--policy",
+      "scripts/sc/config/skill-authoring-standard.v1.json",
+      "--skill-root",
+      ".agents/skills/quick-dev-tdd-adapter",
+      "--mode",
+      "strict"
+    ],
+    "commandId": "strict-quick-dev-tdd-adapter",
+    "cwd": ".",
+    "environmentAllowlist": [
+      "PATH",
+      "PATHEXT",
+      "SystemRoot",
+      "WINDIR",
+      "TEMP",
+      "TMP",
+      "TMPDIR",
+      "HOME",
+      "HOMEDRIVE",
+      "HOMEPATH",
+      "USERPROFILE",
+      "APPDATA",
+      "LOCALAPPDATA",
+      "PROGRAMFILES",
+      "PROGRAMFILES(X86)",
+      "PROGRAMW6432",
+      "DOTNET_ROOT",
+      "LOGNAME",
+      "USER",
+      "LNAME",
+      "USERNAME"
+    ],
+    "executable": "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "shell": false,
+    "timeoutSeconds": 1800
+  },
+  "invocationHash": "sha256:6eea3588786ab8b02e8657e71f4a578a56d0082742c85c7d34eb31501271cd49",
+  "processResult": {
+    "commandId": "strict-quick-dev-tdd-adapter",
+    "exitCode": 0,
+    "stderr": "",
+    "stderrSha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"authorizes\": [], \"diagnostics\": [], \"exit_code\": 0, \"mode\": \"strict\", \"package\": \".agents/skills/quick-dev-tdd-adapter\", \"schema\": \"skill-quality-result.v1\", \"status\": \"pass\"}\n",
+    "stdoutSha256": "sha256:8095f4c0f75acb67c65a9bcaaa5600aaba3774c4967b7362b68b8d9b45476410"
+  },
+  "processResultHash": "sha256:daa3640dac04bcaf465a6afefd1d26dd94d7ffdd82f2d7c8634ffe1f59222652",
+  "schemaVersion": "acceptance-controlled-command-receipt.v1",
+  "writeManifestDelta": {
+    "added": [],
+    "changedPaths": [],
+    "deleted": [],
+    "modified": []
+  },
+  "writeManifestDeltaHash": "sha256:bb773a6f680facf494c924737151e27a8b34a67e91b5c07e53cc27b90cd327d1"
+}

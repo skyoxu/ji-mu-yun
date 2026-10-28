@@ -1,0 +1,7 @@
+{
+  "schema": "package-b.operator-continuation.v1",
+  "state": "Native r15 Q8 passed. Local coordination script failed importing repository module from its logs directory before any projection or Skill-input call.",
+  "error": "ModuleNotFoundError: No module named scripts",
+  "correction": "Add actual repository root to coordinator script import path; retain native runtime environment and all native source bytes. Resume after the already completed Q8; no new business tests or receipt changes.",
+  "authorizes": []
+}

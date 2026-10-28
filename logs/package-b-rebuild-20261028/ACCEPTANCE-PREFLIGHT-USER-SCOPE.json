@@ -1,0 +1,20 @@
+{
+  "schema": "package-b.coordinator-user-scope-record.v1",
+  "source_thread": "01a17bc0-9e26-7270-ab6a-ec97240a7023",
+  "user_message": "Sentinel_c03d5ce226d881918fe8b8ffa5521d92",
+  "user_time": "2026-10-28 09:28 UTC",
+  "user_answer": "同意",
+  "approved_scope": [
+    "Original work branch local checkpoint with explicit task sources,documentation,necessary evidence and15derived Knowledge files; no remote publish",
+    "Preserve CRLF artifact; strict physical/index/HEAD/candidate byte-and-mode observation only; positive/negative tests",
+    "Exact21individual coverage paths,not directory rights",
+    "Complete candidate audit by original independent arms"
+  ],
+  "not_approved": [
+    "Acceptance input baseline creation or adjustment",
+    "Skill-input review-required override",
+    "GitHub push,PR,merge",
+    "Device configuration tracking"
+  ],
+  "authorizes": []
+}

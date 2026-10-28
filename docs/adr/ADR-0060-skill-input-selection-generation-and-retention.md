@@ -93,3 +93,15 @@ Bootstrap.
 
 This extends ADR-0048, ADR-0050, ADR-0057, ADR-0058, and ADR-0059. It
 supersedes only their v1 Skill-input selection/current-resolution practices.
+
+## Implementation clarification (2026-10-28)
+
+The publisher acquisition guard `knowledge/indexes/.publication-acquire.lock`
+is persistent OS mutex metadata, not a Knowledge authority source. Only its
+exact untracked, Git-ignored regular single-link one-NUL-byte shape is excluded
+from candidate changes after stable read/identity verification. The observer
+does not acquire, release or remove the lock. Publisher-created mode bits vary
+with the device umask and are preserved. Tracked modifications, other bytes,
+links/reparse paths, unsupported objects and concurrent changes do not qualify;
+all neighboring and other ignored Knowledge sources remain review inputs.
+No broad path/suffix exclusion, publication right or review bypass is granted.

@@ -1,0 +1,72 @@
+[
+  {
+    "actionId": "validate-vdd-contract",
+    "activation": true,
+    "commandId": "validate-vdd-contract",
+    "dependsOn": [],
+    "order": 1
+  },
+  {
+    "actionId": "validate-code-review-route",
+    "activation": true,
+    "commandId": "validate-code-review-route",
+    "dependsOn": [
+      "validate-vdd-contract"
+    ],
+    "order": 2
+  },
+  {
+    "actionId": "validate-acceptance-package",
+    "activation": true,
+    "commandId": "validate-acceptance-package",
+    "dependsOn": [
+      "validate-code-review-route"
+    ],
+    "order": 3
+  },
+  {
+    "actionId": "strict-vdd-execution-plan",
+    "activation": true,
+    "commandId": "strict-vdd-execution-plan",
+    "dependsOn": [
+      "validate-acceptance-package"
+    ],
+    "order": 4
+  },
+  {
+    "actionId": "strict-quick-dev-tdd-adapter",
+    "activation": true,
+    "commandId": "strict-quick-dev-tdd-adapter",
+    "dependsOn": [
+      "strict-vdd-execution-plan"
+    ],
+    "order": 5
+  },
+  {
+    "actionId": "strict-run-phase-bootstrap-review",
+    "activation": true,
+    "commandId": "strict-run-phase-bootstrap-review",
+    "dependsOn": [
+      "strict-quick-dev-tdd-adapter"
+    ],
+    "order": 6
+  },
+  {
+    "actionId": "strict-run-refactor-implementation-acceptance",
+    "activation": true,
+    "commandId": "strict-run-refactor-implementation-acceptance",
+    "dependsOn": [
+      "strict-run-phase-bootstrap-review"
+    ],
+    "order": 7
+  },
+  {
+    "actionId": "strict-maintain-knowledge-base",
+    "activation": true,
+    "commandId": "strict-maintain-knowledge-base",
+    "dependsOn": [
+      "strict-run-refactor-implementation-acceptance"
+    ],
+    "order": 8
+  }
+]

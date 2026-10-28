@@ -1,0 +1,14 @@
+{
+  "schema": "package-b.nested-class-repair.v1",
+  "at": "2026-10-28T09:07:13.366847+00:00",
+  "producer_assessment": "Confirmed direct false admission and symmetric false rejection in existing new lexical scope branch; no generic Python analyzer or runtime execution added.",
+  "source_review": "reviews/scope-recheck-010/B.md",
+  "causal_red": "nested-class-causal-red.log:2 failed,38 deselected against exact r9 guard",
+  "change": "Include ast.ClassDef in existing outer-scope class namespace skip; comments explain non-capture. No other algorithm, trust root or capability change.",
+  "positive_negative": "Nested class method default resolves module bare-name, not enclosing class attribute. Fake module/canonical outer must reject; canonical module/fake outer must admit.",
+  "green": "nested-class-targeted-green.log:40 passed (this test file)",
+  "direct_regression": "nested-class-direct-regression.log:11 passed (general production guard, runtime dispatcher, public repeat guard)",
+  "previous_evidence": "42-case scope composite and74 direct original logs retained; current40-file result is not relabeled as44 or the old composite selection.",
+  "current_native_refresh": "r10 active; no claim old r9 covers changed guard",
+  "commit_or_baseline_change": false
+}

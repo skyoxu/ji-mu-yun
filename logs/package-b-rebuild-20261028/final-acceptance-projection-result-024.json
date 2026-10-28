@@ -1,0 +1,7 @@
+{
+  "authorizes": [],
+  "bundle": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/acceptance-package-b-mutex-final-20261028/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+  "bundleHash": "sha256:6045b4fc7655a6f5b5b8cb06e903fbb5aca66419240297853d44ae5c3451a137",
+  "runRequest": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-run-request.acceptance-package-b-mutex-final-20261028.v1.json",
+  "status": "ready"
+}

@@ -379,6 +379,28 @@ def _read_sources(root, paths, origin, index):
     return reads
 
 
+def _reference_metadata(root, request):
+    """ADR-0048: citations are locations, never adopted/read-source evidence."""
+    inputs = request.get('relevant_inputs', {})
+    references = inputs.get('source_references', []) if isinstance(inputs, dict) else []
+    if not isinstance(references, list) or len(references) > 64:
+        raise _Stop('invalid_request')
+    result, seen = [], set()
+    for row in references:
+        if (not isinstance(row, dict) or set(row) != {'path', 'sha256', 'mentioned_in', 'role'}
+                or row['role'] != 'reference-only' or not isinstance(row['mentioned_in'], list)
+                or not row['mentioned_in'] or any(p not in request.get('scope', []) for p in row['mentioned_in'])):
+            raise _Stop('invalid_request')
+        path = _path(root, row['path'])
+        if row['path'] in seen or _digest_file(path)[0] != row['sha256']:
+            raise _Stop('integrity_failed')
+        seen.add(row['path'])
+        result.append(copy.deepcopy(row))
+    if len(seen | set(request.get('scope', []))) > 64:
+        raise _Stop('invalid_request')
+    return result
+
+
 def diagnose(request, repository_root, catalog_path, policies_path, projections_path):
     """Separate ordinary planning advice from unchanged formal Locator gates."""
     if 'operation' not in request:
@@ -399,6 +421,7 @@ def diagnose(request, repository_root, catalog_path, policies_path, projections_
     prior_bytes = 0
     exits = []
     valid_publication = None
+    references = []
     def state(outcome, reason):
         output.update(outcome=outcome, reason_code=reason)
         output['diagnostic']['incomplete'] = outcome != 'hit'
@@ -436,6 +459,7 @@ def diagnose(request, repository_root, catalog_path, policies_path, projections_
         if not isinstance(scope, list) or not scope or any(not isinstance(p, str) for p in scope):
             raise _Stop('invalid_request')
         source_hashes = {p: _digest_file(_path(root, p))[0] for p in sorted(set(scope))}
+        references = _reference_metadata(root, request)
         if request.get('record_path') is not None:
             record = _path(root, request['record_path'])
         previous = _previous(record)
@@ -593,6 +617,11 @@ def diagnose(request, repository_root, catalog_path, policies_path, projections_
         state('blocked', 'unknown_failure')
         output['candidates'], output['read_set'] = [], []
     diagnostic = output['diagnostic']
+    if references and output['outcome'] not in {'blocked', 'cancelled', 'budget_exhausted'}:
+        # Included before byte accounting; never append uncharged data afterwards.
+        output['source_references'] = references
+    else:
+        output.pop('source_references', None)
     if output['outcome'] in {'blocked', 'cancelled', 'budget_exhausted'}:
         result = output.get('result')
         if isinstance(result, dict) and result.get('candidates'):
@@ -616,6 +645,7 @@ def diagnose(request, repository_root, catalog_path, policies_path, projections_
     data = encode()
     if len(data) + prior_bytes > config['max_output_bytes'] - 4096:
         state('budget_exhausted', 'budget_exhausted')
+        output.pop('source_references', None)
         output['candidates'], output['read_set'] = [], []
         output['index_identity'] = None
         output.pop('result', None)
@@ -657,10 +687,15 @@ def prepare_consumption(payload, repository_root):
     if not isinstance(inputs, list) or not inputs:
         raise ValueError('consumption_inputs_required')
     scope = payload.get('scope', inputs)
-    if not isinstance(scope, list) or not scope or len(scope) > 64:
+    if (not isinstance(scope, list) or not scope or any(not isinstance(p, str) for p in scope)
+            or any(not isinstance(p, str) for p in inputs)):
         raise ValueError('invalid_consumption_scope')
-    scope = list(dict.fromkeys(scope))
-    # Discover only explicit local references from selected inputs, not a repo scan.
+    scope = list(dict.fromkeys([*inputs, *scope]))
+    if len(scope) > 64:
+        raise ValueError('invalid_consumption_scope')
+    references = {}
+    # Keep ordinary citations traceable without elevating them into mandatory
+    # excerpt delivery. Explicit scope and normative inputs remain mandatory.
     for name in inputs:
         path = _path(root, name)
         if path.stat().st_size > 262144:
@@ -676,8 +711,12 @@ def prepare_consumption(payload, repository_root):
                 raise ValueError('consumption_reference_denied') from None
             if referenced is None:
                 continue
-            scope.append(relative)
-            if len(scope) > 64:
+            row = references.setdefault(relative, {'path': relative,
+                'sha256': _digest_file(referenced)[0], 'mentioned_in': [],
+                'role': 'reference-only'})
+            if name not in row['mentioned_in']:
+                row['mentioned_in'].append(name)
+            if len(set(scope) | set(references)) > 64:
                 raise ValueError('consumption_scope_exhausted')
     for name in scope:
         _path(root, name)
@@ -710,6 +749,8 @@ def prepare_consumption(payload, repository_root):
         'query': payload.get('query') or ' '.join(inputs), 'scope': scope,
         'snapshot': {'ref': 'refs/heads/main', 'commit': commit},
         'policy_revision': policy['policy_revision']}
+    if references:
+        request['relevant_inputs'] = {'source_references': [references[p] for p in sorted(references)]}
     for key in ('supplement_reason', 'narrow_overrides'):
         if key in payload:
             request[key] = payload[key]

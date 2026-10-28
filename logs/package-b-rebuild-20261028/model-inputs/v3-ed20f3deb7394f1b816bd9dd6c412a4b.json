@@ -1,0 +1,524 @@
+{
+  "obligation_contracts": {
+    "O-F7C23594D5FC": {
+      "acceptance": {
+        "source_refs": [
+          "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+        ],
+        "given": "The current repository and the five existing governed packages; declarations may be incomplete and no validation result is assumed.",
+        "when": "Inspect declared validation unit budgets and existing native timeout/retry regression boundaries.",
+        "then": "Independent units retain 1800-second total/600-second genuine inactivity and cumulative bounded retries; heartbeats cannot renew total budget.",
+        "oracle": {
+          "observable": "Inspect declared validation unit budgets and existing native timeout/retry regression boundaries.",
+          "expected": "Independent units retain 1800-second total/600-second genuine inactivity and cumulative bounded retries; heartbeats cannot renew total budget.",
+          "forbidden": [
+            "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+          ]
+        },
+        "assertion_ids": [
+          "PKGB_F7C23594D5FC"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "timeout-no-observation",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_package_b.py::test_unit_budget",
+          "expected_outcome": "fail",
+          "failure_id": "PKGB_F7C23594D5FC_FAIL"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+        ],
+        "verification_lane": "unit",
+        "behavior_change": "Migrate the five existing control-plane packages to the adopted quality declaration contract while preserving their native workflow ownership.",
+        "affected_subjects": [
+          "Five existing Skill quality packages"
+        ],
+        "state_transition": "Existing workflow declarations to strict-valid package quality declarations; native runtime and lifecycle ownership unchanged.",
+        "rollback_scope": {
+          "production_paths": [
+            ".agents/skills/vdd-execution-plan/SKILL.md",
+            ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+            ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+            ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+            ".agents/skills/maintain-knowledge-base/SKILL.md",
+            ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+            ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+            ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+            ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+          ],
+          "state_or_schema_compatibility": "Revert only package prose/quality metadata together; never rewrite historical workflow evidence or alter accepted Package A validation semantics."
+        },
+        "allowed_write_paths": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_package_b.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py"
+        ],
+        "planned_new_files": [
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "terminal_predicate": "The current complete migration test module passes, all five native strict package checks pass and frozen owner/authority boundaries remain intact.",
+        "forbidden_paths": [
+          "PhaseA.Platform/",
+          "runtime/phase-a/",
+          "_bmad/",
+          ".agents/skills/jimuyun-spec/",
+          ".agents/skills/jimuyun-architecture/",
+          "scripts/sc/_llm_backend.py"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_package_b.py",
+            "-q"
+          ]
+        ]
+      }
+    },
+    "O-FB4AFA4ABA94": {
+      "acceptance": {
+        "source_refs": [
+          "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+        ],
+        "given": "The current repository and the five existing governed packages; declarations may be incomplete and no validation result is assumed.",
+        "when": "Inspect current package/entry/test baseline identities and migration delta against their actual source content.",
+        "then": "Already implemented workflow behavior is reused and only missing quality declarations/stale prose are changed, without relying on status checkboxes.",
+        "oracle": {
+          "observable": "Inspect current package/entry/test baseline identities and migration delta against their actual source content.",
+          "expected": "Already implemented workflow behavior is reused and only missing quality declarations/stale prose are changed, without relying on status checkboxes.",
+          "forbidden": [
+            "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+          ]
+        },
+        "assertion_ids": [
+          "PKGB_FB4AFA4ABA94"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_package_b.py::test_current_state",
+          "expected_outcome": "fail",
+          "failure_id": "PKGB_FB4AFA4ABA94_FAIL"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+        ],
+        "verification_lane": "unit",
+        "behavior_change": "Migrate the five existing control-plane packages to the adopted quality declaration contract while preserving their native workflow ownership.",
+        "affected_subjects": [
+          "Five existing Skill quality packages"
+        ],
+        "state_transition": "Existing workflow declarations to strict-valid package quality declarations; native runtime and lifecycle ownership unchanged.",
+        "rollback_scope": {
+          "production_paths": [
+            ".agents/skills/vdd-execution-plan/SKILL.md",
+            ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+            ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+            ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+            ".agents/skills/maintain-knowledge-base/SKILL.md",
+            ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+            ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+            ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+            ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+          ],
+          "state_or_schema_compatibility": "Revert only package prose/quality metadata together; never rewrite historical workflow evidence or alter accepted Package A validation semantics."
+        },
+        "allowed_write_paths": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_package_b.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py"
+        ],
+        "planned_new_files": [
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "terminal_predicate": "The current complete migration test module passes, all five native strict package checks pass and frozen owner/authority boundaries remain intact.",
+        "forbidden_paths": [
+          "PhaseA.Platform/",
+          "runtime/phase-a/",
+          "_bmad/",
+          ".agents/skills/jimuyun-spec/",
+          ".agents/skills/jimuyun-architecture/",
+          "scripts/sc/_llm_backend.py"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_package_b.py",
+            "-q"
+          ]
+        ]
+      }
+    },
+    "O-06B2E983CB73": {
+      "acceptance": {
+        "source_refs": [
+          "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-5"
+        ],
+        "given": "The current repository and the five existing governed packages; declarations may be incomplete and no validation result is assumed.",
+        "when": "Compare protected authority/runtime/device/evidence paths and allowed writes against the accepted baseline and migration scope.",
+        "then": "Excluded Phase/BMAD/GDS/Chapter2-7/PackageA/security/budget/history content is not modified to make migration checks pass.",
+        "oracle": {
+          "observable": "Compare protected authority/runtime/device/evidence paths and allowed writes against the accepted baseline and migration scope.",
+          "expected": "Excluded Phase/BMAD/GDS/Chapter2-7/PackageA/security/budget/history content is not modified to make migration checks pass.",
+          "forbidden": [
+            "An excluded action is performed or an unverified later completion state is claimed"
+          ]
+        },
+        "assertion_ids": [
+          "PKGB_06B2E983CB73"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_package_b.py::test_protected_sources",
+          "expected_outcome": "fail",
+          "failure_id": "PKGB_06B2E983CB73_FAIL"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+        ],
+        "verification_lane": "unit",
+        "behavior_change": "Migrate the five existing control-plane packages to the adopted quality declaration contract while preserving their native workflow ownership.",
+        "affected_subjects": [
+          "Five existing Skill quality packages"
+        ],
+        "state_transition": "Existing workflow declarations to strict-valid package quality declarations; native runtime and lifecycle ownership unchanged.",
+        "rollback_scope": {
+          "production_paths": [
+            ".agents/skills/vdd-execution-plan/SKILL.md",
+            ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+            ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+            ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+            ".agents/skills/maintain-knowledge-base/SKILL.md",
+            ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+            ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+            ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+            ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+          ],
+          "state_or_schema_compatibility": "Revert only package prose/quality metadata together; never rewrite historical workflow evidence or alter accepted Package A validation semantics."
+        },
+        "allowed_write_paths": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_package_b.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py"
+        ],
+        "planned_new_files": [
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "terminal_predicate": "The current complete migration test module passes, all five native strict package checks pass and frozen owner/authority boundaries remain intact.",
+        "forbidden_paths": [
+          "PhaseA.Platform/",
+          "runtime/phase-a/",
+          "_bmad/",
+          ".agents/skills/jimuyun-spec/",
+          ".agents/skills/jimuyun-architecture/",
+          "scripts/sc/_llm_backend.py"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_package_b.py",
+            "-q"
+          ]
+        ]
+      }
+    },
+    "O-0BCEAD7964BF": {
+      "acceptance": {
+        "source_refs": [
+          "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-5"
+        ],
+        "given": "The current repository and the five existing governed packages; declarations may be incomplete and no validation result is assumed.",
+        "when": "Reconcile six canonical request families to atomic acceptances, assertion IDs and actual selected tests.",
+        "then": "All six requests have explicit observable case coverage; no representative sample or missing selector substitutes for complete coverage.",
+        "oracle": {
+          "observable": "Reconcile six canonical request families to atomic acceptances, assertion IDs and actual selected tests.",
+          "expected": "All six requests have explicit observable case coverage; no representative sample or missing selector substitutes for complete coverage.",
+          "forbidden": [
+            "An excluded action is performed or an unverified later completion state is claimed"
+          ]
+        },
+        "assertion_ids": [
+          "PKGB_0BCEAD7964BF"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "scripts/sc/tests/test_skill_quality_package_b.py::test_complete_coverage",
+          "expected_outcome": "fail",
+          "failure_id": "PKGB_0BCEAD7964BF_FAIL"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+        ],
+        "verification_lane": "unit",
+        "behavior_change": "Migrate the five existing control-plane packages to the adopted quality declaration contract while preserving their native workflow ownership.",
+        "affected_subjects": [
+          "Five existing Skill quality packages"
+        ],
+        "state_transition": "Existing workflow declarations to strict-valid package quality declarations; native runtime and lifecycle ownership unchanged.",
+        "rollback_scope": {
+          "production_paths": [
+            ".agents/skills/vdd-execution-plan/SKILL.md",
+            ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+            ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+            ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+            ".agents/skills/maintain-knowledge-base/SKILL.md",
+            ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+            ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+            ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+            ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+            ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+            ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+            ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json"
+          ],
+          "state_or_schema_compatibility": "Revert only package prose/quality metadata together; never rewrite historical workflow evidence or alter accepted Package A validation semantics."
+        },
+        "allowed_write_paths": [
+          ".agents/skills/vdd-execution-plan/SKILL.md",
+          ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+          ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+          ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+          ".agents/skills/maintain-knowledge-base/SKILL.md",
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "execution_snapshot_paths": [
+          "scripts/sc/tests/test_skill_quality_package_b.py",
+          "scripts/sc/validate_skill_quality.py",
+          "scripts/sc/config/skill-authoring-standard.v1.json",
+          "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+          "scripts/sc/skill_quality_examples.py"
+        ],
+        "planned_new_files": [
+          ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+          ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+          ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+          ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+          ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+          ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+          ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+          "scripts/sc/tests/test_skill_quality_package_b.py"
+        ],
+        "terminal_predicate": "The current complete migration test module passes, all five native strict package checks pass and frozen owner/authority boundaries remain intact.",
+        "forbidden_paths": [
+          "PhaseA.Platform/",
+          "runtime/phase-a/",
+          "_bmad/",
+          ".agents/skills/jimuyun-spec/",
+          ".agents/skills/jimuyun-architecture/",
+          "scripts/sc/_llm_backend.py"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-B",
+            "-m",
+            "pytest",
+            "scripts/sc/tests/test_skill_quality_package_b.py",
+            "-q"
+          ]
+        ]
+      }
+    }
+  }
+}

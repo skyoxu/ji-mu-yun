@@ -1,0 +1,8 @@
+{
+  "schema": "jimuyun.host-response.v1",
+  "session_id": "420497afb0bc4243a06423bfb8a66065",
+  "request_id": "4952888af1544eba8f1d3b85444774fa",
+  "request_sha256": "sha256:731eb95f6e7685811b2749d0f2194abba883c3e4d4c67bb5e4d92645ced59c04",
+  "output_text": "Authored scripts/sc/tests/test_skill_quality_package_b.py with77 distinct literal CER assertion markers and exact planned failure IDs. Only the declared test file was edited; production entries remain the native empty first-use JSON. Syntax was checked; no tests or runtime success facts were invented. Current package checks call the unchanged adopted public validator; preservation checks compare actual native implementation bytes to immutable accepted main. External durable-copy evidence is required and cannot be substituted with a local-only snapshot.\n",
+  "authorizes": []
+}

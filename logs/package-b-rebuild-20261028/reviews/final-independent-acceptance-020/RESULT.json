@@ -1,0 +1,45 @@
+{
+  "schema": "package-b.fresh-independent-ab-result.v1",
+  "completed_utc": "2026-10-28T12:08:48.005295+00:00",
+  "candidate": "13bd5b598ffde513cd75acea072f0e433f6c91b0",
+  "base": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "stages": {
+    "5": "supports-native-plan-ready",
+    "6": "supports-native-implementation-complete",
+    "7": "supports-existing-native-acceptance-passed"
+  },
+  "reports": {
+    "A.md": {
+      "path": "logs/package-b-rebuild-20261028/reviews/final-independent-acceptance-020/A.md",
+      "bytes": 7473,
+      "sha256": "e609b70f4e89b409a41b7d6933f7ecc54fdd9feb52c46fb8f7df98142b65f3ab"
+    },
+    "B.md": {
+      "path": "logs/package-b-rebuild-20261028/reviews/final-independent-acceptance-020/B.md",
+      "bytes": 8206,
+      "sha256": "7ee92d5e2519d71fd6a6e1fb8ca899f15e393e827090bd5b3c0f747c3c7a36bc"
+    }
+  },
+  "confirmed_findings_each": {
+    "A": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    },
+    "B": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    }
+  },
+  "source_changes_during_review": false,
+  "frozen_files": 2217,
+  "postreview_mismatches": [],
+  "staged_paths": [],
+  "tracked_status": [
+    " M execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json"
+  ],
+  "untracked_files": 415,
+  "publication_status": "not-started-pending-parent-boundary-adjudication",
+  "authorizes": []
+}

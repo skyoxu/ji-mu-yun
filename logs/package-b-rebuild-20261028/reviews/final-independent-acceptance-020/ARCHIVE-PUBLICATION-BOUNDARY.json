@@ -1,0 +1,44 @@
+{
+  "schema": "package-b.archive-boundary.v1",
+  "items": [
+    {
+      "path": "logs/package-b-rebuild-20261028/final-acceptance-inputs-checkpoint-13bd5b59.bundle",
+      "type": "incremental Git bundle",
+      "reason": "Includes local candidate commit history; cannot publish without inspecting full object payload. Retain privately."
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/mutex-reviewed-checkpoint-1152321c.bundle",
+      "type": "incremental Git bundle",
+      "reason": "Includes local candidate commit history; cannot publish without inspecting full object payload. Retain privately."
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/stage-acceptance-preflight-014.zip",
+      "entries": 20,
+      "knowledge_payload_paths": 0,
+      "device_or_transfer_named_paths": [],
+      "classification": "Archive-member names inspected only, not a secret audit or upload authorization."
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/stage-final-focused-recheck-013.zip",
+      "entries": 12,
+      "knowledge_payload_paths": 0,
+      "device_or_transfer_named_paths": [],
+      "classification": "Archive-member names inspected only, not a secret audit or upload authorization."
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/stage-nested-class-repaired-011.zip",
+      "entries": 227,
+      "knowledge_payload_paths": 0,
+      "device_or_transfer_named_paths": [],
+      "classification": "Archive-member names inspected only, not a secret audit or upload authorization."
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/stage-vdd-plan-ready-003.zip",
+      "entries": 662,
+      "knowledge_payload_paths": 0,
+      "device_or_transfer_named_paths": [],
+      "classification": "Archive-member names inspected only, not a secret audit or upload authorization."
+    }
+  ],
+  "authorizes": []
+}

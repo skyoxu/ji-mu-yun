@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "-B",
+    "scripts/python/skill_input_v2.py",
+    "finish",
+    "--plan-id",
+    "package-b-acceptance-20261028",
+    "--attempt-id",
+    "6bdb2faa667045e98f60b59a9ee3f758"
+  ],
+  "authorizes": [],
+  "exit_code": 0,
+  "raw_log": "logs/package-b-rebuild-20261028/mutex-skill-input-finish-023.log",
+  "raw_log_sha256": "sha256:ee9a7565b8d13a83bb64548bd8901073b7c016b8ec2c668eb46c6da28c84d497",
+  "schema": "package-b.actual-public-invocation.v1"
+}

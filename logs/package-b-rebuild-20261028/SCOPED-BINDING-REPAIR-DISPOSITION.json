@@ -1,0 +1,21 @@
+{
+  "schema": "package-b.scoped-binding-repair.v1",
+  "at": "2026-10-28T08:46:04.146091+00:00",
+  "predecessor": "stage-p2-repaired-current-proof-008.zip",
+  "reports": [
+    "reviews/p2-recheck-008/A.md",
+    "reviews/p2-recheck-008/B.md"
+  ],
+  "confirmed": [
+    "Unrelated function-local imports must not remove a module canonical binding",
+    "MatchAs/MatchStar/MatchMapping capture names are bindings and cannot retain canonical identity"
+  ],
+  "scope": "Private quality-branch lexical name binding lookup only; no source execution or control/data-flow inference. Fixed oracle/policy/paths and existing public schemas unchanged.",
+  "targeted_original_red": "scope-repair-causal-red.log:6 failed33 passed; actual misclassification assertions, not fixture errors",
+  "additional_local_closure": "Named-expression binding and outer evaluation retain their Python lexical scope; small positive/negative cases prevent regression caused by scope segmentation",
+  "green": "scope-repair-targeted-final-green.log:42 passed",
+  "direct_regression": "scope-repair-direct-regression.log:74 passed12.07s",
+  "formal_state": "Fresh native r9 Q7/Q8 pass; independent focused recheck pending",
+  "commit_or_baseline_change": false,
+  "Q8_sha256": "bafd90aaa96af5e99f720fc3c1151344310feee2acf11ccb5a446885bcad5c85"
+}

@@ -1,0 +1,179 @@
+{
+  "schema": "skill-quality.v1",
+  "standard_version": "1.0",
+  "name": "run-phase-bootstrap-review",
+  "authorizes": [],
+  "responsibility": "Run only an explicitly requested bounded supplemental review under its existing profile and consumer authority.",
+  "triggers": [
+    "Explicit request matching this Skill responsibility and an existing supported input route."
+  ],
+  "non_goals": [
+    "No Phase/BMAD/GDS/Chapter2-7 behavior changes, new global runtime, credential handling, deployment or implicit upstream review.",
+    "Static quality declarations grant no filesystem, subprocess, model, publication or lifecycle authority."
+  ],
+  "inputs": [
+    "Explicit source/plan/request and actual prerequisite receipts described by SKILL.md; unavailable or stale required input blocks."
+  ],
+  "outputs": [
+    "Existing native typed outputs and immutable source-bound evidence; never assistant-authored successful runtime receipts."
+  ],
+  "dependencies": [
+    {
+      "id": "repository-skill-authoring-standard",
+      "version": "1.0",
+      "required": true,
+      "authority": "references/package-dependencies.v1.json",
+      "when_missing": "block",
+      "when_mismatch": "block",
+      "kind": "local-contract"
+    }
+  ],
+  "references": [
+    {
+      "ref": "SKILL.md#package-quality-and-routing"
+    }
+  ],
+  "tests": [
+    "tests/test_direct_script_startup.py",
+    "Repository migration: scripts/sc/tests/test_skill_quality_package_b.py; run through the frozen native plan."
+  ],
+  "evidence": "Native per-run controlled process originals and predicates under repository logs; quality JSON alone is never completion evidence.",
+  "lifecycle": {
+    "owner": "Bootstrap owns bounded supplemental review evidence only; no delivery lifecycle state.",
+    "completion_owner": "Bootstrap owns bounded supplemental review evidence only; no delivery lifecycle state."
+  },
+  "capabilities": {
+    "routing": true,
+    "version_lookup": false,
+    "secrets": false,
+    "destructive": false,
+    "database_write": false,
+    "untrusted_content": true,
+    "filesystem": true,
+    "subprocess": true,
+    "network": false
+  },
+  "lookup": {
+    "kind": "not-applicable"
+  },
+  "controls": {
+    "untrusted_content": {
+      "owner": "Bootstrap owns bounded supplemental review evidence only; no delivery lifecycle state.",
+      "role": "data-only",
+      "prohibit_expansion": [
+        "targets",
+        "commands",
+        "tools",
+        "authority"
+      ]
+    },
+    "filesystem": {
+      "owner": "Existing native controller owns repository-contained request/output roots. Listed package paths bound static inspection and explicit package-maintenance changes only; they grant no workflow write/delete permission. Runtime plans/logs retain their existing argument-bound owner checks.",
+      "roots": [
+        "."
+      ],
+      "read": [
+        "."
+      ],
+      "write": [
+        "SKILL.md",
+        "skill-quality.v1.json",
+        "references/package-dependencies.v1.json"
+      ],
+      "delete": [
+        "skill-quality.v1.json",
+        "references/package-dependencies.v1.json"
+      ],
+      "traversal": "reject",
+      "symlinks": "reject"
+    },
+    "subprocess": {
+      "owner": "Existing workflow host and command supervisor; this declaration describes only a bounded read-only startup preflight. Real execution units retain1800-second total/600-second idle limits.",
+      "argv": [
+        "python",
+        "-B",
+        "scripts/bootstrap_review.py",
+        "--help"
+      ],
+      "shell": false,
+      "cwd": ".",
+      "timeout": 60,
+      "output_limit": 65536,
+      "cancellation_owner": "Existing host supervisor terminates the owned process tree; no replacement runner."
+    }
+  },
+  "entrypoints": [
+    {
+      "id": "native-workflow",
+      "inputs": [
+        "Explicit arguments for .agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py",
+        "Existing native input contracts and required child/profile/consumer prerequisites; see the operation guide."
+      ],
+      "outputs": [
+        "Native typed result or typed blocking diagnostic; preserve immutable failure sidecars."
+      ],
+      "preflight": "From repository root, verify Python, required modules, exact target/contract and all declared prerequisites. Use the existing native CLI validation; do not install or silently skip dependencies.",
+      "standalone": true,
+      "dependencies": [
+        "repository-skill-authoring-standard"
+      ],
+      "caller_setup": "Run from repository root with Python3 and required declared modules. Online callers explicitly initialize the existing caller-session transport. Optional model/child workflows retain their native authority; quality inspection does not launch them.",
+      "install_missing": false,
+      "skip_missing": false
+    }
+  ],
+  "examples": [
+    {
+      "outcome": "typical",
+      "branch": "clean",
+      "input": "Clean: explicit review request supplies a valid profile, current Artifact View and permitted consumer.",
+      "output": "Native finalized clean or P2-only review envelope with real reviewer evidence.",
+      "expected_result": "The review remains supplemental and cannot publish plan-ready or acceptance-passed."
+    },
+    {
+      "outcome": "boundary",
+      "branch": "round",
+      "input": "Round: request a later semantic round with actual predecessor, typed trigger and existing user confirmation.",
+      "output": "Native round authorization or typed blocked/manual-pause result.",
+      "expected_result": "Do not fabricate confirmation, reset lineage or launch another round from a clean predecessor."
+    },
+    {
+      "outcome": "error",
+      "branch": "access",
+      "input": "Access: preflight or access proof is missing, denied or stale.",
+      "output": "Typed preflight/access failure; no unauthorized reviewer launch.",
+      "expected_result": "Preserve the failed run and use the existing explicit recovery route."
+    }
+  ],
+  "outcomes": [
+    "typical",
+    "boundary",
+    "error"
+  ],
+  "routing": {
+    "kind": "conditional",
+    "entry": "input",
+    "branches": [
+      "clean",
+      "round",
+      "access"
+    ],
+    "diagram": {
+      "ref": "SKILL.md#package-quality-and-routing"
+    }
+  },
+  "error_ids": [
+    "DEPENDENCY_UNRESOLVED_AUTHORITY",
+    "DEPENDENCY_VERSION_CONFLICT",
+    "INVALID_INSPECTION",
+    "INVALID_LOCAL_REFERENCE"
+  ],
+  "faq": [
+    {
+      "from": "DEPENDENCY_UNRESOLVED_AUTHORITY",
+      "target": {
+        "ref": "SKILL.md#package-quality-and-routing"
+      }
+    }
+  ]
+}

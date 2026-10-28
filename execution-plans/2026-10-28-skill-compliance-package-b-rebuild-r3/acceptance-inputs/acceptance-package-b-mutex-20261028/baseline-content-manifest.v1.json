@@ -1,0 +1,216 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:8ac8a676efb291c170fe4b866882c9b697088a82708f01c651de205d1cb57d18"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:1e3d3bae887f505f90d50488d2b4a8c63f210cf61b5c728a118eb059cf9eb060"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d8a30da5d112c999b05d789ff93876fd676f58cde31547bcd37e8b064aec09c6"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:9ce4579fa4f3d3a3598aac4b1e32038cadc530882713012f7d79088a4b98abe7"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:64e7e4f3dcafe6bdc913025cb1e6966e5ee49daf4bf0c6a2ba9c9cd53d29a0e8"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:004e39a380f5985ee49bf55e152cc3308ea660478429f2fea191094c844aa8f0"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ce47e2319817a6afb5e0c859320dce220907e37fe10e64753f1054b3e7ea3237"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a59041c2dd6a171169fa6653ab19df98bdb8ca7ab9623fd8c1f5a81d1ce58545"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:6aca810edba4def30ef8a8013b02232bc1bebd61d221048bdc3efbd27e36d866"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:a56193fbc52ea5bd87e0cad53c46e92bee2e3cf113709caaa5db43ac3d5ccb55"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:7f25464c6e621b906a6f35cefe6487c339fc9ae2930b2eb95afd86971838cca4"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:3c48ba395316daf371aa119d8f254b1f0a55a1ad6136e6ebfa446a8017806b18"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:f893fe31f5230c1cd1c1c8243644f84d4f06f020ad53a79c6e46709cf123db39"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2ce6f4b51571be0fa65d3e40a1eba60b6fbd06984d5b157a8ee7bea215f94fd5"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:5b48575fcb421a37575289cd1ffd96e91a206de45e28bcb48578df75cf46f9cf"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:11cc177cca53784b7e7e5c4022efab9f2ef2706cbae95a52a21f0325e69cf17c"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "knowledge/indexes/current.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ba67149a6f1e39cd9434ef1d5f240fc563744ac06ac40d7667c1f09bb1d90a07"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "knowledge/indexes/last-known-good.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:ba67149a6f1e39cd9434ef1d5f240fc563744ac06ac40d7667c1f09bb1d90a07"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "knowledge/projections/consumer-projections.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:2b2da593b2892ebdafd7d944a926f3d4b9d763deef77fb73c294fb028e8acb21"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:d79646c39535153a392f0f1c082a98159eb1914039633b180f3c2ea0c59c7afe"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/python/skill_input_candidate.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:4c0120980da903cf560dae2108c1e3ea786d5496939cf5d2cdfd0e63cae989af"
+    },
+    {
+      "inclusion_reason": "explicit compact VDD candidate baseline",
+      "path": "scripts/toolchain/knowledge_query/adapter.py",
+      "roles": [
+        "implementation"
+      ],
+      "sha256": "sha256:92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041"
+    }
+  ],
+  "schemaVersion": "acceptance-baseline-content-manifest.v1",
+  "status": "complete"
+}

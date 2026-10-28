@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "contractHash": "sha256:16ddf260b44beeb52697da816684915896cbd19f05fdc43d70710f221a58490f",
+  "createdUtc": "2026-10-28T11:16:55.607604Z",
+  "knowledgeContextHash": "sha256:e3abe71f94bf10b25ea1d42382ffbfebe64f4f9f0624d707580b99861256f709",
+  "runId": "acceptance-fe850ae4de042a74",
+  "runInputHash": "sha256:4ceac879d7d1045c469263356c168fdd7aada3ea783005b5bb916fa8e97a32cd",
+  "schemaVersion": "acceptance-execution-run.v1",
+  "skillInputBindingHash": "sha256:24869774b1232af236594c4ff8e68e5aaca1b1f8bf179851c61040a94332ab8a",
+  "skillInputContextHash": "sha256:22aec622b9264b7e1fdcf4ca3f298bff27902b74f08959477da406cdb26f4a1e",
+  "skillInputContextPath": "skill-input/skill-input-context.v1.json",
+  "skillInputContextSourcePath": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/skill-input-v2/acceptance/skill-input-generations/6d67a3520c58a5eae618f800f503825fc89868bc8bf1bce3ca20906c54748e0a/context.json"
+}

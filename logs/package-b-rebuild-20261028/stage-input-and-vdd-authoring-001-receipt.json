@@ -1,0 +1,9 @@
+{
+  "archive": "logs/package-b-rebuild-20261028/stage-input-and-vdd-authoring-001.zip",
+  "size": 1133294,
+  "sha256": "e36a80a3213072f61e5fd19b66c4fc9ccfab9c875bb478f2b67b1a65a7190b76",
+  "restored_files_verified": 92,
+  "restore_directory": "logs/package-b-rebuild-20261028/stage-input-and-vdd-authoring-001-restore-validation",
+  "durability": "Local verified snapshot only; no new Library upload performed",
+  "scope": "Current source/canonical input, completed author responses and selected original regression/publication logs; NOT a completed VDD plan or old missing candidate recovery."
+}

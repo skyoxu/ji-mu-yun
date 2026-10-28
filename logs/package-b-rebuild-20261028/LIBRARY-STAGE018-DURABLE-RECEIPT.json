@@ -1,0 +1,13 @@
+{
+  "schema": "package-b.private-library-preservation.v1",
+  "library_file_id": "libfile_78c6bcc35bb48191b00b604f6eef4981",
+  "file_id": "file_000000005bc881fa8bfc284a96fa53c4",
+  "version": 0,
+  "bytes": 3022130,
+  "sha256": "cae54448db516fd1c22b9f5bb29dad66eac6c61adaa6722d103eeb6725340ef3",
+  "local_crc_restore_hash": "432payloadspassed",
+  "remote_create": "officialsucceeded",
+  "remote_download_byte_hash": "notverified",
+  "metadata_helper_exit": 0,
+  "authorizes": []
+}

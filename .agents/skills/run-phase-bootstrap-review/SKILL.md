@@ -471,7 +471,24 @@ Run all of these after changing the control plane:
 ```text
 py -3 .agents/skills/run-phase-bootstrap-review/tests/test_bootstrap_review.py
 py -3 execution-plans/2026-07-12-llm-review-evidence-gate-hardening/tools/validate_whole_directory.py
-py -3 C:/Users/Administrator/.codex/skills/.system/skill-creator/scripts/quick_validate.py .agents/skills/run-phase-bootstrap-review
+py -3 -B scripts/sc/validate_skill_quality.py --repository-root . --policy scripts/sc/config/skill-authoring-standard.v1.json --skill-root .agents/skills/run-phase-bootstrap-review --mode strict
+# Do not substitute VDD's validate_skill_contract.py or Acceptance's package capability for this Bootstrap check.
 ```
 
 Then run a fresh `bootstrap-skill-route` review over the repository Skill, external thin route, standard, ADR, compatibility adapter, profiles, schemas, tests, operator guide, repository rules, and usage evidence.
+
+## Package Quality And Routing
+
+Quality metadata is [non-authorizing](skill-quality.v1.json); it preserves every native owner and required child dependency.
+
+| Dependency | Authority/version | Missing or mismatch |
+| --- | --- | --- |
+| Adopted authoring contract | [Local record](references/package-dependencies.v1.json), standard1.0 | Typed A09 block; no installation or silent skip |
+
+```text
+[input] -> [clean]
+[input] -> [round]
+[input] -> [access]
+```
+
+The sidecar contains exactly three primary route examples, explicit public-entry setup and typed results. Static pass grants no execution or completion authority.

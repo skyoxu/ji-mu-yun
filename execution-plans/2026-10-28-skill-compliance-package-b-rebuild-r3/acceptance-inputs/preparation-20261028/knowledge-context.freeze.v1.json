@@ -1,0 +1,6 @@
+{
+  "authorizes": [],
+  "context_path": "knowledge-context.refactor-acceptance.v1.json",
+  "context_sha256": "sha256:7bcfcbb405876493c0e38f9eda29c828753200c409ecf2aaad933054af36901d",
+  "schema_version": "jimuyun.knowledge-consumer-freeze.v1"
+}

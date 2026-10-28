@@ -1,0 +1,15 @@
+{
+  "archive": "logs/package-b-rebuild-20261028/stage-final-focused-recheck-013.zip",
+  "bytes": 45439,
+  "sha256": "23384df7c9e7e42043d8a9ea5292fc78c4ddc76ed40d3d8b7df0c9dd51c539c8",
+  "files": 11,
+  "CRC_and_restored_hashes": "pass",
+  "source_archive_library_file_id": "libfile_29b2153fd1e881918832cbef8c0bd56d",
+  "no_commit_or_baseline_change": true,
+  "library_file_id": "libfile_9cec7611b5d48191966684e51df259c6",
+  "file_id": "file_00000000bf08821189ed8f479b228556",
+  "version": 0,
+  "create": "succeeded",
+  "metadata_applied": true,
+  "remote_readback_hash": "not claimed"
+}

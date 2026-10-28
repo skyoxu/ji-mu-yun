@@ -1,0 +1,124 @@
+{
+  "schema": "package-b.acceptance-prerequisite-proposal.v1",
+  "at": "2026-10-28T09:21:27.470660+00:00",
+  "status": "Proposal only; no commit, staging, baseline selection, policy/host/config mutation or Acceptance run performed",
+  "current_verified_result": "Original A/B r10 focused recheck both close demonstrated class cases;0new directly related P0/P1/P2; Q8implementation-complete is not Acceptance",
+  "original_delivery_baseline": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "fixed_candidate": "stage011+r10 overlay; exact paths and bytes in NESTED-CLASS-RECHECK-MANIFEST.json",
+  "four_items": {
+    "derived_knowledge": {
+      "count": 15,
+      "paths": [
+        "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+        "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "knowledge/indexes/current.json",
+        "knowledge/indexes/last-known-good.json",
+        "knowledge/projections/consumer-projections.v1.json",
+        "knowledge/snapshots/repository-source-snapshot.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/evaluation/query-report.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/consumer-policies.v2.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/repository-knowledge-query-suite.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/source-exclusions.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/consumer-projections.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v2.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-source-snapshot.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/manifest.json"
+      ],
+      "proposal": "Preserve exactly and include in an expressly authorized local-only custody checkpoint, separately classified as maintainer-published derived data. Never reset/stash/delete/ignore or publish them to GitHub. Verify current generation and real native publication110+4 proof/authorized07-26 request; hash scan alone is not semantic review. If final Acceptance changedPaths includes these15, maintain their explicit scope and exact policy routes; never silently omit pending Knowledge authority changes.",
+      "required_decision": "Local checkpoint authorization must explicitly include these15 rather than treating source-only approval as permission."
+    },
+    "crlf_status": {
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json",
+      "facts": "Physical bytes exactly match original HEAD blob SHA4bfa9206a23122810ec7c41783ce8c6866d91917ab1633a795891a2937c596d9; mode100644,index100644; Git still reports M due clean-filter normalization. A source checkpoint alone does not resolve it.",
+      "preferred_minimal_proposal": "Do not normalize the historical artifact or alter Git flags/config. If approved, make compact projection clean-worktree verification recognize a reported M only when regular-file physical bytes, index blob/mode and immutable HEAD/candidate blob/mode are exactly equal. Keep original Git status in diagnostics; do not report git status clean. Reject symlink, changed bytes/mode,index mutation,untracked extras and mismatched candidate. This is an explicit bounded preflight correction, not yet implemented.",
+      "proposed_files": [
+        ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+        ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py"
+      ],
+      "positive_negative_tests": [
+        "Real CRLF Git-normalization M with all three byte/mode identities equal can proceed, without file/index/config mutation and status remains visible.",
+        "One actual byte change,staged blob or mode change,symlink,untracked extra and wrong immutable candidate continue reject.",
+        "Existing missing candidateRevision and clean/dirty commit custody regression remain unchanged."
+      ],
+      "alternative": "An explicit separate line-ending-normalization commit would change this historical Git artifact and is not the recommended preservation path; never do it implicitly."
+    },
+    "exact_coverage_routes": {
+      "current_software_and_canonical_gaps": [
+        "docs/workflows/inputs/package-b-rebuild-20261028-r2/requirements.md",
+        "docs/workflows/inputs/package-b-rebuild-20261028-r2/source-map.json",
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md",
+        "docs/workflows/inputs/package-b-rebuild-20261028/source-map.json",
+        "docs/workflows/skill-control-plane-evolution-requirements.md",
+        "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py"
+      ],
+      "additional_derived_data_paths_if_included_in_final_manifest": [
+        "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+        "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+        "knowledge/indexes/current.json",
+        "knowledge/indexes/last-known-good.json",
+        "knowledge/projections/consumer-projections.v1.json",
+        "knowledge/snapshots/repository-source-snapshot.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/evaluation/query-report.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/consumer-policies.v2.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/repository-knowledge-query-suite.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/source-exclusions.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/consumer-projections.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v2.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-source-snapshot.v1.json",
+        "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/manifest.json"
+      ],
+      "count_if_all_derived_data_in_candidate": 21,
+      "policy": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "proposal": "Add individual exact file paths only, no broad docs/workflows/,knowledge/,allow-all or exclusions. Compute policyRevision from canonical policy content via existing function; retain every existing check,authorityRef,cross-domain rule. Existing source/canonical gap is6; including derived data means the current6-only proposal is insufficient and must account for the15additional paths explicitly.",
+      "regression_scope": "Existing toolchain policy schema/canonical revision positive; all approved exact paths covered; sibling/unknown path still fail closed; existing cross-domain handling unchanged.",
+      "classification": "Toolchain code-review coverage routing, not filesystem/model/consumer/publication permission and not a Knowledge review waiver.",
+      "test_file": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py"
+    },
+    "knowledge_review_required": {
+      "code": "scripts/python/knowledge_gate_projection.py:9-38",
+      "authority_contract": "docs/workflows/skill-input-v2.md:50-68",
+      "facts": "With original baseline, maintain-knowledge-base and knowledge changes unconditionally require review. No supplied external-review receipt override is consumed by this projection. Commit alone does not change a baseline-relative delta.",
+      "proposal": "First close review of every actual Knowledge source/derived change with a scope-matching real owner decision and fixed hashes. Existing initial A/B semantically covers27source deltas but explicitly only selected related Knowledge-publication evidence; do not assert that it proves complete15-derived semantic review. Obtain a focused custody/publication confirmation for those15 if not already covered. Only then, with explicit maintainer authorization, create a NEW Acceptance input authority whose skill_input_baseline is the real reviewed local checkpoint. Preserve original delivery baseline, full old-to-final manifests and all review history in Acceptance code-review/baselineRevision. This records a completed reviewed epoch rather than hiding pending changes.",
+      "blocked_if": "Without that owner authorization/complete review boundary, retain review-required; do not change the projection, supply changed_paths=[],fake authority or move pending Knowledge outside observation.",
+      "no_new_protocol": "No unsigned review boolean/new override field or general bypass is proposed."
+    }
+  },
+  "execution_order_after_authorization": [
+    "Implement only approved exact route/preflight correction,run focused compatibility tests,freeze and obtain affected independent review before treating new acceptance-host bytes as reviewed.",
+    "Resolve and explicitly acknowledge complete Knowledge change scope including15derived data; keep full original-baseline comparison.",
+    "Create real local reviewed checkpoint in existing work branch only,including expressly approved15data if selected; do not touch main or remap original Git baseline.",
+    "Generate actual target-owned knowledge context,action DAG,registered commands,source manifests and Skill-input authority/receipt using existing public operations. New authority binds reviewed checkpoint only after owner approval; no runtime success flags are caller fabricated.",
+    "Freeze/record normally generated Acceptance input namespace in a final local candidate checkpoint before compact projection,so the helper need not waive untracked generated outputs; no commit self-reference required because the input authority baseline is prior reviewed checkpoint,not its containing final commit. Recheck clean/candidate custody and actual source currentness first.",
+    "Use public QuickDev read-only current-proof replay after final custody assembly. If actual bound hashes/dependencies differ,refresh only owner-required evidence; no automatic business/test rerun solely due commit SHA.",
+    "Invoke public compact projection,prepare/start-or-resume and exact registered actions/finalization. Keep new generated outputs in existing target-owned namespaces; finalize actual result only after every native gate passes."
+  ],
+  "remaining_normal_inputs": [
+    "Acceptance-owned real Locator context",
+    "Complete exact baseline/candidate manifests and currentQ8 handoff",
+    "Real command registry/action DAG from target requirements",
+    "Ready Skill-inputv2 generation and typed request",
+    "Native prepare/start/action/finalization receipts"
+  ],
+  "authorization_needed": [
+    "Explicit local checkpoint scope and custody commits,including15derived data if chosen; no remote publication.",
+    "Bounded compact clean-preflight byte-identity correction and tests,if preserving original marker unchanged.",
+    "Exact versioned coverage-routing maintenance and targeted regression,including any final candidate Knowledge paths.",
+    "Genuine completed-review owner decision and new post-review Acceptance input authority baseline; original delivery diff retained."
+  ],
+  "not_requested": [
+    "GitHub publish/PR/merge",
+    "New development worktree or branch switch",
+    "Global environment/config/permissions change",
+    "Knowledge gate override or hiding pending source changes",
+    "Arbitrary Python analysis expansion"
+  ],
+  "proposed_source_changes_only": [
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+    ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+    ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py"
+  ],
+  "scope_note": "These four proposed files are not modified. Any necessary ADR rationale must remain bounded to existing accepted routing/custody contract, not new permission or review-bypass protocol."
+}

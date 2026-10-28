@@ -1,0 +1,48 @@
+{
+  "schema": "package-b.p2-recheck-candidate.v1",
+  "created_utc": "2026-10-28T08:14:20.111688+00:00",
+  "baseline_commit": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "fixed_predecessor_zip": "stage-final-implementation-complete-006.zip",
+  "fixed_predecessor_sha256": "5dc3e4760097c9804857c699864d8734d48656e005a7666e5a4a03eb56785383",
+  "changed_from_predecessor": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "sha256": "8dbef164b6496a8f28b7421d9dea6adcabcd4b55f99a04e1a5f5ffd911f67f44",
+      "bytes": 13010
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "sha256": "654ae169ae049807a40e1e202796005a6d0eb9ad5f0f89571959014467d359af",
+      "bytes": 9733
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_quality_package_b.py",
+      "sha256": "adf7bf645274f47ed8c2b014ad1bf4540b1a1e4ae8f5f4c7885c208fbc58df57",
+      "bytes": 27966
+    }
+  ],
+  "scope": "Import-bound aliases and absolute canonical validator import admission; real Bootstrap strict-command predicate and positive/negative mutation checks. No Package A oracle, runtime entrypoint, path/write permission or business scope change.",
+  "plan": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3",
+  "plan_sha256": "sha256:98915252cdf287151a7116fb84bcef93842b5831b914c8a6c64000bfe38a8812",
+  "Q8": {
+    "path": "logs/package-b-rebuild-20261028/proof-refresh-p2-r8/Q8.json",
+    "sha256": "b4002f3e4af44fa4f8f4dda3c817270f6df3eb8bc854e2068dba47638e187d5a",
+    "author_claim": "implementation-complete / pass"
+  },
+  "current_snapshot_sha256": "sha256:bd136c78d7050207dd1fc1c1d07a8f1c1cb967da2b274deb46d1d69e37b9aae8",
+  "raw_test_evidence": [
+    "logs/package-b-rebuild-20261028/p2-causal-red-corrected-command.log",
+    "logs/package-b-rebuild-20261028/p2-targeted-green.log",
+    "logs/package-b-rebuild-20261028/p2-direct-regression.log"
+  ],
+  "native_run": "logs/package-b-rebuild-20261028/quick-dev-s1-r8",
+  "native_proof_directory": "logs/package-b-rebuild-20261028/proof-refresh-p2-r8",
+  "checklist": [
+    "The current canonical invocation remains admitted and alternate import sources/relative/wildcard imports reject.",
+    "First-descriptor and reentry admission remain enforced.",
+    "Portable-command predicate rejects removal/wrong path/missing strict/private path, accepts actual existing command independently of prose comments.",
+    "All current expected source/selector/case and snapshot/runtime bindings must be read as current originals, not inherited success."
+  ],
+  "not_yet_reviewed": true,
+  "Acceptance_started": false
+}

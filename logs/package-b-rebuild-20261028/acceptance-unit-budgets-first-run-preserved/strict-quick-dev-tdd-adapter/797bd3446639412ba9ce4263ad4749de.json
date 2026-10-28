@@ -1,0 +1,34 @@
+{
+  "schema": "workflow.unit-budget-run.v1",
+  "authorizes": [],
+  "argv": [
+    "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "-B",
+    "scripts/sc/validate_skill_quality.py",
+    "--repository-root",
+    ".",
+    "--policy",
+    "scripts/sc/config/skill-authoring-standard.v1.json",
+    "--skill-root",
+    ".agents/skills/quick-dev-tdd-adapter",
+    "--mode",
+    "strict"
+  ],
+  "exit_code": 0,
+  "reason": null,
+  "elapsed_seconds": 0.052057244000025094,
+  "unit_seconds": 1800,
+  "idle_seconds": 600,
+  "spent": {
+    "e4f705f048fec66a61c1d85cb8361f45d2089aa3e9aa8e3e32ff2387ce851051": 0.05088930499914568
+  },
+  "active_at_stop": [
+    {
+      "key": "e4f705f048fec66a61c1d85cb8361f45d2089aa3e9aa8e3e32ff2387ce851051",
+      "label": "entry overhead",
+      "parent": null,
+      "idle": 0.05088930499914568,
+      "container": true
+    }
+  ]
+}
