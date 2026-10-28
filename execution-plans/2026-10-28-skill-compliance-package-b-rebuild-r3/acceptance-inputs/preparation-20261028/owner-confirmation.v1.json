@@ -1,0 +1,26 @@
+{
+  "schema_version": "package-b.owner-confirmation.v1",
+  "owner_message": "Sentinel_7d74f0818e9481919c1ca58d35969351",
+  "owner_confirmed_utc": "2026-10-28T10:24:56Z",
+  "assistant_proposal_message": "Sentinel_47be6f1c2fac819190f0a00e10fd364b",
+  "proposal": "Recognize the completely reviewed checkpoint as the new Acceptance input baseline and start formal Acceptance. Preserve original delivery baseline and all delivery differences; do not waive native gates.",
+  "owner_response": "\u540c\u610f",
+  "reviewed_checkpoint": "82ee682bcc5279729b4a9ea87eba6ccbf086e351",
+  "original_delivery_baseline": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "complete_candidate_manifest_sha256": "sha256:eb21f06cfd0d6f3bf41172e46e888d0483d718a1b34a4c7c9dda4b96ef92b47a",
+  "review_reports": [
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/complete-candidate-015/A.md",
+      "bytes": 8289,
+      "sha256": "8fa78df8353d63459b2a54d3acfcb08223c2b76ae36ddf5ced3853f0b466c568"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/complete-candidate-015/B.md",
+      "bytes": 8903,
+      "sha256": "09fa762484fb97f5c502f064440a72faa2ce5d96b0a40ce9c82d73bacd0870ca"
+    }
+  ],
+  "verified_payload_count": 387,
+  "verified_Q8_sha256": "sha256:cb99aff90f4af86e734c605a2da125ea688a9a098b8330cd8968bcb606f41e3e",
+  "authorizes": []
+}

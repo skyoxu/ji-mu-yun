@@ -1,0 +1,26 @@
+{
+  "supported_obligation_ids": [
+    "O-18BAEF1E87C0",
+    "O-1A82E183EEBB",
+    "O-2275CA248048",
+    "O-1370E773AD67",
+    "O-1A7456E604BF",
+    "O-26F529A9E55D",
+    "O-0E6D98559F6B",
+    "O-106E49892C1C",
+    "O-1FC41E966CB0",
+    "O-27A3D0428D77",
+    "O-31BB4B73B2E0",
+    "O-0082DA37FDD3",
+    "O-0E031EB3891E",
+    "O-0E781666A8E6",
+    "O-122D7390958D",
+    "O-181DCD9163A1",
+    "O-06B2E983CB73",
+    "O-0BCEAD7964BF",
+    "O-136CDDBA77A6",
+    "O-2CBB18C96E83"
+  ],
+  "invented_obligation_ids": [],
+  "source_gap_claims": []
+}

@@ -1,0 +1,321 @@
+{
+  "schema": "package-b.proposed-shared-publication-blobs.v1",
+  "candidate": "13bd5b598ffde513cd75acea072f0e433f6c91b0",
+  "remote_main_observed": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "files": [
+    {
+      "path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "mode": "100644",
+      "git_blob": "446beb6e505149027c052bcdbf64a4b8f398c12e",
+      "sha256": "3d5eeebdc13f06eea7a6af7ee02200164f4b4fb399772613d4cd1193d69e5187",
+      "bytes": 5641,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+      "mode": "100644",
+      "git_blob": "f3356fd0f8dd709f02f298f17e779a07caa2252c",
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "bytes": 447,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+      "mode": "100644",
+      "git_blob": "bca769eba03785abf3858c9d5f48c3294e34a21a",
+      "sha256": "bad075afc9862cb365943bf0c18dfbd5121e7f8fd452b89dbd5c921de50a6db5",
+      "bytes": 6734,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "mode": "100644",
+      "git_blob": "274e067d3dac0cd47aae77468de06ba1168fb882",
+      "sha256": "38780746ff91869fb368446e70d71b3b0ffd646b450bbcc1d98e75f8a3b15230",
+      "bytes": 10115,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "mode": "100644",
+      "git_blob": "0042bb277f9caabcc3fb58c68bb3d5dbb696b55e",
+      "sha256": "756aab26e76ca9b80addb8b8d09484655f5730c2c052f0b2bb79b7182d5b67e5",
+      "bytes": 18035,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+      "mode": "100644",
+      "git_blob": "f3356fd0f8dd709f02f298f17e779a07caa2252c",
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "bytes": 447,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+      "mode": "100644",
+      "git_blob": "569f3aa96f1a608d68a5a6a44672206a244da175",
+      "sha256": "6e664bc97336411a490e2fce53039153d616b3ced6089e5d4283b49e3a4271c5",
+      "bytes": 6548,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "mode": "100644",
+      "git_blob": "adf6bac47dc0e4e9cef5e1e49c2fabe0f3f73e4e",
+      "sha256": "c7eb7d34ac31dcb90caaac8870b0f5bfc5fa1f54f71f65faebfdd47c7015d3fa",
+      "bytes": 16438,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "mode": "100644",
+      "git_blob": "2c10fccbeafc083e969df5a16309a757e8272ab2",
+      "sha256": "fdd17178131065507adc5e2f5a650190ade82dce979d88b25de7faacce30eb52",
+      "bytes": 13624,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+      "mode": "100644",
+      "git_blob": "f9271afc8c0d69621d961c6b615e79d9b7d7c4a5",
+      "sha256": "b42a0343f359bdc962455abfe84378a7476d37a03d10d515ad04469cf2b97391",
+      "bytes": 6498,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "mode": "100644",
+      "git_blob": "8c5c94c34e9fcff5bca7a301831b3e5aea7930e3",
+      "sha256": "7d5d2f7e37436dbddcd2464547de60b752639a8210b02965c06c554fd9c86a34",
+      "bytes": 13717,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "mode": "100644",
+      "git_blob": "ec9d392be4e3a058bec67195cdfe8aae8198c77e",
+      "sha256": "4d4a3a22e0ae8bff61df3d1b68b30188483bfba75d33e0da02baf58a9fc1c08f",
+      "bytes": 37567,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+      "mode": "100644",
+      "git_blob": "f3356fd0f8dd709f02f298f17e779a07caa2252c",
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "bytes": 447,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+      "mode": "100644",
+      "git_blob": "247eaa5eb9df9c812c7863d026e8823aa2858327",
+      "sha256": "88b9e944dca6efd3ddd6c7a4c791e125afb970e20325db4a62b39179d05135a2",
+      "bytes": 6559,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      "mode": "100644",
+      "git_blob": "d42b30a48e266423269f0f3719a302416d909a7b",
+      "sha256": "7daee413ebc3e5b980df87e4bd35d7a70de6230473d80fcb99ecb4648ce45ad7",
+      "bytes": 2015,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "mode": "100644",
+      "git_blob": "b210bf4b7d570cd90e8f0f79812a7b972ce4d9ea",
+      "sha256": "4fdecf2aa2e824901a2079c90f20e8681915a6eb3e5f16a8a7c92607d7dcdfab",
+      "bytes": 6922,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "mode": "100644",
+      "git_blob": "00da2c433eaad55ed4e02883315e2358cf57da0b",
+      "sha256": "fafa82e77d887db92172e70a816d2a31bac8826178ad4d526e36dc4a994ec639",
+      "bytes": 3700,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+      "mode": "100644",
+      "git_blob": "f3356fd0f8dd709f02f298f17e779a07caa2252c",
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "bytes": 447,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "mode": "100644",
+      "git_blob": "89d9cfa7e6b2933928c2a1c8603cb8d236bce771",
+      "sha256": "6a3c108cc8af441bebb8ca18959f0559b2a1accb5a286be761a959bcdc5ce926",
+      "bytes": 36644,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+      "mode": "100644",
+      "git_blob": "c4a4e4f920bbe054d41899545533af94ff5e0a08",
+      "sha256": "28a97fb455ac8b25d4d2ef75330c8d2b4acb8f6a37d884841a9166e5c4974dca",
+      "bytes": 6589,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "mode": "100644",
+      "git_blob": "a354bedaa2a0275dd39709bbaf92efd1cc7faf8b",
+      "sha256": "bd645a3500377d07e8f4ec8ae7ddc2c5d76f58a2e50ea66cfcf50e0c1923ee46",
+      "bytes": 23344,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "mode": "100644",
+      "git_blob": "9a52cee5029b6514c72e9a14320fb1d1e5c8d915",
+      "sha256": "cfee05cad93b35cad58c3ed40fcb8176853215c4b324455703b7d8b04662ace3",
+      "bytes": 10901,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "mode": "100644",
+      "git_blob": "ec54dd41e22e6ca6f149fb5112fe0e1711dddbc3",
+      "sha256": "f8ac95353263f8b39d0b3b86af929969d86b1a104756f33dbe7f9aebab817573",
+      "bytes": 21315,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+      "mode": "100644",
+      "git_blob": "f3356fd0f8dd709f02f298f17e779a07caa2252c",
+      "sha256": "4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "bytes": 447,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+      "mode": "100644",
+      "git_blob": "a476204f6efba85fdc76f225f487afcb5823b829",
+      "sha256": "6e681f47a125284d8fb6d20e0a69b20f2cde663780e170da2f7acc60af9865d0",
+      "bytes": 6559,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "mode": "100644",
+      "git_blob": "06a207746c7c68c5e680402cfb9ede9457b2061c",
+      "sha256": "c3fb2f2f69fb05000b4d5e0fc8e6b8fff7aff69fd41544d34517e2fece9b132a",
+      "bytes": 46998,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "mode": "100644",
+      "git_blob": "fc9398a25ec2af33dcb38a9301ba88e94e88ed5c",
+      "sha256": "8a1ddb84bf21020e58f61416c1100fab574e6378a25a116c2c34a9e2824a3c03",
+      "bytes": 7140,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md",
+      "mode": "100644",
+      "git_blob": "03c75b80b54601c4279412b2f3f9d303b8ce8440",
+      "sha256": "d624c6960b7f4988dbbf85f4a7810b6d54108de6822f9c79106f2935c1aa2a87",
+      "bytes": 5888,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/workflows/inputs/package-b-rebuild-20261028-r2/requirements.md",
+      "mode": "100644",
+      "git_blob": "49367743aa8e263925ec9183addd530f15cd61c7",
+      "sha256": "ad60d79dfabcc4281f4bd2937b3f5fb5537a459b4dc3e0d5b4abf159b17d6e5c",
+      "bytes": 10943,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/workflows/inputs/package-b-rebuild-20261028-r2/source-map.json",
+      "mode": "100644",
+      "git_blob": "3962130d691320c5312d3216965f939ee6dcb8ba",
+      "sha256": "5177ccf0a824dfdf34a16594b4be07bf2e44399443854388c336cb307e2543d7",
+      "bytes": 2898,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md",
+      "mode": "100644",
+      "git_blob": "fa76db520240d1e79af0ecde050db920397e6fbd",
+      "sha256": "681fe569215ee8b712e2103551e3ca90efc3c4e37204b8be83ea3b2f5b615abc",
+      "bytes": 10943,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/workflows/inputs/package-b-rebuild-20261028/source-map.json",
+      "mode": "100644",
+      "git_blob": "ab1cdd7b4dcd65caad8c338b23cd67702b39a13e",
+      "sha256": "370a671fe75b9ce2ea33eb583ce8fd7a6b1fc811e3cad4d78ee2d75c98e89fdf",
+      "bytes": 2555,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "mode": "100644",
+      "git_blob": "6293f29f4d9d112c91e0735a3fd2f3a49d869417",
+      "sha256": "a4a7c492ed6e03a1a4da672f3e53435fc0e8314cf48e5f672a6f6a4f16ced73a",
+      "bytes": 14939,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "docs/workflows/skill-input-v2.md",
+      "mode": "100644",
+      "git_blob": "6f0b54fe0d1789984c0adb432b69cf928753adfe",
+      "sha256": "6272ed3204d8991ed4cafcc20ee1b7b154c3f02091675f273d2c44b6682f6103",
+      "bytes": 14089,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "scripts/python/skill_input_candidate.py",
+      "mode": "100644",
+      "git_blob": "da3d5e1e2b9a48e3b2d578751101eaa08d5f162f",
+      "sha256": "a2cd45a83b088fe46d5c0fa6c76a061119f973b60a8a350526d7bc824acebf66",
+      "bytes": 5523,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "scripts/python/tests/test_skill_input_publication_mutex.py",
+      "mode": "100644",
+      "git_blob": "f7dbea1a56c6b8a063a86e69c5bda98840de3340",
+      "sha256": "502adb5737ebce1f3a058c5467e4842a98d3c0c957f0751c4a18c443f1e94b06",
+      "bytes": 7843,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "scripts/sc/tests/test_skill_quality_package_b.py",
+      "mode": "100644",
+      "git_blob": "3e07a79b127d89866bc4bb74ade8ee9b7f4026e3",
+      "sha256": "97d685cfbcfb0026c0fa8a8658600e163a6ec874e7c5685a92f434e7ba99175a",
+      "bytes": 27965,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/adapter.py",
+      "mode": "100644",
+      "git_blob": "7d2f9f6c961cb419b86bd850fb9051393c223335",
+      "sha256": "01700fda09c8a6e57739e726b9f74fde476d89678dc60428012193da2ae26edf",
+      "bytes": 42564,
+      "matches_run_candidate_and_worktree": true
+    },
+    {
+      "path": "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py",
+      "mode": "100644",
+      "git_blob": "b796097bbebeea0f057202a8e5aa8b47f37ae795",
+      "sha256": "e77d95f22972819d060d6e65b25667094543eb698919bd558fadef168deaead9",
+      "bytes": 7469,
+      "matches_run_candidate_and_worktree": true
+    }
+  ],
+  "authorizes": [],
+  "scope": "Exact shared source/test/contract/requirement blob proposal only. No publication commit built; native evidence separately selected. Local Knowledge/generation/device content excluded."
+}

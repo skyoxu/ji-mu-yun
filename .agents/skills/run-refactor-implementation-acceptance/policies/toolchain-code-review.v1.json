@@ -1,7 +1,7 @@
 {
   "schemaVersion": "code-review-policy-pack.v1",
   "policyId": "toolchain-code-review",
-  "policyRevision": "sha256:6876d81e879d8e7148224f0adec15ba41349331713a2238360de18e711b0809b",
+  "policyRevision": "sha256:5db6fc57894f1f57f5343bcb4739cd112816322e0de2dacad5efda2b19abf4f3",
   "targetDomain": "toolchain",
   "authorityRefs": [
     "AGENTS.md",
@@ -23,7 +23,31 @@
       "scripts/toolchain/knowledge_query/adapter.py",
       "scripts/toolchain/knowledge_query/tests/test_planning_query.py",
       "scripts/vdd/compile_plan.py",
-      "tests/toolchain/knowledge_query/test_planning_boundaries.py"
+      "tests/toolchain/knowledge_query/test_planning_boundaries.py",
+      "docs/workflows/inputs/package-b-rebuild-20261028-r2/requirements.md",
+      "docs/workflows/inputs/package-b-rebuild-20261028-r2/source-map.json",
+      "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md",
+      "docs/workflows/inputs/package-b-rebuild-20261028/source-map.json",
+      "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/current.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/evaluation/query-report.v1.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/consumer-policies.v2.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/repository-knowledge-query-suite.v1.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/source-exclusions.v1.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/consumer-projections.v1.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v1.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v2.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-source-snapshot.v1.json",
+      "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/manifest.json",
+      "knowledge/indexes/last-known-good.json",
+      "knowledge/projections/consumer-projections.v1.json",
+      "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py",
+      "scripts/python/skill_input_candidate.py",
+      "scripts/python/tests/test_skill_input_publication_mutex.py",
+      "docs/workflows/skill-input-v2.md"
     ],
     "crossDomainPaths": [
       "scripts/sc/_llm_backend.py"

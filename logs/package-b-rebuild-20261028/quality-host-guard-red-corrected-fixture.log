@@ -1,0 +1,106 @@
+F..............F                                                         [100%]
+=================================== FAILURES ===================================
+_____ test_admits_exact_readonly_validator_call_for_declared_quality_owner _____
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-1/test_admits_exact_readonly_val0')
+
+    def test_admits_exact_readonly_validator_call_for_declared_quality_owner(tmp_path):
+        root,bundle,descriptor=_fixture(tmp_path)
+        before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}
+>       result=_run(root,bundle,descriptor)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:55: in _run
+    return validate_red_production_entry(workspace=root,bundle=bundle,slice_id='S1',descriptor=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def validate_red_production_entry(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        descriptor: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if descriptor.get("stage") != "red":
+            raise ValueError("production-entry guard only accepts RED descriptor")
+        if descriptor.get("slice_id") != slice_id or descriptor.get("plan_id") != bundle.get("plan_id"):
+            raise ValueError("RED descriptor plan/slice identity mismatch")
+    
+        selected = _slice(bundle, slice_id)
+        owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
+        python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
+    
+        candidate_refs: list[str] = []
+        for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
+            if not isinstance(raw, str):
+                continue
+            ref = safe_relative(raw)
+            if ref.endswith(".py") and ref not in owners and ref not in candidate_refs:
+                candidate_refs.append(ref)
+        if not candidate_refs:
+            raise ValueError("RED production-entry guard found no bound Python test source")
+    
+        root = workspace.resolve()
+        parsed: list[tuple[str, str, ast.AST]] = []
+        for ref in candidate_refs:
+            path = (root / ref).resolve()
+            try:
+                path.relative_to(root)
+            except ValueError as exc:
+                raise ValueError("RED test path escapes repository") from exc
+            if not path.is_file() or path.is_symlink():
+                continue
+            source = path.read_text(encoding="utf-8")
+            try:
+                tree = ast.parse(source, filename=ref)
+            except SyntaxError as exc:
+                raise ValueError(f"RED test source is not valid Python: {ref}") from exc
+            if _constant_failure(tree):
+                raise ValueError(f"RED test contains unconditional assert False: {ref}")
+            self_judging = _self_judging_source(source)
+            if self_judging:
+                raise ValueError(f"RED test reads plan/evidence completion bytes: {ref}:{self_judging}")
+            parsed.append((ref, source, tree))
+    
+        if not parsed:
+            raise ValueError("RED test source is missing; run author-red first")
+    
+        bindings: list[dict[str, str]] = []
+        for owner, module in python_owners:
+            for ref, _source, tree in parsed:
+                if _owner_called(tree, module):
+                    bindings.append({"production_owner": owner, "module": module, "test_ref": ref})
+        if not bindings and any(owner.endswith(".cs") for owner in owners):
+            from dotnet_production_entry import dotnet_bindings
+            bindings.extend(dotnet_bindings(workspace=root, selected=selected, parsed=parsed))
+        if not bindings:
+            if not python_owners:
+>               raise ValueError("RED production-entry guard has no supported Python production owner or verified .NET test binding")
+E               ValueError: RED production-entry guard has no supported Python production owner or verified .NET test binding
+
+.agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py:162: ValueError
+__________ test_red_dispatch_checks_binding_before_reentry_or_process __________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-1/test_red_dispatch_checks_bindi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fdba5f07110>
+
+    def test_red_dispatch_checks_binding_before_reentry_or_process(tmp_path,monkeypatch):
+        import stage_pipeline
+        import stage_reentry
+        import red_production_entry_guard
+        root,bundle,descriptor=_fixture(tmp_path)
+        descriptor.update(run_id='run')
+        monkeypatch.setattr(stage_pipeline,'load_json',lambda p:bundle if str(p)=='semantic' else descriptor)
+        monkeypatch.setattr(stage_pipeline,'validate_descriptor',lambda d:None)
+        monkeypatch.setattr(stage_reentry,'existing_result',lambda *a,**k:{'old_result':True})
+        def rejected(**kwargs):raise ValueError('Binding rejected before process/reentry')
+        monkeypatch.setattr(red_production_entry_guard,'validate_red_production_entry',rejected)
+>       with pytest.raises(ValueError,match='Binding rejected'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:116: Failed
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_admits_exact_readonly_validator_call_for_declared_quality_owner
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_red_dispatch_checks_binding_before_reentry_or_process
+2 failed, 14 passed in 0.53s

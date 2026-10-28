@@ -1,0 +1,64 @@
+{
+  "schema": "package-b.final-focused-recheck-stage.v1",
+  "scope": "Original A/B focused final reports, exact current candidate postcheck and unimplemented minimal Acceptance prerequisite decision. No new source/evidence mutation.",
+  "source_archive_library_file_id": "libfile_29b2153fd1e881918832cbef8c0bd56d",
+  "source_archive_sha256": "ccd36bc9526c9b2241a7a24dd9663c437cc75e2f99d5456b767ddb400aa472a1",
+  "boundary_record_library_file_id": "libfile_d000f9c76b3881919fed1cfe4666a1bd",
+  "files": [
+    {
+      "path": "logs/package-b-rebuild-20261028/ACCEPTANCE-MINIMAL-PREREQUISITE-PROPOSAL.json",
+      "bytes": 13124,
+      "sha256": "d8509ed507d896f174b0dcce0c2e86a397ad3b11432cc2a09db91116d61e9be8"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/ACCEPTANCE-MINIMAL-PREREQUISITE-PROPOSAL.md",
+      "bytes": 4673,
+      "sha256": "64e2cd2bf9ee369daa66337dd3af5b0e4037c3068f5d1186b1e3622d0aa1644a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/ACCEPTANCE-PREFLIGHT-AND-COMMIT-INVENTORY-r10.json",
+      "bytes": 119099,
+      "sha256": "45fc746c8f77972ce955dc8ff44ddcf59266d485a6e119e87d7e76f190c8605b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/CURRENT-CHECKPOINT.json",
+      "bytes": 7056,
+      "sha256": "e448d91fc269e4e0f408e2748e5605d4f586540a7348be9c9eed6d19b6f68445"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/LIBRARY-STAGE011-DURABLE-RECEIPT.json",
+      "bytes": 1036,
+      "sha256": "4294b254597acb3ac53ca04330116804d450073d9d7f4e7679e07ae8a6e470a4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/LIBRARY-STAGE012-DURABLE-RECEIPT.json",
+      "bytes": 450,
+      "sha256": "f5ae286cfaf99a83796e0148878f0db5d98ffbebce875f867e19a41ba0ce74c2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/NESTED-CLASS-RECHECK-MANIFEST.json",
+      "bytes": 12628,
+      "sha256": "f3801de9e0c132f4c1d13f65c2ae6e34deee7dfdca8b6e7041ef5007b95bcab5"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/A.md",
+      "bytes": 4412,
+      "sha256": "a8dc1167fb404cacbc150ceeefc6d6b0a8ee32876af7412bb83169fe08cc8d70"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/B.md",
+      "bytes": 4211,
+      "sha256": "43de85c2dce9e09c1dcb043fa093f9743139aa96c2715f05167040d4c0504c3f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/RECHECK-METADATA.json",
+      "bytes": 1046,
+      "sha256": "eeb6ada5da5ddc03b365e24136414ba4f6be2165be5be473de7a8c4367b21576"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/nested-class-recheck-011/CANDIDATE-POSTCHECK.json",
+      "bytes": 385,
+      "sha256": "211b3d5ed716448e8f895f67adb12ba80bf7bb1f467332d43f9bb90a40e26b9c"
+    }
+  ]
+}

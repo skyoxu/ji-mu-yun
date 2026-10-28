@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "-B",
+    "scripts/python/skill_input_v2.py",
+    "validate",
+    "--pointer",
+    "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/skill-input-v2/acceptance/current.v1.json",
+    "--consumer",
+    "run-refactor-implementation-acceptance",
+    "--operation",
+    "acceptance",
+    "--contract",
+    "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/skill-input-contract.v1.json"
+  ],
+  "authorizes": [],
+  "exit_code": 0,
+  "finished_utc": "2026-10-28T11:26:40.078546+00:00",
+  "raw_log": "logs/package-b-rebuild-20261028/ordered-skill-input-revalidate-024.log",
+  "raw_log_sha256": "sha256:9648065f6c84246edb70fbd0921ef0eb9e7db33a5699586519c1e3ea2bf221ef",
+  "schema": "package-b.actual-public-invocation.v1",
+  "started_utc": "2026-10-28T11:26:39.506120+00:00"
+}

@@ -97,6 +97,12 @@ def execute_stage(*,workspace:Path,semantic_plan:Path,run_dir:Path,descriptor_pa
     validate_descriptor(descriptor)
     if descriptor["run_id"]!=run_dir.name:
         raise ValueError("descriptor run binding mismatch")
+    # ADR-0041: run-red may materialize its descriptor after the public wrapper
+    # preflight. Enforce admission here before either reuse or process launch.
+    if descriptor["stage"] == "red":
+        from red_production_entry_guard import validate_red_production_entry
+        validate_red_production_entry(workspace=workspace, bundle=bundle,
+                                      slice_id=descriptor["slice_id"], descriptor=descriptor)
     from stage_reentry import existing_result, input_binding, check_history
     prior = existing_result(workspace, bundle, run_dir, descriptor, profile_identity)
     if prior is not None:

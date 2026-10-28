@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-28T09:23:15.300642+00:00",
+  "head": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "branch": "work",
+  "verified47files": true,
+  "source_drift": [],
+  "candidate_archive_sha256": "ccd36bc9526c9b2241a7a24dd9663c437cc75e2f99d5456b767ddb400aa472a1",
+  "Acceptance_started": false,
+  "commit_performed": false,
+  "proposed_preflight_or_policy_source_modified": false
+}

@@ -1,0 +1,69 @@
+{
+  "actionReceipts": [
+    {
+      "path": "actions/strict-maintain-knowledge-base/attempt-001/result.json",
+      "sha256": "sha256:d4eb2fc52ea3d4af8471fae5c777603292ec3c4aed4055d71f3520e0ba587f1c"
+    },
+    {
+      "path": "actions/strict-quick-dev-tdd-adapter/attempt-001/result.json",
+      "sha256": "sha256:ed1d11f26a2976f955f699735ebf68a41744a96dd5cd8fe034962a4524e73e8e"
+    },
+    {
+      "path": "actions/strict-run-phase-bootstrap-review/attempt-001/result.json",
+      "sha256": "sha256:f42ac02928ba26d1baf520ac3de1d35af2c338a8db9f3e815367ec7a09ba14e9"
+    },
+    {
+      "path": "actions/strict-run-refactor-implementation-acceptance/attempt-001/result.json",
+      "sha256": "sha256:56dcf79c0e030c0d43e29fac68429d08f0c7034086288259109dd17e0fd6c4e1"
+    },
+    {
+      "path": "actions/strict-vdd-execution-plan/attempt-001/result.json",
+      "sha256": "sha256:7087fdb7e65b9c1601ee0bc83369cef04ff5a745b511518484cbff861bc0baa1"
+    },
+    {
+      "path": "actions/validate-acceptance-package/attempt-001/result.json",
+      "sha256": "sha256:6205a1b1b0fec125d7a592c73ca7c541fc8e20b755a0ff332ea0d1903f57a8f1"
+    },
+    {
+      "path": "actions/validate-code-review-route/attempt-001/result.json",
+      "sha256": "sha256:57d247d2010e4d0c5aa911da19264b7e0a88112130f83a7367326f205dedfc45"
+    },
+    {
+      "path": "actions/validate-skill-input-mutex/attempt-001/result.json",
+      "sha256": "sha256:5119f77f6ad054ca7203cddc70c3401fc7e361e26286582adca1a504d27e7c6f"
+    },
+    {
+      "path": "actions/validate-vdd-contract/attempt-001/result.json",
+      "sha256": "sha256:3b0d5a15ba791871e06dd71186424641b31f40bbcfbf6095a00601a2abf4b852"
+    }
+  ],
+  "authorizes": [],
+  "candidateCustodyHash": "sha256:78341272af31a3603fd7ef787c2414a029f8acbc060cbf23232935909131c0b3",
+  "implementationReceiptBinding": {
+    "path": "logs/package-b-rebuild-20261028/proof-refresh-final-inputs-r16/Q8.json",
+    "sha256": "sha256:a6d8512d238e8be9f2ead00c965728eeb550563a5aaf66a8a0ea8c4ad5809545",
+    "terminalCommandId": "terminal-full"
+  },
+  "inputBindings": {
+    "candidateCustodyHash": "sha256:78341272af31a3603fd7ef787c2414a029f8acbc060cbf23232935909131c0b3",
+    "contractHash": "sha256:31eda19a83897d549c29b93b614550af4f360f46a14ad403f81f60a7093fa878",
+    "knowledgeContextHash": "sha256:e3abe71f94bf10b25ea1d42382ffbfebe64f4f9f0624d707580b99861256f709",
+    "runInputHash": "sha256:578c717ea190718301c82768142fb761ebc51139069e8d7e75eaa911e0e39be7",
+    "skillInputBindingHash": "sha256:24869774b1232af236594c4ff8e68e5aaca1b1f8bf179851c61040a94332ab8a",
+    "skillInputContextHash": "sha256:22aec622b9264b7e1fdcf4ca3f298bff27902b74f08959477da406cdb26f4a1e"
+  },
+  "prerequisiteBundle": {
+    "bundleHash": "sha256:6045b4fc7655a6f5b5b8cb06e903fbb5aca66419240297853d44ae5c3451a137",
+    "implementationReceipt": {
+      "path": "logs/package-b-rebuild-20261028/proof-refresh-final-inputs-r16/Q8.json",
+      "sha256": "sha256:a6d8512d238e8be9f2ead00c965728eeb550563a5aaf66a8a0ea8c4ad5809545",
+      "terminalCommandId": "terminal-full"
+    },
+    "path": "acceptance-inputs/acceptance-package-b-mutex-final-20261028/compact-vdd-acceptance-prerequisite-bundle.v1.json",
+    "sha256": "sha256:faf9060539784497b013a2fcfb6de588a00210e616bd59f8e81dbd9a73ebd782"
+  },
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-evaluation.v1",
+  "status": "passed",
+  "terminalResultHash": "sha256:4da1899a803777c9fb0ea0058d39932e784dfc9d2ce15ff3cb5d6d571b942308"
+}

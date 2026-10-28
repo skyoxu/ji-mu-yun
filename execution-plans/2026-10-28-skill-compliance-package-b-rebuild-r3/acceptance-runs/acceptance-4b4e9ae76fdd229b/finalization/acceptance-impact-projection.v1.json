@@ -1,0 +1,20 @@
+{
+  "actionReceiptHashes": [
+    "sha256:d4eb2fc52ea3d4af8471fae5c777603292ec3c4aed4055d71f3520e0ba587f1c",
+    "sha256:ed1d11f26a2976f955f699735ebf68a41744a96dd5cd8fe034962a4524e73e8e",
+    "sha256:f42ac02928ba26d1baf520ac3de1d35af2c338a8db9f3e815367ec7a09ba14e9",
+    "sha256:56dcf79c0e030c0d43e29fac68429d08f0c7034086288259109dd17e0fd6c4e1",
+    "sha256:7087fdb7e65b9c1601ee0bc83369cef04ff5a745b511518484cbff861bc0baa1",
+    "sha256:6205a1b1b0fec125d7a592c73ca7c541fc8e20b755a0ff332ea0d1903f57a8f1",
+    "sha256:57d247d2010e4d0c5aa911da19264b7e0a88112130f83a7367326f205dedfc45",
+    "sha256:5119f77f6ad054ca7203cddc70c3401fc7e361e26286582adca1a504d27e7c6f",
+    "sha256:3b0d5a15ba791871e06dd71186424641b31f40bbcfbf6095a00601a2abf4b852"
+  ],
+  "authorizes": [],
+  "candidateResultHash": "sha256:d90488b4a4dfc25eef0e61035f076c160ad6d813efbb55fd7a97a1a904e625b6",
+  "evaluationHash": "sha256:d90488b4a4dfc25eef0e61035f076c160ad6d813efbb55fd7a97a1a904e625b6",
+  "requiredCheckStatus": "passed",
+  "route": "deterministic_only",
+  "schemaVersion": "acceptance-deterministic-impact-projection.v1",
+  "status": "current"
+}

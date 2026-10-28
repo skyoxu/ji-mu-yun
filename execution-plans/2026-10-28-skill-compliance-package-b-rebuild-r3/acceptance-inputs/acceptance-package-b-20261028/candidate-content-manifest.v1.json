@@ -1,0 +1,4177 @@
+{
+  "authorizes": [],
+  "coverageGaps": [],
+  "files": [
+    {
+      "baseline_path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "baseline_sha256": "sha256:8ac8a676efb291c170fe4b866882c9b697088a82708f01c651de205d1cb57d18",
+      "candidate_path": ".agents/skills/maintain-knowledge-base/SKILL.md",
+      "candidate_sha256": "sha256:3d5eeebdc13f06eea7a6af7ee02200164f4b4fb399772613d4cd1193d69e5187",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+      "candidate_sha256": "sha256:4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+      "candidate_sha256": "sha256:bad075afc9862cb365943bf0c18dfbd5121e7f8fd452b89dbd5c921de50a6db5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "baseline_sha256": "sha256:d68d579a0c023bda71a64f5272c98e8156aae1b4cda86285b65a82a8ce1a1c17",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+      "candidate_sha256": "sha256:38780746ff91869fb368446e70d71b3b0ffd646b450bbcc1d98e75f8a3b15230",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "baseline_sha256": "sha256:1e3d3bae887f505f90d50488d2b4a8c63f210cf61b5c728a118eb059cf9eb060",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "candidate_sha256": "sha256:756aab26e76ca9b80addb8b8d09484655f5730c2c052f0b2bb79b7182d5b67e5",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+      "candidate_sha256": "sha256:4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+      "candidate_sha256": "sha256:6e664bc97336411a490e2fce53039153d616b3ced6089e5d4283b49e3a4271c5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "baseline_sha256": "sha256:d8a30da5d112c999b05d789ff93876fd676f58cde31547bcd37e8b064aec09c6",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "candidate_sha256": "sha256:c7eb7d34ac31dcb90caaac8870b0f5bfc5fa1f54f71f65faebfdd47c7015d3fa",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "baseline_sha256": "sha256:9ce4579fa4f3d3a3598aac4b1e32038cadc530882713012f7d79088a4b98abe7",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "candidate_sha256": "sha256:fdd17178131065507adc5e2f5a650190ade82dce979d88b25de7faacce30eb52",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+      "baseline_sha256": "sha256:64e7e4f3dcafe6bdc913025cb1e6966e5ee49daf4bf0c6a2ba9c9cd53d29a0e8",
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+      "candidate_sha256": "sha256:b42a0343f359bdc962455abfe84378a7476d37a03d10d515ad04469cf2b97391",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "candidate_sha256": "sha256:7d5d2f7e37436dbddcd2464547de60b752639a8210b02965c06c554fd9c86a34",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "baseline_sha256": "sha256:004e39a380f5985ee49bf55e152cc3308ea660478429f2fea191094c844aa8f0",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/SKILL.md",
+      "candidate_sha256": "sha256:4d4a3a22e0ae8bff61df3d1b68b30188483bfba75d33e0da02baf58a9fc1c08f",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+      "candidate_sha256": "sha256:4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+      "candidate_sha256": "sha256:88b9e944dca6efd3ddd6c7a4c791e125afb970e20325db4a62b39179d05135a2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      "baseline_sha256": "sha256:ce47e2319817a6afb5e0c859320dce220907e37fe10e64753f1054b3e7ea3237",
+      "candidate_path": ".agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py",
+      "candidate_sha256": "sha256:7daee413ebc3e5b980df87e4bd35d7a70de6230473d80fcb99ecb4648ce45ad7",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "baseline_sha256": "sha256:a59041c2dd6a171169fa6653ab19df98bdb8ca7ab9623fd8c1f5a81d1ce58545",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/SKILL.md",
+      "candidate_sha256": "sha256:4fdecf2aa2e824901a2079c90f20e8681915a6eb3e5f16a8a7c92607d7dcdfab",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "baseline_sha256": "sha256:0ab9860b518e47c3e610161337b98a8c2e5a57a89d3a5d82f41a27437f48f502",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json",
+      "candidate_sha256": "sha256:7ac509ffc8ce9ee26fbef71664643964c64733d89421deceb87749d96f8b3211",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+      "candidate_sha256": "sha256:4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "baseline_sha256": "sha256:debeefa0a247126d957a35ce7ff3fed6d029bcf188041dcda547e688dc1cc110",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/scripts/compact_vdd_projection.py",
+      "candidate_sha256": "sha256:6a3c108cc8af441bebb8ca18959f0559b2a1accb5a286be761a959bcdc5ce926",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+      "candidate_sha256": "sha256:28a97fb455ac8b25d4d2ef75330c8d2b4acb8f6a37d884841a9166e5c4974dca",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "baseline_sha256": "sha256:6aca810edba4def30ef8a8013b02232bc1bebd61d221048bdc3efbd27e36d866",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_compact_vdd_projection.py",
+      "candidate_sha256": "sha256:bd645a3500377d07e8f4ec8ae7ddc2c5d76f58a2e50ea66cfcf50e0c1923ee46",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "baseline_sha256": "sha256:a56193fbc52ea5bd87e0cad53c46e92bee2e3cf113709caaa5db43ac3d5ccb55",
+      "candidate_path": ".agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py",
+      "candidate_sha256": "sha256:d9e3fd6fdf14df7682776700776486763cde88b07da1fdce6f58d73e8eedf9dd",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "baseline_sha256": "sha256:7f25464c6e621b906a6f35cefe6487c339fc9ae2930b2eb95afd86971838cca4",
+      "candidate_path": ".agents/skills/vdd-execution-plan/SKILL.md",
+      "candidate_sha256": "sha256:f8ac95353263f8b39d0b3b86af929969d86b1a104756f33dbe7f9aebab817573",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+      "candidate_sha256": "sha256:4c3045de1db94ba4b76869a4bfe53af424f642c907ec169b793dc1331b8e4b5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+      "candidate_sha256": "sha256:6e681f47a125284d8fb6d20e0a69b20f2cde663780e170da2f7acc60af9865d0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "baseline_sha256": "sha256:3c48ba395316daf371aa119d8f254b1f0a55a1ad6136e6ebfa446a8017806b18",
+      "candidate_path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "candidate_sha256": "sha256:c3fb2f2f69fb05000b4d5e0fc8e6b8fff7aff69fd41544d34517e2fece9b132a",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "baseline_sha256": "sha256:f893fe31f5230c1cd1c1c8243644f84d4f06f020ad53a79c6e46709cf123db39",
+      "candidate_path": "docs/adr/ADR-0048-repository-knowledge-locator-workflow-consumption.md",
+      "candidate_sha256": "sha256:8a1ddb84bf21020e58f61416c1100fab574e6378a25a116c2c34a9e2824a3c03",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/workflows/inputs/package-b-rebuild-20261028-r2/requirements.md",
+      "candidate_sha256": "sha256:ad60d79dfabcc4281f4bd2937b3f5fb5537a459b4dc3e0d5b4abf159b17d6e5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/workflows/inputs/package-b-rebuild-20261028-r2/source-map.json",
+      "candidate_sha256": "sha256:5177ccf0a824dfdf34a16594b4be07bf2e44399443854388c336cb307e2543d7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md",
+      "candidate_sha256": "sha256:681fe569215ee8b712e2103551e3ca90efc3c4e37204b8be83ea3b2f5b615abc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "docs/workflows/inputs/package-b-rebuild-20261028/source-map.json",
+      "candidate_sha256": "sha256:370a671fe75b9ce2ea33eb583ce8fd7a6b1fc811e3cad4d78ee2d75c98e89fdf",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "baseline_sha256": "sha256:97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a",
+      "candidate_path": "docs/workflows/skill-control-plane-evolution-requirements.md",
+      "candidate_sha256": "sha256:a4a7c492ed6e03a1a4da672f3e53435fc0e8314cf48e5f672a6f6a4f16ced73a",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-attempts/v3-execution-preflight-f2fc9c03d84b849b900a4709.json",
+      "candidate_sha256": "sha256:f2fc9c03d84b849b900a4709088b594aeb394f5cda0f68a5d7f7c0632024856d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-attempts/v4-published-recall-35f1b074853d6cfa2a169caf5d15551432de2d510c3b96bf419fcc50fd8bc933.json",
+      "candidate_sha256": "sha256:7ddb485ef02d6a803587a05a31866f8747a9ea88fc6e1198eedd482bf2c2b44f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/source-replay/881b313e2df63eed61fd93ccc291b1fb4bde00bee66467691c1880d6cf769dfa.json",
+      "candidate_sha256": "sha256:2f9915b1b37609b2212ce870d7415b98f97d3e8bc1103d9be2def71c7f7987de",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v1-FR-3-5d6035d941262d3df94c6a41.json",
+      "candidate_sha256": "sha256:952739d2399d70a5ef265d6476c3ea30356ac5905dca05cef7d7e86518eb6204",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-05e3dab9afa811ac59ba2e4d.json",
+      "candidate_sha256": "sha256:8e34f312026b82c35953e0937f75bd35d2cdabd05f50d5b269960fc7fe9c0d37",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-0de305bdceaf6f6ae6cd43bd.json",
+      "candidate_sha256": "sha256:91d727ee6d9fd7a36c109ff5ce4c449eb874a086915239a2c96f26f5d454ed27",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-1118480f80d64ae2b6b3ac23.json",
+      "candidate_sha256": "sha256:866555d71e3e248726e147f97572c5e3c2f46266d9f2001b042420754a4430f6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-15861ac9981c80698c61b2a8.json",
+      "candidate_sha256": "sha256:27aad76c89f27e5bc90eef4b8ec5799bb2987fb3f498fc3306853488897829d5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-1f3bdcf9c6879d4b62a7b4d8.json",
+      "candidate_sha256": "sha256:5223c603990a42085c5a8bffc8eecde033d87248fa9b39c00f460a4bfd5deee8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-25ab78e19c8f08b649dcf4f8.json",
+      "candidate_sha256": "sha256:5223c603990a42085c5a8bffc8eecde033d87248fa9b39c00f460a4bfd5deee8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-348cab6d582ddbfcbc106a38.json",
+      "candidate_sha256": "sha256:3f57fc460d4502cd709279dfc8f308103a2f5ca4f3ed667792880a3a9fb2dc22",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-35ee48ea52ea2d93debeba8e.json",
+      "candidate_sha256": "sha256:768d7c7f214f9688044e95c79f0455111118d9381590a49609332b491f19769b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-3779efc1befb3a9d3ac89b32.json",
+      "candidate_sha256": "sha256:00542694ac6c20d0373142ad4fa5c7e5a9bfa9321cfd472e51bc8270e1a174c3",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-41ac31193fde94db77c134a7.json",
+      "candidate_sha256": "sha256:00542694ac6c20d0373142ad4fa5c7e5a9bfa9321cfd472e51bc8270e1a174c3",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-4b1c706adeafe6165f6e83a3.json",
+      "candidate_sha256": "sha256:a7a21782d58fd21a63aeb65a88b54bbf88ce255acb2ab74167a8cf627f2e7ded",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-4f635ef0cabf94e9bdd082f7.json",
+      "candidate_sha256": "sha256:f1b2c69b2becb011d4a05d530c47b4fbb63444320321ad23ce87c60f39e2cd21",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-4f77be77d5d560df188fe60b.json",
+      "candidate_sha256": "sha256:3edf9932962c218871427930c609a0d7a92ac585338bc79dcbaf39549629d509",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-55b20359716c3fa97f8299ca.json",
+      "candidate_sha256": "sha256:330b5ce38071e1670a39c3b8e62c3b71a30441e21f3f8bb96e4e9804ad76934e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-5e4ab67bddc2965f92b485c1.json",
+      "candidate_sha256": "sha256:62147945bfc106a177c2bcecd70a63cbe6c79144974c96251cbdc5608e618a14",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-5e82fd239244d27b8e352688.json",
+      "candidate_sha256": "sha256:3edf9932962c218871427930c609a0d7a92ac585338bc79dcbaf39549629d509",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-5e97dd99822a15f22efdf63e.json",
+      "candidate_sha256": "sha256:d290e00821efab728de8275b97ad8a3121263cf1bd6c0cffcd1976613f42105f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-60cb5e15933754b527e8fcca.json",
+      "candidate_sha256": "sha256:72d12d2c119b072e5ae64ada6f41ad9b839cae0db001363e62b323b388f3208c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-6419cdcff2bd2496e11043c0.json",
+      "candidate_sha256": "sha256:91d727ee6d9fd7a36c109ff5ce4c449eb874a086915239a2c96f26f5d454ed27",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-64b2ee3bcb71d257e5d544e8.json",
+      "candidate_sha256": "sha256:39a14e6d0ab3551f0c3118cf599c391293084e9d4b474d12ae2af9d50ebbffba",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-680de215565b9fefaec19686.json",
+      "candidate_sha256": "sha256:74aecd83bc7f474a5cf930f9fc9cd0fc4cd558c1d15f0c6c91e971592f2961b0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-681f1dfa2be84a1b07c72996.json",
+      "candidate_sha256": "sha256:81edd2db25505f6d51326502061eab8f6dc0db4e9038834f7d41af7d202c442c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-6a53d7e8e43cc3ce2e99d0a4.json",
+      "candidate_sha256": "sha256:39a14e6d0ab3551f0c3118cf599c391293084e9d4b474d12ae2af9d50ebbffba",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-707c1052cf89f13c22a1b6d6.json",
+      "candidate_sha256": "sha256:81edd2db25505f6d51326502061eab8f6dc0db4e9038834f7d41af7d202c442c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-72308b1793f0e25ec5f205e1.json",
+      "candidate_sha256": "sha256:74aecd83bc7f474a5cf930f9fc9cd0fc4cd558c1d15f0c6c91e971592f2961b0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-76379a3201827bc3408826b8.json",
+      "candidate_sha256": "sha256:62147945bfc106a177c2bcecd70a63cbe6c79144974c96251cbdc5608e618a14",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-88d7f6b8d483c54325255716.json",
+      "candidate_sha256": "sha256:330b5ce38071e1670a39c3b8e62c3b71a30441e21f3f8bb96e4e9804ad76934e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-a44f5efd901a9bdec3d93f1f.json",
+      "candidate_sha256": "sha256:3f57fc460d4502cd709279dfc8f308103a2f5ca4f3ed667792880a3a9fb2dc22",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-a45a5221e3c4ea25d19e2b04.json",
+      "candidate_sha256": "sha256:494e9f6ccefac73cd790360f1961449a7d14b733894be818a36d9897c91a6499",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-a6cd08f8de2c05ce1b93d74e.json",
+      "candidate_sha256": "sha256:8f620b70c3f4d995c55bf165c4012066ce0e9bb3539b69120b145b66520b6443",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-a6dc228df3d505bc97211311.json",
+      "candidate_sha256": "sha256:f1b2c69b2becb011d4a05d530c47b4fbb63444320321ad23ce87c60f39e2cd21",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-a86155f5c04e42c50c9b7c80.json",
+      "candidate_sha256": "sha256:8e34f312026b82c35953e0937f75bd35d2cdabd05f50d5b269960fc7fe9c0d37",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-b1f2bd842999bd9e22ab7e96.json",
+      "candidate_sha256": "sha256:72d12d2c119b072e5ae64ada6f41ad9b839cae0db001363e62b323b388f3208c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-cc1552cb9264895bb7e7f703.json",
+      "candidate_sha256": "sha256:768d7c7f214f9688044e95c79f0455111118d9381590a49609332b491f19769b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-02c071c49cbd84f800d9afc1.json",
+      "candidate_sha256": "sha256:5223c603990a42085c5a8bffc8eecde033d87248fa9b39c00f460a4bfd5deee8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-0abb5669474873780a8e1a08.json",
+      "candidate_sha256": "sha256:3f57fc460d4502cd709279dfc8f308103a2f5ca4f3ed667792880a3a9fb2dc22",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-2966a2f88258f1269f5deefd.json",
+      "candidate_sha256": "sha256:27aad76c89f27e5bc90eef4b8ec5799bb2987fb3f498fc3306853488897829d5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-2d0a045597d587d8c15e06c5.json",
+      "candidate_sha256": "sha256:d290e00821efab728de8275b97ad8a3121263cf1bd6c0cffcd1976613f42105f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-3-db7ed63303348ce70e16f228.json",
+      "candidate_sha256": "sha256:e0e3285dc5d56d5263995fb645f5eb2c51d99d62830b860ae8d7eba277c697a3",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4-2379d63d47b590e48d1dcb18.json",
+      "candidate_sha256": "sha256:2385be7c4b35a50a5609c315f5c2cff59bf8f16ef12e45674c6e910d89c6e444",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-45b60fe8a7f979a2507bccfe.json",
+      "candidate_sha256": "sha256:f1b2c69b2becb011d4a05d530c47b4fbb63444320321ad23ce87c60f39e2cd21",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-5a46be2a7c760c79bd8581a4.json",
+      "candidate_sha256": "sha256:8e34f312026b82c35953e0937f75bd35d2cdabd05f50d5b269960fc7fe9c0d37",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-617f3c8d11199f85d73dca9b.json",
+      "candidate_sha256": "sha256:f05bbfc2d2dcdfe7d09d96b741d655adad5fecb37eca7e6bb340f877f81c3905",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6377c04656108e54edabf161.json",
+      "candidate_sha256": "sha256:62147945bfc106a177c2bcecd70a63cbe6c79144974c96251cbdc5608e618a14",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-76d6b752ae5b10dced5e0985.json",
+      "candidate_sha256": "sha256:3edf9932962c218871427930c609a0d7a92ac585338bc79dcbaf39549629d509",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-8b92238e5c8f9e7165d570ae.json",
+      "candidate_sha256": "sha256:39a14e6d0ab3551f0c3118cf599c391293084e9d4b474d12ae2af9d50ebbffba",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-8c3b16810361420ff436d078.json",
+      "candidate_sha256": "sha256:81edd2db25505f6d51326502061eab8f6dc0db4e9038834f7d41af7d202c442c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-a4cdd24271a8e8b801b0dce9.json",
+      "candidate_sha256": "sha256:74aecd83bc7f474a5cf930f9fc9cd0fc4cd558c1d15f0c6c91e971592f2961b0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-af4e7f104b4941ed6c34bb73.json",
+      "candidate_sha256": "sha256:72d12d2c119b072e5ae64ada6f41ad9b839cae0db001363e62b323b388f3208c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-bac429d4fc5f5ca85f4f08a4.json",
+      "candidate_sha256": "sha256:768d7c7f214f9688044e95c79f0455111118d9381590a49609332b491f19769b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-cb9b90d4c2d226a3f2b01c22.json",
+      "candidate_sha256": "sha256:866555d71e3e248726e147f97572c5e3c2f46266d9f2001b042420754a4430f6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-dbd1ca9a1247722cc02fc5b9.json",
+      "candidate_sha256": "sha256:494e9f6ccefac73cd790360f1961449a7d14b733894be818a36d9897c91a6499",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-e624848dc168234e77b9ec18.json",
+      "candidate_sha256": "sha256:a7a21782d58fd21a63aeb65a88b54bbf88ce255acb2ab74167a8cf627f2e7ded",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-eeec741c510588e509195522.json",
+      "candidate_sha256": "sha256:330b5ce38071e1670a39c3b8e62c3b71a30441e21f3f8bb96e4e9804ad76934e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-f9f912c487883cfd1757a96d.json",
+      "candidate_sha256": "sha256:8f620b70c3f4d995c55bf165c4012066ce0e9bb3539b69120b145b66520b6443",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-ff75dc8281c585bfe27a288c.json",
+      "candidate_sha256": "sha256:91d727ee6d9fd7a36c109ff5ce4c449eb874a086915239a2c96f26f5d454ed27",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-semantic-v2-r01-01-1855dcf81cd1c7fdfe3b1d6f.json",
+      "candidate_sha256": "sha256:66362e774c37a21c315979b75c43ae7914576311a6bf93acd3157e76a293e8a1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-semantic-v2-r01-02-202007a1b2f8ea7cf09e2c34.json",
+      "candidate_sha256": "sha256:b4bb8c0ee58c93d1e128b1185d18db712cc09f6209ad88949a43a4250db82271",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-dde0cc4cc4a307362f13bbcc.json",
+      "candidate_sha256": "sha256:494e9f6ccefac73cd790360f1961449a7d14b733894be818a36d9897c91a6499",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-e13d68dd3c895306d061ecb5.json",
+      "candidate_sha256": "sha256:8f620b70c3f4d995c55bf165c4012066ce0e9bb3539b69120b145b66520b6443",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-e4ce64fdcd9f55fb87df01aa.json",
+      "candidate_sha256": "sha256:866555d71e3e248726e147f97572c5e3c2f46266d9f2001b042420754a4430f6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-e89aaf2a5e1650639a29c142.json",
+      "candidate_sha256": "sha256:d290e00821efab728de8275b97ad8a3121263cf1bd6c0cffcd1976613f42105f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-e8b171c93ec37fffe45f24a6.json",
+      "candidate_sha256": "sha256:27aad76c89f27e5bc90eef4b8ec5799bb2987fb3f498fc3306853488897829d5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-fe1aebb47da087764a15f9d1.json",
+      "candidate_sha256": "sha256:a7a21782d58fd21a63aeb65a88b54bbf88ce255acb2ab74167a8cf627f2e7ded",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-11e334137d32395ad8bb698d.json",
+      "candidate_sha256": "sha256:0ed8ef153cd0a047129fbd5b6e40bbf4437d8304205405c1de545b355db514bb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-84a762f4ac66ed73563670c1.json",
+      "candidate_sha256": "sha256:6800786ccf840eb46ff1bb45cadb5449988fd67db0e66b7a9ae45fb0212065fc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-chunk-001-4fa6c06c4de06a86b62e2d43.json",
+      "candidate_sha256": "sha256:621aea844e6711d4cede2cd8c7adc76c5cffa4d517802c1ef8bf6e1ceb596fbd",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-chunk-002-d5b4799662ba9eab478181cc.json",
+      "candidate_sha256": "sha256:02df5c310c06ce8572586223e076023a2ab8a3a487ec64a960a2225cbd08535b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-chunk-003-3f52fc0a06268ba81ee8a4c6.json",
+      "candidate_sha256": "sha256:6ff116c6c68e5c3b9005f32df15660708739c698096788eed34561060cee5b64",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-chunk-004-df6e9d6dda0b2e40e0ac9ad3.json",
+      "candidate_sha256": "sha256:24037c8c5b906e3d2dea5d198bcebe652d2a989f4d233e90f86ac40e87eee6a8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-source-001-bcd637093f518542b56abe30.json",
+      "candidate_sha256": "sha256:c90794365796be0923ff42c5824789a3203a8f1a97585bd483fbd1287e5b12ac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-cache/v4-atomic-recall-source-002-b4916cf82b348bbfc9b1fd40.json",
+      "candidate_sha256": "sha256:c90794365796be0923ff42c5824789a3203a8f1a97585bd483fbd1287e5b12ac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/candidate-repairs/16934bc40148f5f22aa049581b078aa4709af6b5466eec8d4addf2541cae51ad.json",
+      "candidate_sha256": "sha256:16934bc40148f5f22aa049581b078aa4709af6b5466eec8d4addf2541cae51ad",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/compiler-progress.jsonl",
+      "candidate_sha256": "sha256:04534936e5beea3103d469db869e095b4965a8199072e7334014eca2b73c7773",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/execution-preflight/04ddd7b4a14300808e76a9423acc34eaa2e416fb14390083d9a4ac9330d7f86a.json",
+      "candidate_sha256": "sha256:04ddd7b4a14300808e76a9423acc34eaa2e416fb14390083d9a4ac9330d7f86a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/resolved-atomic-recall/536b10bacee51a146a75b0825df2fe2c26ef2107ecaa88dd63ff8d6cc8bf5f36.json",
+      "candidate_sha256": "sha256:94e8061b22fb8b75aecbe11c47810dcd25a7c560536eeea0c9eee6c0dee83ce3",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v1-FR-3-9b2b0b9f12c1e9f81200c0c9-last-message.json",
+      "candidate_sha256": "sha256:c45feeecc7e9a3610c433e4745fada348653578191e71912b24352f79ef6ae30",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-1118480f80d64ae2b6b3ac23-last-message.json",
+      "candidate_sha256": "sha256:c3366f094933ac3a5d89310fad8523056ab25ed1feef029119a67021204cc42c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-15861ac9981c80698c61b2a8-last-message.json",
+      "candidate_sha256": "sha256:c52718bb89cc800042d01713ad7f28d0b6e63a26cdd104e6c296a5c39028fb2b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-25ab78e19c8f08b649dcf4f8-last-message.json",
+      "candidate_sha256": "sha256:4da3930d8ddcb42dafa373b01aabc72c0d85e9b30b3f36287689fdeaa67c3e16",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-3-41ac31193fde94db77c134a7-last-message.json",
+      "candidate_sha256": "sha256:1d486687363397ba5ea529c9bbde93db4eb1f8c85fd9da6d7540765f3c37bff7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4-41ac31193fde94db77c134a7-last-message.json",
+      "candidate_sha256": "sha256:88be83283c97e53ae578020d0b8edcfbd64183e8ad4a1b038169586e3b978946",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4b1c706adeafe6165f6e83a3-last-message.json",
+      "candidate_sha256": "sha256:7b4fa22ef0c3c35cb8a90e5bcbef5cc497cd7a8168ac46bc86ba9e685912ba94",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4f635ef0cabf94e9bdd082f7-last-message.json",
+      "candidate_sha256": "sha256:570338410f8b0d45d8fde14e948444b5b3281fd8ebd70a015b41caf79f55188f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4f77be77d5d560df188fe60b-last-message.json",
+      "candidate_sha256": "sha256:f505267f9adb5f9d70b427f061f5549f9a549b2593bcea49267ae95e762fede0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-55b20359716c3fa97f8299ca-last-message.json",
+      "candidate_sha256": "sha256:5c9440ce23b10990c715bab5ca4794d7fd2d70413c1338589d5546ff7e9b3b05",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-5e4ab67bddc2965f92b485c1-last-message.json",
+      "candidate_sha256": "sha256:d6e28931da66ff9f7b0286cec933bd6881344661d64ed32a162560d9785958ae",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-5e97dd99822a15f22efdf63e-last-message.json",
+      "candidate_sha256": "sha256:01a32e920aa9b633af7f249ef886a0ff960383b98ef85472faf4f6eb16cc8d8b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6419cdcff2bd2496e11043c0-last-message.json",
+      "candidate_sha256": "sha256:d6bb704027ef78426dfa0af11c533f1ff045d2bd57291e21cfc541c6ffd3cf34",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-64b2ee3bcb71d257e5d544e8-last-message.json",
+      "candidate_sha256": "sha256:a2e3e0e2e6527ac6fc5ff2c690f2eae5c6e6bf15ecd46f7cd336d5c15cb8422c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-680de215565b9fefaec19686-last-message.json",
+      "candidate_sha256": "sha256:6e36754482c142ad60ec4b72d0b6f5ebf815484ab41132ecf42cef40271f4e6f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-707c1052cf89f13c22a1b6d6-last-message.json",
+      "candidate_sha256": "sha256:bc5801735d11d6f5097f6e7ad18ddf3508a6f2db2266286d04adc214dc74134a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-a44f5efd901a9bdec3d93f1f-last-message.json",
+      "candidate_sha256": "sha256:2cfc0313ac9a425ae31afe60b91fcb97f9d17d40f370edbc126c7a0e71212f3f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-a6cd08f8de2c05ce1b93d74e-last-message.json",
+      "candidate_sha256": "sha256:d23162f766e1ca39b3f45028b0b5ec074a4cf339e18a950bfb26737cde566918",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-a86155f5c04e42c50c9b7c80-last-message.json",
+      "candidate_sha256": "sha256:8061b5710895c7546d38ad56650e62b7c003e33ff23f8095560dc1d3be14e8a6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b1f2bd842999bd9e22ab7e96-last-message.json",
+      "candidate_sha256": "sha256:023ea5a8238e47e22572fa3a593dad3f09073af41ea2ff5f7acf73534c126c5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-cc1552cb9264895bb7e7f703-last-message.json",
+      "candidate_sha256": "sha256:51c2c982135fa507acfe1fe951c0567db7dfa285c626e175991dfcaf65773cc2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-dde0cc4cc4a307362f13bbcc-last-message.json",
+      "candidate_sha256": "sha256:2e4ecfd022602e2b156ab5adc41d33f50eb8df20f14dc0e1c8b9f55b4c648d27",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-semantic-v2-r01-01-41ac31193fde94db77c134a7-last-message.json",
+      "candidate_sha256": "sha256:2f5551c465a9acaa008076af181d8cd183fcc5bfd12a88d1e9a626c47c4ef613",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-semantic-v2-r01-02-41ac31193fde94db77c134a7-last-message.json",
+      "candidate_sha256": "sha256:956647100568b9a75cf84f1b42004c09c0d31d0fb2ed9303117f122a8561aa6f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-39d56590174a07a71f1bb3c5-last-message.json",
+      "candidate_sha256": "sha256:0e6560539a868178673fce7342eba2378c0e1fdd22198d0d55e8c0204df5db8c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "candidate_sha256": "sha256:61ed1b28b548c2aa8137df8f1e71b2debb036a0969c53315feeb27cee70fe2fb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "candidate_sha256": "sha256:002843f90f7594e23f6dc0efa729252cdbcd54e957ebffb91ea0a56bdbc9f077",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "candidate_sha256": "sha256:e00e8e7d5bb3d9b6fe01e77704c1badd9b44491a4d07b8185696aa3279eb8fa0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-atomic-recall-chunk-004-last-message.json",
+      "candidate_sha256": "sha256:dd82322a96662177704ae4c4c9334fb7db082708308a1fc2b6cf320c12b0865a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-atomic-recall-source-001-last-message.json",
+      "candidate_sha256": "sha256:41f0667daf3a63e91008155d631bf711e5335ae0c52d788c60e6c385f8038b66",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/v4-atomic-recall-source-002-last-message.json",
+      "candidate_sha256": "sha256:41f0667daf3a63e91008155d631bf711e5335ae0c52d788c60e6c385f8038b66",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-receipts/v1-FR-3-9b2b0b9f12c1-592a40b84eb8.json",
+      "candidate_sha256": "sha256:1d54fa03a0ed3adf657604b0ccbf1e206cc7d485acbe909c5811d7c9277a3a57",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-receipts/v1-FR-3-ccbeebd7a696-4d2298a212d9.json",
+      "candidate_sha256": "sha256:dc5061b87bb3c8dd488de4e178a94417a1dfdef2f1e6019a13a79eb9ae874f4b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-receipts/v3-50c822b35135-6c8632df55ea.json",
+      "candidate_sha256": "sha256:6053cea45b5ca6beef4b8827eb7afc324a877eb81bd5f7ee70684a88ae6af812",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-receipts/v3-a9be69db6b29-44d0ac74c033.json",
+      "candidate_sha256": "sha256:9888ff5a11320884e702378d6f38b27358f650a6e7355b3c511965917982f882",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-receipts/v4-39d56590174a-bbf66203bac2.json",
+      "candidate_sha256": "sha256:a1fd74410075ee3e42fa5d9fe92a0aba1f99f156c9c290489499bb0dcf6016d2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-receipts/v4-atomic-recall-84a762f4ac66-cf74545943c9.json",
+      "candidate_sha256": "sha256:0de2a680c82b006f7abd2d0540489557bfaa5cf2f47bfb7364cb0bae37c2601b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-15b6b9491241.json",
+      "candidate_sha256": "sha256:15b6b9491241eb8ee81cf2119403b857e4387c4f2ad6adde46d5c2e286fe01bc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-1e5abd38ecce.json",
+      "candidate_sha256": "sha256:1e5abd38ecce7ae443222faa6ef372eaa4150cb1359632547e37f6d2fef3932d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-210f2b5159dc.json",
+      "candidate_sha256": "sha256:210f2b5159dcfe08489d22ba83c303908409c2dc8c0fe39cfbab2dc92ef3e787",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-24a8a6195ec2.json",
+      "candidate_sha256": "sha256:24a8a6195ec249eedecb6e3c8b9fecce9c94da238d2a5232f52decc54422e0dd",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-511ba42c16af.json",
+      "candidate_sha256": "sha256:511ba42c16afff90cb257bd65f427d4f2946a9706572775c1a31b23bf82d16be",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-52e085ae1820.json",
+      "candidate_sha256": "sha256:52e085ae1820b63183907bf0200175d78df4708d5d25ed3c2a33b59615d3dc9a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-5f6c06f02368.json",
+      "candidate_sha256": "sha256:5f6c06f023688d278b814ecfbb4ddf46aa6f5f271f265bd702bf3ff7c93f8c87",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-615014f16fe1.json",
+      "candidate_sha256": "sha256:615014f16fe19c8200d783964b7929c022d26de82ec715595f98927dd586f4ac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-691b8c9010c9.json",
+      "candidate_sha256": "sha256:691b8c9010c9b2ef89e78b03c6771aef27eca54975344709c5e2e6253a90fc01",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-7548dedc4d46.json",
+      "candidate_sha256": "sha256:7548dedc4d46643492b8df061fd5682d541370f6f9e4635c2f171b22bbc8d6aa",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-9036bfd10cc0.json",
+      "candidate_sha256": "sha256:9036bfd10cc0f7cfc8c83313657f1a7d180da571b6214954c041f70460886e2a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-a26632b37341.json",
+      "candidate_sha256": "sha256:a26632b37341f11328aeddb0ad4bd61e979beadb109c87b5553bd7f6db593238",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-b09dacf41fd7.json",
+      "candidate_sha256": "sha256:b09dacf41fd746c7a520f4a2c0540c6d8c0b366b8f352c78954e9acd55e2b5be",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-bba98d362104.json",
+      "candidate_sha256": "sha256:bba98d362104bd3a38beceb75782fee1883e0f195b2932e4a217a297dce18cc4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-cba16a482660.json",
+      "candidate_sha256": "sha256:cba16a482660be5562490c40268ec1833f824f740c4a40b402b5a12bd0f68d38",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-d52a6d45d254.json",
+      "candidate_sha256": "sha256:d52a6d45d254892ca3d18faa845e7189b7c540b76b518ac041f40d1d5a3a4777",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-dbce34f9befc.json",
+      "candidate_sha256": "sha256:dbce34f9befc0b4acf371701aa0c6c45a309c6a35e9834e131adea4efb2f2606",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-ddf714a3f2f1.json",
+      "candidate_sha256": "sha256:ddf714a3f2f193bd5db1cf282daf8e26f79a9d465f8f034f4b8d95fb4c6fa73e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-e684d0ebef1f.json",
+      "candidate_sha256": "sha256:e684d0ebef1f0ca27096c3e58642489bf444d11a86a548e6f86aede097d6d5d4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-edd186149a79.json",
+      "candidate_sha256": "sha256:edd186149a7983c3af2d1aafd0dfc7180bb834cf321a3c19dc14d46c3d25c6cf",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-f47a7d6fa42d.json",
+      "candidate_sha256": "sha256:f47a7d6fa42d1e5323f143818af137a64394a8c895ffcee937e3ae533481bdfd",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-fb1d27fdaac2.json",
+      "candidate_sha256": "sha256:fb1d27fdaac255e53e535b7147755eece3627e447b5cafe94eb626924e0be11c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/.compiler-work/worker-schemas/v3-fd3fbb430649.json",
+      "candidate_sha256": "sha256:fd3fbb4306491240c1e230150885a344a3a28798054455f69c8e5ba76ad8c154",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/acceptances.v1.json",
+      "candidate_sha256": "sha256:2d907dc050b1da356d3740837ba7f7f0fa6a450d13d62b6400614524309f290b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/agent-context/S1/agent-context.json",
+      "candidate_sha256": "sha256:608544b055b39e4a5ddb27afab3d912e392fde8d40d82ee2e4cadaa660b3b385",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/atomic-recall-alignment.v1.json",
+      "candidate_sha256": "sha256:d2fec404ca550d3768b6e8c7781b72195e9e8a8a7e62c5eb3e8630bf9e157aae",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/compiler-state.v1.json",
+      "candidate_sha256": "sha256:9ac4e6615f736fa1050ae259f12cc063e0484ba21b3504bb50a801ecb3bf4c3f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/execution-record.md",
+      "candidate_sha256": "sha256:c5bfcb61d2fcafe933c47ca4a2aded77a988543f1d7d1b16ed94e6edb63e1213",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/failure-intents.v1.json",
+      "candidate_sha256": "sha256:9333935efaa98dfd1db34a3c8fa86ecba9981f0fa3772efb28480dcf8a1a2f42",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/feasibility.v1.json",
+      "candidate_sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/final-plan-coverage.v1.json",
+      "candidate_sha256": "sha256:2c936e0037a2d1446e6129c40b9255b87ff8238e87c4f48007e1c5c2193bc7f4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/obligations.v1.json",
+      "candidate_sha256": "sha256:405f0d9977dcfe50ff59e0e1fe58efbaa42b70ba86e675d87811e32c053eed54",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/pre-slice-coverage.v1.json",
+      "candidate_sha256": "sha256:ff0b82de3c05a899955ee0559667786f171218f3a91bc0383efa7ec8f3e3df38",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/semantic-alignment.v1.json",
+      "candidate_sha256": "sha256:b5763617910a91e922c181811c5ced5304538611ee96ce8e903678a65c6eb0ea",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/semantic-chain-audit.v1.json",
+      "candidate_sha256": "sha256:21cacc87484d9d7c67e606a2d36a2f03a439e263aff2dc554d3e8149466ac3d9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/semantic-plan-bundle.v1.json",
+      "candidate_sha256": "sha256:35f1b074853d6cfa2a169caf5d15551432de2d510c3b96bf419fcc50fd8bc933",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/slices.v1.json",
+      "candidate_sha256": "sha256:539b0d8a21a42610a8a626bab22901ccd7acfb0058c626496baa09178750a0ea",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r2/source-index.v1.json",
+      "candidate_sha256": "sha256:ccc813be035084fab7868141c57684e666fa427cf83fed40d66e0f996d809af0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-attempts/v4-published-recall-98915252cdf287151a7116fb84bcef93842b5831b914c8a6c64000bfe38a8812.json",
+      "candidate_sha256": "sha256:2452e169c2d5c826e5052ac9eb89307ef66bdb5f7919e7c59ea74074e7e726c7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-work/candidate-repairs/1c591f6000c4a20901f6ef2eff4c16dd74f5a4a1eaf5993405fa084b41c1d4e9.json",
+      "candidate_sha256": "sha256:1c591f6000c4a20901f6ef2eff4c16dd74f5a4a1eaf5993405fa084b41c1d4e9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-work/compiler-progress.jsonl",
+      "candidate_sha256": "sha256:b3e3512097d6dbce4ccba2037617912886d7d2f9ca41795c26f0d22934561735",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/.compiler-work/published-v3-repair-active.json",
+      "candidate_sha256": "sha256:fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/acceptance-authority.v1.json",
+      "candidate_sha256": "sha256:a2425ee82ea42fbb53b9a6303e213e54775f755a3f87e8847e7bd68d8757b7d6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/acceptance-input-projection.v1.json",
+      "candidate_sha256": "sha256:db79b087ed0492092521384247df64af49b7b08b4e94f56998fb13cb7e7f5288",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/action-dag.projection-input.v1.json",
+      "candidate_sha256": "sha256:d3b8b5751264b99846a0013b666d6e0f8af5f5e99a06530c7e0a429b39cf228e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/command-registry.projection-input.v1.json",
+      "candidate_sha256": "sha256:adce2a452d482cf90bb3540e266faa646e7f80b71bf7b8deee33d05133f6a2e5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/knowledge-context.freeze.v1.json",
+      "candidate_sha256": "sha256:6cc5cd47c0d0e75bb6ede932033ab816b45e1d3c456d4d89c3fc733c0f04a2c7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/knowledge-context.refactor-acceptance.v1.json",
+      "candidate_sha256": "sha256:7bcfcbb405876493c0e38f9eda29c828753200c409ecf2aaad933054af36901d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/owner-confirmation.v1.json",
+      "candidate_sha256": "sha256:d7932a5cf6cc2a4b59378fc4a46082293ae0353fe3433dfe744917eb100da3a0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-20261028/unit-budget.py",
+      "candidate_sha256": "sha256:a61d35d986529080da2a2a610573ed84a6cb9da199c962d9980d3be5542184cb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptances.v1.json",
+      "candidate_sha256": "sha256:2d907dc050b1da356d3740837ba7f7f0fa6a450d13d62b6400614524309f290b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/agent-context/S1/agent-context.json",
+      "candidate_sha256": "sha256:172fa38e43e767daed9bf57437aab1ce5300b059e9e4f8acfa2f8db3e40e0487",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/atomic-recall-alignment.v1.json",
+      "candidate_sha256": "sha256:0022f181e4417c7ddbfb75d9552c06a1bce19dfa9c8fbab9bcce2d8bb442cae1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/compiler-state.v1.json",
+      "candidate_sha256": "sha256:180159128e78f2dce1189475519624cb3dc2ea21376f9366fff750e9733ccae0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/execution-record.md",
+      "candidate_sha256": "sha256:d6824ceb09228319a0625fbac33ea1a2323cc37395e5a0cab7fd706113974154",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/failure-intents.v1.json",
+      "candidate_sha256": "sha256:9333935efaa98dfd1db34a3c8fa86ecba9981f0fa3772efb28480dcf8a1a2f42",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/feasibility.v1.json",
+      "candidate_sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/final-plan-coverage.v1.json",
+      "candidate_sha256": "sha256:2c936e0037a2d1446e6129c40b9255b87ff8238e87c4f48007e1c5c2193bc7f4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/obligations.v1.json",
+      "candidate_sha256": "sha256:405f0d9977dcfe50ff59e0e1fe58efbaa42b70ba86e675d87811e32c053eed54",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/pre-slice-coverage.v1.json",
+      "candidate_sha256": "sha256:ff0b82de3c05a899955ee0559667786f171218f3a91bc0383efa7ec8f3e3df38",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-alignment.v1.json",
+      "candidate_sha256": "sha256:293a932e3c370930ddae19dd173d34420a92dd103d4b4bdd813fd5e00de5865d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-chain-audit.v1.json",
+      "candidate_sha256": "sha256:21cacc87484d9d7c67e606a2d36a2f03a439e263aff2dc554d3e8149466ac3d9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/semantic-plan-bundle.v1.json",
+      "candidate_sha256": "sha256:98915252cdf287151a7116fb84bcef93842b5831b914c8a6c64000bfe38a8812",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/slices.v1.json",
+      "candidate_sha256": "sha256:56dc222629d96ea67607009ec640858c4e9eac421836a0a7b897690a775e055c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/source-index.v1.json",
+      "candidate_sha256": "sha256:ccc813be035084fab7868141c57684e666fa427cf83fed40d66e0f996d809af0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-attempts/v4-published-recall-e44b8fc51d43ac9abd265c460de7d599eab999c10cd19b19b8cf19829fc7b666.json",
+      "candidate_sha256": "sha256:ca6c8fb1164f9e4ab53e9ddab0fcb3bc0bddb0b68f7ccd40745c29f0c84961ba",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/source-replay/0e69b7cd2cb32e44456521bd535769796394adc1830082dd9a41472f854ef0f1.json",
+      "candidate_sha256": "sha256:e9550e0af6d9f75e5f0af7b0a753f094644c84e62d6e11e29553e883a8b8e532",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/source-replay/29ac49f73d5e74aa3ee26f84145f9f86832ebfb8f872cc8f017172e4807453c0.json",
+      "candidate_sha256": "sha256:c49447ce22404df226122fe8993052276cb281e08c01b893dba8fb6da0aa6cac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/source-replay/545be1a72938eb382a7f3952d9e529fe12e6df05c9f38751eb39a062b06407c0.json",
+      "candidate_sha256": "sha256:66e4eef9fdfddfed6d25359777600b8d4c5797f4ba1b8cb505c4ec11645a80a1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/source-replay/5a95b24e93868a25d52839c9c802f034532787bd45bd958a417e85f0bd4ba965.json",
+      "candidate_sha256": "sha256:574f5eba56f975664555e5c375a8cfefac408cc1692741c7b4bd742fbf5e4536",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/source-replay/7a47f79fc4c94860de611e7fc98eacf986fce01448012a00e100f5a79a859432.json",
+      "candidate_sha256": "sha256:f37c5d0271b27d8653730370f3e031b35872d408b1777b2d85482589388c2633",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/source-replay/f10cd4acab3c0a31d1f1f2473bac9d53f72f21a03db8435cbbedce20b72f47dd.json",
+      "candidate_sha256": "sha256:2d3b0e3affcf26167467d3b4d962dfe586e4ea25bbc1dad8bc247e5ead0f9612",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v1-FR-1-79f82ac87059c205ccb84025.json",
+      "candidate_sha256": "sha256:7494ee640506db7f29419441ab059f0366447dc7ccce88a5ec86cb2eb180b146",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v1-FR-2-3b6f565d6a5ae8dcb31d3496.json",
+      "candidate_sha256": "sha256:1f5471069f0375b92b3a586616114dcd3634b94144397e8796474e7df2b0ca1e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v1-FR-3-94f5d788ada714495fa99055.json",
+      "candidate_sha256": "sha256:9941e44eaf17b6873a156e896dc791080a9b6ff6da33c4b3fe6bd3ff02219f26",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v1-FR-4-8088c2fc9bf273e1a5afaf12.json",
+      "candidate_sha256": "sha256:28a7e7c69c2fec65407ea02aa00188b6bc02fcc4bfab1bd08852699995b8be5b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v1-FR-5-e23c9169809248fc9eb8a327.json",
+      "candidate_sha256": "sha256:670aba602ca22bea3970145334d9f3945027c4360c5ff12a1146c766e3a7f368",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v1-FR-6-609f447459b322ecd714d8d9.json",
+      "candidate_sha256": "sha256:12c1f3e6a2bf3af50ce3eb42ea5d114bc388ffdbf7222cc70bd54cb2a6b16ee1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-0f4c37606d01db04c6c84daf.json",
+      "candidate_sha256": "sha256:7bfa470663b9891b2dcc5781932b2c5b66f92c612d400d199d6a5e08df1e5f6a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-1c099172a44755a3494900c5.json",
+      "candidate_sha256": "sha256:e33c3b2d47cd08fcdddb100ff3f4268cc3e07588750216aa79e1c3fec2c23a7f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-3dfdf8af01b14aec6b1f231a.json",
+      "candidate_sha256": "sha256:4be1355f22d4aae37923ecc9f1a8771f02766996d0b7c53f461e2a10454443eb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-44c0fad66f7dc177802026fe.json",
+      "candidate_sha256": "sha256:63ab58ad1c896996b0889fb664c6b9e112554a688a2a45eac4a70b564101c7e1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-465322820b5b41731c485925.json",
+      "candidate_sha256": "sha256:5a02ff8078f8451aad04d4e493ac503b0f55032439cacb5ff10048b72d2ee4c8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-6055fbd0897efa58be4907e6.json",
+      "candidate_sha256": "sha256:85f69cd394046fdd1efc7521a23f77667ba4c1b275d26a5127979f11d8e76a11",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-6eac1339e66ec206948f36aa.json",
+      "candidate_sha256": "sha256:27f495f29fce69c902d29b060f6bb2c24f4c81abf34cd8b99a4f804d1e81b57a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-78dc1abe695f04bf1c9cc094.json",
+      "candidate_sha256": "sha256:3572e27cdf9b9b61717d034329caeadbbf11a9e90e6d763fee1bf65defeb5f05",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-8ab0745a589b5502ef2cd6a9.json",
+      "candidate_sha256": "sha256:0d7f407111c06722f83479b90f3c14a7b4b9e52c0ab9228d2c3946be549ee9f1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-9ddf2fa013c4b68616161a7e.json",
+      "candidate_sha256": "sha256:14fe8dbbe9f3234c45ea5e396bee4cd94997f237a9443dd32eb05d523dcda08a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-9fe6552ed06acef516577c10.json",
+      "candidate_sha256": "sha256:f13ee54ddc0a19ebdeb98775cd9bad6fd40202b18d7308eb12412508e8c4ab76",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-a8330255833a25cdc4631e0b.json",
+      "candidate_sha256": "sha256:82f8e1e4ef030c023fd17560a861bcea08e2a9491e73cec121fb0fc964615d46",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-aa2d5301e3947e087008b185.json",
+      "candidate_sha256": "sha256:15fccd8acb62c4074f96b7c36382b16b4924888fd82d9a0922a3bf2fe9f100bc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-aafb3c279ab35ebcd7f8fb0f.json",
+      "candidate_sha256": "sha256:88ab0e97666d0ae47e2f2db0ac2660b6e0ed1982b0153cc07c34067ef51b717e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-bc709d0d1795c1b16c684024.json",
+      "candidate_sha256": "sha256:e451ad10b4cd5f8aee8f9c8287d56da81b5e842814ebe101c9d178c8f7a4c8b2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-ceb69c8326d49499a7e8f906.json",
+      "candidate_sha256": "sha256:57e036864701cc0565bb6fed09516a1b5cf21b1516c99398f414a3a2968fbf70",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-112a172da7dc592f8b3047e6.json",
+      "candidate_sha256": "sha256:14fe8dbbe9f3234c45ea5e396bee4cd94997f237a9443dd32eb05d523dcda08a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-20e05d3e6b76d5b57912069f.json",
+      "candidate_sha256": "sha256:98207902ec3a046f116351ff3c484b429fd71f14e3d3a464a2fe6d4844d2ad23",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-3bc641b442e531554095a399.json",
+      "candidate_sha256": "sha256:85f69cd394046fdd1efc7521a23f77667ba4c1b275d26a5127979f11d8e76a11",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4743ff0ab4de95166f2f9237.json",
+      "candidate_sha256": "sha256:d7ddd04e8d9c68596681795fb77a9ac5686af79a98590a6350bcb5b4a8fbb4ff",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4c5208609c236037f4578c6d.json",
+      "candidate_sha256": "sha256:63ab58ad1c896996b0889fb664c6b9e112554a688a2a45eac4a70b564101c7e1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-4ffbb51f202b68687dea4619.json",
+      "candidate_sha256": "sha256:15fccd8acb62c4074f96b7c36382b16b4924888fd82d9a0922a3bf2fe9f100bc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-51c0e4043a14067bbc166c68.json",
+      "candidate_sha256": "sha256:5a02ff8078f8451aad04d4e493ac503b0f55032439cacb5ff10048b72d2ee4c8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-594c45c27f6b8a60fdf88947.json",
+      "candidate_sha256": "sha256:27f495f29fce69c902d29b060f6bb2c24f4c81abf34cd8b99a4f804d1e81b57a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-676d1463b79e2408dbc47ffd.json",
+      "candidate_sha256": "sha256:82f8e1e4ef030c023fd17560a861bcea08e2a9491e73cec121fb0fc964615d46",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-73a36f54d29697a24a2e8dc8.json",
+      "candidate_sha256": "sha256:e33c3b2d47cd08fcdddb100ff3f4268cc3e07588750216aa79e1c3fec2c23a7f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-762edf0941dc2997d63377ba.json",
+      "candidate_sha256": "sha256:799099098a329c72059200f2d39bc3839066612417970706fd6b8d419ffafe33",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-845c240b51bc75d04f356e6a.json",
+      "candidate_sha256": "sha256:57e036864701cc0565bb6fed09516a1b5cf21b1516c99398f414a3a2968fbf70",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-a52ff78a0d34c937ae6896b4.json",
+      "candidate_sha256": "sha256:7bfa470663b9891b2dcc5781932b2c5b66f92c612d400d199d6a5e08df1e5f6a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-aec90900b344913b567c545c.json",
+      "candidate_sha256": "sha256:88ab0e97666d0ae47e2f2db0ac2660b6e0ed1982b0153cc07c34067ef51b717e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b0ebe678dce7e1450161579f.json",
+      "candidate_sha256": "sha256:6e41e4029a89299207956eb7422c119ccfa60c447104b1ea90fd7dfbd3976919",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-b2c7b514e71716a40399b1a4.json",
+      "candidate_sha256": "sha256:f13ee54ddc0a19ebdeb98775cd9bad6fd40202b18d7308eb12412508e8c4ab76",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-bcab888ad809cc880b1368ee.json",
+      "candidate_sha256": "sha256:4be1355f22d4aae37923ecc9f1a8771f02766996d0b7c53f461e2a10454443eb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-d7a7de107d946513ce76147f.json",
+      "candidate_sha256": "sha256:3572e27cdf9b9b61717d034329caeadbbf11a9e90e6d763fee1bf65defeb5f05",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-fbb3de5f983f538e3ca7d49d.json",
+      "candidate_sha256": "sha256:0d7f407111c06722f83479b90f3c14a7b4b9e52c0ab9228d2c3946be549ee9f1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-fbb6006d6c1d5c923fec78e3.json",
+      "candidate_sha256": "sha256:e451ad10b4cd5f8aee8f9c8287d56da81b5e842814ebe101c9d178c8f7a4c8b2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-d4c25bf741507675b20c179c.json",
+      "candidate_sha256": "sha256:6e41e4029a89299207956eb7422c119ccfa60c447104b1ea90fd7dfbd3976919",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-d89af6cfc55e8b997d2dd7f3.json",
+      "candidate_sha256": "sha256:98207902ec3a046f116351ff3c484b429fd71f14e3d3a464a2fe6d4844d2ad23",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-f144935bf805376c44844f52.json",
+      "candidate_sha256": "sha256:d7ddd04e8d9c68596681795fb77a9ac5686af79a98590a6350bcb5b4a8fbb4ff",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v3-schema-repair-group-v7-planned-production-owner-runtime-test-ff80ab3a388068b5c93ee207.json",
+      "candidate_sha256": "sha256:799099098a329c72059200f2d39bc3839066612417970706fd6b8d419ffafe33",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-acceptance-repair-156fa97952c3c20c80431b13.json",
+      "candidate_sha256": "sha256:a356d1742a665b58716d5c19c9a50ed311340e2c73e2ac07546d4cc177439c75",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-228b757f94ba7d5597a31fee.json",
+      "candidate_sha256": "sha256:840f3fd04d31b4aa7e03a9a8f0da9b281fc77913e924b05244ad07562843e174",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-chunk-001-1ffec50846491000b10150e2.json",
+      "candidate_sha256": "sha256:1ea06c802135b57357a384b2ef1d09aa4ded2ae95edcd82b8a24c414df7c005e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-chunk-002-7aec2bff3f03a7fff1459720.json",
+      "candidate_sha256": "sha256:56b337ad6bb911a711355b4ebe4e3e8bfa22f0f3fb19f7ea4c0e5f4fdd3fe7b4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-chunk-003-8aecbb81e3160696aba0630b.json",
+      "candidate_sha256": "sha256:286647afc6e36bb1c096847a01aee360b7c17eefea93c55d0c8e107741b4e965",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-chunk-004-9d9b9f8a3a5854f13774b32a.json",
+      "candidate_sha256": "sha256:2f0f6cea15b8c0fcce9a7f53e0761fe7c71d5685071c208f019bf012e5dae956",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-source-001-6efd4296881435590ddecbd9.json",
+      "candidate_sha256": "sha256:c90794365796be0923ff42c5824789a3203a8f1a97585bd483fbd1287e5b12ac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-atomic-recall-source-002-bf134eb00628798398672e4b.json",
+      "candidate_sha256": "sha256:c90794365796be0923ff42c5824789a3203a8f1a97585bd483fbd1287e5b12ac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-ca0b19a2212a4a7e8cfed34b.json",
+      "candidate_sha256": "sha256:fc08f4b3eb4af771ba5653882dfc6e123cbae7b945a00ec4f4afdea44d128384",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-cache/v4-recheck-432e67031b36290c62d56379.json",
+      "candidate_sha256": "sha256:cb6a9794d057cea18ad9903f840d21bfa106224f8259e3f8d20d0079e4f3dffe",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/compiler-progress.jsonl",
+      "candidate_sha256": "sha256:158cb837a0ad92bce7fd1789a0b5c2b11dd2751843ed297ee5d5c2c601b5d8d9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/execution-preflight/394b47972b456b099ff69a253a1d2e49fd94bd60fce3acb9be3daf4fdb6c2c9b.json",
+      "candidate_sha256": "sha256:394b47972b456b099ff69a253a1d2e49fd94bd60fce3acb9be3daf4fdb6c2c9b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/resolved-atomic-recall/923f64d980ead1740ac9a257c6da8116ff60b548efeff9727b3b8be6edfe9edc.json",
+      "candidate_sha256": "sha256:6d5dc3288573c07a849b728e44cf391bd943b35e4c31fadca66d13d4616913fe",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v1-FR-1-c22f2f10dc2774064be597c8-last-message.json",
+      "candidate_sha256": "sha256:a5c6a650facb0f4fb56b18d050aefdd38798a26e6697723a9ab13ca320eb09f2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v1-FR-2-960944668ff0e02848cb8c6f-last-message.json",
+      "candidate_sha256": "sha256:9a01ef91ce54eeb971558eb7cd6bb45f155ca2fe5a9d0b631f8f09e78b782364",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v1-FR-3-359e6a376e4c2fe295590a1d-last-message.json",
+      "candidate_sha256": "sha256:19e29204d480dfbc272706f54aac009d844d9d2fe81aa34ee300109d1e38bb6f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v1-FR-4-5056670940ee05be9ce5df79-last-message.json",
+      "candidate_sha256": "sha256:65fa19bb4c9f5a0f65d474b5f0e1d60d25d6826b596cdb019be3c4dbfab6b1ec",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v1-FR-5-92fd6969866f466925d0b568-last-message.json",
+      "candidate_sha256": "sha256:baae2e8589dbfcd22f128683aea90f161aa4944ecfb98fec2b62a9cfe358baae",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v1-FR-6-43fb2fa07cfad419f472b124-last-message.json",
+      "candidate_sha256": "sha256:92cf45070e6a2c4c754458f2e6d86c2a391f5611d18857c745e0ec721be81d9b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-0f4c37606d01db04c6c84daf-last-message.json",
+      "candidate_sha256": "sha256:ff5721641d9e84eed8ce7f0cefec901367d305c09457d57c21dbeedf961db1e1",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-1c099172a44755a3494900c5-last-message.json",
+      "candidate_sha256": "sha256:5df27f99614666e4a70128ae579ce2be6ced50b9f8da6db29bb36067881ad237",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-3dfdf8af01b14aec6b1f231a-last-message.json",
+      "candidate_sha256": "sha256:f528bd47d97867014e1bc29ba52ca7b53a570b78063098399906fde81d9f24eb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-44c0fad66f7dc177802026fe-last-message.json",
+      "candidate_sha256": "sha256:3e9650517a995d29686a14886031480c8bc78bf5e8195ad170da3c1ed92b364f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-465322820b5b41731c485925-last-message.json",
+      "candidate_sha256": "sha256:ef367e8b56e7076fa15f3d5384aabd06ed5415698b34fe023f3cd34f15a133d7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6055fbd0897efa58be4907e6-last-message.json",
+      "candidate_sha256": "sha256:b0322c2930563cc1757775dd4c9e85c1632473bc388aba94ad147102b4fb6b9b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-6eac1339e66ec206948f36aa-last-message.json",
+      "candidate_sha256": "sha256:ac0d6d9e1b96c5b42d8379f450033724ad6f6d20feb965d9ebe3d7b27ed9aadf",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-78dc1abe695f04bf1c9cc094-last-message.json",
+      "candidate_sha256": "sha256:d60d338ebe60d2db14e11b73da31827c7e13ae8ba7827136349aaabc9f9d4220",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-8ab0745a589b5502ef2cd6a9-last-message.json",
+      "candidate_sha256": "sha256:b83fb0e2b613bfc1e80159c3e8b4f3ae295da9a1814b150b6f1b99d9386bf8e6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-9ddf2fa013c4b68616161a7e-last-message.json",
+      "candidate_sha256": "sha256:047d7103759c7aabe09ef9249a3d1e78be6afce1fcc6110d09d1c26cfadea962",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-9fe6552ed06acef516577c10-last-message.json",
+      "candidate_sha256": "sha256:9fccff8605d5fac6eb3e49953c90dfb8af0943da29e1ac854dd8875916f97d86",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-a8330255833a25cdc4631e0b-last-message.json",
+      "candidate_sha256": "sha256:0850206fe277eea3467a582295f274841c0060ed4e5e1484d448918d32ecb2a2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-aa2d5301e3947e087008b185-last-message.json",
+      "candidate_sha256": "sha256:c1e1a056d30226367c67f7b99c75e9370ced33ce797791517ed5a9e1aacea88a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-aafb3c279ab35ebcd7f8fb0f-last-message.json",
+      "candidate_sha256": "sha256:e54f3f6b321590018b045978e768a4ed2fbaa56d29a2fd3013ded470af21aa64",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-bc709d0d1795c1b16c684024-last-message.json",
+      "candidate_sha256": "sha256:d87e0d8cd7b71c2df6cd5160cae7a8853f2d0b76e238d3029b64872a3011fed5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-ceb69c8326d49499a7e8f906-last-message.json",
+      "candidate_sha256": "sha256:d405549ecd76405c22082bcc9aaff63bf6fd8bcb174bd43e4014f4770b640bf2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-d4c25bf741507675b20c179c-last-message.json",
+      "candidate_sha256": "sha256:03b68771d797e5f4d146bbfe3b33d108e243622eb734e904785e3eb18d3920f5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-d89af6cfc55e8b997d2dd7f3-last-message.json",
+      "candidate_sha256": "sha256:2cf44d878522e370694b27659c245c40562fc81ac7b39a209b9060ef84c81442",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-f144935bf805376c44844f52-last-message.json",
+      "candidate_sha256": "sha256:2ea63c25d50a1f81df604025b56cb3b68c7c29850c2bc9f679ca0d68f4b481dc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v3-schema-repair-group-v7-planned-production-owner-runtime-test-chunk-01-ff80ab3a388068b5c93ee207-last-message.json",
+      "candidate_sha256": "sha256:ec44f94d9d27d01334af66ff727f9c322400aab6dc7037b4da923d9eca3b4c17",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-229a03831874cd5bb14a3d2e-last-message.json",
+      "candidate_sha256": "sha256:a5f36123c97f354834d81c4e3741d92d6c09e1e50e973281c0898ab1def78008",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-acceptance-repair-2b5b60c641f77557b3faa435-last-message.json",
+      "candidate_sha256": "sha256:3950a9b95237ba8f2b98bdb585b4eecac307350ba617f742ac6870da6a0b4993",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-atomic-recall-chunk-001-last-message.json",
+      "candidate_sha256": "sha256:c5532bb091904128426bc996080c65bcca7f14fe37423421e1be44f2ee5bcbdc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-atomic-recall-chunk-002-last-message.json",
+      "candidate_sha256": "sha256:93c462025a6788307ab458a83c8c3da19ac2652e4c0cafea7a8c6d484cf4aba9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-atomic-recall-chunk-003-last-message.json",
+      "candidate_sha256": "sha256:76d9161a6275c2316d2b710fa1c77a08c30479beaef72a7610ce985a139ee1bd",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-atomic-recall-chunk-004-last-message.json",
+      "candidate_sha256": "sha256:ce46f9b4a1947e22dae97bbc686c8450e62a96d8b0172ec42c3f1e92912292ba",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-atomic-recall-source-001-last-message.json",
+      "candidate_sha256": "sha256:41f0667daf3a63e91008155d631bf711e5335ae0c52d788c60e6c385f8038b66",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-atomic-recall-source-002-last-message.json",
+      "candidate_sha256": "sha256:41f0667daf3a63e91008155d631bf711e5335ae0c52d788c60e6c385f8038b66",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/v4-recheck-44d1bed646d5bce96eef9a24-last-message.json",
+      "candidate_sha256": "sha256:2b32632dd9f24e61702d79380b46573bc517433d1f32dfc8cee2d428f015b6fb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v1-FR-1-c22f2f10dc27-36ca1301a9d4.json",
+      "candidate_sha256": "sha256:fa01a9da47b4f556666ee2d7542ef3e625196981347006efbeb170a2be8a958d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v1-FR-2-960944668ff0-36ca1301a9d4.json",
+      "candidate_sha256": "sha256:ed52acfb375a3421cf840890c6f9f39f7c4d225dbb66aa1367e90d87ff44f311",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v1-FR-3-359e6a376e4c-36ca1301a9d4.json",
+      "candidate_sha256": "sha256:6673cddecdfd001af2571015c57e8af11188b574cd8502299e7a0cfa03726dcb",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v1-FR-4-5056670940ee-36ca1301a9d4.json",
+      "candidate_sha256": "sha256:09a50458aad8aa823214197c59aa687629b35122b4a4e94482b604f5d8eb3df8",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v1-FR-5-92fd6969866f-36ca1301a9d4.json",
+      "candidate_sha256": "sha256:39cb810331b06aaa7efc7f718d673fd14782de2396b1237dd44a5381a13d4204",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v1-FR-6-43fb2fa07cfa-36ca1301a9d4.json",
+      "candidate_sha256": "sha256:028bc45482046911cbcef6f0eaacee7887b1954e7099c926cda58073b601eac6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v3-bf103ef34f62-ed4f3c9257f4.json",
+      "candidate_sha256": "sha256:1710c5287d9fdcda40a54aa425caee6e898bb9760b645dcf6184bd9c85f20030",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v4-229a03831874-76bfc57ea214.json",
+      "candidate_sha256": "sha256:fbf998283304bfe3e072243566c5989220a2d1e511ab15fea2e8ef67929a1869",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v4-acceptance-repair-2b5b60c641f7-73b57152e068.json",
+      "candidate_sha256": "sha256:6a600e3010fd2ef356a7f0272b45a6245a9105054aa6d83bf95b99fdbc34409d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v4-atomic-recall-228b757f94ba-ca36ff68b540.json",
+      "candidate_sha256": "sha256:ae889b479e6c5629ebc933bf7b688363b099cff4f8ba0156228f956a33f6c89c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-receipts/v4-recheck-44d1bed646d5-617bf23c225a.json",
+      "candidate_sha256": "sha256:64d9ac653314c669ee9d57c90f8d6d413fc3f0670e84b8f61b14f1a55932a77a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-0247608d52f8.json",
+      "candidate_sha256": "sha256:0247608d52f8385f7bf5952e8eda7ad3261accd12e01c237b4f9cd6c69bcbc5c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-0e8bfdc1ba88.json",
+      "candidate_sha256": "sha256:0e8bfdc1ba88367ff4b5c193608cbce48c06c970df2fd530e307e3ed59da14b9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-2160acd9130f.json",
+      "candidate_sha256": "sha256:2160acd9130fc660c0732d8a84e5b28558fed1db5fe4614462c7aa3d37c73181",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-3194d6ab4ba7.json",
+      "candidate_sha256": "sha256:3194d6ab4ba705aaa751fbb675c9875a9cf82780bda16b4cb6de28157b660a69",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-33d0ecc49a0e.json",
+      "candidate_sha256": "sha256:33d0ecc49a0ed6899917daf78b54490080c833bc908a6bcbbe2c556b9cc71bef",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-34af65243c17.json",
+      "candidate_sha256": "sha256:34af65243c1788ce890a031bdd87349017766ec27a9c7dd0300e507e74cd179d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-3c51c4e9c2d9.json",
+      "candidate_sha256": "sha256:3c51c4e9c2d934a7654b1c84763d903642a1556fd692e50c8091fa04c263927d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-461e5df595c3.json",
+      "candidate_sha256": "sha256:461e5df595c32b29c28d5069637ef8bfbede7bff9051d0013e1fb8846c75794d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-4e0661f3e238.json",
+      "candidate_sha256": "sha256:4e0661f3e238cffbd30e16caeb7634f6a1bbbab6d7903e729a310a6627c54662",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-4f4cad6bc809.json",
+      "candidate_sha256": "sha256:4f4cad6bc809a9bc8a4cf0ed1cf027a861e03b3547b4de5df2061000ffdd1ffe",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-6875a0a9673f.json",
+      "candidate_sha256": "sha256:6875a0a9673f719cc17ffdc677232a8a4c9cd609d73b37e91a87d8f6b1b9b427",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-86a7a05ca5bd.json",
+      "candidate_sha256": "sha256:86a7a05ca5bdc73487d72d68beebfea0c5c55eb7009dc79e41a9d01173b8be1b",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-8ecae57ddc7c.json",
+      "candidate_sha256": "sha256:8ecae57ddc7cd3640138ee440ec1377e8f92050d105550af2a24e1ad06b81c15",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-98e60f692878.json",
+      "candidate_sha256": "sha256:98e60f6928781a26516bc05734c5ece6f052fdccd0a680e98749fbed3d4968d4",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-aa6bcad75093.json",
+      "candidate_sha256": "sha256:aa6bcad750931946fc352b4ade7581dbea8282bd6b29f457126379cf1339adac",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-abc573553ee1.json",
+      "candidate_sha256": "sha256:abc573553ee1afbf3d171bfaf364ec83b917839a64c147a22c9a705a8991f38f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-d908cf63c426.json",
+      "candidate_sha256": "sha256:d908cf63c42650f10187acd3391d44cc9daf4a0d4fd467195fda15465b9559dd",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-dc857f6d6898.json",
+      "candidate_sha256": "sha256:dc857f6d689855de9387dfe59ba37d46adc7fbd1a992e58e509f596236e1b737",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-dd2610bada9e.json",
+      "candidate_sha256": "sha256:dd2610bada9e8d8c658efded6eb0622b149ff6d5b1e3bc572699621334026f26",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/.compiler-work/worker-schemas/v3-e19cd48df7e9.json",
+      "candidate_sha256": "sha256:e19cd48df7e9904fbbe38ecb3188f4c743d29a025a1460b7cf66f682a687ac83",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/acceptances.v1.json",
+      "candidate_sha256": "sha256:2484d119f4d2a2523798d8d65b5e15b74b796476478f78fc3cab569cff19368c",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/agent-context/S1/agent-context.json",
+      "candidate_sha256": "sha256:648e6a6e0ef854c33729eba2d7e00000ddde23161944b3c369a5d781680a50f6",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/atomic-recall-alignment.v1.json",
+      "candidate_sha256": "sha256:93f8a64326fe3066ddd7da7cf59ab12e55d2fbbfb7fff97292a1e54b66651c11",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/compiler-state.v1.json",
+      "candidate_sha256": "sha256:3a36fd3a3195d11690b15047ab3304827e640a33c577ca5145d6812120db71b0",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/execution-record.md",
+      "candidate_sha256": "sha256:19296b4be1301cfaf1f82ae6b3198b906d376c6ca5d4a83e32bdaa0e7768220a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/failure-intents.v1.json",
+      "candidate_sha256": "sha256:2cdb1b348ff85cb4c6fcd419e99f48a93b2952e939da3713661c940a840301b7",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/feasibility.v1.json",
+      "candidate_sha256": "sha256:5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/final-plan-coverage.v1.json",
+      "candidate_sha256": "sha256:8b43694f2c3b43c52b7c199f590a7cb4dd6be72e7e9b4f8a75e1c4a91ec89f4f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/obligations.v1.json",
+      "candidate_sha256": "sha256:2d5192b36459222223be1e6179d066296c0985f055937fbb385f48bc287dd8f9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/pre-slice-coverage.v1.json",
+      "candidate_sha256": "sha256:6e6e984cff3d89b3a0d34c4b19c58de86459e9a50360fef204b7701020ed4b43",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/semantic-alignment.v1.json",
+      "candidate_sha256": "sha256:435cf2b31b47a1142c7fa1524246cdf34ca27c080e8a0ebef59f325baa0041f5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/semantic-chain-audit.v1.json",
+      "candidate_sha256": "sha256:21cacc87484d9d7c67e606a2d36a2f03a439e263aff2dc554d3e8149466ac3d9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/semantic-plan-bundle.v1.json",
+      "candidate_sha256": "sha256:e44b8fc51d43ac9abd265c460de7d599eab999c10cd19b19b8cf19829fc7b666",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/slices.v1.json",
+      "candidate_sha256": "sha256:cf9473597d4c0a3d0dfe3bf4452e2acc8c6126b49b32acded2e1cf746507994f",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild/source-index.v1.json",
+      "candidate_sha256": "sha256:3c309149a8ac3fc3ce417dff2098564dd88dd205b1be50195f7154a800a29a28",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "baseline_sha256": "sha256:5b48575fcb421a37575289cd1ffd96e91a206de45e28bcb48578df75cf46f9cf",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:b895eca0586bc1f6bd40c15b977c166a2472fdf173cd7001f096fa7d301cdc63",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "baseline_sha256": "sha256:11cc177cca53784b7e7e5c4022efab9f2ef2706cbae95a52a21f0325e69cf17c",
+      "candidate_path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:98add609330caaea812e9159136cff1d65eda8c73dff6dfc72bbe3600bb16684",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/indexes/current.json",
+      "baseline_sha256": "sha256:ba67149a6f1e39cd9434ef1d5f240fc563744ac06ac40d7667c1f09bb1d90a07",
+      "candidate_path": "knowledge/indexes/current.json",
+      "candidate_sha256": "sha256:2edb405578a76d0aa8fa957d6c9f01577f62de1da098da778e7c5634ec6bf413",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/evaluation/query-report.v1.json",
+      "candidate_sha256": "sha256:6ee8a003c8eecb006de5a3c44e9319eeed0fc16f193c1f3ca5609252b589a0dc",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/consumer-policies.v2.json",
+      "candidate_sha256": "sha256:d3f3f3729f37b1fb2ac118be176d0dc9e5b73cdcb6764c4abb14b585466b3813",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/repository-knowledge-query-suite.v1.json",
+      "candidate_sha256": "sha256:0ddbd12edfc974481f8ba8aa0204621e0cdc62180c8ed7bcb6994c729e7b3bb3",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/inputs/source-exclusions.v1.json",
+      "candidate_sha256": "sha256:c12514d500252b84c93041ccb2b564419a6d72bc77546af20dfde1e378287f2d",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:51529e9e350cf6613b825a4012de1db0ce2013b804f78830f68714e3e960dea2",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v1.json",
+      "candidate_sha256": "sha256:b895eca0586bc1f6bd40c15b977c166a2472fdf173cd7001f096fa7d301cdc63",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-knowledge-catalog.v2.json",
+      "candidate_sha256": "sha256:98add609330caaea812e9159136cff1d65eda8c73dff6dfc72bbe3600bb16684",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/layers/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:aaa6bee1cefd7a20c288d34faef8b6d869540c79beaa8e75ff9bf8b9be1859b5",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "knowledge/indexes/generations/6d312bc24ccc72e5f73e98e83a4f39229f22879ae0897c04fdf9e20770a6ba48/manifest.json",
+      "candidate_sha256": "sha256:e9cc1fe3c25e5259d67f1457d40a723ee4dc6b353ed3febd25a5ff5297cbdd4e",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/indexes/last-known-good.json",
+      "baseline_sha256": "sha256:ba67149a6f1e39cd9434ef1d5f240fc563744ac06ac40d7667c1f09bb1d90a07",
+      "candidate_path": "knowledge/indexes/last-known-good.json",
+      "candidate_sha256": "sha256:2edb405578a76d0aa8fa957d6c9f01577f62de1da098da778e7c5634ec6bf413",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/projections/consumer-projections.v1.json",
+      "baseline_sha256": "sha256:2b2da593b2892ebdafd7d944a926f3d4b9d763deef77fb73c294fb028e8acb21",
+      "candidate_path": "knowledge/projections/consumer-projections.v1.json",
+      "candidate_sha256": "sha256:51529e9e350cf6613b825a4012de1db0ce2013b804f78830f68714e3e960dea2",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "baseline_sha256": "sha256:d79646c39535153a392f0f1c082a98159eb1914039633b180f3c2ea0c59c7afe",
+      "candidate_path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "candidate_sha256": "sha256:aaa6bee1cefd7a20c288d34faef8b6d869540c79beaa8e75ff9bf8b9be1859b5",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/sc/tests/test_skill_quality_package_b.py",
+      "candidate_sha256": "sha256:97d685cfbcfb0026c0fa8a8658600e163a6ec874e7c5685a92f434e7ba99175a",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": "scripts/toolchain/knowledge_query/adapter.py",
+      "baseline_sha256": "sha256:92e0f99bf5ba59de9a715e34080170606f56767f1a9a3eec02f4bc7e38815041",
+      "candidate_path": "scripts/toolchain/knowledge_query/adapter.py",
+      "candidate_sha256": "sha256:01700fda09c8a6e57739e726b9f74fde476d89678dc60428012193da2ae26edf",
+      "change_type": "modified",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    },
+    {
+      "baseline_path": null,
+      "baseline_sha256": null,
+      "candidate_path": "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py",
+      "candidate_sha256": "sha256:e77d95f22972819d060d6e65b25667094543eb698919bd558fadef168deaead9",
+      "change_type": "untracked",
+      "inclusion_reason": "explicit compact VDD candidate path",
+      "roles": [
+        "implementation"
+      ]
+    }
+  ],
+  "schemaVersion": "acceptance-candidate-content-manifest.v1",
+  "status": "complete"
+}

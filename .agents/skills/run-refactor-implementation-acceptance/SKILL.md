@@ -94,3 +94,19 @@ explicit [caller-session route](../../../docs/workflows/caller-session-execution
 It invokes this Skill's existing native entry and retains its gates and lifecycle
 ownership. Local Codex CLI defaults remain unchanged; caller text never becomes
 execution or acceptance evidence.
+
+## Package Quality And Routing
+
+Quality metadata is [non-authorizing](skill-quality.v1.json); it preserves every native owner and required child dependency.
+
+| Dependency | Authority/version | Missing or mismatch |
+| --- | --- | --- |
+| Adopted authoring contract | [Local record](references/package-dependencies.v1.json), standard1.0 | Typed A09 block; no installation or silent skip |
+
+```text
+[input] -> [deterministic]
+[input] -> [repair]
+[input] -> [stale]
+```
+
+The sidecar contains exactly three primary route examples, explicit public-entry setup and typed results. Static pass grants no execution or completion authority.

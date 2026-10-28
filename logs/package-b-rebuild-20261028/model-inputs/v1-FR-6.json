@@ -1,0 +1,137 @@
+{
+  "obligations": [
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Authority and dependency drift",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Stop and use a repair/successor path if an accepted standard, ADR, schema, validator, command or dependency hash changes.",
+      "observable_result": "Changed accepted inputs are not silently reused as the old frozen execution contract.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Execution scope drift",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Stop and repair when the declared write set, execution read set or target containment changes.",
+      "observable_result": "A changed execution boundary does not inherit old completion proof.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Lifecycle authority drift",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Stop and repair when a lifecycle owner or authorizes boundary changes.",
+      "observable_result": "No lifecycle or authorization transfer occurs through silent migration.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Capability and confirmation drift",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Stop and repair when security capability classification or required confirmation changes.",
+      "observable_result": "A new security posture does not reuse old permission or evidence.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Child entry contract drift",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Stop and repair when a current child Skill public entry or output contract changes.",
+      "observable_result": "The consumer must resolve real changed dependency contracts before proceeding.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Repair integrity",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Never resolve drift by editing historical evidence, weakening a validator or silently applying a new Skill contract to an old frozen plan.",
+      "observable_result": "Old evidence remains bound to its actual source and verification rules.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-6"
+      ],
+      "subject": "Predecessor versus current scope",
+      "trigger": "When a frozen Package B dependency, boundary or verification rule drifts",
+      "state_before": "An existing scoped plan or execution witness is bound to its original inputs",
+      "state_after": "Affected scope stopped until a legitimate repair/successor is validated",
+      "expected_behavior": "Treat Package A implementation as the accepted prerequisite, not additional Package B implementation scope.",
+      "observable_result": "Package B requirements and repair do not reopen accepted Package A work.",
+      "forbidden_result": [
+        "Changed authority or stale evidence is silently treated as a current validated contract"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    }
+  ]
+}

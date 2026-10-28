@@ -1,0 +1,1136 @@
+{
+  "schema": "package-b.stage-snapshot.v1",
+  "scope": "Nested class direct repair, raw RED/GREEN and r10 proof with original two focused reports and sealed predecessor; no device configuration, credentials, transfers or old fixtures",
+  "files": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "bytes": 16438,
+      "sha256": "c7eb7d34ac31dcb90caaac8870b0f5bfc5fa1f54f71f65faebfdd47c7015d3fa"
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "bytes": 13717,
+      "sha256": "7d5d2f7e37436dbddcd2464547de60b752639a8210b02965c06c554fd9c86a34"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/LIBRARY-STAGE010-DURABLE-RECEIPT.json",
+      "bytes": 1335,
+      "sha256": "2a07f0674e1082bd07cc3350bb1f16dcc731dc7d1c897a31a594865772fc333d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/NESTED-CLASS-RECHECK-MANIFEST.json",
+      "bytes": 12628,
+      "sha256": "f3801de9e0c132f4c1d13f65c2ae6e34deee7dfdca8b6e7041ef5007b95bcab5"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/NESTED-CLASS-REPAIR-DISPOSITION.json",
+      "bytes": 1276,
+      "sha256": "2256562ea12f2443501280075ff9096a042c76518f7e2f728454deb8d54fe558"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/advance-r10.log",
+      "bytes": 82771,
+      "sha256": "aa6f175a1aac96ed9316c3918a800ec18ff5002b69b5e7959e225a6a60283585"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/execution-session-r10.json",
+      "bytes": 21670,
+      "sha256": "3dff209030541bf70cdac661b9bb18f262149267535613397eba40a7f84817be"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/nested-class-before-guard.py.snapshot",
+      "bytes": 16348,
+      "sha256": "118a234e4ee28f0f0caf19bd2f6525407342a6c1e12fa41a0814fa6edfb53f54"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/nested-class-before-tests.py.snapshot",
+      "bytes": 12655,
+      "sha256": "a0a9215188aa43088d6f8eb431ac71b5c977113032f7505e74de4bf5c1a62235"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/nested-class-causal-red.log",
+      "bytes": 7258,
+      "sha256": "b8f7b4a205e16047d8176ba50063dbb51e91cfaeefccc0042635b6f173bf7366"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/nested-class-direct-regression.log",
+      "bytes": 99,
+      "sha256": "47fcf447dbabadadfc951f798460bfcd33199165d1ee4df0acb8f92b5372e732"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/nested-class-targeted-green.log",
+      "bytes": 83118,
+      "sha256": "c34a98d09387755e0b57afe16ff255ff09fc693f5d0c8b9342532742216eccea"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/Q8.json",
+      "bytes": 79577,
+      "sha256": "525bde492c74e7547807a426c2ee7b844b22e2966f4576ec65be671dae7f56e3"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/S1-ready.json",
+      "bytes": 44810,
+      "sha256": "b49e2aca9203edecce1aece807cb3cffbdd2e3c518f4686a7193a72b3c6ef5d8"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/acceptance-current-quick-dev-binding.json",
+      "bytes": 9378,
+      "sha256": "49e5ceae03d3b2ddb3b9458d3138e64487fb1d093c61b8acef59201ee11c621c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/session-input.v1.json",
+      "bytes": 18332,
+      "sha256": "2ab91dc2502e5bbdf7dc1fedffabeb3218442bf156ebb6a4e76b55322152db3a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/terminal-input.v2.json",
+      "bytes": 100885,
+      "sha256": "08931ecbe743269fbaa8b10bb3528dbbe92556cdc8be710a8eb44bd3fda3df7f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/execution-complete.v1.json",
+      "bytes": 181,
+      "sha256": "58b3ac7348664adf1f309adf8820d04e9391a8262a5c0e70a101b798808c02de"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/execution-input.v1.json",
+      "bytes": 4782,
+      "sha256": "10c9fecc50866d425cd0548b676119613ebffed9bbb58534acaa2af855d0f7de"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/observation.v2.json",
+      "bytes": 646,
+      "sha256": "7b70436fbb739c684156f3f7e5c84af276262e5c2b751f2b629f31b235fdd8b2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/process-receipt.v2.json",
+      "bytes": 117183,
+      "sha256": "b653a63d4075074903dd9303ed6d9a83d6fd80505a3b9b1672ba5bd3e26c10b0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/reuse-complete.v1.json",
+      "bytes": 184,
+      "sha256": "afdcfc998413ae2e3c16b6f808ebaf3794721d74d99ad9d55fc35d7b2b610134"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/reuse-decision.v1.json",
+      "bytes": 64,
+      "sha256": "5c8871c8bca3a31327a6db7a9430d32575d9260795693824f145e915278c26b4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/reuse-request.v1.json",
+      "bytes": 242,
+      "sha256": "d2e7d1c076015ef1d129a399ca5fa149d94f84ad2dd5e67b4df43031fd717aaa"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/stage-result.v2.json",
+      "bytes": 25481,
+      "sha256": "318e9d2400eebc814128eace1e8e03edb5033881d5ce192497b90a312497fc71"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/probe/stdout.bin",
+      "bytes": 179,
+      "sha256": "38603ab8d93db0ea4eb9901ed5f1fd0683ab30ca1d7ae1401064a461305120c3"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/execution-complete.v1.json",
+      "bytes": 181,
+      "sha256": "7c05e5a164a488ed20ad0a0996950ab6544892c443fa2061d839a8bfb509d4c6"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/execution-input.v1.json",
+      "bytes": 4782,
+      "sha256": "4c4e1551368d7c0c891b682c1d9b6668882c8e0a5fefb3b233591fbc591e9c5d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/observation.v2.json",
+      "bytes": 661,
+      "sha256": "c34c41332c0b3446f5557473959f3a767a986929925a64850c84ae43f7bea2c2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/process-receipt.v2.json",
+      "bytes": 117192,
+      "sha256": "45c4d7f2f90691fb22cac1485699e94830c0b6a0c35e4d53d45b03233f963efe"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/process-receipt.v2.json",
+      "bytes": 110536,
+      "sha256": "e3dd5417592b5baf520a35602b18e0885c2d26c694e150aae2537d0b32071106"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/reuse-complete.v1.json",
+      "bytes": 184,
+      "sha256": "bc3373562b0c50ca61bc4fdc3a223905b7ce227b9bd7b8f159e71763b9d26885"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/reuse-decision.v1.json",
+      "bytes": 71,
+      "sha256": "9770e0e6568cbbff44321493d8ce8ac7b127e873a5f0ae7dcd9d196417642b5b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/reuse-publication.v1.json",
+      "bytes": 125,
+      "sha256": "7e17879c6267fea250a4161aab4ffc4c30000284e874acde0ef04255c7413828"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/reuse-request.v1.json",
+      "bytes": 1106583,
+      "sha256": "9219564726987df3b369a38856d8cec348316f626c57f2a37c9399f32bbd2602"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-6a643fd4cdda2b13/canonical-evidence/regression/stdout.bin",
+      "bytes": 99,
+      "sha256": "4876d2b271258a19f57238176d2692adda758d1c0105401aa57477242c2514d6"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/process-receipt.v2.json",
+      "bytes": 105789,
+      "sha256": "97f7e57714d839334b243499d0b39ea8d170d170f06824b51b28d9e0475c3b53"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/reuse-complete.v1.json",
+      "bytes": 184,
+      "sha256": "e08b0c4c11b07cbba8564de64dfb8ffa2e7266bb2f405be9722d4bfd9a810d28"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/reuse-decision.v1.json",
+      "bytes": 71,
+      "sha256": "9770e0e6568cbbff44321493d8ce8ac7b127e873a5f0ae7dcd9d196417642b5b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/reuse-publication.v1.json",
+      "bytes": 125,
+      "sha256": "7e17879c6267fea250a4161aab4ffc4c30000284e874acde0ef04255c7413828"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/reuse-request.v1.json",
+      "bytes": 1105883,
+      "sha256": "af3dcfadff65914f4444ed7706ba6bde0e11150bab87ca7ec90918cac1a3d74d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/q6-executions/command-bf5f117d50dc4b94/canonical-evidence/regression/stdout.bin",
+      "bytes": 179,
+      "sha256": "46ce9077bb234a6e8b4a59e8c145f026843a14aae4771551cd58afb1032c9934"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/regression-gate.v1.json",
+      "bytes": 73418,
+      "sha256": "25c3e692d8e4e5c17f9fb497aab029422579e0f8ffb59d955c4b70d89d117e9d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/reuse-complete.v1.json",
+      "bytes": 184,
+      "sha256": "f0d84322f5e8d3f75b93ed87589c5a5ba465f870675dc9e4b83a868a4707fabf"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/reuse-decision.v1.json",
+      "bytes": 71,
+      "sha256": "9770e0e6568cbbff44321493d8ce8ac7b127e873a5f0ae7dcd9d196417642b5b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/reuse-publication.v1.json",
+      "bytes": 125,
+      "sha256": "7e17879c6267fea250a4161aab4ffc4c30000284e874acde0ef04255c7413828"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/reuse-request.v1.json",
+      "bytes": 1111589,
+      "sha256": "8afec960c2882eb18aa2336906db89141cf3c9146f5cfb43d54644a7574b0bdc"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0001-A-0318691652C9-PKGB_4DE82E497103.json",
+      "bytes": 2032,
+      "sha256": "d1f9e57c3b5c3cf06964a726a8cad4210ce2133ca0c22786de1080fea414c99f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0002-A-0321E071B426-PKGB_597AAD1CF5FF.json",
+      "bytes": 2033,
+      "sha256": "2022fa50ee44c8c7e3e4ae1c7a211bc9382d4e2da1a593b142bfde4a96b9a230"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0003-A-0383CAC099CD-PKGB_516E31393C6B.json",
+      "bytes": 2036,
+      "sha256": "bad5681e79425f9398f1ba722e4e27016418cc80bca56c717672f81ae6a6a09f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0004-A-0466423D920F-PKGB_AA5934B2633E.json",
+      "bytes": 2032,
+      "sha256": "5d1c1ac21796398fc16e0a2f6e45f44cac14c923ce7ce02baefb135af47bd899"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0005-A-0591150D78BA-PKGB_56A33BF13918.json",
+      "bytes": 2034,
+      "sha256": "e8e5eea2703cb55cc5c26894041dd04d2da325231ce90f65b204c723b08f64fb"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0006-A-06A8500AA16C-PKGB_97205C679D05.json",
+      "bytes": 2036,
+      "sha256": "567d23e6829ee1317ecfab18904928e4cbc9b623909631402db8be6f30a8e3dd"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0007-A-086CA3D1359B-PKGB_B31AFCA31048.json",
+      "bytes": 2033,
+      "sha256": "951c379787dfe348c0bee63096be62b0595924cf363eda160c48d4e2c22efb41"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0008-A-09332ECDF2DE-PKGB_1FC41E966CB0.json",
+      "bytes": 2038,
+      "sha256": "945934e3e68c6b0ed7e49e31501ea66beecb02a8767fed956b20e00f1dae535a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0009-A-116C7BE15BC9-PKGB_7EDC585984AC.json",
+      "bytes": 2029,
+      "sha256": "4b775873dae2595afe6122b7883b70d9b3d83e8c98e234725e696ab2585587e7"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0010-A-1483FA01EEBF-PKGB_2CBB18C96E83.json",
+      "bytes": 2033,
+      "sha256": "66cc0af18cf3f86fb359ef33330fbd8fb7e881d75fcb414cf7ad58760c164bd3"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0011-A-14C82F18F2E5-PKGB_56B4D051B472.json",
+      "bytes": 2035,
+      "sha256": "33c95e93820cd3bd77769f81f76fc13edb70000117b6fa072fff461624305672"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0012-A-163CE3ACFA08-PKGB_435F58556AB8.json",
+      "bytes": 2028,
+      "sha256": "41bd4ea3507669d4d479ccee962a527bf1f3ae75bbcc3f630aa6c251c9215e0c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0013-A-1709C24BB303-PKGB_06B2E983CB73.json",
+      "bytes": 2033,
+      "sha256": "7e80a29645dd26d03e37ed8466b0a591bd191fa3ee2a9db42ecda9bf05f10ea8"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0014-A-1B7E3D2A47B7-PKGB_6F444612047C.json",
+      "bytes": 2030,
+      "sha256": "93c057a887df0ef67e62f0975218b622d195c0562a9176c489856dc66e6daaaf"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0015-A-1B854C35989F-PKGB_31BB4B73B2E0.json",
+      "bytes": 2034,
+      "sha256": "5954ef3c9056d134cb9ddcc655a69a4bdb0ec775dac0d92bf3b25ec68e26822d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0016-A-1F504CA9C2BA-PKGB_FB4AFA4ABA94.json",
+      "bytes": 2029,
+      "sha256": "fa9636658581a575e61a41a01047b27953cf9ad29f2de982d68e0b6baca47707"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0017-A-24507F920521-PKGB_DBD4AF430715.json",
+      "bytes": 2032,
+      "sha256": "216e7ba6e5e37ac4b6845070ee0e4211446f14ba6e3c3b298e7c01da5a8885a9"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0018-A-27C286923406-PKGB_106E49892C1C.json",
+      "bytes": 2027,
+      "sha256": "e316191442b688747ea78a5f60cc214bb4eca20a7fb84a472c4d979a5b2f1b38"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0019-A-2CD8A0BEF5E1-PKGB_2275CA248048.json",
+      "bytes": 2030,
+      "sha256": "afcbb260bec3c759db8685c69ee5202b8f47244033b60b70b31e220e9f2bb9e4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0020-A-2F17CF9B2579-PKGB_333D4B6DB398.json",
+      "bytes": 2036,
+      "sha256": "85992308d2c945f5b99bea45a8663a97557c6954dd7a9d632d0bbc1e01e3a33b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0021-A-31ADF693E988-PKGB_33A58D56A240.json",
+      "bytes": 2036,
+      "sha256": "af6d34cedcc28b4cfc9c162fc65bc0f0454c5feaa1618e96fa3591716cbc07ef"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0022-A-39A5F4F7F7A9-PKGB_EBC502B01FF4.json",
+      "bytes": 2033,
+      "sha256": "bd0284c90918d99555c406e75e634cffaa91911a68d7e58701e1aca627ab6780"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0023-A-3C6D44B2581A-PKGB_B66298A862BB.json",
+      "bytes": 2027,
+      "sha256": "16ee2307f6051e840ec9cc2444f7295162db055bb9da1030b9f0be750fbc821f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0024-A-3CFD795ADE40-PKGB_F308EA0BD0A3.json",
+      "bytes": 2027,
+      "sha256": "b4b18a12e13924c813ba29b39d98145486db96abbc607145e90d29054486bf5e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0025-A-4629D83026CA-PKGB_D4FDDB15D79E.json",
+      "bytes": 2032,
+      "sha256": "8edccf8d514b5a38eb76bfac4b4c1cbf7756b1a8166630e426ed9cd6106f4d8f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0026-A-47D19AF48E38-PKGB_3468471DAB29.json",
+      "bytes": 2035,
+      "sha256": "0f695ce324ca674b3d684c8cef9e63161f6b8400d76cbc2294a658db2001c24b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0027-A-48DABB725239-PKGB_D435CEAE6CBD.json",
+      "bytes": 2034,
+      "sha256": "6d483cf046c3e5ac788fc621b3aef689c187e0aed23e0ff66a13ab7ce101a9d7"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0028-A-4BD9FF47766C-PKGB_520D0E5EA4C7.json",
+      "bytes": 2030,
+      "sha256": "b83e7f8416a8479510676b1a9df19a708dddc2159f1374589660d0fb4dbdcb7a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0029-A-4F23432BA4B9-PKGB_136CDDBA77A6.json",
+      "bytes": 2036,
+      "sha256": "c9bc328965cc44bb0a2efe31f5a71d352a3e26501bb96e47f776619dd7370453"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0030-A-530A88140632-PKGB_9E8AACC50395.json",
+      "bytes": 2026,
+      "sha256": "1b82fb36f232b4a1bc33e3b5e6cfca37c6eb62f85c13ad79dcdd29e848b3154e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0031-A-5577FDB2417C-PKGB_49D7164AED75.json",
+      "bytes": 2032,
+      "sha256": "96cf06be24060f0a19fa9ebbd2f47440d932c70f1fc7c2bbf7d80a9f6d1c0e0b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0032-A-5811299647E0-PKGB_8ECA25407A03.json",
+      "bytes": 2036,
+      "sha256": "82cb372bc82c868522ae2f8507bf9ecd8952b711dd2456866671e54f36615b92"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0033-A-610B0FCED91B-PKGB_A6C02C53C2A4.json",
+      "bytes": 2036,
+      "sha256": "d54e7eed0d77911fb2ac11be4b2e758d539f7e8012bec202ba00ee1eddf449fc"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0034-A-644724AD70F2-PKGB_0E781666A8E6.json",
+      "bytes": 2031,
+      "sha256": "21076495f107da8a1db8edfb64c7e9de73484508e2d396b4d76b4b6124d75ee3"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0035-A-6492EC47D791-PKGB_F8B04C33A6A6.json",
+      "bytes": 2027,
+      "sha256": "cc3c40a4a21ca1a1cfb2239bd94d46d9f8a37d163a00da85e82f9aed39aea068"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0036-A-654764CCC5E4-PKGB_0082DA37FDD3.json",
+      "bytes": 2036,
+      "sha256": "37da5cbfb70a07787d750346f4d0c89e3d17dde12a9c251b8f192753c259d0ea"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0037-A-677C56D2E00B-PKGB_1370E773AD67.json",
+      "bytes": 2040,
+      "sha256": "b1c227228be738b61a65dcbfd817e09b2274eed6d54f94114e4d8b21476eb97f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0038-A-6AA7FAC093AF-PKGB_80316CD17E3B.json",
+      "bytes": 2035,
+      "sha256": "6f32a86dd584df288274ed364277991855ff2396ff415f94fe1ff32c29c3d4a1"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0039-A-6CCD4DEAACE8-PKGB_7ACD9F289FDE.json",
+      "bytes": 2036,
+      "sha256": "4916c8844e297760179f77c52834c1df85547629bae3df2e27b666c260340c23"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0040-A-71FBA4D4208B-PKGB_3E98F7EB3C8D.json",
+      "bytes": 2029,
+      "sha256": "9909854846a3c7945b6fb04e10f190042f4726e1ad0f614c6b36249c38882fcd"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0041-A-726F8D1D7941-PKGB_FF00F91F7070.json",
+      "bytes": 2035,
+      "sha256": "63602c540b12c2d79e523adc3e501dd8458a813a01a4a13b5fcced4c4b012d03"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0042-A-745AFBB4BF7A-PKGB_EB599B9F9D24.json",
+      "bytes": 2034,
+      "sha256": "5bebe5b683d811d081417323d45a36af9818bcdef34230f818901f5c2996b792"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0043-A-76D54F175DC8-PKGB_E5D14EE8A976.json",
+      "bytes": 2033,
+      "sha256": "f88cb0f02ae187907c2cc4576daab939fac36c9b5fdc8a061190e2fb9ebc733c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0044-A-7A885DC508CA-PKGB_51D4739E3A0A.json",
+      "bytes": 2030,
+      "sha256": "af011ccbc7e01ebe8fd66367e3c36c8d4438565ea8e2789aba1b03b4b49c3c2d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0045-A-7D0E9C5FB237-PKGB_7136BAA2CA44.json",
+      "bytes": 2036,
+      "sha256": "55b5709f9856f8454c5ab3d73ab7dfb67da0d2dc4ecc4c4ac11165f6ee6701bc"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0046-A-7D4C6A3F5A53-PKGB_897EA243B79E.json",
+      "bytes": 2031,
+      "sha256": "7df56d828deffc554477e4b76043f4624d2306252c1741f973aa714ef2ee94d9"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0047-A-7F66799C2C86-PKGB_27A3D0428D77.json",
+      "bytes": 2028,
+      "sha256": "b836f2dfda6c988796ae96989a53e606d31797706fae17d2e9afac28542e9cef"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0048-A-81A7EC590F1A-PKGB_18BAEF1E87C0.json",
+      "bytes": 2027,
+      "sha256": "b1abbfba1ea1e6aa0a19160d700be6e0e44c8196cd506b08712f28173301d1ae"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0049-A-869557EE84E2-PKGB_5AAFB946671F.json",
+      "bytes": 2034,
+      "sha256": "d59b7553a0b8766bf89d711a12616e6cf34d09c1cca59aa16c62769f8b73dca1"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0050-A-8AF3DA43B6E3-PKGB_26F529A9E55D.json",
+      "bytes": 2045,
+      "sha256": "c1c4fe78c6648cc3dacc7b364b6360017667c50a50eb0c9b77104f4de0e1663c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0051-A-8D09153940A5-PKGB_CA4306911C31.json",
+      "bytes": 2027,
+      "sha256": "c3d9a866d182053e8a971cf1452caebee38bc858472939fbcc9125f954ced395"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0052-A-94102DC7D4AD-PKGB_3CB8579F527E.json",
+      "bytes": 2040,
+      "sha256": "3de3f9fdefb43272918c2c106f09bb24daab0bc04ab11d53aa39d18d8a3e43ad"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0053-A-9BF1B560BB43-PKGB_EB7D799DFE5A.json",
+      "bytes": 2031,
+      "sha256": "64f1b35e4c610d2055fedc48b554d0adc3e32f4e58965ef7f7807fe4b35be4ff"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0054-A-9CE3DD251993-PKGB_5911772C50A8.json",
+      "bytes": 2031,
+      "sha256": "40f1289203572b6d6f1c9ed20208128f3404f231f65c8231730ae4c65837ce6f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0055-A-A7506B517704-PKGB_F522DEE88468.json",
+      "bytes": 2039,
+      "sha256": "43bb651618437f27f7d6272a16f8455d3c77c3f998d199a2e3f13e3d84d30f95"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0056-A-A8040913FCAF-PKGB_73B685FB11F6.json",
+      "bytes": 2039,
+      "sha256": "2772554b5ec46b471b84abcb85756e00f8fb617b766735ad8cd016b06a2e661d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0057-A-B0E5958FF84D-PKGB_0E6D98559F6B.json",
+      "bytes": 2033,
+      "sha256": "789d05c0a56539a8426e72bfed5dbe346ef47c77785a174d507dce181e5c8cd6"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0058-A-B4D0F3A9EA61-PKGB_3334FEB462B7.json",
+      "bytes": 2033,
+      "sha256": "c3ec7663fe6aaae4c5637a2d43278b70d2e00ff9d813d0309a522510ca13230f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0059-A-B5BB105B8528-PKGB_181DCD9163A1.json",
+      "bytes": 2027,
+      "sha256": "e60b4074406d5bed61bf7324bf3df9e63a853e5ca902d5cc44466550b7467765"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0060-A-BA56FA8EF199-PKGB_9ED7E6CE4DDC.json",
+      "bytes": 2032,
+      "sha256": "5cbadb56a7ca6d7cfba0b577211d4fc1c9026369cf95c94b6e7f225c7ebd5d8f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0061-A-BB1170C99739-PKGB_122D7390958D.json",
+      "bytes": 2029,
+      "sha256": "a3da818afabbee188ff5e1e5838d424305738c6129bf8ab88d174af28b50ded0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0062-A-C4DD7F5EDE31-PKGB_F40D1B12384F.json",
+      "bytes": 2043,
+      "sha256": "df1deb9585cb9561fd26a7209305649190a3feccc8cf1012f7a58e9d52a80274"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0063-A-C60914052199-PKGB_F7C23594D5FC.json",
+      "bytes": 2027,
+      "sha256": "b26ed7534340ed2b21b07f61e47a806723b9c983509df1ff6b6c6bdaa9db6a8b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0064-A-C6DAAA292E36-PKGB_5375308178D9.json",
+      "bytes": 2036,
+      "sha256": "2e2266ad89f7f04c031c93eaa994ecfa9648653be6227c6d03fab8b67a706215"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0065-A-D095387AB304-PKGB_6AC1654A3B38.json",
+      "bytes": 2034,
+      "sha256": "0d78afb8ec3adee2a742c4d61e76901fd351317c40d259696d8defaf3ae3de95"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0066-A-D4263C0A3BA3-PKGB_C9ED9E3E46B5.json",
+      "bytes": 2029,
+      "sha256": "79fd4db754e5a60085a3cd5c4f2596670339275d77b0d1248cb9883a75f1cd1e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0067-A-D7BE19F67717-PKGB_F7254CBACFD6.json",
+      "bytes": 2031,
+      "sha256": "ee5b15e4351ce864d66410ddb1582f49c92d9c12613d540de38541f4e355aa7e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0068-A-D9F9A2ADA729-PKGB_1A7456E604BF.json",
+      "bytes": 2038,
+      "sha256": "79ad29e06991b6530b64c8b72fba2ffdd0325a04138b6311d3b2489b75f3d8de"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0069-A-DB0C3B577AEE-PKGB_0BCEAD7964BF.json",
+      "bytes": 2033,
+      "sha256": "701aac91701f41a1c6ad0f887dce665d2e97c74eb45118d3f8763f105ba40a5f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0070-A-DDD8A46DEBF3-PKGB_9FDC53051B14.json",
+      "bytes": 2033,
+      "sha256": "8ce05374e9ca983ca150ab49a434b05137d73c39ecc8d2573198cb6a8260c116"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0071-A-E049FFA9D18F-PKGB_0E031EB3891E.json",
+      "bytes": 2030,
+      "sha256": "f8dfeb486611f895d8dfa29cbf9da0d7691729fc7025485efeafce2200f9575e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0072-A-E28F073E5DB7-PKGB_8AFEC64253D3.json",
+      "bytes": 2034,
+      "sha256": "770787de55838fc01fee846450d905ef0e89e0422e2cbc0c88a9b015df220e02"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0073-A-E3E2286C7251-PKGB_D0CE1CA291A7.json",
+      "bytes": 2035,
+      "sha256": "ef71a1ce7244d99bdf39b6f624358ed726338002c31a14f326e9c2830f3adc7d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0074-A-E4AF2350B969-PKGB_95DA69640268.json",
+      "bytes": 2028,
+      "sha256": "9a45ba5d9bd52811860d0c6a9ff1f792804df29b215ea3e64d90298a3bf93a59"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0075-A-E9944C74EA7A-PKGB_A4FF42287EF4.json",
+      "bytes": 2028,
+      "sha256": "9f31e82b25c3cecf676f8995adce500c707e10ff88720e89e2c0be10c3f8cd1d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0076-A-F28C991CBA22-PKGB_1A82E183EEBB.json",
+      "bytes": 2032,
+      "sha256": "951626d9d12b4d3a26abb61b879efabbf991ff460fc8d531c6c6e954fbba5405"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/runtime-edges/0077-A-F64EA93DA156-PKGB_53380A1D038B.json",
+      "bytes": 2034,
+      "sha256": "8a6170bc2a4d8fdf97e77c253f18619777206b33d0b387ae05d58d157229c41b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/stage-result.v2.json",
+      "bytes": 22631,
+      "sha256": "f0772586567fdcb43b82d3f5e95360c21456305418e7628822cecc84b6c57691"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/regression/stdout.bin",
+      "bytes": 179,
+      "sha256": "a3bb144b5a39d2e772f5e7caa63ea1f1fb417f1665b61bb180adce9329e3dd0c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/execution-complete.v1.json",
+      "bytes": 181,
+      "sha256": "d74a99fd4a264dd47d547c996466b46a449496082042130456bb99b62d08d180"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/execution-input.v1.json",
+      "bytes": 4782,
+      "sha256": "3a650c48083e39d06ade3ae6447dd5593e34cfb1c706e09f91e21ed6df2c6863"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/observation.v2.json",
+      "bytes": 655,
+      "sha256": "e1a515a7a2d3d19f59baa19690e596bd1efbe7629f80eee810ca2b595931c59c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/process-receipt.v2.json",
+      "bytes": 105776,
+      "sha256": "9afc479e282403fe4b79a6c9877769c8a91e8efaa8e33e71f3e71b616b5820fe"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/reuse-complete.v1.json",
+      "bytes": 184,
+      "sha256": "fd86c8f1c7d81c3c32c38e6f0fcc0f80e6c47c9806cdf869f263f1da6439cc4b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/reuse-decision.v1.json",
+      "bytes": 71,
+      "sha256": "9770e0e6568cbbff44321493d8ce8ac7b127e873a5f0ae7dcd9d196417642b5b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/reuse-publication.v1.json",
+      "bytes": 125,
+      "sha256": "7e17879c6267fea250a4161aab4ffc4c30000284e874acde0ef04255c7413828"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/reuse-request.v1.json",
+      "bytes": 1105883,
+      "sha256": "dd3d22c4d618634e9631e7cea78382a9fcd7fa719cead87b982f492e6e610129"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0001-A-0318691652C9-PKGB_4DE82E497103.json",
+      "bytes": 2022,
+      "sha256": "2fae696394b8e288cd5b1cdee20213fca2467c401fbdcda726e3ba7bab428b02"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0002-A-0321E071B426-PKGB_597AAD1CF5FF.json",
+      "bytes": 2023,
+      "sha256": "6e87bc786b39429048ba60b9f282d3106fb5c2080ea4a55dee04936e007f4bc9"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0003-A-0383CAC099CD-PKGB_516E31393C6B.json",
+      "bytes": 2026,
+      "sha256": "d3b9915acc12582ffdcd3cfc7b738a0a2bd802be9f4882c93964cb119355fa3d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0004-A-0466423D920F-PKGB_AA5934B2633E.json",
+      "bytes": 2022,
+      "sha256": "b5671d592a55da9e70488d1e87cbee69d0b1da290f26bd3daf16f2a1cb8441d0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0005-A-0591150D78BA-PKGB_56A33BF13918.json",
+      "bytes": 2024,
+      "sha256": "b74be3467d5f81a6705d740ec79331f2f4524755342d05039157ea5fed0cfe2c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0006-A-06A8500AA16C-PKGB_97205C679D05.json",
+      "bytes": 2026,
+      "sha256": "61b1e61689bd08a15a4dbc67dac9af4bbc28346a7142173838ecba1021404b80"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0007-A-086CA3D1359B-PKGB_B31AFCA31048.json",
+      "bytes": 2023,
+      "sha256": "92adbc3acc63a5e6ccf3ebfe30f13a8d5fa7b247ecbe1c9cb7d7855c01e99972"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0008-A-09332ECDF2DE-PKGB_1FC41E966CB0.json",
+      "bytes": 2028,
+      "sha256": "f5a4dec9a43c4dadc66b5ad8ee9fc44243a059117eb6455d01171901984d0013"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0009-A-116C7BE15BC9-PKGB_7EDC585984AC.json",
+      "bytes": 2019,
+      "sha256": "775a4cea04d1eac4efe62f1c1d8a3ec7ef8d7b0e2c992c5c7521abb7f1ade67e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0010-A-1483FA01EEBF-PKGB_2CBB18C96E83.json",
+      "bytes": 2023,
+      "sha256": "6563948c66fde275e78b0190383507f5e6be3ff8d820313495ac4251dbaf84df"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0011-A-14C82F18F2E5-PKGB_56B4D051B472.json",
+      "bytes": 2025,
+      "sha256": "25a62e57520a94b0daf15d5be7ae93cf033ff71081fe75877b93c90565b26406"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0012-A-163CE3ACFA08-PKGB_435F58556AB8.json",
+      "bytes": 2018,
+      "sha256": "b1b7e38b2fd9c53719fe119aca2af5d0d17629596c3b3259e5dd1959b13ab37f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0013-A-1709C24BB303-PKGB_06B2E983CB73.json",
+      "bytes": 2023,
+      "sha256": "dc64072d08f3ac79c0cb68f7b8639e252b8b9921f5861faa56fdfcc3ded84c65"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0014-A-1B7E3D2A47B7-PKGB_6F444612047C.json",
+      "bytes": 2020,
+      "sha256": "41dadd3e9b57425e749a039d579314b3d08adc274dfd0e3bd26e114b8eacd3e4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0015-A-1B854C35989F-PKGB_31BB4B73B2E0.json",
+      "bytes": 2024,
+      "sha256": "b682aa0709eec0fd85a94b101ba1c941e96b55905047cf93d60cf76d5b4fc632"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0016-A-1F504CA9C2BA-PKGB_FB4AFA4ABA94.json",
+      "bytes": 2019,
+      "sha256": "835c8e7ce4aa904bc9844d3fce61d4aea6da18bbf8894b759a66f21093f9bf9d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0017-A-24507F920521-PKGB_DBD4AF430715.json",
+      "bytes": 2022,
+      "sha256": "cf6c348955bd78a0061f67ffc8cbd140a22922c5315a409aa7481a4593617604"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0018-A-27C286923406-PKGB_106E49892C1C.json",
+      "bytes": 2017,
+      "sha256": "5d76d97e8bdfc9e0d0fd2689a96579614420f3688fb5a6b70dcb71e640dc46ee"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0019-A-2CD8A0BEF5E1-PKGB_2275CA248048.json",
+      "bytes": 2020,
+      "sha256": "197ff7fba2c53decf82b8c46534996341afc7220f447339f576ba1898ece70e0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0020-A-2F17CF9B2579-PKGB_333D4B6DB398.json",
+      "bytes": 2026,
+      "sha256": "51ccadf4246ad72905138cdb50675242c97c2b2bdaccc6a01204fe1393c416f2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0021-A-31ADF693E988-PKGB_33A58D56A240.json",
+      "bytes": 2026,
+      "sha256": "ec44f4ab2c16201b9495d2311fbbed057c871f230e28f235ed83217fa41fa4a4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0022-A-39A5F4F7F7A9-PKGB_EBC502B01FF4.json",
+      "bytes": 2023,
+      "sha256": "00d97532ec956b78d350fdcf96adc308342f9cf19d14eda0930ff03120a7dbd2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0023-A-3C6D44B2581A-PKGB_B66298A862BB.json",
+      "bytes": 2017,
+      "sha256": "1d931ec4468631f2b264e7a4c80d4f960f0e6ac60a1053e9cf6bcb7b8bff90b8"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0024-A-3CFD795ADE40-PKGB_F308EA0BD0A3.json",
+      "bytes": 2017,
+      "sha256": "5d52435173984d9cc40d13fbea1d24cfefb49c9e0fbd50afd49609a724a88c04"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0025-A-4629D83026CA-PKGB_D4FDDB15D79E.json",
+      "bytes": 2022,
+      "sha256": "8734ebad4742d5b67abdf56041b8d0b2ea31c94529aa3c753d3c18c4a3f3d49a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0026-A-47D19AF48E38-PKGB_3468471DAB29.json",
+      "bytes": 2025,
+      "sha256": "ff494d432f09db669e45fd9fb79e8e5af98482cabea7b55bf54f19c7958f766f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0027-A-48DABB725239-PKGB_D435CEAE6CBD.json",
+      "bytes": 2024,
+      "sha256": "f0f9dd2202130a53d6335322c02f5b21a378b6ce126adb842132b30fed5f6183"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0028-A-4BD9FF47766C-PKGB_520D0E5EA4C7.json",
+      "bytes": 2020,
+      "sha256": "78713ac00ec6ab861c7ff614656dfbdfbcec28292428e8db2f3c6e76bde19c15"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0029-A-4F23432BA4B9-PKGB_136CDDBA77A6.json",
+      "bytes": 2026,
+      "sha256": "973f149e286087146e5ef5440a3085cb58e6c6522a866860c005ae7cc8412a87"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0030-A-530A88140632-PKGB_9E8AACC50395.json",
+      "bytes": 2016,
+      "sha256": "16a07661a14ac60c14dbe4bf4487b67f05c5b2efd41c11963173960678907bf4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0031-A-5577FDB2417C-PKGB_49D7164AED75.json",
+      "bytes": 2022,
+      "sha256": "1a83b48b1cdf2ccd8458140b76c010d4d6677835c1ddfa64dbccdd170e9538d6"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0032-A-5811299647E0-PKGB_8ECA25407A03.json",
+      "bytes": 2026,
+      "sha256": "ba66e1458aafaa9f6d25ede556a5918bd8b953fdef0f748613fa25915c43d63d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0033-A-610B0FCED91B-PKGB_A6C02C53C2A4.json",
+      "bytes": 2026,
+      "sha256": "d4a3d7ac78d96a8bac8fcba345e9bc2448df590d28f3fc670727a08690c7b3f0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0034-A-644724AD70F2-PKGB_0E781666A8E6.json",
+      "bytes": 2021,
+      "sha256": "2ca7477371076bfe6c0c59d7527d54b5e0274ca7464ecf378ab862eb81d9a34d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0035-A-6492EC47D791-PKGB_F8B04C33A6A6.json",
+      "bytes": 2017,
+      "sha256": "b72df604914fd676ed1ffe4e05ed6777863452203be8dffad13190190726717e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0036-A-654764CCC5E4-PKGB_0082DA37FDD3.json",
+      "bytes": 2026,
+      "sha256": "e0680e9dc4438c44a8d4ca33405df597f4b8070b1e1bcfdd3848b01177aed2d4"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0037-A-677C56D2E00B-PKGB_1370E773AD67.json",
+      "bytes": 2030,
+      "sha256": "3ee936f4ebf2ca6ab8534303cd1bcf1028677c61097f140c8317fd2aaf7f9407"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0038-A-6AA7FAC093AF-PKGB_80316CD17E3B.json",
+      "bytes": 2025,
+      "sha256": "9360c4f2a1b78bdcec6bd0e7e64c01d35732b0f46bc080fe7d98e21fab2cd644"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0039-A-6CCD4DEAACE8-PKGB_7ACD9F289FDE.json",
+      "bytes": 2026,
+      "sha256": "087186cf7e6fc250a018f33efe1c9570049c11c01bf059946d8ea714362abd7e"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0040-A-71FBA4D4208B-PKGB_3E98F7EB3C8D.json",
+      "bytes": 2019,
+      "sha256": "7771c5d1325d60b2f63a688c63f36818a7511a9ccd8e649672f74088ffb81d50"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0041-A-726F8D1D7941-PKGB_FF00F91F7070.json",
+      "bytes": 2025,
+      "sha256": "2448a669fd17c5020948c287bd2e086bcb6aa909854112a9a4f39900058d6354"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0042-A-745AFBB4BF7A-PKGB_EB599B9F9D24.json",
+      "bytes": 2024,
+      "sha256": "9b1a4ad46c1fe2d35fe32aed4541060cc7845eea0c8aa624c25d52c476b8ae32"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0043-A-76D54F175DC8-PKGB_E5D14EE8A976.json",
+      "bytes": 2023,
+      "sha256": "27eb6a307433d95755d2e346b4f6f0aab7ea2fec1aa8d847334797f3a5eacf06"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0044-A-7A885DC508CA-PKGB_51D4739E3A0A.json",
+      "bytes": 2020,
+      "sha256": "072d48ae28300ecc69aabd65ff6f2da142526c687a0adb37f7a0efbc1666ac23"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0045-A-7D0E9C5FB237-PKGB_7136BAA2CA44.json",
+      "bytes": 2026,
+      "sha256": "70b68e5f916454512d5634ff6d91c2c73de398f0a8ea249cf9f841b48dc510d2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0046-A-7D4C6A3F5A53-PKGB_897EA243B79E.json",
+      "bytes": 2021,
+      "sha256": "9803378cd9dc97877a9ce301e6ee99d1e983a0d6f57bc0f143e68c7f7bdda816"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0047-A-7F66799C2C86-PKGB_27A3D0428D77.json",
+      "bytes": 2018,
+      "sha256": "4e67491f902221dc530f18d65e81c0f5be16896db389d5853941f719d3616eda"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0048-A-81A7EC590F1A-PKGB_18BAEF1E87C0.json",
+      "bytes": 2017,
+      "sha256": "543e7ae554e9a5fd1e145b05ccf2b5e779d86c42a5f42f75ca0eeca80e6c9bcc"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0049-A-869557EE84E2-PKGB_5AAFB946671F.json",
+      "bytes": 2024,
+      "sha256": "0bb516512a000c5099ed826057e3e9f9ea686a90a75f6d2b7cdc33cc37d3a1b0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0050-A-8AF3DA43B6E3-PKGB_26F529A9E55D.json",
+      "bytes": 2035,
+      "sha256": "b0b46b93eb79e23f3ee2ed5f4bc19bf959ba9e8a605bcd027f26eb557342d2ba"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0051-A-8D09153940A5-PKGB_CA4306911C31.json",
+      "bytes": 2017,
+      "sha256": "b4bc6f7dc15da0de56043f01c2736cf2c519307327b132a8cfc4864eda65120c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0052-A-94102DC7D4AD-PKGB_3CB8579F527E.json",
+      "bytes": 2030,
+      "sha256": "d87c66a5c1f4c070bdeb6fac4162ebb7d5fe37b76b3740b8d03cfc497ef30914"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0053-A-9BF1B560BB43-PKGB_EB7D799DFE5A.json",
+      "bytes": 2021,
+      "sha256": "f5018416337c8ab9a892eade9d1c404b6ed3fdcc2c7bc2da054acf95f1d07125"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0054-A-9CE3DD251993-PKGB_5911772C50A8.json",
+      "bytes": 2021,
+      "sha256": "07ea51251da54c50ee17ddbe7fa289ffaab65c21212151b3b3e342842a8fbfc5"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0055-A-A7506B517704-PKGB_F522DEE88468.json",
+      "bytes": 2029,
+      "sha256": "cba24257a523801f20fc0ede7d9c667ee330429b0d41b9303078d5c7a5f3de0f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0056-A-A8040913FCAF-PKGB_73B685FB11F6.json",
+      "bytes": 2029,
+      "sha256": "017b769c4198d8df1fab81afa905f9362534cb7a5602a487f51104d03ea8276c"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0057-A-B0E5958FF84D-PKGB_0E6D98559F6B.json",
+      "bytes": 2023,
+      "sha256": "459e186234f9f8e18e9f1f63a7a54c4d259d745fc4d4ced7e63449dc54fe04cc"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0058-A-B4D0F3A9EA61-PKGB_3334FEB462B7.json",
+      "bytes": 2023,
+      "sha256": "01ead2e2f65061330bb12173656c397ab381e266977a0bc947033c62bf219d4f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0059-A-B5BB105B8528-PKGB_181DCD9163A1.json",
+      "bytes": 2017,
+      "sha256": "38b66a0776fe032bc2828870e52da83bb792cd8c26b5705aa84139a10ff27e43"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0060-A-BA56FA8EF199-PKGB_9ED7E6CE4DDC.json",
+      "bytes": 2022,
+      "sha256": "57d8f75df9be26054f2867f16e46ffb473a3176ed875efd9dedcf955500487af"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0061-A-BB1170C99739-PKGB_122D7390958D.json",
+      "bytes": 2019,
+      "sha256": "d14b49f4ec699b93c3f8327d20ab2b7ed11842c30c19f1afcd822c9119f3cbd9"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0062-A-C4DD7F5EDE31-PKGB_F40D1B12384F.json",
+      "bytes": 2033,
+      "sha256": "dfc270cf1f8c84b2f6eb32508534953cfcfa0f084c59029b9d7fcf474747e94d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0063-A-C60914052199-PKGB_F7C23594D5FC.json",
+      "bytes": 2017,
+      "sha256": "04b3e647956f9eaf622f0728196a7d5c31201362bcdc4408d83a5ceefc6add42"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0064-A-C6DAAA292E36-PKGB_5375308178D9.json",
+      "bytes": 2026,
+      "sha256": "82df4c3da10b33a29d61a76216a157d87613d7c49d0d70c79dac7f858a03b791"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0065-A-D095387AB304-PKGB_6AC1654A3B38.json",
+      "bytes": 2024,
+      "sha256": "74d430b8038b9324b2603af277ba49ffb309220924bf492dd0e20e628226390b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0066-A-D4263C0A3BA3-PKGB_C9ED9E3E46B5.json",
+      "bytes": 2019,
+      "sha256": "762621235c6b97e4083380b3b02946e31214a22e00720594e48a961e5c8513cd"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0067-A-D7BE19F67717-PKGB_F7254CBACFD6.json",
+      "bytes": 2021,
+      "sha256": "77478493dad79301ad8d1511d2c0154548f8846d915b9c3f0d1950d839707e12"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0068-A-D9F9A2ADA729-PKGB_1A7456E604BF.json",
+      "bytes": 2028,
+      "sha256": "86cb30dea4c3ff0ba755fbf120fd9536334aa7eabb880da5411c0da330613e46"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0069-A-DB0C3B577AEE-PKGB_0BCEAD7964BF.json",
+      "bytes": 2023,
+      "sha256": "6d4a66ad82a91ecbf3a60de5e963c5c3fe220f08f53a45e09295a211752c7dcc"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0070-A-DDD8A46DEBF3-PKGB_9FDC53051B14.json",
+      "bytes": 2023,
+      "sha256": "f79c36bce4a11807142f2f5e3f361d2079ef838af7b718ce6d85a67c466e25fa"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0071-A-E049FFA9D18F-PKGB_0E031EB3891E.json",
+      "bytes": 2020,
+      "sha256": "e853c160b8381db5db354de23b42293ce6e861b9c85722ebba1842e4be0d5a8d"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0072-A-E28F073E5DB7-PKGB_8AFEC64253D3.json",
+      "bytes": 2024,
+      "sha256": "6804aa92755edf9aa5275845db8eebe027383e2d9ad253c5818edacc6d226102"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0073-A-E3E2286C7251-PKGB_D0CE1CA291A7.json",
+      "bytes": 2025,
+      "sha256": "74a32c3a2b5cb15a7b34120c35d62f2354ff54aa69f09f5fe1598ae43f6b2c28"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0074-A-E4AF2350B969-PKGB_95DA69640268.json",
+      "bytes": 2018,
+      "sha256": "7b47ade0bb8de096460330836f8b9ccbd5f28a4ee26d5db36c6170e2bfb05cbe"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0075-A-E9944C74EA7A-PKGB_A4FF42287EF4.json",
+      "bytes": 2018,
+      "sha256": "b11c6a7e9d5b2eecff8212da9a78335d1300b50c716bfaa46a1e9b6adbf7d3ae"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0076-A-F28C991CBA22-PKGB_1A82E183EEBB.json",
+      "bytes": 2022,
+      "sha256": "f3d54ed001864d428e1fcb105a60e260b771bf03251c994b7745843251c26c7f"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/runtime-edges/0077-A-F64EA93DA156-PKGB_53380A1D038B.json",
+      "bytes": 2024,
+      "sha256": "9e623cec78f44d018c671c8894796e61a497810ab787894130f5b80ad3753b68"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/stage-result.v2.json",
+      "bytes": 22270,
+      "sha256": "395100934ff09e0cea27b1e8ec6338e6d57018511da2bef8d5bba4fdb0093c0a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/canonical-evidence/terminal/stdout.bin",
+      "bytes": 179,
+      "sha256": "c63782c11b970a4c2cdcc5806c1b17a06da3c292ecf1c27ff84343fdcdf7a03b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/descriptors/probe.json",
+      "bytes": 40732,
+      "sha256": "9c10e10d5bd73d46ac9b73585c6a73b9e72e11b8b7305536989c4c64c9ef8db0"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/descriptors/regression.json",
+      "bytes": 40806,
+      "sha256": "26d2193df431c144ccdd3729c848362429301eedfe20e44aec85489cd47b834b"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/quick-dev-s1-r10/descriptors/terminal.json",
+      "bytes": 35098,
+      "sha256": "fc93f126b662186c82348eb3b0498e9343ddf8ccb344adc802ffe4d3f7d283e2"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/scope-recheck-010/A.md",
+      "bytes": 5657,
+      "sha256": "0d4eb0050e569ab00c70b2d9e9f80a449ff4f1af6bb6984428149bc8c288f461"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/scope-recheck-010/B.md",
+      "bytes": 6158,
+      "sha256": "a3fc522cb16640afea69e885731eb9000e89efe8469c0f1783f25110308f23eb"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/reviews/scope-recheck-010/RECHECK-METADATA.json",
+      "bytes": 760,
+      "sha256": "c1f1475a69927185acffa9b9afc0dd248ca5e2895d14449cf1ec16197fc5c66a"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/snapshot-roots-r10.json",
+      "bytes": 9864,
+      "sha256": "d6e00736e52fe24772107cfe19deb9069a5d19c99f1de9198df4c9946cc57d14"
+    },
+    {
+      "path": "logs/package-b-rebuild-20261028/stage-scope-repaired-current-proof-010.zip",
+      "bytes": 36370644,
+      "sha256": "5211fdcd9f8ab50009e6da1b21ccf48f2f5951cd022d09a3475c439d87b61027"
+    }
+  ]
+}

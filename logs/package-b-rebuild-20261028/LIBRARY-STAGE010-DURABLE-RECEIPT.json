@@ -1,0 +1,29 @@
+{
+  "archive": {
+    "path": "logs/package-b-rebuild-20261028/stage-scope-repaired-current-proof-010.zip",
+    "bytes": 36370644,
+    "sha256": "5211fdcd9f8ab50009e6da1b21ccf48f2f5951cd022d09a3475c439d87b61027"
+  },
+  "manifest": {
+    "path": "logs/package-b-rebuild-20261028/stage-scope-repaired-current-proof-010-manifest.json",
+    "bytes": 58412,
+    "sha256": "b556827bbd73f787711b8140a1c09bbfe6d9527be40037cdbf453291bc05d617"
+  },
+  "payload_files": 226,
+  "zip_crc": "pass",
+  "restored_all_file_hashes": "pass",
+  "restore_directory": "/workspace/ji-mu-yun/logs/package-b-rebuild-20261028/stage-scope-repaired-current-proof-010-restore-validation",
+  "library_upload": "succeeded",
+  "Q8": {
+    "path": "logs/package-b-rebuild-20261028/proof-refresh-scope-r9/Q8.json",
+    "bytes": 79560,
+    "sha256": "bafd90aaa96af5e99f720fc3c1151344310feee2acf11ccb5a446885bcad5c85"
+  },
+  "snapshot": "sha256:b26baf3e7ff3b7312e903bde81a19d86e47e09495c41f1b0f6fc7218f27c26a3",
+  "saved_at": "2026-10-28T08:56:06.533722+00:00",
+  "library_file_id": "libfile_85ed5499bf08819180f3c2fef56a0a00",
+  "file_id": "file_000000009788820ba976f2e2be1cf8e2",
+  "version": 0,
+  "remote_download_hash_verification": "not claimed; official successful create and exact returned size, local CRC/all-restored-payload verified",
+  "metadata_applied": true
+}

@@ -1,0 +1,13 @@
+{
+  "authorizes": [],
+  "currentRun": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-runs/acceptance-4b4e9ae76fdd229b",
+  "finalResult": {
+    "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-runs/acceptance-4b4e9ae76fdd229b/finalization/acceptance-passed.v1.json",
+    "sha256": "sha256:8c95baedb74bd9a39ba265e4059f40e8619f4b5a01d8501b5ffaf703731a2176"
+  },
+  "finalWrapper": {
+    "path": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-runs/acceptance-4b4e9ae76fdd229b/finalization/acceptance-result-final.v1.json",
+    "sha256": "sha256:3351c9b519d158f015a39e4e91c99a605a59a62b3d38984059483f7fc248382a"
+  },
+  "schemaVersion": "acceptance-current.v1"
+}

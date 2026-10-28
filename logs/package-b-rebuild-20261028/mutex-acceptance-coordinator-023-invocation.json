@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "-B",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    "run-coordinator",
+    "--request",
+    "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/coordinator-request.mutex-current.v3.json",
+    "--out",
+    "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-inputs/preparation-mutex-20261028/coordinator-result.v4.json"
+  ],
+  "authorizes": [],
+  "exit_code": 0,
+  "raw_log": "logs/package-b-rebuild-20261028/mutex-acceptance-coordinator-023.log",
+  "raw_log_sha256": "sha256:b7f2a55cb6977974a44b9f4ffc8e07d7d6b96c588468e9d2e8a5022b3d3f599e",
+  "schema": "package-b.actual-public-invocation.v1"
+}

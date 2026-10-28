@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-28T09:04:36.030569+00:00",
+  "agents": {
+    "A": "/root/package_b_review_a",
+    "B": "/root/package_b_review_b"
+  },
+  "model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "reports_received_before_writes": true,
+  "candidate_changed": false,
+  "verified_bound_files": 47,
+  "result": "A closes prior findings,0new; B closes prior Match capture but confirms direct nested class namespace P2; producer causal evaluation pending",
+  "reports": [
+    {
+      "path": "reviews/scope-recheck-010/A.md",
+      "sha256": "0d4eb0050e569ab00c70b2d9e9f80a449ff4f1af6bb6984428149bc8c288f461"
+    },
+    {
+      "path": "reviews/scope-recheck-010/B.md",
+      "sha256": "a3fc522cb16640afea69e885731eb9000e89efe8469c0f1783f25110308f23eb"
+    }
+  ]
+}

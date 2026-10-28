@@ -1,0 +1,12 @@
+{
+  "library_file_id": "libfile_d000f9c76b3881919fed1cfe4666a1bd",
+  "file_id": "file_000000000a3481f89049e80bc5d9c442",
+  "version": 0,
+  "bytes": 33981,
+  "sha256": "e9880e14c12d9e5f3f9b7aac12aa6c1598183a9c0a61fdc22bb7bcf18efe3962",
+  "create": "succeeded",
+  "metadata_applied": true,
+  "local_crc_payload_hash": "verified",
+  "remote_readback_hash": "not claimed",
+  "source_payload_library_file_id": "libfile_29b2153fd1e881918832cbef8c0bd56d"
+}

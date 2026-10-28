@@ -1,0 +1,128 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_quality_binding_respects_lexical_scope[default-argument-outer-call-True] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-12/test_quality_binding_respects_0')
+variant = 'default-argument-outer-call', expected = True
+
+    @pytest.mark.parametrize("variant,expected", [
+        ("unrelated-local-import", True),
+        ("unrelated-local-assignment", True),
+        ("local-canonical-import", True),
+        ("called-local-replacement", False),
+        ("other-function-canonical-only", False),
+        ("match-capture", False),
+        ("match-star-capture", False),
+        ("match-mapping-capture", False),
+        ("comprehension-assignment", False),
+        ("comprehension-outer-iterator", True),
+        ("default-argument-outer-call", True),
+    ])
+    def test_quality_binding_respects_lexical_scope(tmp_path, variant, expected):
+        source = _source()
+        canonical = "from scripts.sc.validate_skill_quality import validate_package\n"
+        if variant == "unrelated-local-import":
+            source += "\ndef unrelated_helper():\n    from alternate_validator import validate_package\n    return validate_package\n"
+        elif variant == "unrelated-local-assignment":
+            source += "\ndef unrelated_helper():\n    validate_package = None\n    return validate_package\n"
+        elif variant == "local-canonical-import":
+            source = source.replace(canonical, "").replace("    result=", "    " + canonical + "    result=")
+        elif variant == "called-local-replacement":
+            source = source.replace("    result=", "    from alternate_validator import validate_package\n    result=")
+        elif variant == "other-function-canonical-only":
+            source = source.replace(canonical, "")
+            source += "\ndef unrelated_helper():\n    " + canonical + "    return validate_package\n"
+        elif variant == "comprehension-assignment":
+            source = source.replace("    result=", "    values = [(validate_package := (lambda **kw: {'status': 'fail'})) for _ in [0]]\n    result=")
+        elif variant == "comprehension-outer-iterator":
+            source = source.replace("result=validate_package(", "result=[validate_package for validate_package in validate_package(")
+            source = source.replace("mode='strict')", "mode='strict')]").replace("assert result['status']=='pass'", "assert result")
+        elif variant == "default-argument-outer-call":
+            call = source.split("    result=", 1)[1].split("\n", 1)[0]
+            source = canonical + "def test_real_quality(validate_package=" + call + "):\n    assert validate_package['status']=='pass'\n"
+        else:
+            patterns = {"match-capture": ("lambda **kw: {'status': 'fail'}", "validate_package"),
+                        "match-star-capture": ("[]", "[*validate_package]"),
+                        "match-mapping-capture": ("{}", "{**validate_package}")}
+            value, capture = patterns[variant]
+            source = source.replace("    result=", f"    match {value}:\n        case {capture}:\n            result=")
+        root, bundle, descriptor = _fixture(tmp_path, source)
+        if expected:
+>           assert _run(root, bundle, descriptor)["status"] == "pass"
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:230: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:55: in _run
+    return validate_red_production_entry(workspace=root,bundle=bundle,slice_id='S1',descriptor=descriptor)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def validate_red_production_entry(
+        *,
+        workspace: Path,
+        bundle: Mapping[str, Any],
+        slice_id: str,
+        descriptor: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        if descriptor.get("stage") != "red":
+            raise ValueError("production-entry guard only accepts RED descriptor")
+        if descriptor.get("slice_id") != slice_id or descriptor.get("plan_id") != bundle.get("plan_id"):
+            raise ValueError("RED descriptor plan/slice identity mismatch")
+    
+        selected = _slice(bundle, slice_id)
+        owners = [str(item) for item in selected.get("production_owners", []) if isinstance(item, str) and item]
+        python_owners = [(owner, module) for owner in owners if (module := _module_for_owner(owner))]
+    
+        candidate_refs: list[str] = []
+        for raw in [*descriptor.get("target_refs", []), *selected.get("execution_snapshot_paths", [])]:
+            if not isinstance(raw, str):
+                continue
+            ref = safe_relative(raw)
+            if ref.endswith(".py") and ref not in owners and ref not in candidate_refs:
+                candidate_refs.append(ref)
+        if not candidate_refs:
+            raise ValueError("RED production-entry guard found no bound Python test source")
+    
+        root = workspace.resolve()
+        parsed: list[tuple[str, str, ast.AST]] = []
+        for ref in candidate_refs:
+            path = (root / ref).resolve()
+            try:
+                path.relative_to(root)
+            except ValueError as exc:
+                raise ValueError("RED test path escapes repository") from exc
+            if not path.is_file() or path.is_symlink():
+                continue
+            source = path.read_text(encoding="utf-8")
+            try:
+                tree = ast.parse(source, filename=ref)
+            except SyntaxError as exc:
+                raise ValueError(f"RED test source is not valid Python: {ref}") from exc
+            if _constant_failure(tree):
+                raise ValueError(f"RED test contains unconditional assert False: {ref}")
+            self_judging = _self_judging_source(source)
+            if self_judging:
+                raise ValueError(f"RED test reads plan/evidence completion bytes: {ref}:{self_judging}")
+            parsed.append((ref, source, tree))
+    
+        if not parsed:
+            raise ValueError("RED test source is missing; run author-red first")
+    
+        bindings: list[dict[str, str]] = []
+        for owner, module in python_owners:
+            for ref, _source, tree in parsed:
+                if _owner_called(tree, module):
+                    bindings.append({"production_owner": owner, "module": module, "test_ref": ref})
+        if not bindings and any(owner.endswith(".cs") for owner in owners):
+            from dotnet_production_entry import dotnet_bindings
+            bindings.extend(dotnet_bindings(workspace=root, selected=selected, parsed=parsed))
+        if not bindings:
+            bindings.extend(_quality_bindings(root, selected, parsed))
+        if not bindings:
+            if not python_owners:
+>               raise ValueError("RED production-entry guard has no supported Python production owner or verified .NET test binding")
+E               ValueError: RED production-entry guard has no supported Python production owner or verified .NET test binding
+
+.agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py:350: ValueError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_quality_binding_respects_lexical_scope[default-argument-outer-call-True]
+1 failed, 37 deselected in 0.15s

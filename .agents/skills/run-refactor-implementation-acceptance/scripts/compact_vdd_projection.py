@@ -9,6 +9,8 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
+import sys
 import subprocess
 import tempfile
 from typing import Any
@@ -272,6 +274,63 @@ def _candidate_payload(root: Path, request: dict[str, Any], path: str) -> bytes 
     return current.read_bytes() if current.is_file() else None
 
 
+def _commit_worktree_observation(root: Path, candidate: str, request_path: Path) -> list[dict[str, str]]:
+    """ADR-0053: retain Git status; admit only byte-identical normalization noise.
+
+    No index, file, attribute or Git configuration is changed. Real staged,
+    mode, symlink, byte or untracked changes retain the clean-custody refusal.
+    """
+    refusal = "commit candidate requires a clean worktree apart from its projection request"
+    observed = []
+    try:
+        head = (_git(root, "rev-parse", "HEAD") or b"").strip().decode("ascii")
+        rows = (_git(root, "--no-optional-locks", "status", "--porcelain=v1", "-z", "--untracked-files=all") or b"").split(b"\0")
+        for row in filter(None, rows):
+            status, raw_path = row[:2].decode("ascii"), row[3:]
+            relative = _relative(raw_path.decode("utf-8"), "worktree path")
+            path = root / relative
+            if status == "??" and path.resolve() == request_path.resolve():
+                continue
+            if status != " M":
+                raise InputError(refusal)
+            for part in (path, *path.parents):
+                if part == root:
+                    break
+                if part.is_symlink() or getattr(part, "is_junction", lambda: False)():
+                    raise InputError(refusal)
+            before = path.stat()
+            if not stat.S_ISREG(before.st_mode):
+                raise InputError(refusal)
+            trees = []
+            for revision in (head, candidate):
+                tree = _git(root, "ls-tree", "-z", revision, "--", relative) or b""
+                metadata, listed = tree.rstrip(b"\0").split(b"\t", 1)
+                mode, kind, oid = metadata.split()
+                if listed != raw_path or kind != b"blob" or mode not in (b"100644", b"100755"):
+                    raise InputError(refusal)
+                trees.append((mode, oid))
+            entry = _git(root, "ls-files", "--stage", "-z", "--", relative) or b""
+            metadata, listed = entry.rstrip(b"\0").split(b"\t", 1)
+            mode, oid, stage = metadata.split()
+            if listed != raw_path or stage != b"0" or trees[0] != trees[1] or (mode, oid) != trees[0]:
+                raise InputError(refusal)
+            if os.name != "nt" and bool(before.st_mode & 0o111) != (mode == b"100755"):
+                raise InputError(refusal)
+            payload = path.read_bytes()
+            after = path.stat()
+            stable_fields = ("st_dev", "st_ino", "st_mode", "st_size", "st_mtime_ns", "st_ctime_ns")
+            if any(getattr(before, key) != getattr(after, key) for key in stable_fields) or payload != _git_blob(root, head, relative):
+                raise InputError(refusal)
+            observed.append({"path": relative, "gitStatus": status,
+                             "verification": "physical-index-head-candidate-byte-and-mode-identical",
+                             "sha256": _hash_bytes(payload), "mode": mode.decode("ascii")})
+        if (_git(root, "rev-parse", "HEAD") or b"").strip().decode("ascii") != head:
+            raise InputError(refusal)
+    except (OSError, UnicodeError, ValueError, InputError) as exc:
+        raise InputError(refusal) from exc
+    return observed
+
+
 def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     root = repository_root.resolve()
     request = _load(request_path)
@@ -279,15 +338,9 @@ def project(repository_root: Path, request_path: Path) -> dict[str, Any]:
     if not request.get("candidateRevision"):
         raise InputError("dirty-worktree acceptance requests require an explicit candidateRevision")
     if request.get("candidateRevision"):
-        status = (_git(root, "status", "--porcelain") or b"").decode("utf-8")
-        lines = [line for line in status.splitlines() if line]
-        allowed_request = (
-            len(lines) == 1
-            and lines[0].startswith("?? ")
-            and (root / lines[0][3:]).resolve() == request_path.resolve()
-        )
-        if status and not allowed_request:
-            raise InputError("commit candidate requires a clean worktree apart from its projection request")
+        observation = _commit_worktree_observation(root, request["candidateRevision"], request_path)
+        if observation:
+            print(json.dumps({"worktreeStatusObservation": observation, "authorizes": []}, sort_keys=True), file=sys.stderr)
     target = (root / request["targetPlan"]).resolve()
     try:
         target.relative_to(root)

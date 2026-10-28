@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "-B",
+    "scripts/quick_dev/run.py",
+    "--plan",
+    "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3",
+    "--action",
+    "preflight-session",
+    "--execution-request",
+    "logs/package-b-rebuild-20261028/execution-session-r15.json"
+  ],
+  "authorizes": [],
+  "exit_code": 0,
+  "finished_utc": "2026-10-28T11:12:29.303949+00:00",
+  "raw_log": "logs/package-b-rebuild-20261028/mutex-r15-preflight.log",
+  "raw_log_sha256": "sha256:bbcb516cd73511897fd1b9d959fdfbb76d716ee3a341852263b4e0ccc11109e7",
+  "schema": "package-b.actual-public-invocation.v1",
+  "started_utc": "2026-10-28T11:12:28.882317+00:00"
+}

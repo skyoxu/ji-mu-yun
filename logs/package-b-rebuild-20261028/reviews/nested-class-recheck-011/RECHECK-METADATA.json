@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-28T09:16:48.808643+00:00",
+  "agents": {
+    "A": "/root/package_b_review_a",
+    "B": "/root/package_b_review_b"
+  },
+  "model": "gpt-6-astra",
+  "reasoning_effort": "high",
+  "reports_received_before_writes": true,
+  "candidate_changed": false,
+  "verified_current_files": 47,
+  "result": "Both original arms close the demonstrated nested class false admission/rejection;0new directly related P0/P1/P2. Acceptance preconditions remain separate.",
+  "head": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "Q8": {
+    "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/Q8.json",
+    "bytes": 79577,
+    "sha256": "525bde492c74e7547807a426c2ee7b844b22e2966f4576ec65be671dae7f56e3"
+  },
+  "reports": [
+    {
+      "path": "reviews/nested-class-recheck-011/A.md",
+      "sha256": "a8dc1167fb404cacbc150ceeefc6d6b0a8ee32876af7412bb83169fe08cc8d70"
+    },
+    {
+      "path": "reviews/nested-class-recheck-011/B.md",
+      "sha256": "43de85c2dce9e09c1dcb043fa093f9743139aa96c2715f05167040d4c0504c3f"
+    }
+  ]
+}

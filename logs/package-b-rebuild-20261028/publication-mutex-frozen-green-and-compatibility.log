@@ -1,0 +1,77 @@
+......................................F...F.....F....................... [ 62%]
+............................................                             [100%]
+=================================== FAILURES ===================================
+_ test_real_entry_registers_and_protects_generation[run-phase-bootstrap-review] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-21/test_real_entry_registers_and_2')
+consumer = 'run-phase-bootstrap-review'
+
+    @pytest.mark.parametrize('consumer', CONSUMERS)
+    def test_real_entry_registers_and_protects_generation(tmp_path, consumer):
+        request = actual_request(tmp_path, consumer)
+        _, result, _ = complete(tmp_path, request)
+        store = tmp_path / request['storage']
+        pointer = store / 'current.v1.json'
+        probe = subprocess.run([sys.executable, str(Path(__file__).resolve()), consumer, str(tmp_path), str(pointer)],
+            capture_output=True, text=True, encoding='utf-8', errors='strict', env=dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get('PYTHONPATH', '')))
+>       assert probe.returncode == 0, probe.stdout + probe.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "/workspace/ji-mu-yun/scripts/python/tests/test_skill_input_consumer_migration.py", line 284, in <module>
+E             entry_probe(sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]))
+E           File "/workspace/ji-mu-yun/scripts/python/tests/test_skill_input_consumer_migration.py", line 242, in entry_probe
+E             entry = importlib.import_module(module)
+E                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/importlib/__init__.py", line 90, in import_module
+E             return _bootstrap._gcd_import(name[level:], package, level)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+E           File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+E           File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+E           File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+E           File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+E           File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+E           File "/workspace/ji-mu-yun/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", line 72, in <module>
+E             CONFIGURED_MODEL = load_model()
+E                                ^^^^^^^^^^^^
+E           File "/workspace/ji-mu-yun/scripts/sc/model_config.py", line 39, in load_model
+E             raise ValueError("Codex model configuration must define a valid model string")
+E         ValueError: Codex model configuration must define a valid model string
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/workspace/.cloud-tools/package-b-env-20261028/bin/python', '/workspace/ji-mu-yun/scripts/pyth...guration must define a valid model string")\nValueError: Codex model configuration must define a valid model string\n').returncode
+
+scripts/python/tests/test_skill_input_consumer_migration.py:210: AssertionError
+______ test_real_entry_rejects_legacy_receipt[run-phase-bootstrap-review] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-21/test_real_entry_rejects_legacy2')
+consumer = 'run-phase-bootstrap-review'
+
+    @pytest.mark.parametrize('consumer', CONSUMERS)
+    def test_real_entry_rejects_legacy_receipt(tmp_path, consumer):
+        request = actual_request(tmp_path, consumer)
+        legacy = tmp_path / 'legacy.json'
+        legacy.write_text(json.dumps({'schema_version':'skill-input-consumption.v1','ready':True}), encoding='utf-8')
+        probe = subprocess.run([sys.executable, str(Path(__file__).resolve()), consumer, str(tmp_path), str(legacy)],
+            capture_output=True, text=True, encoding='utf-8', errors='strict', env=dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get('PYTHONPATH', '')))
+>       assert probe.returncode != 0 and 'v2 current pointer' in probe.stderr
+E       assert (1 != 0 and 'v2 current pointer' in 'Traceback (most recent call last):\n  File "/workspace/ji-mu-yun/scripts/python/tests/test_skill_input_consumer_migra...iguration must define a valid model string")\nValueError: Codex model configuration must define a valid model string\n')
+E        +  where 1 = CompletedProcess(args=['/workspace/.cloud-tools/package-b-env-20261028/bin/python', '/workspace/ji-mu-yun/scripts/pyth...guration must define a valid model string")\nValueError: Codex model configuration must define a valid model string\n').returncode
+E        +  and   'Traceback (most recent call last):\n  File "/workspace/ji-mu-yun/scripts/python/tests/test_skill_input_consumer_migra...iguration must define a valid model string")\nValueError: Codex model configuration must define a valid model string\n' = CompletedProcess(args=['/workspace/.cloud-tools/package-b-env-20261028/bin/python', '/workspace/ji-mu-yun/scripts/pyth...guration must define a valid model string")\nValueError: Codex model configuration must define a valid model string\n').stderr
+
+scripts/python/tests/test_skill_input_consumer_migration.py:234: AssertionError
+___________________ test_native_custody_tampering_blocks_gc ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-21/test_native_custody_tampering_0')
+
+    def test_native_custody_tampering_blocks_gc(tmp_path):
+        request = fixture(tmp_path)
+        complete(tmp_path, request)
+>       from skill_input_gate import require_ready_skill_input
+E       ModuleNotFoundError: No module named 'skill_input_gate'
+
+scripts/python/tests/test_skill_input_consumer_migration.py:313: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED scripts/python/tests/test_skill_input_consumer_migration.py::test_real_entry_registers_and_protects_generation[run-phase-bootstrap-review]
+FAILED scripts/python/tests/test_skill_input_consumer_migration.py::test_real_entry_rejects_legacy_receipt[run-phase-bootstrap-review]
+FAILED scripts/python/tests/test_skill_input_consumer_migration.py::test_native_custody_tampering_blocks_gc
+3 failed, 113 passed in 9.71s

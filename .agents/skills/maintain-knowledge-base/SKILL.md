@@ -30,7 +30,7 @@ promote dirty-worktree bytes as repository facts.
    bound publication request. Acceptance, VDD, Bootstrap, and Quick Dev cannot
    create this authority or invoke publication implicitly. The publication CLI,
    not this Skill, owns the single-writer lock, layer composition and hash
-   checks, 108-query evaluation, adapter-decision gate, immutable generation,
+   checks, current query-suite evaluation, adapter-decision gate, immutable generation,
    atomic current/LKG pointers, and failed-build evidence. `docs/migration/**`
    is excluded in every mode.
 6. Report source locations and hashes, not generated factual answers. Preserve
@@ -71,7 +71,8 @@ py -3 -B scripts/python/publish_knowledge_catalog.py --restore-lkg
 LKG and writes append-only failure evidence under `logs/knowledge-context/`.
 `--publish` fails closed without a request created by the maintainer helper;
 the request binds caller, trigger, one target plan, current main, confirmation,
-publication authority, and the hash-verified Acceptance maintenance route. The
+publication authority. `catalog-stale-maintenance` also requires the hash-verified
+Acceptance maintenance route; `operator-requested` does not require that route. The
 target plan must exist at pinned main with `00-index.md`; the request summary
 and hash are recorded in the immutable generation. Do not call
 `build_knowledge_catalog.py` as a publication substitute; that CLI is read-only.
@@ -91,3 +92,19 @@ py -3 -B scripts/python/prune_knowledge_generations.py --prune
 The policy is `knowledge/policies/generation-retention.v1.json`. Current, LKG,
 and the configured recent successful generations are protected. Publication
 must never invoke pruning implicitly.
+
+## Package Quality And Routing
+
+Quality metadata is [non-authorizing](skill-quality.v1.json); it preserves every native owner and required child dependency.
+
+| Dependency | Authority/version | Missing or mismatch |
+| --- | --- | --- |
+| Adopted authoring contract | [Local record](references/package-dependencies.v1.json), standard1.0 | Typed A09 block; no installation or silent skip |
+
+```text
+[input] -> [existing]
+[input] -> [provisional]
+[input] -> [publication]
+```
+
+The sidecar contains exactly three primary route examples, explicit public-entry setup and typed results. Static pass grants no execution or completion authority.

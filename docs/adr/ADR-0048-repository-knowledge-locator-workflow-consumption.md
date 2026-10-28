@@ -114,3 +114,17 @@ The normative detail is the approved canonical SPEC's behavior-contracts.md
 and failure-modes.md, with its adopted architecture AD-6 through AD-10. Future
 budget or authority changes must return to their existing owners; this entry
 adds no new freeze, service, permission or completion authority.
+
+## 2026-10-28 applicability: citation materialization
+
+Normative inputs and explicit required scope remain mandatory read sources. A
+prose citation alone is not a request to append its excerpt to every planning
+query delivery. The adapter retains safe existing citations as reference-only
+path/hash/mention metadata, includes those bytes in the existing UTF-8 budget,
+and binds them to episode content identity. A consumer must read and verify a
+reference before factual adoption. Selected Locator evidence retains its actual
+read set. Path denials, publication integrity, candidate authorization, closed
+episodes, cumulative accounting, the 4096-byte reserve and existing hard ceiling
+remain unchanged. Blocked and exhausted results withhold reference metadata.
+This is a bounded producer/consumer clarification, not new lookup permission or
+a persistent reference cache.

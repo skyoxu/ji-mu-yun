@@ -1,0 +1,29 @@
+.........................F....                                           [100%]
+=================================== FAILURES ===================================
+_ DirectScriptStartupTests.test_bootstrap_review_direct_script_startup_resolves_repository_toolchain _
+
+self = <test_direct_script_startup.DirectScriptStartupTests testMethod=test_bootstrap_review_direct_script_startup_resolves_repository_toolchain>
+
+    def test_bootstrap_review_direct_script_startup_resolves_repository_toolchain(self):
+        result = subprocess.run(
+            [sys.executable, "-B", str(COMMAND.relative_to(ROOT)), "--help"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+        combined = result.stdout + result.stderr
+>       self.assertEqual(result.returncode, 0, combined)
+E       AssertionError: 1 != 0 : Traceback (most recent call last):
+E         File "/workspace/ji-mu-yun/.agents/skills/run-phase-bootstrap-review/scripts/bootstrap_review.py", line 72, in <module>
+E           CONFIGURED_MODEL = load_model()
+E                              ^^^^^^^^^^^^
+E         File "/workspace/ji-mu-yun/scripts/sc/model_config.py", line 39, in load_model
+E           raise ValueError("Codex model configuration must define a valid model string")
+E       ValueError: Codex model configuration must define a valid model string
+
+.agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py:22: AssertionError
+=========================== short test summary info ============================
+FAILED .agents/skills/run-phase-bootstrap-review/tests/test_direct_script_startup.py::DirectScriptStartupTests::test_bootstrap_review_direct_script_startup_resolves_repository_toolchain
+1 failed, 29 passed in 0.95s

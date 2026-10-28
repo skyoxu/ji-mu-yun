@@ -1,0 +1,48 @@
+{
+  "schema": "quick-dev.first-use-contract.v1",
+  "plan_sha256": "sha256:e44b8fc51d43ac9abd265c460de7d599eab999c10cd19b19b8cf19829fc7b666",
+  "slice_id": "S1",
+  "source_commit": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "entries": [
+    {
+      "path": ".agents/skills/maintain-knowledge-base/references/package-dependencies.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/maintain-knowledge-base/skill-quality.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/package-dependencies.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/skill-quality.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/references/package-dependencies.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/run-phase-bootstrap-review/skill-quality.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/references/package-dependencies.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/run-refactor-implementation-acceptance/skill-quality.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/references/package-dependencies.v1.json",
+      "exports": []
+    },
+    {
+      "path": ".agents/skills/vdd-execution-plan/skill-quality.v1.json",
+      "exports": []
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/workspace/.cloud-tools/package-b-env-20261028/bin/python",
+    "-B",
+    ".agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+    "project-compact-vdd",
+    "--repository-root",
+    ".",
+    "--request",
+    "logs/package-b-rebuild-20261028/final-acceptance-projection-request-024.json",
+    "--out",
+    "logs/package-b-rebuild-20261028/final-acceptance-projection-result-024.json"
+  ],
+  "authorizes": [],
+  "exit_code": 0,
+  "finished_utc": "2026-10-28T11:26:19.832508+00:00",
+  "raw_log": "logs/package-b-rebuild-20261028/ordered-acceptance-projection-024.log",
+  "raw_log_sha256": "sha256:26996e1431a4e0c519681d32abcb40fe3a50d267a1aae64b2cc51f1ad8327760",
+  "schema": "package-b.actual-public-invocation.v1",
+  "started_utc": "2026-10-28T11:25:56.382767+00:00"
+}

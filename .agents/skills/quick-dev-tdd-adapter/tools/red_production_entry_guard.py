@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path, PurePosixPath
+import re
+import subprocess
 from typing import Any, Mapping, Sequence
 
 from runtime_evidence import safe_relative
@@ -98,6 +100,211 @@ def _owner_called(tree: ast.AST, module: str) -> bool:
     return False
 
 
+_QUALITY_MODULE = "scripts.sc.validate_skill_quality"
+_QUALITY_POLICY = "scripts/sc/config/skill-authoring-standard.v1.json"
+_QUALITY_FROZEN_INPUTS = {
+    "scripts/sc/validate_skill_quality.py",
+    "scripts/sc/skill_quality_examples.py",
+    _QUALITY_POLICY,
+    "scripts/sc/schemas/skill-quality-contract.v1.schema.json",
+}
+_QUALITY_ORACLE_INPUTS = _QUALITY_FROZEN_INPUTS | {
+    "scripts/sc/schemas/skill-quality-result.v1.schema.json",
+}
+
+
+def _quality_file(root: Path, ref: str) -> Path:
+    path = root / safe_relative(ref)
+    for parent in (path, *path.parents):
+        if parent == root:
+            break
+        if parent.is_symlink() or getattr(parent, "is_junction", lambda: False)():
+            raise ValueError("symbolic quality binding")
+    path.resolve().relative_to(root)
+    if not path.is_file():
+        raise ValueError("quality binding file unavailable")
+    return path
+
+
+def _fixed_quality_oracle(root: Path, selected: Mapping[str, Any]) -> bool:
+    """Admit only the adopted, frozen, unmodified read-only Package A entry.
+
+    This compares bytes, not a Git revision label. Candidate publication SHA
+    changes alone have no effect. No arbitrary validator/policy is accepted.
+    """
+    frozen = set(selected.get("execution_snapshot_paths", []))
+    writable = set(selected.get("allowed_write_paths", [])) | set(selected.get("production_owners", []))
+    if not _QUALITY_FROZEN_INPUTS <= frozen or _QUALITY_ORACLE_INPUTS & writable:
+        return False
+    try:
+        top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=root,
+                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False)
+        if top.returncode or Path(top.stdout.decode().strip()).resolve() != root:
+            return False
+        for ref in sorted(_QUALITY_ORACLE_INPUTS):
+            original = subprocess.run(["git", "show", "HEAD:" + ref], cwd=root,
+                                      stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False)
+            if original.returncode or _quality_file(root, ref).read_bytes() != original.stdout:
+                return False
+    except (OSError, UnicodeError, ValueError):
+        return False
+    return True
+
+
+def _canonical_quality_calls(tree: ast.AST) -> list[ast.Call]:
+    """Resolve explicit names in lexical scopes, not flow or Python execution."""
+    scopes = (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef,
+              ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
+    functions = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
+    parents = {child: node for node in ast.walk(tree) for child in ast.iter_child_nodes(node)}
+
+    def scope_of(node):
+        if isinstance(node, ast.arg):
+            while node is not None and not isinstance(node, functions):
+                node = parents.get(node)
+            return node
+        child, ancestors = None, set()
+        while node is not None:
+            if isinstance(node, scopes):
+                # Defaults/decorators and the first comprehension iterable
+                # are evaluated in the enclosing scope, not the new body.
+                body = getattr(node, "body", [])
+                body = body if isinstance(body, list) else [body]
+                outside_body = isinstance(node, functions + (ast.ClassDef,)) and child is not None and child not in body
+                first_iterable = isinstance(node, scopes[5:]) and node.generators[0].iter in ancestors
+                if not outside_body and not first_iterable:
+                    return node
+            ancestors.add(node)
+            child, node = node, parents.get(node)
+        return None
+
+    def outer(scope):
+        parent = scope_of(parents.get(scope))
+        # Methods, comprehensions and nested classes do not capture an
+        # enclosing class namespace when resolving outer bare names.
+        if isinstance(scope, functions + (ast.ClassDef,) + scopes[5:]):
+            while isinstance(parent, ast.ClassDef):
+                parent = scope_of(parents.get(parent))
+        return parent
+
+    raw = {}
+    stars = set()
+    globals_ = {}
+    nonlocals = {}
+    def bind(scope, name, kind):
+        if scope is not None and name:
+            raw.setdefault((scope, name), set()).add(kind)
+    for node in ast.walk(tree):
+        scope = scope_of(node)
+        if isinstance(node, (ast.Global, ast.Nonlocal)):
+            (globals_ if isinstance(node, ast.Global) else nonlocals).setdefault(scope, set()).update(node.names)
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name == "*":
+                    stars.add(scope)
+                else:
+                    canonical = node.level == 0 and node.module == _QUALITY_MODULE and alias.name == "validate_package"
+                    bind(scope, alias.asname or alias.name, "canonical" if canonical else "other")
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                bind(scope, alias.asname or alias.name.split(".")[0], "other")
+        elif isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            if isinstance(parents.get(node), ast.NamedExpr):
+                # Assignment expressions in comprehensions bind outside the
+                # comprehension's implicit function scope (PEP572).
+                while isinstance(scope, scopes[5:]):
+                    scope = outer(scope)
+            bind(scope, node.id, "other")
+        elif isinstance(node, ast.arg):
+            bind(scope, node.arg, "other")
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bind(scope_of(parents.get(node)), node.name, "other")
+        elif isinstance(node, (ast.ExceptHandler, ast.MatchAs, ast.MatchStar)):
+            bind(scope, node.name, "other")
+        elif isinstance(node, ast.MatchMapping):
+            bind(scope, node.rest, "other")
+
+    def declared_scope(scope, name):
+        if name in globals_.get(scope, ()):
+            return tree
+        if name in nonlocals.get(scope, ()):
+            parent = outer(scope)
+            while parent is not None:
+                if isinstance(parent, functions) and (parent, name) in raw:
+                    return parent
+                parent = outer(parent)
+            return None
+        return scope
+
+    bindings = {}
+    for (scope, name), kinds in raw.items():
+        target = declared_scope(scope, name)
+        if target is not None:
+            bindings.setdefault((target, name), set()).update(kinds)
+    calls = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
+            continue
+        name, scope = node.func.id, scope_of(node)
+        while scope is not None:
+            target = declared_scope(scope, name)
+            if target is None or target in stars:
+                break
+            kinds = bindings.get((target, name))
+            if kinds is not None:
+                if kinds == {"canonical"}:
+                    calls.append(node)
+                break
+            scope = outer(target)
+    return calls
+
+
+def _quality_bindings(root: Path, selected: Mapping[str, Any], parsed) -> list[dict[str, str]]:
+    """Recognize literal strict inspections of exact declared quality sidecars.
+
+    Static admission remains non-authorizing. The real validator and CER
+    AssertionError/case proof still decide behavior and expected RED.
+    """
+    candidates = []
+    snapshots = set(selected.get("execution_snapshot_paths", []))
+    writes = set(selected.get("allowed_write_paths", []))
+    for raw in selected.get("production_owners", []):
+        if not isinstance(raw, str):
+            continue
+        ref = safe_relative(raw)
+        parts = PurePosixPath(ref).parts
+        if (len(parts) != 4 or parts[:2] != (".agents", "skills")
+                or parts[-1] != "skill-quality.v1.json"
+                or re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", parts[2]) is None
+                or ref not in writes or ref in snapshots):
+            continue
+        try:
+            _quality_file(root, ref)
+            _quality_file(root, str(PurePosixPath(ref).parent / "SKILL.md"))
+        except (OSError, ValueError):
+            continue
+        candidates.append((ref, str(PurePosixPath(ref).parent)))
+    if not candidates or not _fixed_quality_oracle(root, selected):
+        return []
+    bindings = []
+    for test_ref, _source, tree in parsed:
+        for node in _canonical_quality_calls(tree):
+            if node.args:
+                continue
+            if any(item.arg is None or not isinstance(item.value, ast.Constant) or not isinstance(item.value.value, str)
+                   for item in node.keywords):
+                continue
+            values = {item.arg: item.value.value for item in node.keywords}
+            if (len(values) != len(node.keywords) or set(values) != {"repository_root", "package_root", "policy_path", "mode"}
+                    or values["repository_root"] != "." or values["policy_path"] != _QUALITY_POLICY or values["mode"] != "strict"):
+                continue
+            for owner, package in candidates:
+                binding = {"production_owner": owner, "module": _QUALITY_MODULE, "test_ref": test_ref}
+                if values["package_root"] == package and binding not in bindings:
+                    bindings.append(binding)
+    return bindings
+
+
 def validate_red_production_entry(
     *,
     workspace: Path,
@@ -157,6 +364,8 @@ def validate_red_production_entry(
     if not bindings and any(owner.endswith(".cs") for owner in owners):
         from dotnet_production_entry import dotnet_bindings
         bindings.extend(dotnet_bindings(workspace=root, selected=selected, parsed=parsed))
+    if not bindings:
+        bindings.extend(_quality_bindings(root, selected, parsed))
     if not bindings:
         if not python_owners:
             raise ValueError("RED production-entry guard has no supported Python production owner or verified .NET test binding")

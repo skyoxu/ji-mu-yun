@@ -1,0 +1,179 @@
+{
+  "schema": "skill-quality.v1",
+  "standard_version": "1.0",
+  "name": "run-refactor-implementation-acceptance",
+  "authorizes": [],
+  "responsibility": "Coordinate deterministic final implementation acceptance for one explicit target plan.",
+  "triggers": [
+    "Explicit request matching this Skill responsibility and an existing supported input route."
+  ],
+  "non_goals": [
+    "No Phase/BMAD/GDS/Chapter2-7 behavior changes, new global runtime, credential handling, deployment or implicit upstream review.",
+    "Static quality declarations grant no filesystem, subprocess, model, publication or lifecycle authority."
+  ],
+  "inputs": [
+    "Explicit source/plan/request and actual prerequisite receipts described by SKILL.md; unavailable or stale required input blocks."
+  ],
+  "outputs": [
+    "Existing native typed outputs and immutable source-bound evidence; never assistant-authored successful runtime receipts."
+  ],
+  "dependencies": [
+    {
+      "id": "repository-skill-authoring-standard",
+      "version": "1.0",
+      "required": true,
+      "authority": "references/package-dependencies.v1.json",
+      "when_missing": "block",
+      "when_mismatch": "block",
+      "kind": "local-contract"
+    }
+  ],
+  "references": [
+    {
+      "ref": "SKILL.md#package-quality-and-routing"
+    }
+  ],
+  "tests": [
+    "tests/test_package.py",
+    "Repository migration: scripts/sc/tests/test_skill_quality_package_b.py; run through the frozen native plan."
+  ],
+  "evidence": "Native per-run controlled process originals and predicates under repository logs; quality JSON alone is never completion evidence.",
+  "lifecycle": {
+    "owner": "Acceptance alone owns acceptance-passed through its existing final predicate.",
+    "completion_owner": "Acceptance alone owns acceptance-passed through its existing final predicate."
+  },
+  "capabilities": {
+    "routing": true,
+    "version_lookup": false,
+    "secrets": false,
+    "destructive": false,
+    "database_write": false,
+    "untrusted_content": true,
+    "filesystem": true,
+    "subprocess": true,
+    "network": false
+  },
+  "lookup": {
+    "kind": "not-applicable"
+  },
+  "controls": {
+    "untrusted_content": {
+      "owner": "Acceptance alone owns acceptance-passed through its existing final predicate.",
+      "role": "data-only",
+      "prohibit_expansion": [
+        "targets",
+        "commands",
+        "tools",
+        "authority"
+      ]
+    },
+    "filesystem": {
+      "owner": "Existing native controller owns repository-contained request/output roots. Listed package paths bound static inspection and explicit package-maintenance changes only; they grant no workflow write/delete permission. Runtime plans/logs retain their existing argument-bound owner checks.",
+      "roots": [
+        "."
+      ],
+      "read": [
+        "."
+      ],
+      "write": [
+        "SKILL.md",
+        "skill-quality.v1.json",
+        "references/package-dependencies.v1.json"
+      ],
+      "delete": [
+        "skill-quality.v1.json",
+        "references/package-dependencies.v1.json"
+      ],
+      "traversal": "reject",
+      "symlinks": "reject"
+    },
+    "subprocess": {
+      "owner": "Existing workflow host and command supervisor; this declaration describes only a bounded read-only startup preflight. Real execution units retain1800-second total/600-second idle limits.",
+      "argv": [
+        "python",
+        "-B",
+        "scripts/acceptance_cli.py",
+        "--help"
+      ],
+      "shell": false,
+      "cwd": ".",
+      "timeout": 60,
+      "output_limit": 65536,
+      "cancellation_owner": "Existing host supervisor terminates the owned process tree; no replacement runner."
+    }
+  },
+  "entrypoints": [
+    {
+      "id": "native-workflow",
+      "inputs": [
+        "Explicit arguments for .agents/skills/run-refactor-implementation-acceptance/scripts/acceptance_cli.py",
+        "Existing native input contracts and required child/profile/consumer prerequisites; see the operation guide."
+      ],
+      "outputs": [
+        "Native typed result or typed blocking diagnostic; preserve immutable failure sidecars."
+      ],
+      "preflight": "From repository root, verify Python, required modules, exact target/contract and all declared prerequisites. Use the existing native CLI validation; do not install or silently skip dependencies.",
+      "standalone": true,
+      "dependencies": [
+        "repository-skill-authoring-standard"
+      ],
+      "caller_setup": "Run from repository root with Python3 and required declared modules. Online callers explicitly initialize the existing caller-session transport. Optional model/child workflows retain their native authority; quality inspection does not launch them.",
+      "install_missing": false,
+      "skip_missing": false
+    }
+  ],
+  "examples": [
+    {
+      "outcome": "typical",
+      "branch": "deterministic",
+      "input": "Deterministic: current Q8, prepared prerequisites, action DAG, command registry and Skill-input receipts are supplied.",
+      "output": "Native coordinator action receipts and acceptance-passed only if the final predicate succeeds.",
+      "expected_result": "Q8 alone and a clean review are not Acceptance; no implicit Bootstrap launch."
+    },
+    {
+      "outcome": "boundary",
+      "branch": "repair",
+      "input": "Repair: a registered action failed and an explicit source-bound successor is supplied.",
+      "output": "Typed repair route retaining failed action history and predecessor custody.",
+      "expected_result": "Identical failed reentry cannot be relabeled ready; recovery must use the native successor route."
+    },
+    {
+      "outcome": "error",
+      "branch": "stale",
+      "input": "Stale: prepared inputs, authority or proof no longer match current candidate bytes.",
+      "output": "Typed stale-input block or manual pause, never acceptance-passed.",
+      "expected_result": "Revalidate the owning prerequisite; neither assistant text nor old proof can override it."
+    }
+  ],
+  "outcomes": [
+    "typical",
+    "boundary",
+    "error"
+  ],
+  "routing": {
+    "kind": "conditional",
+    "entry": "input",
+    "branches": [
+      "deterministic",
+      "repair",
+      "stale"
+    ],
+    "diagram": {
+      "ref": "SKILL.md#package-quality-and-routing"
+    }
+  },
+  "error_ids": [
+    "DEPENDENCY_UNRESOLVED_AUTHORITY",
+    "DEPENDENCY_VERSION_CONFLICT",
+    "INVALID_INSPECTION",
+    "INVALID_LOCAL_REFERENCE"
+  ],
+  "faq": [
+    {
+      "from": "DEPENDENCY_UNRESOLVED_AUTHORITY",
+      "target": {
+        "ref": "SKILL.md#package-quality-and-routing"
+      }
+    }
+  ]
+}

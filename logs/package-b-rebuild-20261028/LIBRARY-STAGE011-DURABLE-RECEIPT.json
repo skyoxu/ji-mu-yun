@@ -1,0 +1,27 @@
+{
+  "archive": {
+    "path": "logs/package-b-rebuild-20261028/stage-nested-class-repaired-011.zip",
+    "bytes": 37921624,
+    "sha256": "ccd36bc9526c9b2241a7a24dd9663c437cc75e2f99d5456b767ddb400aa472a1"
+  },
+  "manifest": {
+    "path": "logs/package-b-rebuild-20261028/stage-nested-class-repaired-011-manifest.json",
+    "bytes": 58691,
+    "sha256": "3ea675af3d4f3c194ab351e7da0bea7b1d19904d5a4bb0171d1e893d5dff5a3b"
+  },
+  "payload_files": 226,
+  "zip_crc": "pass",
+  "restored_all_file_hashes": "pass",
+  "Q8": {
+    "path": "logs/package-b-rebuild-20261028/proof-refresh-nested-class-r10/Q8.json",
+    "bytes": 79577,
+    "sha256": "525bde492c74e7547807a426c2ee7b844b22e2966f4576ec65be671dae7f56e3"
+  },
+  "snapshot": "sha256:bf7ddbab7546a438caf72ad5b8abde608b1d7c4479a21fe2a91cb95e8087dc7b",
+  "library_upload": "succeeded",
+  "library_file_id": "libfile_29b2153fd1e881918832cbef8c0bd56d",
+  "file_id": "file_0000000045a88230b57e46b0d14cf919",
+  "version": 0,
+  "metadata_applied": true,
+  "remote_readback_hash": "not claimed"
+}

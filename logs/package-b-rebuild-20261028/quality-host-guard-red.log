@@ -1,0 +1,966 @@
+FFFFFFFFFFFFFFFF                                                         [100%]
+=================================== FAILURES ===================================
+_____ test_admits_exact_readonly_validator_call_for_declared_quality_owner _____
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_admits_exact_readonly_val0')
+
+    def test_admits_exact_readonly_validator_call_for_declared_quality_owner(tmp_path):
+>       root,bundle,descriptor=_fixture(tmp_path)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_admits_exact_readonly_val0/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_unbound_or_noncanonical_validator_invocation[undeclared-package] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan0')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package...olicy_path='scripts/sc/config/skill-authoring-standard.v1.json', mode='strict')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan0/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_unbound_or_noncanonical_validator_invocation[traversal-package] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan1')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package...olicy_path='scripts/sc/config/skill-authoring-standard.v1.json', mode='strict')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan1/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+___ test_rejects_unbound_or_noncanonical_validator_invocation[outside-root] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan2')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package...olicy_path='scripts/sc/config/skill-authoring-standard.v1.json', mode='strict')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan2/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_unbound_or_noncanonical_validator_invocation[inventory-not-runtime-quality] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan3')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package...cy_path='scripts/sc/config/skill-authoring-standard.v1.json', mode='inventory')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan3/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_unbound_or_noncanonical_validator_invocation[alternate-policy] __
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan4')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package....agents/skills/demo-skill', policy_path='candidate-policy.json', mode='strict')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan4/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+__ test_rejects_unbound_or_noncanonical_validator_invocation[dynamic-package] __
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan5')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package...olicy_path='scripts/sc/config/skill-authoring-standard.v1.json', mode='strict')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan5/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_unbound_or_noncanonical_validator_invocation[rebound-validator] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan6')
+source = "from scripts.sc.validate_skill_quality import validate_package\ndef test_real_quality():\n    result=validate_package...ard.v1.json', mode='strict')\n    assert result['status']=='pass'\n\nvalidate_package=lambda **kw: {'status':'pass'}\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan6/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_unbound_or_noncanonical_validator_invocation[alternate-validator] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan7')
+source = "from candidate import validate_package\ndef test_real_quality():\n    result=validate_package(repository_root='.', pa...olicy_path='scripts/sc/config/skill-authoring-standard.v1.json', mode='strict')\n    assert result['status']=='pass'\n"
+
+    @pytest.mark.parametrize('source',[
+        pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+        pytest.param(_source(package='../outside'),id='traversal-package'),
+        pytest.param(_source(repository='..'),id='outside-root'),
+        pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+        pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+        pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+        pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+        pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+    ])
+    def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+>       root,bundle,descriptor=_fixture(tmp_path,source)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_unbound_or_noncan7/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+___ test_rejects_untrusted_validator_or_owner_context[validator-not-frozen] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat0')
+variant = 'missing-snapshot'
+
+    @pytest.mark.parametrize('variant',[
+        pytest.param('missing-snapshot',id='validator-not-frozen'),
+        pytest.param('writable-validator',id='validator-also-writable'),
+        pytest.param('modified-validator',id='candidate-replaced-validator'),
+        pytest.param('unversioned-validator',id='missing-git-identity'),
+        pytest.param('owner-symlink',id='symlink-owner'),
+        pytest.param('not-quality-sidecar',id='arbitrary-json'),
+    ])
+    def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+>       root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat0/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+__ test_rejects_untrusted_validator_or_owner_context[validator-also-writable] __
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat1')
+variant = 'writable-validator'
+
+    @pytest.mark.parametrize('variant',[
+        pytest.param('missing-snapshot',id='validator-not-frozen'),
+        pytest.param('writable-validator',id='validator-also-writable'),
+        pytest.param('modified-validator',id='candidate-replaced-validator'),
+        pytest.param('unversioned-validator',id='missing-git-identity'),
+        pytest.param('owner-symlink',id='symlink-owner'),
+        pytest.param('not-quality-sidecar',id='arbitrary-json'),
+    ])
+    def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+>       root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat1/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_ test_rejects_untrusted_validator_or_owner_context[candidate-replaced-validator] _
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat2')
+variant = 'modified-validator'
+
+    @pytest.mark.parametrize('variant',[
+        pytest.param('missing-snapshot',id='validator-not-frozen'),
+        pytest.param('writable-validator',id='validator-also-writable'),
+        pytest.param('modified-validator',id='candidate-replaced-validator'),
+        pytest.param('unversioned-validator',id='missing-git-identity'),
+        pytest.param('owner-symlink',id='symlink-owner'),
+        pytest.param('not-quality-sidecar',id='arbitrary-json'),
+    ])
+    def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+>       root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat2/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+___ test_rejects_untrusted_validator_or_owner_context[missing-git-identity] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat3')
+variant = 'unversioned-validator'
+
+    @pytest.mark.parametrize('variant',[
+        pytest.param('missing-snapshot',id='validator-not-frozen'),
+        pytest.param('writable-validator',id='validator-also-writable'),
+        pytest.param('modified-validator',id='candidate-replaced-validator'),
+        pytest.param('unversioned-validator',id='missing-git-identity'),
+        pytest.param('owner-symlink',id='symlink-owner'),
+        pytest.param('not-quality-sidecar',id='arbitrary-json'),
+    ])
+    def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+>       root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat3/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+_______ test_rejects_untrusted_validator_or_owner_context[symlink-owner] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat4')
+variant = 'owner-symlink'
+
+    @pytest.mark.parametrize('variant',[
+        pytest.param('missing-snapshot',id='validator-not-frozen'),
+        pytest.param('writable-validator',id='validator-also-writable'),
+        pytest.param('modified-validator',id='candidate-replaced-validator'),
+        pytest.param('unversioned-validator',id='missing-git-identity'),
+        pytest.param('owner-symlink',id='symlink-owner'),
+        pytest.param('not-quality-sidecar',id='arbitrary-json'),
+    ])
+    def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+>       root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat4/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+______ test_rejects_untrusted_validator_or_owner_context[arbitrary-json] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat5')
+variant = 'not-quality-sidecar'
+
+    @pytest.mark.parametrize('variant',[
+        pytest.param('missing-snapshot',id='validator-not-frozen'),
+        pytest.param('writable-validator',id='validator-also-writable'),
+        pytest.param('modified-validator',id='candidate-replaced-validator'),
+        pytest.param('unversioned-validator',id='missing-git-identity'),
+        pytest.param('owner-symlink',id='symlink-owner'),
+        pytest.param('not-quality-sidecar',id='arbitrary-json'),
+    ])
+    def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+>       root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_rejects_untrusted_validat5/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+__________ test_red_dispatch_checks_binding_before_reentry_or_process __________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-0/test_red_dispatch_checks_bindi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2d65e31e20>
+
+    def test_red_dispatch_checks_binding_before_reentry_or_process(tmp_path,monkeypatch):
+        import stage_pipeline
+        import stage_reentry
+        import red_production_entry_guard
+>       root,bundle,descriptor=_fixture(tmp_path)
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py:30: in _fixture
+    shutil.copyfile(REPOSITORY/ref,target)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+src = PosixPath('/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py')
+dst = PosixPath('/tmp/pytest-of-agent/pytest-0/test_red_dispatch_checks_bindi0/repo/scripts/sc/validate_skill_quality.py')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+    
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+    
+        """
+        sys.audit("shutil.copyfile", src, dst)
+    
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+    
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+    
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+E           FileNotFoundError: [Errno 2] No such file or directory: '/workspace/ji-mu-yun/.agents/scripts/sc/validate_skill_quality.py'
+
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:260: FileNotFoundError
+=========================== short test summary info ============================
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_admits_exact_readonly_validator_call_for_declared_quality_owner
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[undeclared-package]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[traversal-package]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[outside-root]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[inventory-not-runtime-quality]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[alternate-policy]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[dynamic-package]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[rebound-validator]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_unbound_or_noncanonical_validator_invocation[alternate-validator]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_untrusted_validator_or_owner_context[validator-not-frozen]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_untrusted_validator_or_owner_context[validator-also-writable]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_untrusted_validator_or_owner_context[candidate-replaced-validator]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_untrusted_validator_or_owner_context[missing-git-identity]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_untrusted_validator_or_owner_context[symlink-owner]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_rejects_untrusted_validator_or_owner_context[arbitrary-json]
+FAILED .agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_red_dispatch_checks_binding_before_reentry_or_process
+16 failed in 0.35s

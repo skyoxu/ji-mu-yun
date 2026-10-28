@@ -130,3 +130,19 @@ reference and input-content identity checks, plus this workflow's own contract
 and implementation checks. These checks must not become an upstream quality
 review gate. Explicit user-requested stage-end external A/B remains separate
 and is neither launched nor removed by this rule.
+
+## Package Quality And Routing
+
+Quality metadata is [non-authorizing](skill-quality.v1.json); it preserves every native owner and required child dependency.
+
+| Dependency | Authority/version | Missing or mismatch |
+| --- | --- | --- |
+| Adopted authoring contract | [Local record](references/package-dependencies.v1.json), standard1.0 | Typed A09 block; no installation or silent skip |
+
+```text
+[input] -> [strict]
+[input] -> [upgrade]
+[input] -> [invalid]
+```
+
+The sidecar contains exactly three primary route examples, explicit public-entry setup and typed results. Static pass grants no execution or completion authority.

@@ -1,0 +1,308 @@
+{
+  "obligations": [
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Current-state inspection",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Inspect current five packages, actual callers and focused tests and distinguish existing behavior from missing quality metadata or stale prose.",
+      "observable_result": "Migration decisions retain current code facts instead of assuming a status check proves implementation.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Canonical Package B input",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Prepare Package-B-only requirements with stable FR anchors and source-role/hash mapping, including shared constraints but excluding Package A implementation and unrelated BMAD artifacts.",
+      "observable_result": "The canonical input and mapping retain all current requirements with explicit source identity.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Valid source expression",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Express existing source files as real file paths, functions as separate prose and directory annotations as directories.",
+      "observable_result": "The public source reader can resolve actual required inputs without dropping sources or mistaking directories/function suffixes for filenames.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Public VDD plan production",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Use the public VDD compiler and self-hosted plan shape for this control-plane migration; native workers and gates alone own plan-ready.",
+      "observable_result": "No hand-authored plan state substitutes for the real compiler.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "VDD versus runtime evidence",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Keep RED execution and future execution proof out of VDD output.",
+      "observable_result": "VDD supplies intent, not fabricated runtime receipts or readiness of later phases.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Controlled behavior classification",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Use controlled Quick Dev probes; present behavior receives current regression/terminal and missing behavior requires bound RED before Q4 and GREEN/REFACTOR.",
+      "observable_result": "Existing behavior is not forced to fail and missing behavior has real causal TDD proof.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Invalid RED causes",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Do not treat absent imports, files or test runtimes as behavioral RED.",
+      "observable_result": "Harness/setup failures cannot authorize production implementation.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Bounded host defect repair",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Repair a genuine host admission defect narrowly with positive and negative tests before final input freezing, without weakening failure oracles.",
+      "observable_result": "Tool corrections preserve the actual bound failure and validation gates.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Freeze before final proof",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Freeze common inputs before final proof and retain failed evidence as immutable history.",
+      "observable_result": "Current proof binds final bytes while failures are not overwritten or upgraded.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Content-bound reuse",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Reuse native originals only when content, coverage and environment match, not because of summaries or Git SHA alone.",
+      "observable_result": "Valid current evidence is referenced and incompatible originals do not silently pass.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Independent unit budgets",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Retain 1800-second total and 600-second genuine inactivity limits for each independent unit, with bounded cumulative retry cost.",
+      "observable_result": "Heartbeats, retries or new workers cannot reset total cost or renew a stalled unit.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Required validation set",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Run all five strict Package A public checks, relevant owning-package regressions and a route-boundary check.",
+      "observable_result": "The migration has actual public validation and relevant regressions rather than a sidecar-only claim.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Quality and dependency invariants",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Preserve under-500-line main files, typed dependency failures and capability-aware controls.",
+      "observable_result": "The adopted validator and negative fixtures retain these observable boundaries.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Actual platform and test prerequisites",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Use supported actual local test dependencies and do not relabel Linux results as Windows execution.",
+      "observable_result": "Reported platforms and prerequisite availability match actual runs.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "Persistent original-workspace evidence",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Keep formal inputs, code, plans and native evidence in the original repository; save content-hashed stage snapshots, verify restoration and retain an authorized durable copy outside ephemeral storage.",
+      "observable_result": "New work has explicit source/evidence identities and verified recovery data rather than a sole temporary directory.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    },
+    {
+      "source_refs": [
+        "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md#FR-4"
+      ],
+      "subject": "No fake recovery",
+      "trigger": "When executing the Package B planning, implementation or verification workflow",
+      "state_before": "Current readable sources are available and the lost prior candidate is not a current witness",
+      "state_after": "Native, source-bound scoped execution and verification",
+      "expected_behavior": "Do not reconstruct the missing old candidate by copying old success states.",
+      "observable_result": "Fresh implementation and native proof remain distinguishable from historical investigation clues.",
+      "forbidden_result": [
+        "The explicit execution or verification boundary is omitted, bypassed or falsely claimed"
+      ],
+      "requirement_type": "Governance",
+      "obligation_kind": "constraint",
+      "unresolved_fragments": [],
+      "status": "active",
+      "depends_on": []
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-28T06:46:33.449133+00:00",
+  "base_commit": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "status": "staged-not-used-for-new-business-RED-or-Q4",
+  "files": [
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py",
+      "sha256": "476715133de5138a89b86a013c5470af285da8e357883f474b0361fdc5eba833",
+      "bytes": 12183
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py",
+      "sha256": "fdd17178131065507adc5e2f5a650190ade82dce979d88b25de7faacce30eb52",
+      "bytes": 13624
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py",
+      "sha256": "feaff799c67f8d3cf0baebfc3156a7274f605d74c20c95de644a8782119dbbf9",
+      "bytes": 7669
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_runtime_stage_pipeline.py",
+      "sha256": "b42a0343f359bdc962455abfe84378a7476d37a03d10d515ad04469cf2b97391",
+      "bytes": 6498
+    },
+    {
+      "path": ".agents/skills/quick-dev-tdd-adapter/references/execution-operation.md",
+      "sha256": "756aab26e76ca9b80addb8b8d09484655f5730c2c052f0b2bb79b7182d5b67e5",
+      "bytes": 18035
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "sha256": "c3fb2f2f69fb05000b4d5e0fc8e6b8fff7aff69fd41544d34517e2fece9b132a",
+      "bytes": 46998
+    }
+  ],
+  "first_repeat_test": "quality-host-guard-first-and-repeat.log:22 passed in1.41s",
+  "direct_regression": "quality-host-direct-regression-corrected-fixtures.log:74 passed in12.21s",
+  "old_r5_red_authority": false,
+  "new_binding_contract_disposition": "pending"
+}

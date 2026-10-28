@@ -1,0 +1,455 @@
+FF.F..F..F                                                               [100%]
+=================================== FAILURES ===================================
+_________ test_ordinary_references_are_metadata_not_mandatory_excerpts _________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red-20261028/test_ordinary_references_are_m0'), [])
+
+    def test_ordinary_references_are_metadata_not_mandatory_excerpts(prepared_root):
+        root, seen = prepared_root
+        names = [f'scripts/module_{i}.py' for i in range(40)]
+        for n in names:
+            put(root, n, '# Reference implementation.\n' * 100)
+        put(root, 'docs/input.md', '\n'.join('Reference `' + n + '`.' for n in names))
+>       prepare(root)
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:30: in prepare
+    return adapter.prepare_consumption({'stage': 'vdd-create', 'operation': 'create',
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+payload = {'inputs': ['docs/input.md'], 'operation': 'create', 'stage': 'vdd-create', 'task_id': 'reference-materialization-fixture'}
+repository_root = PosixPath('/tmp/package-b-reference-red-20261028/test_ordinary_references_are_m0')
+
+    def prepare_consumption(payload, repository_root):
+        """Prepare bounded verified context after the caller identifies its task."""
+        root = Path(repository_root).resolve()
+        if not isinstance(payload, dict):
+            raise ValueError('invalid_consumption_request')
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        allowed = {'stage', 'operation', 'task_id', 'mode', 'inputs', 'query',
+                   'scope', 'record_path', 'supplement_reason', 'narrow_overrides'}
+        if set(payload) - allowed or payload.get('stage') not in _STAGES:
+            raise ValueError('invalid_consumption_request')
+        if payload.get('mode', 'headless') not in {'headless', 'interactive'}:
+            raise ValueError('invalid_consumption_mode')
+        if not payload.get('task_id'):
+            return {'status': 'awaiting-input', 'queried': False, 'authorizes': []}
+        inputs = payload.get('inputs', [])
+        if not isinstance(inputs, list) or not inputs:
+            raise ValueError('consumption_inputs_required')
+        scope = payload.get('scope', inputs)
+        if not isinstance(scope, list) or not scope or len(scope) > 64:
+            raise ValueError('invalid_consumption_scope')
+        scope = list(dict.fromkeys(scope))
+        # Discover only explicit local references from selected inputs, not a repo scan.
+        for name in inputs:
+            path = _path(root, name)
+            if path.stat().st_size > 262144:
+                raise ValueError('consumption_input_too_large')
+            content = path.read_text(encoding='utf-8')
+            for reference in re.findall(r'`([^`\s]+)`', content):
+                relative = reference.split('::', 1)[0]
+                if '/' not in relative or relative in scope:
+                    continue
+                try:
+                    referenced = _path(root, relative, allow_missing=True)
+                except _Stop:
+                    raise ValueError('consumption_reference_denied') from None
+                if referenced is None:
+                    continue
+                scope.append(relative)
+                if len(scope) > 64:
+                    raise ValueError('consumption_scope_exhausted')
+        for name in scope:
+            _path(root, name)
+        paths = [root / p for p in _CANONICAL]
+        if any(not p.is_file() for p in paths):
+            # ADR-0048: optional absence is not permission to bypass a damaged
+            # installed publication. Surviving artifacts/pointer/generations are
+            # installation evidence even when another required file is missing.
+            installed = any(p.exists() or p.is_symlink() for p in [
+                *paths, root / 'knowledge/indexes/current.json',
+                root / 'knowledge/indexes/generations'])
+            if installed:
+                return {'status': 'blocked', 'queried': False, 'authorizes': [],
+                        'availability': 'publication_incomplete',
+                        'query_result': {'outcome': 'blocked', 'reason_code': 'integrity_failed',
+                                         'candidates': [], 'read_set': []}}
+            return {'status': 'prepared', 'queried': False, 'authorizes': [],
+                    'availability': 'not_installed', 'requires_direct_source_check': True}
+        catalog = json.loads(paths[0].read_text(encoding='utf-8'))
+        policy = json.loads(paths[1].read_text(encoding='utf-8'))
+        snapshot = core.catalog_source_snapshot(catalog) or {}
+        commit = snapshot.get('commit') or snapshot.get('main_commit')
+        if not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit):
+>           raise ValueError('consumption_snapshot_missing')
+E           ValueError: consumption_snapshot_missing
+
+scripts/toolchain/knowledge_query/adapter.py:704: ValueError
+__________ test_explicit_required_sources_do_not_drop_normative_input __________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red-20261028/test_explicit_required_sources0'), [])
+
+    def test_explicit_required_sources_do_not_drop_normative_input(prepared_root):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', 'Background `scripts/reference.py`.')
+        put(root, 'scripts/reference.py', '# Reference only\n')
+        put(root, 'docs/mandatory.md', '# Mandatory companion\n')
+>       prepare(root, scope=['docs/mandatory.md'])
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:30: in prepare
+    return adapter.prepare_consumption({'stage': 'vdd-create', 'operation': 'create',
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+payload = {'inputs': ['docs/input.md'], 'operation': 'create', 'scope': ['docs/mandatory.md'], 'stage': 'vdd-create', ...}
+repository_root = PosixPath('/tmp/package-b-reference-red-20261028/test_explicit_required_sources0')
+
+    def prepare_consumption(payload, repository_root):
+        """Prepare bounded verified context after the caller identifies its task."""
+        root = Path(repository_root).resolve()
+        if not isinstance(payload, dict):
+            raise ValueError('invalid_consumption_request')
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        allowed = {'stage', 'operation', 'task_id', 'mode', 'inputs', 'query',
+                   'scope', 'record_path', 'supplement_reason', 'narrow_overrides'}
+        if set(payload) - allowed or payload.get('stage') not in _STAGES:
+            raise ValueError('invalid_consumption_request')
+        if payload.get('mode', 'headless') not in {'headless', 'interactive'}:
+            raise ValueError('invalid_consumption_mode')
+        if not payload.get('task_id'):
+            return {'status': 'awaiting-input', 'queried': False, 'authorizes': []}
+        inputs = payload.get('inputs', [])
+        if not isinstance(inputs, list) or not inputs:
+            raise ValueError('consumption_inputs_required')
+        scope = payload.get('scope', inputs)
+        if not isinstance(scope, list) or not scope or len(scope) > 64:
+            raise ValueError('invalid_consumption_scope')
+        scope = list(dict.fromkeys(scope))
+        # Discover only explicit local references from selected inputs, not a repo scan.
+        for name in inputs:
+            path = _path(root, name)
+            if path.stat().st_size > 262144:
+                raise ValueError('consumption_input_too_large')
+            content = path.read_text(encoding='utf-8')
+            for reference in re.findall(r'`([^`\s]+)`', content):
+                relative = reference.split('::', 1)[0]
+                if '/' not in relative or relative in scope:
+                    continue
+                try:
+                    referenced = _path(root, relative, allow_missing=True)
+                except _Stop:
+                    raise ValueError('consumption_reference_denied') from None
+                if referenced is None:
+                    continue
+                scope.append(relative)
+                if len(scope) > 64:
+                    raise ValueError('consumption_scope_exhausted')
+        for name in scope:
+            _path(root, name)
+        paths = [root / p for p in _CANONICAL]
+        if any(not p.is_file() for p in paths):
+            # ADR-0048: optional absence is not permission to bypass a damaged
+            # installed publication. Surviving artifacts/pointer/generations are
+            # installation evidence even when another required file is missing.
+            installed = any(p.exists() or p.is_symlink() for p in [
+                *paths, root / 'knowledge/indexes/current.json',
+                root / 'knowledge/indexes/generations'])
+            if installed:
+                return {'status': 'blocked', 'queried': False, 'authorizes': [],
+                        'availability': 'publication_incomplete',
+                        'query_result': {'outcome': 'blocked', 'reason_code': 'integrity_failed',
+                                         'candidates': [], 'read_set': []}}
+            return {'status': 'prepared', 'queried': False, 'authorizes': [],
+                    'availability': 'not_installed', 'requires_direct_source_check': True}
+        catalog = json.loads(paths[0].read_text(encoding='utf-8'))
+        policy = json.loads(paths[1].read_text(encoding='utf-8'))
+        snapshot = core.catalog_source_snapshot(catalog) or {}
+        commit = snapshot.get('commit') or snapshot.get('main_commit')
+        if not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit):
+>           raise ValueError('consumption_snapshot_missing')
+E           ValueError: consumption_snapshot_missing
+
+scripts/toolchain/knowledge_query/adapter.py:704: ValueError
+______________ test_unsafe_reference_still_rejects[.env/private] _______________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red-20261028/test_unsafe_reference_still_re1'), [])
+reference = '.env/private'
+
+    @pytest.mark.parametrize('reference', ['.git/config', '.env/private', '../outside.py', 'C:/private.txt'])
+    def test_unsafe_reference_still_rejects(prepared_root, reference):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', f'Reference `{reference}`.')
+        with pytest.raises(ValueError, match='consumption_reference_denied'):
+>           prepare(root)
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:30: in prepare
+    return adapter.prepare_consumption({'stage': 'vdd-create', 'operation': 'create',
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+payload = {'inputs': ['docs/input.md'], 'operation': 'create', 'stage': 'vdd-create', 'task_id': 'reference-materialization-fixture'}
+repository_root = PosixPath('/tmp/package-b-reference-red-20261028/test_unsafe_reference_still_re1')
+
+    def prepare_consumption(payload, repository_root):
+        """Prepare bounded verified context after the caller identifies its task."""
+        root = Path(repository_root).resolve()
+        if not isinstance(payload, dict):
+            raise ValueError('invalid_consumption_request')
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        allowed = {'stage', 'operation', 'task_id', 'mode', 'inputs', 'query',
+                   'scope', 'record_path', 'supplement_reason', 'narrow_overrides'}
+        if set(payload) - allowed or payload.get('stage') not in _STAGES:
+            raise ValueError('invalid_consumption_request')
+        if payload.get('mode', 'headless') not in {'headless', 'interactive'}:
+            raise ValueError('invalid_consumption_mode')
+        if not payload.get('task_id'):
+            return {'status': 'awaiting-input', 'queried': False, 'authorizes': []}
+        inputs = payload.get('inputs', [])
+        if not isinstance(inputs, list) or not inputs:
+            raise ValueError('consumption_inputs_required')
+        scope = payload.get('scope', inputs)
+        if not isinstance(scope, list) or not scope or len(scope) > 64:
+            raise ValueError('invalid_consumption_scope')
+        scope = list(dict.fromkeys(scope))
+        # Discover only explicit local references from selected inputs, not a repo scan.
+        for name in inputs:
+            path = _path(root, name)
+            if path.stat().st_size > 262144:
+                raise ValueError('consumption_input_too_large')
+            content = path.read_text(encoding='utf-8')
+            for reference in re.findall(r'`([^`\s]+)`', content):
+                relative = reference.split('::', 1)[0]
+                if '/' not in relative or relative in scope:
+                    continue
+                try:
+                    referenced = _path(root, relative, allow_missing=True)
+                except _Stop:
+                    raise ValueError('consumption_reference_denied') from None
+                if referenced is None:
+                    continue
+                scope.append(relative)
+                if len(scope) > 64:
+                    raise ValueError('consumption_scope_exhausted')
+        for name in scope:
+            _path(root, name)
+        paths = [root / p for p in _CANONICAL]
+        if any(not p.is_file() for p in paths):
+            # ADR-0048: optional absence is not permission to bypass a damaged
+            # installed publication. Surviving artifacts/pointer/generations are
+            # installation evidence even when another required file is missing.
+            installed = any(p.exists() or p.is_symlink() for p in [
+                *paths, root / 'knowledge/indexes/current.json',
+                root / 'knowledge/indexes/generations'])
+            if installed:
+                return {'status': 'blocked', 'queried': False, 'authorizes': [],
+                        'availability': 'publication_incomplete',
+                        'query_result': {'outcome': 'blocked', 'reason_code': 'integrity_failed',
+                                         'candidates': [], 'read_set': []}}
+            return {'status': 'prepared', 'queried': False, 'authorizes': [],
+                    'availability': 'not_installed', 'requires_direct_source_check': True}
+        catalog = json.loads(paths[0].read_text(encoding='utf-8'))
+        policy = json.loads(paths[1].read_text(encoding='utf-8'))
+        snapshot = core.catalog_source_snapshot(catalog) or {}
+        commit = snapshot.get('commit') or snapshot.get('main_commit')
+        if not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit):
+>           raise ValueError('consumption_snapshot_missing')
+E           ValueError: consumption_snapshot_missing
+
+scripts/toolchain/knowledge_query/adapter.py:704: ValueError
+
+During handling of the above exception, another exception occurred:
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red-20261028/test_unsafe_reference_still_re1'), [])
+reference = '.env/private'
+
+    @pytest.mark.parametrize('reference', ['.git/config', '.env/private', '../outside.py', 'C:/private.txt'])
+    def test_unsafe_reference_still_rejects(prepared_root, reference):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', f'Reference `{reference}`.')
+>       with pytest.raises(ValueError, match='consumption_reference_denied'):
+E       AssertionError: Regex pattern did not match.
+E        Regex: 'consumption_reference_denied'
+E        Input: 'consumption_snapshot_missing'
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:63: AssertionError
+______________ test_absent_proposed_reference_remains_non_source _______________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red-20261028/test_absent_proposed_reference0'), [])
+
+    def test_absent_proposed_reference_remains_non_source(prepared_root):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', 'Proposed `scripts/missing.py`.')
+>       prepare(root)
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:30: in prepare
+    return adapter.prepare_consumption({'stage': 'vdd-create', 'operation': 'create',
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+payload = {'inputs': ['docs/input.md'], 'operation': 'create', 'stage': 'vdd-create', 'task_id': 'reference-materialization-fixture'}
+repository_root = PosixPath('/tmp/package-b-reference-red-20261028/test_absent_proposed_reference0')
+
+    def prepare_consumption(payload, repository_root):
+        """Prepare bounded verified context after the caller identifies its task."""
+        root = Path(repository_root).resolve()
+        if not isinstance(payload, dict):
+            raise ValueError('invalid_consumption_request')
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        allowed = {'stage', 'operation', 'task_id', 'mode', 'inputs', 'query',
+                   'scope', 'record_path', 'supplement_reason', 'narrow_overrides'}
+        if set(payload) - allowed or payload.get('stage') not in _STAGES:
+            raise ValueError('invalid_consumption_request')
+        if payload.get('mode', 'headless') not in {'headless', 'interactive'}:
+            raise ValueError('invalid_consumption_mode')
+        if not payload.get('task_id'):
+            return {'status': 'awaiting-input', 'queried': False, 'authorizes': []}
+        inputs = payload.get('inputs', [])
+        if not isinstance(inputs, list) or not inputs:
+            raise ValueError('consumption_inputs_required')
+        scope = payload.get('scope', inputs)
+        if not isinstance(scope, list) or not scope or len(scope) > 64:
+            raise ValueError('invalid_consumption_scope')
+        scope = list(dict.fromkeys(scope))
+        # Discover only explicit local references from selected inputs, not a repo scan.
+        for name in inputs:
+            path = _path(root, name)
+            if path.stat().st_size > 262144:
+                raise ValueError('consumption_input_too_large')
+            content = path.read_text(encoding='utf-8')
+            for reference in re.findall(r'`([^`\s]+)`', content):
+                relative = reference.split('::', 1)[0]
+                if '/' not in relative or relative in scope:
+                    continue
+                try:
+                    referenced = _path(root, relative, allow_missing=True)
+                except _Stop:
+                    raise ValueError('consumption_reference_denied') from None
+                if referenced is None:
+                    continue
+                scope.append(relative)
+                if len(scope) > 64:
+                    raise ValueError('consumption_scope_exhausted')
+        for name in scope:
+            _path(root, name)
+        paths = [root / p for p in _CANONICAL]
+        if any(not p.is_file() for p in paths):
+            # ADR-0048: optional absence is not permission to bypass a damaged
+            # installed publication. Surviving artifacts/pointer/generations are
+            # installation evidence even when another required file is missing.
+            installed = any(p.exists() or p.is_symlink() for p in [
+                *paths, root / 'knowledge/indexes/current.json',
+                root / 'knowledge/indexes/generations'])
+            if installed:
+                return {'status': 'blocked', 'queried': False, 'authorizes': [],
+                        'availability': 'publication_incomplete',
+                        'query_result': {'outcome': 'blocked', 'reason_code': 'integrity_failed',
+                                         'candidates': [], 'read_set': []}}
+            return {'status': 'prepared', 'queried': False, 'authorizes': [],
+                    'availability': 'not_installed', 'requires_direct_source_check': True}
+        catalog = json.loads(paths[0].read_text(encoding='utf-8'))
+        policy = json.loads(paths[1].read_text(encoding='utf-8'))
+        snapshot = core.catalog_source_snapshot(catalog) or {}
+        commit = snapshot.get('commit') or snapshot.get('main_commit')
+        if not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit):
+>           raise ValueError('consumption_snapshot_missing')
+E           ValueError: consumption_snapshot_missing
+
+scripts/toolchain/knowledge_query/adapter.py:704: ValueError
+_________ test_reference_hash_and_mentioning_inputs_track_real_change __________
+
+prepared_root = (PosixPath('/tmp/package-b-reference-red-20261028/test_reference_hash_and_mentio0'), [])
+
+    def test_reference_hash_and_mentioning_inputs_track_real_change(prepared_root):
+        root, seen = prepared_root
+        put(root, 'docs/input.md', 'Reference `scripts/dep.py`.')
+        put(root, 'docs/second.md', 'Reference `scripts/dep.py`.')
+        p=put(root, 'scripts/dep.py', '# First\n')
+>       prepare(root, inputs=['docs/input.md', 'docs/second.md'])
+
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+scripts/toolchain/knowledge_query/tests/test_reference_materialization.py:30: in prepare
+    return adapter.prepare_consumption({'stage': 'vdd-create', 'operation': 'create',
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+payload = {'inputs': ['docs/input.md', 'docs/second.md'], 'operation': 'create', 'stage': 'vdd-create', 'task_id': 'reference-materialization-fixture'}
+repository_root = PosixPath('/tmp/package-b-reference-red-20261028/test_reference_hash_and_mentio0')
+
+    def prepare_consumption(payload, repository_root):
+        """Prepare bounded verified context after the caller identifies its task."""
+        root = Path(repository_root).resolve()
+        if not isinstance(payload, dict):
+            raise ValueError('invalid_consumption_request')
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+        allowed = {'stage', 'operation', 'task_id', 'mode', 'inputs', 'query',
+                   'scope', 'record_path', 'supplement_reason', 'narrow_overrides'}
+        if set(payload) - allowed or payload.get('stage') not in _STAGES:
+            raise ValueError('invalid_consumption_request')
+        if payload.get('mode', 'headless') not in {'headless', 'interactive'}:
+            raise ValueError('invalid_consumption_mode')
+        if not payload.get('task_id'):
+            return {'status': 'awaiting-input', 'queried': False, 'authorizes': []}
+        inputs = payload.get('inputs', [])
+        if not isinstance(inputs, list) or not inputs:
+            raise ValueError('consumption_inputs_required')
+        scope = payload.get('scope', inputs)
+        if not isinstance(scope, list) or not scope or len(scope) > 64:
+            raise ValueError('invalid_consumption_scope')
+        scope = list(dict.fromkeys(scope))
+        # Discover only explicit local references from selected inputs, not a repo scan.
+        for name in inputs:
+            path = _path(root, name)
+            if path.stat().st_size > 262144:
+                raise ValueError('consumption_input_too_large')
+            content = path.read_text(encoding='utf-8')
+            for reference in re.findall(r'`([^`\s]+)`', content):
+                relative = reference.split('::', 1)[0]
+                if '/' not in relative or relative in scope:
+                    continue
+                try:
+                    referenced = _path(root, relative, allow_missing=True)
+                except _Stop:
+                    raise ValueError('consumption_reference_denied') from None
+                if referenced is None:
+                    continue
+                scope.append(relative)
+                if len(scope) > 64:
+                    raise ValueError('consumption_scope_exhausted')
+        for name in scope:
+            _path(root, name)
+        paths = [root / p for p in _CANONICAL]
+        if any(not p.is_file() for p in paths):
+            # ADR-0048: optional absence is not permission to bypass a damaged
+            # installed publication. Surviving artifacts/pointer/generations are
+            # installation evidence even when another required file is missing.
+            installed = any(p.exists() or p.is_symlink() for p in [
+                *paths, root / 'knowledge/indexes/current.json',
+                root / 'knowledge/indexes/generations'])
+            if installed:
+                return {'status': 'blocked', 'queried': False, 'authorizes': [],
+                        'availability': 'publication_incomplete',
+                        'query_result': {'outcome': 'blocked', 'reason_code': 'integrity_failed',
+                                         'candidates': [], 'read_set': []}}
+            return {'status': 'prepared', 'queried': False, 'authorizes': [],
+                    'availability': 'not_installed', 'requires_direct_source_check': True}
+        catalog = json.loads(paths[0].read_text(encoding='utf-8'))
+        policy = json.loads(paths[1].read_text(encoding='utf-8'))
+        snapshot = core.catalog_source_snapshot(catalog) or {}
+        commit = snapshot.get('commit') or snapshot.get('main_commit')
+        if not isinstance(commit, str) or not re.fullmatch('[0-9a-f]{40}', commit):
+>           raise ValueError('consumption_snapshot_missing')
+E           ValueError: consumption_snapshot_missing
+
+scripts/toolchain/knowledge_query/adapter.py:704: ValueError
+=========================== short test summary info ============================
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_ordinary_references_are_metadata_not_mandatory_excerpts
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_explicit_required_sources_do_not_drop_normative_input
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_unsafe_reference_still_rejects[.env/private]
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_absent_proposed_reference_remains_non_source
+FAILED scripts/toolchain/knowledge_query/tests/test_reference_materialization.py::test_reference_hash_and_mentioning_inputs_track_real_change
+5 failed, 5 passed in 0.16s

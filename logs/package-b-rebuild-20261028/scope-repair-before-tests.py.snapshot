@@ -1,0 +1,184 @@
+"""ADR-0041: bound read-only quality validation is artifact behavior, not evidence."""
+from pathlib import Path
+import json
+import shutil
+import subprocess
+import sys
+
+import pytest
+
+TOOLS=Path(__file__).resolve().parents[1]
+REPOSITORY=Path(__file__).resolve().parents[5]
+sys.path.insert(0,str(TOOLS))
+from red_production_entry_guard import validate_red_production_entry
+
+FIXED=[
+    'scripts/sc/validate_skill_quality.py',
+    'scripts/sc/skill_quality_examples.py',
+    'scripts/sc/config/skill-authoring-standard.v1.json',
+    'scripts/sc/schemas/skill-quality-contract.v1.schema.json',
+    'scripts/sc/schemas/skill-quality-result.v1.schema.json',
+]
+OWNER='.agents/skills/demo-skill/skill-quality.v1.json'
+TEST='tests/test_quality.py'
+
+
+def _fixture(tmp_path,source=None):
+    root=tmp_path/'repo';root.mkdir()
+    for ref in FIXED:
+        target=root/ref;target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(REPOSITORY/ref,target)
+    target=root/OWNER;target.parent.mkdir(parents=True)
+    target.write_text('{}\n',encoding='utf-8')
+    target.with_name('SKILL.md').write_text('---\nname: demo-skill\ndescription: Read-only quality fixture.\n---\n',encoding='utf-8')
+    path=root/TEST;path.parent.mkdir()
+    path.write_text(source or _source(),encoding='utf-8')
+    subprocess.run(['git','init','-q'],cwd=root,check=True,capture_output=True)
+    subprocess.run(['git','add',*FIXED],cwd=root,check=True,capture_output=True)
+    subprocess.run(['git','-c','user.name=Fixture','-c','user.email=fixture@example.test',
+                    'commit','-qm','Immutable adopted validator fixture'],cwd=root,check=True,capture_output=True)
+    bundle={'plan_id':'P','slices':[{'slice_id':'S1','production_owners':[OWNER],
+        'allowed_write_paths':[OWNER], 'execution_snapshot_paths':[TEST,*FIXED]}]}
+    descriptor={'stage':'red','plan_id':'P','slice_id':'S1','target_refs':[TEST]}
+    return root,bundle,descriptor
+
+
+def _source(package='.agents/skills/demo-skill',mode='strict',repository='.',policy=FIXED[2]):
+    return ("from scripts.sc.validate_skill_quality import validate_package\n"
+            "def test_real_quality():\n"
+            f"    result=validate_package(repository_root={repository!r}, package_root={package!r}, "
+            f"policy_path={policy!r}, mode={mode!r})\n"
+            "    assert result['status']=='pass'\n")
+
+
+def _run(root,bundle,descriptor):
+    return validate_red_production_entry(workspace=root,bundle=bundle,slice_id='S1',descriptor=descriptor)
+
+
+def test_admits_exact_readonly_validator_call_for_declared_quality_owner(tmp_path):
+    root,bundle,descriptor=_fixture(tmp_path)
+    before={p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}
+    result=_run(root,bundle,descriptor)
+    assert result['status']=='pass'
+    assert result['bindings']==[{'production_owner':OWNER,'module':'scripts.sc.validate_skill_quality','test_ref':TEST}]
+    assert result['tests_executed'] is False and result['writes_performed'] is False
+    assert {p.relative_to(root).as_posix():p.read_bytes() for p in root.rglob('*') if p.is_file() and '.git' not in p.parts}==before
+
+
+@pytest.mark.parametrize('source',[
+    pytest.param(_source(package='.agents/skills/undeclared'),id='undeclared-package'),
+    pytest.param(_source(package='../outside'),id='traversal-package'),
+    pytest.param(_source(repository='..'),id='outside-root'),
+    pytest.param(_source(mode='inventory'),id='inventory-not-runtime-quality'),
+    pytest.param(_source(policy='candidate-policy.json'),id='alternate-policy'),
+    pytest.param(_source().replace("package_root='.agents/skills/demo-skill'","package_root=package"),id='dynamic-package'),
+    pytest.param(_source()+"\nvalidate_package=lambda **kw: {'status':'pass'}\n",id='rebound-validator'),
+    pytest.param(_source().replace('from scripts.sc.validate_skill_quality import validate_package','from candidate import validate_package'),id='alternate-validator'),
+])
+def test_rejects_unbound_or_noncanonical_validator_invocation(tmp_path,source):
+    root,bundle,descriptor=_fixture(tmp_path,source)
+    with pytest.raises(ValueError):_run(root,bundle,descriptor)
+
+
+@pytest.mark.parametrize('variant',[
+    pytest.param('missing-snapshot',id='validator-not-frozen'),
+    pytest.param('writable-validator',id='validator-also-writable'),
+    pytest.param('modified-validator',id='candidate-replaced-validator'),
+    pytest.param('unversioned-validator',id='missing-git-identity'),
+    pytest.param('owner-symlink',id='symlink-owner'),
+    pytest.param('not-quality-sidecar',id='arbitrary-json'),
+])
+def test_rejects_untrusted_validator_or_owner_context(tmp_path,variant):
+    root,bundle,descriptor=_fixture(tmp_path);selected=bundle['slices'][0]
+    if variant=='missing-snapshot':selected['execution_snapshot_paths'].remove(FIXED[0])
+    elif variant=='writable-validator':selected['allowed_write_paths'].append(FIXED[0])
+    elif variant=='modified-validator':(root/FIXED[0]).write_text('def validate_package(**kw): return {}\n',encoding='utf-8')
+    elif variant=='unversioned-validator':shutil.move(root/'.git',tmp_path/'original-fixture-git')
+    elif variant=='owner-symlink':
+        (root/OWNER).unlink();(root/OWNER).symlink_to(root/FIXED[2])
+    elif variant=='not-quality-sidecar':
+        selected['production_owners']=['.agents/skills/demo-skill/data.json']
+        selected['allowed_write_paths']=list(selected['production_owners'])
+    with pytest.raises(ValueError):_run(root,bundle,descriptor)
+
+
+@pytest.mark.parametrize('prior',[
+    pytest.param(None,id='first-call'),
+    pytest.param({'old_result':True},id='reentry'),
+])
+def test_red_dispatch_checks_binding_before_reentry_or_process(tmp_path,monkeypatch,prior):
+    import stage_pipeline
+    import stage_reentry
+    import red_production_entry_guard
+    root,bundle,descriptor=_fixture(tmp_path)
+    descriptor.update(run_id='run')
+    monkeypatch.setattr(stage_pipeline,'load_json',lambda p:bundle if str(p)=='semantic' else descriptor)
+    monkeypatch.setattr(stage_pipeline,'validate_descriptor',lambda d:None)
+    monkeypatch.setattr(stage_reentry,'existing_result',lambda *a,**k:prior)
+    def rejected(**kwargs):raise ValueError('Binding rejected before process/reentry')
+    monkeypatch.setattr(red_production_entry_guard,'validate_red_production_entry',rejected)
+    with pytest.raises(ValueError,match='Binding rejected'):
+        stage_pipeline.execute_stage(workspace=root,semantic_plan=Path('semantic'),run_dir=root/'run',
+                                     descriptor_path=Path('descriptor'),profile_identity='standard')
+
+
+def test_named_red_materialization_and_repeat_both_check_admission(tmp_path,monkeypatch):
+    import stable_runner
+    import red_production_entry_guard
+    from test_cer_behavior_routing import fixture,execute
+    semantic,_=fixture(tmp_path,(False,False))
+    execute(tmp_path,semantic,'probe')
+    monkeypatch.setattr(stable_runner,'ROOT',tmp_path)
+    calls=[]
+    def rejected(**kwargs):
+        calls.append(kwargs['descriptor']['stage'])
+        raise ValueError('Native RED admission refused')
+    monkeypatch.setattr(red_production_entry_guard,'validate_red_production_entry',rejected)
+    run=tmp_path/'RUN-1'
+    assert not (run/'descriptors/red.json').exists()
+    for _ in range(2):
+        with pytest.raises(ValueError,match='Native RED admission refused'):
+            stable_runner._execute_named_stage(semantic,run,'red','standard')
+        assert (run/'descriptors/red.json').is_file()
+        assert not (run/'canonical-evidence/red/process-receipt.v2.json').exists()
+    assert calls==['red','red']
+
+
+@pytest.mark.parametrize("variant", ["from-import", "module-import", "relative-import", "wildcard-import"])
+def test_rejects_import_created_validator_rebinding(tmp_path, variant):
+    source = _source()
+    if variant == "from-import":
+        source += "\nfrom alternate_validator import validate_package\n"
+    elif variant == "module-import":
+        source += "\nimport alternate_validator as validate_package\n"
+    elif variant == "relative-import":
+        source = source.replace("from scripts.sc.", "from .scripts.sc.")
+    else:
+        source += "\nfrom alternate_validator import *\n"
+    root, bundle, descriptor = _fixture(tmp_path, source)
+    with pytest.raises(ValueError):
+        _run(root, bundle, descriptor)
+
+
+@pytest.mark.parametrize("variant", ["valid", "removed-command", "wrong-script", "missing-strict", "private-script"])
+def test_portability_check_binds_actual_strict_command(monkeypatch, variant):
+    import importlib.util
+    source = REPOSITORY / "scripts/sc/tests/test_skill_quality_package_b.py"
+    spec = importlib.util.spec_from_file_location("package_b_command_check_fixture", source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    text = module._main(module.PACKAGES[2])
+    command = next(line for line in text.splitlines()
+                   if line.startswith("py -3 -B scripts/sc/validate_skill_quality.py "))
+    if variant == "removed-command":
+        changed = text.replace(command, "")
+    elif variant == "wrong-script":
+        changed = text.replace(command, command.replace("scripts/sc/", "scripts/missing/"))
+    elif variant == "missing-strict":
+        changed = text.replace(command, command.replace(" --mode strict", ""))
+    elif variant == "private-script":
+        changed = text.replace(command, command.replace("scripts/sc/validate_skill_quality.py", "C:/private/validate_skill_quality.py"))
+    else:
+        changed = text
+    monkeypatch.setattr(module, "_main", lambda package: changed)
+    assert module._portable_bootstrap() is (variant == "valid")

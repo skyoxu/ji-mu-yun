@@ -1,0 +1,620 @@
+..........................................                               [100%]
+=============================== warnings summary ===============================
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:374: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_0082DA37FDD3')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:379: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_06B2E983CB73')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:384: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_0BCEAD7964BF')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:389: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_0E031EB3891E')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:394: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_0E6D98559F6B')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:399: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_0E781666A8E6')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:404: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_106E49892C1C')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:409: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_122D7390958D')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:414: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_136CDDBA77A6')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:419: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_1370E773AD67')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:424: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_181DCD9163A1')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:429: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_18BAEF1E87C0')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:434: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_1A7456E604BF')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:439: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_1A82E183EEBB')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:444: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_1FC41E966CB0')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:449: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_2275CA248048')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:454: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_26F529A9E55D')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:459: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_27A3D0428D77')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:464: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_2CBB18C96E83')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:477: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_31BB4B73B2E0')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:482: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_3334FEB462B7')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:487: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_333D4B6DB398')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:492: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_33A58D56A240')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:497: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_3468471DAB29')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:502: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_3CB8579F527E')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:507: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_3E98F7EB3C8D')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:512: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_435F58556AB8')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:517: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_49D7164AED75')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:522: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_4DE82E497103')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:527: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_516E31393C6B')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:532: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_51D4739E3A0A')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:537: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_520D0E5EA4C7')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:542: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_53380A1D038B')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:547: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_5375308178D9')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:552: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_56A33BF13918')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:557: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_56B4D051B472')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:562: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_5911772C50A8')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:567: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_597AAD1CF5FF')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:572: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_5AAFB946671F')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:577: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_6AC1654A3B38')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:582: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_6F444612047C')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:587: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_7136BAA2CA44')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:592: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_73B685FB11F6')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:597: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_7ACD9F289FDE')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:602: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_7EDC585984AC')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:607: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_80316CD17E3B')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:612: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_897EA243B79E')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:617: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_8AFEC64253D3')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:622: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_8ECA25407A03')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:627: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_95DA69640268')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:632: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_97205C679D05')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:637: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_9E8AACC50395')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:642: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_9ED7E6CE4DDC')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:647: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_9FDC53051B14')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:652: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_A4FF42287EF4')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:657: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_A6C02C53C2A4')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:662: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_AA5934B2633E')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:667: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_B31AFCA31048')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:672: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_B66298A862BB')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:677: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_C9ED9E3E46B5')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:682: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_CA4306911C31')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:687: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_D0CE1CA291A7')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:692: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_D435CEAE6CBD')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:697: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_D4FDDB15D79E')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:702: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_DBD4AF430715')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:707: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_E5D14EE8A976')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:712: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_EB599B9F9D24')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:717: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_EB7D799DFE5A')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:722: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_EBC502B01FF4')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:727: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_F308EA0BD0A3')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:732: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_F40D1B12384F')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:737: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_F522DEE88468')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:742: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_F7254CBACFD6')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:747: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_F7C23594D5FC')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:752: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_F8B04C33A6A6')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:757: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_FB4AFA4ABA94')
+
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[valid]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[removed-command]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[wrong-script]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[missing-strict]
+.agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_portability_check_binds_actual_strict_command[private-script]
+  /workspace/ji-mu-yun/scripts/sc/tests/test_skill_quality_package_b.py:762: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('PKGB_FF00F91F7070')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+42 passed, 385 warnings in 2.94s

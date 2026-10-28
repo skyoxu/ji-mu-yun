@@ -1,0 +1,173 @@
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json b/.agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json
+index 61b857f39..00da2c433 100644
+--- a/.agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json
++++ b/.agents/skills/run-refactor-implementation-acceptance/policies/toolchain-code-review.v1.json
+@@ -1,7 +1,7 @@
+ {
+   "schemaVersion": "code-review-policy-pack.v1",
+   "policyId": "toolchain-code-review",
+-  "policyRevision": "sha256:8f03480d750dc4f4c8c88d72ac5da3a453847301ad9fc6bfdadc5a9ce336d45f",
++  "policyRevision": "sha256:5db6fc57894f1f57f5343bcb4739cd112816322e0de2dacad5efda2b19abf4f3",
+   "targetDomain": "toolchain",
+   "authorityRefs": [
+     "AGENTS.md",
+@@ -44,7 +44,10 @@
+       "knowledge/indexes/last-known-good.json",
+       "knowledge/projections/consumer-projections.v1.json",
+       "knowledge/snapshots/repository-source-snapshot.v1.json",
+-      "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py"
++      "scripts/toolchain/knowledge_query/tests/test_reference_materialization.py",
++      "scripts/python/skill_input_candidate.py",
++      "scripts/python/tests/test_skill_input_publication_mutex.py",
++      "docs/workflows/skill-input-v2.md"
+     ],
+     "crossDomainPaths": [
+       "scripts/sc/_llm_backend.py"
+diff --git a/.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py b/.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py
+index f08c3d125..9a52cee50 100644
+--- a/.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py
++++ b/.agents/skills/run-refactor-implementation-acceptance/tests/test_toolchain_domain.py
+@@ -56,6 +56,9 @@ PACKAGE_B_EXACT_PATHS = (
+     'knowledge/projections/consumer-projections.v1.json',
+     'knowledge/snapshots/repository-source-snapshot.v1.json',
+     'scripts/toolchain/knowledge_query/tests/test_reference_materialization.py',
++    'scripts/python/skill_input_candidate.py',
++    'scripts/python/tests/test_skill_input_publication_mutex.py',
++    'docs/workflows/skill-input-v2.md',
+ )
+ 
+ class ToolchainDomainTests(unittest.TestCase):
+diff --git a/docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md b/docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md
+index a284a3316..03c75b80b 100644
+--- a/docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md
++++ b/docs/adr/ADR-0060-skill-input-selection-generation-and-retention.md
+@@ -93,3 +93,15 @@ Bootstrap.
+ 
+ This extends ADR-0048, ADR-0050, ADR-0057, ADR-0058, and ADR-0059. It
+ supersedes only their v1 Skill-input selection/current-resolution practices.
++
++## Implementation clarification (2026-10-28)
++
++The publisher acquisition guard `knowledge/indexes/.publication-acquire.lock`
++is persistent OS mutex metadata, not a Knowledge authority source. Only its
++exact untracked, Git-ignored regular single-link one-NUL-byte shape is excluded
++from candidate changes after stable read/identity verification. The observer
++does not acquire, release or remove the lock. Publisher-created mode bits vary
++with the device umask and are preserved. Tracked modifications, other bytes,
++links/reparse paths, unsupported objects and concurrent changes do not qualify;
++all neighboring and other ignored Knowledge sources remain review inputs.
++No broad path/suffix exclusion, publication right or review bypass is granted.
+diff --git a/docs/workflows/skill-input-v2.md b/docs/workflows/skill-input-v2.md
+index 880dfa408..6f0b54fe0 100644
+--- a/docs/workflows/skill-input-v2.md
++++ b/docs/workflows/skill-input-v2.md
+@@ -95,6 +95,23 @@ request/freeze and choosing its newly authorized scope; it cannot silently
+ replace an existing current route. Do not use a fresh storage directory merely
+ to conceal a blocked scope change.
+ 
++## Publisher acquisition mutex
++
++ADR-0060 classifies only the exact untracked, Git-ignored
++`knowledge/indexes/.publication-acquire.lock` as runtime metadata when it is a
++regular single-link file containing exactly one NUL byte and its file identity,
++mode, size and timestamps remain stable across the read. The existing publisher
++creates that byte for its OS acquisition guard and intentionally retains the
++inode after unlocking; the observer never acquires, releases or deletes it.
++Publisher permissions depend on `os.open` and the device umask, so execute mode
++bits do not make that fixed NUL byte a knowledge payload.
++
++Tracked changes at that path, other content, hardlinks, symlink/reparse paths,
++unsupported objects, concurrent replacement and every neighboring or other
++ignored Knowledge file retain fail-closed observation/review behavior. This is
++not a `.lock` suffix or directory exemption, publication permission or review
++waiver. Actual Knowledge changes still produce `review-required`.
++
+ ## Run and resume
+ 
+ Run from the repository root (PowerShell examples):
+diff --git a/scripts/python/skill_input_candidate.py b/scripts/python/skill_input_candidate.py
+index ddb7e171f..da3d5e1e2 100644
+--- a/scripts/python/skill_input_candidate.py
++++ b/scripts/python/skill_input_candidate.py
+@@ -1,6 +1,8 @@
+ """Observe candidate changes against the authority-bound Git baseline (ADR-0060)."""
+ import fnmatch
++import os
+ import re
++import stat
+ import subprocess
+ from pathlib import Path
+ try:
+@@ -16,6 +18,40 @@ def git(root, *args):
+     return result.stdout.decode('utf-8', errors='strict')
+ 
+ 
++_PUBLISHER_MUTEX = 'knowledge/indexes/.publication-acquire.lock'
++
++
++def _is_publisher_mutex_metadata(path):
++    """ADR-0060: recognize the publisher's one-byte guard, not lock payloads.
++
++    The caller requires the exact untracked, ignored publisher path. Keep the
++    persistent mutex inode intact; never acquire, release, truncate or unlink it.
++    """
++    def stamp(value):
++        return (value.st_dev, value.st_ino, value.st_mode, value.st_nlink,
++                value.st_size, value.st_mtime_ns, value.st_ctime_ns)
++    before = path.lstat()
++    if (not stat.S_ISREG(before.st_mode) or before.st_size != 1
++            or before.st_nlink != 1):
++        return False
++    descriptor = None
++    try:
++        descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)
++                             | getattr(os, 'O_NONBLOCK', 0))
++        opened = os.fstat(descriptor)
++        payload = os.read(descriptor, 2)
++        after = os.fstat(descriptor)
++        current = path.lstat()
++        if not (stamp(before) == stamp(opened) == stamp(after) == stamp(current)):
++            raise ValueError('publisher runtime mutex changed during observation')
++        return payload == b'\0'
++    except OSError as exc:
++        raise ValueError('publisher runtime mutex changed during observation') from exc
++    finally:
++        if descriptor is not None:
++            os.close(descriptor)
++
++
+ def observe_candidate(root, authority_path, storage):
+     root = Path(root).resolve()
+     authority = read_json(authority_path)
+@@ -25,11 +61,18 @@ def observe_candidate(root, authority_path, storage):
+     if Path(git(root, 'rev-parse', '--show-toplevel').strip()).resolve() != root:
+         raise ValueError('candidate must use the repository root')
+     git(root, 'merge-base', '--is-ancestor', baseline, 'HEAD')
+-    changed = set(filter(None, git(root, 'diff', '--no-ext-diff', '--no-renames', '--name-only', '-z', baseline, '--').split('\0')))
++    tracked_changes = set(filter(None, git(root, 'diff', '--no-ext-diff', '--no-renames', '--name-only', '-z', baseline, '--').split('\0')))
++    changed = set(tracked_changes)
+     changed.update(filter(None, git(root, 'ls-files', '--others', '--exclude-standard', '-z').split('\0')))
+     # Ignore rules cannot conceal changes to Knowledge authority.
+-    changed.update(filter(None, git(root, 'ls-files', '--others', '--ignored', '--exclude-standard', '-z', '--',
++    ignored_knowledge = set(filter(None, git(root, 'ls-files', '--others', '--ignored', '--exclude-standard', '-z', '--',
+         'knowledge/', '.agents/skills/maintain-knowledge-base/', ':(glob)scripts/python/*knowledge*.py').split('\0')))
++    changed.update(ignored_knowledge)
++    # Git may omit an empty ignored directory: an invalid mutex object must
++    # still fail closed rather than disappear from its file inventory.
++    mutex = contained(root, _PUBLISHER_MUTEX)
++    if mutex.exists() and not mutex.is_file():
++        raise ValueError('unsupported candidate object')
+     target_plan = authority.get('target_plan')
+     generated = {storage.rstrip('/') + '/', '.skill-input-work/'}
+     if isinstance(target_plan, str) and target_plan:
+@@ -62,6 +105,10 @@ def observe_candidate(root, authority_path, storage):
+         if path.startswith('logs/') or path == storage or is_generated(path):
+             continue
+         file = contained(root, path)
++        if (path == _PUBLISHER_MUTEX and path not in tracked_changes
++                and path in ignored_knowledge
++                and _is_publisher_mutex_metadata(file)):
++            continue
+         if file.exists() and not file.is_file():
+             raise ValueError('unsupported candidate object')
+         rows.append({'path': path, 'sha256': digest(file.read_bytes()) if file.exists() else None})

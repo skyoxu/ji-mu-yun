@@ -95,6 +95,23 @@ request/freeze and choosing its newly authorized scope; it cannot silently
 replace an existing current route. Do not use a fresh storage directory merely
 to conceal a blocked scope change.
 
+## Publisher acquisition mutex
+
+ADR-0060 classifies only the exact untracked, Git-ignored
+`knowledge/indexes/.publication-acquire.lock` as runtime metadata when it is a
+regular single-link file containing exactly one NUL byte and its file identity,
+mode, size and timestamps remain stable across the read. The existing publisher
+creates that byte for its OS acquisition guard and intentionally retains the
+inode after unlocking; the observer never acquires, releases or deletes it.
+Publisher permissions depend on `os.open` and the device umask, so execute mode
+bits do not make that fixed NUL byte a knowledge payload.
+
+Tracked changes at that path, other content, hardlinks, symlink/reparse paths,
+unsupported objects, concurrent replacement and every neighboring or other
+ignored Knowledge file retain fail-closed observation/review behavior. This is
+not a `.lock` suffix or directory exemption, publication permission or review
+waiver. Actual Knowledge changes still produce `review-required`.
+
 ## Run and resume
 
 Run from the repository root (PowerShell examples):

@@ -1,0 +1,156 @@
+{
+  "actionDag": {
+    "actions": [
+      {
+        "actionId": "validate-vdd-contract",
+        "activation": true,
+        "commandId": "validate-vdd-contract",
+        "dependsOn": [],
+        "order": 1
+      },
+      {
+        "actionId": "validate-code-review-route",
+        "activation": true,
+        "commandId": "validate-code-review-route",
+        "dependsOn": [
+          "validate-vdd-contract"
+        ],
+        "order": 2
+      },
+      {
+        "actionId": "validate-acceptance-package",
+        "activation": true,
+        "commandId": "validate-acceptance-package",
+        "dependsOn": [
+          "validate-code-review-route"
+        ],
+        "order": 3
+      },
+      {
+        "actionId": "strict-vdd-execution-plan",
+        "activation": true,
+        "commandId": "strict-vdd-execution-plan",
+        "dependsOn": [
+          "validate-acceptance-package"
+        ],
+        "order": 4
+      },
+      {
+        "actionId": "strict-quick-dev-tdd-adapter",
+        "activation": true,
+        "commandId": "strict-quick-dev-tdd-adapter",
+        "dependsOn": [
+          "strict-vdd-execution-plan"
+        ],
+        "order": 5
+      },
+      {
+        "actionId": "strict-run-phase-bootstrap-review",
+        "activation": true,
+        "commandId": "strict-run-phase-bootstrap-review",
+        "dependsOn": [
+          "strict-quick-dev-tdd-adapter"
+        ],
+        "order": 6
+      },
+      {
+        "actionId": "strict-run-refactor-implementation-acceptance",
+        "activation": true,
+        "commandId": "strict-run-refactor-implementation-acceptance",
+        "dependsOn": [
+          "strict-run-phase-bootstrap-review"
+        ],
+        "order": 7
+      },
+      {
+        "actionId": "strict-maintain-knowledge-base",
+        "activation": true,
+        "commandId": "strict-maintain-knowledge-base",
+        "dependsOn": [
+          "strict-run-refactor-implementation-acceptance"
+        ],
+        "order": 8
+      },
+      {
+        "actionId": "validate-skill-input-mutex",
+        "activation": true,
+        "commandId": "validate-skill-input-mutex",
+        "dependsOn": [
+          "strict-maintain-knowledge-base"
+        ],
+        "order": 9
+      }
+    ]
+  },
+  "actionDagHash": "sha256:bdca6096f221003dc536f3da9fc13c163392657c109056765599004efd93945c",
+  "authorizes": [],
+  "bootstrapInvoked": false,
+  "executedActionCount": 9,
+  "finalization": {
+    "authorizes": [],
+    "reason": "current Quick Dev proof cannot be replayed: reuse-dependency-content-changed:.skill-input-work/package-b-acceptance-20261028/6bdb2faa667045e98f60b59a9ee3f758/attempt.json,.skill-input-work/package-b-acceptance-20261028/6bdb2faa667045e98f60b59a9ee3f758/observed.json,.skill-input-work/package-b-acceptance-20261028/6bdb2faa667045e98f60b59a9ee3f758/prepared.json,.skill-input-work/package-b-acceptance-20261028/6d1ef01524144c628c88d5101a1aeb03/attempt.json,.skill-input-work/package-b-acceptance-20261028/6d1ef01524144c628c88d5101a1aeb03/observed.json,.skill-input-work/package-b-acceptance-20261028/6d1ef01524144c628c88d5101a1aeb03/prepared.json",
+    "status": "not-ready"
+  },
+  "persistedActionState": {
+    "actionStates": {
+      "strict-maintain-knowledge-base": "completed",
+      "strict-quick-dev-tdd-adapter": "completed",
+      "strict-run-phase-bootstrap-review": "completed",
+      "strict-run-refactor-implementation-acceptance": "completed",
+      "strict-vdd-execution-plan": "completed",
+      "validate-acceptance-package": "completed",
+      "validate-code-review-route": "completed",
+      "validate-skill-input-mutex": "completed",
+      "validate-vdd-contract": "completed"
+    },
+    "authorizes": [],
+    "dependencyClosed": {
+      "strict-maintain-knowledge-base": true,
+      "strict-quick-dev-tdd-adapter": true,
+      "strict-run-phase-bootstrap-review": true,
+      "strict-run-refactor-implementation-acceptance": true,
+      "strict-vdd-execution-plan": true,
+      "validate-acceptance-package": true,
+      "validate-code-review-route": true,
+      "validate-skill-input-mutex": true,
+      "validate-vdd-contract": true
+    },
+    "missingDependencies": {
+      "strict-maintain-knowledge-base": [],
+      "strict-quick-dev-tdd-adapter": [],
+      "strict-run-phase-bootstrap-review": [],
+      "strict-run-refactor-implementation-acceptance": [],
+      "strict-vdd-execution-plan": [],
+      "validate-acceptance-package": [],
+      "validate-code-review-route": [],
+      "validate-skill-input-mutex": [],
+      "validate-vdd-contract": []
+    },
+    "nextAction": null,
+    "readyActionIds": [],
+    "runId": "acceptance-fe850ae4de042a74",
+    "schemaVersion": "acceptance-run-inspection.v1",
+    "sortingBasis": "dependency-topology,action-order,command-registry-order,command-id"
+  },
+  "requestAuthority": "none",
+  "route": "deterministic_only",
+  "runBinding": {
+    "actionDagHash": "sha256:bdca6096f221003dc536f3da9fc13c163392657c109056765599004efd93945c",
+    "contractHash": "sha256:16ddf260b44beeb52697da816684915896cbd19f05fdc43d70710f221a58490f",
+    "knowledgeContextHash": "sha256:e3abe71f94bf10b25ea1d42382ffbfebe64f4f9f0624d707580b99861256f709",
+    "runDirectory": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-runs/acceptance-fe850ae4de042a74",
+    "runId": "acceptance-fe850ae4de042a74",
+    "runInputHash": "sha256:4ceac879d7d1045c469263356c168fdd7aada3ea783005b5bb916fa8e97a32cd"
+  },
+  "runBindingHash": "sha256:bfa02b944a3d64a97696fc5474d61f4e66994aad62075a92878c7ff097558424",
+  "runDirectory": "execution-plans/2026-10-28-skill-compliance-package-b-rebuild-r3/acceptance-runs/acceptance-fe850ae4de042a74",
+  "runId": "acceptance-fe850ae4de042a74",
+  "runInputHash": "sha256:4ceac879d7d1045c469263356c168fdd7aada3ea783005b5bb916fa8e97a32cd",
+  "schemaVersion": "acceptance-coordinator-result.v4",
+  "status": "waiting",
+  "telemetry": {
+    "path": "coordinator-telemetry.jsonl",
+    "schemaVersion": "acceptance-coordinator-telemetry.v1"
+  },
+  "typedHandoff": null
+}

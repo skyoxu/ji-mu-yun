@@ -1,0 +1,23 @@
+{
+  "schema": "package-b.input-source-map.v1",
+  "authorizes": [],
+  "baseline_commit": "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+  "original_source": "docs/workflows/skill-control-plane-evolution-requirements.md",
+  "original_source_before_rebuild_sha256": "97b74b10cfd91bfb56d205d3fbe5b49e034b532b285fb443064aa9057d23cf4a",
+  "revised_source_sha256": "1c6759ee5927e7cbd5d7c8df6e1a47d65c5e94acd6631cc0a484fdbb66aba692",
+  "canonical_path": "docs/workflows/inputs/package-b-rebuild-20261028/requirements.md",
+  "canonical_sha256": "681fe569215ee8b712e2103551e3ca90efc3c4e37204b8be83ea3b2f5b615abc",
+  "scope": "Only Package B six retained requests and five existing packages plus applicable common constraints. Package A implementation and BMAD runtime changes excluded.",
+  "anchors": {
+    "FR-1": "Global Boundaries and VDD Consumption Contract",
+    "FR-2": "All six original Package B required outcomes verbatim",
+    "FR-3": "Adopted authority, current code reuse and five-package difference map",
+    "FR-4": "Canonical input, public workflows, actual TDD and evidence persistence",
+    "FR-5": "Acceptance gate and unchanged non-goals",
+    "FR-6": "Cross-Package Stop Conditions"
+  },
+  "normalizations": [
+    "Directory annotations are explicit prose, not file inputs. Existing code citations are real file paths. Function names are separate prose. Source map is traceability, not a native compiler receipt."
+  ],
+  "original_six_requests_verbatim": "- Add route-focused examples rather than business-domain examples:\n  - VDD create, direct-implementation boundary, invalid input;\n  - Quick Dev strict-plan handoff, upgrade classification, invalid contract;\n  - Bootstrap clean path, later-round confirmation, failed access/preflight;\n  - Acceptance deterministic path, repair route, manual pause or stale input;\n  - Knowledge Base existing-only refresh, targeted provisional result,\n    publication/authority failure.\n- Add concise dependency tables and typed standard error outputs.\n- Add ASCII diagrams only where the Skill has internal routing or orchestration.\n- Keep each Skill's main file below 500 lines; move detailed operational text\n  to directly linked first-level references.\n- Make every public entry independently invocable with explicit preflight and\n  typed missing-dependency behavior. Do not remove legitimate child Skill\n  dependencies.\n- Add or extend deterministic validators and focused tests. Preserve current\n  lifecycle ownership, fail-closed behavior, evidence rules, and protected\n  boundaries."
+}

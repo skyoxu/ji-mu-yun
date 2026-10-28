@@ -1,0 +1,21 @@
+{
+  "operation": "create_library_file",
+  "status": "succeeded",
+  "path": "/stage-mutex-reviewed-checkpoint-018.zip",
+  "file_id": "file_000000005bc881fa8bfc284a96fa53c4",
+  "library_file_id": "libfile_78c6bcc35bb48191b00b604f6eef4981",
+  "file_name": "stage-mutex-reviewed-checkpoint-018.zip",
+  "current_version_number": 0,
+  "restored_from_version_number": null,
+  "xattrs": [
+    {
+      "name": "user.library-file-version",
+      "value": "0"
+    }
+  ],
+  "directory_id": "libdir_ca0f726414148191ba8f0642f21b10f0",
+  "mime_type": "application/zip",
+  "library_artifact_type": "other",
+  "file_size_bytes": 3022130,
+  "external_connectors_accessed": false
+}
