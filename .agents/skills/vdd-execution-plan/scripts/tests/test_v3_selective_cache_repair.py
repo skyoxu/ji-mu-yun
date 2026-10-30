@@ -174,6 +174,32 @@ class SelectiveCacheRepairTests(unittest.TestCase):
         assert json.loads(cache.read_text())['obligation_contracts']['O-1'] == original['obligation_contracts']['O-1']
 
 
+    def test_empty_behavior_owner_cache_is_rejected_without_rejecting_valid_ownerless_guard(self):
+        """ADR-0041: cache roles match the final execution-contract owner guard."""
+        from execution_contract import ownerless_guard
+        payload, original, _, _, _ = setup_run(self.root, self, bad=False)
+        invalid = deepcopy(original)
+        invalid['obligation_contracts']['O-2']['slice_hint']['production_owners'] = []
+        invalid['obligation_contracts']['O-2']['slice_hint']['rollback_scope']['production_paths'] = []
+        projected = repair._project_current_output(invalid, repair._obligation_refs(payload))
+        assert repair._cache_requires_refresh(projected, self.root, payload)
+        assert repair._invalid_contract_ids(payload, invalid['obligation_contracts']) == {'O-2'}
+        assert not repair._cache_requires_refresh(
+            repair._project_current_output(original, repair._obligation_refs(payload)), self.root, payload)
+        guard = deepcopy(invalid['obligation_contracts']['O-2'])
+        guard['slice_hint'].update(allowed_write_paths=['tests/test_real.py'],
+            planned_new_files=[], production_owners=[])
+        guard['failure_intents'][0]['failure_family'] = 'semantic-contract-gap'
+        guard_obligation = dict(payload['input']['obligations'][1], obligation_kind='constraint')
+        guard_payload = {'input': {'obligations': [guard_obligation]}}
+        guard_raw = {'obligation_contracts': {'O-2': guard}}
+        guard_projection = repair._project_current_output(guard_raw, repair._obligation_refs(guard_payload))
+        assert ownerless_guard(guard_projection['slice_hints'][0], [guard_obligation],
+                               guard_projection['failure_intents'])
+        assert not repair._cache_requires_refresh(guard_projection, self.root, guard_payload)
+        assert repair._invalid_contract_ids(guard_payload, guard_raw['obligation_contracts']) == set()
+
+
     def test_missing_planned_test_remains_eligible_for_cache_reuse(self):
         payload, original, cache, out, calls = setup_run(self.root, self)
         original['obligation_contracts']['O-2']['slice_hint']['planned_new_files'] = ['tests/test_missing.py']

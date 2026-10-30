@@ -730,3 +730,82 @@ when the first call had not yet materialized its descriptor. Rejected or
 historical executions are preserved; no old receipt is relabeled as an execution
 under the repaired dispatcher. Ordinary Python/.NET bindings and non-RED
 stage routes retain their existing contracts.
+
+
+## 2026-10-29: content-bound toolchain skill regression admission
+
+The maintainer approved mandatory startup fingerprints for the public VDD and
+Quick Dev entries and a shared regression runner. This is tool-content admission,
+not task authorization, publication trust or Acceptance. Existing native source,
+permission, RED/Q4, recovery, Q7/Q8 and terminal owners remain unchanged.
+
+Fingerprints bind relative-path/file-byte inventories of Skill instructions,
+execution code, contracts, schemas and actual shared code dependencies. The test
+suite and runner identity are separately bound. Current Git provenance, time,
+device/private configuration, run artifacts and admission records do not enter
+cyclic content identity. A shared dependency change invalidates each affected
+Skill. Missing, corrupt, changed or incompletely tested content fails closed.
+
+Unapproved candidates may execute only in the controlled regression channel,
+bound to the live runner and disposable fixture paths. There is no generic
+formal-task bypass. Complete non-skipped mandatory process/case results and an
+unchanged post-test candidate precede atomic activation of a versioned record.
+The first baseline uses a one-time explicit bootstrap grounded in the actual
+8-24/8-05 main ancestry and source/test optimization matrix. Subsequent content
+changes require a substantive, non-removing test increment over the approved
+predecessor. AST checks enforce a conservative subset; semantic oracle/fixture
+review remains a maintainer duty, not a claim of automated semantic proof.
+
+A historical GREEN is an immutable TDD predecessor, not reusable proof of the
+current production bytes after an authorized Q6 refactor. Q7/Q8 may permit only
+that slice's declared production-owner content delta; tests/fixtures, file mode,
+other dependencies, engine, environment, selector, lineage and current final
+REFACTOR/regression/terminal proofs remain checked. Execution reuse and stage
+reentry retain their strict current-content checks.
+
+Platform admission is based on actual execution. Linux evidence does not grant
+Windows admission or prove native Windows ACL, Runner, Job Object or deployment.
+No new external PKI, service platform, executor permission or release authority
+is introduced. Operations belong to docs/workflows/toolchain-skill-baseline.md.
+
+## 2026-10-30: owner-approved disk interruption recovery
+
+The owner approved one bounded regression batch after the original two proven
+disk interruptions and verified resource restoration. The regression runner
+may bind a repair successor to the original candidate, platform, native failure
+artifacts and cumulative unit ledger. Its content fingerprint changes honestly;
+the original failed candidate and costs do not. Only the existing runner,
+permanent regression tests, operational guide, this ADR and capability mapping
+may change in this recovery; required targets and permissions remain fixed.
+
+An exclusive, persistent claim consumes this one batch even on process loss.
+It covers exactly the required Skill occurrences, rechecks at least 512 MiB
+free space at recovered launches and refuses assertion failures, normal
+timeouts, completed results, altered evidence and reuse. Two historic failures
+remain two failures after successful measurement; spent time only increases.
+Any further failure prevents completion. The ordinary 192/120 MiB disk floors,
+1800/600 second budgets, case/no-skip proof and immutable admission predecessor
+remain in force. Recovery metadata is outside the content fingerprint but is
+bound to the final measurement and checked before atomic admission. It grants
+no executor, formal-task, write-scope, reviewer or publication authority.
+
+## 2026-10-30: startup and compiler process-tree compatibility
+
+The owner approved a bounded repair after the unchanged ten-second public CLI
+watchdog exposed startup duplication and an escaped supervised child. In the
+authenticated regression channel, actual ancestry, channel key and frozen
+candidate identity precede the broker request. The client supplies the declared
+fingerprint; the actual ancestor broker recomputes current content and validates
+entry bytes and fixture paths on each request. Ordinary startup retains its
+complete admission check. No environment bypass or cross-call hash cache is
+introduced. This avoids repeated stale-approval/client scans before both the
+public parent and its supervised child, without relaxing the watchdog limit.
+
+On Linux, the compiler watchdog reuses the existing owned-descendant termination
+primitive, since its supervised child may own another process session. Windows
+keeps its existing exact taskkill tree operation. A timeout must stop writes
+from this invocation's descendants while leaving unrelated processes running.
+The approved recovery source list adds only compiler_watchdog.py and its exact
+test file for this repair. Original failures, costs and consumed permissions
+remain; targeted diagnostics cannot activate a baseline or authorize another
+complete batch.

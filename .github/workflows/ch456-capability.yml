@@ -27,6 +27,19 @@ jobs:
         run: |
           py -3 -m pip install pytest openai
           choco install ripgrep -y --no-progress
+      - name: Complete guarded skill regression and admit this runner
+        shell: pwsh
+        env:
+          OPENAI_API_KEY: ''
+        run: |
+          py -3 -B scripts/skill_baseline.py candidate --out logs/ch456-skill-baseline/candidate.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -B scripts/skill_baseline.py test --candidate logs/ch456-skill-baseline/candidate.json --out logs/ch456-skill-baseline/regression --bootstrap --defer-admission
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -B scripts/skill_baseline.py admit --measurement logs/ch456-skill-baseline/regression/measurement.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          py -3 -B scripts/skill_baseline.py check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: VDD semantic compiler and closure tests
         run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests/test_semantic_compiler_ch456.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_failed_resume.py .agents/skills/vdd-execution-plan/scripts/tests/test_ch456_planned_red_feasibility.py
       - name: Evaluate Architecture Deferred reconciliation
@@ -59,10 +72,6 @@ jobs:
           } else {
             py -3 scripts/quick_dev/run_live_blind_benchmark.py --backend openai-api --out ch456-live-blind-benchmark.json
           }
-      - name: Full VDD skill regression
-        run: py -3 -m pytest -q .agents/skills/vdd-execution-plan/scripts/tests
-      - name: Full Quick Dev skill regression
-        run: py -3 -m pytest -q .agents/skills/quick-dev-tdd-adapter/tools/tests
       - name: Replay 8-25 real RED-to-GREEN selectors
         run: py -3 scripts/quick_dev/run_candidate_bound_metric.py --metric legacy-replay --out ch456-8-25-replay.json
       - name: Verify all final evidence is candidate-bound
@@ -116,6 +125,15 @@ jobs:
         with:
           name: ch456-capability-evidence
           path: |
+            logs/ch456-skill-baseline/candidate.json
+            logs/ch456-skill-baseline/regression/measurement.json
+            logs/ch456-skill-baseline/regression/failed-units.json
+            logs/ch456-skill-baseline/regression/*/*/argv.json
+            logs/ch456-skill-baseline/regression/*/*/exit.json
+            logs/ch456-skill-baseline/regression/*/*/request.json
+            logs/ch456-skill-baseline/regression/*/*/stdout.log
+            logs/ch456-skill-baseline/regression/*/*/junit.xml
+            logs/ch456-skill-baseline/regression/*/*/case-report.json
             ch456-architecture-reconcile.json
             ch456-curated-semantic-quality.json
             ch456-semantic-chain-mutations.json

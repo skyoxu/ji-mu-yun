@@ -156,7 +156,7 @@ class LlmBackendTests(unittest.TestCase):
                 )
 
     def test_run_llm_exec_should_fail_on_openai_backend_before_implementation(self) -> None:
-        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": ""}, clear=False), \
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "", "SC_OPENAI_MODEL": "gpt-5"}, clear=False), \
             mock.patch.object(llm_backend.importlib.util, "find_spec", return_value=None):
             rc, out, cmd = llm_backend.run_llm_exec(
                 backend="openai-api",
@@ -283,7 +283,7 @@ class LlmBackendTests(unittest.TestCase):
                 self.responses = _FailingResponses()
 
         fake_openai = type("FakeOpenAI", (), {"OpenAI": _FailingClient})
-        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test"}, clear=False), \
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test", "SC_OPENAI_MODEL": "gpt-5"}, clear=False), \
             mock.patch.object(llm_backend.importlib.util, "find_spec", return_value=object()), \
             mock.patch.dict(sys.modules, {"openai": fake_openai}):
             rc, out, cmd = llm_backend.run_llm_exec(

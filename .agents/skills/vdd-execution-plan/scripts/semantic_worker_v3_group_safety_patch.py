@@ -17,7 +17,8 @@ validator remains authoritative and fail-closed.
 When rollback recovery promotes an already-declared production path to owner,
 the same path is removed from forbidden_paths because canonical V7 requires a
 production owner to be writable. Only that exact owner overlap is normalized;
-all unrelated forbidden paths remain unchanged.
+all unrelated forbidden paths remain unchanged. Protected Phase/runtime
+prohibitions are retained even for an exact owner overlap.
 
 No repository-wide owner guessing, sibling-group borrowing, semantic retry, or
 truth-gate relaxation is performed. If neither the declared owners nor the
@@ -31,6 +32,7 @@ from typing import Any, Mapping
 
 import semantic_compiler_gate as gate
 import semantic_worker_v3_group_repair_patch as grouped
+from semantic_phase_source_scope import preserve_forbidden
 
 _BASE_GROUP_TRANSPORT = gate._ORIGINAL_INVOKE_WORKER
 
@@ -115,7 +117,7 @@ def _normalize_hint(root: Path, raw: Mapping[str, Any]) -> dict[str, Any]:
     allowed = set(_strings(hint.get("allowed_write_paths")))
     forbidden = set(_strings(hint.get("forbidden_paths")))
     hint["allowed_write_paths"] = sorted(allowed | owners)
-    hint["forbidden_paths"] = sorted(forbidden - owners)
+    hint["forbidden_paths"] = sorted(forbidden - {p for p in owners if not preserve_forbidden(p)})
     return hint
 
 

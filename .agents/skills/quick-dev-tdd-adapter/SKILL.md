@@ -40,6 +40,12 @@ The stable CLI defaults to deterministic Q1 preflight. `--recommendation-only` i
 
 ## Evidence Ownership
 
+The public entry checks content-bound regression admission before Q0/Q1 or any
+worker. Unadmitted, changed or corrupt Skill/code/schema/shared-dependency
+inputs fail closed. Use [baseline maintenance](../../../docs/workflows/toolchain-skill-baseline.md)
+to test a candidate; that authenticated fixture-only route cannot authorize a
+formal task or bypass RED, Q4, Q7, Q8 or Acceptance.
+
 | Artifact | Sole current writer |
 | --- | --- |
 | descriptor/run orchestration/recommendation/recovery | Quick Dev stable runner/current router |

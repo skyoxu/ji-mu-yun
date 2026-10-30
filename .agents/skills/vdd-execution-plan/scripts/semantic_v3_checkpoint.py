@@ -20,7 +20,7 @@ def _rules():
              'semantic_compiler_authority.py', 'semantic_v3_checkpoint.py',
              'semantic_feasibility_patch.py', 'semantic_worker_transport_patch.py',
              'semantic_worker_contract_patch.py', 'semantic_worker_relational_patch.py',
-             'execution_contract.py',
+             'execution_contract.py', 'semantic_phase_source_scope.py',
              'execution_preflight.py', 'semantic_slice_cohesion_patch.py'}
     names.update(p.name for p in directory.glob('semantic_worker_v3*.py'))
     return {name: sc.sha256_bytes((directory / name).read_bytes()) for name in sorted(names)}
@@ -88,6 +88,10 @@ def prepare(*, source_index, obligations, profile):
                 'source_index_sha256': source_index['sha256'],
                 'obligations_sha256': sc.sha256_value(list(obligations)),
                 'profile': profile, 'rules': _rules()}
+    from semantic_phase_source_scope import description
+    scope = description(context['root'])
+    if scope is not None:
+        identity['source_scope'] = scope
     context.update(identity=identity, raw=None, reused=False, replay=False)
     path = context['out_dir'] / '.compiler-work/v3-checkpoints' / (sc.sha256_value(identity)[7:] + '.json')
     output = context['out_dir'].absolute()

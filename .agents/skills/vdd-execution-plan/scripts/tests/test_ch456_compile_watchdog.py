@@ -56,6 +56,47 @@ def test_global_timeout_stops_child_and_descendant_and_keeps_checkpoint(tmp_path
     assert (tmp_path / "compiler-stdout.log").is_file()
 
 
+
+def test_timeout_stops_separate_session_descendant_and_preserves_unrelated_process(tmp_path):
+    """ADR-0041: a supervisor's independent child is still part of its owned tree."""
+    import signal
+    heartbeat = tmp_path / "owned-heartbeat"
+    unrelated_heartbeat = tmp_path / "unrelated-heartbeat"
+    pid_file = tmp_path / "owned-child.pid"
+    writer = ("import pathlib,sys,time; p=pathlib.Path(sys.argv[1]);\n"
+              "while True:\n p.write_text(str(time.time())); time.sleep(.02)")
+    unrelated = watchdog.subprocess.Popen([sys.executable, "-c", writer, str(unrelated_heartbeat)],
+                                         cwd=tmp_path, stdout=watchdog.subprocess.DEVNULL,
+                                         stderr=watchdog.subprocess.DEVNULL)
+    command = ("import os,pathlib,subprocess,sys,time; "
+               "opts={'start_new_session':True} if os.name!='nt' else "
+               "{'creationflags':subprocess.CREATE_NEW_PROCESS_GROUP}; "
+               f"p=subprocess.Popen([sys.executable,'-c',{writer!r},{str(heartbeat)!r}],**opts); "
+               f"pathlib.Path({str(pid_file)!r}).write_text(str(p.pid)); time.sleep(30)")
+    try:
+        result = watchdog.run_compiler([sys.executable, "-c", command], cwd=tmp_path,
+                                       run_dir=tmp_path, timeout_seconds=1)
+        assert result["timed_out"] and result["exit_code"] != 0
+        assert result["cleanup_error"] is None
+        assert heartbeat.exists() and unrelated_heartbeat.exists() and pid_file.exists()
+        frozen = heartbeat.read_bytes()
+        unrelated_before = unrelated_heartbeat.read_bytes()
+        time.sleep(.2)
+        assert heartbeat.read_bytes() == frozen
+        assert unrelated.poll() is None
+        assert unrelated_heartbeat.read_bytes() != unrelated_before
+    finally:
+        # Only the child PID created by this fixture is eligible for fallback
+        # cleanup when exercising the old failing implementation.
+        if pid_file.exists():
+            try:
+                os.kill(int(pid_file.read_text()), signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        unrelated.terminate()
+        unrelated.wait(timeout=5)
+
+
 def test_normal_completion_is_not_timeout_and_logs_are_utf8_bytes(tmp_path):
     result = watchdog.run_compiler([sys.executable, "-c", "import sys;sys.stdout.buffer.write('完成'.encode('utf-8'))"],
                                    cwd=tmp_path, run_dir=tmp_path, timeout_seconds=5)

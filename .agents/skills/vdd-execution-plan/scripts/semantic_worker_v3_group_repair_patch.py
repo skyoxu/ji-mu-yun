@@ -116,6 +116,23 @@ def _declare_supported_missing_fixture(contract: dict[str, Any]) -> None:
         planned.append(_CANDIDATE_FIXTURE)
 
 
+def _invalid_cache_owner_roles(payload: Mapping[str, Any], projected: Mapping[str, Any]) -> set[str]:
+    """ADR-0041: cached empty owners use the final gate's exact guard rule."""
+    from execution_contract import ownerless_guard
+    obligations = {item.get("obligation_id"): item for item in _repair_obligations(payload)}
+    invalid: set[str] = set()
+    for hint in projected.get("slice_hints", []):
+        if not isinstance(hint, Mapping) or hint.get("production_owners") != []:
+            continue
+        ids = hint.get("obligation_ids", [])
+        bound = [obligations.get(oid, {}) for oid in ids]
+        failures = [item for item in projected.get("failure_intents", [])
+                    if isinstance(item, Mapping) and set(ids).intersection(item.get("obligation_ids", []))]
+        if not ownerless_guard(hint, bound, failures):
+            invalid.update(ids)
+    return invalid
+
+
 def _invalid_contract_ids(payload: Mapping[str, Any], contracts: Mapping[str, Any]) -> set[str]:
     """Return only cached IDs rejected by the same V3 semantic gates as publication."""
     projected = _project_current_output(
@@ -127,6 +144,7 @@ def _invalid_contract_ids(payload: Mapping[str, Any], contracts: Mapping[str, An
         for oid in re.findall(r"O-[0-9A-F]+", finding)
         if oid in known
     }
+    invalid.update(_invalid_cache_owner_roles(payload, projected) & known)
     # ADR-0041: a usable path is not proof of a schema-valid contract. Check
     # each projection to bind field-level failures to only its owning ID.
     for oid in known & set(contracts):
@@ -140,8 +158,9 @@ def _invalid_contract_ids(payload: Mapping[str, Any], contracts: Mapping[str, An
 
 def _cache_requires_refresh(projected, root, payload):
     """Apply current publication schema before accepting any persisted V3 cache."""
-    return bool(gate._worker_schema_findings("v3", projected)) or sc._v3_cache_requires_contract_refresh(
-        projected, root, payload)
+    return (bool(gate._worker_schema_findings("v3", projected))
+            or bool(_invalid_cache_owner_roles(payload, projected))
+            or sc._v3_cache_requires_contract_refresh(projected, root, payload))
 
 
 def _text_tokens(value: Any) -> set[str]:

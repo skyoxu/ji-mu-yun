@@ -1,5 +1,74 @@
 # Create Or Repair A Plan
 
+## Explicit Phase source scope
+
+ADR-0041/0043: an optional public `--source-scope <repository-file.json>`
+selects a bounded source route for a Phase task whose protected changes have
+already been authorized. It does not grant filesystem permission, authenticate
+a user, sign an approval or make a new JSON file an authority. The maintainer
+must first resolve real task scope and AGENTS protected-change approval.
+
+The input has exactly `schema: vdd.phase-source-scope.v1`, `task_id`,
+`requirements`, `adr`, `authorization`, `write_paths`, `read_paths`,
+`support_paths`, and `authorizes: []`. Requirements and authorization each
+contain exact repository-relative `path` and raw-byte `sha256`. The ADR also
+contains its exact `## ` section heading. The current requirement must contain
+that task's Accepted ADR fragment and path; an existing same-workspace task
+record must include the task and authorize VDD and Quick Dev TDD. Hash checks
+establish integrity, not independent human identity or new approval. Code-span
+notation labels in a requirements projection may differ; both raw identities
+remain mandatory and are never normalized for hash comparison.
+
+Write/read paths are exact `PhaseA.Platform/*.cs` file paths (nested paths are
+allowed). Read paths additionally admit only the existing exact
+`PhaseA.Platform/PhaseA.Platform.csproj` and `PhaseA.Platform/packages.lock.json`
+production build metadata files, rechecking their existence during consumption.
+They may be execution snapshot inputs, never production owners, writes, planned
+files, rollback paths or support files. Explicitly selected metadata joins the
+existing raw-byte dependency tuple and must be frozen in every slice's execution
+snapshots; changed bytes block consumption. This retains the identity algorithm,
+cache, resume and repair rules. Support writes are exact test/document files under
+`PhaseA.Platform.Tests/`, `scripts/python/tests/`, `tests/` or `docs/`, plus the
+exact owning `PhaseA.Platform/README.md`. No
+directory, glob, traversal, symlink/junction, runtime or credential-store path
+is admitted. The caller selects only necessary source-bound paths; this is not
+permission to add unrelated files. Default Toolchain tasks receive no Phase
+exception; their existing read-only runtime-source behavior is unchanged, while
+runtime writes remain forbidden. A selected Phase route cannot write arbitrary Toolchain files.
+
+Only the public entry loads this input into its private compile context; a
+worker/cached candidate cannot self-enable it through payload fields. Ordinary
+V3, inline/schema repair and checkpoint validation consult the same context.
+All scope/ADR/task-record/requirements dependencies must be in every slice's
+execution snapshots. Explicit forbidden paths win for writes and read snapshots,
+including after path/write normalization and in final slice/agent-context checks.
+Slice cohesion keeps contexts separate when their combined forbidden paths
+would reject another context's reads, writes or rollback paths under the same
+current route. This preserves exact, prefix and glob exclusions and all atomic
+contracts; it never removes a forbidden path to permit a merge.
+Context is cleared on return/error; changed dependencies block.
+For a selected exact caller route, the compiler preserves authored path roles
+instead of applying legacy repair aliases. Both routes retain the existing
+finite pytest node-to-file snapshot spelling rule for the same declared or
+existing file, preserving the node in command argv. The selected normalizer
+then adds only missing current, hash-rechecked scope dependencies to read
+snapshots and retains every other contract field. Raw caches and receipts remain unchanged;
+the normal strict scope, forbidden-path and semantic gates still decide use.
+V3 cache/checkpoint identity includes the scope. Existing explicit fixture-cache
+Phase filtering is unchanged; this input is not a fixture-import bypass.
+The published semantic bundle also retains the exact source-scope identity.
+Completed resume and handoff repair must match that identity, rather than
+relabeling an old plan with a changed or absent scope. Final V3 projections
+(including repair overlays) and final publication recheck all writes, support
+files, frozen dependencies and explicit forbidden paths. Default Toolchain
+bundles keep their existing shape when no scope is selected.
+
+Planning consumption includes these real routing dependencies in its required
+read scope without turning them into V1 companions or product obligations.
+Normal resume keeps its original output, query history and source-content
+checks. A genuine scope-input change has a recorded predecessor; do not pad
+sources, change IDs or delete records to obtain a fresh budget.
+
 ## Interrupted caller-session recovery
 
 Use the normal public compiler with the same requirements, all companions,
@@ -38,6 +107,56 @@ V3 partial contracts retain their existing frozen-domain/native path validators;
 an answer file alone is not an accepted contract. Resume continues all required
 V3/V4/V5/V6/downstream checks before readiness. Use existing unit budgets, not a
 whole-round watchdog, and do not run a real recovery merely to test this route.
+
+## Reference-only planning observation on resume
+
+FR-09 and adopted planning-query AD-8 permit rechecking an already delivered
+observation without another query delivery. For the same ordinary native resume,
+`--resume-planning-observation-from <logs/session/id/request.json>` selects one
+explicit previously returned native V3 group-repair chunk. Other native routes,
+recommendation/admission/fixture modes and alternate repair inputs are rejected.
+The existing four-field plain `vdd.v3-candidate-repair.v1` authoring input may
+combine with this reference only during same-task failed/unpublished ordinary
+resume. Extended source-index/test-path/dependency forms, companions, addenda,
+published/handoff and V1 replacement/reuse modes are rejected. The native repair
+loader, source-ref/target checks, append-only projection, independent V4 and
+downstream gates remain mandatory. This neither queries nor redelivers advice,
+changes an episode/budget, nor accepts the correction as a worker result.
+The original root, output/task, stage/operation, input/scope identity and all
+observed/reference source bytes must still match. An old Phase scope cannot
+supply a missing or changed current `--source-scope`.
+
+The private VDD check binds the original session/request digest, returned host
+response/result, original native output and exact-key chunk cache, and paired
+native started/returned call. This route has no per-chunk semantic-worker receipt;
+none is synthesized. Existing V1 receipt/replay rules are unchanged. Current
+native schema/domain/source checks still apply, and this observation witness
+never adopts a cached V3 candidate or replaces any normal compiler gate.
+
+The exact adapter producer row and its original UTF-8 charge must match the
+observation in the returned request. Current canonical publication, policy,
+projection, configuration and the entire original located/read set are rechecked,
+including nested diagnostic candidates when the top-level candidate list is
+empty. A valid degraded/source-changed original can remain valid when its
+observed worktree hashes still match; it is never relabeled as hit. Unrelated
+publication changes do not turn its old index identity into a new query result.
+
+Only a reference/SHA, prior delivery/outcome and current closed-episode fact enter
+the existing `planning_source_observations` field. No old query JSON, candidates,
+source excerpts or successful query record are delivered again. The compiler privately retains only verified source identity metadata for its
+existing consumer-decision writer. After a real validated final candidate or
+checkpoint, that writer records accepted/rejected sources and actual scope
+impact in the existing execution record. This metadata is never worker context
+or a new query/producer-success record; prior delivery alone never means adopted.
+The adapter and
+its cumulative/repeated-delivery charging are not invoked or changed; closed
+stays closed and native unit-budget identity is unchanged. Unknown/new facts,
+source changes, revoked access, damaged/unreturned witnesses or an unsupported
+route fail closed. A submitted but unconsumed late answer is not returned; an
+actually returned historical request does not become invalid merely as its old
+deadline passes. The default resume without this explicit option still uses the
+original query/closed-episode gate. This option neither renews a timeout nor
+authorizes deployment, publication or execution.
 
 ## Explicit V3 pause boundary
 
@@ -170,7 +289,7 @@ source index and checks its complete identity before any worker. Every supplied
 companion must have its complete byte hash bound in that index; an input format
 that drops a companion is rejected, not silently summarized.
 
-This form applies only ownerless constraint/governance test-path corrections
+This V3 test-path form applies only ownerless constraint/governance test-path corrections
 before the first V3 execution-contract gate, including cached schema-repair
 results. Only selector file prefixes, allowed/snapshot/planned test paths and
 exact validation argv path tokens may change. All other fields must match the
@@ -221,6 +340,40 @@ to the same exact source. Supply complete per-outcome V3 contracts. Source drift
 cross-source children, predecessor-ID collisions, missing contracts and inactive
 targets fail closed. This does not relax V4, atomic recall or downstream gates,
 and cannot turn a harness failure into expected RED.
+
+## Source-checked unpublished V1 classification correction
+
+The explicitly authorized `--v1-classification-repair <json>` route permits only
+source-supported `quality` to `constraint` corrections on existing frozen IDs.
+It requires same-target ordinary unpublished resume and a checked
+`--resume-planning-observation-from` reference. It may combine with the existing
+four-field plain V3 correction, but not companions, published/handoff/fixture,
+recommendation/admission, V1 reuse, extended repair, or V3 pause modes.
+
+The input has exactly `schema: vdd.v1-classification-repair.v1`, `authorizes: []`,
+`repository_root`, `task_id` (the original relative output directory),
+`requirements_sha256`, `source_index_sha256`, complete current `source_scope`,
+`original_obligations_sha256`, and `kind_changes: {existing_oid: constraint}`.
+The original-domain digest uses existing `sha256_value` over the complete real
+V1 records sorted by `(requirement_id, obligation_id)`. Hashes and source/scope
+metadata bind the request; they never prove the claimed classification.
+
+After ordinary V1 replay, an existing read-only `v1-classification-review-*`
+worker independently checks the frozen semantic source and original target
+records using the existing V1 obligations schema. A runtime/business quality
+returned as quality is source-unsupported. Only constraint results with every
+other raw and normalized field identical are accepted. Type, status, IDs,
+sources, behavior, dependencies and all V3 execution boundaries remain intact.
+The compiler writes only an append-only non-authorizing projection; raw V1
+caches and original source bytes are not rewritten. Original initialization,
+V1 guard/V2, independent recall/V4 and all downstream consumers remain active.
+
+Native semantic/cache and unit-budget identity use canonical source, original
+records and old-to-new kind claims, not formatting, filenames, dates or output
+directories. Equivalent formatting reuses the same native judgment; it does not
+renew an allowance. The closed planning episode remains closed. Classification
+cannot manufacture expected RED, ownerless permission, Q4 authority or readiness.
+Without this flag, the original flow and classifications are unchanged.
 
 ## Execution-only handoff repair
 

@@ -99,7 +99,7 @@ class TestPathInputRepairTests(unittest.TestCase):
 
     def test_public_cli_rejects_missing_drifted_and_wrong_companion_identity(self):
         repo = Path(__file__).resolve().parents[5]
-        directory = Path(self.enterContext(tempfile.TemporaryDirectory(dir=repo / 'logs')))
+        directory = Path(self.enterContext(tempfile.TemporaryDirectory(dir=self.root)))
         req, companion = directory / 'requirements.md', directory / 'companion.md'
         req.write_text('| <a id="SM-T01"></a>T01 | constraint | retain | planning | companion.md | Preserve boundary. |\n', encoding='utf-8')
         companion.write_text('Complete normative boundary.\n', encoding='utf-8')

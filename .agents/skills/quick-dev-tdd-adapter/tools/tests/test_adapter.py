@@ -39,6 +39,8 @@ if str(TEST_SUPPORT) not in sys.path:
 from protocol_fixture_support import hydrate_protocol_fixture, load_protocol_run  # noqa: E402
 from protocol_validation_guards import validate_protocol_bundle  # noqa: E402
 from skill_input_composition_support import publish_ready_receipt  # noqa: E402
+from scripts.python.tests.test_skill_input_consumer_migration import actual_request  # noqa: E402
+from scripts.python.tests.test_toolchain_workflow_repair_e2e import complete  # noqa: E402
 
 
 class AdapterTests(unittest.TestCase):
@@ -74,26 +76,36 @@ class AdapterTests(unittest.TestCase):
             plan.mkdir(parents=True)
             target = plan / "implementation-contract.v1.json"
             target.write_text("{}\n", encoding="utf-8", newline="\n")
-            artifacts = publish_ready_receipt(
-                repository,
-                consumer="quick-dev-tdd-adapter",
-                operation="execute",
-                target="execution-plans/feature-a",
-                role_paths={
-                    "plan_directory": ["execution-plans/feature-a"],
-                    "target_files": ["execution-plans/feature-a/implementation-contract.v1.json"],
-                },
-            )
+            request = actual_request(repository, "quick-dev-tdd-adapter")
+            complete(repository, request)
             prepared = ADAPTER.prepare_with_skill_input(
                 self._contract(),
                 "RMAP-S2",
                 {"contract_hash": "sha256:" + "a" * 64, "validator_hash": "sha256:" + "b" * 64},
-                receipt_path=artifacts["receipt"],
+                receipt_path=repository / request["storage"] / "current.v1.json",
                 repository_root=repository,
-                skill_contract_path=artifacts["contract"],
+                skill_contract_path=repository / "contract.json",
             )
             self.assertEqual("prepared", prepared["state"])
-            self.assertEqual(artifacts["context"].as_posix(), prepared["skill_input"]["context_artifact"])
+            context = Path(prepared["skill_input"]["context_artifact"])
+            self.assertTrue(context.is_file())
+            self.assertTrue(context.is_relative_to(repository / request["storage"]))
+            self.assertTrue(prepared["skill_input"]["context_artifact_hash"].startswith("sha256:"))
+
+    def test_prepare_rejects_wrong_v2_consumer_and_changed_current_source(self) -> None:
+        for mutation in ("wrong-consumer", "source-drift"):
+            with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
+                repository = Path(directory)
+                consumer = "vdd-execution-plan" if mutation == "wrong-consumer" else "quick-dev-tdd-adapter"
+                request = actual_request(repository, consumer)
+                complete(repository, request)
+                if mutation == "source-drift":
+                    (repository / request["sources"][0]["path"]).write_text("changed required source\n", encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "consumer|operation|source|candidate"):
+                    ADAPTER.prepare_with_skill_input(self._contract(), "RMAP-S2",
+                        {"contract_hash": "sha256:" + "a" * 64, "validator_hash": "sha256:" + "b" * 64},
+                        receipt_path=repository / request["storage"] / "current.v1.json",
+                        repository_root=repository, skill_contract_path=repository / "contract.json")
 
     def test_prepare_blocks_missing_wrong_and_stale_ready_receipts(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -1,0 +1,104 @@
+{
+  "actual_help_exits": {
+    "quick-dev": 0,
+    "vdd": 0
+  },
+  "candidate_sha256": "0c4555417c59c6c36cb3757072ae8ecc0ce21460f20e6a01137be3d6fb93cf78",
+  "counts": {
+    "quick-dev": {
+      "case_executions": 1829,
+      "phase_events": 5487,
+      "units": 128
+    },
+    "vdd": {
+      "case_executions": 2199,
+      "phase_events": 6597,
+      "units": 127
+    }
+  },
+  "evidence": {
+    "bytes": 2101218,
+    "path": "logs/toolchain-skill-baseline-20261029/publication-isolation-20261030/public/candidate24-regression-evidence.zip",
+    "raw_members": 1589,
+    "sha256": "2d0a52e37c1c28087edef2241ff40b09c2916ae3d1a30a5a2bfa5b024859049b"
+  },
+  "fingerprints": {
+    "quick-dev": "6d72bbd2e64013c8903496556b33ff84f4ff3da3092b59771b2c7f626c68648c",
+    "vdd": "9e1b35ea8e2fff884cad939a3bf41b618b660b8be70e4b509d7ba2589a254ce9"
+  },
+  "fixture": {
+    "business_task_payloads": false,
+    "cases": 16,
+    "guard_only": 14,
+    "legacy_opaque_marker_ids_retained_to_preserve_oracles": true,
+    "original_two_stages_and_consumer_assertions_retained": true,
+    "runtime_marker_cases": 2
+  },
+  "full_elapsed_seconds": 2981.295863891002,
+  "historical_cutoff": "25580d700da91d2702fd234a024a616d55419f90",
+  "historical_start_inclusive": "49c5cff216646cf82179d906db60426d5f1ef314",
+  "history": {
+    "commits": 1223,
+    "families": 42,
+    "named_witnesses": 848,
+    "prior840_retained": true,
+    "related": 575,
+    "unobserved": []
+  },
+  "limits": [
+    "Linux execution only, no actual Windows or clean other-device deployment established.",
+    "The live original workspace was used with thirteen backed-up exact publication-overlay paths; this is not a new sandbox or worktree.",
+    "Local admission applies to the tested publication bytes; private workspace bytes/pointer are restored after freezing Git objects. A new device must run its own complete admission.",
+    "Published evidence is historical run evidence, not a transferable current pointer, task authority or Acceptance."
+  ],
+  "machine_admissions_published": false,
+  "native_admit_exit": 0,
+  "native_check_exit": 0,
+  "ordinary_vdd_fixture": {
+    "authorizes": [],
+    "business_task": false,
+    "candidate_channel": false,
+    "exit_code": 0,
+    "result_status": "plan-ready",
+    "timed_out": false,
+    "timeout_seconds": 10
+  },
+  "platform": "linux-py3.12",
+  "prior_c15_costs_unchanged": {
+    "failures": 2,
+    "spent": 107.8169117179832
+  },
+  "recovery_permit_reused": false,
+  "red": {
+    "exit": 1,
+    "raw_stdout_published": false,
+    "raw_stdout_sha256": "149f55d55fcace7584e41c4f10f679c35b5c80e04aeef45dfe6dcbbc120a8f4c",
+    "reason": "Original pre-isolation RED refers to excluded business-source provenance. It remains unmodified locally; its exit, argv and exact hash are retained."
+  },
+  "review": "Current work-session self-review, no independent reviewer or A/B.",
+  "s2_business_included": false,
+  "schema": "toolchain.published-baseline-validation.v1",
+  "status": "publication-candidate24-full-regression-and-native-admission-passed",
+  "test_increment": {
+    "quick-dev": [
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_unrelated_ancestor_changes_do_not_invalidate_workspace_originals",
+      ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_workspace_root_replacement_remains_rejected",
+      "scripts/tests/test_skill_baseline.py::test_published_guard_fixture_is_self_contained_and_preserves_all_failure_roles",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_published_fixture_does_not_read_device_generation",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_published_fixture_refuses_actual_repository_before_writes",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_retained_generation_switch_uses_preloaded_fixture_bytes"
+    ],
+    "vdd": [
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_baseline_result_output.py::test_repair_identity_precedes_query_without_rejecting_valid_input",
+      ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_reference_fixture_reads_its_own_published_generation",
+      "scripts/tests/test_skill_baseline.py::test_published_guard_fixture_is_self_contained_and_preserves_all_failure_roles",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_published_fixture_does_not_read_device_generation",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_published_fixture_refuses_actual_repository_before_writes",
+      "scripts/toolchain/knowledge_query/tests/test_planning_query.py::test_retained_generation_switch_uses_preloaded_fixture_bytes"
+    ]
+  },
+  "tools": {
+    "pytest": "8.3.5",
+    "python": "3.12.14"
+  }
+}

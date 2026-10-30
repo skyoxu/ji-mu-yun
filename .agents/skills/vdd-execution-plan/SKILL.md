@@ -39,6 +39,11 @@ One standalone requirements Markdown file routes to direct implementation and cr
 
 ## Canonical Compiler Entry
 
+The public entry requires current content-bound regression admission. Changed
+or unadmitted Skill/code/schema/shared-dependency bytes fail before supervision,
+queries or workers. Use [baseline maintenance](../../../docs/workflows/toolchain-skill-baseline.md)
+for the controlled fixture-only candidate route; it grants no formal task authority.
+
 For VDD `create` and `repair`, `scripts/vdd/compile_plan.py` is the only public plan compiler entry. Invoke it as a process from the repository root; callers must not import the internal semantic compiler modules directly or hand-author `plan-ready`. The CLI installs the complete repository-owned semantic patch stack and alone may publish current canonical plan artifacts, preserving the repository/plan authority boundary accepted in [ADR-0041](../../../docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md).
 
 Use the selected profile with the canonical entry:
@@ -113,6 +118,18 @@ transition contract, use the explicit `--published-v1-replacement` input. It
 must name the approved source-bound replacements and provide complete V3
 contracts for the resulting new obligation IDs; old V1/V3 evidence is not
 silently relabeled. V4 and all downstream gates remain mandatory.
+
+## Explicit Phase source scope
+
+The default V3 route retains its Phase/runtime exclusions. For an already
+authorized Phase task, the public compiler accepts `--source-scope <json>`;
+see [the planning guide](references/planning-operation.md#explicit-phase-source-scope).
+The caller input binds current requirements, an Accepted ADR fragment, the
+existing task authorization record and exact source/test/document paths.
+It is not protected-write approval or execution permission. Worker-supplied
+scope claims cannot select it; missing, invalid or changed inputs fail closed.
+Runtime writes remain excluded and explicit forbidden paths take precedence.
+The scope inputs remain frozen execution dependencies and bind V3 candidates.
 
 ## Execution budgets
 

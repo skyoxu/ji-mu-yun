@@ -878,7 +878,11 @@ def _stable_failure_intent_id(raw: Mapping[str, Any]) -> str:
 
 
 def compile_acceptances(*, root: Path, out_dir: Path, obligations: Sequence[Mapping[str, Any]], worker_cache: Mapping[str, Any] | None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    import semantic_phase_source_scope as phase_scope
     payload = {"obligations": list(obligations)}
+    scope = phase_scope.description(root)
+    if scope is not None:
+        payload['source_scope'] = scope
     raw = invoke_worker(
         root=root, out_dir=out_dir, stage="v3", payload=payload, worker_cache=worker_cache,
         prompt=(
@@ -886,7 +890,9 @@ def compile_acceptances(*, root: Path, out_dir: Path, obligations: Sequence[Mapp
             "Acceptance: obligation_ids[], source_refs[], given, when, then, oracle{observable,expected,forbidden[]}, assertion_ids[]. Do not include acceptance_id or red_intent_ids; they are assigned deterministically. "
             "Failure intent: obligation_ids[] identifying the Acceptance it serves, failure_family from the allowed taxonomy, selector_intent, expected_outcome='fail', failure_id uppercase token. "
             "Treat expected-red as a runtime observation role, never as a generic label for RED-process guards. For non-Governance obligations, it is eligible only when every bound frozen obligation has obligation_kind behavior or quality. Constraint obligations and rules about RED construction, failure-marker emission, validation commands, write scope, fixtures, or harness integrity must retain a failure intent but use the appropriate non-expected-red family. Governance classification does not change V3 runtime-marker eligibility. "
-            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX. Existing production owners must point to real repository files. A genuinely new non-test production owner must be listed in all three fields production_owners, allowed_write_paths, and planned_new_files; do not invent a path that is not declared there. Test files remain execution snapshots/planned files and can never be production owners. Never assign PhaseA.Platform or runtime/phase-a files as production owners or allowed writes for this Toolchain plan; bind to repository Toolchain implementations and tests instead. Derived evidence contracts must always have authorizes=[]; preserve complete FR-9 Consumer Manifest and real-call-surface reconciliation, and require replay obligations to rebuild the original binding identity before replaying with that same identity."
+            "Each slice_hint: obligation_ids[], production_owners[], verification_lane unit|integration|matrix|runtime, behavior_change, affected_subjects[], state_transition, rollback_scope{production_paths[],state_or_schema_compatibility}, allowed_write_paths[], execution_snapshot_paths[], planned_new_files[], terminal_predicate, forbidden_paths[], validation_commands as argv arrays. Paths must be repository-relative POSIX. Existing production owners must point to real repository files. A genuinely new non-test production owner must be listed in all three fields production_owners, allowed_write_paths, and planned_new_files; do not invent a path that is not declared there. Test files remain execution snapshots/planned files and can never be production owners. Derived evidence contracts must always have authorizes=[]. Preserve the actual frozen requirement scope; do not inject another package's Consumer Manifest or replay requirements. "
+            + phase_scope.prompt(root)
+            + "When source_scope is present, include every source_scope.inputs path in each hint's execution_snapshot_paths. Scope is producer input, not worker-issued authority."
         ),
     )
     raw_acceptances = raw.get("acceptances")
@@ -894,6 +900,7 @@ def compile_acceptances(*, root: Path, out_dir: Path, obligations: Sequence[Mapp
     hints = raw.get("slice_hints")
     if not isinstance(raw_acceptances, list) or not raw_acceptances or not isinstance(raw_failures, list) or not raw_failures or not isinstance(hints, list) or not hints:
         raise ValueError("V3 worker output is incomplete")
+    phase_scope.validate_hints(root, hints)
     obligation_by_id = {item["obligation_id"]: item for item in obligations}
     acceptances: list[dict[str, Any]] = []
     acceptance_by_obligation_set: dict[tuple[str, ...], str] = {}
@@ -1407,6 +1414,11 @@ def compile_plan(*, requirements: Path, out_dir: Path, companions: Sequence[Path
         "intents": project_intents(bundle),
         "deferred": project_deferred(bundle),
     }
+    from semantic_phase_source_scope import description, validate_bundle
+    scope_binding = description(root)
+    if scope_binding is not None:
+        bundle['source_scope'] = scope_binding
+    validate_bundle(root, bundle)
     valid, findings = stage_call(out_dir, "final-validation", validate_semantic_bundle, bundle)
     if not valid:
         return {"status": "repair-vdd", "stage": "final-validation", "findings": findings}

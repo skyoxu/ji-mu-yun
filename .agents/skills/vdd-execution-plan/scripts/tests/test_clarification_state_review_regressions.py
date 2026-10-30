@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -24,7 +25,7 @@ def load_clarification_state():
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["py", "-3", "-B", str(SCRIPT), *args], text=True, capture_output=True, check=False)
+    return subprocess.run([sys.executable, "-B", str(SCRIPT), *args], text=True, capture_output=True, check=False)
 
 
 def init_state(root: Path, run_id: str = "review-1") -> Path:

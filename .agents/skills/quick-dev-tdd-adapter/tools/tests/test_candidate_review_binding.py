@@ -2,6 +2,7 @@ import hashlib
 import importlib.util
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -222,29 +223,45 @@ def test_candidate_binding_accepts_only_complete_repair_successor_lineage(tmp_pa
 
 @pytest.mark.cer_assertion("A-FR7-MATRIX-STABLE-CANDIDATE")
 def test_replay_matrix_receipt_proves_both_subjects_and_identity_bounds() -> None:
-    matrix = ROOT / "execution-plans" / "2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed" / "stable-candidate-replay-matrix.v1.json"
-    replay = ROOT / "scripts" / "sc" / "skill_package_replay.py"
-    result = subprocess.run(
-        ["py", "-3", "-B", str(replay), "replay-matrix", "--matrix", str(matrix)],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-        timeout=120,
-    )
-    assert result.returncode == 0, result.stderr
+    # ADR-0058: current positive evidence needs native v3 inputs and immutable
+    # Stable provenance. The old published v2 labels are not executable proof.
+    sys.path.insert(0, str(ROOT / "scripts/sc/tests"))
+    import test_skill_replay_review_regressions as support
+    fixture = support.NativeRuntimeTests(methodName="runTest")
+    fixture.setUp()
+    try:
+        fixture.write("candidate/feature.py", "def result():\n    return 2\n")
+        matrix = "logs/matrix/matrix.json"
+        support.replay.runtime.prepare_matrix(fixture.root, "candidate", "capability.json", fixture.commit, matrix)
+        result = subprocess.run([sys.executable, "-B", str(fixture.root / "scripts/sc/skill_package_replay.py"),
+            "replay-matrix", "--matrix", matrix], cwd=fixture.root, capture_output=True,
+            text=True, encoding="utf-8", check=False, timeout=120)
+        assert result.returncode == 0, result.stdout + result.stderr
+        receipt = json.loads(result.stdout)
+        assert receipt.get("authorizes") == []
+        rows = receipt.get("case_results", [])
+        assert len(rows) == 6
+        for row in rows:
+            assert row["executed"] is True and row["status"] == "pass"
+            subjects = row["subject_executions"]
+            assert {item["subject"] for item in subjects} == {"Stable", "Candidate"}
+            for subject in subjects:
+                assert subject["executed"] and subject["pid"] > 0
+                assert subject["pre_identity"] == subject["post_identity"]
+                assert subject["wrapper_invocation"]["pid"] > 0
+                assert subject["wrapper_invocation"]["exit_code"] == 0
+    finally:
+        fixture.tearDown()
+
+
+def test_historical_label_only_matrix_cannot_authorize_current_subject_replay() -> None:
+    matrix = ROOT / "execution-plans/2026-08-05-toolchain-core-skill-replay-portability-and-evaluation-seed/stable-candidate-replay-matrix.v1.json"
+    result = subprocess.run([sys.executable, "-B", str(ROOT / "scripts/sc/skill_package_replay.py"),
+        "replay-matrix", "--matrix", str(matrix)], cwd=ROOT, capture_output=True,
+        text=True, encoding="utf-8", check=False, timeout=120)
+    assert result.returncode != 0
     receipt = json.loads(result.stdout)
-    assert receipt.get("authorizes") == []
-    rows = receipt.get("case_results", [])
-    assert len(rows) == 6
-    for row in rows:
-        if "subjects" not in row:
-            print("FAILURE_ID:F-FR7-MISSING-SUBJECT-RUN")
-        assert "subjects" in row
-        subjects = row["subjects"]
-        assert {item.get("name") for item in subjects} == {"stable", "candidate"}
-        for subject in subjects:
-            assert subject.get("start_identity_sha256") == subject.get("end_identity_sha256")
-            assert subject.get("executed") is True
-        assert row.get("case_id") == row.get("attribution", {}).get("case_id")
+    assert receipt["aggregate_valid"] is False and receipt["authorizes"] == []
+    assert len(receipt["case_results"]) == 6
+    assert all(not case["executed"] for case in receipt["case_results"])
+    assert any("immutable Stable provenance" in reason for reason in receipt["invalid_reasons"])

@@ -580,6 +580,8 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
     def read(name):
         return json.loads((predecessor / name).read_text(encoding='utf-8'))
     original = read('semantic-plan-bundle.v1.json')
+    from semantic_phase_source_scope import validate_bundle
+    validate_bundle(root, original)
     state = read('compiler-state.v1.json')
     pending = state.get('state') == 'semantic-validated-pending-handoff'
     if state.get('state') not in {'plan-ready', 'semantic-validated-pending-handoff'} or state.get('semantic_plan_sha256') != sc.sha256_value(original):
@@ -655,6 +657,7 @@ def publish_repair(*, root, requirements, predecessor, out_dir, test_root, runti
                            if runtime_red_intents else repair_bundle(original, test_root, workspace=root,
                                                                      windows_launcher_slices=windows_launcher_slices))
     repaired = _project_slice_dependencies(repaired, expected_dependencies)
+    validate_bundle(root, repaired)
     repaired['plan_id'] = 'PLAN-' + sc.sha256_value({'source': source['sha256'], 'profile': original['profile']})[7:19].upper()
     if semantic_projection(expected_original) != semantic_projection(repaired):
         raise ValueError('handoff repair changed semantic scope')

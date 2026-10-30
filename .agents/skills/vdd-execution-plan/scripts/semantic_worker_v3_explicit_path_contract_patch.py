@@ -152,7 +152,8 @@ def _normalize_hint(
         hint["production_owners"] = explicit_owners
 
         forbidden = set(_strings(hint.get("forbidden_paths")))
-        forbidden.difference_update(explicit_owners)
+        from semantic_phase_source_scope import preserve_forbidden
+        forbidden.difference_update(p for p in explicit_owners if not preserve_forbidden(p))
         hint["forbidden_paths"] = sorted(forbidden)
 
         if owner_only:
@@ -197,7 +198,8 @@ def _normalize_hint(
         # but remove this otherwise self-contradictory planned/forbidden overlap
         # before V6 compatibility grouping.
         forbidden = set(_strings(hint.get("forbidden_paths")))
-        forbidden.difference_update(authorized_planned)
+        from semantic_phase_source_scope import preserve_forbidden
+        forbidden.difference_update(p for p in authorized_planned if not preserve_forbidden(p))
         hint["forbidden_paths"] = sorted(forbidden)
 
     return hint

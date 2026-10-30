@@ -2,10 +2,15 @@
 import json
 import os
 from pathlib import Path
-import signal
 import subprocess
 import time
 import math
+import sys
+
+# The public supervisor can create a fresh process session. Reuse the existing
+# repository-owned descendant-aware primitive rather than killing one PGID.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from workflow_unit_budget import terminate_tree as _terminate_owned_tree
 
 
 def positive_timeout(value):
@@ -33,7 +38,7 @@ def _terminate_tree(process):
         if result.returncode != 0:
             raise RuntimeError(f"taskkill failed with exit code {result.returncode}")
     else:
-        os.killpg(process.pid, signal.SIGKILL)
+        _terminate_owned_tree(process)
 
 
 def run_compiler(command, *, cwd, run_dir, timeout_seconds, env=None):

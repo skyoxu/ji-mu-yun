@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import sys
 
+import pytest
+
 THIS=Path(__file__).resolve()
 TOOLS=THIS.parents[1]
 REPO=THIS.parents[5]
@@ -78,7 +80,8 @@ def _worker_cache()->dict:
     }
 
 
-def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle(tmp_path:Path)->None:
+@pytest.mark.parametrize("forbid_test", [False, True])
+def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecycle(tmp_path:Path, forbid_test)->None:
     root=tmp_path
     (root/".agents").mkdir(); (root/"AGENTS.md").write_text("fresh fixture\n",encoding="utf-8")
     (root/"src").mkdir(); (root/"tests").mkdir(); (root/"runs"/"R1"/"descriptors").mkdir(parents=True)
@@ -119,7 +122,17 @@ def test_fresh_three_behavior_requirement_compiles_and_runs_full_current_lifecyc
     )
 
     plan=root/"plan"
-    result=compile_plan(requirements=requirements,out_dir=plan,worker_cache=_worker_cache())
+    cache = _worker_cache()
+    if not forbid_test:
+        for hint in cache["v3"]["slice_hints"]:
+            # This is an authoring exclusion, not a production-worker write set.
+            hint["forbidden_paths"] = ["unrelated/**"]
+    result=compile_plan(requirements=requirements,out_dir=plan,worker_cache=cache)
+    if forbid_test:
+        assert result["status"] == "repair-vdd"
+        assert any("test-entry-forbidden:tests/test_rate_limiter.py" in f for f in result["findings"])
+        assert not (plan/"semantic-plan-bundle.v1.json").exists()
+        return
     assert result["status"]=="plan-ready"
     assert result["atomic_quality_metrics"]=={
         "active_obligation_count":3,"supported_obligation_count":3,"invented_obligation_count":0,"source_gap_count":0,

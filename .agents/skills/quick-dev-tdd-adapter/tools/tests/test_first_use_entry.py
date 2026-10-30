@@ -117,10 +117,12 @@ def test_prepared_real_entry_still_needs_controlled_red_and_detects_harness_erro
     # A missing import remains a harness failure, even with a prepared entry.
     (tmp_path/'tests/test_behavior.py').write_text(source.replace('from src.subject import answer', 'from nonexistent_owner import answer'))
     run2 = tmp_path/'logs/R2'; descriptor['run_id']='R2'; create_json(run2/'descriptors/red.json', descriptor)
-    rejected = execute_stage(workspace=tmp_path, semantic_plan=semantic, run_dir=run2,
-        descriptor_path=run2/'descriptors/red.json', profile_identity='standard')
-    assert not rejected['predicate_result']
-    assert rejected['failure_family'] != 'expected-red'
+    # ADR-0041: the strengthened static binding now refuses this before a
+    # harness process can run; it still cannot create expected-RED evidence.
+    with pytest.raises(ValueError, match='does not import and call'):
+        execute_stage(workspace=tmp_path, semantic_plan=semantic, run_dir=run2,
+            descriptor_path=run2/'descriptors/red.json', profile_identity='standard')
+    assert not (run2/'canonical-evidence').exists()
 
 
 def test_json_interface_has_no_candidate_supplied_data(tmp_path):

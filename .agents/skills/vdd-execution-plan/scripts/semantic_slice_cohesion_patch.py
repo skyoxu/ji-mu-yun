@@ -12,6 +12,7 @@ from typing import Any, Mapping, Sequence
 
 import semantic_compiler as sc
 import semantic_compiler_gate as gate
+import semantic_phase_source_scope as phase_scope
 
 
 def _paths(hint: Mapping[str, Any], key: str, *, nonempty: bool = False) -> list[str]:
@@ -54,18 +55,33 @@ def _compatible(cluster: Sequence[tuple[Mapping[str, Any], Mapping[str, Any]]], 
     candidate_allowed = set(_paths(candidate, "allowed_write_paths"))
     candidate_planned = set(_paths(candidate, "planned_new_files"))
     candidate_owners = set(_paths(candidate, "production_owners"))
+    candidate_reads = set(_paths(candidate, "execution_snapshot_paths"))
+    candidate_rollback = set(_paths(candidate.get("rollback_scope") or {}, "production_paths"))
     candidate_forbidden = _strings(candidate.get("forbidden_paths"))
     cluster_allowed: set[str] = set()
     cluster_planned: set[str] = set()
     cluster_owners: set[str] = set()
     cluster_forbidden: set[str] = set()
+    cluster_reads: set[str] = set()
+    cluster_rollback: set[str] = set()
     for _acceptance, hint in cluster:
         cluster_allowed.update(_paths(hint, "allowed_write_paths"))
         cluster_planned.update(_paths(hint, "planned_new_files"))
         cluster_owners.update(_paths(hint, "production_owners"))
         cluster_forbidden.update(_strings(hint.get("forbidden_paths")))
+        cluster_reads.update(_paths(hint, "execution_snapshot_paths"))
+        cluster_rollback.update(_paths(hint.get("rollback_scope") or {}, "production_paths"))
     candidate_writes = candidate_allowed | candidate_planned | candidate_owners
     cluster_writes = cluster_allowed | cluster_planned | cluster_owners
+    # ADR-0041/0043: unioning individually legal contexts must preserve the
+    # final caller route's forbidden read/write rules, including glob/prefix
+    # matches. Without a selected scope, retain the existing protected boundary.
+    if any(phase_scope.preserve_forbidden(path) and phase_scope.conflict(path, cluster_forbidden)
+           for path in candidate_writes | candidate_reads | candidate_rollback):
+        return False
+    if any(phase_scope.preserve_forbidden(path) and phase_scope.conflict(path, candidate_forbidden)
+           for path in cluster_writes | cluster_reads | cluster_rollback):
+        return False
     return not (candidate_forbidden & cluster_writes or cluster_forbidden & candidate_writes)
 
 

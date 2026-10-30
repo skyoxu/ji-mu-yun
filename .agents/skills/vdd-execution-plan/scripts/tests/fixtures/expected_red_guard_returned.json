@@ -1,0 +1,664 @@
+{
+  "provenance": {
+    "kind": "self-contained-synthetic-contract-fixture",
+    "runtime_sources_required": [],
+    "authorizes": [],
+    "purpose": "Generic structural regression for sixteen failure-role shapes; fourteen guard-only cases and two runtime-marker cases. Not a task plan, worker receipt or execution evidence. Opaque legacy identifiers remain solely to preserve existing consumer regression oracles."
+  },
+  "cases": [
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 1 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-10FBA11521D7",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 1 produces its declared observation.",
+        "requirement_id": "FR-1",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-1"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 1",
+        "trigger": "Fixture observation 1 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-33B8DCB2D608",
+      "assertion_ids": [
+        "ASSERT_GENERIC_1_1",
+        "ASSERT_GENERIC_1_2",
+        "ASSERT_GENERIC_1_3"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "semantic-contract-gap",
+          "selector_intent": "Validate the generic fixture artifact and retain its semantic-contract-gap role for fixture 1.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_1_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 2 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-2B5782A2F923",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 2 produces its declared observation.",
+        "requirement_id": "FR-2",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-2"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 2",
+        "trigger": "Fixture observation 2 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-F3E6A07F2B18",
+      "assertion_ids": [
+        "ASSERT_GENERIC_2_1",
+        "ASSERT_GENERIC_2_2",
+        "ASSERT_GENERIC_2_3",
+        "ASSERT_GENERIC_2_4",
+        "ASSERT_GENERIC_2_5",
+        "ASSERT_GENERIC_2_6",
+        "ASSERT_GENERIC_2_7",
+        "ASSERT_GENERIC_2_8",
+        "ASSERT_GENERIC_2_9",
+        "ASSERT_GENERIC_2_10"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 2.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_2_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 3 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-3633888B6600",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 3 produces its declared observation.",
+        "requirement_id": "FR-3",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-3"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 3",
+        "trigger": "Fixture observation 3 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-B113FBF835FE",
+      "assertion_ids": [
+        "ASSERT_GENERIC_3_1",
+        "ASSERT_GENERIC_3_2",
+        "ASSERT_GENERIC_3_3",
+        "ASSERT_GENERIC_3_4",
+        "ASSERT_GENERIC_3_5"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 3.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_3_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 4 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-5205D4F22E0C",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 4 produces its declared observation.",
+        "requirement_id": "FR-4",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-4"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 4",
+        "trigger": "Fixture observation 4 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-FAE5CC003C64",
+      "assertion_ids": [
+        "ASSERT_GENERIC_4_1",
+        "ASSERT_GENERIC_4_2",
+        "ASSERT_GENERIC_4_3",
+        "ASSERT_GENERIC_4_4"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 4.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_4_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 5 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-5ECF858E9792",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 5 produces its declared observation.",
+        "requirement_id": "FR-5",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-5"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 5",
+        "trigger": "Fixture observation 5 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-686B7CE4AF11",
+      "assertion_ids": [
+        "ASSERT_GENERIC_5_1",
+        "ASSERT_GENERIC_5_2",
+        "ASSERT_GENERIC_5_3",
+        "ASSERT_GENERIC_5_4"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 5.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_5_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 6 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-6493CAA1327E",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 6 produces its declared observation.",
+        "requirement_id": "FR-6",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-6"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 6",
+        "trigger": "Fixture observation 6 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-586EFA0CC976",
+      "assertion_ids": [
+        "ASSERT_GENERIC_6_1",
+        "ASSERT_GENERIC_6_2",
+        "ASSERT_GENERIC_6_3",
+        "ASSERT_GENERIC_6_4",
+        "ASSERT_GENERIC_6_5"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 6.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_6_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 7 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-7D972E7D5A4C",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 7 produces its declared observation.",
+        "requirement_id": "FR-7",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-7"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 7",
+        "trigger": "Fixture observation 7 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-A61A97DD5FE0",
+      "assertion_ids": [
+        "ASSERT_GENERIC_7_1",
+        "ASSERT_GENERIC_7_2",
+        "ASSERT_GENERIC_7_3",
+        "ASSERT_GENERIC_7_4",
+        "ASSERT_GENERIC_7_5",
+        "ASSERT_GENERIC_7_6",
+        "ASSERT_GENERIC_7_7",
+        "ASSERT_GENERIC_7_8"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 7.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_7_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 8 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-85364940D3ED",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 8 produces its declared observation.",
+        "requirement_id": "FR-8",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-8"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 8",
+        "trigger": "Fixture observation 8 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-63050B97D5FE",
+      "assertion_ids": [
+        "ASSERT_GENERIC_8_1",
+        "ASSERT_GENERIC_8_2",
+        "ASSERT_GENERIC_8_3",
+        "ASSERT_GENERIC_8_4",
+        "ASSERT_GENERIC_8_5"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 8.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_8_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 9 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-9D7A18B8E2C0",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 9 produces its declared observation.",
+        "requirement_id": "FR-9",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-9"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 9",
+        "trigger": "Fixture observation 9 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-51B4591EE9F3",
+      "assertion_ids": [
+        "ASSERT_GENERIC_9_1",
+        "ASSERT_GENERIC_9_2",
+        "ASSERT_GENERIC_9_3",
+        "ASSERT_GENERIC_9_4"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 9.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_9_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 10 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-B6B9478D5BCD",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 10 produces its declared observation.",
+        "requirement_id": "FR-10",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-10"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 10",
+        "trigger": "Fixture observation 10 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-90D5567E210F",
+      "assertion_ids": [
+        "ASSERT_GENERIC_10_1",
+        "ASSERT_GENERIC_10_2",
+        "ASSERT_GENERIC_10_3",
+        "ASSERT_GENERIC_10_4",
+        "ASSERT_GENERIC_10_5"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 10.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_10_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 11 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-BFF625900FD4",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 11 produces its declared observation.",
+        "requirement_id": "FR-11",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-11"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 11",
+        "trigger": "Fixture observation 11 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-C5D693D28BD1",
+      "assertion_ids": [
+        "ASSERT_GENERIC_11_1",
+        "ASSERT_GENERIC_11_2",
+        "ASSERT_GENERIC_11_3"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 11.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_11_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 12 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-C11143A9F8A7",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 12 produces its declared observation.",
+        "requirement_id": "FR-12",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-12"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 12",
+        "trigger": "Fixture observation 12 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-F50C91F1D7D0",
+      "assertion_ids": [
+        "ASSERT_GENERIC_12_1",
+        "ASSERT_GENERIC_12_2",
+        "ASSERT_GENERIC_12_3",
+        "ASSERT_GENERIC_12_4",
+        "ASSERT_GENERIC_12_5"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 12.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_12_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 13 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-D37ED811069E",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 13 produces its declared observation.",
+        "requirement_id": "FR-13",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-13"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 13",
+        "trigger": "Fixture observation 13 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-C947ED6A4786",
+      "assertion_ids": [
+        "ASSERT_GENERIC_13_1",
+        "ASSERT_GENERIC_13_2",
+        "ASSERT_GENERIC_13_3",
+        "ASSERT_GENERIC_13_4"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "test-harness-failure",
+          "selector_intent": "Validate the generic fixture artifact and retain its test-harness-failure role for fixture 13.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_13_1"
+        },
+        {
+          "failure_family": "task-implementation-failure",
+          "selector_intent": "Observe the required normalizer output for generic fixture input 13.",
+          "expected_outcome": "fail",
+          "failure_id": "S206_AC08_REQUIRED_FIXTURE_BUSINESS_RESULTS_INCORRECT"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 14 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-EF4E213E7263",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 14 produces its declared observation.",
+        "requirement_id": "FR-14",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-14"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 14",
+        "trigger": "Fixture observation 14 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-60D74B0D0B76",
+      "assertion_ids": [
+        "ASSERT_GENERIC_14_1",
+        "ASSERT_GENERIC_14_2",
+        "ASSERT_GENERIC_14_3",
+        "ASSERT_GENERIC_14_4",
+        "ASSERT_GENERIC_14_5",
+        "ASSERT_GENERIC_14_6",
+        "ASSERT_GENERIC_14_7",
+        "ASSERT_GENERIC_14_8"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "selector_intent": "Observe the required normalizer output for generic fixture input 14.",
+          "expected_outcome": "fail",
+          "failure_id": "S206_EF4E213E7263"
+        },
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 14.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_14_2"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 15 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-F3E1075CC3DD",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 15 produces its declared observation.",
+        "requirement_id": "FR-15",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-15"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 15",
+        "trigger": "Fixture observation 15 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-DB38FD82369C",
+      "assertion_ids": [
+        "ASSERT_GENERIC_15_1",
+        "ASSERT_GENERIC_15_2",
+        "ASSERT_GENERIC_15_3",
+        "ASSERT_GENERIC_15_4"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 15.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_15_1"
+        }
+      ]
+    },
+    {
+      "obligation": {
+        "depends_on": [],
+        "expected_behavior": "Observe the declared generic fixture result 16 without promoting a guard failure to implementation RED.",
+        "forbidden_result": [
+          "A guard failure is relabeled as an implementation failure.",
+          "An unobserved fixture result is claimed as passing."
+        ],
+        "obligation_id": "O-FBBDC7519231",
+        "obligation_kind": "quality",
+        "observable_result": "Generic contract fixture 16 produces its declared observation.",
+        "requirement_id": "FR-16",
+        "requirement_type": "Platform",
+        "source_refs": [
+          "fixtures/generic-requirements.md#FR-16"
+        ],
+        "state_after": "The declared generic observation is verified, or its failure role is retained.",
+        "state_before": "The fixture has not been independently observed.",
+        "status": "active",
+        "subject": "Generic contract fixture 16",
+        "trigger": "Fixture observation 16 is evaluated.",
+        "unresolved_fragments": []
+      },
+      "acceptance_id": "A-C55475C1CC03",
+      "assertion_ids": [
+        "ASSERT_GENERIC_16_1",
+        "ASSERT_GENERIC_16_2",
+        "ASSERT_GENERIC_16_3",
+        "ASSERT_GENERIC_16_4",
+        "ASSERT_GENERIC_16_5"
+      ],
+      "raw_failure_intents": [
+        {
+          "failure_family": "artifact-integrity",
+          "selector_intent": "Validate the generic fixture artifact and retain its artifact-integrity role for fixture 16.",
+          "expected_outcome": "fail",
+          "failure_id": "FIXTURE_GUARD_16_1"
+        }
+      ]
+    }
+  ]
+}

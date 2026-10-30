@@ -58,8 +58,19 @@ def _repo(tmp_path: Path) -> tuple[Path, Path, list[dict[str, str]]]:
     (tmp_path / "descriptor-root.txt").write_text("planned-only\n", encoding="utf-8")
     (tmp_path / "validators.txt").write_text("validator\n", encoding="utf-8")
     (tmp_path / "state.json").write_text("{}\n", encoding="utf-8")
+    context = {"slice_id": "S1", "requirement_ids": ["FR-1"], "obligation_ids": ["O-CLI"],
+        "acceptance_ids": ["A-CLI"], "source_refs": ["requirements.md#FR-1"],
+        "contracts": ["plan/semantic-plan-bundle.v1.json"], "allowed_paths": ["src/value.py"],
+        "forbidden_paths": [], "selector_intents": ["tests/test_value.py"],
+        "validation_commands": [[sys.executable, "-m", "pytest", "tests/test_value.py", "-q"]]}
+    context_path = tmp_path / "plan/agent-context/S1/agent-context.json"
+    context_path.parent.mkdir(parents=True)
+    context_path.write_text(json.dumps(context), encoding="utf-8")
     semantic = tmp_path / "plan" / "semantic-plan-bundle.v1.json"
-    semantic.write_text(json.dumps(_bundle()), encoding="utf-8")
+    bundle = _bundle()
+    bundle["agent_contexts"] = [context]
+    bundle["slices"][0]["proof"] = {"selector_intents": context["selector_intents"]}
+    semantic.write_text(json.dumps(bundle), encoding="utf-8")
     roots = [
         {"root_kind": "candidate_tree", "repository_relative_posix_path": "src", "inclusion_reason": "candidate"},
         {"root_kind": "plan", "repository_relative_posix_path": "plan/semantic-plan-bundle.v1.json", "inclusion_reason": "plan"},
@@ -256,7 +267,7 @@ def test_implementation_handoff_requires_clean_expected_red_and_binds_before_sna
     )
     assert handoff["status"] == "implementation-worker-required"
     assert handoff["predecessor_red_sha256"] == sha256_value(red)
-    assert handoff["allowed_production_paths"] == ["candidate.txt"]
+    assert handoff["allowed_production_paths"] == ["candidate.txt", "candidate.py"]
     assert handoff["before"]["current_snapshot"]["sha256"].startswith("sha256:")
     assert handoff["authorizes_evidence"] is False and handoff["authorizes"] == []
     red["failure_family"] = "unexpected-green"
@@ -373,4 +384,4 @@ def test_terminal_retains_declared_full_module_command(tmp_path, monkeypatch):
     monkeypatch.setattr(stable_runner,'materialize_descriptor',lambda **k:k)
     actual=json.loads(stable_runner._materialize_named_descriptor(semantic,run,'terminal').read_text())
     assert actual['argv']==context['validation_commands'][0]
-    assert actual['timeout_seconds']==600
+    assert actual['timeout_seconds']==1800  # ADR-0041 independent unit budget.

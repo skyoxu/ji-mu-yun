@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.sc import skill_replay_runtime as runtime
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -65,8 +66,24 @@ def test_s1_historical_compatibility_replay() -> None:
 
 
 @pytest.mark.cer_assertion("RMAP-R6-S2")
-def test_s2_evaluation_seeds_and_matrix() -> None:
-    result = run_replay("replay-matrix", "--matrix", f"{PLAN}/stable-candidate-replay-matrix.v1.json")
+def test_s2_evaluation_seeds_and_matrix(tmp_path) -> None:
+    historical = ROOT / PLAN / 'stable-candidate-replay-matrix.v1.json'
+    original = historical.read_bytes()
+    # ADR-0058: legacy labels are non-promotable. Exercise the real current
+    # producer rather than weakening the source-supported v3 replay contract.
+    legacy = run_replay('replay-matrix', '--matrix', historical.relative_to(ROOT).as_posix())
+    assert legacy.returncode != 0
+    assert json.loads(legacy.stdout)['aggregate_valid'] is False
+    current = (tmp_path / 'current-matrix.json').relative_to(ROOT).as_posix()
+    prepared = run_replay('prepare-matrix', '--target', '.agents/skills/run-refactor-implementation-acceptance',
+                          '--capability', CAPABILITY, '--stable-commit', runtime.TRUST_BASELINE,
+                          '--output', current)
+    assert prepared.returncode == 0, prepared.stderr
+    matrix = json.loads(prepared.stdout)
+    assert matrix['schema_version'] == 'jimuyun.stable-candidate-replay-matrix.v3'
+    assert matrix['stable']['commit'] == runtime.TRUST_BASELINE
+    assert matrix['candidate']['bindings']
+    result = run_replay("replay-matrix", "--matrix", current)
     if result.returncode != 0:
         print("FAILURE_ID:RMAP-R6-S2-NOT-READY")
     assert result.returncode == 0
@@ -74,6 +91,8 @@ def test_s2_evaluation_seeds_and_matrix() -> None:
     rows = receipt["case_results"]
     assert len(rows) == 6 and all(row["executed"] and row["status"] == "pass" for row in rows)
     assert {row["category"] for row in rows} == {"positive", "negative", "historical_compatibility", "dirty_baseline", "knowledge_read_set", "closed_policy"}
+    assert all(row['stable_subject']['pid'] != row['candidate_subject']['pid'] for row in rows)
+    assert historical.read_bytes() == original
 
 
 @pytest.mark.cer_assertion("RMAP-R6-S3")

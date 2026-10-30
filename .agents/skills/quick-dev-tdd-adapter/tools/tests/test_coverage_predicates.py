@@ -42,7 +42,7 @@ def semantic_bundle() -> dict:
         }],
         "slices": [{
             "slice_id": "S1", "acceptance_ids": ["A-ONE"], "failure_intent_ids": ["FI-ONE"],
-            "production_owners":["candidate.txt"], "allowed_write_paths":["candidate.txt"],
+            "production_owners":["candidate.txt", "candidate.py"], "allowed_write_paths":["candidate.txt", "candidate.py"],
             "execution_snapshot_paths":["tests/test_one.py","tests/test_terminal.py","fixture.txt"],
             "planned_new_files":[], "terminal_predicate":"all assertions pass",
         }],
@@ -55,29 +55,39 @@ def semantic_bundle() -> dict:
     }
 
 
+
+def write_production_binding(root: Path):
+    """Current RED guard needs a real declared Python production call."""
+    (root / "candidate.py").write_text(
+        "from pathlib import Path\ndef current_value():\n"
+        " return Path(__file__).with_name('candidate.txt').read_text(encoding='utf-8').strip()\n",
+        encoding="utf-8")
+
+
 def prepare(root: Path):
     (root / "tests").mkdir()
     (root / "plan").mkdir()
     (root / "RUN-1" / "descriptors").mkdir(parents=True)
     (root / "candidate.txt").write_text("red\n", encoding="utf-8")
+    write_production_binding(root)
     (root / "contract.json").write_text("{}\n", encoding="utf-8")
     (root / "fixture.txt").write_text("fixture\n", encoding="utf-8")
     (root / "source.txt").write_text("# FR-1\nvalue must be green\n", encoding="utf-8")
     (root / "validator.py").write_text("# validator\n", encoding="utf-8")
     (root / "transition.json").write_text("{}\n", encoding="utf-8")
     (root / "tests" / "test_one.py").write_text(
-        "from pathlib import Path\n"
+        "from pathlib import Path\nfrom candidate import current_value\n"
         "import pytest\n"
         "@pytest.mark.cer_assertion('AS-1', 'AS-2')\n"
         "def test_one():\n"
         " root=Path(__file__).resolve().parents[1]\n"
-        " value=(root/'candidate.txt').read_text(encoding='utf-8').strip()\n"
+        " value=current_value()\n"
         " if value!='green': print('FAILURE_ID:EXPECTED-RED')\n"
         " assert value=='green'\n",
         encoding="utf-8",
     )
     (root / "tests" / "test_terminal.py").write_text(
-        "from pathlib import Path\n"
+        "from pathlib import Path\nfrom candidate import current_value\n"
         "import pytest\n"
         "@pytest.mark.cer_assertion('AS-1', 'AS-2')\n"
         "def test_terminal():\n"
@@ -180,10 +190,10 @@ def test_q8_deduplicates_originals_but_checks_every_edge_within_replay_context(t
             yield
         finally:
             active.pop()
-    def saved(*a):
+    def saved(*a, **kw):
         assert active == [True]  # Deferred checks cannot escape a replay epoch.
         calls.append(a[1])
-        return real_saved(*a)
+        return real_saved(*a, **kw)
     def edge(*a, **kw):
         edges.append(kw['stage'])
         return real_edge(*a, **kw)
@@ -234,8 +244,8 @@ def test_q8_detects_original_mutation_during_deferred_checks(tmp_path, monkeypat
     args = _q8_fixture(tmp_path)
     real = shared_execution.validate_saved_request
     count = []
-    def changed(*a):
-        real(*a)
+    def changed(*a, **kw):
+        real(*a, **kw)
         if not count:
             (tmp_path/'RUN-1/canonical-evidence/terminal/stdout.bin').write_bytes(b'changed')
         count.append(1)

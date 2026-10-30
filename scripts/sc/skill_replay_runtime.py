@@ -450,7 +450,24 @@ def _source_analysis(raw: bytes) -> tuple[frozenset[str], tuple[int, ...]]:
     paths participate in every current closure and Consumer Manifest.
     """
     tree = ast.parse(raw.decode("utf-8-sig"))
-    names, aliases, named_calls, direct_calls, native_calls = set(), {"validate_package", "validate_skill"}, [], [], []
+    # A module's own validator is not an undeclared caller of the replay
+    # validators merely because its public API uses the same generic name.
+    # Imported aliases and actual attribute/native calls below remain visible,
+    # including calls inside such a locally declared wrapper.
+    local_validators = {node.name for node in tree.body
+                        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                        and not node.decorator_list}
+    # Rebinding, decorators and dynamic namespace access cannot establish
+    # exclusive local ownership. Keep the old conservative detection there.
+    rebound = {node.id for node in ast.walk(tree)
+               if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del))}
+    rebound.update(alias.asname or alias.name for node in ast.walk(tree)
+                   if isinstance(node, (ast.Import, ast.ImportFrom)) for alias in node.names)
+    dynamic_namespace = any(isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                            and node.func.id in {"exec", "eval", "globals", "locals", "vars"}
+                            for node in ast.walk(tree))
+    local_validators = set() if dynamic_namespace else local_validators - rebound
+    names, aliases, named_calls, direct_calls, native_calls = set(), {"validate_package", "validate_skill"} - local_validators, [], [], []
     native_selector = False
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

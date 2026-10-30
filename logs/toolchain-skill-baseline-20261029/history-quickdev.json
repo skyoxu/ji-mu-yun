@@ -1,0 +1,1475 @@
+{
+  "schema": "toolchain-skill-baseline.history-quickdev.v1",
+  "status": "read-only bounded history/source inspection; not workflow execution or test pass evidence",
+  "fixed_main": "25580d700da91d2702fd234a024a616d55419f90",
+  "scope_start_exclusive": "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+  "scope_rule": "Git reachable set base..fixed_main, full history and no date filter; include both merges and their introduced parents plus subsequent main reachable commits. Nonmerge list is complete for explicit inspected QuickDev/direct-dependency paths, not every repository commit.",
+  "merge_boundaries": [
+    {
+      "commit": "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+      "parents": [
+        "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+        "71f53ea059157d14e717f322e2defff42869cf51"
+      ],
+      "committed_at": "2026-09-30T23:19:06+08:00",
+      "title": "Merge 8-24 identity isolation and workspace recovery"
+    },
+    {
+      "commit": "971e53ebce52eb54a9f78bcd5bf0faa68aec61f4",
+      "parents": [
+        "93884ba457a390739c653f978cf340774904e9e7",
+        "f04f89e73735eb687ca1cc895cb5f718e4e444b1"
+      ],
+      "committed_at": "2026-10-17T18:19:12+08:00",
+      "title": "Merge pull request #4 from skyoxu/fix/08-05-real-skill-replay"
+    }
+  ],
+  "commit_scope_paths": [
+    ".agents/skills/quick-dev-tdd-adapter",
+    "scripts/quick_dev",
+    "scripts/workflow_unit_budget.py",
+    "scripts/python/skill_input_gate.py",
+    "scripts/toolchain/canonical_evidence.py",
+    "scripts/toolchain/candidate_content_paths.py",
+    "scripts/sc/_llm_backend.py",
+    "scripts/sc/host_session.py",
+    "scripts/sc/workflow_model_routing.py",
+    "scripts/sc/config/workflow_model_routes.v1.json",
+    "scripts/sc/skill_replay_runtime.py",
+    "scripts/sc/tests/tc_d1_cer/conftest.py"
+  ],
+  "nonmerge_related_commit_count": 58,
+  "related_commits": [
+    {
+      "commit": "5197679049e709ea9d22212aacc6c09067b50ec1",
+      "date": "2026-10-28",
+      "title": "Complete Package B skill migration and publish reviewed acceptance evidence",
+      "families": [
+        "red-green-refactor-entry",
+        "q1-light-delivered-admission"
+      ]
+    },
+    {
+      "commit": "01d4bc57d29e3dcbc9369e71bf98619507fe7bf4",
+      "date": "2026-10-26",
+      "title": "wip(toolchain): preserve consumer TDD and fixture-boundary checkpoint",
+      "families": [
+        "q1-light-delivered-admission"
+      ]
+    },
+    {
+      "commit": "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d",
+      "date": "2026-10-25",
+      "title": "fix(quick-dev): deduplicate Q8 originals within replay contexts",
+      "families": [
+        "q7-q8-original-dedup"
+      ]
+    },
+    {
+      "commit": "93d06e67b0276ec8cc2e7ae7298aff8ac8e5fbf6",
+      "date": "2026-10-25",
+      "title": "fix(quick-dev): deduplicate Q7 originals within one validation",
+      "families": [
+        "q7-q8-original-dedup",
+        "q6-scope-and-pytest-arguments"
+      ]
+    },
+    {
+      "commit": "b908cb3915cb50c6860445e27c1e1012137e60bb",
+      "date": "2026-10-25",
+      "title": "fix(quick-dev): distinguish pytest filter values from file dependencies",
+      "families": [
+        "q6-scope-and-pytest-arguments"
+      ]
+    },
+    {
+      "commit": "b9c701c1cfe662d679d747533920f992379c4b06",
+      "date": "2026-10-25",
+      "title": "fix: isolate Quick Dev call metadata from test environment",
+      "families": [
+        "execution-environment-normalization"
+      ]
+    },
+    {
+      "commit": "dadd5ea869108893bdfe014c75a06c363b720cc9",
+      "date": "2026-10-25",
+      "title": "chore(review): publish scoped VDD plan and workflow recovery updates",
+      "families": [
+        "explicit-reentry-repeat-session",
+        "content-bound-shared-execution",
+        "execution-environment-normalization",
+        "shared-worker-budget-model-boundary"
+      ]
+    },
+    {
+      "commit": "f57c2998f83f12dfc98afe11816a4827fffd0228",
+      "date": "2026-10-24",
+      "title": "test(vdd): pin direct delivered-input consumption boundary",
+      "families": [
+        "q1-light-delivered-admission"
+      ]
+    },
+    {
+      "commit": "81cfae78734630002c29146909a02b714be014e0",
+      "date": "2026-10-24",
+      "title": "fix(quick-dev): reuse content-bound execution evidence across slices",
+      "families": [
+        "content-bound-shared-execution",
+        "q6-scope-and-pytest-arguments"
+      ]
+    },
+    {
+      "commit": "127b26a4a22bcd97a4231296c471d06a3548521f",
+      "date": "2026-10-23",
+      "title": "fix(quick-dev): allow deterministic empty TOML entry preparation",
+      "families": [
+        "bounded-first-use-entry"
+      ]
+    },
+    {
+      "commit": "cfae69b40b6608d85c2c86f7efd1537c87d41e0c",
+      "date": "2026-10-22",
+      "title": "fix(quick-dev): support partial obligations and explicit native sessions",
+      "families": [
+        "cer-routing-partial-obligations",
+        "explicit-reentry-repeat-session"
+      ]
+    },
+    {
+      "commit": "10f642762594b9615435ea8671bc1e67d673cdd8",
+      "date": "2026-10-21",
+      "title": "fix(quick-dev): preserve empty production closure for documentary guards",
+      "families": [
+        "cer-routing-partial-obligations"
+      ]
+    },
+    {
+      "commit": "f5f063d5cdffd670b8224d28ccf2f6cc28ac92c3",
+      "date": "2026-10-21",
+      "title": "feat(skill-quality): complete Package A static checks and source-bound verification",
+      "families": [
+        "cer-routing-partial-obligations"
+      ]
+    },
+    {
+      "commit": "119e2407ec26fa2c1b0c4379513955cdfc5c83e1",
+      "date": "2026-10-20",
+      "title": "feat(quick-dev): prepare bounded first-use entries and prove online S10 execution",
+      "families": [
+        "explicit-reentry-repeat-session",
+        "bounded-first-use-entry"
+      ]
+    },
+    {
+      "commit": "57b00012057ac565c3ab964d6fa18d7053825408",
+      "date": "2026-10-20",
+      "title": "feat(toolchain): support caller-session execution and compile Package A plan",
+      "families": [
+        "shared-worker-budget-model-boundary"
+      ]
+    },
+    {
+      "commit": "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+      "date": "2026-10-18",
+      "title": "Support configurable Codex model identifiers",
+      "families": [
+        "shared-worker-budget-model-boundary"
+      ]
+    },
+    {
+      "commit": "e4e1377c6f5fad9213b9ebcaa11f52e2bbce15a1",
+      "date": "2026-10-16",
+      "title": "fix: align incremental acceptance replay contracts",
+      "families": [
+        "approved-budget-compatibility"
+      ]
+    },
+    {
+      "commit": "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd",
+      "date": "2026-10-15",
+      "title": "fix(quick-dev): replay immutable proofs across approved budget transition",
+      "families": [
+        "approved-budget-compatibility"
+      ]
+    },
+    {
+      "commit": "1b1bf3d8bb694c6f3932039118647a9eb59921ba",
+      "date": "2026-10-14",
+      "title": "fix(toolchain): triple bounded replay time budgets per maintainer approval",
+      "families": [
+        "approved-budget-compatibility"
+      ]
+    },
+    {
+      "commit": "888ba9cc898915e3f0dbbc1f1309d51956dc1c5b",
+      "date": "2026-10-13",
+      "title": "Separate historical validator from candidate replay",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "daca642a0509eb2d694b2c60cf7229dfeb08a339",
+      "date": "2026-10-09",
+      "title": "fix: complete 08-05 replay recovery evidence",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "366566e4392b5c320f1cb5803699108cac5d85c0",
+      "date": "2026-10-09",
+      "title": "fix(toolchain): separate replay budgets and publish Windows evidence",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "0c4ffefd93486c4a737a187a66c149cb1e9d55c7",
+      "date": "2026-10-08",
+      "title": "fix(toolchain): load Windows job adapter in isolated replay",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "ae311a29b15c8c75fb0dcaaa1c57c8cb9bd5ac7e",
+      "date": "2026-10-08",
+      "title": "fix(toolchain): contain Windows replay jobs and bound CER process lifetime",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5",
+      "date": "2026-10-07",
+      "title": "fix(toolchain): bound replay process trees and reuse exact-byte syntax",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "a0955c611658ed0b770c779882c6fdf32509f2db",
+      "date": "2026-10-06",
+      "title": "fix(toolchain): make direct replay verification observable and bounded",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "7a8ddaabd78c8da766529e27b2ae66ed2b2060c3",
+      "date": "2026-10-06",
+      "title": "fix(toolchain): preserve Windows replay input identities",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "e984752583edf2b9817f131fbd7b4e7a8eae6db6",
+      "date": "2026-10-06",
+      "title": "fix(toolchain): complete native replay contract integration",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "91279a19ae3d4d6936b86339e9cd5c8c09327fe2",
+      "date": "2026-10-06",
+      "title": "fix(toolchain): bind TC-D1 replay to native behavior and immutable inputs",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "e289d7d3f8572595ca28c498adc798d1fa2a2bf7",
+      "date": "2026-10-06",
+      "title": "fix quick-dev incremental evidence ownership",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "94870bbf087254e5e78fbb7752da42a4c56c3174",
+      "date": "2026-10-06",
+      "title": "fix quick dev run evidence noise boundary",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "13abf92991ca45b966bb0f733de1d7483c08aba7",
+      "date": "2026-10-06",
+      "title": "Complete 08-05 Quick Dev implementation evidence",
+      "families": [
+        "cer-routing-partial-obligations",
+        "q6-scope-and-pytest-arguments"
+      ]
+    },
+    {
+      "commit": "feafd68208f8db44d57cfd987fc2c0bf820c43fe",
+      "date": "2026-10-04",
+      "title": "prepare 08-05 acceptance candidate",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "f132bb38619cbf1280b682ab2e800dae4457615c",
+      "date": "2026-09-30",
+      "title": "quick-dev: constrain output exclusion to dotnet project roots",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "e6cfce464546a380bfea0cb7d33b6a9851ce02f2",
+      "date": "2026-09-30",
+      "title": "quick-dev: exclude generated test outputs from snapshots",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "98e704eed0c000e867dbaf0d5aee9723ec66de4d",
+      "date": "2026-09-30",
+      "title": "acceptance: ignore persisted run transport in snapshot replay",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "997237e08178f730b204c933c9876cad22dda011",
+      "date": "2026-09-30",
+      "title": "quick-dev: scope snapshot reuse to slice inputs",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "5ec5410f7a9ac7451e4e89de22b356d79b0a0e02",
+      "date": "2026-09-30",
+      "title": "tooling: hash long Windows evidence paths",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "7cbda6de49561603464a922d6017631948d4101f",
+      "date": "2026-09-30",
+      "title": "acceptance: exclude generated skill input from frozen plan root",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "ebee96a68679eaa6732f15e895f04c0f1e926064",
+      "date": "2026-09-30",
+      "title": "acceptance: apply declared evidence allowance on replay close",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "bbe60d0f0c255b52c735669bf72582dbac0a5709",
+      "date": "2026-09-30",
+      "title": "acceptance: ignore generated acceptance transport in root replay",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "64e5c791c18018f225ecf0702d89631530518dd3",
+      "date": "2026-09-30",
+      "title": "acceptance: allow declared plan evidence delta in q8 replay",
+      "families": [
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "eaceb36842382c24d2a66c1a239ca997e6bd8abe",
+      "date": "2026-09-29",
+      "title": "fix quick dev S23 independent governance verification",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "db157e767e1d93d4e81b9b3833463b03f66192b3",
+      "date": "2026-09-25",
+      "title": "chore: unify active workflow model routing",
+      "families": [
+        "q6-scope-and-pytest-arguments",
+        "shared-worker-budget-model-boundary"
+      ]
+    },
+    {
+      "commit": "bd494a969ee8f269ba7f38c181cec07dea2da2be",
+      "date": "2026-09-22",
+      "title": "fix(quick-dev): record author worker failures",
+      "families": [
+        "q2-materialized-author-reuse"
+      ]
+    },
+    {
+      "commit": "5cbd5e345f7b7827b57b339e468aafdc07084216",
+      "date": "2026-09-21",
+      "title": "fix(quick-dev): honor fixture assertion mappings",
+      "families": [
+        "q2-materialized-author-reuse"
+      ]
+    },
+    {
+      "commit": "b6632aeffc855c9b69a0223c164bc362a63af767",
+      "date": "2026-09-21",
+      "title": "fix(vdd): preserve repaired S8 execution handoff",
+      "families": [
+        "red-green-refactor-entry",
+        "q2-materialized-author-reuse",
+        "snapshot-incremental-dotnet-evidence-noise"
+      ]
+    },
+    {
+      "commit": "9dff0664d3d6dddd517832fdbbcc2164e7b6d607",
+      "date": "2026-09-20",
+      "title": "fix(quick-dev): require independent candidate trust record",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "8e519cefff8cb57e8d9fa157e8a5efb609c595fe",
+      "date": "2026-09-20",
+      "title": "fix(quick-dev): reuse materialized RED inputs",
+      "families": [
+        "q2-materialized-author-reuse"
+      ]
+    },
+    {
+      "commit": "91f9f749649afd97d9005968fa83801a22b416ac",
+      "date": "2026-09-20",
+      "title": "fix(quick-dev): reject Q4 workers without production changes",
+      "families": [
+        "red-green-refactor-entry"
+      ]
+    },
+    {
+      "commit": "b389e89869e4b2c7eeb16b1cf9ebc9097de6601d",
+      "date": "2026-09-19",
+      "title": "fix(toolchain): bind S1 machine assertion to expected RED",
+      "families": [
+        "red-green-refactor-entry"
+      ]
+    },
+    {
+      "commit": "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+      "date": "2026-09-19",
+      "title": "fix(toolchain): publish consumable 08-05 Quick Dev handoff",
+      "families": [
+        "red-green-refactor-entry",
+        "cer-routing-partial-obligations",
+        "q1-light-delivered-admission"
+      ]
+    },
+    {
+      "commit": "bd126f58a163bd97bb274c43f0a1eea61e139ffa",
+      "date": "2026-09-19",
+      "title": "Preserve S54 isolation evidence and boundary coverage",
+      "families": [
+        "red-green-refactor-entry"
+      ]
+    },
+    {
+      "commit": "46d4955bd6caa1e5fce45aa7ef06135a29c4929c",
+      "date": "2026-09-17",
+      "title": "fix(llm): bound transient retries by worker deadline",
+      "families": [
+        "shared-worker-budget-model-boundary"
+      ]
+    },
+    {
+      "commit": "7723af1f2248320773be36c7e16e368540cd75c7",
+      "date": "2026-09-16",
+      "title": "fix(quick-dev): complete S12 migration recovery and reuse materialized tests",
+      "families": [
+        "q2-materialized-author-reuse"
+      ]
+    },
+    {
+      "commit": "83d4c975195e62013eecd232669bb2931483a200",
+      "date": "2026-09-15",
+      "title": "fix(quick-dev): admit bounded pytest to dotnet production bindings",
+      "families": [
+        "red-green-refactor-entry",
+        "dotnet-production-test-binding"
+      ]
+    },
+    {
+      "commit": "2fe79184ce51265061157bbef1393d4cd73b3e1c",
+      "date": "2026-09-14",
+      "title": "test(quick-dev): expose matrix subject evidence gap",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    },
+    {
+      "commit": "a68555c3ee753fdb1d46696fec2b05f522bd8afd",
+      "date": "2026-09-14",
+      "title": "test(quick-dev): bind candidate path transition evidence",
+      "families": [
+        "direct-pinned-replay-dependency-history"
+      ]
+    }
+  ],
+  "families": [
+    {
+      "id": "red-green-refactor-entry",
+      "optimization_intent": "Require real production-bound expected RED, exact frozen selector succession and actual production Q4 delta; allow no-op refactor.",
+      "related_commits": [
+        "83d4c975",
+        "91f9f749",
+        "b389e898",
+        "699b2b01",
+        "b6632aef",
+        "bd126f58",
+        "51976790"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:51 validate_nonterminal_successor rereads RED descriptor/result/case report; GREEN and REFACTOR must match frozen selector.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:101 RED guard runs before reentry/process; q4_q6_gates.py:70 derives actual resolver production delta.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py and dotnet_production_entry.py implement native Python, exact dotnet and readonly quality-validator binding."
+      ],
+      "supersession_basis": "Current stable stage_pipeline owns evidence; legacy combined writers and static entry admission never authorize runtime completion.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_worker_classifies_actual_production_delta",
+          "line": 15,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_noop_refactor_remains_legal",
+          "line": 35,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_stable_runner_never_creates_green_after_noop",
+          "line": 58,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_q4_finish_materializes_green_for_a_verified_manual_handoff",
+          "line": 90,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_red_dispatch_checks_binding_before_reentry_or_process",
+          "line": 109,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_named_red_materialization_and_repeat_both_check_admission",
+          "line": 125,
+          "assertion_count": 4,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py::test_red_guard_requires_and_accepts_real_production_call",
+          "line": 48,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py::test_red_guard_rejects_import_without_call",
+          "line": 66,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Low for mocked worker/static admission nodes; real runtime succession requires tiny child pytest runs. No live model.",
+      "conflicts_or_gaps": [
+        "Known main P1 belongs to parent repair: shared saved-request validation rejects legal production change after GREEN; existing no-op refactor tests do not exercise changed refactor production bytes."
+      ]
+    },
+    {
+      "id": "cer-routing-partial-obligations",
+      "optimization_intent": "Probe existing behavior once; present obligations use regression, missing behavior uses RED/GREEN/REFACTOR; partial case outcomes remain exact.",
+      "related_commits": [
+        "699b2b01",
+        "13abf929",
+        "cfae69b4",
+        "10f64276",
+        "f5f063d5"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/behavior_routing.py:61 derive_dispositions and :144 verify_stage; stage_map selects required stage per acceptance.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py:98 binds assertion IDs to exact collected/selected nodes; skipped/harness/wrong-ID outcomes cannot authorize RED."
+      ],
+      "supersession_basis": "Partial case extension supersedes all-or-nothing obligation handling while preserving all prior passing cases. Documentary guards alone may have empty production closure.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_all_present_closes_regression_without_red_or_implementation",
+          "line": 93,
+          "assertion_count": 6,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_mixed_slice_preserves_both_obligations_and_closes_both_paths",
+          "line": 105,
+          "assertion_count": 5,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_stale_regression_cannot_close_after_production_change",
+          "line": 130,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_test_only_guard_has_empty_production_hash_closure",
+          "line": 445,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_partial_obligation_closes_native_lifecycle",
+          "line": 16,
+          "assertion_count": 6,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_partial_unverifiable_cases_remain_blocking",
+          "line": 31,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_passing_case_must_remain_green",
+          "line": 45,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_formal_red_preserves_partial_case_outcomes",
+          "line": 53,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_passing_only_assertion_adds_no_red_failure_id",
+          "line": 94,
+          "assertion_count": 5,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Medium: fixture-local native stages execute real tiny pytest children repeatedly and create evidence; do not run all historical 08-05 or 08-24 workflows.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "q2-materialized-author-reuse",
+      "optimization_intent": "Skip model-backed RED author when materialized selector and required literal or fixture assertion mapping are already complete; persist author failures.",
+      "related_commits": [
+        "7723af1f",
+        "8e519cef",
+        "5cbd5e34",
+        "bd494a96",
+        "b6632aef"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py q2_author_red and _descriptor_inputs inspect existing test/fixture markers without importing candidate tests."
+      ],
+      "supersession_basis": "Existing files alone are insufficient: missing assertion IDs route through bounded author. BOM and non-pytest fixtures remain supported.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_existing_tests_with_new_assertion_ids_route_through_bounded_author",
+          "line": 246,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_materialized_planned_test_with_required_assertion_does_not_reinvoke_author",
+          "line": 271,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_fixture_assertion_mapping_does_not_reinvoke_author",
+          "line": 287,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_non_pytest_fixture_does_not_reinvoke_author_when_selector_is_complete",
+          "line": 305,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_bom_encoded_cer_selector_is_scanned_without_worker",
+          "line": 322,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_author_failure_is_recorded_and_blocks_same_run_reentry",
+          "line": 338,
+          "assertion_count": 4,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Low: author calls mocked, fixture files small; no model or full workflow.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "explicit-reentry-repeat-session",
+      "optimization_intent": "Reuse exactly bound completed evidence including failures; stop stale/partial evidence before duplicate work; sessions progress only through native gates.",
+      "related_commits": [
+        "cfae69b4",
+        "dadd5ea8",
+        "119e2407"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py:7 hashes candidate/plan/selector/fixtures/engine/profile; :23 revalidates outputs, report, runtime edges, Q6 and completion seals.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:106 checks existing result then explicit ordered failure history before launch.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py preflight_session/advance_session binds session request and native Q7/Q8; no model implementation auto-authority."
+      ],
+      "supersession_basis": "No latest-run scan; fixed run path or explicit history only. Same-content retries share cumulative unit budget.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution",
+          "line": 22,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_stale_or_partial_evidence_stops_before_process",
+          "line": 33,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_each_stage_honors_explicit_history_before_execution",
+          "line": 60,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_named_cli_stage_honors_failure_history",
+          "line": 95,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_refactor_reentry_does_not_call_worker",
+          "line": 75,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_public_repeat_guard.py::test_repeat_guard_blocks_third_identical_attempt_and_source_change_reenters",
+          "line": 60,
+          "assertion_count": 5,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_public_repeat_guard.py::test_public_entrypoint_never_launches_third_identical_command",
+          "line": 75,
+          "assertion_count": 5,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_readonly_preflight_and_real_present_session_resume",
+          "line": 37,
+          "assertion_count": 8,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_missing_route_stops_before_implementation_worker",
+          "line": 53,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_changed_product_cannot_reuse_completed_session",
+          "line": 77,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_session_completion_is_consumed_by_acceptance",
+          "line": 109,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Medium: reentry/session nodes spawn real tiny pytest and temporary Git; public repeat node creates repository-local .tmp-ch456-repeat-guard then cleans it.",
+      "conflicts_or_gaps": [
+        "Known main P2 belongs to parent repair: stable_runner --failure-history uses object-only loader for valid JSON arrays. Named CLI-stage tests directly cover it; check_history itself already accepts arrays."
+      ]
+    },
+    {
+      "id": "content-bound-shared-execution",
+      "optimization_intent": "Share compatible successful Python pytest execution originals across slices, Q6 and terminal with zero new process attempts.",
+      "related_commits": [
+        "81cfae78",
+        "dadd5ea8"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:87 manifests repository bytes, full contract minus provenance, argv/cwd, engine and installed environment.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:267 uses exact content key under logs/quick-dev-shared-executions; :149 requires complete nonzero all-passed structured events.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:195 re-reads immutable original descriptor/receipt/output; uses retain original case-report identity and are revalidated at Q7/Q8."
+      ],
+      "supersession_basis": "Only new content-bound original/use pairs qualify; legacy receipts are never upgraded. Git provenance alone may differ. Unknown imports/child processes/external reads prevent reusable publication.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_cross_slice_terminal_references_one_original_and_keeps_report_identity",
+          "line": 58,
+          "assertion_count": 6,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_git_only_commit_change_reuses",
+          "line": 72,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_content_or_environment_change_invalidates",
+          "line": 97,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_original_loss_or_corruption_rejected_at_use_and_closure",
+          "line": 118,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_q6_cross_slice_and_terminal_share_raw_execution",
+          "line": 160,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_native_terminal_and_q8_accept_reference_but_reject_missing_original",
+          "line": 193,
+          "assertion_count": 6,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_unknown_dependencies_and_actual_failures_never_publish_success",
+          "line": 229,
+          "assertion_count": 6,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_case_coverage_cannot_be_filled_by_another_assertion",
+          "line": 137,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Highest targeted cost: repeated full environment hashing (<=50000 installed/stdlib files, <=2 GiB read) and repo manifest (<=50000 paths, <=512 MiB read), plus child pytest; budget selectively and serially.",
+      "conflicts_or_gaps": [
+        "Known main P1: validate_saved_request compares historical GREEN manifest to current production at closure; parent owns fix and new changed-refactor regression.",
+        "Current manifest inventories all non-evidence repository files, so unrelated content changes invalidate sharing; do not silently weaken this conservative dependency boundary."
+      ]
+    },
+    {
+      "id": "execution-environment-normalization",
+      "optimization_intent": "Exclude only executor call metadata and private supervisor routing from child test environment and matching identity.",
+      "related_commits": [
+        "b9c701c1",
+        "dadd5ea8"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py:11 removes CODEX_TOOL_CALL_ID after workflow_unit_budget execution_environment removes three supervisor variables.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py uses quick-dev.pytest-environment.v2 and rejects unknown/older environment schema before comparing hashes.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py uses same execution_environment for actual collector process."
+      ],
+      "supersession_basis": "Older aggregate-only identities cannot establish the new filter and must not be relabeled. Every other variable, absence and empty value remain distinct.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_only_call_metadata_change_keeps_candidate_environment",
+          "line": 17,
+          "assertion_count": 4,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_nontransport_environment_changes_and_presence_remain_bound",
+          "line": 33,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_independent_processes_use_the_same_normalized_capture",
+          "line": 48,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_aggregate_only_or_unknown_schema_is_not_upgraded",
+          "line": 69,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_actual_pytest_child_and_reference_share_metadata_boundary",
+          "line": 98,
+          "assertion_count": 5,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "First four groups low; actual child/reference node medium-high due shared environment scans. No large fixture.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "q7-q8-original-dedup",
+      "optimization_intent": "Reduce repeated full original reads within one Q7 invocation or one Q8 predecessor replay epoch; retain every independent runtime edge check.",
+      "related_commits": [
+        "93d06e67",
+        "d86539b9"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:22 _Q7OriginalChecks queues exact content/context keys, watches inputs/directories/environment and finishes before publication.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:447 _q8_reread_edge checks each edge and lineage; per-predecessor originals object stays inside replay_budget_transition.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py validate_regression_references supports invocation-local deferred saved-request validator."
+      ],
+      "supersession_basis": "No persisted cross-call cache. Only genuine new completion progress resets inactivity; it never resets total allowance.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_same_original_checked_once_per_invocation",
+          "line": 36,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_mutation_during_validation_rejected",
+          "line": 75,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_each_edge_keeps_independent_identity_checks",
+          "line": 114,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_139_edges_check_three_q6_originals_and_main_only_four_times",
+          "line": 165,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_genuine_completion_does_not_reset_unit_total",
+          "line": 156,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py::test_q8_deduplicates_originals_but_checks_every_edge_within_replay_context",
+          "line": 169,
+          "assertion_count": 8,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py::test_q8_rejects_bad_proof_without_publishing",
+          "line": 207,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py::test_q8_detects_original_mutation_during_deferred_checks",
+          "line": 232,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Q7 synthetic tests low; Q8 real fixture medium. Assertions prove 139 uses validate four originals, and Q8 checks 11 edges/four originals with no cross-call cache.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "q6-scope-and-pytest-arguments",
+      "optimization_intent": "Defer genuinely terminal-wide regressions while preserving primary truth floor and exact slice-local commands; parse filter values separately from file inputs.",
+      "related_commits": [
+        "db157e76",
+        "13abf929",
+        "b908cb39",
+        "81cfae78",
+        "93d06e67"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py _pytest_path_arguments skips -k/-m/-o values, retains -c config and real targets, rejects missing values.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py _terminal_scope_command and run_regression_gate retain profile-specific required command set and immutable references."
+      ],
+      "supersession_basis": "standard/self-hosted require native agent-context commands; fast-ship may omit extras only. Terminal-scope deferral is not blanket single-file consumer suppression.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_long_keyword_value_is_not_probed_as_a_file",
+          "line": 19,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_filter_value_cannot_defer_a_real_slice_command",
+          "line": 45,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_pytest_argument_values_preserve_real_targets",
+          "line": 58,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_missing_filter_value_fails_closed",
+          "line": 64,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_requires_agent_context_and_publishes_no_refactor_result_without_it",
+          "line": 143,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_failed_declared_regression_blocks_refactor_result",
+          "line": 155,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_defers_terminal_whole_tree_pytest_command",
+          "line": 196,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_defers_shared_consumer_regression_file",
+          "line": 222,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_runs_explicit_single_file_consumer_fixture",
+          "line": 247,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Most parser/profile nodes low; missing-context/failed-regression nodes run tiny stage children. Last node runs repository test_plan_directory_loop (timeout 60s); omit from initial low-disk batch unless expressly budgeted.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "snapshot-incremental-dotnet-evidence-noise",
+      "optimization_intent": "Reuse earlier slice proof across unrelated slice changes and append-only generated evidence; exclude only actual dotnet project generated output trees.",
+      "related_commits": [
+        "997237e0",
+        "64e5c791",
+        "bbe60d0f",
+        "ebee96a6",
+        "7cbda6de",
+        "98e704ee",
+        "e6cfce46",
+        "f132bb38",
+        "5ec5410f",
+        "feafd682",
+        "94870bbf",
+        "e289d7d3",
+        "b6632aef"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:387 _replay_snapshot checks eight exact roots, plan evidence allowance and candidate changes outside explicit slice inputs.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py:410 hash_path ignores bin/obj/TestResults only when tree root contains .csproj; explicit output files stay bound.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py owns current run/batch evidence-noise exclusion; unknown production noise still fails.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py hashes long Windows evidence storage keys to bound path lengths."
+      ],
+      "supersession_basis": "Default snapshots remain content strict; documentary/governance input bytes only become runtime dependencies when explicitly bound. Evidence allowance never masks changed semantic plan or own production inputs.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_snapshot_outputs.py::test_project_snapshot_excludes_outputs_but_detects_source",
+          "line": 8,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_snapshot_outputs.py::test_explicit_output_and_non_project_bin_remain_bound",
+          "line": 22,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py::test_multi_path_plan_replay_allows_only_declared_append",
+          "line": 77,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py::test_slice_snapshot_reuse_keeps_production_inputs_bound",
+          "line": 92,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py::test_current_run_evidence_is_not_classified_as_repo_noise",
+          "line": 114,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py::test_sibling_slice_evidence_in_same_batch_is_not_classified_as_repo_noise",
+          "line": 127,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Hash-only dotnet nodes low; snapshot tests tiny Git; noise tests child pytest. No dotnet build required.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "dotnet-production-test-binding",
+      "optimization_intent": "Admit bounded pytest wrappers that statically target exact dotnet test/TRX and declared production owner.",
+      "related_commits": [
+        "83d4c975"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/dotnet_production_entry.py:112 follows safe subprocess argv, exact FullyQualifiedName, test csproj/reference, frozen C# source and actual production call.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py invokes dotnet route only as admission; runtime CER/TRX remains independent."
+      ],
+      "supersession_basis": "Permits exact compatible .NET binding without executing dotnet during admission; fabricated comments/strings/import-only/static no-op do not establish a call.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_accepts_bound_dotnet_without_executing_it",
+          "line": 36,
+          "assertion_count": 4,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_rejects_unbound_or_fabricated_entry",
+          "line": 67,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_requires_frozen_csharp_source",
+          "line": 74,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_rejects_project_escape",
+          "line": 81,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_accepts_static_call_and_subprocess_alias",
+          "line": 88,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_accepts_host_binding",
+          "line": 97,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Low: tiny AST/XML/text fixtures, no actual dotnet process.",
+      "conflicts_or_gaps": [
+        "Session guidance explicitly defers reusable TRX helper to pre-S2. Static .NET admission coverage is not real Windows/.NET execution evidence; this is an approved compatibility limit, not a new implementation requirement."
+      ]
+    },
+    {
+      "id": "bounded-first-use-entry",
+      "optimization_intent": "Prepare deterministic neutral missing production interfaces before Q2 without model-written bodies or implementation authority.",
+      "related_commits": [
+        "119e2407",
+        "127b26a4"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/first_use_entry.py:65 validates exact planned-new owner/write path and forbids frozen, symlink, tracked, escaping or existing paths; validates entire batch before writes.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/first_use_entry.py:109 creates immutable hash-bound Python return-None interface, empty JSON object or zero-byte TOML with exports=[]."
+      ],
+      "supersession_basis": "Preparation never satisfies expected RED; real controlled assertion failure still required. TOML support extends prior Python/JSON route only with strictly empty configuration.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_prepare_and_exact_resume_do_not_authorize_implementation",
+          "line": 35,
+          "assertion_count": 6,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_prepare_rejects_unbounded_input_before_writing",
+          "line": 56,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_prepared_real_entry_still_needs_controlled_red_and_detects_harness_error",
+          "line": 95,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_json_interface_has_no_candidate_supplied_data",
+          "line": 126,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_empty_toml_is_deterministic_and_not_configured_or_red",
+          "line": 28,
+          "assertion_count": 9,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_toml_keeps_all_input_and_path_rejections",
+          "line": 61,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_toml_receipt_revalidation_rejects_drift",
+          "line": 103,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_mixed_preparation_prevalidates_before_creating_toml",
+          "line": 126,
+          "assertion_count": 1,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Low-medium: many tiny Git init/commit fixtures; one real RED/harness child pair. Avoid calling it wholly process-free.",
+      "conflicts_or_gaps": []
+    },
+    {
+      "id": "q1-light-delivered-admission",
+      "optimization_intent": "Preflight delivered contracts deterministically without importing tests, creating runs, invoking BMAD reviews or model workers.",
+      "related_commits": [
+        "699b2b01",
+        "01d4bc57",
+        "f57c2998",
+        "51976790"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:68 validates actual materialized/planned refs and argv plus per-slice context projection.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py q1_preflight and _descriptor_inputs keep literal discovery/selection side-effect free."
+      ],
+      "supersession_basis": "Upstream review reports are not gates; native contract readability/hash/reference checks remain. Dynamic markers defer to execution rather than test imports.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1",
+          "line": 68,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee",
+          "line": 87,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_8888741bb36f",
+          "line": 102,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_e16830860490",
+          "line": 113,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_d07a4a77480c",
+          "line": 136,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_3a295774a883",
+          "line": 152,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py::test_q1_does_not_require_upstream_review_or_run_upstream_process",
+          "line": 17,
+          "assertion_count": 3,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py::test_q1_keeps_actual_contract_checks",
+          "line": 29,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py::test_reuse_binds_delivered_input_bytes_without_review_evidence",
+          "line": 38,
+          "assertion_count": 4,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Most nodes low/static. light_3a295774a883 calls actual VDD inspect_candidate (dirty VDD source can affect it); delivered reuse node performs shared scans/child pytest.",
+      "conflicts_or_gaps": [
+        "Do not attribute failures caused by pre-existing modified VDD files to fixed main without replaying those source blobs."
+      ]
+    },
+    {
+      "id": "approved-budget-compatibility",
+      "optimization_intent": "Replay original immutable successful proofs through one explicitly approved exact-byte budget transition without rerunning business fixtures.",
+      "related_commits": [
+        "c15c2839",
+        "e4e1377c",
+        "1b1bf3d8"
+      ],
+      "current_implementation": [
+        "scripts/quick_dev/approved_budget_replay.py exact transition/owner blobs and ContextVar scope provide original file reads only in opt-in Q8 context.",
+        ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py scopes predecessor rereads and deferred original checks to the explicit compatibility epoch."
+      ],
+      "supersession_basis": "ADR-0058 pins allowed before/after transition pairs, owner baseline, authority-empty binding and every unaffected byte. Ordinary native success/exact-cover gates remain.",
+      "test_nodes": [
+        {
+          "node": "scripts/quick_dev/tests/test_approved_budget_replay.py::test_reads_original_bytes_only_inside_explicit_q8_context",
+          "line": 44,
+          "assertion_count": 4,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": "scripts/quick_dev/tests/test_approved_budget_replay.py::test_extra_semantic_change_rejects_instead_of_masking",
+          "line": 57,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": "scripts/quick_dev/tests/test_approved_budget_replay.py::test_malformed_or_forged_binding_rejects",
+          "line": 68,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": "scripts/quick_dev/tests/test_approved_budget_replay.py::test_unrelated_fixture_and_exception_cleanup_remain_strict",
+          "line": 81,
+          "assertion_count": 2,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": "scripts/quick_dev/tests/test_approved_budget_replay.py::test_changed_owner_adapter_is_not_compatible",
+          "line": 120,
+          "assertion_count": 0,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        },
+        {
+          "node": "scripts/quick_dev/tests/test_public_budget_transfer.py::test_owner_q8_reuses_success_but_rejects_failed_stale_and_changed_cases",
+          "line": 18,
+          "assertion_count": 5,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Compatibility unit fixtures read pinned historical Git blobs and copy small owner files; public Q8 test executes real tiny CER stages. No 08-05 whole replay.",
+      "conflicts_or_gaps": [
+        "OWNER_FILES pins current behavior_routing.py/coverage_predicates.py byte hashes. Later owner changes need explicit compatibility decision; do not update pins silently or rewrite old evidence. Existing main owner files evolved after pinned c15c and should be assessed separately from proposed fixes."
+      ],
+      "main_static_owner_pin_comparison": [
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/behavior_routing.py",
+          "main_sha256": "26e967ece795d54cdc4df4ac6f181872a41b31f24315ba03d515fd8033317cf6",
+          "pinned_sha256": "c5e6d9402e456866299c51be9f21d17c9f1a20c93dcdeb67459342994638750f",
+          "matches": false
+        },
+        {
+          "path": ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py",
+          "main_sha256": "1d98150f7b23cf4df178c10941ecf02ab5b13a6982c4b049d966e193022bd620",
+          "pinned_sha256": "9e8c0343d5a15f51c1257d4f388633972484d0599efe5fc39ac80afaecb0fcc8",
+          "matches": false
+        }
+      ]
+    },
+    {
+      "id": "shared-worker-budget-model-boundary",
+      "optimization_intent": "Keep caller-session and local Codex worker transport inside native write guards; use per-content-unit cumulative budgets and configured model route.",
+      "related_commits": [
+        "46d4955b",
+        "db157e76",
+        "f7ac19db",
+        "57b00012",
+        "dadd5ea8"
+      ],
+      "current_implementation": [
+        ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py:27 uses workflow_unit_budget.unit then shared _llm_backend; actual worker mutator delta is validated before any successor evidence.",
+        "scripts/workflow_unit_budget.py per-content-key total/idle budget; execution_environment strips only supervisor variables; retries cannot renew allowance.",
+        "scripts/sc/host_session.py and _llm_backend.py preserve caller transport status without evidence authority; model routing lives in scripts/sc/workflow_model_routing.py."
+      ],
+      "supersession_basis": "Caller-session is an explicit transport route; caller/model text does not establish RED/GREEN/Acceptance. Native stable gate ownership remains.",
+      "test_nodes": [
+        {
+          "node": ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_host_session_worker.py::test_actual_host_q2_worker_obeys_native_write_set",
+          "line": 22,
+          "assertion_count": 9,
+          "review": "Entry call, fixture and assertions read; not executed in this task."
+        }
+      ],
+      "execution_cost": "Medium-low: local host-session thread/response, tiny Git and files, bounded join; no real Codex or network. Budget pure-state assertions are available in scripts/sc/tests/test_workflow_unit_budget.py.",
+      "conflicts_or_gaps": [
+        "Full LLM backend, replay lifecycle and model routing audit delegated to their owners; this matrix records direct QuickDev call boundary and complete path-scoped commit set."
+      ]
+    }
+  ],
+  "verification_limits": [
+    "No tests or workflows executed by this history subtask. Test node assertion/entry inspection is recorded explicitly.",
+    "No source, test, historical evidence, worktree, temporary directory, upload, push or commit mutation performed. Only this new append-sidecar file is written.",
+    "Baseline main source is 25580d7; worktree has pre-existing VDD and business-plan modifications.",
+    "Current skill and recovery/shared guides own current runtime behavior; older implementation-contract.v1 remains compatibility-only.",
+    "FastCtx tools unavailable in attached tool metadata; existing Bash read plane used.",
+    "Disk budget reported by parent approximately 394 MiB; avoid large fixtures and broad environment-scanning test groups in parallel."
+  ],
+  "recommended_test_policy": {
+    "first_low_cost_modules": [
+      "test_q7_original_checks.py",
+      "test_dotnet_snapshot_outputs.py",
+      "test_dotnet_production_entry.py",
+      "test_q4_no_production_change.py",
+      "test_ch456_red_production_entry_guard.py",
+      "test_skill_quality_red_binding.py"
+    ],
+    "then_scoped_real_process_modules": [
+      "test_shared_execution.py",
+      "test_stage_reentry.py",
+      "test_partial_obligation.py",
+      "test_cer_behavior_routing.py",
+      "test_coverage_predicates.py",
+      "test_execution_session.py"
+    ],
+    "direct_compatibility_modules": [
+      "scripts/quick_dev/tests/test_approved_budget_replay.py",
+      "scripts/quick_dev/tests/test_public_budget_transfer.py"
+    ],
+    "selection_notes": [
+      "All module shorthand paths use .agents/skills/quick-dev-tdd-adapter/tools/tests/.",
+      "Use python -B -m pytest -p no:cacheprovider with explicit node selections and a parent-approved logs basetemp; this task does not create scratch fixtures.",
+      "Keep slow environment hashing groups serial. Record measured duration/free disk before broadening.",
+      "Q6 last explicit-single-file consumer node and candidate_review_binding replay matrix node may invoke larger nested fixtures; exclude from first phase.",
+      "Read-only Q1 tests may be selected separately from delivered reuse/environment child tests."
+    ]
+  },
+  "guidance_read": [
+    "AGENTS.md",
+    "knowledge/toolchain-workflow-index.md",
+    ".agents/skills/quick-dev-tdd-adapter/SKILL.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/shared-execution.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/recovery-operation.md",
+    ".agents/skills/quick-dev-tdd-adapter/references/session-operation.md"
+  ]
+}

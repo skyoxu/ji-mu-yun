@@ -612,7 +612,7 @@ def test_product_behavior_failure_is_a_causal_expected_red_with_frozen_negation(
     obligation = _obligation("O-1")
     obligation["expected_behavior"] = "protected administrator change creates an auditable new active policy version"
     value = {"failure_intents": [{
-        "obligation_ids": ["O-1"], "failure_family": "test-harness-failure",
+        "obligation_ids": ["O-1"], "failure_family": "task-implementation-failure",
         "selector_intent": "select policy boundary test", "expected_outcome": "fail", "failure_id": "OLD",
     }]}
     result = _normalize_expected_red_for_product_behavior("v3", {"obligations": [obligation]}, value)

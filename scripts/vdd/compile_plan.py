@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import nullcontext
 from copy import deepcopy
 import json
 import hashlib
@@ -13,6 +14,13 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
+if __name__ == "__main__":
+    from skill_baseline import require_admission
+    try:
+        require_admission(ROOT, "vdd", sys.argv[1:])
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(json.dumps({"status": "blocked", "reason": str(exc), "authorizes": []}))
+        raise SystemExit(1)
 if __name__ == "__main__" and "--admission-only" not in sys.argv:
     from workflow_unit_budget import public_entry
     supervised_exit = public_entry("vdd", ROOT, sys.argv)
@@ -125,6 +133,8 @@ def main() -> int:
     parser.add_argument("--profile", choices=("standard", "resumable", "self-hosted"), default="standard")
     parser.add_argument("--companion", type=Path, action="append", default=[])
     parser.add_argument("--worker-cache", type=Path)
+    parser.add_argument("--source-scope", type=Path,
+                        help="Explicit source/ADR-bound exact Phase planning scope; never worker permission")
     parser.add_argument("--v3-contract-repair", type=Path,
                         help="Explicit source-bound V3 candidate corrections; independent V4 remains required")
     parser.add_argument("--v3-contract-repair-addendum", type=Path,
@@ -146,6 +156,8 @@ def main() -> int:
     parser.add_argument("--stop-after", choices=("v3",),
                         help="Pause normally after V3, V3A and execution preflight; never enter V4")
     parser.add_argument("--resume-from", choices=("first-failed-stage",), default=None)
+    parser.add_argument("--resume-planning-observation-from", type=Path,
+                        help="Reference an already returned native group-chunk planning observation on normal resume")
     parser.add_argument("--resume-worker-session", type=Path,
                         help="Explicit original caller-session transcript for validated legacy V1 cache replay")
     parser.add_argument(
@@ -176,7 +188,35 @@ def main() -> int:
                         help="Explicit reviewed runtime intent to bind as expected RED; requires handoff repair")
     parser.add_argument("--handoff-windows-launcher-slice", action="append", default=[],
                         help="Explicit slice whose retained pytest regressions use the Windows py -3 launcher")
+    parser.add_argument('--v1-classification-repair', type=Path,
+                        help='Source-checked quality-to-constraint correction for an unpublished native resume')
     args = parser.parse_args()
+    import semantic_phase_source_scope as phase_scope
+    try:
+        scope = phase_scope.load(ROOT, args.requirements, args.source_scope) if args.source_scope else None
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError) as exc:
+        parser.error(str(exc))
+    with phase_scope.session(ROOT, scope):
+        return _run(args, parser, scope)
+
+
+def _run(args, parser, scope):
+    if args.v1_classification_repair and (not args.resume_from or not args.resume_planning_observation_from or any((
+            args.worker_cache,args.recommendation_only,args.admission_only,args.companion,
+            args.repair_published_v3_from,args.repair_quick_dev_handoff_from,
+            args.v1_reuse_from_git_ref,args.v1_reuse_from_plan,args.v3_contract_repair_addendum,
+            args.published_v1_gap_extension,args.published_v1_replacement,args.published_v1_split,
+            args.resume_worker_session,args.stop_after))):
+        parser.error('V1 classification repair requires same-target unpublished ordinary resume and checked observation reference')
+    if args.resume_planning_observation_from and (not args.resume_from or any((
+            args.worker_cache, args.recommendation_only, args.admission_only,
+            args.repair_published_v3_from, args.repair_quick_dev_handoff_from,
+            args.v1_reuse_from_git_ref, args.v1_reuse_from_plan))):
+        parser.error("--resume-planning-observation-from requires ordinary native resume without alternate inputs")
+    if args.resume_planning_observation_from and args.v3_contract_repair and any((
+            args.companion, args.v3_contract_repair_addendum,
+            args.published_v1_gap_extension, args.published_v1_replacement, args.published_v1_split)):
+        parser.error("planning observation reference requires plain V3 candidate repair without alternate inputs")
     if args.admission_only and args.repair_quick_dev_handoff_from:
         parser.error("admission-only cannot combine handoff publication")
     if args.handoff_static_primary_slice and (not args.repair_quick_dev_handoff_from
@@ -389,6 +429,9 @@ def main() -> int:
             if state_path.exists() and json.loads(state_path.read_text(encoding="utf-8")).get("state") == "plan-ready":
                 raise ValueError("V3 candidate repair requires a failed or unpublished output directory")
             correction = candidate_repair.load_repair(args.v3_contract_repair, args.requirements)
+            if (args.resume_planning_observation_from or args.v1_classification_repair) and set(correction) != {
+                    "schema", "requirements_sha256", "authorizes", "obligation_contracts"}:
+                raise ValueError("planning observation reference requires the four-field plain V3 candidate repair")
             if "dependency_revision" in correction:
                 raise ValueError("dependency revision requires a validated published predecessor")
             if args.companion and "source_index_sha256" not in correction:
@@ -405,6 +448,9 @@ def main() -> int:
     if args.admission_only or admission["status"] == "blocked":
         result = {"status": "repair-vdd" if admission["status"] == "blocked" else "admission-only",
                   "admission": admission, "authorizes": []}
+        if args.result_json:
+            args.result_json.parent.mkdir(parents=True, exist_ok=True)
+            args.result_json.write_text(json.dumps(result, sort_keys=True) + "\n", encoding="utf-8")
         print(json.dumps(result, sort_keys=True))
         return 1 if admission["status"] == "blocked" else 0
     cache = None
@@ -414,6 +460,7 @@ def main() -> int:
             raise SystemExit("worker cache must be a JSON object")
         cache = value
     prepared_query = None
+    planning_decision_context = None
     planning_request = None
     try:
         # ADR-0048/AD-5: read-only advice precedes semantic scope, independent of governance.
@@ -421,6 +468,12 @@ def main() -> int:
         previous_worker = semantic_compiler.invoke_worker
         import semantic_resume_cache
         semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=args.resume_worker_session)
+        if args.v3_contract_repair and not args.repair_published_v3_from and "source_index_sha256" in correction:
+            # Keep admission first and use the normal structured failure path;
+            # invalid complete input must not depend on a device publication.
+            candidate_repair.validate_active_input(
+                semantic_compiler.build_source_index(ROOT, args.requirements, args.companion or ()),
+                root=ROOT, companions=args.companion or ())
         if not args.recommendation_only and not args.worker_cache:
             sys.path.insert(0, str(ROOT))
             from scripts.toolchain.knowledge_query import adapter
@@ -430,10 +483,16 @@ def main() -> int:
                 "stage": "vdd-repair" if args.resume_from or args.v3_contract_repair or published else "vdd-create",
                 "operation": "repair" if args.resume_from or args.v3_contract_repair or published else "create",
                 "task_id": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix(),
-                "inputs": inputs, "scope": inputs,
+                "inputs": inputs, "scope": list(dict.fromkeys([*inputs,
+                    *(p for p, _h in scope.dependencies)])) if scope is not None else inputs,
                 "query": "current source callers tests contracts " + " ".join(inputs),
                 "record_path": args.out_dir.resolve().relative_to(ROOT.resolve()).as_posix() + "/execution-record.md"}
-            prepared_query = adapter.prepare_consumption(planning_request, ROOT)
+            if args.resume_planning_observation_from:
+                from planning_observation_resume import reference
+                prepared_query, planning_decision_context = reference(root=ROOT, out_dir=args.out_dir,
+                    origin=args.resume_planning_observation_from, request=planning_request)
+            else:
+                prepared_query = adapter.prepare_consumption(planning_request, ROOT)
             if prepared_query["status"] == "blocked":
                 raise ValueError("PLANNING_QUERY_BLOCKED:" + prepared_query["query_result"]["reason_code"])
             def with_planning_context(**kwargs):
@@ -442,10 +501,17 @@ def main() -> int:
                 return previous_worker(**kwargs)
             semantic_compiler.invoke_worker = with_planning_context
         import semantic_v3_checkpoint
-        with semantic_v3_checkpoint.session(
+        classification_context = nullcontext()
+        if args.v1_classification_repair:
+            import semantic_v1_classification_repair as classification
+            classification_input = classification.load(args.v1_classification_repair,
+                root=ROOT,requirements=args.requirements,out_dir=args.out_dir)
+            classification_context = classification.session(classification_input,
+                root=ROOT,requirements=args.requirements,out_dir=args.out_dir)
+        with classification_context, semantic_v3_checkpoint.session(
             root=ROOT, out_dir=args.out_dir,
             enabled=bool((args.stop_after or args.resume_from) and not args.worker_cache
-                         and not published and not args.v3_contract_repair),
+                         and not published and not args.v3_contract_repair and not args.v1_classification_repair),
             resume=bool(args.resume_from),
         ):
             result = compile_plan(
@@ -477,7 +543,8 @@ def main() -> int:
                            if split else {}),
                     })
         if prepared_query is not None:
-            _record_planning_decisions(prepared=prepared_query, request=planning_request,
+            _record_planning_decisions(prepared=(planning_decision_context if planning_decision_context is not None
+                                                else prepared_query), request=planning_request,
                                        result=result, out_dir=args.out_dir)
     except WorkerTransportError as exc:
         result = {"status": "repair-vdd", "stage": exc.stage, "repair_class": "transport",
@@ -492,8 +559,12 @@ def main() -> int:
             _archive_repair_publications(args.out_dir)
         result = {"status": "repair-vdd", "reason": str(exc)}
     semantic_compiler.invoke_worker = previous_worker
+    if args.resume_planning_observation_from and prepared_query is not None:
+        result["planning_observation_reuse"] = prepared_query
     result["admission"] = admission
     result["worker_cache_reuse"] = semantic_resume_cache.statistics()
+    if scope is not None:
+        result["source_scope"] = {"sha256": scope.identity, "authorizes": []}
     semantic_resume_cache.configure(root=ROOT, out_dir=args.out_dir, session=None)
     if args.result_json:
         args.result_json.parent.mkdir(parents=True, exist_ok=True)

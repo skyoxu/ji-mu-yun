@@ -2,7 +2,9 @@
 
 Fixtures are isolated local Git repositories. Legacy catalog arguments test
 the existing CLI compatibility interface; canonical missing-publication denial
-is tested separately. No debug bypass flag, publication or BMAD flow is used.
+is tested separately. Valid data is produced only at fresh pytest fixture roots
+through the existing native maintenance entry; the actual repository is never
+published or modified. No debug bypass flag or BMAD flow is used.
 """
 import copy
 import hashlib
@@ -10,6 +12,7 @@ import io
 import importlib.util
 import shutil
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -154,45 +157,167 @@ def test_contract_ca335d988af5(tmp_path, monkeypatch, capsys, scenario, status, 
     assert _content_snapshot(tmp_path) == before
 
 
-@pytest.fixture(scope='module')
-def published_vdd_base(tmp_path_factory):
-    """Copy an actual existing generation; never manufacture or republish one."""
-    root = tmp_path_factory.mktemp('published-vdd-base')
-    relative_paths = [
-        'knowledge/snapshots/repository-source-snapshot.v1.json',
-        'knowledge/catalogs/repository-knowledge-catalog.v2.json',
-        'knowledge/catalogs/repository-knowledge-catalog.v1.json',
-        'knowledge/projections/consumer-projections.v1.json',
-        'knowledge/policies/consumer-policies.v2.json',
-        'knowledge/policies/source-exclusions.v1.json',
-        'knowledge/evaluation/repository-knowledge-query-suite.v1.json',
-        'knowledge/indexes/current.json', 'knowledge/planning-query.toml',
-    ]
-    canonical = [ROOT / p for p in relative_paths[1:2] + relative_paths[4:5] + relative_paths[3:4]]
-    assert core.verify_current_publication(ROOT, catalog_path=canonical[0],
-        policy_path=canonical[1], projections_path=canonical[2])
-    pointer = json.loads((ROOT / 'knowledge/indexes/current.json').read_text(encoding='utf-8'))
-    generation = Path('knowledge/indexes/generations') / pointer['generation_id']
-    manifest = json.loads((ROOT / generation / 'manifest.json').read_text(encoding='utf-8'))
-    report = generation / manifest['artifacts']['query_report']['bundle_path']
-    assert (ROOT / report).resolve().is_relative_to((ROOT / generation).resolve())
-    for relative in [*relative_paths, generation / 'manifest.json', report]:
-        _put(root, relative, (ROOT / relative).read_bytes())
-    # Borrow real source objects read-only, without checking out the repository
-    # or restoring any installed skill. Fixture refs are independent copies.
+def _copy_published_fixture(source, destination, **kwargs):
+    """Share only the fixture index; Git writers replace it via index.lock."""
+    index = Path(source) / '.git/index'
+    def copy_file(src, dst):
+        if Path(src) == index and not Path(src).is_symlink():
+            try:
+                os.link(src, dst)
+                return str(dst)
+            except OSError:
+                pass
+        return shutil.copy2(src, dst)
+    return shutil.copytree(source, destination, copy_function=copy_file, **kwargs)
+
+
+_PUBLISHED_FIXTURE_MAIN = '25580d700da91d2702fd234a024a616d55419f90'
+
+
+def _prepare_published_main_fixture(root):
+    """Build genuine fixture-only data from immutable main, never device state."""
+    root = Path(root).resolve()
+    if root == ROOT.resolve() or (root / '.git').exists():
+        raise ValueError('publication fixture requires a fresh non-repository root')
+    import publish_knowledge_catalog as publication
+    # The cloned object store is read-only shared; refs/index are fixture-owned.
     subprocess.run(['git', 'clone', '--shared', '--bare', str(ROOT), str(root / '.git')],
                    capture_output=True, check=True, timeout=15)
     _git(root, 'config', '--local', 'core.bare', 'false')
     _git(root, 'symbolic-ref', 'HEAD', 'refs/heads/main')
-    # A fresh-publication control must use the actual published source commit,
-    # not pretend this older generation is fresh at today's repository main.
-    # Only independent fixture refs change; the real repository is read-only.
-    _git(root, 'update-ref', 'refs/heads/main', pointer['main_commit'])
+    _git(root, 'update-ref', 'refs/heads/main', _PUBLISHED_FIXTURE_MAIN)
     _git(root, 'read-tree', 'refs/heads/main')
-    assert _git(root, 'rev-parse', 'refs/heads/main') == pointer['main_commit']
-    agents = subprocess.check_output(['git', '-C', str(ROOT), 'show', pointer['main_commit'] + ':AGENTS.md'], timeout=10)
-    _put(root, 'AGENTS.md', agents)
+    names = {p.as_posix() for p in (*publication.CONTROL_PATHS, *publication.INPUT_PATHS.values())}
+    names.update(('AGENTS.md', 'knowledge/planning-query.toml'))
+    names.update(_git(root, 'ls-tree', '-r', '--name-only', _PUBLISHED_FIXTURE_MAIN,
+                      'knowledge/contracts').splitlines())
+    for name in sorted(names):
+        payload = subprocess.check_output(['git', '-C', str(ROOT), 'show',
+                                          _PUBLISHED_FIXTURE_MAIN + ':' + name], timeout=10)
+        _put(root, name, payload)
+    request_path = Path('logs/knowledge-context/publication-requests/pytest-fixture.json')
+    # This operator record and generation exist only inside the fresh fixture.
+    # Use the real preparer and producer: no private tokens, forged manifests,
+    # replaced policy, publication bypass or mutation of the actual repository.
+    command = [sys.executable, '-B', str(ROOT / '.agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py'),
+        '--repository-root', str(root), '--request-id', 'pytest-fixture-only',
+        '--trigger', 'operator-requested', '--target-plan',
+        'execution-plans/2026-07-26-knowledge-locator-workflow-integration',
+        '--output', request_path.as_posix(), '--ack-maintainer']
+    subprocess.run(command, check=True, capture_output=True, text=True, timeout=20)
+    result = publication.run(root, publish=True, repeat=1, publication_request=request_path)
+    assert result['status'] == 'published', result
+    assert result['main_commit'] == _PUBLISHED_FIXTURE_MAIN
+    assert result['evaluation']['failed'] == result['evaluation']['protocol_failed'] == 0
+    paths = [root / p for p in ('knowledge/catalogs/repository-knowledge-catalog.v2.json',
+        'knowledge/policies/consumer-policies.v2.json', 'knowledge/projections/consumer-projections.v1.json')]
+    assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1],
+                                           projections_path=paths[2])
+    # Preload the genuine committed B bundle before any bounded query. The
+    # switch callback must only read fixture bytes, never launch a large Git
+    # subprocess inside the adapter's bounded transport scope.
+    legacy_name = 'logs/quick-dev-s12-20261025/existing-generation-B-pointer.json'
+    legacy_pointer = subprocess.check_output(['git', '-C', str(ROOT), 'show',
+        _PUBLISHED_FIXTURE_MAIN + ':' + legacy_name], timeout=10)
+    legacy = json.loads(legacy_pointer)
+    generation = Path('knowledge/indexes/generations') / legacy['generation_id']
+    manifest_bytes = subprocess.check_output(['git', '-C', str(ROOT), 'show',
+        _PUBLISHED_FIXTURE_MAIN + ':' + (generation / 'manifest.json').as_posix()], timeout=10)
+    manifest = json.loads(manifest_bytes)
+    _put(root, 'fixtures/retained-generation-B-pointer.json', legacy_pointer)
+    _put(root, generation / 'manifest.json', manifest_bytes)
+    for metadata in manifest['artifacts'].values():
+        relative = generation / metadata['bundle_path']
+        payload = subprocess.check_output(['git', '-C', str(ROOT), 'show',
+            _PUBLISHED_FIXTURE_MAIN + ':' + relative.as_posix()], timeout=10)
+        assert 'sha256:' + hashlib.sha256(payload).hexdigest() == metadata['sha256']
+        _put(root, relative, payload)
     return root
+
+
+@pytest.fixture(scope='module')
+def published_vdd_base(tmp_path_factory, request):
+    """Prepare a valid current-policy fixture without reading device publication."""
+    patch = pytest.MonkeyPatch()
+    patch.setenv('GIT_OPTIONAL_LOCKS', '0')
+    request.addfinalizer(patch.undo)
+    return _prepare_published_main_fixture(tmp_path_factory.mktemp('published-vdd-base'))
+
+
+def test_published_fixture_does_not_read_device_generation(tmp_path, monkeypatch):
+    private = {str((ROOT / name).resolve()) for name in (
+        'knowledge/indexes/current.json', 'knowledge/projections/consumer-projections.v1.json',
+        'knowledge/catalogs/repository-knowledge-catalog.v2.json',
+        'knowledge/catalogs/repository-knowledge-catalog.v1.json',
+        'knowledge/snapshots/repository-source-snapshot.v1.json')}
+    original_bytes, original_text = Path.read_bytes, Path.read_text
+    def no_device_bytes(path, *args, **kwargs):
+        assert str(path.resolve()) not in private, 'Device generation must not be read by the fixture'
+        return original_bytes(path, *args, **kwargs)
+    def no_device_text(path, *args, **kwargs):
+        assert str(path.resolve()) not in private, 'Device generation must not be read by the fixture'
+        return original_text(path, *args, **kwargs)
+    monkeypatch.setattr(Path, 'read_bytes', no_device_bytes)
+    monkeypatch.setattr(Path, 'read_text', no_device_text)
+    fixture = _prepare_published_main_fixture(tmp_path)
+    pointer = json.loads((fixture / 'knowledge/indexes/current.json').read_text(encoding='utf-8'))
+    assert pointer['main_commit'] == _git(fixture, 'rev-parse', 'HEAD') == _PUBLISHED_FIXTURE_MAIN
+    assert (fixture / 'logs/knowledge-context/publication-requests/pytest-fixture.json').is_file()
+
+
+def test_published_fixture_refuses_actual_repository_before_writes():
+    with pytest.raises(ValueError, match='fresh non-repository root'):
+        _prepare_published_main_fixture(ROOT)
+
+
+def test_published_fixture_index_storage_preserves_independent_git_writes(published_vdd_base, tmp_path):
+    """ADR-0041: retain full real source identity without duplicate index blocks."""
+    import os
+    first, *_ = _s7_inputs(published_vdd_base, tmp_path / 'first')
+    second, *_ = _s7_inputs(published_vdd_base, tmp_path / 'second')
+    index = published_vdd_base / '.git/index'
+    original_index = index.read_bytes()
+    original_agents = (published_vdd_base / 'AGENTS.md').read_bytes()
+    probe = tmp_path / 'link-probe'
+    probe.write_bytes(b'probe')
+    try:
+        os.link(probe, tmp_path / 'link-probe-copy')
+    except OSError:
+        pass
+    else:
+        assert os.path.samefile(index, first / '.git/index')
+        assert os.path.samefile(index, second / '.git/index')
+    assert (first / '.git/index').read_bytes() == original_index
+    assert _git(first, 'ls-files') == _git(published_vdd_base, 'ls-files')
+    assert _git(first, 'rev-parse', 'HEAD') == _git(published_vdd_base, 'rev-parse', 'HEAD')
+    assert not os.path.samefile(first / 'AGENTS.md', published_vdd_base / 'AGENTS.md')
+    (first / 'AGENTS.md').write_bytes(original_agents + b'\nFixture-only changed source.\n')
+    assert _git(first, 'status', '--porcelain', '--', 'AGENTS.md') == 'M AGENTS.md'
+    assert index.read_bytes() == original_index
+    _git(first, 'add', 'AGENTS.md')
+    assert not os.path.samefile(index, first / '.git/index')
+    assert _git(first, 'status', '--porcelain', '--', 'AGENTS.md') == 'M  AGENTS.md'
+    assert _git(second, 'status', '--porcelain', '--', 'AGENTS.md') == ''
+    assert index.read_bytes() == (second / '.git/index').read_bytes() == original_index
+    assert (published_vdd_base / 'AGENTS.md').read_bytes() == original_agents
+    assert (second / 'AGENTS.md').read_bytes() == original_agents
+
+
+def test_published_fixture_copy_falls_back_without_shared_source_writes(tmp_path, monkeypatch):
+    source = tmp_path / 'base'
+    _put(source, '.git/index', b'Complete original index bytes')
+    _put(source, 'AGENTS.md', b'Original source bytes')
+    def no_link(*args, **kwargs):
+        raise OSError('Hardlinks unavailable on fixture filesystem')
+    monkeypatch.setattr(os, 'link', no_link)
+    clone = tmp_path / 'clone'
+    _copy_published_fixture(source, clone)
+    assert (clone / '.git/index').read_bytes() == (source / '.git/index').read_bytes()
+    assert not os.path.samefile(clone / '.git/index', source / '.git/index')
+    (clone / '.git/index').write_bytes(b'Changed isolated index')
+    (clone / 'AGENTS.md').write_bytes(b'Changed isolated source')
+    assert (source / '.git/index').read_bytes() == b'Complete original index bytes'
+    assert (source / 'AGENTS.md').read_bytes() == b'Original source bytes'
 
 
 @pytest.mark.cer_assertion('ASSERT_2E09F07252E1')
@@ -209,7 +334,7 @@ def test_contract_2e09f07252e1(published_vdd_base, tmp_path, monkeypatch, scenar
     import _knowledge_catalog_builder as builder
 
     root = tmp_path / 'published-copy'
-    shutil.copytree(published_vdd_base, root)
+    _copy_published_fixture(published_vdd_base, root)
     catalog_path = root / 'knowledge/catalogs/repository-knowledge-catalog.v2.json'
     policy_path = root / 'knowledge/policies/consumer-policies.v2.json'
     projection_path = root / 'knowledge/projections/consumer-projections.v1.json'
@@ -253,11 +378,14 @@ def test_contract_2e09f07252e1(published_vdd_base, tmp_path, monkeypatch, scenar
             assert not builder._module_allowed(restricted, vdd_policy)
             assert not core._policy_allows(restricted, request['query'], vdd_policy)
     if scenario == 'later-main-stale':
-        later_main = _git(ROOT, 'rev-parse', 'refs/heads/main')
-        _git(root, 'update-ref', 'refs/heads/main', later_main)
-        _git(root, 'read-tree', 'refs/heads/main')
-        _put(root, 'AGENTS.md', subprocess.check_output(
-            ['git', '-C', str(ROOT), 'show', later_main + ':AGENTS.md'], timeout=10))
+        # A new local fixture commit is genuinely later than the publication,
+        # even when the real device main already equals the publication.
+        agents = root / 'AGENTS.md'
+        agents.write_bytes(agents.read_bytes() + b'\nFixture-only later source revision.\n')
+        _git(root, 'add', 'AGENTS.md')
+        _git(root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+             'commit', '-qm', 'Fixture-only newer main')
+        assert _git(root, 'rev-parse', 'refs/heads/main') != pointer['main_commit']
     elif scenario == 'configuration-absent':
         (root / 'knowledge/planning-query.toml').unlink()
     elif scenario == 'publication-absent':
@@ -366,7 +494,7 @@ def test_contract_f96ecd3253a2(published_vdd_base, tmp_path, monkeypatch, stage,
     import jsonschema
 
     root = tmp_path / 'identity-copy'
-    shutil.copytree(published_vdd_base, root)
+    _copy_published_fixture(published_vdd_base, root)
     paths = [root / relative for relative in (
         'knowledge/catalogs/repository-knowledge-catalog.v2.json',
         'knowledge/policies/consumer-policies.v2.json',
@@ -382,7 +510,7 @@ def test_contract_f96ecd3253a2(published_vdd_base, tmp_path, monkeypatch, stage,
         'policy_revision': policy['policy_revision']}
     schema = json.loads((ROOT / 'knowledge/contracts/knowledge-locator-request.v1.schema.json').read_text(encoding='utf-8'))
     validator = jsonschema.Draft202012Validator(schema)
-    assert set(schema['properties']['consumer']['enum']) == {'vdd', 'quick-dev', 'bootstrap', 'refactor-acceptance'}
+    assert set(schema['properties']['consumer']['enum']) == {'vdd', 'quick-dev', 'bootstrap', 'refactor-acceptance', 'bmad-planning'}
     if scenario in {'unknown', 'stage-as-consumer'}:
         assert list(validator.iter_errors(request))
     else:
@@ -452,7 +580,7 @@ def test_contract_f96ecd3253a2(published_vdd_base, tmp_path, monkeypatch, stage,
 def _s7_inputs(published_vdd_base, tmp_path):
     import shutil
     root = tmp_path / 'admission-copy'
-    shutil.copytree(published_vdd_base, root)
+    _copy_published_fixture(published_vdd_base, root)
     paths = [root / p for p in (
         'knowledge/catalogs/repository-knowledge-catalog.v2.json',
         'knowledge/policies/consumer-policies.v2.json',
@@ -580,7 +708,7 @@ def test_contract_94c2d2fa535d(published_vdd_base, tmp_path, monkeypatch, scenar
     module = next(m for m in catalog['modules'] if m['source_path'] == 'AGENTS.md')
     # Recompute with the existing owner without writing/publishing a generation.
     assert builder.build_consumer_projections(catalog, policy) == projection
-    assert module['consumer_ids'] == sorted(builder._consumer_ids(module['primary_domain']))
+    assert module['consumer_ids'] == sorted(set(builder._consumer_ids(module['primary_domain'])) | {'bmad-planning'})
     expected_ids = {m['module_id'] for m in catalog['modules'] if
                     builder._module_allowed(m, next(p for p in policy['policies'] if p['consumer'] == 'vdd'))}
     assert core._projection_for(request, catalog, policy, projection) == expected_ids
@@ -619,7 +747,7 @@ def test_contract_f7401102fe99(published_vdd_base, tmp_path, monkeypatch, scenar
     import threading
     import time
     if scenario == 'windows-evidence':
-        _current_windows_runtime_evidence()
+        _historical_windows_runtime_evidence()
         return
     root, paths, _, _, _, request = _s7_inputs(published_vdd_base, tmp_path)
     renamed = root.with_name('repository space \u03c0')
@@ -760,11 +888,11 @@ def published_planning(published_vdd_base, tmp_path):
     root, paths, catalog, policy, _, envelope = _s7_inputs(published_vdd_base, tmp_path)
     pointer = json.loads((root/'knowledge/indexes/current.json').read_text(encoding='utf-8'))
     generation = Path('knowledge/indexes/generations') / pointer['generation_id']
-    manifest = json.loads((ROOT/generation/'manifest.json').read_text(encoding='utf-8'))
+    manifest = json.loads((root/generation/'manifest.json').read_text(encoding='utf-8'))
     # Keep real frozen layer originals for the switch/data-attribution check.
     for metadata in manifest['artifacts'].values():
         relative = generation / metadata['bundle_path']
-        _put(root, relative, (ROOT/relative).read_bytes())
+        _put(root, relative, (published_vdd_base/relative).read_bytes())
     vdd = next(p for p in policy['policies'] if p['consumer']=='vdd')
     needed = {'AGENTS.md', 'README.md'}
     for query in ('AGENTS.md', 'repository knowledge authority'):
@@ -784,19 +912,20 @@ def published_planning(published_vdd_base, tmp_path):
 
 
 def _s12_restore_existing_generation(root):
-    # Exact historical pointer, not a newly manufactured publication request.
-    pointer_bytes = (ROOT/'logs/quick-dev-s12-20261025/existing-generation-B-pointer.json').read_bytes()
+    # The native fixture preloaded and hash-verified these real main bytes.
+    # No device access or subprocess is allowed during the query callback.
+    pointer_bytes = (root/'fixtures/retained-generation-B-pointer.json').read_bytes()
     pointer = json.loads(pointer_bytes)
     generation = Path('knowledge/indexes/generations')/pointer['generation_id']
-    manifest_bytes = (ROOT/generation/'manifest.json').read_bytes()
+    manifest_bytes = (root/generation/'manifest.json').read_bytes()
     manifest = json.loads(manifest_bytes)
     _put(root,generation/'manifest.json',manifest_bytes)
-    for metadata in manifest['artifacts'].values():
+    for artifact_name, metadata in manifest['artifacts'].items():
         relative = generation/metadata['bundle_path']
-        data = (ROOT/relative).read_bytes()
+        data = (root/relative).read_bytes()
         assert 'sha256:'+hashlib.sha256(data).hexdigest()==metadata['sha256']
         _put(root,relative,data)
-        if metadata.get('repository_path'):
+        if artifact_name != 'query_report' and metadata.get('repository_path'):
             _put(root,metadata['repository_path'],data)
     _put(root,'knowledge/indexes/current.json',pointer_bytes)
     assert core.verify_current_publication(root, catalog_path=root/'knowledge/catalogs/repository-knowledge-catalog.v2.json',
@@ -822,7 +951,7 @@ def _s7_generation_switch(fixture):
         return hashes
     with patch.object(adapter,'_stream_source_hashes',switch),patch.object(core,'locate',locate):
         output=_planning_operation(fixture)
-    assert len(switched)==1 and switched[0]['generation_id']!=before['generation_id']
+    assert len(switched)==1 and switched[0]['generation_id']!=before['generation_id'], output
     if output.get('result',output).get('status',output.get('outcome'))=='blocked':
         assert not output.get('read_set') and not output.get('adopted')
     else:
@@ -3397,11 +3526,13 @@ def test_planning_closed_episode_does_not_retry(published_planning, monkeypatch)
 def _vdd_public_run(published_vdd_base, tmp_path_factory, mode='enabled'):
     import shutil
     root = tmp_path_factory.mktemp('vdd-public-consumption')
-    shutil.copytree(published_vdd_base, root, dirs_exist_ok=True)
+    _copy_published_fixture(published_vdd_base, root, dirs_exist_ok=True)
     for name in ('scripts', '.agents/skills/vdd-execution-plan',
                  '.agents/skills/quick-dev-tdd-adapter'):
         shutil.copytree(ROOT / name, root / name, dirs_exist_ok=True,
-                        ignore=shutil.ignore_patterns('__pycache__', '.pytest_cache'))
+                        ignore=shutil.ignore_patterns('__pycache__', '.pytest_cache', 'test_*.py', 'tests'))
+    helper = '.agents/skills/vdd-execution-plan/scripts/tests/test_ch456_compiler_closure.py'
+    _put(root, helper, (ROOT / helper).read_bytes())
     _put(root, 'src/compiler.py', b'VALUE = 1\n')
     _put(root, 'tests/test_compile.py',
          b'import runpy\nimport pytest\nfrom pathlib import Path\n@pytest.mark.cer_assertion("ASSERT-COMPILE")\ndef test_compile():\n'
@@ -3427,7 +3558,12 @@ def _vdd_public_run(published_vdd_base, tmp_path_factory, mode='enabled'):
     for candidate in preview.get('candidates', []):
         name = candidate['path']
         assert not name.startswith(('_bmad/', '.agents/skills/jimuyun-')), name
-        if not (root/name).exists():
+        if not (root/name).exists() or name == '.agents/skills/vdd-execution-plan/SKILL.md':
+            # This fixture exercises a fresh published-document hit with the
+            # current compiler code. Later current SKILL instructions may differ
+            # from that generation; do not pretend their changed bytes are fresh.
+            # Only the selected non-executable document is materialized. Never
+            # replace compiler, validator or transport code with old source.
             data = subprocess.check_output(['git','-C',str(ROOT),'show',
                 catalog['source_snapshot']['commit'] + ':' + name], timeout=10)
             _put(root, name, data)
@@ -3539,9 +3675,15 @@ def _assert_vdd_caller_record(sample, query):
         assert row['actual_use']['contract']==contract and row['actual_use']['effect']
         assert row['authority']=='observation-only' and row['authorizes']==[]
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==read['sha256'].removeprefix('sha256:')
-    for name in ('src/compiler.py','tests/test_compile.py'):
-        assert by_path[name]['decision']=='accepted'
-        assert by_path[name]['actual_use']['obligation_ids']==sorted(hint['obligation_ids'])
+    # Mere mentions are reference metadata, not delivered excerpts. The native
+    # journal must not invent an accepted read for a source it did not receive.
+    references = {r['path']: r for r in query['source_references']}
+    for name in ('src/compiler.py', 'tests/test_compile.py'):
+        assert name not in by_path and name not in reads
+        assert references[name]['role'] == 'reference-only' and 'excerpt' not in references[name]
+        assert references[name]['sha256'] == hashlib.sha256((root / name).read_bytes()).hexdigest()
+    assert hint['production_owners'] == ['src/compiler.py']
+    assert hint['execution_snapshot_paths'] == ['tests/test_compile.py']
     for item in query['candidates']:
         name=item['path']
         if name not in {*hint['production_owners'],*hint['execution_snapshot_paths'],'requirements.md'}:
@@ -3601,18 +3743,22 @@ def test_contract_8e3d097b669c(vdd_public_consumption):
     query = _vdd_current_episode(sample)
     root = sample['root']
     reads = {r['path']:r for r in query['read_set']}
-    assert {'requirements.md','src/compiler.py','tests/test_compile.py'} <= reads.keys()
+    assert 'requirements.md' in reads
+    references = {r['path']: r for r in query['source_references']}
+    assert {'src/compiler.py', 'tests/test_compile.py'} <= references.keys()
     assert 'src/compiler.py' not in {c['path'] for c in query['candidates']}
-    for name in ('src/compiler.py','tests/test_compile.py'):
-        actual = (root/name).read_bytes()
-        assert reads[name]['origin'] == 'direct-source'
-        assert reads[name]['sha256'].removeprefix('sha256:') == hashlib.sha256(actual).hexdigest()
-        assert reads[name]['read_identity'] and reads[name]['excerpt_range']
-    assert 'VALUE = 1' in reads['src/compiler.py']['excerpt']
-    assert 'def test_compile' in reads['tests/test_compile.py']['excerpt']
+    for name in ('src/compiler.py', 'tests/test_compile.py'):
+        actual = (root / name).read_bytes()
+        assert name not in reads
+        assert references[name]['role'] == 'reference-only' and 'excerpt' not in references[name]
+        assert references[name]['sha256'] == hashlib.sha256(actual).hexdigest()
+        assert references[name]['mentioned_in'] == ['requirements.md']
+    assert 'VALUE = 1' in reads['requirements.md']['excerpt']
+    assert 'tests/test_compile.py' in reads['requirements.md']['excerpt']
     # Query/source reads are already present at V1, before any V3 boundary.
     assert sample['trace'][0]['stage'].startswith('v1-')
     assert all(t['payload']['planning_source_observations']['query_result']['read_set'] == query['read_set']
+               and t['payload']['planning_source_observations']['query_result']['source_references'] == query['source_references']
                for t in sample['trace'])
     v3 = next(t['payload'] for t in sample['trace'] if t['stage'].startswith('v3'))
     assert 'VALUE = 1 implemented' == v3['obligations'][0]['state_before']
@@ -3740,7 +3886,7 @@ def test_contract_ce33174bfa28():
 @pytest.mark.cer_assertion('ASSERT_11A7E3CEF26B')
 def test_contract_58d790ed2d22(vdd_public_consumption):
     _vdd_current_episode(vdd_public_consumption)
-    _current_windows_runtime_evidence()
+    _historical_windows_runtime_evidence()
 
 
 
@@ -3752,7 +3898,7 @@ def test_contract_58d790ed2d22(vdd_public_consumption):
 @pytest.mark.cer_assertion('ASSERT_CEAD20C83823')
 @pytest.mark.cer_assertion('ASSERT_5F92AC05BCFA')
 def test_windows_planning_query_runtime_evidence():
-    _current_windows_runtime_evidence()
+    _historical_windows_runtime_evidence()
 
 
 # ADR-0048: current publication admission and permission-bound reuse.
@@ -3760,7 +3906,14 @@ def test_windows_planning_query_runtime_evidence():
 @pytest.mark.parametrize('missing', ['catalog', 'policy', 'projection', 'uninstalled'])
 def test_contract_2e09f07252e1_public_caller_missing_component(published_vdd_base, tmp_path, monkeypatch, capsys, missing):
     root = tmp_path / 'caller'
-    shutil.copytree(published_vdd_base, root)
+    _copy_published_fixture(published_vdd_base, root)
+    # The native V0 admission now validates the real QD consumer before query.
+    # Supply its actual pure-reader files so this test reaches its intended
+    # publication-missing boundary rather than failing an unrelated precondition.
+    _put(root, 'scripts/quick_dev/run.py', (ROOT / 'scripts/quick_dev/run.py').read_bytes())
+    tools = '.agents/skills/quick-dev-tdd-adapter/tools'
+    shutil.copytree(ROOT / tools, root / tools,
+                    ignore=shutil.ignore_patterns('__pycache__', 'tests'))
     requirement = _put(root, 'requirements.md', b'# FR-1\nRetain existing source.\n')
     paths = [root / p for p in adapter._CANONICAL]
     if missing == 'uninstalled':
@@ -3895,12 +4048,13 @@ def test_contract_c442b3b56fce_current_permissions(published_planning, monkeypat
         raise
 
 
-def _current_windows_runtime_evidence():
-    """ADR-0048: verified11-case platform subset, never full acceptance.
+def _historical_windows_runtime_evidence():
+    """ADR-0048: verify the immutable historical 11-case Windows subset.
 
     Preserve the13-case historical ZIP separately. This current original covers
     only its explicitly executed runtime nodes; none of the7 P1 cases is claimed.
-    Reader-only source edits do not relabel the Windows author/source identity.
+    Current source changes cannot inherit that execution. This reader validates
+    the original Git bytes, and returns current compatibility separately.
     """
     import ast
     import zipfile
@@ -3932,8 +4086,10 @@ def _current_windows_runtime_evidence():
         runtime = {'scripts/toolchain/knowledge_query/adapter.py', 'scripts/python/knowledge_locator.py',
                    'scripts/python/_knowledge_locator_core.py', 'knowledge/planning-query.toml'}
         assert set(expected) == runtime | {'scripts/toolchain/knowledge_query/tests/test_planning_query.py'}
+        commit = decode('commit.txt')
         for relative in runtime:
-            assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected[relative]
+            original_runtime = subprocess.check_output(['git', '-C', str(ROOT), 'show', commit + ':' + relative], timeout=15)
+            assert hashlib.sha256(original_runtime).hexdigest() == expected[relative]
         original = (evidence / 'original-test_planning_query.py').read_bytes()
         assert hashlib.sha256(original).hexdigest() == expected['scripts/toolchain/knowledge_query/tests/test_planning_query.py']
         # Compare actual runtime author code without importing the archived file.
@@ -3943,11 +4099,31 @@ def _current_windows_runtime_evidence():
             parsed = ast.parse(raw)
             parsed.body = [n for n in parsed.body if not (isinstance(n, ast.FunctionDef) and n.name in {
                 'test_contract_58d790ed2d22', 'test_windows_planning_query_runtime_evidence',
-                '_current_windows_runtime_evidence'})]
+                '_historical_windows_runtime_evidence', '_current_windows_runtime_evidence'})]
             for function in parsed.body:
                 if isinstance(function, ast.FunctionDef) and function.name == 'test_contract_f7401102fe99':
                     for branch in function.body:
                         if isinstance(branch, ast.If) and ast.unparse(branch.test) == "scenario == 'windows-evidence'":
                             branch.body = [ast.Pass()]
             return ast.dump(parsed, include_attributes=False)
-        assert runtime_tree(original) == runtime_tree(Path(__file__).read_bytes())
+        original_test = subprocess.check_output(['git', '-C', str(ROOT), 'show', commit + ':scripts/toolchain/knowledge_query/tests/test_planning_query.py'], timeout=15)
+        assert runtime_tree(original) == runtime_tree(original_test)
+        return {'historical_commit': commit, 'historical_case_count': 11,
+                'current_runtime_matches': all(hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == expected[relative]
+                                               for relative in runtime),
+                'scope': 'historical-execution-only; no current Windows execution claimed'}
+
+
+def test_retained_generation_switch_uses_preloaded_fixture_bytes(published_vdd_base, tmp_path, monkeypatch):
+    root = tmp_path / 'retained-switch'
+    _copy_published_fixture(published_vdd_base, root)
+    expected = json.loads((root / 'fixtures/retained-generation-B-pointer.json').read_text())
+    original = subprocess.check_output
+    def no_bundle_subprocess(argv, *args, **kwargs):
+        assert not ('show' in argv and any('knowledge/indexes/generations/' in str(v)
+            or 'existing-generation-B-pointer.json' in str(v) for v in argv))
+        return original(argv, *args, **kwargs)
+    monkeypatch.setattr(subprocess, 'check_output', no_bundle_subprocess)
+    pointer = _s12_restore_existing_generation(root)
+    assert pointer == expected
+    assert json.loads((root / 'knowledge/indexes/current.json').read_text()) == expected

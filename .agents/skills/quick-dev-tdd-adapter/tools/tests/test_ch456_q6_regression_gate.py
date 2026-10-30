@@ -93,7 +93,8 @@ def _bundle(validation_commands: list[list[str]] | None, *, include_context: boo
             "acceptance_ids": ["A-1"],
             "failure_intent_ids": ["FI-1"],
             "execution_snapshot_paths": ["tests/test_behavior.py", "tests/fixture.txt"],
-            "allowed_write_paths": ["src/value.txt"],
+            "production_owners": ["src/value.py", "src/value.txt"],
+            "allowed_write_paths": ["src/value.txt", "src/value.py"],
         }],
         "final_plan_coverage": [{"slice_id": "S1", "acceptance_id": "A-1", "stage_scope": ["red", "green", "refactor", "terminal"]}],
         "agent_contexts": contexts,
@@ -106,13 +107,14 @@ def _prepare(root: Path, bundle: dict) -> tuple[Path, Path]:
     run = root / "runs" / "R1"
     (run / "descriptors").mkdir(parents=True)
     (root / "src" / "value.txt").write_text("red\n", encoding="utf-8")
+    (root / "src/value.py").write_text("from pathlib import Path\ndef current_value():\n return Path(__file__).with_suffix('.txt').read_text(encoding='utf-8').strip()\n", encoding="utf-8")
     (root / "tests" / "fixture.txt").write_text("fixture\n", encoding="utf-8")
     (root / "tests" / "test_behavior.py").write_text(
-        "from pathlib import Path\n"
+        "from pathlib import Path\nfrom src.value import current_value\n"
         "import pytest\n@pytest.mark.cer_assertion('ASSERT-1')\n"
         "def test_behavior():\n"
         " root=Path(__file__).resolve().parents[1]\n"
-        " value=(root/'src'/'value.txt').read_text(encoding='utf-8').strip()\n"
+        " value=current_value()\n"
         " if value!='green': print('FAILURE_ID:EXPECTED-Q6')\n"
         " assert value=='green'\n",
         encoding="utf-8",
@@ -137,6 +139,9 @@ def _prepare(root: Path, bundle: dict) -> tuple[Path, Path]:
     red_result = execute_stage(workspace=root, semantic_plan=semantic, run_dir=run, descriptor_path=run / "descriptors" / "red.json", profile_identity="standard")
     assert red_result["failure_family"] == "expected-red" and red_result["predicate_result"] is True
     (root / "src" / "value.txt").write_text("green\n", encoding="utf-8")
+    green = successor_descriptor(red, stage="green", run_id="R1", candidate_hash="sha256:" + "2" * 64)
+    create_json(run / "descriptors/green.json", green)
+    assert execute_stage(workspace=root, semantic_plan=semantic, run_dir=run, descriptor_path=run / "descriptors/green.json", profile_identity="standard")["predicate_result"] is True
     return semantic, run
 
 

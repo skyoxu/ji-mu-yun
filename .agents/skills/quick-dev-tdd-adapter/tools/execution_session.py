@@ -1,11 +1,19 @@
 """ADR-0041: deterministic wiring of explicit native runs, without model calls."""
 from pathlib import Path
+import json
 import re
 import subprocess
 
 from runtime_evidence import ROOT_KINDS, create_json, load_json, safe_relative, sha256_bytes, sha256_value
 
 SCHEMA = "quick-dev.execution-session.v1"
+
+
+def _failure_history(root, path):
+    value = json.loads(_path(root, path).read_text(encoding="utf-8"))
+    if not isinstance(value, list) or any(not isinstance(row, dict) for row in value):
+        raise ValueError("session failure history must be an ordered list of objects")
+    return value
 
 
 def _path(root, value, *, output=False):
@@ -80,8 +88,8 @@ def preflight_session(api, semantic, request):
         api._detached_promotion_binding(_path(root, request["detached_bundle"]), request["profile"])
     elif request.get("detached_bundle") is not None:
         raise ValueError("detached_bundle requires self-hosted execution profile")
-    if "failure_history" in request and not isinstance(load_json(_path(root, request["failure_history"])), list):
-        raise ValueError("session failure history must be an ordered list")
+    if "failure_history" in request:
+        _failure_history(root, request["failure_history"])
     slices = request["slices"]
     if not isinstance(slices, list) or not slices or any(not isinstance(s, dict) for s in slices):
         raise ValueError("session slices must be explicit")
@@ -141,7 +149,7 @@ def advance_session(api, semantic, request, *, max_steps=8):
     root, bundle = api.ROOT, load_json(semantic)
     # A different profile, baseline, history or scope needs an explicit successor.
     create_json(_path(root, request["out"]).with_name("session-input.v1.json"), request)
-    history = load_json(_path(root, request["failure_history"])) if request.get("failure_history") else None
+    history = _failure_history(root, request["failure_history"]) if request.get("failure_history") else None
     steps, predecessors, used = [], [], 0
     def result(status, sid=None, action=None, **extra):
         return {"schema": "quick-dev.session-progress.v1", "status": status, "slice_id": sid,

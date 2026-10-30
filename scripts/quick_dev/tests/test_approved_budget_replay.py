@@ -11,6 +11,7 @@ TOOLS = REPO / ".agents/skills/quick-dev-tdd-adapter/tools"
 sys.path.insert(0, str(TOOLS))
 sys.path.insert(0, str(REPO / "scripts/quick_dev"))
 TRANSITION = "1b1bf3d8bb694c6f3932039118647a9eb59921ba"
+PINNED_OWNER_REVISION = "c15c2839f1ccaa3e4e4ca0febd67f3b009aed3dd"
 PATHS = ("scripts/sc/skill_replay_runtime.py", "scripts/sc/tests/tc_d1_cer/conftest.py")
 
 
@@ -28,7 +29,11 @@ def materialize(root):
     for relative in owner().OWNER_FILES:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes((REPO / relative).read_bytes())
+        # Historical compatibility admits exactly this old adapter version,
+        # never the current implementation or an updated allowlist hash.
+        payload = subprocess.check_output(["git", "show", PINNED_OWNER_REVISION + ":" + relative], cwd=REPO)
+        assert __import__('hashlib').sha256(payload).hexdigest() == owner().OWNER_FILES[relative]
+        path.write_bytes(payload)
     relative = next(p for p in owner().PAIRS if p.endswith(".md"))
     path = root / relative
     path.parent.mkdir(parents=True, exist_ok=True)
