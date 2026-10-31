@@ -44,6 +44,8 @@ class _Q7OriginalChecks:
             self.seals[path] = self._stamp(path)
         # Directory seals detect additions/removals/replacements as well as
         # edits to existing inputs. Do not watch unrelated /tmp or / globally.
+        if path == self.workspace:
+            return
         parent = path.parent
         while parent != parent.parent and str(parent) not in {"/tmp", "/workspace"}:
             if parent not in self.seals:
@@ -102,7 +104,10 @@ class _Q7OriginalChecks:
                     path = resolve_file(evidence, name + ".bin")
                     if sha256_bytes(path.read_bytes()) != receipt.get(name + "_sha256"):
                         raise ValueError(f"{self.label} original output changed")
-            validate_saved_request(self.workspace, evidence, descriptor, receipt)
+            if descriptor.get("stage") == "green":
+                validate_saved_request(self.workspace, evidence, descriptor, receipt, historical_green=True)
+            else:
+                validate_saved_request(self.workspace, evidence, descriptor, receipt)
         self.jobs[key] = check
 
     def gate(self, gate_path, gate):
@@ -229,13 +234,18 @@ def _reread_edge(workspace: Path, run_root: Path, ref: Mapping[str, str], *, sli
         raise ValueError("descriptor hash stale")
     from shared_execution import validate_saved_request
     if originals is None:
-        validate_saved_request(workspace, run_root / "canonical-evidence" / stage, descriptor, receipt)
+        if stage == "green":
+            validate_saved_request(workspace, run_root / "canonical-evidence" / stage,
+                                   descriptor, receipt, historical_green=True)
+        else:
+            validate_saved_request(workspace, run_root / "canonical-evidence" / stage, descriptor, receipt)
     else:
         originals.saved(run_root / "canonical-evidence" / stage,
                         descriptor_path, descriptor,
                         resolve_file(run_root, edge["receipt_ref"]), receipt)
     from case_evidence import assertion_cases, reread_stage_cases, VERSION
-    cases = assertion_cases(descriptor, receipt)
+    cases = (assertion_cases(descriptor, receipt, historical_green=True) if stage == "green"
+             else assertion_cases(descriptor, receipt))
     if stage in {"green", "refactor"} and cases != reread_stage_cases(run_root, "red"):
         raise ValueError("case-set-changed-since-red")
     key = (edge.get("acceptance_id"), edge.get("assertion_id"))

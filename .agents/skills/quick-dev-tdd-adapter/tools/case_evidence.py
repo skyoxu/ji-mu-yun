@@ -95,7 +95,7 @@ def run_cases(descriptor, cwd):
         return process, report, error, actual_argv
 
 
-def assertion_cases(descriptor, receipt, *, keys=None, expected=None):
+def assertion_cases(descriptor, receipt, *, keys=None, expected=None, historical_green=False):
     """Return admissible node IDs per assertion or precise fail-closed diagnostics."""
     from runtime_evidence import sha256_value, sha256_bytes
     validate_contract(descriptor)
@@ -109,7 +109,7 @@ def assertion_cases(descriptor, receipt, *, keys=None, expected=None):
     report_descriptor = descriptor
     if receipt.get("execution_reference") is not None:
         from shared_execution import validate_use
-        report_descriptor = validate_use(descriptor, receipt)
+        report_descriptor = validate_use(descriptor, receipt, historical_green=historical_green)
     if (report.get("descriptor_sha256") != sha256_value(report_descriptor)
             or report.get("run_id") != report_descriptor["run_id"] or report.get("stage") != report_descriptor["stage"]
             or report.get("exit_code") != receipt.get("exit_code")

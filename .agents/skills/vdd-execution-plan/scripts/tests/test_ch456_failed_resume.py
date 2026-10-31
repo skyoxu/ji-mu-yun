@@ -21,9 +21,11 @@ def test_atomic_recall_failure_can_be_repaired_in_same_out_dir_and_resumed(tmp_p
     def unexpected_live_call(*args, **kwargs):
         raise AssertionError("resume regression must not invoke a live backend")
 
-    monkeypatch.setitem(sys.modules, "_llm_backend", SimpleNamespace(
-        run_llm_exec=unexpected_live_call, resolve_llm_backend=unexpected_live_call,
-    ))
+    monkeypatch.syspath_prepend(str(SCRIPTS.parents[3] / "scripts/sc"))
+    import _llm_backend
+    # Preserve the real pure inspection interface; forbid actual live transport.
+    monkeypatch.setattr(_llm_backend, "run_llm_exec", unexpected_live_call)
+    monkeypatch.setattr(_llm_backend, "resolve_llm_backend", unexpected_live_call)
     root, req, owner, selector = _repo(tmp_path)
     out = root / "plan"
     broken = _cache(owner, selector)

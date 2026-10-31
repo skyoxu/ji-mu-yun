@@ -202,6 +202,11 @@ def _ground_test_path_for_source(raw: object, source_text: str, test_class: str 
 
 def ground_v3_paths(root: Path, payload: Mapping[str, Any], value: Mapping[str, Any]) -> tuple[Mapping[str, Any], list[dict[str, Any]]]:
     """Return a grounded copy and auditable finite-path projection changes."""
+    import semantic_phase_source_scope as phase_scope
+    # ADR-0041/0043: exact selected paths are not stale legacy aliases. Keep
+    # their roles for the current strict scope gate; never infer new authority.
+    if phase_scope.current(root) is not None:
+        return value, []
     hints = value.get("slice_hints")
     if not isinstance(hints, list):
         return value, []

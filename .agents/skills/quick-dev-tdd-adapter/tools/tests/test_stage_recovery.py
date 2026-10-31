@@ -16,6 +16,39 @@ def _load(name: str):
     return module
 
 
+
+def _bind_structural_successor(run):
+    """Provide the real current binding fields required by the recovery reader.
+
+    The routing unit fixture supplies its own content-bound validator and plan;
+    production validator/admission behavior has separate native lifecycle tests.
+    """
+    root = next(parent.parent for parent in run.parents if parent.name == "logs")
+    plan = root / "execution-plans/fixture-plan"
+    plan.mkdir(parents=True)
+    (plan / "implementation-contract.v1.json").write_text(json.dumps({"plan_id": "fixture-plan"}))
+    identity = {key: "sha256:fixture-" + key for key in
+        ("candidate_hash", "predicate_input_root", "authority_root", "validator_root", "closure_definition_hash")}
+    identity.update(validator_version="fixture-v1", candidate_manifest={"probe.py": "sha256:probe"})
+    validator = plan / "validate.py"
+    validator.write_text("def current_candidate_identity(slice_id):\n    return " + repr(identity) + "\n")
+    (root / "probe.py").write_text("assert True\n")
+    basis_path = run / "red-basis.v1.json"
+    receipt_path = run / "implementation-successor.v1.json"
+    basis = json.loads(basis_path.read_text())
+    basis.update(plan_binding={"plan_id": "fixture-plan", "path_type": "repo_path",
+        "path": "execution-plans/fixture-plan", "contract_path": "implementation-contract.v1.json",
+        "validator_path": "validate.py"}, contract_hash="sha256:" + hashlib.sha256(
+        (plan / "implementation-contract.v1.json").read_bytes()).hexdigest(),
+        validator_hash="sha256:" + hashlib.sha256(validator.read_bytes()).hexdigest(),
+        test_sha256="sha256:" + hashlib.sha256((root / "probe.py").read_bytes()).hexdigest())
+    basis_path.write_text(json.dumps(basis))
+    receipt = json.loads(receipt_path.read_text())
+    receipt.update(red_basis_sha256="sha256:" + hashlib.sha256(basis_path.read_bytes()).hexdigest(),
+        contract_hash=basis["contract_hash"], validator_hash=basis["validator_hash"],
+        post_implementation_candidate=identity)
+    receipt_path.write_text(json.dumps(receipt))
+
 def test_router_recognizes_a_current_red_handoff():
     router = _load("route_plan_directory")
     assert router.next_stage_action(["red"]) == "implement"
@@ -25,7 +58,7 @@ def test_router_recognizes_a_current_red_handoff():
 def test_persisted_stage_router_requires_each_boundary():
     driver = _load("loop_plan_directory")
     with tempfile.TemporaryDirectory() as temp:
-        run = Path(temp) / "RUN-001"
+        run = Path(temp) / "logs" / "tdd-adapter" / "fixture-plan" / "S0" / "RUN-001"
         observations = run / "observations"
         observations.mkdir(parents=True)
         (run / "stage-state.json").write_text(json.dumps({"stage": "red"}), encoding="utf-8")
@@ -50,6 +83,7 @@ def test_persisted_stage_router_requires_each_boundary():
             "changed_paths": ["probe.py"],
             "authorizes": [],
         }), encoding="utf-8")
+        _bind_structural_successor(run)
         (run / "stage-state.json").write_text(json.dumps({"stage": "implement"}), encoding="utf-8")
         assert driver.route_staged_run(run) == "green"
         (run / "stage-state.json").write_text(json.dumps({"stage": "green"}), encoding="utf-8")
@@ -65,7 +99,7 @@ def test_persisted_stage_router_requires_each_boundary():
 def test_recovery_derives_refactor_without_stage_state():
     driver = _load("loop_plan_directory")
     with tempfile.TemporaryDirectory() as temp:
-        run = Path(temp) / "RUN-001"
+        run = Path(temp) / "logs" / "tdd-adapter" / "fixture-plan" / "S0" / "RUN-001"
         observations = run / "observations"
         observations.mkdir(parents=True)
         (observations / "red-observed.json").write_text(json.dumps({"stage": "red", "exit_code": 1}), encoding="utf-8")
@@ -85,6 +119,7 @@ def test_recovery_derives_refactor_without_stage_state():
         }), encoding="utf-8")
         (observations / "green-observed.json").write_text(json.dumps({"stage": "green", "exit_code": 0}), encoding="utf-8")
 
+        _bind_structural_successor(run)
         assert not (run / "stage-state.json").exists()
         assert driver.route_staged_run(run) == "refactor"
         assert json.loads((run / "stage-state.json").read_text(encoding="utf-8"))["derived"] is True

@@ -13,6 +13,26 @@ from scripts.sc import skill_replay_runtime as runtime
 
 
 class NativeProcessOwnershipTests(unittest.TestCase):
+    def test_local_quality_validator_is_not_a_replay_consumer_by_name_alone(self):
+        source = Path(__file__).resolve().parents[1] / 'validate_skill_quality.py'
+        imports, lines = runtime._source_at(source.read_bytes(), str(source))
+        self.assertTrue(imports)
+        self.assertEqual((), lines)
+
+    def test_local_validator_definition_cannot_hide_a_real_consumer_call(self):
+        cases = [
+            b"def validate_package(value):\n return value\nfrom native import validate_package as check\ncheck('x')\n",
+            b"def validate_package(value):\n return native.validate_package(value)\nvalidate_package('x')\n",
+            b"def validate_package(value):\n return value\nfrom native import validate_package\nvalidate_package('x')\n",
+            b"def validate_package(value):\n return value\nfrom native import other as validate_package\nvalidate_package('x')\n",
+            b"def validate_package(value):\n return value\nvalidate_package = native.other\nvalidate_package('x')\n",
+            b"@native.decorator\ndef validate_package(value):\n return value\nvalidate_package('x')\n",
+            b"validate_package('unresolved-is-still-conservative')\n",
+        ]
+        for source in cases:
+            with self.subTest(source=source):
+                self.assertTrue(runtime._source_at(source, 'consumer.py')[1])
+
     def test_normal_leader_exit_drains_descendants_before_stdio_cleanup(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

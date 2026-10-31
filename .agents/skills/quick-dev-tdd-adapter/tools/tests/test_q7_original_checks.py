@@ -199,3 +199,46 @@ def test_139_edges_check_three_q6_originals_and_main_only_four_times(tmp_path, m
     other_scope = q7._Q7OriginalChecks(tmp_path, lambda _: None)
     with pytest.raises(ValueError, match='Q6 original output changed'):
         other_scope.gate(gate_path, gate)
+
+
+@pytest.mark.parametrize('change', ['added', 'replaced', 'deleted'])
+def test_unrelated_ancestor_changes_do_not_invalidate_workspace_originals(tmp_path, monkeypatch, change):
+    """ADR-0041: the workspace root is a boundary, never an input file parent."""
+    root = tmp_path / 'workspace'
+    root.mkdir()
+    evidence, descriptor, receipt, dependency = original(root)
+    unrelated = tmp_path / 'outside-report.json'
+    if change != 'added':
+        unrelated.write_text('old')
+    calls = []
+    def validate(*_):
+        calls.append(True)
+        if change == 'added':
+            unrelated.write_text('new')
+        elif change == 'replaced':
+            replacement = tmp_path / 'replacement'
+            replacement.write_text('new')
+            replacement.replace(unrelated)
+        else:
+            unrelated.unlink()
+    monkeypatch.setattr(shared_execution, 'validate_saved_request', validate)
+    scope = q7._Q7OriginalChecks(root, lambda _: None)
+    add(scope, evidence, descriptor, receipt)
+    scope.finish()
+    assert calls == [True]
+    assert root in scope.seals and tmp_path not in scope.seals
+    assert dependency.read_text() == 'original'
+
+
+def test_workspace_root_replacement_remains_rejected(tmp_path, monkeypatch):
+    root = tmp_path / 'workspace'
+    root.mkdir()
+    evidence, descriptor, receipt, _ = original(root)
+    def validate(*_):
+        root.rename(tmp_path / 'retained-original')
+        root.mkdir()
+    monkeypatch.setattr(shared_execution, 'validate_saved_request', validate)
+    scope = q7._Q7OriginalChecks(root, lambda _: None)
+    add(scope, evidence, descriptor, receipt)
+    with pytest.raises(ValueError, match='original/input changed during validation'):
+        scope.finish()

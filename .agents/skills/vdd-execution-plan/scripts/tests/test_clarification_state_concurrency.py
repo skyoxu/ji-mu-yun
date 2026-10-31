@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,7 +17,7 @@ HASH_C = "sha256:" + "c" * 64
 
 
 def run(*args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["py", "-3", "-B", str(SCRIPT), *args], text=True, capture_output=True, check=False)
+    return subprocess.run([sys.executable, "-B", str(SCRIPT), *args], text=True, capture_output=True, check=False)
 
 
 def init_state(root: Path, run_id: str = "resume-1", mode: str = "create") -> Path:

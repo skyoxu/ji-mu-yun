@@ -1,0 +1,1636 @@
+{
+  "schema": "toolchain-skill-history-baseline.v1",
+  "scope": "VDD generation/recovery/caches/contracts/shared unit budget/knowledge compatibility",
+  "baseline_exclusive": "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+  "fixed_main_inclusive": "25580d700da91d2702fd234a024a616d55419f90",
+  "merge_boundaries": [
+    {
+      "merge": "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+      "parents": [
+        "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+        "71f53ea059157d14e717f322e2defff42869cf51"
+      ],
+      "all_second_parent_new_commits": 140,
+      "relevant_commits_in_merge": [
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca"
+      ],
+      "date": "2026-09-30"
+    },
+    {
+      "merge": "971e53ebce52eb54a9f78bcd5bf0faa68aec61f4",
+      "parents": [
+        "93884ba457a390739c653f978cf340774904e9e7",
+        "f04f89e73735eb687ca1cc895cb5f718e4e444b1"
+      ],
+      "all_second_parent_new_commits": 135,
+      "relevant_commits_in_merge": [
+        "047a7aaf031e13b2a84279eb153d0416b0891863",
+        "2c03b208670466301203be05b9bd0fc2182f3d87",
+        "1b1bf3d8bb694c6f3932039118647a9eb59921ba",
+        "366566e4392b5c320f1cb5803699108cac5d85c0",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "1a6c9455ebcb150c065afb3072e3d25a23da172a",
+        "db157e767e1d93d4e81b9b3833463b03f66192b3",
+        "95902c858ecf67d935219b4c334f7a024b396851",
+        "b6632aeffc855c9b69a0223c164bc362a63af767",
+        "697c50a0634fa60fb0da9e1867fd0b071976e1cf",
+        "7b79b95cba8b3a475e35fd050896b501254724cc",
+        "791e8c89bc1273328350deb9e2b0ffa69a9792e3",
+        "0ecdf97e82e3360175dc390c42106943da77e6cb",
+        "b389e89869e4b2c7eeb16b1cf9ebc9097de6601d",
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+        "ca9aadb1c3605cd6cf0bd71832bd7d96455ea593",
+        "a3b92f1c20e65d55059fede4af29b0c740509c15",
+        "dc1ae0e7e910b5ed0a1d8797ea7b041edff0c225",
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+        "d3256ae83814930c317183a36084a599b58162b6",
+        "e2a87446d3edbfc329d9c9ce24f744dfcc4424e0",
+        "3af1bfd381423418852f97955f5762584b4d01ee",
+        "86e5d1425c1b9d09d294e6a9c517b87c178029ca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00",
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1",
+        "1fa82514437942fe0abc381bedfd49c002216c80",
+        "0dce7806c93e5e0ca4ac4faed61baa13735c8983"
+      ],
+      "date": "2026-10-17"
+    }
+  ],
+  "enumeration": "git log --full-history BASE..HEAD -- VDD public entry, VDD skill and shared budget/knowledge paths; merge parents resolved from actual git objects; first-parent chain also inspected. File-related lists retain all selected nonmerge commits, intentionally allowing a commit in multiple behavior families.",
+  "complete_related_commit_list": [
+    {
+      "commit": "25580d700da91d2702fd234a024a616d55419f90",
+      "date": "2026-10-28",
+      "subject": "Merge pull request #25 from skyoxu/feat/package-b-skill-compliance",
+      "parents": [
+        "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+        "5197679049e709ea9d22212aacc6c09067b50ec1"
+      ]
+    },
+    {
+      "commit": "5197679049e709ea9d22212aacc6c09067b50ec1",
+      "date": "2026-10-28",
+      "subject": "Complete Package B skill migration and publish reviewed acceptance evidence",
+      "parents": [
+        "fb676bc398f653a2ffa869c95d6c8d632f6f9796"
+      ]
+    },
+    {
+      "commit": "863ce37a80bc56b8cda37e4c3c4c839f3de72ee0",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #22 from skyoxu/toolchain/light-optimizations-20261026",
+      "parents": [
+        "a41d382ba889a6236b7d1687d11c396c54896227",
+        "5bfb9e24e1459bdc54374d72e44df61520593639"
+      ]
+    },
+    {
+      "commit": "a41d382ba889a6236b7d1687d11c396c54896227",
+      "date": "2026-10-27",
+      "subject": "Merge pull request #21 from skyoxu/stage5-review/knowledge-query-20261026",
+      "parents": [
+        "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+        "d2fd7405513b90c516e7f65f1771be67efcb1b95"
+      ]
+    },
+    {
+      "commit": "c6bb51fe2227000ec9c96e62aca810b22c5d4fc9",
+      "date": "2026-10-27",
+      "subject": "test(toolchain): bind lawful published repair advisory fixtures",
+      "parents": [
+        "424f51d875d93dd1f1e167e11161c00373c2ac45"
+      ]
+    },
+    {
+      "commit": "0b61a4d00640672c2a8cec12d33277c3654ccc8c",
+      "date": "2026-10-26",
+      "subject": "fix(toolchain): align V1 drift diagnostic with package constraints",
+      "parents": [
+        "94d8d00a7a63a39484949f18981e4ff7f7c9a6d8"
+      ]
+    },
+    {
+      "commit": "94d8d00a7a63a39484949f18981e4ff7f7c9a6d8",
+      "date": "2026-10-26",
+      "subject": "fix(toolchain): stabilize bounded admission and dependency revision inputs",
+      "parents": [
+        "47047841d6c2d4072c4bd7d6ee18f9043a327793"
+      ]
+    },
+    {
+      "commit": "47047841d6c2d4072c4bd7d6ee18f9043a327793",
+      "date": "2026-10-26",
+      "subject": "wip(toolchain): preserve native boundary revision and bounded TDD evidence",
+      "parents": [
+        "01d4bc57d29e3dcbc9369e71bf98619507fe7bf4"
+      ]
+    },
+    {
+      "commit": "01d4bc57d29e3dcbc9369e71bf98619507fe7bf4",
+      "date": "2026-10-26",
+      "subject": "wip(toolchain): preserve consumer TDD and fixture-boundary checkpoint",
+      "parents": [
+        "99144af7c7ea2f1bf0d36d525b6ba40bb77c3bec"
+      ]
+    },
+    {
+      "commit": "ebd4e04152fbefaf1b0beb89dcb02c4835385cf4",
+      "date": "2026-10-26",
+      "subject": "fix: publish knowledge query P1 repairs and current stage 5 evidence",
+      "parents": [
+        "2abfbccbe532f6d934d3bba36d00c915207f5e38"
+      ]
+    },
+    {
+      "commit": "2abfbccbe532f6d934d3bba36d00c915207f5e38",
+      "date": "2026-10-26",
+      "subject": "review: publish fixed stage 5 implementation and native closeout evidence",
+      "parents": [
+        "d86539b9602d9cff7cfe1d96ae6a58b287ce7b3d"
+      ]
+    },
+    {
+      "commit": "965df2e34f71ef197fffd8afb68f037688486ca2",
+      "date": "2026-10-25",
+      "subject": "fix(vdd): declare bound missing tests in handoff repairs",
+      "parents": [
+        "dadd5ea869108893bdfe014c75a06c363b720cc9"
+      ]
+    },
+    {
+      "commit": "dadd5ea869108893bdfe014c75a06c363b720cc9",
+      "date": "2026-10-25",
+      "subject": "chore(review): publish scoped VDD plan and workflow recovery updates",
+      "parents": [
+        "f57c2998f83f12dfc98afe11816a4827fffd0228"
+      ]
+    },
+    {
+      "commit": "f57c2998f83f12dfc98afe11816a4827fffd0228",
+      "date": "2026-10-24",
+      "subject": "test(vdd): pin direct delivered-input consumption boundary",
+      "parents": [
+        "81cfae78734630002c29146909a02b714be014e0"
+      ]
+    },
+    {
+      "commit": "81cfae78734630002c29146909a02b714be014e0",
+      "date": "2026-10-24",
+      "subject": "fix(quick-dev): reuse content-bound execution evidence across slices",
+      "parents": [
+        "127b26a4a22bcd97a4231296c471d06a3548521f"
+      ]
+    },
+    {
+      "commit": "b49f05beaecc4ba7911f416a0ab9c1fe8f8d5068",
+      "date": "2026-10-23",
+      "subject": "fix(vdd): derive slice dependencies and preserve strict legacy handoff scope",
+      "parents": [
+        "d60ef8aa46bfdcfcb4b6b798b8c2502500dd90e9"
+      ]
+    },
+    {
+      "commit": "d60ef8aa46bfdcfcb4b6b798b8c2502500dd90e9",
+      "date": "2026-10-23",
+      "subject": "fix(vdd): bind companion repair inputs before contract validation",
+      "parents": [
+        "a1e783c569cb5a78ea8728c83518fd13c73a99e8"
+      ]
+    },
+    {
+      "commit": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+      "date": "2026-10-23",
+      "subject": "Merge pull request #20 from skyoxu/refactor/bmad-6-native-wrappers",
+      "parents": [
+        "bf78bb43c5583571eab9ec4001fb3c3a913c0708",
+        "09da37cc1a1fea3a8eb8d87159fe14910db09b79"
+      ]
+    },
+    {
+      "commit": "09da37cc1a1fea3a8eb8d87159fe14910db09b79",
+      "date": "2026-10-22",
+      "subject": "refactor(bmad): externalize repository wrappers and untrack native distributions",
+      "parents": [
+        "bf78bb43c5583571eab9ec4001fb3c3a913c0708"
+      ]
+    },
+    {
+      "commit": "bf78bb43c5583571eab9ec4001fb3c3a913c0708",
+      "date": "2026-10-22",
+      "subject": "Merge pull request #19 from skyoxu/fix/08-06-skill-authoring-plan-refresh",
+      "parents": [
+        "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+        "0bee3b5b1c0357689de8b09ae1bf4c4dd5648370"
+      ]
+    },
+    {
+      "commit": "f5f063d5cdffd670b8224d28ccf2f6cc28ac92c3",
+      "date": "2026-10-21",
+      "subject": "feat(skill-quality): complete Package A static checks and source-bound verification",
+      "parents": [
+        "a05d343ea697139d989bcdbd5138204fd4f570b4"
+      ]
+    },
+    {
+      "commit": "15f6e3b3680598d273f2ceb74ea0953ce4026761",
+      "date": "2026-10-20",
+      "subject": "fix(vdd): preserve published contracts during source-bound atomic repairs",
+      "parents": [
+        "119e2407ec26fa2c1b0c4379513955cdfc5c83e1"
+      ]
+    },
+    {
+      "commit": "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+      "date": "2026-10-20",
+      "subject": "fix(vdd): preflight execution contracts and classify worker retries",
+      "parents": [
+        "57b00012057ac565c3ab964d6fa18d7053825408"
+      ]
+    },
+    {
+      "commit": "57b00012057ac565c3ab964d6fa18d7053825408",
+      "date": "2026-10-20",
+      "subject": "feat(toolchain): support caller-session execution and compile Package A plan",
+      "parents": [
+        "271b43783d446aa541d9fe2218f44a2ba6629833"
+      ]
+    },
+    {
+      "commit": "271b43783d446aa541d9fe2218f44a2ba6629833",
+      "date": "2026-10-20",
+      "subject": "fix(vdd): preserve bounded compiler repairs and continuation evidence",
+      "parents": [
+        "9ce5400ae1dd80b07975bbe91f68c27f9fb1d54f"
+      ]
+    },
+    {
+      "commit": "9ce5400ae1dd80b07975bbe91f68c27f9fb1d54f",
+      "date": "2026-10-19",
+      "subject": "fix: carry frozen VDD authoring context and clarify 08-06 handoff",
+      "parents": [
+        "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e"
+      ]
+    },
+    {
+      "commit": "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e",
+      "date": "2026-10-19",
+      "subject": "fix: preserve V3 execution hints and isolate authoring context",
+      "parents": [
+        "78a9ee44945f5acedcab43df646325e559f9e593"
+      ]
+    },
+    {
+      "commit": "78a9ee44945f5acedcab43df646325e559f9e593",
+      "date": "2026-10-19",
+      "subject": "repair VDD semantic execution contract pipeline",
+      "parents": [
+        "29e9df72adc2823d5c54b8f1d1c31ec0bed954a5"
+      ]
+    },
+    {
+      "commit": "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+      "date": "2026-10-18",
+      "subject": "Support configurable Codex model identifiers",
+      "parents": [
+        "2118c5f724217b52df3c47c874481ed50c4740e5"
+      ]
+    },
+    {
+      "commit": "971e53ebce52eb54a9f78bcd5bf0faa68aec61f4",
+      "date": "2026-10-17",
+      "subject": "Merge pull request #4 from skyoxu/fix/08-05-real-skill-replay",
+      "parents": [
+        "93884ba457a390739c653f978cf340774904e9e7",
+        "f04f89e73735eb687ca1cc895cb5f718e4e444b1"
+      ]
+    },
+    {
+      "commit": "047a7aaf031e13b2a84279eb153d0416b0891863",
+      "date": "2026-10-16",
+      "subject": "merge: integrate main toolchain improvements into 08-05",
+      "parents": [
+        "2c03b208670466301203be05b9bd0fc2182f3d87",
+        "93884ba457a390739c653f978cf340774904e9e7"
+      ]
+    },
+    {
+      "commit": "2c03b208670466301203be05b9bd0fc2182f3d87",
+      "date": "2026-10-15",
+      "subject": "docs(vdd): correct package validation maintenance commands",
+      "parents": [
+        "4a0fc77812e0ef854a9f34ac3e8a76b4a8bca390"
+      ]
+    },
+    {
+      "commit": "1b1bf3d8bb694c6f3932039118647a9eb59921ba",
+      "date": "2026-10-14",
+      "subject": "fix(toolchain): triple bounded replay time budgets per maintainer approval",
+      "parents": [
+        "888ba9cc898915e3f0dbbc1f1309d51956dc1c5b"
+      ]
+    },
+    {
+      "commit": "366566e4392b5c320f1cb5803699108cac5d85c0",
+      "date": "2026-10-09",
+      "subject": "fix(toolchain): separate replay budgets and publish Windows evidence",
+      "parents": [
+        "00d773a87ae50aaba57b9810f12f6bcf694a33e3"
+      ]
+    },
+    {
+      "commit": "13abf92991ca45b966bb0f733de1d7483c08aba7",
+      "date": "2026-10-06",
+      "subject": "Complete 08-05 Quick Dev implementation evidence",
+      "parents": [
+        "feafd68208f8db44d57cfd987fc2c0bf820c43fe"
+      ]
+    },
+    {
+      "commit": "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+      "date": "2026-09-30",
+      "subject": "Merge 8-24 identity isolation and workspace recovery",
+      "parents": [
+        "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+        "71f53ea059157d14e717f322e2defff42869cf51"
+      ]
+    },
+    {
+      "commit": "1a6c9455ebcb150c065afb3072e3d25a23da172a",
+      "date": "2026-09-29",
+      "subject": "fix vdd cache reuse and grouped repair regression",
+      "parents": [
+        "1b14614496ce14dd5130820ea7f46e3380301379"
+      ]
+    },
+    {
+      "commit": "db157e767e1d93d4e81b9b3833463b03f66192b3",
+      "date": "2026-09-25",
+      "subject": "chore: unify active workflow model routing",
+      "parents": [
+        "e1b458625c04ca3ffd62857dc523b73c1254cadd"
+      ]
+    },
+    {
+      "commit": "95902c858ecf67d935219b4c334f7a024b396851",
+      "date": "2026-09-21",
+      "subject": "fix(vdd): normalize preflight repository root",
+      "parents": [
+        "b6632aeffc855c9b69a0223c164bc362a63af767"
+      ]
+    },
+    {
+      "commit": "b6632aeffc855c9b69a0223c164bc362a63af767",
+      "date": "2026-09-21",
+      "subject": "fix(vdd): preserve repaired S8 execution handoff",
+      "parents": [
+        "697c50a0634fa60fb0da9e1867fd0b071976e1cf"
+      ]
+    },
+    {
+      "commit": "697c50a0634fa60fb0da9e1867fd0b071976e1cf",
+      "date": "2026-09-20",
+      "subject": "fix(vdd): bind handoff tests to semantic assertions",
+      "parents": [
+        "7b79b95cba8b3a475e35fd050896b501254724cc"
+      ]
+    },
+    {
+      "commit": "7b79b95cba8b3a475e35fd050896b501254724cc",
+      "date": "2026-09-20",
+      "subject": "fix(vdd): publish checked pending handoff repair",
+      "parents": [
+        "791e8c89bc1273328350deb9e2b0ffa69a9792e3"
+      ]
+    },
+    {
+      "commit": "791e8c89bc1273328350deb9e2b0ffa69a9792e3",
+      "date": "2026-09-20",
+      "subject": "fix(vdd): repair scoped lifecycle and root-escape candidate bindings",
+      "parents": [
+        "0ecdf97e82e3360175dc390c42106943da77e6cb"
+      ]
+    },
+    {
+      "commit": "0ecdf97e82e3360175dc390c42106943da77e6cb",
+      "date": "2026-09-20",
+      "subject": "fix(vdd): stop invalid acceptance repair retries",
+      "parents": [
+        "9dff0664d3d6dddd517832fdbbcc2164e7b6d607"
+      ]
+    },
+    {
+      "commit": "b389e89869e4b2c7eeb16b1cf9ebc9097de6601d",
+      "date": "2026-09-19",
+      "subject": "fix(toolchain): bind S1 machine assertion to expected RED",
+      "parents": [
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7"
+      ]
+    },
+    {
+      "commit": "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+      "date": "2026-09-19",
+      "subject": "fix(toolchain): publish consumable 08-05 Quick Dev handoff",
+      "parents": [
+        "70b506486521e0e2f59d912823b7ff1c814fdfab"
+      ]
+    },
+    {
+      "commit": "70b506486521e0e2f59d912823b7ff1c814fdfab",
+      "date": "2026-09-19",
+      "subject": "fix(vdd): stabilize selective 08-05 plan repair",
+      "parents": [
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3"
+      ]
+    },
+    {
+      "commit": "88f2599271043624e582a7527ab98a2ea2403b42",
+      "date": "2026-09-18",
+      "subject": "Fix VDD semantic compiler repair contracts",
+      "parents": [
+        "302cab476909d9f52f2f0d4ed185344a285bc00e"
+      ]
+    },
+    {
+      "commit": "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+      "date": "2026-09-18",
+      "subject": "fix(vdd): reuse verified chunks and project deferred blocks",
+      "parents": [
+        "46d4955bd6caa1e5fce45aa7ef06135a29c4929c"
+      ]
+    },
+    {
+      "commit": "ca9aadb1c3605cd6cf0bd71832bd7d96455ea593",
+      "date": "2026-09-17",
+      "subject": "fix(vdd): reuse partitioned alignment for V4 rechecks",
+      "parents": [
+        "a3b92f1c20e65d55059fede4af29b0c740509c15"
+      ]
+    },
+    {
+      "commit": "a3b92f1c20e65d55059fede4af29b0c740509c15",
+      "date": "2026-09-17",
+      "subject": "fix(vdd): partition oversized V4 alignment inputs",
+      "parents": [
+        "dc1ae0e7e910b5ed0a1d8797ea7b041edff0c225"
+      ]
+    },
+    {
+      "commit": "dc1ae0e7e910b5ed0a1d8797ea7b041edff0c225",
+      "date": "2026-09-17",
+      "subject": "fix(vdd): require complete V4 recall partitions",
+      "parents": [
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118"
+      ]
+    },
+    {
+      "commit": "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+      "date": "2026-09-17",
+      "subject": "fix(vdd): exclude governance from V3 marker eligibility",
+      "parents": [
+        "d3256ae83814930c317183a36084a599b58162b6"
+      ]
+    },
+    {
+      "commit": "d3256ae83814930c317183a36084a599b58162b6",
+      "date": "2026-09-17",
+      "subject": "fix(vdd): reuse executable V3 contracts across chunk domains",
+      "parents": [
+        "b969525fe6619aff485ad6cdd58a3c47e7de614d"
+      ]
+    },
+    {
+      "commit": "e2a87446d3edbfc329d9c9ce24f744dfcc4424e0",
+      "date": "2026-09-15",
+      "subject": "fix(vdd): repair isolated V4 acceptance alignment",
+      "parents": [
+        "3af1bfd381423418852f97955f5762584b4d01ee"
+      ]
+    },
+    {
+      "commit": "3af1bfd381423418852f97955f5762584b4d01ee",
+      "date": "2026-09-15",
+      "subject": "fix(vdd): repair invalid cached V3 contracts without regenerating peers",
+      "parents": [
+        "a4e26d5df0571c2e7c20ba530d3e7622ca58b880"
+      ]
+    },
+    {
+      "commit": "86e5d1425c1b9d09d294e6a9c517b87c178029ca",
+      "date": "2026-09-14",
+      "subject": "fix(vdd): repair round-7 cache and expected-red routing",
+      "parents": [
+        "016737b651797bf7702dd6a0d66d8755f0a1f088"
+      ]
+    },
+    {
+      "commit": "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+      "date": "2026-09-14",
+      "subject": "fix(vdd): reuse validated compiler evidence and complete 8-24 plan",
+      "parents": [
+        "a7da3e7566eeab72ab21829c98b002d09bad307c"
+      ]
+    },
+    {
+      "commit": "c9fe289edb01011a9810f5473e3a0574f0525d00",
+      "date": "2026-09-14",
+      "subject": "repair VDD round-7 semantic plan coverage",
+      "parents": [
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1"
+      ]
+    },
+    {
+      "commit": "0d553d7e858333750c0712c2b25e7123d21d1ec1",
+      "date": "2026-09-13",
+      "subject": "tighten vdd toolchain scope contracts",
+      "parents": [
+        "1fa82514437942fe0abc381bedfd49c002216c80"
+      ]
+    },
+    {
+      "commit": "1fa82514437942fe0abc381bedfd49c002216c80",
+      "date": "2026-09-13",
+      "subject": "repair vdd execution plan round 7",
+      "parents": [
+        "80bf26bf50ef002a52fc2d8a5bed68124fd6db54"
+      ]
+    },
+    {
+      "commit": "0dce7806c93e5e0ca4ac4faed61baa13735c8983",
+      "date": "2026-09-11",
+      "subject": "fix(toolchain): replay 08-05 with quick dev tdd",
+      "parents": [
+        "d665884f1eb9a7a5544fe9ff05d31eacd0f0a8b5"
+      ]
+    }
+  ],
+  "first_parent_chain": [
+    [
+      "25580d700da91d2702fd234a024a616d55419f90",
+      "2026-10-28",
+      "Merge pull request #25 from skyoxu/feat/package-b-skill-compliance"
+    ],
+    [
+      "fb676bc398f653a2ffa869c95d6c8d632f6f9796",
+      "2026-10-27",
+      "Merge pull request #24 from skyoxu/fix/bmad-query-source-bindings-20261027"
+    ],
+    [
+      "a4fdd19df060222741172bfc559ffa866b6254a2",
+      "2026-10-27",
+      "Merge pull request #23 from skyoxu/local/bmad-admin-readonly-20261027"
+    ],
+    [
+      "2f8c28a0f045c814ec9b80fd01b309bbd047c679",
+      "2026-10-27",
+      "docs: add BMAD device knowledge configuration guide"
+    ],
+    [
+      "863ce37a80bc56b8cda37e4c3c4c839f3de72ee0",
+      "2026-10-27",
+      "Merge pull request #22 from skyoxu/toolchain/light-optimizations-20261026"
+    ],
+    [
+      "a41d382ba889a6236b7d1687d11c396c54896227",
+      "2026-10-27",
+      "Merge pull request #21 from skyoxu/stage5-review/knowledge-query-20261026"
+    ],
+    [
+      "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+      "2026-10-23",
+      "Merge pull request #20 from skyoxu/refactor/bmad-6-native-wrappers"
+    ],
+    [
+      "bf78bb43c5583571eab9ec4001fb3c3a913c0708",
+      "2026-10-22",
+      "Merge pull request #19 from skyoxu/fix/08-06-skill-authoring-plan-refresh"
+    ],
+    [
+      "f7ac19dbc1dde82e73f91854b5dc0c157c78703a",
+      "2026-10-18",
+      "Support configurable Codex model identifiers"
+    ],
+    [
+      "2118c5f724217b52df3c47c874481ed50c4740e5",
+      "2026-10-17",
+      "chore: prune obsolete 08-05 and 08-24 evidence"
+    ],
+    [
+      "7670748642c046e4858ea6ac8c8b1d4e19e9c6fe",
+      "2026-10-17",
+      "docs(toolchain): refine TC-D2 evaluation flow with bmad-eval"
+    ],
+    [
+      "971e53ebce52eb54a9f78bcd5bf0faa68aec61f4",
+      "2026-10-17",
+      "Merge pull request #4 from skyoxu/fix/08-05-real-skill-replay"
+    ],
+    [
+      "93884ba457a390739c653f978cf340774904e9e7",
+      "2026-10-08",
+      "Merge pull request #18 from skyoxu/feature/package-snapshot-restore-20261004"
+    ],
+    [
+      "a4fefe2a27e26593acdd6523a20ed018fcc361ec",
+      "2026-10-07",
+      "Merge pull request #17 from skyoxu/implementation/main-admin-project-purge-cleanup"
+    ],
+    [
+      "41567bd87f13060c9008846159249badeb8dcc62",
+      "2026-10-04",
+      "Merge pull request #16 from skyoxu/feature/package-snapshot-restore-20261004"
+    ],
+    [
+      "70aeee9b0b4cc21534868cd23d99b7165a1306b9",
+      "2026-10-03",
+      "Merge pull request #15 from skyoxu/fix/main-ci-fixture-readiness-20261003"
+    ],
+    [
+      "2328ed7ed39b0623c6692a3dbce34ee84460ef70",
+      "2026-10-03",
+      "Merge pull request #14 from skyoxu/fix/godot-ci-cleanup-20261003"
+    ],
+    [
+      "00ab62d993fbe041fca6b5f8e0a75d66dc866d5a",
+      "2026-10-03",
+      "Merge pull request #13 from skyoxu/fix/main-s25-interruption-20261002"
+    ],
+    [
+      "a02171c94a6acbccdfaa38b52c97d954b6bef9e5",
+      "2026-10-03",
+      "Merge pull request #12 from skyoxu/fix/main-completion-recovery-20261002"
+    ],
+    [
+      "61141d6c792e2108a9cf0b48f32f6aebccc4165e",
+      "2026-10-03",
+      "Merge pull request #11 from skyoxu/fix/main-ci-gdd-efficiency-20261002"
+    ],
+    [
+      "c55977c54c6928b815d6c937684a5ac8fff96bcd",
+      "2026-10-02",
+      "Merge pull request #10 from skyoxu/fix/phase-runner-acceptance-boundaries-20261002"
+    ],
+    [
+      "3bb6aeff08ed90e08a253834c8e0f2b8011579cd",
+      "2026-10-02",
+      "Merge pull request #9 from skyoxu/fix/phase-runner-business-acceptance-20261002"
+    ],
+    [
+      "3b2d677aa2c0bd4c6ef12e1fdbf3414ac9979ad4",
+      "2026-10-02",
+      "Merge pull request #8 from skyoxu/fix/ci-s43-total-timeout-20261002"
+    ],
+    [
+      "5d3913b31220162e5cd3d81237d4c693c2b573fa",
+      "2026-10-02",
+      "Merge pull request #7 from skyoxu/fix/ci-s51-interruption-checkpoint-20261001"
+    ],
+    [
+      "2cea24911ef5e7ad3d7083f27597a0a034fb0a95",
+      "2026-10-02",
+      "Merge pull request #6 from skyoxu/fix/ci-recovery-doc-metadata-20260930"
+    ],
+    [
+      "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+      "2026-09-30",
+      "Merge 8-24 identity isolation and workspace recovery"
+    ]
+  ],
+  "behavior_families": [
+    {
+      "id": "v1-content-replay",
+      "intent": "Reuse unchanged source sections without repeating extraction; validate current full-domain guards.",
+      "introduction_commits": [
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "dadd5ea869108893bdfe014c75a06c363b720cc9"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+          "function": "_reusable_prior_v1_cache",
+          "line": 575
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py",
+          "function": "content_identity",
+          "line": 72
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py",
+          "function": "lookup",
+          "line": 110
+        }
+      ],
+      "lawful_replacement_basis": "dadd5ea source-replay envelopes bind section text, source role, interpretation context and extraction prompt; query/Git/line changes are advisory. Legacy adoption needs explicit returned request/response/native output/cache/receipt. This legitimately supplements older exact payload cache.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_source_identity_ignores_query_git_position_but_binds_context",
+          "line": 148,
+          "assertions_read": [
+            "assert identity == replay.content_identity('v1-FR-1', b, prompt, 'role')",
+            "assert identity != replay.content_identity('v1-FR-1', b, prompt, 'role')",
+            "assert identity != replay.content_identity('v1-FR-1', b, prompt, 'role')",
+            "assert identity != replay.content_identity('v1-FR-1', a, prompt, 'new-role')"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_public_changed_anchor_only_reextracts_that_anchor_and_git_only_reuses",
+          "line": 163,
+          "assertions_read": [
+            "assert first['transport_exit_code'] == 130",
+            "assert changed['transport_exit_code'] == 130, changed",
+            "assert len(v1_calls) == 1 and v1_calls[0].startswith('v1-FR-1-'), calls",
+            "assert changed['worker_cache_reuse']['source_content_replays'] >= 1"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_public_timeout_or_unconsumed_response_is_not_adopted",
+          "line": 204,
+          "assertions_read": [
+            "assert result['transport_exit_code'] == 130, result",
+            "assert result['worker_cache_reuse']['legacy_v1_replays'] == 0",
+            "assert sum(n.startswith('v1-') for n in calls) == 1"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_public_current_query_refusal_precedes_reuse",
+          "line": 220,
+          "assertions_read": [
+            "assert result['status'] == 'repair-vdd' and 'PLANNING_QUERY_BLOCKED:permission_denied' in result['reason']",
+            "assert calls == []"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "No model calls or tests executed in this read-only audit. Preserve V0/V2 and full-source recall validation, not a saved stage counter."
+      ],
+      "dirty_local_assessment": null,
+      "complete_relevant_file_commit_list": [
+        "dadd5ea869108893bdfe014c75a06c363b720cc9",
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "57b00012057ac565c3ab964d6fa18d7053825408",
+        "271b43783d446aa541d9fe2218f44a2ba6629833",
+        "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "697c50a0634fa60fb0da9e1867fd0b071976e1cf",
+        "7b79b95cba8b3a475e35fd050896b501254724cc",
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+        "d3256ae83814930c317183a36084a599b58162b6",
+        "86e5d1425c1b9d09d294e6a9c517b87c178029ca",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00",
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1",
+        "1fa82514437942fe0abc381bedfd49c002216c80"
+      ]
+    },
+    {
+      "id": "v3-selective-cache",
+      "intent": "Retain valid per-obligation contracts across changed groups and repair only invalid contracts.",
+      "introduction_commits": [
+        "3af1bfd381423418852f97955f5762584b4d01ee",
+        "d3256ae83814930c317183a36084a599b58162b6",
+        "1a6c9455ebcb150c065afb3072e3d25a23da172a"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+          "function": "_reusable_prior_contracts",
+          "line": 321
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+          "function": "_invalid_contract_ids",
+          "line": 119
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+          "function": "_v3_cache_requires_contract_refresh",
+          "line": 630
+        }
+      ],
+      "lawful_replacement_basis": "The cache refresh check deliberately concerns executability; domain/schema/owner/policy checks remain with owning gates. Rebinding is unique semantic matching, not fuzzy requirement loss.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_only_invalid_contract_is_requested_and_prior_cache_is_preserved",
+          "line": 106,
+          "assertions_read": [
+            "assert [ids for ids, _ in calls] == [['O-2']]",
+            "assert 'tests/test_missing.py' in calls[0][1]",
+            "assert refreshed['obligation_contracts']['O-1'] == original['obligation_contracts']['O-1']",
+            "assert any(p.read_bytes() == old_bytes for p in cache.parent.glob(cache.name + '.stale-*'))"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_changed_group_input_reuses_each_executable_contract",
+          "line": 225,
+          "assertions_read": [
+            "assert calls == []",
+            "assert json.loads(cache.read_text()) == original"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_semantic_mismatch_or_ambiguous_match_is_not_rebound",
+          "line": 288,
+          "assertions_read": [
+            "assert repair._reusable_prior_contracts(\n            root=self.root, cache_dir=cache_dir, payload=payload, ids=['O-NEW']) == {}"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Do not reintroduce blanket group regeneration when a policy or source scope changes; validate selected contracts with current gates."
+      ],
+      "dirty_local_assessment": null,
+      "complete_relevant_file_commit_list": [
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "57b00012057ac565c3ab964d6fa18d7053825408",
+        "271b43783d446aa541d9fe2218f44a2ba6629833",
+        "9ce5400ae1dd80b07975bbe91f68c27f9fb1d54f",
+        "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "1a6c9455ebcb150c065afb3072e3d25a23da172a",
+        "697c50a0634fa60fb0da9e1867fd0b071976e1cf",
+        "7b79b95cba8b3a475e35fd050896b501254724cc",
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+        "d3256ae83814930c317183a36084a599b58162b6",
+        "3af1bfd381423418852f97955f5762584b4d01ee",
+        "86e5d1425c1b9d09d294e6a9c517b87c178029ca",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00",
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1",
+        "1fa82514437942fe0abc381bedfd49c002216c80"
+      ]
+    },
+    {
+      "id": "v3-owner-snapshot",
+      "intent": "Ground planned owners, write sets and pytest node snapshots while preserving source-bound scope.",
+      "introduction_commits": [
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "78a9ee44945f5acedcab43df646325e559f9e593"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+          "function": "_cached_owner_is_admissible",
+          "line": 83
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+          "function": "_normalize_production_write_sets",
+          "line": 437
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+          "function": "_pytest_snapshot_files",
+          "line": 422
+        }
+      ],
+      "lawful_replacement_basis": "Main already canonicalizes pytest node snapshot spellings to declared files without altering argv. Local helper extracts the same finite rule, and the selected Phase route adds its frozen input dependencies rather than using legacy Package A path inference.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_missing_unplanned_production_owner_invalidates_cache",
+          "line": 184,
+          "assertions_read": [
+            "assert [ids for ids, _ in calls] == [['O-1']]"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_pytest_node_snapshot_reuses_existing_or_planned_file",
+          "line": 194,
+          "assertions_read": [
+            "assert repair.sc._v3_cache_requires_contract_refresh(value, self.root, payload) is expected"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_scoped_snapshot_projection.py::test_selected_node_preserves_argv_and_reaches_real_consumer",
+          "line": 143,
+          "assertions_read": [
+            "assert normalized == expected and value == before",
+            "assert handoff_findings({**bundle, 'behavior_routing': {}}, workspace=tmp_path) == []",
+            "assert result['status'] == 'planned-contract-valid'",
+            "assert result['target_refs'] == ['tests/test_owner.py']"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_scoped_snapshot_projection.py::test_default_legacy_path_and_selector_mapping_stays_compatible",
+          "line": 99,
+          "assertions_read": [
+            "assert changes",
+            "assert result['slice_hints'][0]['execution_snapshot_paths'] == [canonical]",
+            "assert canonical in result['slice_hints'][0]['planned_new_files']"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Package A owner aliases remain finite historical compatibility, not general Phase authority. Root owns fingerprint closure review."
+      ],
+      "dirty_local_assessment": "Existing node-to-file normalization is preserved. New scoped branch intentionally skips legacy inference; explicit caller boundaries and dependency rehashing replace it.",
+      "complete_relevant_file_commit_list": [
+        "d60ef8aa46bfdcfcb4b6b798b8c2502500dd90e9",
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "57b00012057ac565c3ab964d6fa18d7053825408",
+        "271b43783d446aa541d9fe2218f44a2ba6629833",
+        "9ce5400ae1dd80b07975bbe91f68c27f9fb1d54f",
+        "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "1a6c9455ebcb150c065afb3072e3d25a23da172a",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+        "d3256ae83814930c317183a36084a599b58162b6",
+        "3af1bfd381423418852f97955f5762584b4d01ee",
+        "86e5d1425c1b9d09d294e6a9c517b87c178029ca",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00",
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1",
+        "1fa82514437942fe0abc381bedfd49c002216c80"
+      ]
+    },
+    {
+      "id": "red-role-and-classification",
+      "intent": "Keep failure-family guards distinct from runtime implementation RED and admit source-checked unpublished classification correction.",
+      "introduction_commits": [
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+        "88f2599271043624e582a7527ab98a2ea2403b42"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+          "function": "_normalize_expected_red_for_product_behavior",
+          "line": 167
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v1_classification_repair.py",
+          "function": "apply",
+          "line": 64
+        }
+      ],
+      "lawful_replacement_basis": "Historical eligibility checks exclude constraints from expected-red but the later main normalizer promoted every eligible non-expected-red family. Dirty code narrows promotion to task-implementation-failure. Independent V1 quality-to-constraint judgment preserves every other frozen field and requires current bound unfinished target.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_expected_red_eligibility.py::test_non_expected_guard_is_preserved_without_entering_runtime_marker_role",
+          "line": 88,
+          "assertions_read": [
+            "assert domain._domain_findings(\"v3\", payload, value) == []",
+            "assert value[\"failure_intents\"] == failures"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_expected_red_guard_preservation.py::test_real_returned_contract_failure_roles_are_preserved",
+          "line": 37,
+          "assertions_read": [
+            "assert result == expected",
+            "assert _expected_red_eligibility_findings(stage, payload, result) == []",
+            "assert _normalize_expected_red_for_product_behavior(stage, payload, result) == result"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_expected_red_guard_preservation.py::test_fourteen_quality_guard_only_routes_still_fail_real_handoff",
+          "line": 110,
+          "assertions_read": [
+            "assert len(missing) == 14",
+            "assert {f.rsplit(':',1)[1] for f in missing} == guarded"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v1_classification_repair.py::test_native_judgment_is_required_and_cannot_change_other_fields",
+          "line": 114,
+          "assertions_read": [
+            "assert not (out/'.compiler-work/v1-classification-repairs').exists()"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_v1_classification_repair.py::test_public_runtime_quality_refusal_is_not_a_classification_approval",
+          "line": 161,
+          "assertions_read": [
+            "assert code==1 and 'source-unsupported' in result['reason'],(result,stderr)",
+            "assert any('requested_kind_changes' in p for _,p in seen)",
+            "assert not (root/'execution-plans/plan/semantic-plan-bundle.v1.json').exists()"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "V1 classification route is local/untracked and has no introduction commit. Tests are inspected only. Do not treat classification request as approval or guard family as behavioral RED."
+      ],
+      "dirty_local_assessment": "Main old defect is visible in git diff condition: old not eligible or family==expected-red; local not eligible or family!=task-implementation-failure. Preserve this correction.",
+      "complete_relevant_file_commit_list": [
+        "d60ef8aa46bfdcfcb4b6b798b8c2502500dd90e9",
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "57b00012057ac565c3ab964d6fa18d7053825408",
+        "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1"
+      ]
+    },
+    {
+      "id": "v4-partition-and-recheck",
+      "intent": "Bound large V4 calls, require complete disjoint frozen domains, reuse valid chunks and independently check repaired acceptance.",
+      "introduction_commits": [
+        "a3b92f1c20e65d55059fede4af29b0c740509c15",
+        "ca9aadb1c3605cd6cf0bd71832bd7d96455ea593",
+        "dc1ae0e7e910b5ed0a1d8797ea7b041edff0c225",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_alignment_repair_patch.py",
+          "function": "_chunked_alignment",
+          "line": 120
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_alignment_repair_patch.py",
+          "function": "_alignment_worker_result",
+          "line": 165
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v4_domain_patch.py",
+          "function": "_chunk_obligation_payload",
+          "line": 220
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_gate.py",
+          "function": "_resolved_atomic_recall_worker",
+          "line": 540
+        }
+      ],
+      "lawful_replacement_basis": "Source chunking is a transport partition with complete cross-source obligation context for source-gap review. An empty invalid cache may be retried once; a genuine invented verdict remains blocking. V4 wording repair cannot rewrite frozen executable bindings.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_incomplete_frozen_partition_requires_repair",
+          "line": 136,
+          "assertions_read": [
+            "assert findings == [\"obligation-partition-incomplete:O-2\"]"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_source_gap_chunk_preserves_complete_outer_batch_context",
+          "line": 299,
+          "assertions_read": [
+            "assert selected[\"obligations\"] == payload[\"complete_obligation_context\"]"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_cached_empty_verdict_retries_once_but_invented_verdict_is_reused",
+          "line": 356,
+          "assertions_read": [
+            "assert gate._resolved_atomic_recall_worker(**args) == (repaired if empty else old)",
+            "assert gate._resolved_atomic_recall_worker(**args) == (repaired if empty else old)",
+            "assert calls == ([\"v4-atomic-recall\"] if empty else [])",
+            "assert path.read_bytes() == old_bytes"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_domain_and_v4_alignment_repair.py::test_v4_misaligned_acceptance_gets_bounded_repair_and_independent_recheck",
+          "line": 117,
+          "assertions_read": [
+            "assert result[\"valid\"] is True",
+            "assert result[\"repair_attempted\"] is True",
+            "assert calls == [\"v4-acceptance-repair\", \"v4-recheck\"]",
+            "assert (acceptances[0][\"obligation_ids\"], acceptances[0][\"source_refs\"]) == old_binding"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_domain_and_v4_alignment_repair.py::test_v4_does_not_treat_frozen_red_or_assertion_binding_as_wording_repair",
+          "line": 449,
+          "assertions_read": [
+            "assert alignment._requires_frozen_execution_binding_change({\n        \"repairs\": [{\"action\": \"Bind assertions and at least one RED intent to the lifecycle request.\"}],\n    })",
+            "assert alignment._requires_frozen_execution_binding_change({\n        \"repairs\": [{\"repair\": \"Replace the foreign assertion bindings with current assertion IDs.\"}],\n    })",
+            "assert not alignment._requires_frozen_execution_binding_change({\n        \"repairs\": [{\"repair\": \"Make the observable distinguish rejection from acceptance.\"}],\n    })"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Preserve stale sidecars, complete recall partitions and independent recheck; no dirty-local replacement of this family observed."
+      ],
+      "dirty_local_assessment": null,
+      "complete_relevant_file_commit_list": [
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "271b43783d446aa541d9fe2218f44a2ba6629833",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "1a6c9455ebcb150c065afb3072e3d25a23da172a",
+        "0ecdf97e82e3360175dc390c42106943da77e6cb",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+        "ca9aadb1c3605cd6cf0bd71832bd7d96455ea593",
+        "a3b92f1c20e65d55059fede4af29b0c740509c15",
+        "dc1ae0e7e910b5ed0a1d8797ea7b041edff0c225",
+        "e2a87446d3edbfc329d9c9ce24f744dfcc4424e0",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00"
+      ]
+    },
+    {
+      "id": "v3-execution-preflight",
+      "intent": "Reject infeasible execution bindings before V4 and keep transport failures outside schema repair.",
+      "introduction_commits": [
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+          "function": "inspect_candidate",
+          "line": 12
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_gate.py",
+          "function": "normative_invoke_worker",
+          "line": 181
+        }
+      ],
+      "lawful_replacement_basis": "Pure projected candidate checks reuse final feasibility/handoff validators; missing planned owner is a first-use warning, never fabricated implementation evidence.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_authority_stops_before_v4_when_execution_is_invalid",
+          "line": 63,
+          "assertions_read": [
+            "assert result['stage'] == 'V3-execution-preflight'",
+            "assert result['status'] == 'repair-vdd' and result['repair_class'] == 'execution-contract'",
+            "assert not (tmp_path/'out/compiler-state.v1.json').exists()"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_transport_errors_do_not_enter_schema_repair",
+          "line": 122,
+          "assertions_read": [
+            "assert caught.value.category == category",
+            "assert len(calls) == count",
+            "assert not any('SCHEMA REPAIR' in c['prompt'] for c in calls)"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_first_use_is_early_non_authorizing_consumer_warning",
+          "line": 47,
+          "assertions_read": [
+            "assert result['valid'] and result['authorizes'] == []",
+            "assert result['consumer_warnings'][0]['code'] == 'planned-production-first-use'",
+            "assert not (tmp_path/'src/ledger.py').exists()",
+            "assert not (tmp_path/'out/compiler-state.v1.json').exists()"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Local Phase scope must be copied into this nonpublished projection; otherwise final scope validator sees withdrawal."
+      ],
+      "dirty_local_assessment": "Dirty execution_preflight adds only current source_scope metadata before shared validators. This is required compatibility with the new scope contract, not a reason to remove preflight.",
+      "complete_relevant_file_commit_list": [
+        "94d8d00a7a63a39484949f18981e4ff7f7c9a6d8",
+        "47047841d6c2d4072c4bd7d6ee18f9043a327793",
+        "01d4bc57d29e3dcbc9369e71bf98619507fe7bf4",
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "271b43783d446aa541d9fe2218f44a2ba6629833",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "1a6c9455ebcb150c065afb3072e3d25a23da172a",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00"
+      ]
+    },
+    {
+      "id": "v3-pause-checkpoint",
+      "intent": "Pause after both V3 gates and continue without generating unchanged V3 again.",
+      "introduction_commits": [
+        "dadd5ea869108893bdfe014c75a06c363b720cc9"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py",
+          "function": "prepare",
+          "line": 81
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py",
+          "function": "_validate",
+          "line": 29
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py",
+          "function": "save",
+          "line": 117
+        }
+      ],
+      "lawful_replacement_basis": "Checkpoint is nonauthorizing, binds native source/domain/profile/rules and validates current candidate. It does not publish canonical lifecycle at pause.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py::test_public_pause_then_resume_reuses_v3_and_preserves_history",
+          "line": 69,
+          "assertions_read": [
+            "assert code == 0 and first['status'] == 'paused', first",
+            "assert first['authorizes'] == [] and first['acceptance_count'] == 1",
+            "assert first['completed_checks'] == ['V3','V3A','V3-execution-preflight']",
+            "assert any(s.startswith('v3') for s in calls)"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py::test_public_changed_source_revalidates_and_requests_new_contract",
+          "line": 112,
+          "assertions_read": [
+            "assert code == 0 and second['status'] == 'paused', second",
+            "assert not second['v3_checkpoint_reused']",
+            "assert any(s.startswith('v1-') for s in calls) and any(s.startswith('v3') for s in calls), calls",
+            "assert second['source_index_sha256'] != first['source_index_sha256']"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py::test_public_current_security_gate_still_precedes_pause_reuse",
+          "line": 179,
+          "assertions_read": [
+            "assert code == 0 and first['status'] == 'paused'",
+            "assert code != 0 and result['status'] == 'repair-vdd'",
+            "assert 'permission_denied' in result['reason'] and not calls"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Fingerprint dependency closure is being repaired by root; broad or incomplete rule fingerprints need separate verification."
+      ],
+      "dirty_local_assessment": "Local source_scope joins candidate identity and scope module joins rules. This required new context binding should survive root fingerprint repair.",
+      "complete_relevant_file_commit_list": [
+        "dadd5ea869108893bdfe014c75a06c363b720cc9"
+      ]
+    },
+    {
+      "id": "handoff-surgical-repair",
+      "intent": "Repair execution bindings in a checked successor without worker calls or semantic relabeling.",
+      "introduction_commits": [
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+        "7b79b95cba8b3a475e35fd050896b501254724cc",
+        "965df2e34f71ef197fffd8afb68f037688486ca2",
+        "ebd4e04152fbefaf1b0beb89dcb02c4835385cf4"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+          "function": "publish_repair",
+          "line": 571
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+          "function": "declare_planned_tests",
+          "line": 354
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+          "function": "repair_static_primary_bindings",
+          "line": 17
+        }
+      ],
+      "lawful_replacement_basis": "Legitimate refinements add exact bound planned-test declarations or remove a completely mapped redundant primary -k; preserve oracle, role, owner, commands, source/V4 witnesses and normal successor publication gates.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py::test_public_cli_publishes_checked_successor_without_worker",
+          "line": 180,
+          "assertions_read": [
+            "assert result.returncode == 0, result.stdout + result.stderr",
+            "assert state['state'] == 'plan-ready'",
+            "assert state['semantic_plan_sha256'] == sc.sha256_value(bundle)",
+            "assert report['authorizes'] == [] and report['model_called'] is False"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py::test_only_planned_field_and_slice_identity_change_and_idempotent",
+          "line": 36,
+          "assertions_read": [
+            "assert old==snapshot and new['slices'][0]['planned_new_files']==[TARGET]",
+            "assert new['slices'][0]['slice_input_hash']!='old'",
+            "assert restored==old",
+            "assert delta['added_expected_red_intents']==[] and delta['command_dispositions']==[]"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py::test_only_explicit_primary_fields_change",
+          "line": 41,
+          "assertions_read": [
+            "assert old == before",
+            "assert new == old",
+            "assert delta['added_expected_red_intents'] == []",
+            "assert c['validation_commands'][0] == ['python3','-B','-m','pytest',TARGET,'-q']"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Do not restore broad test-root repair in place of explicit modes. No historical execution proof is imported."
+      ],
+      "dirty_local_assessment": "Local adds source scope validation on both predecessor and repaired bundle, retaining main surgical modes.",
+      "complete_relevant_file_commit_list": [
+        "ebd4e04152fbefaf1b0beb89dcb02c4835385cf4",
+        "965df2e34f71ef197fffd8afb68f037688486ca2",
+        "b49f05beaecc4ba7911f416a0ab9c1fe8f8d5068",
+        "f5f063d5cdffd670b8224d28ccf2f6cc28ac92c3",
+        "15f6e3b3680598d273f2ceb74ea0953ce4026761",
+        "57b00012057ac565c3ab964d6fa18d7053825408",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "b6632aeffc855c9b69a0223c164bc362a63af767",
+        "697c50a0634fa60fb0da9e1867fd0b071976e1cf",
+        "7b79b95cba8b3a475e35fd050896b501254724cc",
+        "b389e89869e4b2c7eeb16b1cf9ebc9097de6601d",
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7"
+      ]
+    },
+    {
+      "id": "dependency-and-cohesion",
+      "intent": "Derive dependency graph from authoritative V1 edges, preserve unaffected scopes and reject conflicting combined contexts.",
+      "introduction_commits": [
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "b49f05beaecc4ba7911f416a0ab9c1fe8f8d5068",
+        "94d8d00a7a63a39484949f18981e4ff7f7c9a6d8"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+          "function": "project_slice_dependencies",
+          "line": 1171
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_slice_cohesion_patch.py",
+          "function": "_compatible",
+          "line": 52
+        }
+      ],
+      "lawful_replacement_basis": "Missing dependency projection may be filled idempotently from V1 graph; explicit errors reject and prose has no graph authority. Published dependency revision is explicit bound input, not automatic broad regeneration.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py::test_producer_emits_v1_edges_and_stable_hashes",
+          "line": 20,
+          "assertions_read": [
+            "assert len(slices) == 2",
+            "assert sum(map(len, expected.values())) == 1",
+            "assert {s['slice_id']: s['depends_on'] for s in slices} == expected",
+            "assert slices == again"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py::test_prose_does_not_gain_authority",
+          "line": 56,
+          "assertions_read": [
+            "assert derive_slice_dependencies(obs, slices) == {'S1': [], 'S2': []}"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py::test_explicit_errors_reject_before_filling_any_omission",
+          "line": 47,
+          "assertions_read": [
+            "assert 'depends_on' not in slices[0]"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Local cohesion extends exact set conflict checks to caller-protected glob/prefix read/write/rollback intersections. Root owns known P1/P2 checks."
+      ],
+      "dirty_local_assessment": "Keep local forbidden-read/write closure while retaining authoritative dependency projection.",
+      "complete_relevant_file_commit_list": [
+        "b49f05beaecc4ba7911f416a0ab9c1fe8f8d5068",
+        "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab",
+        "57b00012057ac565c3ab964d6fa18d7053825408",
+        "271b43783d446aa541d9fe2218f44a2ba6629833",
+        "b99f5df5bc4642a4e9fd5dfc3c6ffcffbd37204e",
+        "78a9ee44945f5acedcab43df646325e559f9e593",
+        "13abf92991ca45b966bb0f733de1d7483c08aba7",
+        "697c50a0634fa60fb0da9e1867fd0b071976e1cf",
+        "7b79b95cba8b3a475e35fd050896b501254724cc",
+        "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+        "70b506486521e0e2f59d912823b7ff1c814fdfab",
+        "88f2599271043624e582a7527ab98a2ea2403b42",
+        "16394068142e2688b511ab87e88bbef4e0f7b9f3",
+        "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+        "d3256ae83814930c317183a36084a599b58162b6",
+        "86e5d1425c1b9d09d294e6a9c517b87c178029ca",
+        "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+        "c9fe289edb01011a9810f5473e3a0574f0525d00",
+        "0d553d7e858333750c0712c2b25e7123d21d1ec1",
+        "1fa82514437942fe0abc381bedfd49c002216c80"
+      ]
+    },
+    {
+      "id": "shared-unit-budget",
+      "intent": "Bound independent native work units cumulatively across retries/resume while allowing a healthy sequence longer than a round limit.",
+      "introduction_commits": [
+        "dadd5ea869108893bdfe014c75a06c363b720cc9"
+      ],
+      "current_functions": [
+        {
+          "path": "scripts/workflow_unit_budget.py",
+          "function": "worker_input",
+          "line": 39
+        },
+        {
+          "path": "scripts/workflow_unit_budget.py",
+          "function": "Budget",
+          "line": 126
+        },
+        {
+          "path": "scripts/workflow_unit_budget.py",
+          "function": "supervise",
+          "line": 239
+        }
+      ],
+      "lawful_replacement_basis": "Budget lineage strips advisory planning observations and unwraps schema-repair input, but does not alter semantic cache fingerprints. Child units exclude container accounting and bytes/native completion count as progress.",
+      "actual_test_nodes": [
+        {
+          "node": "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_independent_units_exceed_round_budget_without_timeout",
+          "line": 28,
+          "assertions_read": [
+            "self.assertIsNone(b.violation)",
+            "self.assertEqual(sum(b.spent.values()), 2200)"
+          ],
+          "executed": false
+        },
+        {
+          "node": "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_retry_spends_same_allowance_and_cannot_renew",
+          "line": 53,
+          "assertions_read": [
+            "self.assertEqual(b.tick(10)[\"reason\"], \"unit-total\")",
+            "self.assertEqual(resumed.violation[\"reason\"], \"unit-total\")"
+          ],
+          "executed": false
+        },
+        {
+          "node": "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_idle_and_duplicate_output_do_not_extend_budget",
+          "line": 46,
+          "assertions_read": [
+            "self.assertEqual(b.tick(601)[\"reason\"], \"unit-idle\")"
+          ],
+          "executed": false
+        },
+        {
+          "node": "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_advisory_attempt_identity_does_not_renew_budget",
+          "line": 75,
+          "assertions_read": [
+            "self.assertEqual(wb.worker_input('prompt\\n\\nINPUT:\\n' + json.dumps(a), None),\n                         wb.worker_input('prompt\\n\\nINPUT:\\n' + json.dumps(b), None))",
+            "self.assertNotEqual(wb.worker_input('prompt\\n\\nINPUT:\\n' + json.dumps(a), None),\n                            wb.worker_input('prompt\\n\\nINPUT:\\n' + json.dumps(b), None))",
+            "self.assertEqual(previous, wb.worker_input('prompt\\n\\nINPUT:\\n' + json.dumps(a), None))"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Do not replace with aggregate 1800-second compile watchdog. Classification/reference metadata must not renew same semantic budget."
+      ],
+      "dirty_local_assessment": null,
+      "complete_relevant_file_commit_list": [
+        "dadd5ea869108893bdfe014c75a06c363b720cc9"
+      ]
+    },
+    {
+      "id": "knowledge-observation-and-scope",
+      "intent": "Retain current safety/source verification while permitting an explicit already-returned reference after a closed query episode.",
+      "introduction_commits": [
+        "95902c858ecf67d935219b4c334f7a024b396851",
+        "ebd4e04152fbefaf1b0beb89dcb02c4835385cf4"
+      ],
+      "current_functions": [
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+          "function": "evaluate_preflight",
+          "line": 68
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/planning_observation_resume.py",
+          "function": "reference",
+          "line": 272
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_phase_source_scope.py",
+          "function": "validate_hints",
+          "line": 242
+        },
+        {
+          "path": ".agents/skills/vdd-execution-plan/scripts/semantic_phase_source_scope.py",
+          "function": "validate_bundle",
+          "line": 269
+        }
+      ],
+      "lawful_replacement_basis": "Preflight hashes accepted current worktree sources and does not expand locator authority. Local reference route checks explicit returned native origin and current permissions/dependencies, emits reference-only metadata and keeps default closed query block. Explicit Phase scope is caller-bound input, not protected-write approval.",
+      "actual_test_nodes": [
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py::VddKnowledgePreflightTests::test_rejected_candidate_drift_does_not_block_preflight",
+          "line": 271,
+          "assertions_read": [
+            "self.assertEqual(\"ready\", result[\"status\"])",
+            "self.assertFalse(validate.call_args.kwargs[\"verify_sources\"])",
+            "self.assertEqual([\"AGENTS.md\"], [candidate[\"path\"] for candidate in captured])"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py::VddKnowledgePreflightTests::test_accepted_candidate_outside_locator_result_blocks_preflight",
+          "line": 312,
+          "assertions_read": [
+            "self.assertEqual(\"blocked\", result[\"status\"])",
+            "self.assertEqual(\"accepted_candidate_not_locator_bound\", result[\"failure_code\"])"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_default_resume_keeps_real_closed_query_block",
+          "line": 268,
+          "assertions_read": [
+            "assert code == 1 and result['reason'] == 'PLANNING_QUERY_BLOCKED:budget_exhausted'",
+            "assert not seen"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_valid_new_publication_rechecks_located_permissions",
+          "line": 346,
+          "assertions_read": [
+            "assert pointer['generation_id'] != old_generation",
+            "assert not prepared['query_result']['candidates'] and prepared['query_result']['result']['candidates']",
+            "assert code == 1 and result['reason'] == 'PLANNING_OBSERVATION_REUSE_BLOCKED:current_permission_denied'",
+            "assert not seen"
+          ],
+          "executed": false
+        },
+        {
+          "node": ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_reference_advice_keeps_native_budget_input_identity",
+          "line": 376,
+          "assertions_read": [
+            "assert worker_input(original, 'old-output') == worker_input(replaced, 'new-output')"
+          ],
+          "executed": false
+        }
+      ],
+      "conflicts_or_gaps": [
+        "Scope/reference are untracked local extensions with no main introduction commit; they compensate absence of a safe source route/reference-only resume. Bounded audit did not re-read all knowledge internals, owned by other reviewer."
+      ],
+      "dirty_local_assessment": "Main hardcoded Toolchain/Package A prompt is replaced locally with exact current source scope; original exclusions remain default. Preserve exact scope dependency rehash and no automatic authority.",
+      "complete_relevant_file_commit_list": [
+        "95902c858ecf67d935219b4c334f7a024b396851"
+      ]
+    }
+  ],
+  "verification_limits": [
+    "Read-only source/history/assertion inspection; no tests, model calls, compilers or large fixtures executed.",
+    "No S2 package A/B output read. No source or test modifications. Only this requested append-only analysis JSON created.",
+    "Introduction commits of key functions checked using git log -S; other commits are family refinements, not all individual introductions.",
+    "Historical merge-evidence contents were not treated as current execution proof."
+  ],
+  "recommended_test_modules": [
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_domain_and_v4_alignment_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_expected_red_guard_preservation.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_scoped_snapshot_projection.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_scoped_slice_context.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_v1_classification_repair.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_plain_repair_observation_compat.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py",
+    ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py",
+    "scripts/sc/tests/test_workflow_unit_budget.py"
+  ]
+}

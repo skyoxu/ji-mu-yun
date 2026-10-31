@@ -67,7 +67,9 @@ def _clear_readonly_and_retry(operation, path: str, _exception) -> None:
 
 
 def read_only_index_tree(repository_root: Path) -> str:
-    temporary = Path(tempfile.mkdtemp(prefix="ri", dir=repository_root.anchor))
+    # ADR-0041: this read-only index probe needs no drive-root write access.
+    # The caller can select a persistent test scratch through normal tempfile.
+    temporary = Path(tempfile.mkdtemp(prefix="ri"))
     try:
         git_directory = repository_root / ".git"
         index = temporary / "index"

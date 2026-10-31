@@ -1,0 +1,786 @@
+{
+  "schema": "toolchain.skill-bootstrap-history.v1",
+  "scope_start_exclusive": "d8219f5a867e2a1bb2ed22c86f0437367617da06",
+  "fixed_main": "25580d700da91d2702fd234a024a616d55419f90",
+  "merge_boundaries": {
+    "8-24": "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+    "8-05": "971e53ebce52eb54a9f78bcd5bf0faa68aec61f4"
+  },
+  "skills": {
+    "vdd": {
+      "source_analysis": {
+        "path": "logs/toolchain-skill-baseline-20261029/history-vdd.json",
+        "sha256": "a552067636d25aa7160e32fb2ecb59c0c424e331d02605e352c441c688965fe3"
+      },
+      "families": [
+        {
+          "id": "v1-content-replay",
+          "intent": "Reuse unchanged source sections without repeating extraction; validate current full-domain guards.",
+          "commits": [
+            "70b506486521e0e2f59d912823b7ff1c814fdfab",
+            "dadd5ea869108893bdfe014c75a06c363b720cc9"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+              "function": "_reusable_prior_v1_cache",
+              "line": 575
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py",
+              "function": "content_identity",
+              "line": 72
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_resume_cache.py",
+              "function": "lookup",
+              "line": 110
+            }
+          ],
+          "replacement_basis": "dadd5ea source-replay envelopes bind section text, source role, interpretation context and extraction prompt; query/Git/line changes are advisory. Legacy adoption needs explicit returned request/response/native output/cache/receipt. This legitimately supplements older exact payload cache.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_source_identity_ignores_query_git_position_but_binds_context",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_public_changed_anchor_only_reextracts_that_anchor_and_git_only_reuses",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_public_timeout_or_unconsumed_response_is_not_adopted",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_source_cache_resume.py::test_public_current_query_refusal_precedes_reuse"
+          ],
+          "limits": [
+            "No model calls or tests executed in this read-only audit. Preserve V0/V2 and full-source recall validation, not a saved stage counter."
+          ]
+        },
+        {
+          "id": "v3-selective-cache",
+          "intent": "Retain valid per-obligation contracts across changed groups and repair only invalid contracts.",
+          "commits": [
+            "3af1bfd381423418852f97955f5762584b4d01ee",
+            "d3256ae83814930c317183a36084a599b58162b6",
+            "1a6c9455ebcb150c065afb3072e3d25a23da172a"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+              "function": "_reusable_prior_contracts",
+              "line": 321
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+              "function": "_invalid_contract_ids",
+              "line": 119
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+              "function": "_v3_cache_requires_contract_refresh",
+              "line": 630
+            }
+          ],
+          "replacement_basis": "The cache refresh check deliberately concerns executability; domain/schema/owner/policy checks remain with owning gates. Rebinding is unique semantic matching, not fuzzy requirement loss.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_only_invalid_contract_is_requested_and_prior_cache_is_preserved",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_changed_group_input_reuses_each_executable_contract",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_semantic_mismatch_or_ambiguous_match_is_not_rebound"
+          ],
+          "limits": [
+            "Do not reintroduce blanket group regeneration when a policy or source scope changes; validate selected contracts with current gates."
+          ]
+        },
+        {
+          "id": "v3-owner-snapshot",
+          "intent": "Ground planned owners, write sets and pytest node snapshots while preserving source-bound scope.",
+          "commits": [
+            "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+            "78a9ee44945f5acedcab43df646325e559f9e593"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_group_repair_patch.py",
+              "function": "_cached_owner_is_admissible",
+              "line": 83
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+              "function": "_normalize_production_write_sets",
+              "line": 437
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+              "function": "_pytest_snapshot_files",
+              "line": 422
+            }
+          ],
+          "replacement_basis": "Main already canonicalizes pytest node snapshot spellings to declared files without altering argv. Local helper extracts the same finite rule, and the selected Phase route adds its frozen input dependencies rather than using legacy Package A path inference.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_missing_unplanned_production_owner_invalidates_cache",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v3_selective_cache_repair.py::SelectiveCacheRepairTests::test_pytest_node_snapshot_reuses_existing_or_planned_file",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_scoped_snapshot_projection.py::test_selected_node_preserves_argv_and_reaches_real_consumer",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_scoped_snapshot_projection.py::test_default_legacy_path_and_selector_mapping_stays_compatible"
+          ],
+          "limits": [
+            "Package A owner aliases remain finite historical compatibility, not general Phase authority. Root owns fingerprint closure review."
+          ]
+        },
+        {
+          "id": "red-role-and-classification",
+          "intent": "Keep failure-family guards distinct from runtime implementation RED and admit source-checked unpublished classification correction.",
+          "commits": [
+            "b7ccc291aa196ee39831f4638dd6ed3222f12118",
+            "88f2599271043624e582a7527ab98a2ea2403b42"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v3_execution_contract_patch.py",
+              "function": "_normalize_expected_red_for_product_behavior",
+              "line": 167
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v1_classification_repair.py",
+              "function": "apply",
+              "line": 64
+            }
+          ],
+          "replacement_basis": "Historical eligibility checks exclude constraints from expected-red but the later main normalizer promoted every eligible non-expected-red family. Dirty code narrows promotion to task-implementation-failure. Independent V1 quality-to-constraint judgment preserves every other frozen field and requires current bound unfinished target.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_expected_red_eligibility.py::test_non_expected_guard_is_preserved_without_entering_runtime_marker_role",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_expected_red_guard_preservation.py::test_real_returned_contract_failure_roles_are_preserved",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_expected_red_guard_preservation.py::test_fourteen_quality_guard_only_routes_still_fail_real_handoff",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v1_classification_repair.py::test_native_judgment_is_required_and_cannot_change_other_fields",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_v1_classification_repair.py::test_public_runtime_quality_refusal_is_not_a_classification_approval"
+          ],
+          "limits": [
+            "V1 classification route is local/untracked and has no introduction commit. Tests are inspected only. Do not treat classification request as approval or guard family as behavioral RED."
+          ]
+        },
+        {
+          "id": "v4-partition-and-recheck",
+          "intent": "Bound large V4 calls, require complete disjoint frozen domains, reuse valid chunks and independently check repaired acceptance.",
+          "commits": [
+            "a3b92f1c20e65d55059fede4af29b0c740509c15",
+            "ca9aadb1c3605cd6cf0bd71832bd7d96455ea593",
+            "dc1ae0e7e910b5ed0a1d8797ea7b041edff0c225",
+            "13abf92991ca45b966bb0f733de1d7483c08aba7"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_alignment_repair_patch.py",
+              "function": "_chunked_alignment",
+              "line": 120
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_alignment_repair_patch.py",
+              "function": "_alignment_worker_result",
+              "line": 165
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_worker_v4_domain_patch.py",
+              "function": "_chunk_obligation_payload",
+              "line": 220
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_gate.py",
+              "function": "_resolved_atomic_recall_worker",
+              "line": 540
+            }
+          ],
+          "replacement_basis": "Source chunking is a transport partition with complete cross-source obligation context for source-gap review. An empty invalid cache may be retried once; a genuine invented verdict remains blocking. V4 wording repair cannot rewrite frozen executable bindings.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_incomplete_frozen_partition_requires_repair",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_source_gap_chunk_preserves_complete_outer_batch_context",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v4_atomic_recall_domain.py::test_cached_empty_verdict_retries_once_but_invented_verdict_is_reused",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_domain_and_v4_alignment_repair.py::test_v4_misaligned_acceptance_gets_bounded_repair_and_independent_recheck",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_ch456_v3_domain_and_v4_alignment_repair.py::test_v4_does_not_treat_frozen_red_or_assertion_binding_as_wording_repair"
+          ],
+          "limits": [
+            "Preserve stale sidecars, complete recall partitions and independent recheck; no dirty-local replacement of this family observed."
+          ]
+        },
+        {
+          "id": "v3-execution-preflight",
+          "intent": "Reject infeasible execution bindings before V4 and keep transport failures outside schema repair.",
+          "commits": [
+            "7756d4ca704582f12d3f5c6dd8ad13838f4df4ab"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/execution_preflight.py",
+              "function": "inspect_candidate",
+              "line": 12
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler_gate.py",
+              "function": "normative_invoke_worker",
+              "line": 181
+            }
+          ],
+          "replacement_basis": "Pure projected candidate checks reuse final feasibility/handoff validators; missing planned owner is a first-use warning, never fabricated implementation evidence.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_authority_stops_before_v4_when_execution_is_invalid",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_transport_errors_do_not_enter_schema_repair",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_execution_preflight.py::test_first_use_is_early_non_authorizing_consumer_warning"
+          ],
+          "limits": [
+            "Local Phase scope must be copied into this nonpublished projection; otherwise final scope validator sees withdrawal."
+          ]
+        },
+        {
+          "id": "v3-pause-checkpoint",
+          "intent": "Pause after both V3 gates and continue without generating unchanged V3 again.",
+          "commits": [
+            "dadd5ea869108893bdfe014c75a06c363b720cc9"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py",
+              "function": "prepare",
+              "line": 81
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py",
+              "function": "_validate",
+              "line": 29
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v3_checkpoint.py",
+              "function": "save",
+              "line": 117
+            }
+          ],
+          "replacement_basis": "Checkpoint is nonauthorizing, binds native source/domain/profile/rules and validates current candidate. It does not publish canonical lifecycle at pause.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py::test_public_pause_then_resume_reuses_v3_and_preserves_history",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py::test_public_changed_source_revalidates_and_requests_new_contract",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_public_v3_pause.py::test_public_current_security_gate_still_precedes_pause_reuse"
+          ],
+          "limits": [
+            "Fingerprint dependency closure is being repaired by root; broad or incomplete rule fingerprints need separate verification."
+          ]
+        },
+        {
+          "id": "handoff-surgical-repair",
+          "intent": "Repair execution bindings in a checked successor without worker calls or semantic relabeling.",
+          "commits": [
+            "699b2b0110ee16161ea1152940b10799e2bd2cd7",
+            "7b79b95cba8b3a475e35fd050896b501254724cc",
+            "965df2e34f71ef197fffd8afb68f037688486ca2",
+            "ebd4e04152fbefaf1b0beb89dcb02c4835385cf4"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+              "function": "publish_repair",
+              "line": 571
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+              "function": "declare_planned_tests",
+              "line": 354
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/quick_dev_handoff.py",
+              "function": "repair_static_primary_bindings",
+              "line": 17
+            }
+          ],
+          "replacement_basis": "Legitimate refinements add exact bound planned-test declarations or remove a completely mapped redundant primary -k; preserve oracle, role, owner, commands, source/V4 witnesses and normal successor publication gates.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_quick_dev_handoff.py::test_public_cli_publishes_checked_successor_without_worker",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_planned_test_declaration_handoff.py::test_only_planned_field_and_slice_identity_change_and_idempotent",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_static_primary_handoff.py::test_only_explicit_primary_fields_change"
+          ],
+          "limits": [
+            "Do not restore broad test-root repair in place of explicit modes. No historical execution proof is imported."
+          ]
+        },
+        {
+          "id": "dependency-and-cohesion",
+          "intent": "Derive dependency graph from authoritative V1 edges, preserve unaffected scopes and reject conflicting combined contexts.",
+          "commits": [
+            "13abf92991ca45b966bb0f733de1d7483c08aba7",
+            "b49f05beaecc4ba7911f416a0ab9c1fe8f8d5068",
+            "94d8d00a7a63a39484949f18981e4ff7f7c9a6d8"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_compiler.py",
+              "function": "project_slice_dependencies",
+              "line": 1171
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_slice_cohesion_patch.py",
+              "function": "_compatible",
+              "line": 52
+            }
+          ],
+          "replacement_basis": "Missing dependency projection may be filled idempotently from V1 graph; explicit errors reject and prose has no graph authority. Published dependency revision is explicit bound input, not automatic broad regeneration.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py::test_producer_emits_v1_edges_and_stable_hashes",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py::test_prose_does_not_gain_authority",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_slice_dependency_projection.py::test_explicit_errors_reject_before_filling_any_omission"
+          ],
+          "limits": [
+            "Local cohesion extends exact set conflict checks to caller-protected glob/prefix read/write/rollback intersections. Root owns known P1/P2 checks."
+          ]
+        },
+        {
+          "id": "shared-unit-budget",
+          "intent": "Bound independent native work units cumulatively across retries/resume while allowing a healthy sequence longer than a round limit.",
+          "commits": [
+            "dadd5ea869108893bdfe014c75a06c363b720cc9"
+          ],
+          "implementation": [
+            {
+              "path": "scripts/workflow_unit_budget.py",
+              "function": "worker_input",
+              "line": 39
+            },
+            {
+              "path": "scripts/workflow_unit_budget.py",
+              "function": "Budget",
+              "line": 126
+            },
+            {
+              "path": "scripts/workflow_unit_budget.py",
+              "function": "supervise",
+              "line": 239
+            }
+          ],
+          "replacement_basis": "Budget lineage strips advisory planning observations and unwraps schema-repair input, but does not alter semantic cache fingerprints. Child units exclude container accounting and bytes/native completion count as progress.",
+          "tests": [
+            "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_independent_units_exceed_round_budget_without_timeout",
+            "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_retry_spends_same_allowance_and_cannot_renew",
+            "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_idle_and_duplicate_output_do_not_extend_budget",
+            "scripts/sc/tests/test_workflow_unit_budget.py::ClockTests::test_advisory_attempt_identity_does_not_renew_budget"
+          ],
+          "limits": [
+            "Do not replace with aggregate 1800-second compile watchdog. Classification/reference metadata must not renew same semantic budget."
+          ]
+        },
+        {
+          "id": "knowledge-observation-and-scope",
+          "intent": "Retain current safety/source verification while permitting an explicit already-returned reference after a closed query episode.",
+          "commits": [
+            "95902c858ecf67d935219b4c334f7a024b396851",
+            "ebd4e04152fbefaf1b0beb89dcb02c4835385cf4"
+          ],
+          "implementation": [
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/vdd_knowledge_preflight.py",
+              "function": "evaluate_preflight",
+              "line": 68
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/planning_observation_resume.py",
+              "function": "reference",
+              "line": 272
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_phase_source_scope.py",
+              "function": "validate_hints",
+              "line": 242
+            },
+            {
+              "path": ".agents/skills/vdd-execution-plan/scripts/semantic_phase_source_scope.py",
+              "function": "validate_bundle",
+              "line": 269
+            }
+          ],
+          "replacement_basis": "Preflight hashes accepted current worktree sources and does not expand locator authority. Local reference route checks explicit returned native origin and current permissions/dependencies, emits reference-only metadata and keeps default closed query block. Explicit Phase scope is caller-bound input, not protected-write approval.",
+          "tests": [
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py::VddKnowledgePreflightTests::test_rejected_candidate_drift_does_not_block_preflight",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_knowledge_preflight.py::VddKnowledgePreflightTests::test_accepted_candidate_outside_locator_result_blocks_preflight",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_default_resume_keeps_real_closed_query_block",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_valid_new_publication_rechecks_located_permissions",
+            ".agents/skills/vdd-execution-plan/scripts/tests/test_planning_observation_resume.py::test_reference_advice_keeps_native_budget_input_identity"
+          ],
+          "limits": [
+            "Scope/reference are untracked local extensions with no main introduction commit; they compensate absence of a safe source route/reference-only resume. Bounded audit did not re-read all knowledge internals, owned by other reviewer."
+          ]
+        }
+      ]
+    },
+    "quick-dev": {
+      "source_analysis": {
+        "path": "logs/toolchain-skill-baseline-20261029/history-quickdev.json",
+        "sha256": "ae0db2614aa2eaf3636b4f507340712bf6eb78db1e4224c1b322f560892b5532"
+      },
+      "families": [
+        {
+          "id": "red-green-refactor-entry",
+          "intent": "Require real production-bound expected RED, exact frozen selector succession and actual production Q4 delta; allow no-op refactor.",
+          "commits": [
+            "83d4c975",
+            "91f9f749",
+            "b389e898",
+            "699b2b01",
+            "b6632aef",
+            "bd126f58",
+            "51976790"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:51 validate_nonterminal_successor rereads RED descriptor/result/case report; GREEN and REFACTOR must match frozen selector.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:101 RED guard runs before reentry/process; q4_q6_gates.py:70 derives actual resolver production delta.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py and dotnet_production_entry.py implement native Python, exact dotnet and readonly quality-validator binding."
+          ],
+          "replacement_basis": "Current stable stage_pipeline owns evidence; legacy combined writers and static entry admission never authorize runtime completion.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_worker_classifies_actual_production_delta",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_noop_refactor_remains_legal",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_stable_runner_never_creates_green_after_noop",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q4_no_production_change.py::test_q4_finish_materializes_green_for_a_verified_manual_handoff",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_red_dispatch_checks_binding_before_reentry_or_process",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_skill_quality_red_binding.py::test_named_red_materialization_and_repeat_both_check_admission",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py::test_red_guard_requires_and_accepts_real_production_call",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_red_production_entry_guard.py::test_red_guard_rejects_import_without_call"
+          ],
+          "limits": [
+            "Known main P1 belongs to parent repair: shared saved-request validation rejects legal production change after GREEN; existing no-op refactor tests do not exercise changed refactor production bytes."
+          ]
+        },
+        {
+          "id": "cer-routing-partial-obligations",
+          "intent": "Probe existing behavior once; present obligations use regression, missing behavior uses RED/GREEN/REFACTOR; partial case outcomes remain exact.",
+          "commits": [
+            "699b2b01",
+            "13abf929",
+            "cfae69b4",
+            "10f64276",
+            "f5f063d5"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/behavior_routing.py:61 derive_dispositions and :144 verify_stage; stage_map selects required stage per acceptance.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/case_evidence.py:98 binds assertion IDs to exact collected/selected nodes; skipped/harness/wrong-ID outcomes cannot authorize RED."
+          ],
+          "replacement_basis": "Partial case extension supersedes all-or-nothing obligation handling while preserving all prior passing cases. Documentary guards alone may have empty production closure.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_all_present_closes_regression_without_red_or_implementation",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_mixed_slice_preserves_both_obligations_and_closes_both_paths",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_stale_regression_cannot_close_after_production_change",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_test_only_guard_has_empty_production_hash_closure",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_partial_obligation_closes_native_lifecycle",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_partial_unverifiable_cases_remain_blocking",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_passing_case_must_remain_green",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_formal_red_preserves_partial_case_outcomes",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_partial_obligation.py::test_passing_only_assertion_adds_no_red_failure_id"
+          ],
+          "limits": []
+        },
+        {
+          "id": "q2-materialized-author-reuse",
+          "intent": "Skip model-backed RED author when materialized selector and required literal or fixture assertion mapping are already complete; persist author failures.",
+          "commits": [
+            "7723af1f",
+            "8e519cef",
+            "5cbd5e34",
+            "bd494a96",
+            "b6632aef"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py q2_author_red and _descriptor_inputs inspect existing test/fixture markers without importing candidate tests."
+          ],
+          "replacement_basis": "Existing files alone are insufficient: missing assertion IDs route through bounded author. BOM and non-pytest fixtures remain supported.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_existing_tests_with_new_assertion_ids_route_through_bounded_author",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_materialized_planned_test_with_required_assertion_does_not_reinvoke_author",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_fixture_assertion_mapping_does_not_reinvoke_author",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_non_pytest_fixture_does_not_reinvoke_author_when_selector_is_complete",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_bom_encoded_cer_selector_is_scanned_without_worker",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_behavior_routing.py::test_author_failure_is_recorded_and_blocks_same_run_reentry"
+          ],
+          "limits": []
+        },
+        {
+          "id": "explicit-reentry-repeat-session",
+          "intent": "Reuse exactly bound completed evidence including failures; stop stale/partial evidence before duplicate work; sessions progress only through native gates.",
+          "commits": [
+            "cfae69b4",
+            "dadd5ea8",
+            "119e2407"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/stage_reentry.py:7 hashes candidate/plan/selector/fixtures/engine/profile; :23 revalidates outputs, report, runtime edges, Q6 and completion seals.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/stage_pipeline.py:106 checks existing result then explicit ordered failure history before launch.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/execution_session.py preflight_session/advance_session binds session request and native Q7/Q8; no model implementation auto-authority."
+          ],
+          "replacement_basis": "No latest-run scan; fixed run path or explicit history only. Same-content retries share cumulative unit budget.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_stale_or_partial_evidence_stops_before_process",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_each_stage_honors_explicit_history_before_execution",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_named_cli_stage_honors_failure_history",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_refactor_reentry_does_not_call_worker",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_public_repeat_guard.py::test_repeat_guard_blocks_third_identical_attempt_and_source_change_reenters",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_public_repeat_guard.py::test_public_entrypoint_never_launches_third_identical_command",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_readonly_preflight_and_real_present_session_resume",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_missing_route_stops_before_implementation_worker",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_changed_product_cannot_reuse_completed_session",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_session.py::test_session_completion_is_consumed_by_acceptance"
+          ],
+          "limits": [
+            "Known main P2 belongs to parent repair: stable_runner --failure-history uses object-only loader for valid JSON arrays. Named CLI-stage tests directly cover it; check_history itself already accepts arrays."
+          ]
+        },
+        {
+          "id": "content-bound-shared-execution",
+          "intent": "Share compatible successful Python pytest execution originals across slices, Q6 and terminal with zero new process attempts.",
+          "commits": [
+            "81cfae78",
+            "dadd5ea8"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:87 manifests repository bytes, full contract minus provenance, argv/cwd, engine and installed environment.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:267 uses exact content key under logs/quick-dev-shared-executions; :149 requires complete nonzero all-passed structured events.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:195 re-reads immutable original descriptor/receipt/output; uses retain original case-report identity and are revalidated at Q7/Q8."
+          ],
+          "replacement_basis": "Only new content-bound original/use pairs qualify; legacy receipts are never upgraded. Git provenance alone may differ. Unknown imports/child processes/external reads prevent reusable publication.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_cross_slice_terminal_references_one_original_and_keeps_report_identity",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_git_only_commit_change_reuses",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_content_or_environment_change_invalidates",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_original_loss_or_corruption_rejected_at_use_and_closure",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_q6_cross_slice_and_terminal_share_raw_execution",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_native_terminal_and_q8_accept_reference_but_reject_missing_original",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_unknown_dependencies_and_actual_failures_never_publish_success",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_case_coverage_cannot_be_filled_by_another_assertion"
+          ],
+          "limits": [
+            "Known main P1: validate_saved_request compares historical GREEN manifest to current production at closure; parent owns fix and new changed-refactor regression.",
+            "Current manifest inventories all non-evidence repository files, so unrelated content changes invalidate sharing; do not silently weaken this conservative dependency boundary."
+          ]
+        },
+        {
+          "id": "execution-environment-normalization",
+          "intent": "Exclude only executor call metadata and private supervisor routing from child test environment and matching identity.",
+          "commits": [
+            "b9c701c1",
+            "dadd5ea8"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/execution_environment.py:11 removes CODEX_TOOL_CALL_ID after workflow_unit_budget execution_environment removes three supervisor variables.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py uses quick-dev.pytest-environment.v2 and rejects unknown/older environment schema before comparing hashes.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py uses same execution_environment for actual collector process."
+          ],
+          "replacement_basis": "Older aggregate-only identities cannot establish the new filter and must not be relabeled. Every other variable, absence and empty value remain distinct.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_only_call_metadata_change_keeps_candidate_environment",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_nontransport_environment_changes_and_presence_remain_bound",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_independent_processes_use_the_same_normalized_capture",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_aggregate_only_or_unknown_schema_is_not_upgraded",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_execution_environment.py::test_actual_pytest_child_and_reference_share_metadata_boundary"
+          ],
+          "limits": []
+        },
+        {
+          "id": "q7-q8-original-dedup",
+          "intent": "Reduce repeated full original reads within one Q7 invocation or one Q8 predecessor replay epoch; retain every independent runtime edge check.",
+          "commits": [
+            "93d06e67",
+            "d86539b9"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:22 _Q7OriginalChecks queues exact content/context keys, watches inputs/directories/environment and finishes before publication.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:447 _q8_reread_edge checks each edge and lineage; per-predecessor originals object stays inside replay_budget_transition.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py validate_regression_references supports invocation-local deferred saved-request validator."
+          ],
+          "replacement_basis": "No persisted cross-call cache. Only genuine new completion progress resets inactivity; it never resets total allowance.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_same_original_checked_once_per_invocation",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_mutation_during_validation_rejected",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_each_edge_keeps_independent_identity_checks",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_139_edges_check_three_q6_originals_and_main_only_four_times",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_q7_original_checks.py::test_genuine_completion_does_not_reset_unit_total",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py::test_q8_deduplicates_originals_but_checks_every_edge_within_replay_context",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py::test_q8_rejects_bad_proof_without_publishing",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_coverage_predicates.py::test_q8_detects_original_mutation_during_deferred_checks"
+          ],
+          "limits": []
+        },
+        {
+          "id": "q6-scope-and-pytest-arguments",
+          "intent": "Defer genuinely terminal-wide regressions while preserving primary truth floor and exact slice-local commands; parse filter values separately from file inputs.",
+          "commits": [
+            "db157e76",
+            "13abf929",
+            "b908cb39",
+            "81cfae78",
+            "93d06e67"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py _pytest_path_arguments skips -k/-m/-o values, retains -c config and real targets, rejects missing values.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/regression_gate.py _terminal_scope_command and run_regression_gate retain profile-specific required command set and immutable references."
+          ],
+          "replacement_basis": "standard/self-hosted require native agent-context commands; fast-ship may omit extras only. Terminal-scope deferral is not blanket single-file consumer suppression.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_long_keyword_value_is_not_probed_as_a_file",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_filter_value_cannot_defer_a_real_slice_command",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_pytest_argument_values_preserve_real_targets",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_missing_filter_value_fails_closed",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_requires_agent_context_and_publishes_no_refactor_result_without_it",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_q6_failed_declared_regression_blocks_refactor_result",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_defers_terminal_whole_tree_pytest_command",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_defers_shared_consumer_regression_file",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_q6_regression_gate.py::test_standard_q6_runs_explicit_single_file_consumer_fixture"
+          ],
+          "limits": []
+        },
+        {
+          "id": "snapshot-incremental-dotnet-evidence-noise",
+          "intent": "Reuse earlier slice proof across unrelated slice changes and append-only generated evidence; exclude only actual dotnet project generated output trees.",
+          "commits": [
+            "997237e0",
+            "64e5c791",
+            "bbe60d0f",
+            "ebee96a6",
+            "7cbda6de",
+            "98e704ee",
+            "e6cfce46",
+            "f132bb38",
+            "5ec5410f",
+            "feafd682",
+            "94870bbf",
+            "e289d7d3",
+            "b6632aef"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py:387 _replay_snapshot checks eight exact roots, plan evidence allowance and candidate changes outside explicit slice inputs.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py:410 hash_path ignores bin/obj/TestResults only when tree root contains .csproj; explicit output files stay bound.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/process_executor_v2.py owns current run/batch evidence-noise exclusion; unknown production noise still fails.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/runtime_evidence.py hashes long Windows evidence storage keys to bound path lengths."
+          ],
+          "replacement_basis": "Default snapshots remain content strict; documentary/governance input bytes only become runtime dependencies when explicitly bound. Evidence allowance never masks changed semantic plan or own production inputs.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_snapshot_outputs.py::test_project_snapshot_excludes_outputs_but_detects_source",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_snapshot_outputs.py::test_explicit_output_and_non_project_bin_remain_bound",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py::test_multi_path_plan_replay_allows_only_declared_append",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_snapshot_exclusions.py::test_slice_snapshot_reuse_keeps_production_inputs_bound",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py::test_current_run_evidence_is_not_classified_as_repo_noise",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_ch456_recovery_mutations.py::test_sibling_slice_evidence_in_same_batch_is_not_classified_as_repo_noise"
+          ],
+          "limits": []
+        },
+        {
+          "id": "dotnet-production-test-binding",
+          "intent": "Admit bounded pytest wrappers that statically target exact dotnet test/TRX and declared production owner.",
+          "commits": [
+            "83d4c975"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/dotnet_production_entry.py:112 follows safe subprocess argv, exact FullyQualifiedName, test csproj/reference, frozen C# source and actual production call.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/red_production_entry_guard.py invokes dotnet route only as admission; runtime CER/TRX remains independent."
+          ],
+          "replacement_basis": "Permits exact compatible .NET binding without executing dotnet during admission; fabricated comments/strings/import-only/static no-op do not establish a call.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_accepts_bound_dotnet_without_executing_it",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_rejects_unbound_or_fabricated_entry",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_requires_frozen_csharp_source",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_rejects_project_escape",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_accepts_static_call_and_subprocess_alias",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_dotnet_production_entry.py::test_accepts_host_binding"
+          ],
+          "limits": [
+            "Session guidance explicitly defers reusable TRX helper to pre-S2. Static .NET admission coverage is not real Windows/.NET execution evidence; this is an approved compatibility limit, not a new implementation requirement."
+          ]
+        },
+        {
+          "id": "bounded-first-use-entry",
+          "intent": "Prepare deterministic neutral missing production interfaces before Q2 without model-written bodies or implementation authority.",
+          "commits": [
+            "119e2407",
+            "127b26a4"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/first_use_entry.py:65 validates exact planned-new owner/write path and forbids frozen, symlink, tracked, escaping or existing paths; validates entire batch before writes.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/first_use_entry.py:109 creates immutable hash-bound Python return-None interface, empty JSON object or zero-byte TOML with exports=[]."
+          ],
+          "replacement_basis": "Preparation never satisfies expected RED; real controlled assertion failure still required. TOML support extends prior Python/JSON route only with strictly empty configuration.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_prepare_and_exact_resume_do_not_authorize_implementation",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_prepare_rejects_unbounded_input_before_writing",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_prepared_real_entry_still_needs_controlled_red_and_detects_harness_error",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_entry.py::test_json_interface_has_no_candidate_supplied_data",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_empty_toml_is_deterministic_and_not_configured_or_red",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_toml_keeps_all_input_and_path_rejections",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_toml_receipt_revalidation_rejects_drift",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_first_use_toml.py::test_mixed_preparation_prevalidates_before_creating_toml"
+          ],
+          "limits": []
+        },
+        {
+          "id": "q1-light-delivered-admission",
+          "intent": "Preflight delivered contracts deterministically without importing tests, creating runs, invoking BMAD reviews or model workers.",
+          "commits": [
+            "699b2b01",
+            "01d4bc57",
+            "f57c2998",
+            "51976790"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/q1_planned_preflight.py:68 validates actual materialized/planned refs and argv plus per-slice context projection.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/stable_runner.py q1_preflight and _descriptor_inputs keep literal discovery/selection side-effect free."
+          ],
+          "replacement_basis": "Upstream review reports are not gates; native contract readability/hash/reference checks remain. Dynamic markers defer to execution rather than test imports.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_2186eab31aa1",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_b01c33d730ee",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_8888741bb36f",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_e16830860490",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_d07a4a77480c",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_light_consumer_admission.py::test_light_3a295774a883",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py::test_q1_does_not_require_upstream_review_or_run_upstream_process",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py::test_q1_keeps_actual_contract_checks",
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_quick_dev_delivered_inputs.py::test_reuse_binds_delivered_input_bytes_without_review_evidence"
+          ],
+          "limits": [
+            "Do not attribute failures caused by pre-existing modified VDD files to fixed main without replaying those source blobs."
+          ]
+        },
+        {
+          "id": "approved-budget-compatibility",
+          "intent": "Replay original immutable successful proofs through one explicitly approved exact-byte budget transition without rerunning business fixtures.",
+          "commits": [
+            "c15c2839",
+            "e4e1377c",
+            "1b1bf3d8"
+          ],
+          "implementation": [
+            "scripts/quick_dev/approved_budget_replay.py exact transition/owner blobs and ContextVar scope provide original file reads only in opt-in Q8 context.",
+            ".agents/skills/quick-dev-tdd-adapter/tools/coverage_predicates.py scopes predecessor rereads and deferred original checks to the explicit compatibility epoch."
+          ],
+          "replacement_basis": "ADR-0058 pins allowed before/after transition pairs, owner baseline, authority-empty binding and every unaffected byte. Ordinary native success/exact-cover gates remain.",
+          "tests": [
+            "scripts/quick_dev/tests/test_approved_budget_replay.py::test_reads_original_bytes_only_inside_explicit_q8_context",
+            "scripts/quick_dev/tests/test_approved_budget_replay.py::test_extra_semantic_change_rejects_instead_of_masking",
+            "scripts/quick_dev/tests/test_approved_budget_replay.py::test_malformed_or_forged_binding_rejects",
+            "scripts/quick_dev/tests/test_approved_budget_replay.py::test_unrelated_fixture_and_exception_cleanup_remain_strict",
+            "scripts/quick_dev/tests/test_approved_budget_replay.py::test_changed_owner_adapter_is_not_compatible",
+            "scripts/quick_dev/tests/test_public_budget_transfer.py::test_owner_q8_reuses_success_but_rejects_failed_stale_and_changed_cases"
+          ],
+          "limits": [
+            "OWNER_FILES pins current behavior_routing.py/coverage_predicates.py byte hashes. Later owner changes need explicit compatibility decision; do not update pins silently or rewrite old evidence. Existing main owner files evolved after pinned c15c and should be assessed separately from proposed fixes."
+          ]
+        },
+        {
+          "id": "shared-worker-budget-model-boundary",
+          "intent": "Keep caller-session and local Codex worker transport inside native write guards; use per-content-unit cumulative budgets and configured model route.",
+          "commits": [
+            "46d4955b",
+            "db157e76",
+            "f7ac19db",
+            "57b00012",
+            "dadd5ea8"
+          ],
+          "implementation": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/worker_orchestrator.py:27 uses workflow_unit_budget.unit then shared _llm_backend; actual worker mutator delta is validated before any successor evidence.",
+            "scripts/workflow_unit_budget.py per-content-key total/idle budget; execution_environment strips only supervisor variables; retries cannot renew allowance.",
+            "scripts/sc/host_session.py and _llm_backend.py preserve caller transport status without evidence authority; model routing lives in scripts/sc/workflow_model_routing.py."
+          ],
+          "replacement_basis": "Caller-session is an explicit transport route; caller/model text does not establish RED/GREEN/Acceptance. Native stable gate ownership remains.",
+          "tests": [
+            ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_host_session_worker.py::test_actual_host_q2_worker_obeys_native_write_set"
+          ],
+          "limits": [
+            "Full LLM backend, replay lifecycle and model routing audit delegated to their owners; this matrix records direct QuickDev call boundary and complete path-scoped commit set."
+          ]
+        }
+      ]
+    }
+  },
+  "verification_limit": "Historical source review maps assertions, not execution proof. Admission requires running every mapped case in the full mandatory suite."
+}

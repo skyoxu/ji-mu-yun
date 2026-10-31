@@ -499,6 +499,8 @@ def partition_slices_with_preflight(
 
 
 def validate_semantic_bundle_with_preflight(bundle: Mapping[str, Any]) -> tuple[bool, list[str]]:
+    from semantic_phase_source_scope import validate_active_bundle
+    validate_active_bundle(bundle)
     valid, findings = _ORIGINAL_VALIDATE_SEMANTIC_BUNDLE(bundle)
     findings = list(findings)
     for label in ("acceptances", "slices"):
@@ -828,6 +830,8 @@ def _completed_resume(
     current_bundle_sha256 = sc.sha256_value(bundle)
     if state.get("semantic_plan_sha256") != current_bundle_sha256:
         raise ValueError("resume found semantic bundle hash drift")
+    from semantic_phase_source_scope import validate_active_bundle
+    validate_active_bundle(bundle)
     valid, findings = validate_semantic_bundle_with_preflight(bundle)
     if not valid:
         raise ValueError("resume found invalid completed bundle: " + ",".join(findings))

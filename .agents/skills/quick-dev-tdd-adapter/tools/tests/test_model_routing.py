@@ -12,6 +12,28 @@ if str(TOOLS_ROOT) not in sys.path:
 import model_routing  # noqa: E402
 
 
+def setUpModule() -> None:
+    """ADR-0041: routing tests use explicit isolated settings, never this device."""
+    global _model_directory, _model_location
+    import tempfile
+    from unittest import mock
+    _model_directory = tempfile.TemporaryDirectory(prefix="routing-model-fixture-")
+    settings = Path(_model_directory.name)
+    (settings / "config.toml").write_text('model = "regression-fixture-model"\n', encoding="utf-8")
+    owner = sys.modules[model_routing.routing.load_model.__module__]
+    import os
+    original = owner.codex_config_dir
+    initial_home = os.environ.get("CODEX_HOME")
+    _model_location = mock.patch.object(owner, "codex_config_dir",
+        side_effect=lambda: original() if os.environ.get("CODEX_HOME") != initial_home else settings)
+    _model_location.start()
+
+
+def tearDownModule() -> None:
+    _model_location.stop()
+    _model_directory.cleanup()
+
+
 class QuickDevModelRoutingTests(unittest.TestCase):
     def facts(self, **updates: object) -> dict[str, object]:
         value: dict[str, object] = {

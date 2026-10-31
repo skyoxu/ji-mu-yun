@@ -1,0 +1,1492 @@
+{
+  "schema": "toolchain.history-dependency-expansion.v1",
+  "note": "Additive source/test dependency pass after restoring missing 8-05 suites. Original first-pass evidence remains unchanged.",
+  "new_enrolled_paths": [
+    ".agents/skill-baselines/capability-coverage.v1.json",
+    ".github/workflows/ch456-capability.yml",
+    ".gitignore",
+    "docs/workflows/toolchain-skill-capability-baseline.md",
+    "scripts/sc/tests/test_805_round6_full_replay.py",
+    "scripts/sc/tests/test_skill_package_replay.py",
+    "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+    "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+    "scripts/sc/tests/test_skill_replay_historical_validator.py",
+    "scripts/sc/tests/test_skill_replay_integration_regressions.py",
+    "scripts/sc/tests/test_skill_replay_process_regressions.py",
+    "scripts/sc/tests/test_skill_replay_review2_regressions.py",
+    "scripts/sc/tests/test_skill_replay_verification.py",
+    "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+    "scripts/sc/verify_skill_replay.py"
+  ],
+  "new_commit_candidates": [],
+  "commits": [
+    {
+      "commit": "ba5d5203a140bb510834e487f4ac0547364b38d3",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": null,
+          "after_sha256": "33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests.test_capability_rejects_escape",
+            "SkillPackageReplayTests.test_validate_package_emits_non_authorizing_receipt"
+          ]
+        }
+      ],
+      "diff_sha256": "606d60edde2d44bbe0c6149860c42b0265c0672433e812d0f9268f0cae52dee4",
+      "diff_bytes": 1803
+    },
+    {
+      "commit": "6471eee09446a02e39b4ec641717aa56c3d6e76e",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": null,
+          "after_sha256": "ed11ceac1d7fac8d2bf980a5c16cf8903f19b559ffa333aa0b5127214c02313d",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "0004829180fe2d76d78ac343d1d24e6029229366891350c65f1dfa6ac67650fa",
+      "diff_bytes": 986
+    },
+    {
+      "commit": "b0ae7dd37697c2b411a734076564b88e4e11a10a",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "ed11ceac1d7fac8d2bf980a5c16cf8903f19b559ffa333aa0b5127214c02313d",
+          "after_sha256": "85bccb4cb00dd85a604020772dd189f559d046c55c4cc63d93882abac034f464",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "91d6dd535e7ba036d0d9a57ae5ac280077b37f7afa684958ffbccd21c756358b",
+      "diff_bytes": 759
+    },
+    {
+      "commit": "98482d972a0682993cd871572a8bbb60f2463626",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "85bccb4cb00dd85a604020772dd189f559d046c55c4cc63d93882abac034f464",
+          "after_sha256": "cfeed96574fb1d6a65d24998e46152da5013930259fd2b090c563fa3a8543dfb",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "7698c0be0dd29b1f52011bcf926ca50dfd39dbf9ed4c057e9d73b36ac004498d",
+      "diff_bytes": 755
+    },
+    {
+      "commit": "4a829b12855fc89ca4902c0541eff8156aee59d9",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "cfeed96574fb1d6a65d24998e46152da5013930259fd2b090c563fa3a8543dfb",
+          "after_sha256": "aa4fcbae7cc735a7d1c8baf37f03324171338bbfe38f11fb1995002bd2d229c9",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "78e892b8dc0bc55a07f19e417958232717f26f4838bf8fde9e4dacfc45835a80",
+      "diff_bytes": 1177
+    },
+    {
+      "commit": "3bc1c3c1e4a338eceecde8e6c1187ddcad34c299",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "aa4fcbae7cc735a7d1c8baf37f03324171338bbfe38f11fb1995002bd2d229c9",
+          "after_sha256": "f8f3490930d4cc5bd67a3ce1d5c67fa4bb0bc67e378f66ef8fa5b63d9c8d1472",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "5fe73b153a4102e1467c57f6c0dfb23d97667e4540d9b652a3bead4b8680a200",
+      "diff_bytes": 661
+    },
+    {
+      "commit": "8dad688dd847789b2506ec500bd9a556894c70d8",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "f8f3490930d4cc5bd67a3ce1d5c67fa4bb0bc67e378f66ef8fa5b63d9c8d1472",
+          "after_sha256": "7426becc3195813536ceb26a315c2e2087a9685c96d2fbbd6ffb0f16e35e7fd6",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "90deb145ce0c9afecb1a39c94f331274513e09e3c54d86573af30ad9a18aff04",
+      "diff_bytes": 969
+    },
+    {
+      "commit": "d9d9a091a939e9a9e9897ff61351fcf90767aec0",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "7426becc3195813536ceb26a315c2e2087a9685c96d2fbbd6ffb0f16e35e7fd6",
+          "after_sha256": "bd856e90d218a3c49c6b7350c336d76dbcea31f7d2955dca0f3cbb25842db5d2",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "8e47de3428a513e32cd191956e1cc48148349a5270a16efcc1a80eba78cca080",
+      "diff_bytes": 809
+    },
+    {
+      "commit": "1664050d82abf96891d3fe9552fedbd377462052",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "bd856e90d218a3c49c6b7350c336d76dbcea31f7d2955dca0f3cbb25842db5d2",
+          "after_sha256": "1c43d451f87e0cf89628cd4b52a12e4db36b0edc27ac7c568276a82a2f6ab6a8",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "1354bfa3dfc46273799f69f002a04386f43bc1c4c22815b384ba40911316b316",
+      "diff_bytes": 702
+    },
+    {
+      "commit": "b48d43d4004cdd4774383cbc24948a60160b0988",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "1c43d451f87e0cf89628cd4b52a12e4db36b0edc27ac7c568276a82a2f6ab6a8",
+          "after_sha256": "d259e5224094b0397ca1a9c31276d8a9fdbadb9195bc9fc9514a7198c3d346f7",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "2bd253d46bc23c78d01acc81c38cc3e55d72b87ee9ce90cb241ce7bfe7269440",
+      "diff_bytes": 953
+    },
+    {
+      "commit": "f6c175c44ab6e8d5656b8412da13dee67fe0b82e",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "d259e5224094b0397ca1a9c31276d8a9fdbadb9195bc9fc9514a7198c3d346f7",
+          "after_sha256": "84c78865dd3411f923e9b0e9b6f84b8f63ca75724dd2c7ce8ab8d66f2708c8b3",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "3dc9838cce3311ea326d133e8a2789832a14b9b12bdaad324c9fc735d8f7a9a5",
+      "diff_bytes": 1121
+    },
+    {
+      "commit": "bd7cd18998ebd16f854bb4b82b395d0ab6d3b954",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "84c78865dd3411f923e9b0e9b6f84b8f63ca75724dd2c7ce8ab8d66f2708c8b3",
+          "after_sha256": "305b0a3e0f8c5a27e06e0fb83daa9d06ca0944a67c14f4d465b67f23495fcf80",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "37a0c2e5879858dd2c3808d0d02a9246700c81bdde768d210d88a7851f0896c4",
+      "diff_bytes": 514
+    },
+    {
+      "commit": "5ca5b033902ecb2637f888cf0c59963214ed6316",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "305b0a3e0f8c5a27e06e0fb83daa9d06ca0944a67c14f4d465b67f23495fcf80",
+          "after_sha256": "e2d0c269031e1373b022797a26ae87a94f426b5c6ba1bc4f7fa4c7de067b199c",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "a3e7fab64480cbe3424d6ad2429a5a589bd3f11361acdfc90bafaa4081ddde70",
+      "diff_bytes": 885
+    },
+    {
+      "commit": "41c526c1fe6308478f30f3088c591dc7d0f269df",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "e2d0c269031e1373b022797a26ae87a94f426b5c6ba1bc4f7fa4c7de067b199c",
+          "after_sha256": "fd742e13eea0e7082ec8db342566b95c7410989f3cfdf19d2cebbb7765ecd007",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "6d561de1550895126922f54a0b855eaca9846c9da8ba7e8d47183384005d0e5a",
+      "diff_bytes": 671
+    },
+    {
+      "commit": "19ac9a33d356e7807554eadbfb588a212c17440e",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "fd742e13eea0e7082ec8db342566b95c7410989f3cfdf19d2cebbb7765ecd007",
+          "after_sha256": "6ccf39a88ffb3addd3ff93f3c3abda0f8a36aeee56ac829db5b328d54da83542",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "f2513bc9ad565b23d786b1fb03c2db5b217c833a10bd07e764c0028bfa615995",
+      "diff_bytes": 420
+    },
+    {
+      "commit": "cb65c264db1f0cd0fdf1861513b67b0a759cacff",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "6ccf39a88ffb3addd3ff93f3c3abda0f8a36aeee56ac829db5b328d54da83542",
+          "after_sha256": "a484f487748c8599a6b25bf96a94002fb9e53c839f1f8501cb48b8bc2de5ce82",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "7fa03c77f7f78825c279c9877df07ce7797afde05e05769885f1b0058b13e0b6",
+      "diff_bytes": 1404
+    },
+    {
+      "commit": "bbcf11559ecbce27d31ad8a2e368f4f3d0ae026b",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "a484f487748c8599a6b25bf96a94002fb9e53c839f1f8501cb48b8bc2de5ce82",
+          "after_sha256": "3e5f90300288fb56d7d551a64769be49e18dc4cd2f35e5a6782d34fd503b3d1d",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "3c6554b952cf7d4788263d60acd606d6a81a053c0976e0f139585b03bc4bbece",
+      "diff_bytes": 1013
+    },
+    {
+      "commit": "a6d755efa1fe45157951cf86aac2135c3cd836ca",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "3e5f90300288fb56d7d551a64769be49e18dc4cd2f35e5a6782d34fd503b3d1d",
+          "after_sha256": "4a6ec49abe90a9bd4fb61ee0b213cb9e31bd0429e40aeb45d21fb700d4aa4230",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "edbd5240aafb2b02f937c0a18ec9fc050b7d4a8c09c1e2293f3de0998585bdbb",
+      "diff_bytes": 744
+    },
+    {
+      "commit": "30a9b381abf167ff0463660db1f07c284f2aeee9",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "4a6ec49abe90a9bd4fb61ee0b213cb9e31bd0429e40aeb45d21fb700d4aa4230",
+          "after_sha256": "4c3225cdb3b27c3cc1ef7f0c3993df1cb5a113c73fabfa1ee7175ea1cd45d5e7",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "fa22bb0178a40d91dc0dc25ae2d5abf236c9669e73af002b8f3845bec05872f1",
+      "diff_bytes": 703
+    },
+    {
+      "commit": "0ba261b8b828f10837ceee5564aaf43a81393e07",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "4c3225cdb3b27c3cc1ef7f0c3993df1cb5a113c73fabfa1ee7175ea1cd45d5e7",
+          "after_sha256": "e1a2841dd08ead7e4ce94a269ec7532f43c11551ec8b5a7dad2a499e8bf701d5",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "4ef674a00c6522e6559814c8775d18205d7f241a75f6ce1abcb4e9130ff39289",
+      "diff_bytes": 1092
+    },
+    {
+      "commit": "dee67680d95de177601f54a7617f4052f9e2d330",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "e1a2841dd08ead7e4ce94a269ec7532f43c11551ec8b5a7dad2a499e8bf701d5",
+          "after_sha256": "8ab5673977e2969cd0182d60e7f72e947b0861dd49a69c1dfd45382ffd025d41",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "db9232d0237883c5d954c7784c5e82c91eed4a41e64ec332365215b369772d8b",
+      "diff_bytes": 1288
+    },
+    {
+      "commit": "9c08d643953bc25c65da0f0a0e3a28aac1439ba2",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "8ab5673977e2969cd0182d60e7f72e947b0861dd49a69c1dfd45382ffd025d41",
+          "after_sha256": "5d0e0d935b5639d2eebf93faf17a7f5c2846a81299ea6effcf6e036b4176dc5d",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "c62319bf1ea14b40601caf51997fac6f829b813f5acea796ede593dcfc587c4b",
+      "diff_bytes": 1307
+    },
+    {
+      "commit": "5f10c6fb8195ca0aa9f4aed1fa51ca83d9b6b6de",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "5d0e0d935b5639d2eebf93faf17a7f5c2846a81299ea6effcf6e036b4176dc5d",
+          "after_sha256": "de303519d9df6aee685dd3d43d0a11ac433688b46deb4a8363c5129b9d574006",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "adf5b45f9817e4ced8cdfa12c9c3aa40db9d83b0386084498b99895ed9df9bb2",
+      "diff_bytes": 727
+    },
+    {
+      "commit": "2a3053b69fde492a28fcd0bc42ae11d8966911db",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "de303519d9df6aee685dd3d43d0a11ac433688b46deb4a8363c5129b9d574006",
+          "after_sha256": "d7720d617e6b3a8584ac08d8116c81130f3d91a1668048c670ccffba79b5d3c1",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "30f7f9ac5ad81118e0f98fea1219d84726f4004399ba69c7b646ca4e78728e6e",
+      "diff_bytes": 731
+    },
+    {
+      "commit": "3b33a3e80c7834df8d1317a58c396e5b15cb3e27",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "d7720d617e6b3a8584ac08d8116c81130f3d91a1668048c670ccffba79b5d3c1",
+          "after_sha256": "1077726373af78384753bf4b86960c6569c9f5b6da8c3d56e795a1e66e5e9cce",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "f18372be95be727b0280bd39f7896df4a502010d2028a64d3a6bb827019e7263",
+      "diff_bytes": 2201
+    },
+    {
+      "commit": "0e773026765c37a2fcf83ae210060c98d0c57845",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "1077726373af78384753bf4b86960c6569c9f5b6da8c3d56e795a1e66e5e9cce",
+          "after_sha256": "74a8dfdf3f5998b89d7794d75f4fe069d1e9aeadecb421a3fabf81b383458d32",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "81ac365a9bd4935d9ec9ab891619807a1e4cc89a1d4522519fcd9901583c0195",
+      "diff_bytes": 1652
+    },
+    {
+      "commit": "68b599302304d48db221f10c6152012de7cff629",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "74a8dfdf3f5998b89d7794d75f4fe069d1e9aeadecb421a3fabf81b383458d32",
+          "after_sha256": "0c222e281bf475e2ae62d8fc564a73c1a588db40ed7534e9c3d44d5c3ae4c14f",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "92021ada985dc37043bf8a5352204e55fc8b5a7ecd9122c2f8af9a16da2ad25f",
+      "diff_bytes": 1095
+    },
+    {
+      "commit": "1bae47917f32f8ab64a6d65c5063566552a61d2e",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "0c222e281bf475e2ae62d8fc564a73c1a588db40ed7534e9c3d44d5c3ae4c14f",
+          "after_sha256": "5b2c1e57c2f164a8b6c724a817fa19e10c8efe32e3e13a405e68e4e8d0b618cc",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "3da6cee1b6572cc6c5e160cd79d2c188425fc895db8eb9869c290d44eccfaf31",
+      "diff_bytes": 2615
+    },
+    {
+      "commit": "ae5b32f10bdd843fb70af8c51efa8cc1a0282990",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "5b2c1e57c2f164a8b6c724a817fa19e10c8efe32e3e13a405e68e4e8d0b618cc",
+          "after_sha256": "158296c88e55ec0a0b71c10720d497a4f3eb40d4c42ce39be871a830295dbf47",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "34256bb14e703538c25656dcb4020647f592e8feb17308973b01f283d9a5d024",
+      "diff_bytes": 1722
+    },
+    {
+      "commit": "37f96dad2eddaa97dfec91d05da209036019a88d",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "158296c88e55ec0a0b71c10720d497a4f3eb40d4c42ce39be871a830295dbf47",
+          "after_sha256": "60ef027ecadfc20804e9726861c3d4b4c38e7253dfd2a52489ead8b8b9bf8bff",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "dc8911930e66be9da807e86f1fd80892e5d6d7083d8674dea84e63bd5cdcfc3e",
+      "diff_bytes": 1442
+    },
+    {
+      "commit": "a168405028ff74ed4f08e7def43290eacf241fcf",
+      "paths": [
+        ".github/workflows/ch456-capability.yml"
+      ],
+      "effects": [
+        {
+          "path": ".github/workflows/ch456-capability.yml",
+          "before_sha256": "60ef027ecadfc20804e9726861c3d4b4c38e7253dfd2a52489ead8b8b9bf8bff",
+          "after_sha256": "ffb4426dc6a4a88790d280a1d8e5ce41fce262291805b96ec27b0b2f78d3c9d3",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "1a9b06c12af9f34b0f49eb52328c86e9e22cae250b8e39e5076726c8b5d9b121",
+      "diff_bytes": 2990
+    },
+    {
+      "commit": "270dcef9ea5c72a078660edfd8d6090c3340c3e7",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "9c39b88656fe4ec221e506e1146c578df997d89a97c8e07edc11731bd1662dcb",
+          "after_sha256": "c33749c1777f39df34e5dd1e1e35be743afc0c209cce8944f0906e840c320177",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "af2faf0e78cc3466c140d0df1f33d21891ef54d5e2c7117eb89198f463424ac8",
+      "diff_bytes": 286
+    },
+    {
+      "commit": "04900158aeb1643b12ae88804dead69b83a180de",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "c33749c1777f39df34e5dd1e1e35be743afc0c209cce8944f0906e840c320177",
+          "after_sha256": "4293768eb565c1d2baad390cb033823c0dd668f1348aed5200d32f9ff8c9b934",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "e663744e02ceeddd4a2db0c165ff4e2540622463f5f18d282359fc1291f8206d",
+      "diff_bytes": 278
+    },
+    {
+      "commit": "d665884f1eb9a7a5544fe9ff05d31eacd0f0a8b5",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": "33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+          "after_sha256": "9595d0c1e217992f9cc61d45d58144c19b002602aa07ad337f828eec4050eacf",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests._package",
+            "SkillPackageReplayTests._relative",
+            "SkillPackageReplayTests._run",
+            "SkillPackageReplayTests._sha256",
+            "SkillPackageReplayTests._validate",
+            "SkillPackageReplayTests._write_capability",
+            "SkillPackageReplayTests.setUp",
+            "SkillPackageReplayTests.tearDown",
+            "SkillPackageReplayTests.test_always_successful_validator_cannot_approve_invalid_package",
+            "SkillPackageReplayTests.test_capability_rejects_escape",
+            "SkillPackageReplayTests.test_disabled_and_rolled_back_capabilities_fail_closed",
+            "SkillPackageReplayTests.test_illegal_package_is_rejected",
+            "SkillPackageReplayTests.test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+            "SkillPackageReplayTests.test_missing_target_is_rejected_before_validator_runs",
+            "SkillPackageReplayTests.test_validate_package_emits_non_authorizing_receipt",
+            "SkillPackageReplayTests.test_validate_package_runs_validator_against_requested_target",
+            "SkillPackageReplayTests.test_validator_content_drift_is_rejected"
+          ]
+        }
+      ],
+      "diff_sha256": "b2182ad3b01cebf6bb21091493db9097deb54587725d3f204019b48dd0791c0a",
+      "diff_bytes": 7718
+    },
+    {
+      "commit": "0dce7806c93e5e0ca4ac4faed61baa13735c8983",
+      "paths": [
+        "scripts/sc/tests/test_805_round6_full_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_805_round6_full_replay.py",
+          "before_sha256": null,
+          "after_sha256": "36a6ebe8c6795334efd7549a7893f09325b2164001bb6893abc83347a7d3d2ab",
+          "exists_now": true,
+          "changed_symbols": [
+            "assert_slice_ready",
+            "run_replay",
+            "test_s0_repository_owned_validator_capability",
+            "test_s1_historical_compatibility_replay",
+            "test_s2_evaluation_seeds_and_matrix",
+            "test_s3_consumer_and_terminal_integration"
+          ]
+        }
+      ],
+      "diff_sha256": "3ec113dd505189696e154831fe92b83041258c112496bc42543e49f7f6cb1ed0",
+      "diff_bytes": 4238
+    },
+    {
+      "commit": "9cd87d3ab780f7087b9fd470dc2843968b208eca",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "4293768eb565c1d2baad390cb033823c0dd668f1348aed5200d32f9ff8c9b934",
+          "after_sha256": "6949476216bf804cf26f641f4c13a71275e6adbb6ce624b645cbf6676044fb0e",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "fff9aa666afdd0f138b6f248d080be0cbdf8bd4cb86de9127485c587156d3d47",
+      "diff_bytes": 889
+    },
+    {
+      "commit": "b6632aeffc855c9b69a0223c164bc362a63af767",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay_source_identity.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+          "before_sha256": null,
+          "after_sha256": "5ac3e472a498600774b84693ac67679a00c1490791bc2f13538e41c5ef517f97",
+          "exists_now": true,
+          "changed_symbols": [
+            "test_replay_reconstructs_bound_identity_and_launches_fresh_process"
+          ]
+        }
+      ],
+      "diff_sha256": "22a57f7ce81d5f9b13483dc53105d0e2c62f3557dc6a37632e1173fb70186cc4",
+      "diff_bytes": 2132
+    },
+    {
+      "commit": "3a3283c4c243f44aeb18325c6ad25b8cddb3de3c",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "4293768eb565c1d2baad390cb033823c0dd668f1348aed5200d32f9ff8c9b934",
+          "after_sha256": "6949476216bf804cf26f641f4c13a71275e6adbb6ce624b645cbf6676044fb0e",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "fff9aa666afdd0f138b6f248d080be0cbdf8bd4cb86de9127485c587156d3d47",
+      "diff_bytes": 889
+    },
+    {
+      "commit": "feafd68208f8db44d57cfd987fc2c0bf820c43fe",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": "9595d0c1e217992f9cc61d45d58144c19b002602aa07ad337f828eec4050eacf",
+          "after_sha256": "11e6f9cc3eed3737d8e69c75e49ff2a17fc03ef928dc7bd9e71e2dc14f1f9440",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests.test_route_lifecycle_enable_rollback_reenable_uses_real_entry"
+          ]
+        }
+      ],
+      "diff_sha256": "66714b5b52a9fe5ac78d2274147b0e50f84f2776387b9f1484787e680d067d3b",
+      "diff_bytes": 2484
+    },
+    {
+      "commit": "f9c10318eea3312fc161f8acdbcf5e6b59192541",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": "11e6f9cc3eed3737d8e69c75e49ff2a17fc03ef928dc7bd9e71e2dc14f1f9440",
+          "after_sha256": "275339aaf923bcaabe52f40c9492a1c167d4ad641904391e547598b3d9389543",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests._write_capability"
+          ]
+        }
+      ],
+      "diff_sha256": "119f580c89edb5c2b894305ca4e49bc3f29d437a7ae04d74ff6c67c043116bdf",
+      "diff_bytes": 1053
+    },
+    {
+      "commit": "91279a19ae3d4d6936b86339e9cd5c8c09327fe2",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": "275339aaf923bcaabe52f40c9492a1c167d4ad641904391e547598b3d9389543",
+          "after_sha256": "76abf67ec2b623fe295b0cfb95e25c7cebec801934e8abf5ad72dc99dcaaf14d",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests._freeze",
+            "SkillPackageReplayTests._package",
+            "SkillPackageReplayTests._relative",
+            "SkillPackageReplayTests._run",
+            "SkillPackageReplayTests._write_capability",
+            "SkillPackageReplayTests.setUp",
+            "SkillPackageReplayTests.tearDown",
+            "SkillPackageReplayTests.test_always_successful_validator_cannot_approve_invalid_package",
+            "SkillPackageReplayTests.test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+            "SkillPackageReplayTests.test_route_lifecycle_enable_rollback_reenable_uses_real_entry"
+          ]
+        }
+      ],
+      "diff_sha256": "285461dd10cdf4e8bb675bed6832b110ca33b4ccd811bd350aa441f1011daf0d",
+      "diff_bytes": 7299
+    },
+    {
+      "commit": "e984752583edf2b9817f131fbd7b4e7a8eae6db6",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay.py",
+        "scripts/sc/tests/test_skill_replay_integration_regressions.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": "76abf67ec2b623fe295b0cfb95e25c7cebec801934e8abf5ad72dc99dcaaf14d",
+          "after_sha256": "1927f6ede4f56d3e4b32853cbb535bdfde46efe9a418cb68dcaf0a0a7ad31631",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests._freeze"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_integration_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "9cd654641f3490d1595311cdfcaf8885081eb2a1467871df1dd686b08731922c",
+          "exists_now": true,
+          "changed_symbols": [
+            "ReplayIntegrationTests",
+            "ReplayIntegrationTests._bounded_matrix",
+            "ReplayIntegrationTests.setUp",
+            "ReplayIntegrationTests.test_environment_cannot_approve_joint_committed_validator_drift",
+            "ReplayIntegrationTests.test_probe_actual_target_comes_from_the_native_child_witness",
+            "ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package",
+            "ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation",
+            "ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture",
+            "ReplayIntegrationTests.test_tiny_native_matrix_output_budget_is_not_ignored",
+            "ReplayIntegrationTests.test_zero_native_matrix_time_budget_is_not_ignored"
+          ]
+        }
+      ],
+      "diff_sha256": "60b970d5bf08445a23cc82a672bbea242ae17e5afd87622e46e9cc5d61252bf8",
+      "diff_bytes": 6256
+    },
+    {
+      "commit": "7a8ddaabd78c8da766529e27b2ae66ed2b2060c3",
+      "paths": [
+        "scripts/sc/tests/test_skill_replay_windows_regressions.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "15d6d5536ce8ae9a8f9949c2e484b7668258169dd1d1445eabae688efd7fc3f3",
+          "exists_now": true,
+          "changed_symbols": [
+            "WindowsBindingTests",
+            "WindowsBindingTests.freeze",
+            "WindowsBindingTests.mixed_case_resources",
+            "WindowsBindingTests.setUp",
+            "WindowsBindingTests.test_case_only_owner_rename_still_requires_trust_approval",
+            "WindowsBindingTests.test_duplicate_raw_matrix_inputs_name_both_cases_before_execution",
+            "WindowsBindingTests.test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default",
+            "WindowsBindingTests.test_materialization_reads_raw_git_bytes_without_eol_conversion",
+            "WindowsBindingTests.test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths",
+            "WindowsBindingTests.test_package_and_dependency_identities_are_platform_order_independent",
+            "WindowsBindingTests.test_windows_path_order_cannot_create_false_trust_membership_drift",
+            "WindowsBindingTests.windows_order"
+          ]
+        }
+      ],
+      "diff_sha256": "1a400528a378e46dd22dca6d782eb4242534b4c8526f992b37f271541f8986be",
+      "diff_bytes": 5906
+    },
+    {
+      "commit": "a0955c611658ed0b770c779882c6fdf32509f2db",
+      "paths": [
+        "scripts/sc/tests/test_skill_replay_verification.py",
+        "scripts/sc/verify_skill_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_replay_verification.py",
+          "before_sha256": null,
+          "after_sha256": "9c8361ff806eae49f2e176a61a3304d9bd5e46dcff767745a791b07031a34008",
+          "exists_now": true,
+          "changed_symbols": [
+            "ClosureFreshnessTests",
+            "ClosureFreshnessTests.test_new_module_and_changed_import_bytes_are_seen_in_later_closures",
+            "VerificationProcessTests",
+            "VerificationProcessTests.pytest",
+            "VerificationProcessTests.setUp",
+            "VerificationProcessTests.test_all_real_phase_reports_and_exact_collection_are_required",
+            "VerificationProcessTests.test_real_failure_does_not_become_a_successful_verification",
+            "VerificationProcessTests.test_real_skip_is_non_promotable",
+            "VerificationProcessTests.test_timeout_identifies_node_and_stops_its_actual_descendant"
+          ]
+        },
+        {
+          "path": "scripts/sc/verify_skill_replay.py",
+          "before_sha256": null,
+          "after_sha256": "05b117a64b2da19d9c3a65f3dbc377c5e729c112c058ca94e3d481f9ff75b814",
+          "exists_now": true,
+          "changed_symbols": [
+            "Progress",
+            "Progress.__init__",
+            "Progress.event",
+            "Progress.pytest_collection_finish",
+            "Progress.pytest_runtest_call",
+            "Progress.pytest_runtest_logfinish",
+            "Progress.pytest_runtest_logreport",
+            "Progress.pytest_runtest_logstart",
+            "Progress.pytest_runtest_setup",
+            "Progress.pytest_runtest_teardown",
+            "Progress.pytest_sessionfinish",
+            "Progress.pytest_unconfigure",
+            "emit",
+            "evaluate_reports",
+            "main",
+            "pytest_addoption",
+            "pytest_configure",
+            "save",
+            "scope_paths",
+            "source_binding",
+            "supervise",
+            "terminate_owned"
+          ]
+        }
+      ],
+      "diff_sha256": "2bca5b0b26acf969e5c8a836207fe0b4a2603b9f7ed49b4512692a8f41de9666",
+      "diff_bytes": 21291
+    },
+    {
+      "commit": "de6e6a4b0427bc53a8dd9d03b528be075ce0e3d5",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+        "scripts/sc/tests/test_skill_replay_process_regressions.py",
+        "scripts/sc/tests/test_skill_replay_verification.py",
+        "scripts/sc/verify_skill_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+          "before_sha256": "5ac3e472a498600774b84693ac67679a00c1490791bc2f13538e41c5ef517f97",
+          "after_sha256": "1769a37e65a688c8db8d60261054fcaee716400db014ee7fb31ed2ba9a09598b",
+          "exists_now": true,
+          "changed_symbols": [
+            "test_replay_reconstructs_bound_identity_and_launches_fresh_process"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_process_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "270f8cff3d68ae43625f87cbae052edca9bb25991648289e3a8d131269fd8ab0",
+          "exists_now": true,
+          "changed_symbols": [
+            "NativeProcessOwnershipTests",
+            "NativeProcessOwnershipTests.test_native_timeout_reaps_a_descendant_in_a_separate_process_group",
+            "NativeProcessOwnershipTests.test_output_exhaustion_terminates_the_running_process",
+            "SyntaxReuseTests",
+            "SyntaxReuseTests.test_identical_bytes_in_two_checkouts_reuse_parse_without_hiding_changes",
+            "SyntaxReuseTests.test_warm_consumer_analysis_still_rejects_a_new_undeclared_call"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_verification.py",
+          "before_sha256": "9c8361ff806eae49f2e176a61a3304d9bd5e46dcff767745a791b07031a34008",
+          "after_sha256": "773c440687bc417d377e8abdeb74fbdb61026c201783c6e4af019b663a7eafc0",
+          "exists_now": true,
+          "changed_symbols": [
+            "VerificationProcessTests",
+            "VerificationProcessTests.test_real_failure_does_not_become_a_successful_verification",
+            "VerificationProcessTests.test_timeout_identifies_node_and_stops_its_actual_descendant"
+          ]
+        },
+        {
+          "path": "scripts/sc/verify_skill_replay.py",
+          "before_sha256": "05b117a64b2da19d9c3a65f3dbc377c5e729c112c058ca94e3d481f9ff75b814",
+          "after_sha256": "80ce32630d3b7870456f81dc625e03f6a76638cdb3d8812e8e3d402b9a6a147a",
+          "exists_now": true,
+          "changed_symbols": [
+            "Progress",
+            "Progress.pytest_runtest_logreport",
+            "terminate_owned"
+          ]
+        }
+      ],
+      "diff_sha256": "16622626a40ed4590b68a0cdc7e39b59472cfe77ddb29c8faab1c60defd27158",
+      "diff_bytes": 8042
+    },
+    {
+      "commit": "ae311a29b15c8c75fb0dcaaa1c57c8cb9bd5ac7e",
+      "paths": [
+        "scripts/sc/tests/test_skill_replay_process_regressions.py",
+        "scripts/sc/tests/test_skill_replay_verification.py",
+        "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+        "scripts/sc/verify_skill_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_replay_process_regressions.py",
+          "before_sha256": "270f8cff3d68ae43625f87cbae052edca9bb25991648289e3a8d131269fd8ab0",
+          "after_sha256": "79764af12d4e45e37d356e9a8cf95a517e20079de4c3261eacb1a6e474d8f924",
+          "exists_now": true,
+          "changed_symbols": [
+            "NativeProcessOwnershipTests",
+            "NativeProcessOwnershipTests.test_native_diagnostic_records_real_pid_and_timeout_without_relabeling_it",
+            "NativeProcessOwnershipTests.test_normal_leader_exit_drains_descendants_before_stdio_cleanup",
+            "SyntaxReuseTests",
+            "SyntaxReuseTests.test_repeated_missing_imports_do_not_probe_each_module_on_disk"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_verification.py",
+          "before_sha256": "773c440687bc417d377e8abdeb74fbdb61026c201783c6e4af019b663a7eafc0",
+          "after_sha256": "48e40563e522053b8f3326540cce4203da073bf8dbbb5b9909e34b93c12ede92",
+          "exists_now": true,
+          "changed_symbols": [
+            "VerificationProcessTests",
+            "VerificationProcessTests.test_periodic_stack_snapshot_stops_before_its_file_is_closed"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+          "before_sha256": "15d6d5536ce8ae9a8f9949c2e484b7668258169dd1d1445eabae688efd7fc3f3",
+          "after_sha256": "9a117d363673d42642d51bcdb20b81b9d25e674a58e13974cfb02c2824b93e97",
+          "exists_now": true,
+          "changed_symbols": [
+            "WindowsJobContractTests",
+            "WindowsJobContractTests.test_failed_job_assignment_never_resumes_uncontained_code",
+            "WindowsJobContractTests.test_win32_kernel_handle_signatures_preserve_pointer_width"
+          ]
+        },
+        {
+          "path": "scripts/sc/verify_skill_replay.py",
+          "before_sha256": "80ce32630d3b7870456f81dc625e03f6a76638cdb3d8812e8e3d402b9a6a147a",
+          "after_sha256": "4f67f2c324be3eaa232de396c631475550ffd597c2eb81e1c64e9e55a7232f6d",
+          "exists_now": true,
+          "changed_symbols": [
+            "Progress",
+            "Progress.__init__",
+            "Progress.pytest_runtest_logfinish",
+            "Progress.pytest_runtest_logstart",
+            "Progress.pytest_unconfigure",
+            "Progress.start_trace",
+            "Progress.stop_trace",
+            "supervise",
+            "terminate_owned"
+          ]
+        }
+      ],
+      "diff_sha256": "660980e7dc4c161126a7d6e3657574fba5b718cfc924c010e91015e0b70fdf3a",
+      "diff_bytes": 12370
+    },
+    {
+      "commit": "366566e4392b5c320f1cb5803699108cac5d85c0",
+      "paths": [
+        "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+        "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+        "scripts/sc/tests/test_skill_replay_process_regressions.py",
+        "scripts/sc/tests/test_skill_replay_windows_regressions.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+          "before_sha256": "1769a37e65a688c8db8d60261054fcaee716400db014ee7fb31ed2ba9a09598b",
+          "after_sha256": "5660c1033e70b01bed136702908587119ae392774c3d736de02d9e72ae165611",
+          "exists_now": true,
+          "changed_symbols": [
+            "test_replay_reconstructs_bound_identity_and_launches_fresh_process"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "7687060c2bd1522b8fe162d6015952d95709d6d1b6007caa96eef860ca3b467a",
+          "exists_now": true,
+          "changed_symbols": [
+            "MatrixBudgetTests",
+            "MatrixBudgetTests.setUp",
+            "MatrixBudgetTests.test_matrix_total_is_independent_and_every_native_call_retains_leaf_limit",
+            "MatrixBudgetTests.test_stricter_declared_matrix_budget_cannot_be_silently_expanded",
+            "ReplayBudgetTests",
+            "ReplayBudgetTests.setUp",
+            "ReplayBudgetTests.test_exit_124_is_unsuccessful_for_orchestration",
+            "ReplayBudgetTests.test_fresh_orchestration_and_transport_have_separate_safe_ceilings",
+            "ReplayBudgetTests.test_orchestration_can_exceed_leaf_ceiling_without_relaxing_leaf",
+            "ReplayBudgetTests.test_orchestration_ceiling_remains_finite",
+            "ReplayBudgetTests.test_orchestration_timeout_is_not_positive_or_defect_evidence",
+            "ReplayBudgetTests.test_real_work_can_finish_after_a_leaf_sized_deadline"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_process_regressions.py",
+          "before_sha256": "79764af12d4e45e37d356e9a8cf95a517e20079de4c3261eacb1a6e474d8f924",
+          "after_sha256": "5ae8643abe1de70075063ab07cbce67747dfc126801f68c48bc5c054e1717b3d",
+          "exists_now": true,
+          "changed_symbols": [
+            "SyntaxReuseTests",
+            "SyntaxReuseTests.test_dependency_closure_hashes_the_exact_bytes_used_for_import_analysis"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+          "before_sha256": "9a117d363673d42642d51bcdb20b81b9d25e674a58e13974cfb02c2824b93e97",
+          "after_sha256": "6b5de8137c4f57aa94284fb6e8e49bb954329555759ce9e54bf26b54952d5a9e",
+          "exists_now": true,
+          "changed_symbols": [
+            "WindowsBindingTests",
+            "WindowsBindingTests.test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default",
+            "WindowsBindingTests.test_fresh_replay_uses_an_independent_tree_without_cloning_repository"
+          ]
+        }
+      ],
+      "diff_sha256": "2dc9f539ee572a20b940526fb9e232ef91216842a38bbf6427514c6b91648cf9",
+      "diff_bytes": 12643
+    },
+    {
+      "commit": "daca642a0509eb2d694b2c60cf7229dfeb08a339",
+      "paths": [
+        "scripts/sc/tests/test_805_round6_full_replay.py",
+        "scripts/sc/tests/test_skill_replay_review2_regressions.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_805_round6_full_replay.py",
+          "before_sha256": "36a6ebe8c6795334efd7549a7893f09325b2164001bb6893abc83347a7d3d2ab",
+          "after_sha256": "13d56e3ab4ddac4e20f896740fe17eb21e889e256914c64329a10d4a4f37e331",
+          "exists_now": true,
+          "changed_symbols": [
+            "test_s1_historical_compatibility_replay"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_review2_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "677f684a27c0fa921f2f3d7df6f8890e6446755f1d9fb81c6ee7bc4c0b6ccbb5",
+          "exists_now": true,
+          "changed_symbols": [
+            "NativeDeadlineTests",
+            "NativeDeadlineTests.test_git_receives_remaining_time_and_checks_completion",
+            "NativeDeadlineTests.test_nested_budget_cannot_reset_the_parent_deadline",
+            "NativeDeadlineTests.test_real_sleeping_leaf_is_terminated_at_remaining_parent_budget",
+            "TempOwnershipTests",
+            "TempOwnershipTests.setUp",
+            "TempOwnershipTests.stale",
+            "TempOwnershipTests.test_external_link_target_permissions_and_bytes_are_not_changed",
+            "TempOwnershipTests.test_old_directory_used_by_a_live_process_is_not_scavenged",
+            "TempOwnershipTests.test_old_unowned_file_and_directory_are_retained",
+            "WholeEntryDeadlineTests",
+            "WholeEntryDeadlineTests.metadata",
+            "WholeEntryDeadlineTests.native",
+            "WholeEntryDeadlineTests.setUp",
+            "WholeEntryDeadlineTests.test_304_second_whole_replay_cannot_pass_with_a_reset_fresh_clock",
+            "WholeEntryDeadlineTests.test_fresh_child_gets_only_remaining_time_with_success_positive_control",
+            "WholeEntryDeadlineTests.test_receipt_construction_cannot_hide_over_budget_time",
+            "WholeEntryDeadlineTests.test_validation_spends_the_whole_entry_budget_before_fresh_starts"
+          ]
+        }
+      ],
+      "diff_sha256": "bdd1225a3c736f87844a3907a5976f93990267f552928b6f1b2817e3890e6a5c",
+      "diff_bytes": 12083
+    },
+    {
+      "commit": "888ba9cc898915e3f0dbbc1f1309d51956dc1c5b",
+      "paths": [
+        "scripts/sc/tests/test_skill_replay_historical_validator.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_replay_historical_validator.py",
+          "before_sha256": null,
+          "after_sha256": "a27522ebdc153ecd27a6d616e60e9f8834cb35ae69d981165dba9c54821a58a0",
+          "exists_now": true,
+          "changed_symbols": [
+            "HistoricalValidatorTests",
+            "HistoricalValidatorTests.publish_declarations",
+            "HistoricalValidatorTests.setUp",
+            "HistoricalValidatorTests.test_candidate_cannot_expand_historical_capability_scope",
+            "HistoricalValidatorTests.test_historical_validator_reads_changed_current_package_with_three_real_controls",
+            "HistoricalValidatorTests.test_materialized_dependency_mutation_fails_before_success",
+            "HistoricalValidatorTests.test_matrix_executes_both_subjects_with_the_historical_judge"
+          ]
+        }
+      ],
+      "diff_sha256": "bde3afa43d6ad32f3f3ab1eba65707e966309a883696ad65f46ae036bee78762",
+      "diff_bytes": 5371
+    },
+    {
+      "commit": "1b1bf3d8bb694c6f3932039118647a9eb59921ba",
+      "paths": [
+        "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+        "scripts/sc/tests/test_skill_replay_review2_regressions.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+          "before_sha256": "7687060c2bd1522b8fe162d6015952d95709d6d1b6007caa96eef860ca3b467a",
+          "after_sha256": "35cd8096184cfafb77326300e20b41b1feb72a2d96fb3dee4c1bab82bf7d7be7",
+          "exists_now": true,
+          "changed_symbols": [
+            "MatrixBudgetTests",
+            "MatrixBudgetTests.test_matrix_total_is_independent_and_every_native_call_retains_leaf_limit",
+            "ReplayBudgetTests",
+            "ReplayBudgetTests.test_maintainer_tripled_deadlines_preserve_distinct_scopes",
+            "ReplayBudgetTests.test_orchestration_can_exceed_leaf_ceiling_without_relaxing_leaf",
+            "ReplayBudgetTests.test_orchestration_ceiling_remains_finite"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_review2_regressions.py",
+          "before_sha256": "677f684a27c0fa921f2f3d7df6f8890e6446755f1d9fb81c6ee7bc4c0b6ccbb5",
+          "after_sha256": "06a6433ee4de26ac229d531c634c7169513fc17446dfb4ba2d23e8980ab24865",
+          "exists_now": true,
+          "changed_symbols": [
+            "NativeDeadlineTests",
+            "NativeDeadlineTests.test_git_receives_remaining_time_and_checks_completion",
+            "NativeDeadlineTests.test_nested_budget_cannot_reset_the_parent_deadline",
+            "WholeEntryDeadlineTests",
+            "WholeEntryDeadlineTests.metadata",
+            "WholeEntryDeadlineTests.test_304_second_whole_replay_cannot_pass_with_a_reset_fresh_clock",
+            "WholeEntryDeadlineTests.test_fresh_child_gets_only_remaining_time_with_success_positive_control",
+            "WholeEntryDeadlineTests.test_over_budget_whole_replay_cannot_pass_with_a_reset_fresh_clock",
+            "WholeEntryDeadlineTests.test_receipt_construction_cannot_hide_over_budget_time",
+            "WholeEntryDeadlineTests.test_validation_spends_the_whole_entry_budget_before_fresh_starts"
+          ]
+        }
+      ],
+      "diff_sha256": "3778a5865ad1bdeba231ea9743d9b64eef024dad56d5bb3073f840e464dc2790",
+      "diff_bytes": 5945
+    },
+    {
+      "commit": "047a7aaf031e13b2a84279eb153d0416b0891863",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "4293768eb565c1d2baad390cb033823c0dd668f1348aed5200d32f9ff8c9b934",
+          "after_sha256": "6949476216bf804cf26f641f4c13a71275e6adbb6ce624b645cbf6676044fb0e",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "fff9aa666afdd0f138b6f248d080be0cbdf8bd4cb86de9127485c587156d3d47",
+      "diff_bytes": 889
+    },
+    {
+      "commit": "971e53ebce52eb54a9f78bcd5bf0faa68aec61f4",
+      "paths": [
+        "scripts/sc/tests/test_805_round6_full_replay.py",
+        "scripts/sc/tests/test_skill_package_replay.py",
+        "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+        "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+        "scripts/sc/tests/test_skill_replay_historical_validator.py",
+        "scripts/sc/tests/test_skill_replay_integration_regressions.py",
+        "scripts/sc/tests/test_skill_replay_process_regressions.py",
+        "scripts/sc/tests/test_skill_replay_review2_regressions.py",
+        "scripts/sc/tests/test_skill_replay_verification.py",
+        "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+        "scripts/sc/verify_skill_replay.py"
+      ],
+      "effects": [
+        {
+          "path": "scripts/sc/tests/test_805_round6_full_replay.py",
+          "before_sha256": null,
+          "after_sha256": "13d56e3ab4ddac4e20f896740fe17eb21e889e256914c64329a10d4a4f37e331",
+          "exists_now": true,
+          "changed_symbols": [
+            "assert_slice_ready",
+            "run_replay",
+            "test_s0_repository_owned_validator_capability",
+            "test_s1_historical_compatibility_replay",
+            "test_s2_evaluation_seeds_and_matrix",
+            "test_s3_consumer_and_terminal_integration"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay.py",
+          "before_sha256": "33b8dfd4c0af7beffa94b11ca8d1716c50a6ebfb222def53320b4b018651e5a6",
+          "after_sha256": "1927f6ede4f56d3e4b32853cbb535bdfde46efe9a418cb68dcaf0a0a7ad31631",
+          "exists_now": true,
+          "changed_symbols": [
+            "SkillPackageReplayTests",
+            "SkillPackageReplayTests._freeze",
+            "SkillPackageReplayTests._package",
+            "SkillPackageReplayTests._relative",
+            "SkillPackageReplayTests._run",
+            "SkillPackageReplayTests._sha256",
+            "SkillPackageReplayTests._validate",
+            "SkillPackageReplayTests._write_capability",
+            "SkillPackageReplayTests.setUp",
+            "SkillPackageReplayTests.tearDown",
+            "SkillPackageReplayTests.test_always_successful_validator_cannot_approve_invalid_package",
+            "SkillPackageReplayTests.test_capability_rejects_escape",
+            "SkillPackageReplayTests.test_disabled_and_rolled_back_capabilities_fail_closed",
+            "SkillPackageReplayTests.test_illegal_package_is_rejected",
+            "SkillPackageReplayTests.test_matrix_executes_each_case_and_rejects_unexecuted_matrix",
+            "SkillPackageReplayTests.test_missing_target_is_rejected_before_validator_runs",
+            "SkillPackageReplayTests.test_route_lifecycle_enable_rollback_reenable_uses_real_entry",
+            "SkillPackageReplayTests.test_validate_package_emits_non_authorizing_receipt",
+            "SkillPackageReplayTests.test_validate_package_runs_validator_against_requested_target",
+            "SkillPackageReplayTests.test_validator_content_drift_is_rejected"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_package_replay_source_identity.py",
+          "before_sha256": null,
+          "after_sha256": "5660c1033e70b01bed136702908587119ae392774c3d736de02d9e72ae165611",
+          "exists_now": true,
+          "changed_symbols": [
+            "test_replay_reconstructs_bound_identity_and_launches_fresh_process"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_budget_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "35cd8096184cfafb77326300e20b41b1feb72a2d96fb3dee4c1bab82bf7d7be7",
+          "exists_now": true,
+          "changed_symbols": [
+            "MatrixBudgetTests",
+            "MatrixBudgetTests.setUp",
+            "MatrixBudgetTests.test_matrix_total_is_independent_and_every_native_call_retains_leaf_limit",
+            "MatrixBudgetTests.test_stricter_declared_matrix_budget_cannot_be_silently_expanded",
+            "ReplayBudgetTests",
+            "ReplayBudgetTests.setUp",
+            "ReplayBudgetTests.test_exit_124_is_unsuccessful_for_orchestration",
+            "ReplayBudgetTests.test_fresh_orchestration_and_transport_have_separate_safe_ceilings",
+            "ReplayBudgetTests.test_maintainer_tripled_deadlines_preserve_distinct_scopes",
+            "ReplayBudgetTests.test_orchestration_can_exceed_leaf_ceiling_without_relaxing_leaf",
+            "ReplayBudgetTests.test_orchestration_ceiling_remains_finite",
+            "ReplayBudgetTests.test_orchestration_timeout_is_not_positive_or_defect_evidence",
+            "ReplayBudgetTests.test_real_work_can_finish_after_a_leaf_sized_deadline"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_historical_validator.py",
+          "before_sha256": null,
+          "after_sha256": "a27522ebdc153ecd27a6d616e60e9f8834cb35ae69d981165dba9c54821a58a0",
+          "exists_now": true,
+          "changed_symbols": [
+            "HistoricalValidatorTests",
+            "HistoricalValidatorTests.publish_declarations",
+            "HistoricalValidatorTests.setUp",
+            "HistoricalValidatorTests.test_candidate_cannot_expand_historical_capability_scope",
+            "HistoricalValidatorTests.test_historical_validator_reads_changed_current_package_with_three_real_controls",
+            "HistoricalValidatorTests.test_materialized_dependency_mutation_fails_before_success",
+            "HistoricalValidatorTests.test_matrix_executes_both_subjects_with_the_historical_judge"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_integration_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "9cd654641f3490d1595311cdfcaf8885081eb2a1467871df1dd686b08731922c",
+          "exists_now": true,
+          "changed_symbols": [
+            "ReplayIntegrationTests",
+            "ReplayIntegrationTests._bounded_matrix",
+            "ReplayIntegrationTests.setUp",
+            "ReplayIntegrationTests.test_environment_cannot_approve_joint_committed_validator_drift",
+            "ReplayIntegrationTests.test_probe_actual_target_comes_from_the_native_child_witness",
+            "ReplayIntegrationTests.test_replay_identity_is_the_actual_inspected_package",
+            "ReplayIntegrationTests.test_rollback_counts_consumers_and_retains_each_fixture_observation",
+            "ReplayIntegrationTests.test_rollback_refuses_a_missing_negative_fixture",
+            "ReplayIntegrationTests.test_tiny_native_matrix_output_budget_is_not_ignored",
+            "ReplayIntegrationTests.test_zero_native_matrix_time_budget_is_not_ignored"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_process_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "5ae8643abe1de70075063ab07cbce67747dfc126801f68c48bc5c054e1717b3d",
+          "exists_now": true,
+          "changed_symbols": [
+            "NativeProcessOwnershipTests",
+            "NativeProcessOwnershipTests.test_native_diagnostic_records_real_pid_and_timeout_without_relabeling_it",
+            "NativeProcessOwnershipTests.test_native_timeout_reaps_a_descendant_in_a_separate_process_group",
+            "NativeProcessOwnershipTests.test_normal_leader_exit_drains_descendants_before_stdio_cleanup",
+            "NativeProcessOwnershipTests.test_output_exhaustion_terminates_the_running_process",
+            "SyntaxReuseTests",
+            "SyntaxReuseTests.test_dependency_closure_hashes_the_exact_bytes_used_for_import_analysis",
+            "SyntaxReuseTests.test_identical_bytes_in_two_checkouts_reuse_parse_without_hiding_changes",
+            "SyntaxReuseTests.test_repeated_missing_imports_do_not_probe_each_module_on_disk",
+            "SyntaxReuseTests.test_warm_consumer_analysis_still_rejects_a_new_undeclared_call"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_review2_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "06a6433ee4de26ac229d531c634c7169513fc17446dfb4ba2d23e8980ab24865",
+          "exists_now": true,
+          "changed_symbols": [
+            "NativeDeadlineTests",
+            "NativeDeadlineTests.test_git_receives_remaining_time_and_checks_completion",
+            "NativeDeadlineTests.test_nested_budget_cannot_reset_the_parent_deadline",
+            "NativeDeadlineTests.test_real_sleeping_leaf_is_terminated_at_remaining_parent_budget",
+            "TempOwnershipTests",
+            "TempOwnershipTests.setUp",
+            "TempOwnershipTests.stale",
+            "TempOwnershipTests.test_external_link_target_permissions_and_bytes_are_not_changed",
+            "TempOwnershipTests.test_old_directory_used_by_a_live_process_is_not_scavenged",
+            "TempOwnershipTests.test_old_unowned_file_and_directory_are_retained",
+            "WholeEntryDeadlineTests",
+            "WholeEntryDeadlineTests.metadata",
+            "WholeEntryDeadlineTests.native",
+            "WholeEntryDeadlineTests.setUp",
+            "WholeEntryDeadlineTests.test_fresh_child_gets_only_remaining_time_with_success_positive_control",
+            "WholeEntryDeadlineTests.test_over_budget_whole_replay_cannot_pass_with_a_reset_fresh_clock",
+            "WholeEntryDeadlineTests.test_receipt_construction_cannot_hide_over_budget_time",
+            "WholeEntryDeadlineTests.test_validation_spends_the_whole_entry_budget_before_fresh_starts"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_verification.py",
+          "before_sha256": null,
+          "after_sha256": "48e40563e522053b8f3326540cce4203da073bf8dbbb5b9909e34b93c12ede92",
+          "exists_now": true,
+          "changed_symbols": [
+            "ClosureFreshnessTests",
+            "ClosureFreshnessTests.test_new_module_and_changed_import_bytes_are_seen_in_later_closures",
+            "VerificationProcessTests",
+            "VerificationProcessTests.pytest",
+            "VerificationProcessTests.setUp",
+            "VerificationProcessTests.test_all_real_phase_reports_and_exact_collection_are_required",
+            "VerificationProcessTests.test_periodic_stack_snapshot_stops_before_its_file_is_closed",
+            "VerificationProcessTests.test_real_failure_does_not_become_a_successful_verification",
+            "VerificationProcessTests.test_real_skip_is_non_promotable",
+            "VerificationProcessTests.test_timeout_identifies_node_and_stops_its_actual_descendant"
+          ]
+        },
+        {
+          "path": "scripts/sc/tests/test_skill_replay_windows_regressions.py",
+          "before_sha256": null,
+          "after_sha256": "6b5de8137c4f57aa94284fb6e8e49bb954329555759ce9e54bf26b54952d5a9e",
+          "exists_now": true,
+          "changed_symbols": [
+            "WindowsBindingTests",
+            "WindowsBindingTests.freeze",
+            "WindowsBindingTests.mixed_case_resources",
+            "WindowsBindingTests.setUp",
+            "WindowsBindingTests.test_case_only_owner_rename_still_requires_trust_approval",
+            "WindowsBindingTests.test_duplicate_raw_matrix_inputs_name_both_cases_before_execution",
+            "WindowsBindingTests.test_fresh_replay_reproduces_identity_when_clone_uses_windows_eol_default",
+            "WindowsBindingTests.test_fresh_replay_uses_an_independent_tree_without_cloning_repository",
+            "WindowsBindingTests.test_materialization_reads_raw_git_bytes_without_eol_conversion",
+            "WindowsBindingTests.test_non_ascii_git_owner_names_are_not_misread_as_quoted_paths",
+            "WindowsBindingTests.test_package_and_dependency_identities_are_platform_order_independent",
+            "WindowsBindingTests.test_windows_path_order_cannot_create_false_trust_membership_drift",
+            "WindowsBindingTests.windows_order",
+            "WindowsJobContractTests",
+            "WindowsJobContractTests.test_failed_job_assignment_never_resumes_uncontained_code",
+            "WindowsJobContractTests.test_win32_kernel_handle_signatures_preserve_pointer_width"
+          ]
+        },
+        {
+          "path": "scripts/sc/verify_skill_replay.py",
+          "before_sha256": null,
+          "after_sha256": "4f67f2c324be3eaa232de396c631475550ffd597c2eb81e1c64e9e55a7232f6d",
+          "exists_now": true,
+          "changed_symbols": [
+            "Progress",
+            "Progress.__init__",
+            "Progress.event",
+            "Progress.pytest_collection_finish",
+            "Progress.pytest_runtest_call",
+            "Progress.pytest_runtest_logfinish",
+            "Progress.pytest_runtest_logreport",
+            "Progress.pytest_runtest_logstart",
+            "Progress.pytest_runtest_setup",
+            "Progress.pytest_runtest_teardown",
+            "Progress.pytest_sessionfinish",
+            "Progress.pytest_unconfigure",
+            "Progress.start_trace",
+            "Progress.stop_trace",
+            "emit",
+            "evaluate_reports",
+            "main",
+            "pytest_addoption",
+            "pytest_configure",
+            "save",
+            "scope_paths",
+            "source_binding",
+            "supervise",
+            "terminate_owned"
+          ]
+        }
+      ],
+      "diff_sha256": "d44bbbe87c4633c7d2d5cdba174189365875d3961ff0074c31275ac84716577e",
+      "diff_bytes": 88800
+    },
+    {
+      "commit": "09da37cc1a1fea3a8eb8d87159fe14910db09b79",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "6949476216bf804cf26f641f4c13a71275e6adbb6ce624b645cbf6676044fb0e",
+          "after_sha256": "db35f4164b2206e3889e7e809892e1e4664bd19006440c1c5833128a29e4585c",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "6377a36588cd2d1a3fba056bfd8db2be219875aefc8e6c0b035f6c582492d7f5",
+      "diff_bytes": 1213
+    },
+    {
+      "commit": "a1e783c569cb5a78ea8728c83518fd13c73a99e8",
+      "paths": [
+        ".gitignore"
+      ],
+      "effects": [
+        {
+          "path": ".gitignore",
+          "before_sha256": "6949476216bf804cf26f641f4c13a71275e6adbb6ce624b645cbf6676044fb0e",
+          "after_sha256": "db35f4164b2206e3889e7e809892e1e4664bd19006440c1c5833128a29e4585c",
+          "exists_now": true,
+          "changed_symbols": []
+        }
+      ],
+      "diff_sha256": "6377a36588cd2d1a3fba056bfd8db2be219875aefc8e6c0b035f6c582492d7f5",
+      "diff_bytes": 1213
+    }
+  ],
+  "diff_bytes_inspected": 245199
+}

@@ -13,12 +13,23 @@ from current_router import materialize_descriptor
 from process_executor_v2 import execute_process
 from runtime_evidence import create_json, sha256_value
 from stage_pipeline import execute_stage
-from test_coverage_predicates import prepare, semantic_bundle, execute_nonterminal_stages
+from test_coverage_predicates import prepare, semantic_bundle, execute_nonterminal_stages, write_production_binding
 from coverage_predicates import validate_slice_ready, publish_implementation_complete
 
 
 def run_task(root, source, *, stage="terminal", args=(), binding=None, timeout=10):
     (root / "tests").mkdir()
+    (root / "candidate.txt").write_text("red\n", encoding="utf-8")
+    write_production_binding(root)
+    if stage == "red":
+        source = "from candidate import current_value\n" + source
+        source = source.replace(" assert False\n", " assert current_value() == 'green'\n")
+        lines = source.splitlines(keepends=True)
+        for i in reversed(range(len(lines))):
+            if lines[i].startswith("def test_"):
+                indent = len(lines[i + 1]) - len(lines[i + 1].lstrip())
+                lines.insert(i + 1, " " * indent + "current_value()\n")
+        source = "".join(lines)
     (root / "tests/test_one.py").write_text(source, encoding="utf-8")
     (root / "fixture.txt").write_text("fixture", encoding="utf-8")
     bundle = semantic_bundle()
@@ -221,11 +232,12 @@ def test_green_cannot_shrink_dynamically_collected_red_case_set(tmp_path):
     from current_router import successor_descriptor
     semantic, _ = prepare(tmp_path)
     (tmp_path / "tests/test_one.py").write_text("""import pytest
-from pathlib import Path
-state = (Path(__file__).resolve().parents[1] / 'candidate.txt').read_text().strip()
+from candidate import current_value
+state = current_value()
 @pytest.mark.cer_assertion('AS-1','AS-2')
 @pytest.mark.parametrize('index', range(2 if state == 'red' else 1))
 def test_one(index):
+ current_value()
  if state == 'red': print('FAILURE_ID:EXPECTED-RED')
  assert state == 'green'
 """, encoding="utf-8")

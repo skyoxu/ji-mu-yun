@@ -18,6 +18,28 @@ if str(SC_ROOT) not in sys.path:
 import workflow_model_routing as routing  # noqa: E402
 
 
+def setUpModule() -> None:
+    """ADR-0041: routing tests use explicit isolated settings, never this device."""
+    global _model_directory, _model_location
+    import tempfile
+    from unittest import mock
+    _model_directory = tempfile.TemporaryDirectory(prefix="routing-model-fixture-")
+    settings = Path(_model_directory.name)
+    (settings / "config.toml").write_text('model = "regression-fixture-model"\n', encoding="utf-8")
+    owner = sys.modules[routing.load_model.__module__]
+    import os
+    original = owner.codex_config_dir
+    initial_home = os.environ.get("CODEX_HOME")
+    _model_location = mock.patch.object(owner, "codex_config_dir",
+        side_effect=lambda: original() if os.environ.get("CODEX_HOME") != initial_home else settings)
+    _model_location.start()
+
+
+def tearDownModule() -> None:
+    _model_location.stop()
+    _model_directory.cleanup()
+
+
 class PolicyContractTests(unittest.TestCase):
     def test_canonical_policy_covers_every_route_with_full_model_ids(self) -> None:
         policy = routing.load_policy()

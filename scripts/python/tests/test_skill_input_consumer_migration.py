@@ -199,14 +199,25 @@ def test_acceptance_final_pointer_preserves_current_generation(tmp_path, tracked
         v2.require_current(tmp_path, pointer, **args)
 
 
+def _probe_environment(root):
+    # ADR-0041: actual entry import uses an official isolated model setting,
+    # never device configuration. No LLM or Bootstrap workflow is launched.
+    directory = root / 'fixture-codex'
+    directory.mkdir()
+    (directory / 'config.toml').write_text('model = "regression-fixture-model"\n', encoding='utf-8')
+    return dict(os.environ, CODEX_HOME=str(directory), PYTHONIOENCODING='utf-8',
+                PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get('PYTHONPATH', ''))
+
+
 @pytest.mark.parametrize('consumer', CONSUMERS)
 def test_real_entry_registers_and_protects_generation(tmp_path, consumer):
+    environment = _probe_environment(tmp_path)
     request = actual_request(tmp_path, consumer)
     _, result, _ = complete(tmp_path, request)
     store = tmp_path / request['storage']
     pointer = store / 'current.v1.json'
     probe = subprocess.run([sys.executable, str(Path(__file__).resolve()), consumer, str(tmp_path), str(pointer)],
-        capture_output=True, text=True, encoding='utf-8', errors='strict', env=dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get('PYTHONPATH', '')))
+        capture_output=True, text=True, encoding='utf-8', errors='strict', env=environment)
     assert probe.returncode == 0, probe.stdout + probe.stderr
     uses = list((store / 'consumer-uses').glob('*.json'))
     assert len(uses) == 1
@@ -226,11 +237,12 @@ def test_real_entry_registers_and_protects_generation(tmp_path, consumer):
 
 @pytest.mark.parametrize('consumer', CONSUMERS)
 def test_real_entry_rejects_legacy_receipt(tmp_path, consumer):
+    environment = _probe_environment(tmp_path)
     request = actual_request(tmp_path, consumer)
     legacy = tmp_path / 'legacy.json'
     legacy.write_text(json.dumps({'schema_version':'skill-input-consumption.v1','ready':True}), encoding='utf-8')
     probe = subprocess.run([sys.executable, str(Path(__file__).resolve()), consumer, str(tmp_path), str(legacy)],
-        capture_output=True, text=True, encoding='utf-8', errors='strict', env=dict(os.environ, PYTHONIOENCODING='utf-8', PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get('PYTHONPATH', '')))
+        capture_output=True, text=True, encoding='utf-8', errors='strict', env=environment)
     assert probe.returncode != 0 and 'v2 current pointer' in probe.stderr
     assert not (tmp_path / request['storage'] / 'consumer-uses').exists()
 
@@ -307,7 +319,8 @@ def test_storage_cannot_hide_candidate_authority(tmp_path, storage):
         v2.prepare(tmp_path, request)
 
 
-def test_native_custody_tampering_blocks_gc(tmp_path):
+def test_native_custody_tampering_blocks_gc(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT / 'scripts/python'))
     request = fixture(tmp_path)
     complete(tmp_path, request)
     from skill_input_gate import require_ready_skill_input

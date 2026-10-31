@@ -2,13 +2,15 @@
 
 This wrapper is intentionally transparent to future grouped projection keyword
 arguments (for example refs_by_oid). It only unions already-declared owners into
-allowed_write_paths and removes the exact owner overlap from forbidden_paths.
+allowed_write_paths and removes non-protected exact owner overlaps from
+forbidden_paths. Protected prohibitions must reach the final scope gate.
 """
 from __future__ import annotations
 
 from typing import Any, Mapping
 
 import semantic_worker_v3_group_repair_patch as grouped
+from semantic_phase_source_scope import preserve_forbidden
 
 _BASE_PROJECT = grouped._project
 
@@ -33,7 +35,7 @@ def project_with_owner_write_set(value: Mapping[str, Any], **kwargs: Any) -> dic
         allowed = set(_strings(hint.get("allowed_write_paths")))
         forbidden = set(_strings(hint.get("forbidden_paths")))
         hint["allowed_write_paths"] = sorted(allowed | owners)
-        hint["forbidden_paths"] = sorted(forbidden - owners)
+        hint["forbidden_paths"] = sorted(forbidden - {p for p in owners if not preserve_forbidden(p)})
         normalized.append(hint)
     result["slice_hints"] = normalized
     return result

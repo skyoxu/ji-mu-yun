@@ -10,6 +10,12 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 if __name__ == "__main__":
+    from skill_baseline import require_admission
+    try:
+        require_admission(ROOT, "quick-dev", sys.argv[1:])
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(json.dumps({"status": "blocked", "reason": str(exc), "authorizes": []}))
+        raise SystemExit(1)
     from workflow_unit_budget import public_entry
     supervised_exit = public_entry("quick-dev", ROOT, sys.argv)
     if supervised_exit is not None:

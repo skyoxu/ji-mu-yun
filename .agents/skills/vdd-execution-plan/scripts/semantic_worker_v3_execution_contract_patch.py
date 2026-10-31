@@ -23,6 +23,7 @@ from pathlib import Path
 import hashlib
 import json
 from typing import Any, Mapping
+import semantic_phase_source_scope as phase_scope
 
 import semantic_compiler_gate as gate
 import semantic_worker_v3_group_repair_patch  # noqa: F401  # relation-safe repair first
@@ -170,10 +171,11 @@ def _normalize_expected_red_for_product_behavior(
 
     The frozen V3 contract permits ``expected-red`` only for Product/Platform
     behavior or quality obligations, and requires it for those obligations'
-    implementation failures.  A model occasionally labels a positive product
-    selector as a harness failure.  Preserve that selector, but add the exact
-    frozen behavior it must negate so V4 can distinguish causal RED from a
-    tooling condition.  Constraints and Governance records remain untouched.
+    implementation failures. Only a declared task-implementation-failure may
+    acquire this role. Preserve other failure families and their selectors;
+    runtime eligibility alone never reclassifies fixture or tooling guards.
+    Add the exact frozen behavior to the implementation selector so V4 can
+    distinguish causal RED. Constraints and Governance remain untouched.
     """
     by_id = {
         str(item.get("obligation_id")): item
@@ -202,7 +204,7 @@ def _normalize_expected_red_for_product_behavior(
             and obligation.get("obligation_kind") in {"behavior", "quality"}
             and isinstance(expected, str) and expected.strip()
         )
-        if not eligible or item.get("failure_family") == "expected-red":
+        if not eligible or item.get("failure_family") != "task-implementation-failure":
             normalized.append(item)
             continue
         selector = item.get("selector_intent")
@@ -417,6 +419,21 @@ def _authorized_planned_test_paths(stage: str, payload: Mapping[str, Any], value
 
 
 
+def _pytest_snapshot_files(root: Path, hint: Mapping[str, Any], snapshots: list[str]) -> list[str]:
+    """ADR-0041: retain argv selectors, freeze only their declared file identity."""
+    planned_files = set(_string_list(hint.get("planned_new_files")) or [])
+    canonical = []
+    for snapshot in snapshots:
+        file_path = _selector_file_path(snapshot)
+        safe = _safe_path(root, file_path)
+        if ("::" in snapshot and file_path.endswith(".py") and safe is not None
+                and (file_path in planned_files or safe.is_file())):
+            canonical.append(file_path)
+        else:
+            canonical.append(snapshot)
+    return list(dict.fromkeys(canonical))
+
+
 def _normalize_production_write_sets(
     root: Path,
     value: Mapping[str, Any],
@@ -427,6 +444,21 @@ def _normalize_production_write_sets(
     hints = value.get("slice_hints")
     if not isinstance(hints, list):
         return value
+    # ADR-0041/0043: the selected exact caller route owns path declarations.
+    # Recheck its raw dependencies and project only redundant read metadata;
+    # legacy repair aliases cannot infer different writes or discard inputs.
+    selected = phase_scope.current(root)
+    if selected is not None:
+        dependencies = [path for path, _digest in selected.dependencies]
+        normalized = []
+        for raw in hints:
+            if isinstance(raw, Mapping) and _string_list(raw.get("execution_snapshot_paths")) is not None:
+                normalized.append({**raw, "execution_snapshot_paths": list(dict.fromkeys([
+                    *_pytest_snapshot_files(root, raw, raw["execution_snapshot_paths"]),
+                    *dependencies]))})
+            else:
+                normalized.append(raw)
+        return {**value, "slice_hints": normalized}
     normalized = []
     changed = False
     for raw in hints:
@@ -441,17 +473,7 @@ def _normalize_production_write_sets(
         # V3 already checks its file portion; retain that exact identity for
         # V6/V7 and Quick Dev. Never infer a new planned file from a node.
         if snapshots:
-            planned_files = set(_string_list(hint.get("planned_new_files")) or [])
-            canonical = []
-            for snapshot in snapshots:
-                file_path = _selector_file_path(snapshot)
-                safe = _safe_path(root, file_path)
-                if ("::" in snapshot and file_path.endswith(".py") and safe is not None
-                        and (file_path in planned_files or safe.is_file())):
-                    canonical.append(file_path)
-                else:
-                    canonical.append(snapshot)
-            canonical = list(dict.fromkeys(canonical))
+            canonical = _pytest_snapshot_files(root, hint, snapshots)
             if canonical != snapshots:
                 snapshots = canonical
                 hint["execution_snapshot_paths"] = snapshots
@@ -798,9 +820,38 @@ def _findings(
                 continue
             allowed_set = set(allowed)
             planned_set = set(planned)
-            for path_value in owners + allowed + snapshots + planned:
-                if path_value == "PhaseA.Platform" or path_value.startswith("PhaseA.Platform/"):
-                    findings.append(f"v3-contract:slice_hints[{index}]:phase-protected-path:{path_value}")
+            scope = phase_scope.current(root)
+            forbidden = _string_list(raw.get('forbidden_paths', [])) or []
+            rollback = raw.get('rollback_scope', {})
+            rollback_paths = _string_list(rollback.get('production_paths', [])) if isinstance(rollback, Mapping) else []
+            for role, paths in [('write', owners + allowed + planned + (rollback_paths or [])),
+                                ('read', snapshots)]:
+                for path_value in paths:
+                    if scope is not None and phase_scope.conflict(path_value, forbidden):
+                        findings.append(f"v3-contract:slice_hints[{index}]:protected-forbidden-path:{path_value}")
+                    if (scope is not None and role == 'write'
+                            and path_value not in scope.write_paths | scope.support_paths):
+                        findings.append(f"v3-contract:slice_hints[{index}]:outside-source-scope:{path_value}")
+                    if not phase_scope.protected(path_value):
+                        continue
+                    if (scope is None and role == 'read'
+                            and path_value.casefold().startswith('runtime/phase-a/')):
+                        # Default routing historically excluded runtime writes,
+                        # not otherwise valid read-only source dependencies.
+                        if phase_scope.conflict(path_value, forbidden):
+                            findings.append(f"v3-contract:slice_hints[{index}]:protected-forbidden-path:{path_value}")
+                        continue
+                    accepted = (scope is not None and path_value in
+                                (scope.write_paths | scope.read_paths | scope.support_paths
+                                 if role == 'read' else scope.write_paths | scope.support_paths))
+                    if not accepted:
+                        findings.append(f"v3-contract:slice_hints[{index}]:phase-protected-path:{path_value}")
+                    if phase_scope.conflict(path_value, forbidden):
+                        findings.append(f"v3-contract:slice_hints[{index}]:protected-forbidden-path:{path_value}")
+            if scope is not None:
+                for dependency, _digest in scope.dependencies:
+                    if dependency not in snapshots:
+                        findings.append(f"v3-contract:slice_hints[{index}]:phase-scope-input-not-frozen:{dependency}")
             existing_owner = False
             planned_owner = False
             for owner in owners:

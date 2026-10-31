@@ -230,7 +230,27 @@ def read_original(reference):
         raise ValueError("reuse-original-invalid: " + str(exc)) from exc
 
 
-def validate_use(descriptor, receipt, *, current=True):
+def _consumption_reason(before, after, bundle, descriptor, *, historical_green=False):
+    if historical_green:
+        if descriptor.get("stage") != "green":
+            raise ValueError("reuse-historical-predecessor-must-be-green")
+        selected = [s for s in bundle["slices"] if s["slice_id"] == descriptor["slice_id"]]
+        if len(selected) != 1:
+            raise ValueError("reuse-historical-predecessor-slice-invalid")
+        after = deepcopy(after)
+        # GREEN is an immutable TDD predecessor, not a claim that its old
+        # production bytes are the final candidate. Only declared production
+        # owners may differ; engine, environment, tests, dependencies and
+        # semantic inputs retain ordinary fail-closed freshness checks.
+        for path in selected[0].get("production_owners", []):
+            old = before.get("files", {}).get(path)
+            new = after.get("files", {}).get(path)
+            if isinstance(old, dict) and isinstance(new, dict):
+                after["files"][path] = {**new, "sha256": old["sha256"]}
+    return invalidation_reason(before, after)
+
+
+def validate_use(descriptor, receipt, *, current=True, historical_green=False):
     reference = receipt["execution_reference"]
     index, original, original_descriptor = read_original(reference)
     if receipt.get("process_attempts") != 0 or receipt.get("execution_kind") != "reference":
@@ -248,7 +268,8 @@ def validate_use(descriptor, receipt, *, current=True):
     if slice_identity(bundle, descriptor["slice_id"]) != reference["slice_semantic_sha256"]:
         raise ValueError("reuse-slice-semantics-changed")
     if current:
-        reason = invalidation_reason(index["input"], input_manifest(root, bundle, descriptor))
+        reason = _consumption_reason(index["input"], input_manifest(root, bundle, descriptor),
+                                     bundle, descriptor, historical_green=historical_green)
         if reason:
             raise ValueError(reason)
     for key, refs in (("target_hashes", "target_refs"), ("fixture_hashes", "fixture_refs")):
@@ -343,7 +364,7 @@ def execute_with_reuse(*, workspace, bundle, semantic_plan, run_dir, descriptor,
     return finish(receipt)
 
 
-def validate_saved_request(workspace, evidence, descriptor, receipt):
+def validate_saved_request(workspace, evidence, descriptor, receipt, *, historical_green=False):
     """Validate new original/use input seals at reentry and Q7/Q8 consumption."""
     path = evidence / "reuse-request.v1.json"
     if not path.exists():
@@ -359,8 +380,9 @@ def validate_saved_request(workspace, evidence, descriptor, receipt):
         raise ValueError("reuse-request-incomplete-or-tampered")
     if request.get("input") is not None:
         bundle = load_json(resolve_file(workspace, request["semantic_plan"]))
-        reason = invalidation_reason(request["input"], input_manifest(workspace, bundle, descriptor))
+        reason = _consumption_reason(request["input"], input_manifest(workspace, bundle, descriptor),
+                                     bundle, descriptor, historical_green=historical_green)
         if reason:
             raise ValueError(reason)
     if receipt.get("execution_reference"):
-        validate_use(descriptor, receipt)
+        validate_use(descriptor, receipt, historical_green=historical_green)

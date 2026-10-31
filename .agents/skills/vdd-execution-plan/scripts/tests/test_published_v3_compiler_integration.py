@@ -33,6 +33,69 @@ INDEX = ROOT / (
 )
 
 
+import pytest
+from scripts.toolchain.knowledge_query.tests.test_planning_query import (
+    published_vdd_base, _copy_published_fixture,
+)
+
+
+@pytest.fixture(autouse=True)
+def _portable_real_published_advice(request, tmp_path, monkeypatch, published_vdd_base):
+    """Keep the original integration oracle while isolating device publication."""
+    if request.node.name != 'test_real_0805_predecessor_reuses_v3_but_invokes_v4':
+        return
+    source_root, source_plan, source_requirements, source_index = ROOT, PLAN, REQUIREMENTS, INDEX
+    fixture = tmp_path / 'published-repair-fixture'
+    _copy_published_fixture(published_vdd_base, fixture)
+    catalog = json.loads((fixture / 'knowledge/catalogs/repository-knowledge-catalog.v2.json').read_text())
+    projections = json.loads((fixture / 'knowledge/projections/consumer-projections.v1.json').read_text())
+    allowed = set(next(p for p in projections['projections'] if p['consumer'] == 'vdd')['eligible_module_ids'])
+    # Locator returns actual main-bound locations; materialize those public
+    # sources before the real caller verifies their filesystem bytes.
+    import subprocess
+    for relative in sorted({m['source_path'] for m in catalog['modules'] if m['module_id'] in allowed}):
+        target = fixture / relative
+        assert target.resolve().is_relative_to(fixture.resolve())
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(subprocess.check_output(['git', '-C', str(source_root), 'show',
+            subprocess.check_output(['git', '-C', str(published_vdd_base), 'rev-parse', 'refs/heads/main'], text=True).strip() + ':' + relative], timeout=10))
+    from scripts import skill_baseline
+    source_paths = set().union(*(skill_baseline.fingerprint(source_root, name)['files']
+                                for name in ('quick-dev', 'vdd')))
+    # Only shared source is materialized; canonical fixture publication remains
+    # the real producer's main-bound bytes. Keep the trusted admission module
+    # at its existing host import location rather than creating local authority.
+    for relative in sorted(source_paths):
+        if relative.startswith('knowledge/') or relative == 'scripts/skill_baseline.py':
+            continue
+        target = fixture / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((source_root / relative).read_bytes())
+    selected = [source_requirements, source_index,
+        source_plan.parent.parent / 'published-v1-fr4-probe-outcomes.json']
+    bundle = json.loads((source_plan / 'semantic-plan-bundle.v1.json').read_text(encoding='utf-8'))
+    for item in bundle['slices']:
+        for relative in item.get('execution_snapshot_paths', []) + item.get('production_owners', []):
+            source = source_root / relative.split('::', 1)[0]
+            if source.is_file():
+                assert source.resolve().is_relative_to(source_root.resolve())
+                selected.append(source)
+    selected += [source_plan / name for name in (
+        'semantic-plan-bundle.v1.json', 'compiler-state.v1.json', 'source-index.v1.json',
+        'semantic-alignment.v1.json', 'atomic-recall-alignment.v1.json', 'obligations.v1.json')]
+    for source in selected:
+        target = fixture / source.relative_to(source_root)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(source.read_bytes())
+    module = sys.modules[__name__]
+    monkeypatch.setattr(module, 'ROOT', fixture)
+    monkeypatch.setattr(module, 'PLAN', fixture / source_plan.relative_to(source_root))
+    monkeypatch.setattr(module, 'REQUIREMENTS', fixture / source_requirements.relative_to(source_root))
+    monkeypatch.setattr(module, 'INDEX', fixture / source_index.relative_to(source_root))
+    monkeypatch.setattr(cli, 'ROOT', fixture)
+    (fixture / 'logs').mkdir(exist_ok=True)
+
+
 def advisory_fixture(location: Path, *, directory: bool = False) -> dict:
     """Use real file inputs for advice; frozen compiler requirements stay intact."""
     context = location / "planning-context.md"

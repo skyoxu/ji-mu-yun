@@ -45,6 +45,14 @@ def _inside(root: Path, raw: str) -> Path:
 
 def _repo_paths(root: Path) -> list[str]:
     try:
+        top = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"], cwd=str(root),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+        )
+        if top.returncode != 0 or Path(top.stdout.decode("utf-8").strip()).resolve() != root.resolve():
+            # A plain fixture/workspace inside another repository must use the
+            # filesystem fallback, not its ancestor's possibly ignored index.
+            raise ValueError("workspace is not the discovered Git root")
         proc = subprocess.run(
             ["git", "ls-files", "-co", "--exclude-standard", "-z"],
             cwd=str(root),
@@ -54,7 +62,7 @@ def _repo_paths(root: Path) -> list[str]:
         )
         if proc.returncode == 0:
             return sorted({part.decode("utf-8", errors="strict") for part in proc.stdout.split(b"\0") if part})
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, ValueError):
         pass
     result: list[str] = []
     excluded = {".git", ".pytest_cache", "__pycache__", ".mypy_cache", ".ruff_cache"}

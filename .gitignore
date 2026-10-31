@@ -102,6 +102,13 @@ _bmad/*
 .agents/*
 !.agents/skills/
 !.agents/skills/**
+# Shared baseline contracts are source; machine admissions remain local.
+!.agents/skill-baselines/
+.agents/skill-baselines/*
+!.agents/skill-baselines/policy.v1.json
+!.agents/skill-baselines/bootstrap-history.v1.json
+!.agents/skill-baselines/package-b-current-coverage.v1.json
+!.agents/skill-baselines/capability-coverage.v1.json
 .agents/skills/**/__pycache__/
 .agents/skills/**/*.pyc
 backup/BMAD-METHOD-upstream/

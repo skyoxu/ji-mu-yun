@@ -25,6 +25,12 @@ def inspect_candidate(sc, root, obligations, acceptances, failures, hints, *, pr
                   "agent_contexts": sc.agent_contexts(slices, obligations, acceptances, by_acceptance)}
         bundle["behavior_routing"] = {"schema": SCHEMA, "intents": project_intents(bundle),
                                       "deferred": project_deferred(bundle)}
+        # Carry the caller's planning input into this non-published projection.
+        # The shared final validator must not confuse absence with withdrawal.
+        from semantic_phase_source_scope import description
+        scope_binding = description(root)
+        if scope_binding is not None:
+            bundle['source_scope'] = scope_binding
         findings.extend(sc.feasibility(root, slices, acceptances, failures, by_acceptance)["findings"])
         findings.extend(sc.validate_semantic_bundle(bundle)[1])
         findings.extend(handoff_findings(bundle, workspace=root))

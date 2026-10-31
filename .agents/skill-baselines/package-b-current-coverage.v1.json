@@ -1,0 +1,928 @@
+{
+  "schema": "toolchain.package-b-current-coverage.v1",
+  "limits": "Mapping is traceability, not proof of semantic completeness. Metadata tests are not runtime evidence. Historical runs do not count as current fingerprint passes.",
+  "cases": [
+    {
+      "original_case": "test_host_repair_boundary",
+      "original_expression": "_check(_native_boundary() and _unchanged(AUTHORITY), 'PKGB_0082DA37FDD3_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_protected_sources",
+      "original_expression": "_check(_protected_bmad() and _chapters() and _unchanged(AUTHORITY), 'PKGB_06B2E983CB73_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_protected_sources"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_complete_coverage",
+      "original_expression": "_check(_canonical(), 'PKGB_0BCEAD7964BF_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_complete_coverage"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_validation_set",
+      "original_expression": "_check(_validation_set(), 'PKGB_0E031EB3891E_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_validation_set"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_bootstrap_quality",
+      "original_expression": "_check(_quality(2), 'PKGB_0E6D98559F6B_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_bootstrap_quality"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_canonical_input",
+      "original_expression": "_check(_canonical() and _authority_input(), 'PKGB_0E781666A8E6_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_canonical_input"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_vdd_quality",
+      "original_expression": "_check(_quality(0), 'PKGB_106E49892C1C_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_vdd_quality"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_content_reuse",
+      "original_expression": "_check(_native_boundary() and \"content\" in _main(PACKAGES[1]).lower(), 'PKGB_122D7390958D_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_stale_or_partial_evidence_stops_before_process",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_no_quality_authority",
+      "original_expression": "_check(_unchanged(AUTHORITY) and _native_boundary(), 'PKGB_136CDDBA77A6_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_dependency_documentation",
+      "original_expression": "_check(_dependency_table(), 'PKGB_1370E773AD67_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_dependency_documentation"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_invalid_red",
+      "original_expression": "_check(_native_boundary() and \"harness\" in _main(PACKAGES[1]).lower(), 'PKGB_181DCD9163A1_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_stage_only_red_cannot_authorize_current_implementation",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_skipped_or_unusable_cases_never_make_edges",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_local_scope",
+      "original_expression": "_check(_scope(), 'PKGB_18BAEF1E87C0_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_first_level_references",
+      "original_expression": "_check(_references(), 'PKGB_1A7456E604BF_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_first_level_references"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_authority_inputs",
+      "original_expression": "_check(_authority_input(), 'PKGB_1A82E183EEBB_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_authority_inputs"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_quick_upgrade_boundary",
+      "original_expression": "_check(_native_boundary() and \"upgrade\" in _main(PACKAGES[1]).lower() and \"VDD\" in _main(PACKAGES[1]), 'PKGB_1FC41E966CB0_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_bmad_exclusion",
+      "original_expression": "_check(_protected_bmad(), 'PKGB_2275CA248048_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_bmad_exclusion"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_child_dependency_preservation",
+      "original_expression": "_check(_child_contract_preserved(), 'PKGB_26F529A9E55D_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_native_reuse",
+      "original_expression": "_check(_native_boundary(), 'PKGB_27A3D0428D77_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_direct_regression",
+      "original_expression": "_check(_native_boundary() and all(any(name in arg for command in commands\n                                         for arg in command) for name in required),\n           'PKGB_2CBB18C96E83_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_dependency_records",
+      "original_expression": "_check(_dependency_records(), 'PKGB_31BB4B73B2E0_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_dependency_records"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_stale_maintenance",
+      "original_expression": "_check(_native_boundary() and \"catalog-stale-maintenance\" in _main(PACKAGES[4]), 'PKGB_3334FEB462B7_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_predicate_completion",
+      "original_expression": "_check(_native_boundary() and \"Evidence Ownership\" in _main(PACKAGES[1]), 'PKGB_333D4B6DB398_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_operator_publication",
+      "original_expression": "_check(_operator_docs(), 'PKGB_33A58D56A240_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_operator_publication"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_persistent_evidence",
+      "original_expression": "_check(_persistent_input(), 'PKGB_3468471DAB29_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_persistent_evidence"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_no_operational_authority",
+      "original_expression": "_check(_native_boundary() and all(\"not\" in _main(p).lower() for p in PACKAGES), 'PKGB_3CB8579F527E_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_frozen_inputs",
+      "original_expression": "_check(_authority_input() and _native_boundary(), 'PKGB_3E98F7EB3C8D_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_freeze_proof",
+      "original_expression": "_check(_native_boundary() and \"frozen\" in _main(PACKAGES[1]).lower(), 'PKGB_435F58556AB8_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_acceptance_owner",
+      "original_expression": "_check(_native_boundary() and \"finalization\" in _main(PACKAGES[3]).lower(), 'PKGB_49D7164AED75_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_vdd_no_execution",
+      "original_expression": "_check(_native_boundary() and \"VDD owns none\" in _main(PACKAGES[0]), 'PKGB_4DE82E497103_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_focused_verification",
+      "original_expression": "_check(_quality_negative_checks(), 'PKGB_516E31393C6B_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_focused_verification"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_public_compile",
+      "original_expression": "_check(_native_boundary() and \"compile_plan.py\" in _main(PACKAGES[0]), 'PKGB_51D4739E3A0A_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_quick_examples",
+      "original_expression": "_check(_examples(1, [('strict',), ('upgrade',), ('invalid',)]), 'PKGB_520D0E5EA4C7_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_quick_examples"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_accepted_validator",
+      "original_expression": "_check(_unchanged(AUTHORITY), 'PKGB_53380A1D038B_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_accepted_validator"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_accepted_predecessor",
+      "original_expression": "_check(_unchanged(AUTHORITY) and _canonical(), 'PKGB_5375308178D9_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_accepted_predecessor"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_bootstrap_examples",
+      "original_expression": "_check(_examples(2, [('clean',), ('round',), ('access',)]), 'PKGB_56A33BF13918_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_bootstrap_examples"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_no_global_framework",
+      "original_expression": "_check(_scope(), 'PKGB_56B4D051B472_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_reference_reuse",
+      "original_expression": "_check(_references(), 'PKGB_5911772C50A8_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_reference_reuse"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_profile_selection",
+      "original_expression": "_check(\"self-hosted\" in _main(PACKAGES[0]) and _native_boundary(), 'PKGB_597AAD1CF5FF_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_quality_invariants",
+      "original_expression": "_check(_all_quality() and _capabilities(), 'PKGB_5AAFB946671F_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_quality_invariants"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_acceptance_quality",
+      "original_expression": "_check(_quality(3), 'PKGB_6AC1654A3B38_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_acceptance_quality"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_platform_truth",
+      "original_expression": "_check(sys.version_info>=(3,11) and hasattr(pytest,\"mark\"), 'PKGB_6F444612047C_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_platform_truth"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_explicit_vdd_routing",
+      "original_expression": "_check(\"explicitly\" in _main(PACKAGES[0]).lower() and \"standalone\" in _main(PACKAGES[0]).lower() and _native_boundary(), 'PKGB_7136BAA2CA44_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_behavior_classification",
+      "original_expression": "_check(_native_boundary() and \"probe\" in _main(PACKAGES[1]).lower(), 'PKGB_73B685FB11F6_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_stage_only_red_cannot_authorize_current_implementation",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_cer_case_evidence.py::test_missing_skipped_or_unusable_cases_never_make_edges",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_knowledge_boundaries",
+      "original_expression": "_check(_operator_docs() and _native_boundary(), 'PKGB_7ACD9F289FDE_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_sidecar_shape",
+      "original_expression": "_check(_frontmatter(), 'PKGB_7EDC585984AC_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_sidecar_shape"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_acceptance_examples",
+      "original_expression": "_check(_examples(3, [('deterministic',), ('repair',), ('stale',)]), 'PKGB_80316CD17E3B_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_acceptance_examples"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_phase_exclusion",
+      "original_expression": "_check(_scope() and _unchanged([\"scripts/sc/_llm_backend.py\"]), 'PKGB_897EA243B79E_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_knowledge_examples",
+      "original_expression": "_check(_examples(4, [('existing-only',), ('provisional',), ('publication',)]), 'PKGB_8AFEC64253D3_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_knowledge_examples"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_preserved_boundaries",
+      "original_expression": "_check(_native_boundary() and _unchanged(AUTHORITY), 'PKGB_8ECA25407A03_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_vdd_examples",
+      "original_expression": "_check(_examples(0, [('create',), ('direct',), ('invalid',)]), 'PKGB_95DA69640268_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_vdd_examples"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_standalone_preflight",
+      "original_expression": "_check(_entrypoints(), 'PKGB_97205C679D05_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_standalone_preflight"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_main_bound",
+      "original_expression": "_check(all(len(_main(p).splitlines())<500 for p in PACKAGES), 'PKGB_9E8AACC50395_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_main_bound"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_repair_integrity",
+      "original_expression": "_check(_native_boundary() and \"historical\" in _main(PACKAGES[1]).lower(), 'PKGB_9ED7E6CE4DDC_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_stale_or_partial_evidence_stops_before_process",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_knowledge_quality",
+      "original_expression": "_check(_quality(4), 'PKGB_9FDC53051B14_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_knowledge_quality"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_typed_errors",
+      "original_expression": "_check(all(bool(_declaration(p).get(\"error_ids\")) for p in PACKAGES), 'PKGB_A4FF42287EF4_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_typed_errors"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_no_automatic_publish",
+      "original_expression": "_check(_native_boundary() and _unchanged([\"scripts/sc/_llm_backend.py\"]), 'PKGB_A6C02C53C2A4_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_capability_drift",
+      "original_expression": "_check(_unchanged(AUTHORITY) and _native_boundary(), 'PKGB_AA5934B2633E_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_chapter_exclusion",
+      "original_expression": "_check(_chapters(), 'PKGB_B31AFCA31048_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_chapter_exclusion"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_owner_drift",
+      "original_expression": "_check(_native_boundary(), 'PKGB_B66298A862BB_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_quick_quality",
+      "original_expression": "_check(_quality(1), 'PKGB_C9ED9E3E46B5_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_quick_quality"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_child_drift",
+      "original_expression": "_check(_native_boundary(), 'PKGB_CA4306911C31_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_distinct_completion",
+      "original_expression": "_check(_native_boundary() and \"external Acceptance\" in _main(PACKAGES[1]), 'PKGB_D0CE1CA291A7_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_portable_bootstrap",
+      "original_expression": "_check(_portable_bootstrap(), 'PKGB_D435CEAE6CBD_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_portable_bootstrap"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_routing_diagrams",
+      "original_expression": "_check(_diagram(), 'PKGB_D4FDDB15D79E_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_routing_diagrams"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_no_fake_recovery",
+      "original_expression": "_check(_canonical() and _native_boundary(), 'PKGB_DBD4AF430715_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_stale_or_partial_evidence_stops_before_process",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_predecessor_scope",
+      "original_expression": "_check(_unchanged(AUTHORITY), 'PKGB_E5D14EE8A976_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_predecessor_scope"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_vdd_semantic_owner",
+      "original_expression": "_check(_vdd_atomic_bindings(), 'PKGB_EB599B9F9D24_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_public_vdd_entry_consumes_delivered_inputs_without_review_or_install",
+        ".agents/skills/vdd-execution-plan/scripts/tests/test_vdd_delivered_inputs.py::test_actual_input_integrity_still_blocks",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_authority_drift",
+      "original_expression": "_check(_unchanged(AUTHORITY), 'PKGB_EB7D799DFE5A_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_authority_drift"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_source_expression",
+      "original_expression": "_check(_authority_input(), 'PKGB_EBC502B01FF4_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_source_expression"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_five_strict",
+      "original_expression": "_check(_all_quality(), 'PKGB_F308EA0BD0A3_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_five_strict"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_nonauthorizing_dependencies",
+      "original_expression": "_check(_native_boundary() and _unchanged(AUTHORITY), 'PKGB_F40D1B12384F_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_historical_preservation",
+      "original_expression": "_check(_native_boundary() and all(\"histor\" in _main(p).lower() or \"append\" in _main(p).lower() for p in PACKAGES), 'PKGB_F522DEE88468_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_complete_probe_and_regression_reuse_without_execution",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_stage_reentry.py::test_stale_or_partial_evidence_stops_before_process",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_bmad_separation",
+      "original_expression": "_check(_protected_bmad(), 'PKGB_F7254CBACFD6_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "current-unmodified",
+      "current_tests": [
+        "scripts/sc/tests/test_skill_quality_package_b.py::test_bmad_separation"
+      ],
+      "reason": "No obsolete native/child byte oracle in this function or its helper closure. All original assertions run on the current repository."
+    },
+    {
+      "original_case": "test_unit_budget",
+      "original_expression": "_check(_native_boundary() and \"1800\" in _main(PACKAGES[1]) and \"600\" in _main(PACKAGES[1]), 'PKGB_F7C23594D5FC_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_scope_drift",
+      "original_expression": "_check(_native_boundary() and _scope(), 'PKGB_F8B04C33A6A6_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_current_state",
+      "original_expression": "_check(_native_boundary() and _unchanged(AUTHORITY), 'PKGB_FB4AFA4ABA94_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    },
+    {
+      "original_case": "test_bootstrap_authority",
+      "original_expression": "_check(_native_boundary() and \"authority\" in _main(PACKAGES[2]).lower(), 'PKGB_FF00F91F7070_FAIL')",
+      "historical_replay": "scripts/tests/test_package_b_historical_baseline.py::test_all_original_package_b_assertions_replay_on_their_published_candidate",
+      "classification": "historical-byte-oracle-with-current-witness",
+      "reason": "The old literal equality to fb676bc3 proves only Package B delivery preservation; authorized later compiler/runtime changes make that literal equality temporally inapplicable. Current metadata remains checked separately; native behavior is tested on current code, not inferred from historical pass.",
+      "current_tests": [
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_separate_non_authorizing_owners",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_package_b_frozen_scope_and_atomic_sources",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_actual_production_refactor_preserves_green_and_closes_q7_q8",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_baseline_lifecycle_regressions.py::test_historical_green_retains_other_freshness_boundaries",
+        "scripts/tests/test_current_toolchain_quality_contract.py::test_current_mixed_package_b_instructions"
+      ]
+    }
+  ]
+}

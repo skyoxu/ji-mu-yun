@@ -579,7 +579,14 @@ def test_a01_adr_allocation_and_preserved_existing_role(tmp_path):
     names=[name for name in listing.stdout.splitlines() if Path(name).name.startswith('ADR-0060-')]
     assert listing.returncode==0 and len(names)==1
     original=subprocess.run(['git','show',reference+':'+names[0]],cwd=REPOSITORY,shell=False,capture_output=True,timeout=300)
-    assert original.returncode==0 and (REPOSITORY/names[0]).read_bytes()==original.stdout
+    assert original.returncode == 0
+    # ADR-0060 retained its role and all original bytes. Its later accepted
+    # mutex clarification is an append, not a reassignment to skill authoring.
+    accepted = subprocess.check_output(['git', 'show',
+        '25580d700da91d2702fd234a024a616d55419f90:' + names[0]], cwd=REPOSITORY)
+    assert accepted.startswith(original.stdout)
+    assert (REPOSITORY / names[0]).read_bytes() == accepted
+    assert b'## Implementation clarification (2026-10-28)' in accepted[len(original.stdout):]
     adr=REPOSITORY/'docs/adr/ADR-0062-repository-skill-authoring-contract.md'
     assert adr.is_file() and 'ADR-0062' in adr.read_text()
     assert 'ADR-0062' in (REPOSITORY/'docs/architecture/ADR_INDEX_PHASE.md').read_text()
