@@ -156,8 +156,10 @@ skip, xfail/xpass, collection error, ambiguity, timeout or missing report. Tests
 which deliberately exercise a failing child must themselves prove that rejection;
 a skipped required outer case never counts as success.
 
-Every later content fingerprint requires substantive test growth over its
-approved predecessor. Static checks reject deleting existing test bodies,
+Every later code, test, dependency or semantic projection fingerprint change requires
+substantive test growth over its approved predecessor. Only the strictly verified
+native publication refresh described below can remeasure unchanged tool content
+without inventing an additional test. Static checks reject deleting existing test bodies,
 weakening/replacing their assertions, and rename/copy/comment-only increments.
 Declared pytest display `ids`/`id` and CER identity marks do not make an
 otherwise copied case new; actual parameter inputs and assertions remain bound.
@@ -236,3 +238,46 @@ ordinary read-only admission and before querying; invalid input must not depend
 on a running device publication to be rejected. Valid input continues through
 the existing query, source, permission and behavior gates. This test setup is
 not permission for BMAD or an agent to publish the actual repository Knowledge.
+
+## Native derived-publication refresh
+
+ADR-0041's 2026-10-31 owner-approved exception preserves the projection in the
+live content fingerprint. A refreshed projection never starts a formal task on
+an old approval. It still requires a fresh complete mandatory measurement and
+atomic admission of the exact new fingerprint, tools, suite and publication.
+There is no exemption switch, alternate validator path or environment bypass.
+
+The sole eligible dependency delta is the canonical
+`knowledge/projections/consumer-projections.v1.json`. All code, tests, imports,
+runner/policy/tool identities and suite AST/files must be identical to a real,
+intact predecessor. Only source-snapshot/catalog binding fields may differ in
+the projection; eligibility, consumer policy and permissions remain identical.
+The native publisher validates complete layers, evaluation, current-main source
+read identities, unchanged policy/exclusion/query-suite inputs and the matching
+main-bound maintainer request. Catalog source paths/roles, modules, resources,
+relations and access/safety fields must remain identical; indexed content,
+titles and anchor positions may refresh from verified main facts. Unknown,
+mixed, unproved, permission or source-scope changes cannot use this exception.
+Ordinary substantive code changes still require real additive regression tests.
+
+A new ordinary admission seals the validated publication identity when available.
+A legacy record without that sealed evidence is not retroactively upgraded or
+matched to a convenient generation. It must first advance through the ordinary
+real-code/test-increment route. Neither a self-declared publication field nor a
+valid path name grants eligibility. Admission measurements bind the native
+publication before/after the suite; admit and final activation revalidate that
+same identity. Startup checks the immutable predecessor/evidence chain as well
+as current bytes. Reused historical certificates do not become current query
+authority; normal Knowledge publication/permission checks retain ownership.
+
+Use the same `candidate`, `test --defer-admission`, `admit` and `check` commands.
+A failed/partial/changed measurement cannot activate. Existing original failures,
+permits and cumulative budgets remain; this exception grants no retries.
+
+Finish the actual tool/test/document edits before the final native Knowledge
+check and content freeze. Publication continues to read actual local main, not
+uncommitted worktree facts: do not publish branch-only instructions as main or
+change main to satisfy admission. If the main-bound generation is already fresh,
+a successful native check is sufficient; do not force a redundant generation.
+The final content measurement still binds actual worktree tool bytes. This keeps
+source authority separate from device data and avoids an index/fingerprint loop.

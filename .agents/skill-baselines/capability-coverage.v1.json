@@ -3388,7 +3388,7 @@
       "implementation": [
         {
           "path": "scripts/skill_baseline.py",
-          "sha256": "b1664f4f2ae667f96615c386adcea2c9a24216e851eaf2aa0b1564f0d283b7ed"
+          "sha256": "0c3c5f9781d994599720f300db02d71fb794d00f10015bcb7afaf45d7b673448"
         },
         {
           "path": "scripts/vdd/compile_plan.py",
@@ -3469,7 +3469,7 @@
         },
         {
           "path": "scripts/skill_baseline.py",
-          "sha256": "b1664f4f2ae667f96615c386adcea2c9a24216e851eaf2aa0b1564f0d283b7ed"
+          "sha256": "0c3c5f9781d994599720f300db02d71fb794d00f10015bcb7afaf45d7b673448"
         }
       ],
       "tests": [
@@ -3506,9 +3506,13 @@
         "scripts/tests/test_skill_baseline.py::test_parent_package_initializers_and_their_imports_are_fingerprinted",
         "scripts/tests/test_skill_baseline.py::test_applicable_pytest_configuration_changes_both_candidate_and_suite",
         "scripts/tests/test_skill_baseline.py::test_parent_initializer_and_test_configuration_drift_refuse_real_approval",
-        "scripts/tests/test_skill_baseline.py::test_live_candidate_broker_rejects_initializer_and_pytest_configuration_drift"
+        "scripts/tests/test_skill_baseline.py::test_live_candidate_broker_rejects_initializer_and_pytest_configuration_drift",
+        "scripts/tests/test_skill_baseline.py::test_native_publication_refresh_requires_full_remeasurement_and_activates_both_skills",
+        "scripts/tests/test_skill_baseline.py::test_native_publication_refresh_exception_refuses_unproved_or_mixed_change",
+        "scripts/tests/test_skill_baseline.py::test_native_valid_publication_cannot_hide_policy_or_scope_change",
+        "scripts/tests/test_skill_baseline.py::test_native_refresh_measurement_cannot_approve_other_or_partial_content"
       ],
-      "replacement_basis": "The former two raw full-pytest steps are replaced by the same full native mandatory sets, not removed cases. Existing deterministic subsets and live metric commands remain; Windows CI has not been executed locally.",
+      "replacement_basis": "The former two raw full-pytest steps are replaced by the same full native mandatory sets, not removed cases. Existing deterministic subsets and live metric commands remain; Windows CI has not been executed locally. Owner-approved 2026-10-31 native-publication-only refresh permits no fabricated test growth; unchanged permissions/scope and sealed predecessor/native provenance plus complete fresh regression remain mandatory. Code changes still require real additive tests.",
       "commits": [
         "0ba261b8b828f10837ceee5564aaf43a81393e07",
         "0e773026765c37a2fcf83ae210060c98d0c57845",
@@ -3719,6 +3723,15 @@
         "Preserve the workspace-root stamp without walking above that root when watching inventory directories; actual originals and workspace replacement remain guarded. This corrects an existing main-boundary bug exposed by unrelated progress output."
       ],
       "not_historical_main": true
+    },
+    {
+      "scope": "native-derived-publication-readmission",
+      "not_historical_main": true,
+      "changes": [
+        "Keep projection in the fingerprint; allow only native main-bound metadata refresh with identical code, suites, permissions and complete source/safety scope.",
+        "Seal/revalidate native publication identity through measurement, admit and startup lineage; reject missing/corrupt predecessor proofs.",
+        "Rule implementation itself follows ordinary real RED/GREEN increment and complete mandatory admission."
+      ]
     }
   ],
   "historical_ledger": {
