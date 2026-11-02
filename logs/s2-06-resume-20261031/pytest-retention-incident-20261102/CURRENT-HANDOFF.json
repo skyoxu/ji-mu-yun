@@ -1,0 +1,97 @@
+{
+  "schema": "s2-06.retention-incident-current-handoff.v1",
+  "utc": "2026-11-02T04:42:16.090635+00:00",
+  "responsibility": "My standalone supplemental pytest execution omitted native retention safeguards; automatic pytest default keep=3 deleted old common temporary roots. Not user-approved cleanup.",
+  "exact_approved_cleanup": "6 only, released1144676352 bytes; separate audit remains unchanged.",
+  "current_sources_and_plan": "Two product repairs plus three test files remain in original workspace; r9 plan and original budget/failure native records remain. No verdicts were rewritten, no failed run was relabeled.",
+  "protected_selected_files": [
+    {
+      "path": "scripts/skill_baseline.py",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/tests/test_skill_baseline.py",
+      "unchanged": true
+    },
+    {
+      "path": "docs/workflows/toolchain-skill-baseline.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "unchanged": true
+    },
+    {
+      "path": ".agents/skill-baselines/capability-coverage.v1.json",
+      "unchanged": true
+    },
+    {
+      "path": "knowledge/indexes/current.json",
+      "unchanged": true
+    },
+    {
+      "path": "knowledge/projections/consumer-projections.v1.json",
+      "unchanged": true
+    }
+  ],
+  "main_index_unchanged": true,
+  "branch": "feat/s2-06-preparation-20261028",
+  "head": "75323d05b9b1b730e311c0631c3aa1fcde66186a",
+  "raw_dependency_recovery": {
+    "receipt_files_examined": 359,
+    "missing_report_paths_identified": 723,
+    "exact_TRX_paths_restored": 702,
+    "exact_restored_bytes": 16491633,
+    "unresolved_historical_TRX_paths": 21,
+    "unresolved_runs": [
+      "S106",
+      "S138-r2"
+    ],
+    "current_r41_r42_r43_missing_or_mismatched_scratch_report_dependencies": [],
+    "audit": "logs/s2-06-resume-20261031/pytest-retention-incident-20261102/exact-TRX-restoration-audit.json"
+  },
+  "confirmed_older_unique_debug_roots_lost": [
+    {
+      "path": "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-330/test_o_7486ec7571d00/s206-owned-fixtures-57a938043c6c43c1b1bd3fef1e658949",
+      "exists_now": false,
+      "before_files": 2465,
+      "before_allocated_file_bytes": 76648448,
+      "original_SQLite_state_available_in_verified_backup": false
+    },
+    {
+      "path": "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-331/test_o_7486ec7571d00/s206-owned-fixtures-2f6d21b5ff4049498ffc62fa3bdce28a",
+      "exists_now": false,
+      "before_files": 2465,
+      "before_allocated_file_bytes": 76648448,
+      "original_SQLite_state_available_in_verified_backup": false
+    },
+    {
+      "path": "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-341/test_o_7486ec7571d00/s206-owned-fixtures-76c3f46bc72e4551b458aa0bf5e8f2c8",
+      "exists_now": false,
+      "before_files": 2465,
+      "before_allocated_file_bytes": 76656640,
+      "original_SQLite_state_available_in_verified_backup": false
+    },
+    {
+      "path": "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-342/test_o_7486ec7571d00/s206-owned-fixtures-b4e243fb60dd483d8f2934ec6d1995ae",
+      "exists_now": false,
+      "before_files": 2465,
+      "before_allocated_file_bytes": 76648448,
+      "original_SQLite_state_available_in_verified_backup": false
+    }
+  ],
+  "additional_new_failed_root_loss": "Previously verified r42 probe retained62 backend SQLite databases; its exact root is gone. More failed roots and some raw successful-cleanup manifests may be gone. Aggregate loss cannot be reduced to these known examples.",
+  "unrecoverable_limit": "No verified available SQLite backup for these unique states. Existing code, source ZIPs, hashes, native receipts and TRX observations cannot recreate historical SQLite/debug state; no synthetic replacements will be made.",
+  "original_after_disposal_manifests": "Some successful final-Python cleanup manifests inside old pytest roots are also lost; surviving summaries/hashes are not substitutes for full originals.",
+  "available_bytes_now": 7953649664,
+  "no_active_native_or_test_execution": true,
+  "new_tests_paused": true,
+  "product_completion": {
+    "S236": false,
+    "Q8": false,
+    "acceptance_passed": false
+  },
+  "next_required_decision": "Report exact loss to owner and decide whether to proceed with explicitly degraded historical evidence and fresh lawful verification. Do not claim all S2 originals preserved or old proof complete. No additional deletion or test start in this handoff.",
+  "prevention_for_next_authorized_execution": "Native runs retain their existing guarded launcher. Any supplemental pytest must use a dedicated repository-log TMPDIR/--basetemp and explicit retention options, never common scratch defaults. Do not introduce a new workflow/permission bypass.",
+  "authorizes": []
+}

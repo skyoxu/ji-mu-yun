@@ -42,12 +42,18 @@ public sealed class S14BoundaryTests
         try
         {
             var connectionString = $"Data Source={databasePath}";
-            await SqliteMetadataSchema.InitializeAsync(connectionString);
+
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
-                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot
-            });
+                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
+            ["PHASEA_NODE_ID"] = "test-physical-node",
+            ["PHASEA_NODE_SCOPE"] = "single_node_test",
+            ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+            ["PHASEA_ENABLED_ROLES"] = "entry,production",
+            ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+});
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString,options);
             var store = new PhaseAMetadataStore(connectionString, options);
             var user = await store.CreateUserAccountAsync("s14-user", 1);
             var projectRoot = Path.Combine(workspaceRoot, "project-s14");
@@ -59,8 +65,8 @@ public sealed class S14BoundaryTests
             Directory.CreateDirectory(projectRoot);
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
             RouteAuthorityFixture.Seed(connectionString, user.AccountId, project.ProjectId!, projectRoot);
-            _ = new RestoreService(connectionString);
-            _ = new WorkspaceStorageService(connectionString).SetQuota(user.AccountId, 1_000_000_000);
+            _ = new CentralRestoreBackend(connectionString);
+            _ = new CentralWorkspaceStorageBackend(connectionString).SetQuota(user.AccountId, 1_000_000_000);
             using (var leaseConnection = new SqliteConnection(connectionString))
             {
                 leaseConnection.Open();
@@ -299,6 +305,12 @@ public sealed class S14BoundaryTests
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = seedSourceRoot;
         start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
+        start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+
         return Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
     }
 

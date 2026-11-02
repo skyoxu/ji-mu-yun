@@ -42,12 +42,12 @@ public sealed class GameDesignDocumentService
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(20);
     private static readonly TimeSpan DefaultModelCapacityRetryDelay = TimeSpan.FromSeconds(5);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly IAiCodeMirrorBillingClient _billingClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly ProjectGameTypeMatchBackfillService? _gameTypeMatchBackfill;
     private readonly TimeSpan _executionTimeout;
@@ -62,12 +62,12 @@ public sealed class GameDesignDocumentService
         string SelectionReason);
 
     public GameDesignDocumentService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         ProjectGameTypeMatchBackfillService? gameTypeMatchBackfill = null,
         TimeSpan? executionTimeout = null,
@@ -76,13 +76,17 @@ public sealed class GameDesignDocumentService
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _gameTypeMatchBackfill = gameTypeMatchBackfill;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
         _modelCapacityRetryDelay = modelCapacityRetryDelay ?? DefaultModelCapacityRetryDelay;
@@ -1720,7 +1724,7 @@ public sealed class GameDesignDocumentService
         IReadOnlyList<TextAttachment> historicalAttachments,
         bool allowKeywordFallback = true)
     {
-        var catalog = new BmadGameTypeDesignCatalog(_options);
+        var catalog = new BmadGameTypeDesignCatalog(_options.RepositoryRoot);
         var matchEvidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
         var direct = catalog.Find(matchEvidence.MatchedGameTypeId);
         if (direct is not null)
@@ -2092,7 +2096,7 @@ public sealed class GameDesignDocumentService
                     approvedEntry.GuideExcerpt)
                 .Select(item => item.ContentHash)
                 .ToHashSet(StringComparer.Ordinal);
-        var designCatalog = new BmadGameTypeDesignCatalog(_options);
+        var designCatalog = new BmadGameTypeDesignCatalog(_options.RepositoryRoot);
         var forbiddenFingerprints = designCatalog.SourceEntries
             .Where(entry => !string.IsNullOrWhiteSpace(entry.GuideExcerpt))
             .Where(entry => !string.Equals(

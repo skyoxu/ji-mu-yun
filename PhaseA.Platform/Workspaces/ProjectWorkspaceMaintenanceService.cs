@@ -4,12 +4,12 @@ namespace PhaseA.Platform.Workspaces;
 
 public sealed class ProjectWorkspaceMaintenanceService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly ILogger<ProjectWorkspaceMaintenanceService> _logger;
 
     public ProjectWorkspaceMaintenanceService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         IProjectWorkspaceSeeder workspaceSeeder,
         ILogger<ProjectWorkspaceMaintenanceService> logger)
     {
@@ -26,6 +26,7 @@ public sealed class ProjectWorkspaceMaintenanceService
             cancellationToken.ThrowIfCancellationRequested();
             try
             {
+                _metadataStore.DemandCurrent(projectId:project.ProjectId,write:true);
                 _workspaceSeeder.EnsureSeeded(project.RepoPath);
             }
             catch (Exception ex)

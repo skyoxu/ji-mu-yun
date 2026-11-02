@@ -120,18 +120,18 @@ public sealed class S53BoundaryTests
             var context = RequestContext.FromIdentity(new AccountIdentity(account.AccountId, "owner", PhaseAAuth.UserRole), "s53-requester", "s53-credential", "s53-correlation");
             var content = "s53-current-snapshot"u8.ToArray();
             File.WriteAllBytes(Path.Combine(source, "project.godot"), content);
-            var storage = new WorkspaceStorageService();
+            var storage = new CentralWorkspaceStorageBackend();
             storage.SetQuota(account.AccountId, 1024 * 1024);
             var snapshot = storage.CreateSnapshot(context, source, "s53-snapshot", WorkspaceId, ProjectId, "policy-s53", new HashSet<string>());
             var lease = new RunnerLease("s53-lease", account.AccountId, ProjectId, 1);
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             InsertLease(connectionString, lease);
             RouteAuthorityFixture.Seed(connectionString, account.AccountId, ProjectId, projectRoot.FullName);
             RestoreAttempt restore;
             using (RunnerIsolationPolicy.PrepareWorkspace(new RunnerIsolationDescriptor(
                 account.AccountId, ProjectId, "phase-r-a-p", destination, true, true, true)))
             {
-                restore = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(context, snapshot.Manifest, source, destination, lease, "s53-roundtrip");
+                restore = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).Restore(context, snapshot.Manifest, source, destination, lease, "s53-roundtrip");
             }
             var restored = Path.Combine(destination, ".restore-current", "project.godot");
             var snapshotObserved = restore.Status == RestoreAttemptStatus.Published && File.Exists(restored) && File.ReadAllBytes(restored).SequenceEqual(content);
@@ -177,7 +177,7 @@ public sealed class S53BoundaryTests
             var corrupt = snapshot.Manifest with { ProtectedContent = [0, 1, 2] };
             var faultLease = new RunnerLease("s53-fault-lease", account.AccountId, ProjectId, 2);
             InsertLease(connectionString, faultLease);
-            var fault = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString))
+            var fault = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString))
                 .Restore(context, corrupt, source, faultRoot, faultLease, "s53-fault");
             var faultObserved = fault.Status == RestoreAttemptStatus.Quarantined && fault.FailureCategory == "snapshot_corrupt" &&
                 !Directory.Exists(Path.Combine(faultRoot, ".restore-current"));

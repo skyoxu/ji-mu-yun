@@ -44,6 +44,7 @@ if (args.Length >= 4 && string.Equals(args[0], "--independent-evidence-run", Str
 
 var builder = WebApplication.CreateBuilder(args);
 var options = PhaseAPlatformOptionsLoader.FromEnvironment();
+options.ValidateServiceIdentity();
 var metadataDirectory = Path.GetDirectoryName(options.MetadataDatabasePath);
 if (!string.IsNullOrWhiteSpace(metadataDirectory))
 {
@@ -53,186 +54,253 @@ var connectionString = new SqliteConnectionStringBuilder
 {
     DataSource = options.MetadataDatabasePath
 }.ToString();
-
-await SqliteMetadataSchema.InitializeAsync(connectionString);
-
-builder.Services.AddSingleton(options);
-builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
-builder.Services.AddSingleton(new WorkspaceStorageService(connectionString));
-builder.Services.AddSingleton(new RestoreService(
-    connectionString,
-    string.IsNullOrWhiteSpace(connectionString) ? null : new RouteRecoveryAuthorityResolver(connectionString)));
-if (options.HostedContextSigningKeyRing is { } hostedContextKeyRing)
+var ownedRunnerQueues = new List<HeavyRunnerQueueService>();
+HeavyRunnerQueueService CreateOwnedRunnerQueue(TimeSpan duration, int concurrency)
 {
-    builder.Services.AddSingleton(new HostedContextManifestSignatureService(
-        hostedContextKeyRing.ActiveKeyId,
-        hostedContextKeyRing.Keys));
-    builder.Services.AddSingleton<HostedContextManifestIssuer>();
-    builder.Services.AddSingleton<IHostedContextManifestValidator, HostedContextManifestValidator>();
+    var queue = new HeavyRunnerQueueService(duration, concurrency,
+        (NodeProjectMetadata)new PhaseAMetadataStore(connectionString, options));
+    ownedRunnerQueues.Add(queue);
+    return queue;
 }
-builder.Services.AddSingleton<ProjectRuleCatalog>();
-builder.Services.AddSingleton<GameTypeTemplateCatalog>();
-builder.Services.AddSingleton<GameTypeGuideCatalog>();
-builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
-builder.Services.AddSingleton<IProjectRunnerProvisioner, WindowsProjectRunnerProvisioner>();
-builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
-builder.Services.AddHttpClient<ISteamGameTypeMetadataProvider, SteamGameTypeMetadataProvider>(client =>
+
+if (options.ProductionRoleEnabled)
 {
-    client.Timeout = TimeSpan.FromSeconds(3);
-});
-builder.Services.AddSingleton<IProjectGameTypeMatchService, ProjectGameTypeMatchService>();
-builder.Services.AddSingleton<ProjectGameTypeMatchBackfillService>();
-builder.Services.AddSingleton(new ProjectCreationConcurrencyLimiter(
-    options.MaxConcurrentProjectCreations,
-    options.MaxConcurrentProjectCreationsPerAccount));
-builder.Services.AddSingleton<ProjectCreationService>();
-builder.Services.AddSingleton<ProjectDraftImportService>();
-builder.Services.AddSingleton<ProjectInitializationService>();
-builder.Services.AddHostedService<ProjectInitializationRecoveryService>();
-builder.Services.AddSingleton<RunCancellationService>();
-builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
-builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
-builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
-builder.Services.AddSingleton<Chapter2BootstrapService>();
-builder.Services.AddSingleton(new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(
-    TimeSpan.FromMinutes(8),
-    options.MaxConcurrentProjectCreations)));
-builder.Services.AddSingleton(new HeavyRunnerQueueService(
-    TimeSpan.FromMinutes(8),
-    options.MaxConcurrentOtherRuns));
-builder.Services.AddKeyedSingleton("prototype-creation", new HeavyRunnerQueueService(
-    TimeSpan.FromMinutes(25),
-    options.MaxConcurrentPrototypeCreations));
-builder.Services.AddKeyedSingleton("asset-generation", new HeavyRunnerQueueService(
-    TimeSpan.FromMinutes(4),
-    options.MaxConcurrentAssetGenerations));
-builder.Services.AddKeyedSingleton("web-preview", new HeavyRunnerQueueService(
-    TimeSpan.FromMinutes(3),
-    options.MaxConcurrentWebPreviews));
-builder.Services.AddSingleton(new ProjectWebPreviewConcurrencyLimiter(
-    options.MaxConcurrentWebPreviewsPerAccount));
-builder.Services.AddSingleton<ProjectWebPreviewSemanticAdapterService>();
-builder.Services.AddSingleton<ProjectWebPreviewDedicatedAdapterService>();
-builder.Services.AddSingleton(new AssetGenerationConcurrencyLimiter(
-    options.MaxConcurrentAssetGenerationsPerAccount));
-builder.Services.AddSingleton<PrototypeRecordWriter>();
-builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
-builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
-builder.Services.AddSingleton<PrototypeArtifactIndexer>();
-builder.Services.AddSingleton<PrototypeRouteStateWriter>();
-builder.Services.AddSingleton<PrototypeEngineeringClosureService>();
-builder.Services.AddSingleton<PrototypeWorkflowService>();
-builder.Services.AddSingleton<IPrototypeFromGddWorkflow>(sp => sp.GetRequiredService<PrototypeWorkflowService>());
-builder.Services.AddSingleton<IPrototypeLightweightValidationService, PrototypeLightweightValidationService>();
-builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
-builder.Services.AddSingleton<PrototypeQuickFixService>();
-builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
-builder.Services.AddSingleton<PrototypeIterationPlanService>();
-builder.Services.AddSingleton<PrototypeIterationGoalService>();
-builder.Services.AddSingleton<PrototypeRepairPlanService>();
-builder.Services.AddSingleton<PrototypeUiOptimizationService>();
-builder.Services.AddSingleton<GddMilestoneStepService>();
-builder.Services.AddSingleton<GameDesignDocumentService>();
-builder.Services.AddSingleton<GameDesignRequirementMapService>();
-builder.Services.AddSingleton<GddToModulePhase1StateService>();
-builder.Services.AddSingleton<PrototypeContractFreezeService>();
-builder.Services.AddSingleton<GameDesignSceneRouteService>();
-builder.Services.AddSingleton(new QuestionFormConcurrencyLimiter(
-    options.MaxConcurrentQuestionForms,
-    options.MaxConcurrentQuestionFormsPerAccount));
-builder.Services.AddSingleton<GameDesignQuestionFormService>();
-builder.Services.AddSingleton<GameDesignQuestionFormRestoreService>();
-builder.Services.AddSingleton<PrototypeCommandBuilder>();
-builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
-builder.Services.AddSingleton<PrototypeCommandService>();
-builder.Services.AddSingleton<SkillActionCatalog>();
-builder.Services.AddSingleton<SkillActionService>();
-builder.Services.AddSingleton<ArtifactReadbackService>();
-builder.Services.AddSingleton(new ExtensionPolicyState());
-builder.Services.AddSingleton<ProjectPackageRestoreService>();
-builder.Services.AddSingleton<ProjectWebPreviewService>();
-builder.Services.AddSingleton<ProjectPackageService>();
-builder.Services.AddSingleton<ProjectAssetInventoryService>();
-builder.Services.AddSingleton<ProjectAssetImageGenerator>();
-builder.Services.AddHttpClient<ProjectAssetLibraryService>()
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-    {
-        AllowAutoRedirect = false
-    });
-builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
-builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
-builder.Services.AddSingleton<LlmBindingService>();
-builder.Services.AddSingleton<LlmStopLossService>();
-builder.Services.AddSingleton<AiCodeMirrorKeyPoolService>();
-builder.Services.AddHttpClient<IAiCodeMirrorBillingClient, AiCodeMirrorBillingClient>();
-builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
-builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
-builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
-if (options.HostedContextSigningKeyRing is not null)
-{
-    var hostedContextGatePolicy = HostedContextGatePolicy.CreateWithOverrides(
-        HostedContextRouteContractPolicy.EnforcedOperations.ToDictionary(
-            operation => operation,
-            _ => HostedContextGateMode.Enforce,
-            StringComparer.Ordinal));
-    builder.Services.AddSingleton(hostedContextGatePolicy);
-    builder.Services.AddSingleton<ILlmRouteEngine>(serviceProvider => new LlmRouteEngine(
-        serviceProvider.GetRequiredService<ICodexChatClient>(),
-        hostedContextGatePolicy,
-        serviceProvider.GetRequiredService<IHostedContextManifestValidator>()));
+    await PhaseAMetadataStore.ValidateCompletedNodeBindingAsync(connectionString);
+    await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
 }
 else
+    await SqliteMetadataSchema.InitializeAsync(connectionString);
+
+builder.Services.AddSingleton(options);
+builder.Services.AddSingleton<NodeExecutionOptions>((NodeExecutionOptions)options);
+builder.Services.AddSingleton<NodeTicketSigner>((NodeTicketSigner)options);
+builder.Services.AddSingleton<NodePreviewRuntime>((NodePreviewRuntime)options);
+builder.Services.AddSingleton(new PhaseAMetadataStore(connectionString, options));
+builder.Services.AddSingleton<NodeProjectMetadata>(services =>
+    (NodeProjectMetadata)services.GetRequiredService<PhaseAMetadataStore>());
+builder.Services.AddSingleton<NodeOperationGuard>(services =>
+    (NodeOperationGuard)services.GetRequiredService<PhaseAMetadataStore>());
+builder.Services.AddSingleton(new ExtensionPolicyState());
+builder.Services.AddSingleton<LlmBindingService>();
+builder.Services.AddSingleton<NodeLlmBindingReader>(services =>
+    (NodeLlmBindingReader)services.GetRequiredService<LlmBindingService>());
+builder.Services.AddSingleton<LlmStopLossService>();
+builder.Services.AddSingleton<AiCodeMirrorKeyPoolService>();
+builder.Services.AddSingleton<NodeRuntimeCredentialReader>(services =>
+    (NodeRuntimeCredentialReader)services.GetRequiredService<AiCodeMirrorKeyPoolService>());
+builder.Services.AddSingleton<RunCancellationService>();
+// ADR-0061 AD14/25: only trusted root selects these local contract adapters.
+// Ordinary project/Runner services receive neither adapter nor service locator.
+if(options.EntryRoleEnabled)
+    builder.Services.AddSingleton<CentralNoticePublisher>(services =>
+        services.GetRequiredService<PhaseAMetadataStore>().CreateNoticePublisher());
+if(options.ProductionRoleEnabled)
+    builder.Services.AddSingleton<NodeNoticeReader>(services =>
+        services.GetRequiredService<PhaseAMetadataStore>().CreateNoticeReader());
+
+
+// ADR-0061 AD20: no ordinary production graph is registered for entry-only.
+if (options.ProductionRoleEnabled)
 {
-    builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
+    builder.Services.AddSingleton<WorkspaceStorageService>(services =>
+        services.GetRequiredService<PhaseAMetadataStore>().CreateWorkspaceStorageService());
+    builder.Services.AddSingleton<RestoreService>(services =>
+        services.GetRequiredService<PhaseAMetadataStore>().CreateRestoreService(new RouteRecoveryAuthorityResolver(connectionString)));
+    if (options.HostedContextSigningKeyRing is { } hostedContextKeyRing)
+    {
+        builder.Services.AddSingleton(new HostedContextManifestSignatureService(
+            hostedContextKeyRing.ActiveKeyId,
+            hostedContextKeyRing.Keys));
+        builder.Services.AddSingleton<HostedContextManifestIssuer>();
+        builder.Services.AddSingleton<IHostedContextManifestValidator, HostedContextManifestValidator>();
+    }
+    builder.Services.AddSingleton<ProjectRuleCatalog>();
+    builder.Services.AddSingleton<GameTypeTemplateCatalog>();
+    builder.Services.AddSingleton<GameTypeGuideCatalog>();
+    builder.Services.AddSingleton<IProjectWorkspaceSeeder, ProjectWorkspaceSeeder>();
+    builder.Services.AddSingleton<IProjectRunnerProvisioner, WindowsProjectRunnerProvisioner>();
+    builder.Services.AddSingleton<ProjectWorkspaceMaintenanceService>();
+    builder.Services.AddHttpClient<ISteamGameTypeMetadataProvider, SteamGameTypeMetadataProvider>(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(3);
+    });
+    builder.Services.AddSingleton<IProjectGameTypeMatchService, ProjectGameTypeMatchService>();
+    builder.Services.AddSingleton<ProjectGameTypeMatchBackfillService>();
+    builder.Services.AddSingleton(new ProjectCreationConcurrencyLimiter(
+        options.MaxConcurrentProjectCreations,
+        options.MaxConcurrentProjectCreationsPerAccount));
+    builder.Services.AddSingleton<ProjectCreationService>();
+    builder.Services.AddSingleton<ProjectDraftImportService>();
+    builder.Services.AddSingleton<ProjectInitializationService>();
+    builder.Services.AddHostedService<ProjectInitializationRecoveryService>();
+    builder.Services.AddSingleton<IHostedProcessRunner, HostedProcessRunner>();
+    builder.Services.AddSingleton<Chapter2BootstrapCommandBuilder>();
+    builder.Services.AddSingleton<ProjectHealthArtifactIndexer>();
+    builder.Services.AddSingleton<Chapter2BootstrapService>();
+    builder.Services.AddSingleton(new ProjectCreationRunnerQueue(CreateOwnedRunnerQueue(
+        TimeSpan.FromMinutes(8), options.MaxConcurrentProjectCreations)));
+    builder.Services.AddSingleton(CreateOwnedRunnerQueue(
+        TimeSpan.FromMinutes(8), options.MaxConcurrentOtherRuns));
+    builder.Services.AddKeyedSingleton("prototype-creation", CreateOwnedRunnerQueue(
+        TimeSpan.FromMinutes(25), options.MaxConcurrentPrototypeCreations));
+    builder.Services.AddKeyedSingleton("asset-generation", CreateOwnedRunnerQueue(
+        TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations));
+    builder.Services.AddKeyedSingleton("web-preview", CreateOwnedRunnerQueue(
+        TimeSpan.FromMinutes(3), options.MaxConcurrentWebPreviews));
+    builder.Services.AddSingleton(new ProjectWebPreviewConcurrencyLimiter(
+        options.MaxConcurrentWebPreviewsPerAccount));
+    builder.Services.AddSingleton<ProjectWebPreviewSemanticAdapterService>();
+    builder.Services.AddSingleton<ProjectWebPreviewDedicatedAdapterService>();
+    builder.Services.AddSingleton(new AssetGenerationConcurrencyLimiter(
+        options.MaxConcurrentAssetGenerationsPerAccount));
+    builder.Services.AddSingleton<PrototypeRecordWriter>();
+    builder.Services.AddSingleton<IGameTypeRouteEngine, GameTypeRouteEngine>();
+    builder.Services.AddSingleton<PrototypeWorkflowCommandBuilder>();
+    builder.Services.AddSingleton<PrototypeArtifactIndexer>();
+    builder.Services.AddSingleton<PrototypeRouteStateWriter>();
+    builder.Services.AddSingleton<PrototypeEngineeringClosureService>();
+    builder.Services.AddSingleton<PrototypeWorkflowService>();
+    builder.Services.AddSingleton<IPrototypeFromGddWorkflow>(sp => sp.GetRequiredService<PrototypeWorkflowService>());
+    builder.Services.AddSingleton<IPrototypeLightweightValidationService, PrototypeLightweightValidationService>();
+    builder.Services.AddSingleton<PrototypeFeedbackIterationService>();
+    builder.Services.AddSingleton<PrototypeQuickFixService>();
+    builder.Services.AddSingleton<PrototypeNeedsFixRouteService>();
+    builder.Services.AddSingleton<PrototypeIterationPlanService>();
+    builder.Services.AddSingleton<PrototypeIterationGoalService>();
+    builder.Services.AddSingleton<PrototypeRepairPlanService>();
+    builder.Services.AddSingleton<PrototypeUiOptimizationService>();
+    builder.Services.AddSingleton<GddMilestoneStepService>();
+    builder.Services.AddSingleton<GameDesignDocumentService>();
+    builder.Services.AddSingleton<GameDesignRequirementMapService>();
+    builder.Services.AddSingleton<GddToModulePhase1StateService>();
+    builder.Services.AddSingleton<PrototypeContractFreezeService>();
+    builder.Services.AddSingleton<GameDesignSceneRouteService>();
+    builder.Services.AddSingleton(new QuestionFormConcurrencyLimiter(
+        options.MaxConcurrentQuestionForms,
+        options.MaxConcurrentQuestionFormsPerAccount));
+    builder.Services.AddSingleton<GameDesignQuestionFormService>();
+    builder.Services.AddSingleton<GameDesignQuestionFormRestoreService>();
+    builder.Services.AddSingleton<PrototypeCommandBuilder>();
+    builder.Services.AddSingleton<PrototypeTddArtifactIndexer>();
+    builder.Services.AddSingleton<PrototypeCommandService>();
+    builder.Services.AddSingleton<SkillActionCatalog>();
+    builder.Services.AddSingleton<SkillActionService>();
+    builder.Services.AddSingleton<ArtifactReadbackService>();
+    builder.Services.AddSingleton<ProjectPackageRestoreService>();
+    builder.Services.AddSingleton<ProjectWebPreviewService>();
+    builder.Services.AddSingleton<ProjectPackageService>();
+    // ADR-0061 AD24: protected catalog selection, never a project path/provider.
+    builder.Services.AddSingleton<NodeApprovedSourceReader>(services => new NodeApprovedSourceReader(
+        services.GetRequiredService<NodeProjectMetadata>(), options.RepositoryRoot, options.HostedWorkspaceRoot,
+        () => new GameTypeGuideCatalog(options)));
+    builder.Services.AddSingleton<ProjectAssetInventoryService>();
+    builder.Services.AddSingleton<ProjectAssetImageGenerator>();
+    builder.Services.AddHttpClient<ProjectAssetLibraryService>()
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
+    builder.Services.AddSingleton<ProjectPackageDownloadTicketService>();
+    builder.Services.AddSingleton<ProjectAssetPreviewTicketService>();
+    builder.Services.AddHttpClient<IAiCodeMirrorBillingClient, AiCodeMirrorBillingClient>();
+    builder.Services.AddHttpClient<INewApiChatClient, NewApiChatClient>();
+    builder.Services.AddHttpClient<IAiCodeMirrorResponsesClient, AiCodeMirrorResponsesClient>();
+    builder.Services.AddSingleton<ICodexChatClient, CodexCliChatClient>();
+    if (options.HostedContextSigningKeyRing is not null)
+    {
+        var hostedContextGatePolicy = HostedContextGatePolicy.CreateWithOverrides(
+            HostedContextRouteContractPolicy.EnforcedOperations.ToDictionary(
+                operation => operation,
+                _ => HostedContextGateMode.Enforce,
+                StringComparer.Ordinal));
+        builder.Services.AddSingleton(hostedContextGatePolicy);
+        builder.Services.AddSingleton<ILlmRouteEngine>(serviceProvider => new LlmRouteEngine(
+            serviceProvider.GetRequiredService<ICodexChatClient>(),
+            hostedContextGatePolicy,
+            serviceProvider.GetRequiredService<IHostedContextManifestValidator>()));
+    }
+    else
+    {
+        builder.Services.AddSingleton<ILlmRouteEngine, LlmRouteEngine>();
+    }
+    builder.Services.AddSingleton(new ChatConcurrencyLimiter(
+        options.MaxConcurrentChats,
+        options.MaxConcurrentChatsPerAccount));
+    builder.Services.AddTransient<ChatService>();
+    builder.Services.AddSingleton<ProjectChatHistoryService>();
+    builder.Services.AddSingleton<ProjectWorkflowRouteService>();
+    builder.Services.AddSingleton<ProjectRouteStateArtifactService>();
 }
-builder.Services.AddSingleton(new ChatConcurrencyLimiter(
-    options.MaxConcurrentChats,
-    options.MaxConcurrentChatsPerAccount));
-builder.Services.AddTransient<ChatService>();
-builder.Services.AddSingleton<ProjectChatHistoryService>();
-builder.Services.AddSingleton<ProjectWorkflowRouteService>();
-builder.Services.AddSingleton<ProjectRouteStateArtifactService>();
 builder.Services.AddSingleton<BrowserUiRenderer>();
 
 var app = builder.Build();
+options.BindNodeLifetime(app.Lifetime);
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+    foreach (var queue in ownedRunnerQueues)
+    {
+        try { queue.CancelOwnedForHostShutdown(); }
+        catch (Exception) { app.Logger.LogError("Host-owned queue cancellation failed; running commitments remain owned."); }
+    }
+});
 var metadataStore = app.Services.GetRequiredService<PhaseAMetadataStore>();
 var adminAccountId = await metadataStore.EnsureSingleAdminAsync();
-var initializationService = app.Services.GetRequiredService<ProjectInitializationService>();
-await initializationService.ReconcileInterruptedInitializationsAsync();
-var interruptedRunCount = await metadataStore.ReconcileInterruptedRunsAsync(
-    "Run was interrupted because the service restarted before completion.");
-await metadataStore.ReconcileProjectBootstrapStatusAsync();
-await initializationService.ReconcileStaleInitializationsAsync();
-var workspaceMaintenance = app.Services.GetRequiredService<ProjectWorkspaceMaintenanceService>();
-await workspaceMaintenance.EnsureAllWorkspacesSeededAsync();
-_ = Task.Run(async () =>
+if (options.ProductionRoleEnabled)
 {
-    try
+    var interruptedRunCount = 0;
+    using (RequestContext.UseCurrent(await metadataStore.ResolveStartupMaintenanceContextAsync()))
     {
-        var health = await app.Services.GetRequiredService<ProjectWebPreviewService>().GetGodot3HealthAsync(CancellationToken.None);
-        if (string.Equals(health.Status, "healthy", StringComparison.Ordinal))
-        {
-            app.Logger.LogInformation(
-                "Godot3 web preview health preheat completed. SmokeStatus={SmokeStatus}",
-                health.SmokeStatus);
-        }
-        else
-        {
-            app.Logger.LogWarning(
-                "Godot3 web preview health preheat reported unhealthy status. SmokeStatus={SmokeStatus} Error={SmokeError}",
-                health.SmokeStatus,
-                health.SmokeError);
-        }
+    var initializationService = app.Services.GetRequiredService<ProjectInitializationService>();
+    await initializationService.ReconcileInterruptedInitializationsAsync();
+    interruptedRunCount = await metadataStore.ReconcileInterruptedRunsAsync(
+        "Run was interrupted because the service restarted before completion.");
+    await metadataStore.ReconcileProjectBootstrapStatusAsync();
+    await initializationService.ReconcileStaleInitializationsAsync();
+    var workspaceMaintenance = app.Services.GetRequiredService<ProjectWorkspaceMaintenanceService>();
+    await workspaceMaintenance.EnsureAllWorkspacesSeededAsync();
     }
-    catch (Exception ex)
+    _ = Task.Run(async () =>
     {
-        app.Logger.LogWarning(ex, "Godot3 web preview health preheat failed.");
+        try
+        {
+            var health = await app.Services.GetRequiredService<ProjectWebPreviewService>().GetGodot3HealthAsync(CancellationToken.None);
+            if (string.Equals(health.Status, "healthy", StringComparison.Ordinal))
+            {
+                app.Logger.LogInformation(
+                    "Godot3 web preview health preheat completed. SmokeStatus={SmokeStatus}",
+                    health.SmokeStatus);
+            }
+            else
+            {
+                app.Logger.LogWarning(
+                    "Godot3 web preview health preheat reported unhealthy status. SmokeStatus={SmokeStatus} Error={SmokeError}",
+                    health.SmokeStatus,
+                    health.SmokeError);
+            }
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogWarning(ex, "Godot3 web preview health preheat failed.");
+        }
+    }, CancellationToken.None);
+    if (interruptedRunCount > 0)
+    {
+        app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
     }
-}, CancellationToken.None);
-if (interruptedRunCount > 0)
-{
-    app.Logger.LogWarning("Recovered {InterruptedRunCount} interrupted runs during startup.", interruptedRunCount);
 }
+
+// Entry-only exposes existing central/control surfaces, never a default workbench.
+app.Use(async (context, next) =>
+{
+    if (!options.ProductionRoleEnabled && !context.Request.Path.StartsWithSegments("/api") && !IsEntryResponsibility(context.Request.Path))
+    {
+        ApplyNoStore(context);
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsJsonAsync(new { error = "forbidden", requestId = context.TraceIdentifier });
+        return;
+    }
+    await next(context);
+});
 
 app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/api"),
@@ -330,6 +398,15 @@ app.Use(async (context, next) =>
         return;
     }
 
+    if ((!options.ProductionRoleEnabled && !IsEntryResponsibility(context.Request.Path)) ||
+        (!options.EntryRoleEnabled && context.Request.Path.StartsWithSegments("/api/admin/users")))
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsJsonAsync(new { error = "role_disabled", code = "role_disabled",
+            message = "This service role does not expose this operation.", requestId = context.TraceIdentifier });
+        return;
+    }
+
     context.Items["phasea.identity"] = identity;
     context.Items["phasea.role"] = identity.Role;
     context.Items["phasea.accountId"] = identity.AccountId;
@@ -338,7 +415,15 @@ app.Use(async (context, next) =>
     {
         PersistAccessTokenCookie(context);
     }
-    await next(context);
+    using var currentRequest=RequestContext.UseCurrent(CurrentRequestContext(context));
+    try { await next(context); }
+    catch(UnauthorizedAccessException)
+    {
+        if(context.Response.HasStarted)throw;
+        ApplyNoStore(context);context.Response.StatusCode=StatusCodes.Status404NotFound;
+        await context.Response.WriteAsJsonAsync(new {error="project_not_found",code="project_not_found",
+            message="The operation is unavailable.",requestId=context.TraceIdentifier});
+    }
 });
 
 app.MapGet("/healthz", () => Results.Ok(new
@@ -396,13 +481,28 @@ app.MapGet("/api/project-creation-failures/latest", async (
     return failure is null ? Results.NotFound(new { error = "project_creation_failure_not_found" }) : Results.Ok(failure);
 });
 
-app.MapGet("/api/session", (HttpContext context) => Results.Ok(new
+app.MapGet("/api/session", async (HttpContext context, CancellationToken cancellationToken) =>
 {
-    authenticated = true,
-    accountId = CurrentIdentity(context).AccountId,
-    username = CurrentIdentity(context).Username,
-    role = CurrentIdentity(context).Role
-}));
+    var projection = await metadataStore.GetCurrentNodeProjectionAsync(CurrentRequestContext(context), cancellationToken: cancellationToken);
+    if (projection is null)
+        return Results.Json(new { error = "node_binding_unavailable", code = "node_binding_unavailable",
+            message = "The current account has no valid local node binding.", requestId = context.TraceIdentifier }, statusCode: 409);
+    return Results.Ok(new
+    {
+        authenticated = true,
+        accountId = CurrentIdentity(context).AccountId,
+        username = CurrentIdentity(context).Username,
+        role = CurrentIdentity(context).Role,
+        ownership = new
+        {
+            nodeId = options.NodeId,
+            homeNodeId = projection.HomeNodeId,
+            scope = options.NodeScope,
+            enabledRoles = options.EnabledRoles.Order(StringComparer.Ordinal).ToArray(),
+            capacity = options.ReadLocalNodeCapacity(app.Lifetime)
+        }
+    });
+});
 
 app.MapGet("/api/account/active-run", async (
     HttpContext context,
@@ -1581,19 +1681,20 @@ app.MapGet("/projects/{projectId}/gdd/GDD.md", async (
     [FromServices] GameDesignDocumentService gdd,
     CancellationToken cancellationToken) =>
 {
-    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
-    if (project is null)
+    var accountId = await store.GetProjectAccountForAuthorizationAsync(projectId, cancellationToken);
+    if (accountId is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
     }
 
     var ticket = request.Query["ticket"].FirstOrDefault();
-    if (!tickets.IsValid(ticket, project.AccountId, projectId, "GDD.md"))
+    if (!tickets.IsValid(ticket, accountId, projectId, "GDD.md"))
     {
         return Results.Unauthorized();
     }
 
-    var result = await gdd.ReadAsync(project.AccountId, projectId, cancellationToken);
+    using var ticketRead=tickets.BeginRead(ticket,accountId,projectId,"GDD.md");
+    var result = await gdd.ReadAsync(accountId, projectId, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "gdd_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
@@ -1800,19 +1901,20 @@ app.MapGet("/projects/{projectId}/asset-preview", async (
     [FromServices] ProjectAssetPreviewTicketService tickets,
     CancellationToken cancellationToken) =>
 {
-    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
-    if (project is null)
+    var accountId = await store.GetProjectAccountForAuthorizationAsync(projectId, cancellationToken);
+    if (accountId is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
     }
 
     var ticket = request.Query["ticket"].FirstOrDefault();
-    if (!tickets.IsValid(ticket, project.AccountId, projectId, resource))
+    if (!tickets.IsValid(ticket, accountId, projectId, resource))
     {
         return Results.Unauthorized();
     }
 
-    var result = await assets.ReadPreviewAsync(project.AccountId, projectId, resource, cancellationToken);
+    using var ticketRead=tickets.BeginRead(ticket,accountId,projectId,resource);
+    var result = await assets.ReadPreviewAsync(accountId, projectId, resource, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "asset_preview_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
@@ -1827,19 +1929,20 @@ app.MapGet("/projects/{projectId}/packages/{fileName}", async (
     [FromServices] ProjectPackageDownloadTicketService tickets,
     CancellationToken cancellationToken) =>
 {
-    var project = await store.GetProjectSnapshotAsync(projectId, cancellationToken);
-    if (project is null)
+    var accountId = await store.GetProjectAccountForAuthorizationAsync(projectId, cancellationToken);
+    if (accountId is null)
     {
         return Results.NotFound(new { error = "project_not_found" });
     }
 
     var ticket = request.Query["ticket"].FirstOrDefault();
-    if (!tickets.IsValid(ticket, project.AccountId, projectId, fileName))
+    if (!tickets.IsValid(ticket, accountId, projectId, fileName))
     {
         return Results.Unauthorized();
     }
 
-    var result = await packages.ReadPackageAsync(project.AccountId, projectId, fileName, cancellationToken);
+    using var ticketRead=tickets.BeginRead(ticket,accountId,projectId,fileName);
+    var result = await packages.ReadPackageAsync(accountId, projectId, fileName, cancellationToken);
     return result is null
         ? Results.NotFound(new { error = "project_package_not_found" })
         : Results.File(result.Content, result.ContentType, result.FileName);
@@ -2299,6 +2402,11 @@ app.MapPost("/api/admin/users", async (
             cancellationToken);
         return Results.Ok(result);
     }
+    catch (InvalidOperationException ex) when (ex.Message == "account_admission_closed")
+    {
+        return Results.Json(new { error = "account_admission_closed", code = "account_admission_closed",
+            message = "This node is not accepting new accounts.", requestId = context.TraceIdentifier }, statusCode: 503);
+    }
     catch (InvalidOperationException ex) when (ex.Message == "aicodemirror_key_pool_exhausted")
     {
         return Results.Conflict(new { error = "aicodemirror_key_pool_exhausted" });
@@ -2367,7 +2475,16 @@ app.MapGet("/api/admin/users", async (
         return Results.Json(new { error = "admin_required", requestId = context.TraceIdentifier }, statusCode: StatusCodes.Status403Forbidden);
     }
 
-    return Results.Ok(new { users = await store.ListAccountsAsync(cancellationToken) });
+    var users = JsonSerializer.SerializeToNode(await store.ListAccountsAsync(cancellationToken),
+        new JsonSerializerOptions(JsonSerializerDefaults.Web))!.AsArray();
+    var requestContext = CurrentRequestContext(context);
+    foreach (var user in users)
+    {
+        var accountId = user!["accountId"]!.GetValue<string>();
+        var projection = await store.GetCurrentNodeProjectionAsync(requestContext, accountId, cancellationToken);
+        user["homeNodeId"] = projection?.HomeNodeId;
+    }
+    return Results.Ok(new { users });
 });
 
 app.MapGet("/api/admin/projects", async (
@@ -3679,6 +3796,15 @@ app.MapPost("/api/projects/{projectId}/prototype-scene", async (
 
 app.Run(options.AppBindUrl);
 
+static bool IsEntryResponsibility(PathString path)
+{
+    return path == "/healthz" || path == "/favicon.ico" || path == "/api/session" ||
+        path.StartsWithSegments("/api/admin/users") ||
+        path == "/api/admin/extension-policy" ||
+        path == "/api/admin/aicodemirror-key-pool";
+}
+
+
 static async Task<AccountIdentity?> ResolveIdentityAsync(HttpContext context, string adminAccountId)
 {
     var authOptions = context.RequestServices.GetRequiredService<PhaseAPlatformOptions>();
@@ -3686,12 +3812,6 @@ static async Task<AccountIdentity?> ResolveIdentityAsync(HttpContext context, st
     if (string.IsNullOrWhiteSpace(token))
     {
         return null;
-    }
-
-    var role = PhaseAAuth.GetRole(context.Request, authOptions);
-    if (role == PhaseAAuth.AdminRole)
-    {
-        return new AccountIdentity(adminAccountId, authOptions.AdminUsername, PhaseAAuth.AdminRole);
     }
 
     var store = context.RequestServices.GetRequiredService<PhaseAMetadataStore>();
@@ -3734,6 +3854,15 @@ static AccountIdentity CurrentIdentity(HttpContext context)
     return context.Items.TryGetValue("phasea.identity", out var value) && value is AccountIdentity identity
         ? identity
         : throw new InvalidOperationException("Authenticated account identity is missing.");
+}
+
+static RequestContext CurrentRequestContext(HttpContext context)
+{
+    var identity = CurrentIdentity(context);
+    var token = PhaseAAuth.ReadBearerOrHeaderToken(context.Request);
+    if (string.IsNullOrWhiteSpace(token)) throw new UnauthorizedAccessException("credential_required");
+    return RequestContext.FromIdentity(identity, identity.AccountId,
+        PhaseAAuth.HashTokenForStorage(token), context.TraceIdentifier);
 }
 
 static string CurrentAccountId(HttpContext context)

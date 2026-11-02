@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using System.Diagnostics;
 using System.Net;
@@ -45,10 +46,10 @@ public sealed class S31BoundaryTests
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 fixture project creation failed.");
         RouteAuthorityFixture.Seed(connectionString, account.AccountId, project.ProjectId, workspace);
         var context = new RequestContext("s31-owner", account.AccountId, new HashSet<string> { "user" }, "s31-disposable-credential", "s31-" + nonce);
-        var storage = new WorkspaceStorageService(connectionString);
+        var storage = new CentralWorkspaceStorageBackend(connectionString);
         storage.SetQuota(account.AccountId, 1024 * 1024);
         var manifest = storage.CreateSnapshot(context, source, "snapshot-control", "workspace-control", project.ProjectId, "s31-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
-        var service = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
+        var service = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
         var issues = new List<string>();
         var observations = new List<object>();
         var controlLease = new RunnerLease("lease-control", account.AccountId, project.ProjectId, 1);
@@ -106,14 +107,20 @@ public sealed class S31BoundaryTests
         Directory.CreateDirectory(repo);
         var database = Path.Combine(data, "metadata.sqlite3");
         var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
-        await SqliteMetadataSchema.InitializeAsync(connectionString);
+
         var adminToken = "s31-disposable-admin-" + Guid.NewGuid().ToString("N");
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces"),
             ["PHASEA_REPOSITORY_ROOT"] = repository,
-            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken)
-        });
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
+            ["PHASEA_NODE_ID"] = "test-physical-node",
+            ["PHASEA_NODE_SCOPE"] = "single_node_test",
+            ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+            ["PHASEA_ENABLED_ROLES"] = "entry,production",
+            ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+});
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString,options);
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         var owner = await store.CreateUserAccountAsync("s31-http-owner", 1);
@@ -123,6 +130,9 @@ public sealed class S31BoundaryTests
             workspace, repo, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 HTTP project setup failed.");
         await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
+        if(!OperatingSystem.IsWindows())
+            PhaseA.Platform.Tests.NodeIdentity.S206TestSupport.RegisterLogicalReadbackProject(
+                await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."));
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}";
@@ -141,6 +151,12 @@ public sealed class S31BoundaryTests
         start.Environment["PHASEA_REPOSITORY_ROOT"] = repository;
         start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken);
         start.Environment["PHASEA_SERVICE_STATE"] = "test";
+        start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+
         using var host = Process.Start(start) ?? throw new InvalidOperationException("S31 HTTP host failed to start.");
         host.OutputDataReceived += (_, _) => { };
         host.ErrorDataReceived += (_, _) => { };

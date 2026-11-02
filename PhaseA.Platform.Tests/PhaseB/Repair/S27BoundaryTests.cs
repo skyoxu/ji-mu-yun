@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -58,7 +59,7 @@ public sealed class S27BoundaryTests
                 "s27-correlation");
             var source = Directory.CreateDirectory(Path.Combine(root.FullName, "source"));
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "s27 unpublished result");
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.SetQuota(account.AccountId, 4 * 1024 * 1024);
             var snapshot = storage.CreateSnapshot(
                 context,
@@ -105,7 +106,7 @@ public sealed class S27BoundaryTests
                 {
                     try
                     {
-                        var attempt = new RestoreService(connectionString).RestorePrepared(
+                        var attempt = new CentralRestoreBackend(connectionString).RestorePrepared(
                             context,
                             snapshot.Manifest,
                             source.FullName,

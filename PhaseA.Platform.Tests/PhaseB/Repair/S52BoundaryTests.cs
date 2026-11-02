@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -92,7 +93,7 @@ public sealed class S52BoundaryTests
                 Pooling = false
             }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = root,
@@ -150,7 +151,7 @@ public sealed class S52BoundaryTests
                 new ProjectAssetPreviewTicketService(options));
         }
 
-        public RestoreAttempt Restore() => new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+        public RestoreAttempt Restore() => new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
             Context,
             Manifest,
             SourceRoot,

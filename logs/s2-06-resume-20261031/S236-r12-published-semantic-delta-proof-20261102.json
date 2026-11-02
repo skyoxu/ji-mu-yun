@@ -1,0 +1,20 @@
+{
+  "utc": "2026-11-02T11:01:43.341108+00:00",
+  "predecessor": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-module-r11-20261102",
+  "successor": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+  "successor_bundle_sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267",
+  "exact_semantic_equality": {
+    "obligations": true,
+    "acceptances": true,
+    "failure_intents": true
+  },
+  "obligations": 459,
+  "slices": 239,
+  "worker_alignment": "Same current caller semantic equivalence against fixed predecessor and source SHA, not external/independent reviewer or runtime execution",
+  "added_commands": [
+    "test_program_detached_preview_current_authority",
+    "test_native_registered_project_launch_current_authority"
+  ],
+  "plan_ready_is_not_implementation_or_acceptance": true,
+  "authorizes": []
+}

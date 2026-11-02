@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -21,7 +22,7 @@ public sealed class S6BoundaryTests
         using var fixture = await RestoreFixture.CreateAsync();
         var (source, manifest) = fixture.CreateSnapshot("old-lease", "current-publication");
         var destination = Directory.CreateDirectory(Path.Combine(fixture.Root.FullName, "old-lease-destination"));
-        var service = new RestoreService(
+        var service = new CentralRestoreBackend(
             fixture.ConnectionString,
             new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         var first = service.RestorePrepared(
@@ -76,7 +77,7 @@ public sealed class S6BoundaryTests
             ProjectId,
             "s6-policy",
             [("project.godot", "retry-content"u8.ToArray())]);
-        var service = new RestoreService(
+        var service = new CentralRestoreBackend(
             fixture.ConnectionString,
             new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         const string idempotencyKey = "s6-retry-key";
@@ -137,7 +138,7 @@ public sealed class S6BoundaryTests
             manifest.SnapshotId,
             destination.FullName,
             idempotencyKey);
-        var service = new RestoreService(
+        var service = new CentralRestoreBackend(
             fixture.ConnectionString,
             new RouteRecoveryAuthorityResolver(fixture.ConnectionString));
         var created = service.RestorePrepared(
@@ -311,7 +312,7 @@ public sealed class S6BoundaryTests
         {
             var source = Directory.CreateDirectory(Path.Combine(Root.FullName, $"source-{snapshotId}"));
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), content);
-            var storage = new WorkspaceStorageService(ConnectionString);
+            var storage = new CentralWorkspaceStorageBackend(ConnectionString);
             storage.SetQuota(AccountId, 4 * 1024 * 1024);
             var snapshot = storage.CreateSnapshot(
                 Context,

@@ -35,7 +35,7 @@ public sealed class R7QuotaBoundaryTests
             File.WriteAllText(Path.Combine(sourceA, "supported.txt"), "a-content");
             File.WriteAllText(Path.Combine(sourceB, "supported.txt"), new string('b', 512));
 
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.SetQuota(accountA.AccountId, 4096);
             storage.SetQuota(accountB.AccountId, 4096);
             var contextA = RequestContext.FromIdentity(new AccountIdentity(accountA.AccountId, "owner", PhaseAAuth.UserRole), "r7-a", accountA.Token, "r7-a");
@@ -51,7 +51,7 @@ public sealed class R7QuotaBoundaryTests
             storage.SoftDeleteSnapshot(contextA, "r7-snapshot-a");
             Assert.Equal(afterDelete, storage.GetQuota(accountA.AccountId).UsedBytes);
 
-            var restarted = new WorkspaceStorageService(connectionString);
+            var restarted = new CentralWorkspaceStorageBackend(connectionString);
             Assert.Equal(afterDelete, restarted.GetQuota(accountA.AccountId).UsedBytes);
             Assert.True(restarted.GetQuota(accountB.AccountId).UsedBytes > 0);
         }

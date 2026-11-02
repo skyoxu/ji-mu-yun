@@ -76,7 +76,7 @@ public sealed class S22BoundaryTests
                 "principal-s22",
                 "credential-s22",
                 "correlation-s22");
-            var storage = new WorkspaceStorageService($"Data Source={_databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={_databasePath}");
             var record = storage.CreateSnapshot(
                 context,
                 _root.FullName,

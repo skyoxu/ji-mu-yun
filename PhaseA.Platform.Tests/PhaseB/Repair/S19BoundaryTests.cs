@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -92,7 +93,7 @@ public sealed class S19BoundaryTests
                 Pooling = false
             }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             // ADR-0061: exercise restore validity with a real enabled account and project.
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
@@ -166,7 +167,7 @@ public sealed class S19BoundaryTests
                 _ => throw new ArgumentOutOfRangeException(nameof(variant))
             };
             var idempotencyKey = $"s19-{variant.ToString().ToLowerInvariant()}";
-            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+            var attempt = new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
                 Context,
                 Manifest,
                 placementReference!,

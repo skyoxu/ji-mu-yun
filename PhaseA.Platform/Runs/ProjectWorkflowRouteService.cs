@@ -28,8 +28,8 @@ public sealed class ProjectWorkflowRouteService
         new("preview-package", "预览打包下载", "release", "preview/package/readback artifacts", "P2")
     ];
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly PrototypeWorkflowService _prototypeWorkflow;
     private readonly PrototypeRepairPlanService _repairPlans;
     private readonly ProjectPackageService _packages;
@@ -39,8 +39,8 @@ public sealed class ProjectWorkflowRouteService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectWorkflowRouteService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         PrototypeWorkflowService prototypeWorkflow,
         PrototypeRepairPlanService repairPlans,
         ProjectPackageService packages,
@@ -56,7 +56,7 @@ public sealed class ProjectWorkflowRouteService
         _packages = packages;
         _assetInventory = assetInventory;
         _llmRouteEngine = llmRouteEngine;
-        _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService();
+        _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService(metadataStore);
         _contextManifestIssuer = contextManifestIssuer;
     }
 

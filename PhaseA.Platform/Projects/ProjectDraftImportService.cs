@@ -37,43 +37,53 @@ public sealed class ProjectDraftImportService
 
     private static readonly Dictionary<string, string> LocalizedKeyAliases = BuildLocalizedKeyAliases();
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IAiCodeMirrorResponsesClient? _responsesClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly RunCancellationService _runCancellation;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectDraftImportService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ICodexChatClient codexChatClient)
-        : this(metadataStore, options, codexChatClient, null, null, new ProjectWorkspaceSeeder(options))
     {
+        // ADR-0061 AD20: retain pure parsing without manufacturing production consumers.
+        _metadataStore = metadataStore;
+        _options = options;
+        _llmRouteEngine = null!;
+        _workspaceSeeder = null!;
+        _heavyRunnerQueue = null!;
+        _runCancellation = null!;
     }
 
     public ProjectDraftImportService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ICodexChatClient codexChatClient,
         IAiCodeMirrorResponsesClient? responsesClient,
-        AiCodeMirrorKeyPoolService? keyPoolService,
+        NodeRuntimeCredentialReader? keyPoolService,
         IProjectWorkspaceSeeder workspaceSeeder,
         ILlmRouteEngine? llmRouteEngine = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         RunCancellationService? runCancellation = null,
         HostedContextManifestIssuer? contextManifestIssuer = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _responsesClient = responsesClient;
         _keyPoolService = keyPoolService;
         _workspaceSeeder = workspaceSeeder;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _runCancellation = runCancellation ?? new RunCancellationService();
         _contextManifestIssuer = contextManifestIssuer;
     }
@@ -86,6 +96,7 @@ public sealed class ProjectDraftImportService
         string? model,
         CancellationToken cancellationToken = default)
     {
+        DemandExplicitProductionConsumers();
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
@@ -231,6 +242,7 @@ public sealed class ProjectDraftImportService
         string projectId,
         CancellationToken cancellationToken = default)
     {
+        DemandExplicitProductionConsumers();
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
@@ -239,6 +251,15 @@ public sealed class ProjectDraftImportService
 
         var draft = await _metadataStore.GetProjectPrototypeDraftAsync(projectId, cancellationToken);
         return draft is null ? null : FromSnapshot(draft);
+    }
+
+    private void DemandExplicitProductionConsumers()
+    {
+        if (_llmRouteEngine is null || _workspaceSeeder is null ||
+            _heavyRunnerQueue is null || _runCancellation is null)
+        {
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+        }
     }
 
     public ProjectDraftImportResult ImportPlainText(string fileName, byte[] content)

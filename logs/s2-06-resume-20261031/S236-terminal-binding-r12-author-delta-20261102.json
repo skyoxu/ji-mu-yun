@@ -1,0 +1,30 @@
+{
+  "utc": "2026-11-02T10:54:34.713689+00:00",
+  "kind": "author input correction; no readiness authority",
+  "predecessor": "logs/s2-06-resume-20261031/S236-terminal-module-native-proof-v3-repair-r11-20261102.json",
+  "predecessor_sha256": "541e803574a5a82eebdcaf758526f1e6874fcaa1094d0fbaee5d5d547b56c0c0",
+  "successor": "logs/s2-06-resume-20261031/S236-terminal-binding-v3-repair-r12-20261102.json",
+  "successor_sha256": "36f4ca322ddce20ade886fcfbc694fa2de757fae51b87c21ec89f90ecc6f1998",
+  "only_changed_field": "obligation_contracts.O-7486EC7571D0.slice_hint.validation_commands",
+  "original_commands_preserved": true,
+  "added_commands": [
+    [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/s2_06/test_node_role_closure.py::test_program_detached_preview_current_authority"
+    ],
+    [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/s2_06/test_node_role_closure.py::test_native_registered_project_launch_current_authority"
+    ]
+  ],
+  "unchanged": "requirements, obligation/acceptance/failure identity and semantics, write/forbidden scope, expected-red ownership, Windows runtime gates, budgets",
+  "root_cause": "r11 selector_intent prose did not replace the explicit old three validation_commands; compiler used declared author input as designed",
+  "retained_limit": "Native Windows test remains mandatory and is not expected to pass on Linux",
+  "authorizes": []
+}

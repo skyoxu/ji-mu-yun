@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Runs;
 
@@ -13,10 +14,12 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
     private readonly RunCancellationService _runCancellation;
     private readonly Func<Process, Task> _cleanupProcess;
     private int _cleanupFailureObserved;
+    private readonly NodeProjectMetadata? _authority;
 
-    public HostedProcessRunner(RunCancellationService? runCancellation = null)
+    public HostedProcessRunner(RunCancellationService? runCancellation = null,NodeProjectMetadata? authority=null)
         : this(runCancellation, StopProcessAsync)
     {
+        _authority=authority;
     }
 
     internal HostedProcessRunner(RunCancellationService? runCancellation, Func<Process, Task> cleanupProcess)
@@ -29,6 +32,15 @@ public sealed class HostedProcessRunner : IHostedProcessRunner
     public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
+        var registeredProject=RunnerIsolationPolicy.TryGetWorkspaceDescriptor(command.WorkingDirectory,out var projectBinding);
+        if(command.RequireIsolation || registeredProject)
+        {
+            if(!registeredProject || _authority is null)
+                return new HostedProcessResult(403,string.Empty,"current local project authority is required");
+            try { _authority.DemandCurrent(projectBinding.AccountId,projectBinding.ProjectId,write:true); }
+            catch(UnauthorizedAccessException)
+            { return new HostedProcessResult(403,string.Empty,"current local project authority is required"); }
+        }
         if (Volatile.Read(ref _cleanupFailureObserved) != 0)
         {
             return new HostedProcessResult(409, string.Empty, "runner dispatch is blocked after a prior cleanup failure");

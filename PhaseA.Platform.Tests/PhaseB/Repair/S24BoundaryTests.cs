@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Data.Sqlite;
@@ -91,7 +92,7 @@ public sealed class S24BoundaryTests
             var root = Directory.CreateTempSubdirectory("s24-boundary-").FullName;
             var connectionString = new SqliteConnectionStringBuilder { DataSource = Path.Combine(root, "metadata.sqlite3"), Pooling = false }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = root,
@@ -129,7 +130,7 @@ public sealed class S24BoundaryTests
             return new S24Fixture(root, connectionString, manifest, context, lease);
         }
 
-        public RestoreAttempt Restore() => new RestoreService(ConnectionString).RestorePrepared(Context, Manifest, SourceRoot, DestinationRoot, Lease, IdempotencyKey);
+        public RestoreAttempt Restore() => new CentralRestoreBackend(ConnectionString).RestorePrepared(Context, Manifest, SourceRoot, DestinationRoot, Lease, IdempotencyKey);
 
         public string? ReadAttemptStatus()
         {

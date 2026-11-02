@@ -16,7 +16,7 @@ public sealed class RestoreTreeSecurityRegressionTests
         {
             var manifest = Manifest();
             var context = new RequestContext("owner", "account", new HashSet<string> { "member" }, "credential", "correlation");
-            var result = new RestoreService().Restore(context, manifest, root, root, new RunnerLease("lease", "account", "project", 1));
+            var result = new CentralRestoreBackend().Restore(context, manifest, root, root, new RunnerLease("lease", "account", "project", 1));
             Assert.Equal(RestoreAttemptStatus.Quarantined, result.Status);
             Assert.Equal("acl_invalid", result.FailureCategory);
             Assert.False(Directory.Exists(Path.Combine(root, ".restore-current")));

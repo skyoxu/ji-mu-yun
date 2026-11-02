@@ -1,4 +1,5 @@
 using PhaseA.Platform.Security;
+using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Runs;
 
@@ -12,6 +13,35 @@ public sealed class HeavyRunnerQueueService
     private readonly TimeSpan _estimatedTaskDuration;
     private readonly int _maxConcurrentRuns;
     private readonly List<HeavyRunnerQueueItem> _running = [];
+    private readonly NodeProjectMetadata? _authority;
+    private bool _hostShutdown;
+
+    // ADR-0061: close this host-owned queue without releasing running commitments.
+    internal void CancelOwnedForHostShutdown()
+    {
+        HeavyRunnerQueueItem[] owned;
+        lock (_gate)
+        {
+            if (_hostShutdown) return;
+            _hostShutdown = true;
+            owned = _running.Concat(_waiting).ToArray();
+            foreach (var waiting in _waiting) waiting.Ready.TrySetCanceled();
+            _waiting.Clear();
+        }
+        List<Exception>? errors = null;
+        foreach (var item in owned)
+        {
+            try { item.Cancellation.Cancel(); }
+            catch (ObjectDisposedException) { /* The operation already completed. */ }
+            catch (Exception error) { (errors ??= []).Add(error); }
+        }
+        if (errors is not null) throw new AggregateException("queue_shutdown_cancellation_failed", errors);
+    }
+
+    private void DemandOpenLocked()
+    {
+        if (_hostShutdown) throw new UnauthorizedAccessException("production_admission_closed");
+    }
 
     public HeavyRunnerQueueService()
         : this(DefaultEstimatedTaskDuration, DefaultMaxConcurrentOtherRuns)
@@ -19,6 +49,9 @@ public sealed class HeavyRunnerQueueService
     }
 
     public HeavyRunnerQueueService(TimeSpan? estimatedTaskDuration, int maxConcurrentRuns = DefaultMaxConcurrentOtherRuns)
+        : this(estimatedTaskDuration,maxConcurrentRuns,null) { }
+
+    public HeavyRunnerQueueService(TimeSpan? estimatedTaskDuration,int maxConcurrentRuns,NodeProjectMetadata? authority)
     {
         if (maxConcurrentRuns <= 0)
         {
@@ -27,6 +60,19 @@ public sealed class HeavyRunnerQueueService
 
         _estimatedTaskDuration = estimatedTaskDuration ?? DefaultEstimatedTaskDuration;
         _maxConcurrentRuns = maxConcurrentRuns;
+        _authority=authority;
+    }
+
+    private void DemandCurrent(string account,string project,RequestContext? context=null)
+    {
+        if(_authority is null)throw new UnauthorizedAccessException("queue_authority_required");
+        _authority.DemandCurrent(account,project,context,write:true);
+    }
+
+    private void DemandCurrentControl(string? account=null,string? project=null,bool write=false)
+    {
+        if(_authority is null)throw new UnauthorizedAccessException("queue_authority_required");
+        _authority.DemandCurrentControl(account,project,write);
     }
 
     public async Task<T> ExecuteAsync<T>(
@@ -60,7 +106,8 @@ public sealed class HeavyRunnerQueueService
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(reauthorizeAtStart);
-        context.DemandAccount(accountId);
+        DemandCurrent(accountId,projectId,context);
+        using var current=RequestContext.UseCurrent(context);
 
         return await ExecuteAsync(
             runId,
@@ -93,6 +140,7 @@ public sealed class HeavyRunnerQueueService
         ArgumentException.ThrowIfNullOrWhiteSpace(runType);
         ArgumentNullException.ThrowIfNull(work);
 
+        DemandCurrent(accountId,projectId);
         using var itemCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var item = new HeavyRunnerQueueItem(
             runId,
@@ -115,6 +163,7 @@ public sealed class HeavyRunnerQueueService
 
         try
         {
+            DemandCurrent(accountId,projectId);
             return await work(new HeavyRunnerStartContext(item.QueuePositionAtStart), itemCancellation.Token);
         }
         finally
@@ -135,6 +184,7 @@ public sealed class HeavyRunnerQueueService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runType);
 
+        DemandCurrent(accountId,projectId);
         var itemCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var item = new HeavyRunnerQueueItem(
             runId,
@@ -144,9 +194,9 @@ public sealed class HeavyRunnerQueueService
             DateTimeOffset.UtcNow,
             itemCancellation);
 
-        Enqueue(item);
         try
         {
+            Enqueue(item);
             await item.Ready.Task.WaitAsync(itemCancellation.Token);
         }
         catch
@@ -156,6 +206,8 @@ public sealed class HeavyRunnerQueueService
             throw;
         }
 
+        try { DemandCurrent(accountId,projectId); }
+        catch { Complete(item);itemCancellation.Dispose();throw; }
         return new HeavyRunnerLease(item.QueuePositionAtStart, () =>
         {
             Complete(item);
@@ -171,8 +223,11 @@ public sealed class HeavyRunnerQueueService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runType);
 
+        DemandCurrent(accountId,projectId);
         lock (_gate)
         {
+            DemandOpenLocked();
+            DemandCurrent(accountId,projectId);
             if (_waiting.Count > 0 || _running.Count >= _maxConcurrentRuns ||
                 _running.Any(item => string.Equals(item.ProjectId, projectId, StringComparison.Ordinal)))
             {
@@ -200,6 +255,9 @@ public sealed class HeavyRunnerQueueService
 
         lock (_gate)
         {
+            DemandCurrentControl(accountId);
+            if(includeAll && RequestContext.Current?.IsAdmin!=true)
+                throw new UnauthorizedAccessException("current_admin_required");
             var waiting = _waiting.ToArray();
             var visibleItems = waiting
                 .Select((item, index) => ToReadbackItem(item, index + 1, includeAll || string.Equals(item.AccountId, accountId, StringComparison.Ordinal)))
@@ -231,6 +289,10 @@ public sealed class HeavyRunnerQueueService
 
         lock (_gate)
         {
+            DemandCurrentControl(write:true);
+            var target=_running.FirstOrDefault(item=>string.Equals(item.RunId,runId,StringComparison.Ordinal))
+                ?? _waiting.FirstOrDefault(item=>string.Equals(item.RunId,runId,StringComparison.Ordinal));
+            if(target is not null)DemandCurrentControl(target.AccountId,target.ProjectId,write:true);
             var running = _running.FirstOrDefault(item => string.Equals(item.RunId, runId, StringComparison.Ordinal));
             if (running is not null)
             {
@@ -267,6 +329,8 @@ public sealed class HeavyRunnerQueueService
     {
         lock (_gate)
         {
+            DemandOpenLocked();
+            DemandCurrent(item.AccountId,item.ProjectId);
             item.QueuePositionAtStart = _running.Count + _waiting.Count + 1;
             _waiting.Enqueue(item);
             TryStartNextLocked();
@@ -309,6 +373,7 @@ public sealed class HeavyRunnerQueueService
 
     private void TryStartNextLocked()
     {
+        if (_hostShutdown) return;
         while (_running.Count < _maxConcurrentRuns)
         {
             var next = DequeueNextEligibleLocked();

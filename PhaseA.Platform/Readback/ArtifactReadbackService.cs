@@ -6,6 +6,7 @@ using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workspaces;
 using PhaseA.Platform.Workflow;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -14,28 +15,38 @@ namespace PhaseA.Platform.Readback;
 
 public sealed class ArtifactReadbackService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
+    private readonly IHostApplicationLifetime? _applicationLifetime;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HeavyRunnerQueueService _prototypeCreationQueue;
     private readonly HeavyRunnerQueueService _assetRunnerQueue;
     private readonly HeavyRunnerQueueService _webPreviewQueue;
 
     public ArtifactReadbackService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
         [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
-        [FromKeyedServices("web-preview")] HeavyRunnerQueueService? webPreviewQueue = null)
+        [FromKeyedServices("web-preview")] HeavyRunnerQueueService? webPreviewQueue = null,
+        IHostApplicationLifetime? applicationLifetime = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(heavyRunnerQueue is null || prototypeCreationQueue is null || assetRunnerQueue is null || webPreviewQueue is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
+        if(!options.ProductionRoleEnabled)throw new UnauthorizedAccessException("production_role_disabled");
         _metadataStore = metadataStore;
         _options = options;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
-        _prototypeCreationQueue = prototypeCreationQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(25), options.MaxConcurrentPrototypeCreations);
-        _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
-        _webPreviewQueue = webPreviewQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(3), options.MaxConcurrentWebPreviews);
+        _applicationLifetime = applicationLifetime;
+        _heavyRunnerQueue = heavyRunnerQueue;
+        _prototypeCreationQueue = prototypeCreationQueue;
+        _assetRunnerQueue = assetRunnerQueue;
+        _webPreviewQueue = webPreviewQueue;
     }
+
+    public LocalNodeCapacityReadback GetLocalNodeCapacity() => _options.ReadLocalNodeCapacity(_applicationLifetime);
 
     public Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
     {
@@ -513,6 +524,15 @@ public sealed class ArtifactReadbackService
     public ProjectHealthSummary? ReadProjectHealthSummary(string repositoryRoot)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryRoot);
+        repositoryRoot = Path.GetFullPath(repositoryRoot);
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        if (!string.Equals(Path.TrimEndingDirectorySeparator(repositoryRoot),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(_options.RepositoryRoot)), comparison))
+        {
+            // ADR-0061 AD19: a supplied private project root is not read authority.
+            _metadataStore.DemandWorkspace(repositoryRoot);
+            PhaseA.Platform.Security.RunnerIsolationPolicy.RequireNoReparsePoint(_options.HostedWorkspaceRoot, repositoryRoot);
+        }
         var latestPath = Path.GetFullPath(Path.Combine(repositoryRoot, "logs", "ci", "project-health", "latest.json"));
         if (!WorkspacePathPolicy.IsUnderRoot(repositoryRoot, latestPath) || !File.Exists(latestPath))
         {

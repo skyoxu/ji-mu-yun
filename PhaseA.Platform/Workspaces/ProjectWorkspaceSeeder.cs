@@ -1,4 +1,6 @@
 using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
+using PhaseA.Platform.Security;
 
 namespace PhaseA.Platform.Workspaces;
 
@@ -98,16 +100,26 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         "TEMPLATE.zh-CN.md"
     ];
 
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
+    private readonly NodeProjectMetadata? _authority;
 
-    public ProjectWorkspaceSeeder(PhaseAPlatformOptions options)
+    public ProjectWorkspaceSeeder(NodeExecutionOptions options):this(options,null)
+    {
+    }
+
+    public ProjectWorkspaceSeeder(NodeExecutionOptions options,NodeProjectMetadata? authority)
     {
         _options = options;
+        _authority = authority;
     }
 
     public void EnsureSeeded(string projectRepoPath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectRepoPath);
+
+        if(!_options.ProductionRoleEnabled || _authority is null)
+            throw new UnauthorizedAccessException("production_workspace_authority_required");
+        _authority.DemandWorkspace(projectRepoPath);
 
         var sourceRoot = Path.GetFullPath(_options.RepositoryRoot);
         var targetRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(projectRepoPath));
@@ -121,6 +133,8 @@ public sealed class ProjectWorkspaceSeeder : IProjectWorkspaceSeeder
         {
             lock (seedLock.SyncRoot)
             {
+                _authority.DemandWorkspace(targetRoot);
+                RunnerIsolationPolicy.RequireNoReparsePoint(_options.HostedWorkspaceRoot,targetRoot);
                 EnsureSeededCore(sourceRoot, targetRoot);
             }
         }

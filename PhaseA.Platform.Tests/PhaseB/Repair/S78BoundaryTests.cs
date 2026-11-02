@@ -244,7 +244,7 @@ public sealed class S78BoundaryTests
                 "principal-s78",
                 "credential-s78",
                 "correlation-s78");
-            var storage = new WorkspaceStorageService($"Data Source={_databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={_databasePath}");
             var blacklist = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 ".cache", ".bin", ".tmp", ".secret", ".ticket", ".absolute", ".exe"

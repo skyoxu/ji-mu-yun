@@ -2,6 +2,8 @@ using FluentAssertions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Tests.NodeIdentity;
+using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workflow;
 using Xunit;
@@ -166,10 +168,14 @@ public sealed class ProjectRouteStateArtifactServiceTests
         fixture.WriteFinalUiSourcesAndLedger();
         var link = Path.Combine(fixture.Project.RepoPath, "meta", "reviews", "linked.json");
         File.CreateSymbolicLink(link, Path.Combine(fixture.Project.RepoPath, "meta", "reviews", "final.json"));
-        fixture.UpdateJson("meta/routes/ui-wiring/latest.json", node =>
-            node["full_target_closure_ledger"]![0]!["phase_exit_review_ref"] = "meta/reviews/linked.json");
-        fixture.Read().BlockingIssues.Should().Contain(issue =>
-            issue.IssueId.EndsWith(":phase_exit_review_unavailable"));
+        try
+        {
+            fixture.UpdateJson("meta/routes/ui-wiring/latest.json", node =>
+                node["full_target_closure_ledger"]![0]!["phase_exit_review_ref"] = "meta/reviews/linked.json");
+            fixture.Read().BlockingIssues.Should().Contain(issue =>
+                issue.IssueId.EndsWith(":phase_exit_review_unavailable"));
+        }
+        finally { File.Delete(link); } // Unlink only this test-created entry; never follow it.
     }
 
     [Theory]
@@ -601,9 +607,9 @@ public sealed class ProjectRouteStateArtifactServiceTests
             recovery_source_order = HostedRouteRecoveryContract.SourceOrder,
             source_hashes = new Dictionary<string, string> { ["docs/gdd/GDD.md"] = gddHash }
         }));
+        var link = Path.Combine(fixture.Project.RepoPath, "meta", "routes", "gdd-requirements", "prompt-evidence.json");
         try
         {
-            var link = Path.Combine(fixture.Project.RepoPath, "meta", "routes", "gdd-requirements", "prompt-evidence.json");
             Directory.CreateDirectory(Path.GetDirectoryName(link)!);
             File.CreateSymbolicLink(link, outside);
             fixture.WriteJson("meta/routes/gdd-requirements/latest.json", $$"""
@@ -630,6 +636,7 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         finally
         {
+            File.Delete(link); // The external target is never traversed by fixture disposal.
             File.Delete(outside);
         }
     }
@@ -649,9 +656,11 @@ public sealed class ProjectRouteStateArtifactServiceTests
         }
         """);
 
-        var readback = fixture.Read();
-
-        readback.Artifacts.Single(artifact => artifact.Route == "gdd-requirements").Status.Should().Be("missing");
+        // ADR-0061 S2-06: current protected registration rejects the replaced
+        // repository before any parser readback can expose its contents.
+        Action read = () => fixture.Read();
+        read.Should().Throw<UnauthorizedAccessException>()
+            .WithMessage("current_project_required");
     }
 
     [Fact]
@@ -1666,41 +1675,35 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
     private sealed class RouteStateFixture : IDisposable
     {
-        private readonly string _root;
+        private readonly S206AuthorityFixture _authority;
+        private readonly IDisposable? _currentContext;
         private readonly string? _outsideRoot;
         private readonly Dictionary<string, ProjectRoutePromptEvidenceBinding> _promptBindings = new(StringComparer.Ordinal);
         private readonly HashSet<string> _artifactIds = new(StringComparer.Ordinal);
 
-        private RouteStateFixture(string root, bool symlinkRepo = false)
+        private RouteStateFixture(bool symlinkRepo = false)
         {
-            _root = root;
-            var repoPath = Path.Combine(root, "repo");
+            // ADR-0061: parser fixtures use real current project authority; fixture
+            // business metadata is not an alternate ownership or credential oracle.
+            _authority = S206AuthorityFixture.CreateAsync().GetAwaiter().GetResult();
+            _currentContext = S206TestSupport.EnterCurrentContext(_authority.First.Context);
+            using (var connection = new SqliteConnection(_authority.ConnectionString))
+            {
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE projects SET name='Demo', game_name='Demo', game_type_source='RPG', template_rule_id='default', llm_binding_required=0, allowed_workflows_json='[]', bootstrap_status='succeeded', bootstrap_error=NULL WHERE id=$project";
+                command.Parameters.AddWithValue("$project", _authority.First.Project.ProjectId);
+                command.ExecuteNonQuery();
+            }
+            Project = _authority.Store.GetProjectSnapshotAsync(_authority.First.Project.ProjectId)
+                .GetAwaiter().GetResult()!;
             if (symlinkRepo)
             {
-                _outsideRoot = Path.Combine(Path.GetTempPath(), "phasea-route-state-repo-target-" + Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(_outsideRoot);
-                Directory.CreateDirectory(root);
-                Directory.CreateSymbolicLink(repoPath, _outsideRoot);
+                _outsideRoot = Path.Combine(_authority.Root, "unsafe-repo-target");
+                Directory.Move(Project.RepoPath, _outsideRoot);
+                Directory.CreateSymbolicLink(Project.RepoPath, _outsideRoot);
             }
-            Project = new ProjectSnapshot(
-                "project-1",
-                "account-1",
-                "Demo",
-                "Demo",
-                "RPG",
-                "default",
-                false,
-                "[]",
-                "succeeded",
-                null,
-                "workspace-1",
-                Path.Combine(root, "workspace"),
-                repoPath,
-                Path.Combine(root, "runtime"),
-                Path.Combine(repoPath, "meta"));
-            Directory.CreateDirectory(Project.RepoPath);
-            Directory.CreateDirectory(Project.MetaPath);
-            Service = new ProjectRouteStateArtifactService();
+            Service = new ProjectRouteStateArtifactService(_authority.Store);
         }
 
         public ProjectSnapshot Project { get; }
@@ -1796,14 +1799,12 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
         public static RouteStateFixture Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "phasea-route-state-artifacts-" + Guid.NewGuid().ToString("N"));
-            return new RouteStateFixture(root);
+            return new RouteStateFixture();
         }
 
         public static RouteStateFixture CreateWithRepoSymlink()
         {
-            var root = Path.Combine(Path.GetTempPath(), "phasea-route-state-artifacts-" + Guid.NewGuid().ToString("N"));
-            return new RouteStateFixture(root, symlinkRepo: true);
+            return new RouteStateFixture(symlinkRepo: true);
         }
 
         public void WriteJson(string relativePath, string json)
@@ -1872,14 +1873,20 @@ public sealed class ProjectRouteStateArtifactServiceTests
 
         public void Dispose()
         {
-            if (Directory.Exists(_root))
+            if (_outsideRoot is not null)
             {
-                Directory.Delete(_root, recursive: true);
+                // Undo only this fixture's deliberate link; never traverse it during cleanup.
+                var link = new DirectoryInfo(Project.RepoPath);
+                if ((link.Attributes & FileAttributes.ReparsePoint) == 0
+                    || link.ResolveLinkTarget(true)?.FullName != _outsideRoot)
+                    throw new InvalidOperationException("Owned test link changed unexpectedly.");
+                Directory.Delete(Project.RepoPath);
+                Directory.Move(_outsideRoot, Project.RepoPath);
             }
-            if (_outsideRoot is not null && Directory.Exists(_outsideRoot))
-            {
-                Directory.Delete(_outsideRoot, recursive: true);
-            }
+            _currentContext?.Dispose();
+            _authority.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            // Python owns disposable data until its final business verdict. A direct
+            // dotnet diagnostic deliberately retains its current SQLite evidence.
         }
     }
 }

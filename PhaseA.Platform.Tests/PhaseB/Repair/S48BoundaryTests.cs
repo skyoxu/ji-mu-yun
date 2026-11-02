@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -53,7 +54,7 @@ public sealed class S48BoundaryTests
                 "s48-principal",
                 "s48-runtime-credential",
                 "s48-correlation");
-            var storage = new WorkspaceStorageService();
+            var storage = new CentralWorkspaceStorageBackend();
             storage.SetQuota(accountId, 1024 * 1024);
             var currentManifest = storage.CreateSnapshot(
                 context,
@@ -72,7 +73,7 @@ public sealed class S48BoundaryTests
                 "s48-policy",
                 new HashSet<string>()).Manifest;
 
-            var restore = new RestoreService(
+            var restore = new CentralRestoreBackend(
                 connectionString,
                 new RouteRecoveryAuthorityResolver(connectionString));
             var currentPublication = currentLease is null

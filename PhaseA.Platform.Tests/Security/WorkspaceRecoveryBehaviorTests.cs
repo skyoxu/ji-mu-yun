@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Data;
@@ -57,13 +58,13 @@ public sealed class WorkspaceRecoveryBehaviorTests
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "hello");
             File.WriteAllBytes(Path.Combine(root.FullName, "large.jpg"), new byte[32]);
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
-            var storage = new WorkspaceStorageService();
+            var storage = new CentralWorkspaceStorageBackend();
             storage.SetQuota("a", 100);
             var record = storage.CreateSnapshot(context, root.FullName, "s1", "w", "p", "policy-1", new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg" });
             record.Manifest.Files.Should().ContainSingle();
             var destination = Directory.CreateTempSubdirectory("phase-b-restore");
             // ADR-0061: a positive restore prepares the real destination isolation boundary.
-            var attempt = new RestoreService().RestorePrepared(context, record.Manifest, root.FullName, destination.FullName, new RunnerLease("l", "a", "p", 1));
+            var attempt = new CentralRestoreBackend().RestorePrepared(context, record.Manifest, root.FullName, destination.FullName, new RunnerLease("l", "a", "p", 1));
             attempt.Status.Should().Be(RestoreAttemptStatus.Published);
             File.ReadAllText(Path.Combine(destination.FullName, ".restore-current", "project.godot")).Should().Be("hello");
             storage.SoftDeleteSnapshot(context, "s1");
@@ -84,7 +85,7 @@ public sealed class WorkspaceRecoveryBehaviorTests
             var manifest = SnapshotManifest.Create("s", "w", "a", "p", "v", [("project.godot", "original"u8.ToArray())]);
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "corrupt");
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
-            var attempt = new RestoreService().Restore(context, manifest, source.FullName, destination.FullName, new RunnerLease("l", "a", "p", 1));
+            var attempt = new CentralRestoreBackend().Restore(context, manifest, source.FullName, destination.FullName, new RunnerLease("l", "a", "p", 1));
             attempt.Status.Should().Be(RestoreAttemptStatus.Quarantined);
             Directory.Exists(Path.Combine(destination.FullName, ".restore-current")).Should().BeFalse();
         }
@@ -124,9 +125,9 @@ public sealed class WorkspaceRecoveryBehaviorTests
             { connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "CREATE TABLE projects(id TEXT PRIMARY KEY, account_id TEXT NOT NULL); INSERT INTO projects(id,account_id) VALUES('p','a');"; command.ExecuteNonQuery(); }
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "hello");
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
-            var storage = new WorkspaceStorageService($"Data Source={path}"); storage.SetQuota("a", 100);
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={path}"); storage.SetQuota("a", 100);
             storage.CreateSnapshot(context, root.FullName, "persisted", "w", "p", "v", new HashSet<string>());
-            new WorkspaceStorageService($"Data Source={path}").GetQuota("a").UsedBytes.Should().Be(5);
+            new CentralWorkspaceStorageBackend($"Data Source={path}").GetQuota("a").UsedBytes.Should().Be(5);
         }
         finally { SqliteConnection.ClearAllPools(); root.Delete(true); if (File.Exists(path)) File.Delete(path); }
     }
@@ -142,12 +143,12 @@ public sealed class WorkspaceRecoveryBehaviorTests
             { connection.Open(); using var command = connection.CreateCommand(); command.CommandText = "CREATE TABLE projects(id TEXT PRIMARY KEY, account_id TEXT NOT NULL); INSERT INTO projects(id,account_id) VALUES('p','a');"; command.ExecuteNonQuery(); }
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "hello");
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
-            var first = new WorkspaceStorageService($"Data Source={path}"); first.SetQuota("a", 100);
+            var first = new CentralWorkspaceStorageBackend($"Data Source={path}"); first.SetQuota("a", 100);
             first.CreateSnapshot(context, root.FullName, "persisted", "w", "p", "v", new HashSet<string>());
-            var restarted = new WorkspaceStorageService($"Data Source={path}");
+            var restarted = new CentralWorkspaceStorageBackend($"Data Source={path}");
             restarted.ListSnapshots("a", "p").Should().ContainSingle(x => x.Manifest.SnapshotId == "persisted");
             restarted.SoftDeleteSnapshot(context, "persisted");
-            new WorkspaceStorageService($"Data Source={path}").ListSnapshots("a", "p").Should().BeEmpty();
+            new CentralWorkspaceStorageBackend($"Data Source={path}").ListSnapshots("a", "p").Should().BeEmpty();
         }
         finally { SqliteConnection.ClearAllPools(); root.Delete(true); if (File.Exists(path)) File.Delete(path); }
     }
@@ -176,7 +177,7 @@ public sealed class WorkspaceRecoveryBehaviorTests
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "content");
             var manifest = SnapshotManifest.Create("s", "w", "a", "p", "v", [("project.godot", "content"u8.ToArray())]);
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
-            var act = () => new RestoreService($"Data Source={path}").Restore(context, manifest, source.FullName, destination.FullName, new RunnerLease("lease", "a", "p", 1));
+            var act = () => new CentralRestoreBackend($"Data Source={path}").Restore(context, manifest, source.FullName, destination.FullName, new RunnerLease("lease", "a", "p", 1));
             act.Should().Throw<InvalidOperationException>().WithMessage("*not authoritative*");
         }
         finally { SqliteConnection.ClearAllPools(); source.Delete(true); destination.Delete(true); if (File.Exists(path)) File.Delete(path); }
@@ -193,7 +194,7 @@ public sealed class WorkspaceRecoveryBehaviorTests
             File.WriteAllText(Path.Combine(destination.FullName, "keep.txt"), "old");
             var manifest = SnapshotManifest.Create("s", "w", "a", "p", "v", [("project.godot", "new"u8.ToArray())]);
             var context = RequestContext.FromIdentity(new AccountIdentity("a", "owner", PhaseAAuth.UserRole), "p", "c", "r");
-            var service = new RestoreService(); var lease = new RunnerLease("l", "a", "p", 1);
+            var service = new CentralRestoreBackend(); var lease = new RunnerLease("l", "a", "p", 1);
             var first = service.Restore(context, manifest, source.FullName, destination.FullName, lease, "key-1");
             var second = service.Restore(context, manifest, source.FullName, destination.FullName, lease, "key-1");
             first.Should().Be(second);

@@ -182,7 +182,7 @@ public sealed class S61BoundaryTests
                 "principal-s61",
                 "credential-s61",
                 "correlation-s61");
-            return new WorkspaceStorageService($"Data Source={_databasePath}").CreateSnapshot(
+            return new CentralWorkspaceStorageBackend($"Data Source={_databasePath}").CreateSnapshot(
                 context,
                 _root.FullName,
                 snapshotId,
@@ -196,7 +196,7 @@ public sealed class S61BoundaryTests
             ReloadAll().Single(snapshot => snapshot.Manifest.SnapshotId == snapshotId);
 
         public IReadOnlyList<WorkspaceSnapshotRecord> ReloadAll() =>
-            new WorkspaceStorageService($"Data Source={_databasePath}").ListSnapshots(AccountId, ProjectId);
+            new CentralWorkspaceStorageBackend($"Data Source={_databasePath}").ListSnapshots(AccountId, ProjectId);
 
         public void Dispose()
         {

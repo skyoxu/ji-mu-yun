@@ -1,0 +1,52 @@
+{
+  "utc": "2026-11-02T10:55:34.714338+00:00",
+  "kind": "bounded frozen-scope reconciliation, not a runtime pass",
+  "source_hashes": {
+    "canonical_boundary": {
+      "path": "docs/requirements/s2-06/vdd-input.md",
+      "sha256": "f6e4bacdd952da675a0aeb70c94da6cb7478b0b2f7d6543b0a8b48072db90654"
+    },
+    "question_reader": {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormRestoreService.cs",
+      "sha256": "fe6ed7008d603568ecdefdadbf658a54ed5b226694c3259417c8aa6078c766e3"
+    },
+    "gdd_reader": {
+      "path": "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+      "sha256": "68ad3da0504d7499f22e91a452351588f8cbf9b3f804c7c24f1b55be8c152052"
+    },
+    "current_guard": {
+      "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "sha256": "c6b7494b2ce6406207fc1dcee110b7b83b506ee6cafba465bbcfcd5034d1ea35"
+    },
+    "reader_test": {
+      "path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+      "sha256": "4ab7ca284f9405922741df281e5020a1a79a58f7cbcdc00ff792dc044703a079"
+    }
+  },
+  "canonical_refs": [
+    "docs/requirements/s2-06/vdd-input.md:277",
+    "docs/requirements/s2-06/vdd-input.md:533",
+    "docs/requirements/s2-06/vdd-input.md:663",
+    "docs/requirements/s2-06/vdd-input.md:664"
+  ],
+  "required": "Current protected account/home/project/local-node resolution before private read/cached readback; recheck after queues, before protected writes/publication/activation. Existing mutating-lock requirements remain.",
+  "not_an_independent_frozen_requirement": "Cancellation/re-authorization at return of every already-authorized readonly filesystem await. No new reader test hook, FIFO, scheduler seam, or interpreter was added.",
+  "question_reader": {
+    "actual_entry": "ReadLatestAsync:35-64",
+    "checks": "NodeProjectMetadata.GetProjectSnapshotAsync current guard, ListRunsForProjectAsync current guard; contained project path before private file",
+    "actual_runtime_evidence": "S236-saved-readback-r58 source-specific actual question-answers 10-mode matrix; final current-source validation still needed"
+  },
+  "gdd_reader": {
+    "actual_entry": "GetGddDocumentStateAsync:441-514; GetProjectAsync:570; NodeProjectMetadata.GetProjectSnapshotAsync:7554",
+    "checks": "Current guarded project before private path; current prompt bindings before return; actual generated/scene/source hashes checked",
+    "existing_permanent_cases": [
+      "Phase1State_RecordGeneratedGddAsync_WritesDocumentStateAndSceneHashThrough (ready current-source positive)",
+      "Phase1State_GetGddDocumentStateAsync_RejectsIncompleteOrMismatchedWriteThrough",
+      "Phase1State_GetGddDocumentStateAsync_RevalidatesPromptSourceBoundary (four variants)",
+      "Phase1State_ReadAndWriteOperations_EnforceAccountBoundary"
+    ],
+    "caveat": "No claim of a concurrent mid-read revocation experiment. Existing legacy-route-reader command includes the real backend class and all unchanged assertions."
+  },
+  "result": "Two pending-file-return items removed from missing-production count as stronger self-added semantics; retain current-source reader regression obligation and all before-read safety checks.",
+  "authorizes": []
+}

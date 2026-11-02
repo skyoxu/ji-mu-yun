@@ -64,7 +64,7 @@ public sealed class PackageVersionRecoveryTests
         Assert.Equal(scope.PendingRun, (await scope.Restorer.AdmitAsync(scope.Context,
             active.ProjectId, first.FileName, "restore-one")).OperationId);
         // Reload the persisted snapshot catalog and active metadata as a fresh consumer.
-        var storage = new WorkspaceStorageService(scope.Database.ConnectionString);
+        var storage = scope.Store.CreateWorkspaceStorageService();
         var packages = new ProjectPackageService(scope.Store, scope.Options, storage: storage);
         var restore = scope.NewRestorer(packages, storage);
         var request = await restore.AdmitAsync(scope.Context, active.ProjectId, second.FileName, "restore-two");
@@ -73,7 +73,7 @@ public sealed class PackageVersionRecoveryTests
         Assert.Equal("version-two", File.ReadAllText(Path.Combine(latest.RepoPath, "Game.Core", "Version.cs")));
         Assert.NotEqual(active.RepoPath, latest.RepoPath);
         Assert.NotNull(await packages.ReadPackageAsync(scope.Owner.AccountId, latest.ProjectId, first.FileName));
-        await SqliteMetadataSchema.InitializeAsync(scope.Database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(scope.Database.ConnectionString,scope.Options);
         Assert.Equal(latest.RepoPath, (await scope.Store.GetProjectSnapshotAsync(latest.ProjectId))!.RepoPath);
         Assert.False(await scope.Store.HasRunnerLockAsync(latest.ProjectId));
         var validation = await scope.Store.CreateRunAsync(latest.ProjectId, latest.WorkspaceId, "prototype-7day-playable");
@@ -163,8 +163,11 @@ public sealed class PackageVersionRecoveryTests
             scope._previousKeys = Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT");
             Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", Path.Combine(scope.Root, "keys"));
             scope.Options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
-            { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(scope.Root, "workspaces"), ["PHASEA_REPOSITORY_ROOT"] = AppContext.BaseDirectory });
-            await SqliteMetadataSchema.InitializeAsync(scope.Database.ConnectionString);
+            { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(scope.Root, "workspaces"), ["PHASEA_REPOSITORY_ROOT"] = AppContext.BaseDirectory,
+                ["PHASEA_NODE_ID"] = "test-physical-node", ["PHASEA_NODE_SCOPE"] = "single_node_test",
+                ["PHASEA_NODE_TOPOLOGY"] = "single_service", ["PHASEA_ENABLED_ROLES"] = "entry,production",
+                ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true" });
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(scope.Database.ConnectionString,scope.Options);
             scope.Store = new PhaseAMetadataStore(scope.Database.ConnectionString, scope.Options);
             scope.Owner = await scope.Store.CreateUserAccountAsync("version-owner-" + Guid.NewGuid().ToString("N"), 2);
             var creator = new ProjectCreationService(scope.Store, scope.Options, new ProjectRuleCatalog(), new Seed(),
@@ -178,7 +181,7 @@ public sealed class PackageVersionRecoveryTests
             Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(scope.Project.WorkspaceRootPath, out scope.Descriptor));
             var run = await scope.Store.CreateRunAsync(created.ProjectId!, scope.Project.WorkspaceId, "prototype-7day-playable");
             await scope.Store.CompleteRunAsync(run, "succeeded", 0, "", "", "{}");
-            scope.Storage = new WorkspaceStorageService(scope.Database.ConnectionString);
+            scope.Storage = scope.Store.CreateWorkspaceStorageService();
             scope.Packages = new ProjectPackageService(scope.Store, scope.Options, storage: scope.Storage);
             scope.Restorer = scope.NewRestorer(scope.Packages, scope.Storage);
             scope.Context = new(scope.Owner.Username, scope.Owner.AccountId, new HashSet<string> { "user" },
@@ -186,7 +189,7 @@ public sealed class PackageVersionRecoveryTests
             return scope;
         }
         public ProjectPackageRestoreService NewRestorer(ProjectPackageService packages, WorkspaceStorageService storage) =>
-            new(Store, Options, packages, storage, new RestoreService(Database.ConnectionString), Queue,
+            new(Store, Options, packages, storage, Store.CreateRestoreService(), Queue,
                 new RunCancellationService(), NullLogger<ProjectPackageRestoreService>.Instance);
         public async Task<RunSnapshot> WaitAsync(string id)
         {

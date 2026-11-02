@@ -23,15 +23,15 @@ public sealed partial class PrototypeQuickFixService
     private static readonly TimeSpan DefaultGoalRepairExecutionTimeout = TimeSpan.FromMinutes(12);
     private static readonly TimeSpan GodotSmokeValidationTimeout = TimeSpan.FromSeconds(45);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly PrototypeContractService _contractService;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly IAiCodeMirrorBillingClient _billingClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
@@ -39,16 +39,17 @@ public sealed partial class PrototypeQuickFixService
     private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeQuickFixService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), new PrototypeContractService(), null)
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public PrototypeQuickFixService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
@@ -58,20 +59,24 @@ public sealed partial class PrototypeQuickFixService
     }
 
     public PrototypeQuickFixService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
         PrototypeContractService? contractService = null,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         TimeSpan? executionTimeout = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         HostedContextManifestIssuer? contextManifestIssuer = null,
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
@@ -82,7 +87,7 @@ public sealed partial class PrototypeQuickFixService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _contextManifestIssuer = contextManifestIssuer;
         _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
         _contextManifestValidator = contextManifestValidator;
@@ -242,7 +247,10 @@ public sealed partial class PrototypeQuickFixService
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
             var codexCommand = await BuildCodexCommandAsync(prompt, executionWorkspace.CodexOutputPath, model, executionWorkspace.RootPath, project, runId, timeout.Token);
             var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(codexCommand, runtimeCredential).WithRunId(runId), timeout.Token);
+            // AD19/20: an executor return cannot authorize a former workspace.
+            _metadataStore.DemandWorkspace(project.RepoPath);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
+            _metadataStore.DemandWorkspace(project.RepoPath);
             if (executionWorkspace.SyncBack)
             {
                 SyncFocusedWorkspaceBack(executionWorkspace, project.RepoPath);
@@ -536,7 +544,7 @@ public sealed partial class PrototypeQuickFixService
             await SetProgressAsync(runId, "failed", "timeout", "快速修复超时，请改用正式反馈或缩小问题范围。", CancellationToken.None);
             return new PrototypeFeedbackResult(runId, "failed", "快速修复超时。请改用正式反馈，或把问题描述得更小、更明确。", []);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (Exception ex) when (ex is not OperationCanceledException and not UnauthorizedAccessException)
         {
             var evidenceJson = JsonSerializer.Serialize(new
             {

@@ -17,25 +17,26 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
     private static readonly TimeSpan WebPreviewQueuedTimeout = TimeSpan.FromMinutes(30);
 
     private readonly ProjectInitializationService _initializationService;
-    private readonly PhaseAMetadataStore _metadataStore;
     private readonly ProjectWorkspaceMaintenanceService _workspaceMaintenanceService;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
     private readonly ILogger<ProjectInitializationRecoveryService> _logger;
     private readonly DateTimeOffset _processStartedUtc;
+    private readonly NodeOperationGuard? _guard;
 
     public ProjectInitializationRecoveryService(
         ProjectInitializationService initializationService,
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         ProjectWorkspaceMaintenanceService workspaceMaintenanceService,
-        PhaseAPlatformOptions options,
-        ILogger<ProjectInitializationRecoveryService> logger)
+        NodeExecutionOptions options,
+        ILogger<ProjectInitializationRecoveryService> logger,
+        NodeOperationGuard? guard=null)
     {
         _initializationService = initializationService;
-        _metadataStore = metadataStore;
         _workspaceMaintenanceService = workspaceMaintenanceService;
         _options = options;
         _logger = logger;
         _processStartedUtc = DateTimeOffset.UtcNow;
+        _guard = guard;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,9 +54,8 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
         {
             try
             {
-                await _workspaceMaintenanceService.EnsureAllWorkspacesSeededAsync(stoppingToken);
-                await _initializationService.ReconcileStaleInitializationsAsync(stoppingToken);
-                await _metadataStore.ReconcileAbandonedRunsAsync(
+                if(_guard is null)throw new UnauthorizedAccessException("protected_recovery_capability_required");
+                await _guard.RecoverAsync(_initializationService,_workspaceMaintenanceService,
                     run => SelectTimeout(run, _options, _processStartedUtc),
                     run => BuildFailureMessage(run, _processStartedUtc),
                     stoppingToken);
@@ -82,7 +82,7 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
 
     private static TimeSpan? SelectTimeout(
         InterruptedRunSnapshot run,
-        PhaseAPlatformOptions? options = null,
+        NodeExecutionOptions? options = null,
         DateTimeOffset? processStartedUtc = null)
     {
         return run.RunType switch
@@ -98,7 +98,7 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
 
     public static TimeSpan? SelectTimeoutForTesting(
         InterruptedRunSnapshot run,
-        PhaseAPlatformOptions? options = null,
+        NodeExecutionOptions? options = null,
         DateTimeOffset? processStartedUtc = null)
     {
         return SelectTimeout(run, options, processStartedUtc);
@@ -111,7 +111,7 @@ public sealed class ProjectInitializationRecoveryService : BackgroundService
 
     private static TimeSpan SelectWebPreviewTimeout(
         InterruptedRunSnapshot run,
-        PhaseAPlatformOptions? options,
+        NodeExecutionOptions? options,
         DateTimeOffset? processStartedUtc)
     {
         if (IsQueuedWebPreview(run))

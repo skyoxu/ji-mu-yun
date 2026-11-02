@@ -17,7 +17,7 @@ public interface IProjectRunnerProvisioner
 
 // ADR-0035/0061: register the ordinary CreateProject path, not a test-only fixture.
 // The platform OS identity must be an administrator and remains the vault owner.
-public sealed class WindowsProjectRunnerProvisioner(PhaseAPlatformOptions options) : IProjectRunnerProvisioner
+public sealed class WindowsProjectRunnerProvisioner(NodeExecutionOptions options) : IProjectRunnerProvisioner
 {
     public void Provision(string accountId, string projectId, WorkspaceLayout layout)
     {

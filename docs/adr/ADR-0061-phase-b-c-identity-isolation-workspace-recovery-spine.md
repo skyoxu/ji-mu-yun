@@ -171,3 +171,63 @@ Runner lock. A changed generation returns the existing project-busy response
 without executing validation or publishing a package. Packaging rechecks readiness
 inside that lock. No schema, authentication, concurrency budget, or public route
 changes; historical runs and package downloads remain additive and readable.
+
+## Addendum (2026-10-28 S2-06 node ownership and test role boundaries)
+
+This narrow S2-06 addendum is accepted for the approved implementation scope
+under the maintainer's delegated S2-06 work request. It adopts AD-14 through
+AD-26 of
+`_bmad-output/planning-artifacts/architecture/architecture-s2-06-20261028/ARCHITECTURE-SPINE.md`
+at SHA-256
+`df6549c9f72595bfd883ea8f3d557935ae0f2daf835b500803618be2ef6ef7f2`.
+The independent Architecture A/B reports and the delegated maintenance
+disposition are retained under `logs/s2-06-bmad-20261028/`. The authoring spine
+keeps its original proposed labels and immutable bytes as provenance; this
+addendum records the subsequent scoped adoption, not a rewritten review or
+an assertion that the user personally reviewed a particular future commit.
+
+The existing AD-1 through AD-13 remain in their original capability namespace.
+All current snapshot, package activation and generation-bound acceptance
+clarifications remain effective. S2-06 adds only these rules:
+
+- A protected stable physical `node_id`, one server-owned account home and
+  checked actual-node references constrain permitted placement. They never
+  replace logical account/project/workspace identities, and endpoint or
+  process identity changes cannot rekey or reassign them.
+- The existing local SQLite transaction owns additive home/node/projection
+  changes and explicit old-test-data binding. Conflict rolls back the entire
+  binding increment; no destructive rebinding, orphan adoption, credential
+  copying, live repair or test-to-production migration is authorized.
+- Central account/home/credential writers and synchronous current central
+  token verification retain sole authority. Production consumers receive
+  restricted project/projection interfaces, not a broad metadata store,
+  connection, options object or service locator. A projection is not a second
+  credential authority and contains no credential material.
+- Existing authorization, project locks, leases/fencing, controlled execution,
+  recovery and protected publication acquire the current node/home/role
+  predicates. Role closure covers HTTP and direct calls, every queue overload,
+  fallback queues, startup recovery and detached production. It does not stop
+  already-authorized cancellation and verified cleanup.
+- Exactly one production scheduler owns the fixed protected local host handle
+  in this test topology. A second scheduler is rejected before consumers or
+  admission start. Unknown/crashed cleanup leaves a dirty recovery barrier;
+  admission reopens only after the existing owned recovery is verified.
+- Capacity is counted by physical node once; unmeasured capacity remains
+  invalid with no fabricated reference. S2-03A still owns measurement. Approved
+  shared versions remain read-only and separate from private data. AC08/AC09
+  add only the scoped local content/isolation and notification-authority seams,
+  not a new publication platform or the later notification product/protocol.
+
+The supported scope is `single_node_test`: one trusted same-host process and
+database with existing Windows project Runners. This is logical capability
+separation, not a claim of OS isolation between modules in that process or a
+working remote central-verification protocol. Independent multi-.NET or
+cross-host topology remains unsupported until its separately required
+coordination, authentication and actual environment evidence exist.
+
+This adoption grants no additional project access, network permission,
+cross-host execution, dynamic placement, deployment, live database mutation or
+release authority. It does not assert any implementation or AC is complete.
+Real Windows handle competition, Runner/ACL/Job Object and crash-cleanup proof
+remain required at their corresponding gates; Linux results cannot replace
+them. Production initialization remains separate from test data and secrets.

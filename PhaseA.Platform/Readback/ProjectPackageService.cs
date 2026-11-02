@@ -76,8 +76,8 @@ public sealed class ProjectPackageService
         ".sqlite3-wal"
     ];
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly RunCancellationService _runCancellation;
     private readonly IHostedProcessRunner _processRunner;
@@ -86,8 +86,8 @@ public sealed class ProjectPackageService
     private readonly ExtensionPolicyState _snapshotPolicy;
 
     public ProjectPackageService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         RunCancellationService? runCancellation = null,
         IHostedProcessRunner? processRunner = null,
@@ -95,13 +95,18 @@ public sealed class ProjectPackageService
         WorkspaceStorageService? storage = null,
         ExtensionPolicyState? snapshotPolicy = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(heavyRunnerQueue is null || processRunner is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
+        if(!options.ProductionRoleEnabled)throw new UnauthorizedAccessException("production_role_disabled");
         _metadataStore = metadataStore;
         _options = options;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _runCancellation = runCancellation ?? new RunCancellationService();
-        _processRunner = processRunner ?? new HostedProcessRunner();
+        _processRunner = processRunner;
         _webPreviews = webPreviews;
-        _storage = storage ?? new WorkspaceStorageService();
+        _storage = storage ?? metadataStore.CreateWorkspaceStorageService();
         _snapshotPolicy = snapshotPolicy ?? new ExtensionPolicyState();
     }
 

@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -41,14 +42,20 @@ public sealed class S25BoundaryTests
         Directory.CreateDirectory(workspaceRoot);
         var database = Path.Combine(root, "metadata.sqlite3");
         var connection = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
-        await SqliteMetadataSchema.InitializeAsync(connection);
+
         var adminToken = "s25-disposable-admin-" + nonce;
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_REPOSITORY_ROOT"] = repository,
-            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken)
-        });
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
+            ["PHASEA_NODE_ID"] = "test-physical-node",
+            ["PHASEA_NODE_SCOPE"] = "single_node_test",
+            ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+            ["PHASEA_ENABLED_ROLES"] = "entry,production",
+            ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+});
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connection,options);
         var store = new PhaseAMetadataStore(connection, options);
         await store.EnsureSingleAdminAsync();
         var admin = (await store.ListAccountsAsync()).Single(account => account.IsAdmin);
@@ -66,6 +73,9 @@ public sealed class S25BoundaryTests
         // Seed an already initialized project, not an abandoned bootstrap candidate.
         // This is fixture setup only; no Chapter 2 workflow or live state is invoked.
         await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
+        if(!OperatingSystem.IsWindows())
+            PhaseA.Platform.Tests.NodeIdentity.S206TestSupport.RegisterLogicalReadbackProject(
+                await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."));
         if (readerMode == "verify-failures")
             await ObserveServiceFailuresAsync(root, repository);
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -87,6 +97,12 @@ public sealed class S25BoundaryTests
         start.Environment["PHASEA_REPOSITORY_ROOT"] = repository;
         start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken);
         start.Environment["PHASEA_SERVICE_STATE"] = "test";
+        start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+
         using var host = Process.Start(start) ?? throw new InvalidOperationException("S25 disposable host did not start.");
         // Drain streams continuously, without persisting credential-bearing response bodies.
         host.OutputDataReceived += (_, _) => { };
@@ -183,11 +199,11 @@ public sealed class S25BoundaryTests
             var correlation = Guid.NewGuid().ToString("N");
             var context = new RequestContext("s25-principal", account.AccountId,
                 new HashSet<string>(StringComparer.Ordinal) { "user" }, "s25-fixture-credential", correlation);
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.SetQuota(account.AccountId, 100 * 1024 * 1024);
             var manifest = storage.CreateSnapshot(context, source, "snapshot-control", "workspace-control", project.ProjectId,
                 "policy-s25", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
-            var restore = new RestoreService(connectionString);
+            var restore = new CentralRestoreBackend(connectionString);
             SeedRouteAuthorityEvidence(connectionString);
             var firstLease = new RunnerLease("control-lease", account.AccountId, project.ProjectId, 1);
             await SeedLeaseAsync(connectionString, firstLease);
@@ -236,7 +252,7 @@ public sealed class S25BoundaryTests
                         result = restore.RestorePrepared(context, manifest with { SnapshotId = "different-snapshot" }, source, destination, lease, "control-request");
                         break;
                     case "stale_lease":
-                        result = new RestoreService(connectionString).RestorePrepared(context, manifest, source, destination, firstLease, correlation);
+                        result = new CentralRestoreBackend(connectionString).RestorePrepared(context, manifest, source, destination, firstLease, correlation);
                         break;
                     case "restore_interrupted":
                         result = await InterruptOwnedRestoreAsync(caseRoot, repository, connectionString, context, lease);
@@ -293,7 +309,7 @@ public sealed class S25BoundaryTests
         // The existing staging checkpoint holds publication; a large timing buffer is unnecessary.
         for (var index = 0; index < 32; index++)
             File.WriteAllText(Path.Combine(source, $"file-{index:D5}.txt"), "S25 interrupted restore content");
-        var storage = new WorkspaceStorageService(connectionString);
+        var storage = new CentralWorkspaceStorageBackend(connectionString);
         var manifest = storage.CreateSnapshot(context, source, "snapshot-interrupted", "workspace-control", lease.ProjectId,
             "policy-s25", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
         var destination = Path.Combine(root, "interrupted-restore");
@@ -361,7 +377,7 @@ public sealed class S25BoundaryTests
             throw new Exception($"S25 interruption was not observed during real file staging. Worker exit={worker.ExitCode}; stdout={outputTail}; stderr={errorTail}");
         }
         // Restart the real producer. Do not synthesize verification/history rows.
-        _ = new RestoreService(connectionString);
+        _ = new CentralRestoreBackend(connectionString);
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
@@ -380,7 +396,7 @@ public sealed class S25BoundaryTests
         var contextJson = data.GetProperty("context");
         var context = new RequestContext(contextJson.GetProperty("PrincipalId").GetString()!, contextJson.GetProperty("AccountId").GetString()!,
             new HashSet<string> { "user" }, contextJson.GetProperty("CredentialId").GetString()!, contextJson.GetProperty("CorrelationId").GetString()!);
-        var service = new RestoreService(data.GetProperty("connectionString").GetString());
+        var service = new CentralRestoreBackend(data.GetProperty("connectionString").GetString());
         service.RestorePrepared(context, data.GetProperty("manifest").Deserialize<SnapshotManifest>()!,
             data.GetProperty("source").GetString()!, data.GetProperty("destination").GetString()!,
             data.GetProperty("lease").Deserialize<RunnerLease>()!, "interrupted-request");

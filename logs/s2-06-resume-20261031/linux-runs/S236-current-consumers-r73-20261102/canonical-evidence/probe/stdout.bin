@@ -1,0 +1,8 @@
+..                                                                       [100%]
+=============================== warnings summary ===============================
+logs/s2-06-bmad-20261028/tooling/venv/lib/python3.12/site-packages/_pytest/config/__init__.py:831
+  /workspace/ji-mu-yun/logs/s2-06-bmad-20261028/tooling/venv/lib/python3.12/site-packages/_pytest/config/__init__.py:831: PytestAssertRewriteWarning: Module already imported so cannot be rewritten: trx_support
+    self.import_plugin(import_spec)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 1 warning in 60.76s (0:01:00)

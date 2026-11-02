@@ -23,15 +23,15 @@ public sealed class ProjectGameTypeMatchBackfillService
         "steam_provider_not_configured"
     };
 
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly IProjectGameTypeMatchService _gameTypeMatchService;
-    private readonly PhaseAPlatformOptions? _options;
+    private readonly NodeExecutionOptions? _options;
     private readonly ILogger<ProjectGameTypeMatchBackfillService>? _logger;
 
     public ProjectGameTypeMatchBackfillService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         IProjectGameTypeMatchService gameTypeMatchService,
-        PhaseAPlatformOptions? options = null,
+        NodeExecutionOptions? options = null,
         ILogger<ProjectGameTypeMatchBackfillService>? logger = null)
     {
         _metadataStore = metadataStore;
@@ -45,13 +45,20 @@ public sealed class ProjectGameTypeMatchBackfillService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(project);
+        // ADR-0061 AD19/20: cached input and matcher dispatch require actual current project authority.
+        _metadataStore.DemandWorkspace(project.RepoPath);
+        var registered = await _metadataStore.GetProjectSnapshotAsync(project.ProjectId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        if (registered.AccountId != project.AccountId || registered.WorkspaceId != project.WorkspaceId)
+            throw new UnauthorizedAccessException("current_project_identity_required");
+        project = registered;
 
         var current = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
         if (current.IsMatched && !current.ContractSnapshot.HasContract)
         {
             var enriched = current with
             {
-                ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(_options, current),
+                ContractSnapshot = NodeExecutionOptions.GameTypeContract(_options, current),
                 UpdatedUtc = DateTimeOffset.UtcNow.ToString("O")
             };
             if (enriched.ContractSnapshot.HasContract)
@@ -83,6 +90,7 @@ public sealed class ProjectGameTypeMatchBackfillService
         }
 
         var json = evidence.ToJson();
+        _metadataStore.DemandWorkspace(project.RepoPath);
         await _metadataStore.UpdateProjectGameTypeMatchAsync(project.ProjectId, json, cancellationToken);
         if (!evidence.IsMatched)
         {
@@ -110,7 +118,7 @@ public sealed class ProjectGameTypeMatchBackfillService
             return ProjectGameTypeContractSnapshotRefreshResult.NotMatched(projectId, current.Status, current.StatusReason);
         }
 
-        var refreshedSnapshot = ProjectGameTypeContractSnapshot.RefreshFromProjectMatch(_options, current);
+        var refreshedSnapshot = NodeExecutionOptions.GameTypeContract(_options, current, refresh: true);
         if (!refreshedSnapshot.HasContract)
         {
             return ProjectGameTypeContractSnapshotRefreshResult.NoContract(projectId, current.MatchedGameTypeId);

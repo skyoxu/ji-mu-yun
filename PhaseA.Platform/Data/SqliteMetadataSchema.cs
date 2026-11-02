@@ -1,11 +1,26 @@
 using Microsoft.Data.Sqlite;
 using SQLitePCL;
+using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Data;
 
 public static class SqliteMetadataSchema
 {
-    public static async Task InitializeAsync(string connectionString, CancellationToken cancellationToken = default)
+    public static Task InitializeAsync(string connectionString, CancellationToken cancellationToken = default) =>
+        InitializeCoreAsync(connectionString, null, cancellationToken);
+
+    public static Task InitializeSingleNodeTestAsync(string connectionString, PhaseAPlatformOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        options.ValidateServiceIdentity();
+        if (!options.ProductionRoleEnabled) throw new InvalidOperationException("production_binding_role_required");
+        return InitializeCoreAsync(connectionString, options, cancellationToken);
+    }
+
+    private static async Task InitializeCoreAsync(string connectionString, PhaseAPlatformOptions? options,
+        CancellationToken cancellationToken)
     {
         Batteries_V2.Init();
 
@@ -817,9 +832,156 @@ public static class SqliteMetadataSchema
         await BackfillRunDurationMetricsAsync(connection, transaction, cancellationToken);
         await PruneRunDurationMetricsAsync(connection, transaction, cancellationToken);
 
+        await InstallNodeContractAsync(connection, transaction, options, cancellationToken);
+
         await ExecuteAsync(connection, "PRAGMA user_version = 1;", transaction, cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
+    }
+
+    // ADR-0061 AD16/17: one additive transaction, including current central/projection facts.
+    private static async Task InstallNodeContractAsync(SqliteConnection connection, SqliteTransaction transaction,
+        PhaseAPlatformOptions? options, CancellationToken token)
+    {
+        await AddColumnIfMissingAsync(connection, transaction, "accounts", "home_node_id",
+            "ALTER TABLE accounts ADD COLUMN home_node_id TEXT NULL;", token);
+        await AddColumnIfMissingAsync(connection, transaction, "accounts", "authority_revision",
+            "ALTER TABLE accounts ADD COLUMN authority_revision INTEGER NOT NULL DEFAULT 1;", token);
+        await AddColumnIfMissingAsync(connection, transaction, "projects", "node_id",
+            "ALTER TABLE projects ADD COLUMN node_id TEXT NULL;", token);
+        await ExecuteAsync(connection, """
+            CREATE TABLE IF NOT EXISTS node_binding (
+                singleton_key INTEGER PRIMARY KEY CHECK(singleton_key=1),
+                node_id TEXT NOT NULL UNIQUE,
+                binding_version INTEGER NOT NULL CHECK(binding_version=1),
+                initialization_scope TEXT NOT NULL CHECK(initialization_scope='single_node_test'),
+                scheduler_clean_shutdown INTEGER NOT NULL DEFAULT 0 CHECK(scheduler_clean_shutdown IN(0,1))
+            );
+            CREATE TABLE IF NOT EXISTS account_node_projections (
+                account_id TEXT PRIMARY KEY REFERENCES accounts(id),
+                home_node_id TEXT NOT NULL,
+                is_enabled INTEGER NOT NULL CHECK(is_enabled IN(0,1)),
+                authority_revision INTEGER NOT NULL CHECK(authority_revision>0)
+            );
+            CREATE TRIGGER IF NOT EXISTS account_home_immutable BEFORE UPDATE OF home_node_id ON accounts
+            WHEN OLD.home_node_id IS NOT NULL AND NEW.home_node_id IS NOT OLD.home_node_id
+            BEGIN SELECT RAISE(ABORT,'account_home_immutable'); END;
+            CREATE TRIGGER IF NOT EXISTS project_node_immutable BEFORE UPDATE OF node_id ON projects
+            WHEN OLD.node_id IS NOT NULL AND NEW.node_id IS NOT OLD.node_id
+            BEGIN SELECT RAISE(ABORT,'project_node_immutable'); END;
+            CREATE TRIGGER IF NOT EXISTS account_node_insert AFTER INSERT ON accounts
+            WHEN NEW.home_node_id IS NOT NULL
+            BEGIN
+                INSERT INTO account_node_projections(account_id,home_node_id,is_enabled,authority_revision)
+                VALUES(NEW.id,NEW.home_node_id,CASE WHEN NEW.is_disabled=0 THEN 1 ELSE 0 END,NEW.authority_revision);
+            END;
+            CREATE TRIGGER IF NOT EXISTS account_node_update
+            AFTER UPDATE OF home_node_id,is_disabled,token_hash,password_hash,is_admin,valid_until_utc,username ON accounts
+            WHEN OLD.home_node_id IS NOT NEW.home_node_id OR OLD.is_disabled IS NOT NEW.is_disabled
+              OR OLD.token_hash IS NOT NEW.token_hash OR OLD.password_hash IS NOT NEW.password_hash
+              OR OLD.is_admin IS NOT NEW.is_admin OR OLD.valid_until_utc IS NOT NEW.valid_until_utc
+              OR OLD.username IS NOT NEW.username
+            BEGIN
+                UPDATE accounts SET authority_revision=OLD.authority_revision+1 WHERE id=NEW.id;
+                INSERT INTO account_node_projections(account_id,home_node_id,is_enabled,authority_revision)
+                SELECT id,home_node_id,CASE WHEN is_disabled=0 THEN 1 ELSE 0 END,authority_revision
+                FROM accounts WHERE id=NEW.id AND home_node_id IS NOT NULL
+                ON CONFLICT(account_id) DO UPDATE SET home_node_id=excluded.home_node_id,
+                    is_enabled=excluded.is_enabled,authority_revision=excluded.authority_revision;
+            END;
+            """, transaction, token);
+        if (options is null) return; // Schema-only installation grants no binding authority.
+        var node = options.NodeId!;
+        var completedBinding = false;
+        await using (var current = connection.CreateCommand())
+        {
+            current.Transaction = transaction;
+            current.CommandText = "SELECT node_id,binding_version,initialization_scope FROM node_binding WHERE singleton_key=1;";
+            await using var reader = await current.ExecuteReaderAsync(token);
+            if (await reader.ReadAsync(token))
+            {
+                completedBinding = true;
+                if (!StringComparer.Ordinal.Equals(reader.GetString(0), node) || reader.GetInt64(1)!=1 || reader.GetString(2)!="single_node_test")
+                    throw new InvalidOperationException("node_binding_conflict");
+            }
+        }
+        if (completedBinding)
+        {
+            await using var integrity = connection.CreateCommand();
+            integrity.Transaction = transaction;
+            integrity.CommandText = "SELECT (SELECT count(*) FROM accounts WHERE home_node_id IS NULL) + (SELECT count(*) FROM projects WHERE node_id IS NULL);";
+            if (Convert.ToInt64(await integrity.ExecuteScalarAsync(token)) != 0)
+                throw new InvalidOperationException("completed_node_binding_missing_owner");
+        }
+        await using (var conflicts = connection.CreateCommand())
+        {
+            conflicts.Transaction = transaction;
+            conflicts.CommandText = """
+                SELECT
+                  (SELECT count(*) FROM accounts WHERE home_node_id IS NOT NULL AND home_node_id<>$node) +
+                  (SELECT count(*) FROM projects p LEFT JOIN accounts a ON a.id=p.account_id
+                     WHERE a.id IS NULL OR (p.node_id IS NOT NULL AND p.node_id<>$node)
+                        OR (a.home_node_id IS NOT NULL AND a.home_node_id<>$node));
+                """;
+            conflicts.Parameters.AddWithValue("$node", node);
+            if (Convert.ToInt64(await conflicts.ExecuteScalarAsync(token)) != 0)
+                throw new InvalidOperationException("node_binding_conflict_or_orphan");
+        }
+        var registrations = new List<(string Account, string Project, string Root, string Repo, string Runtime, string Meta)>();
+        await using (var projects = connection.CreateCommand())
+        {
+            projects.Transaction = transaction;
+            projects.CommandText = """
+                SELECT p.account_id,p.id,w.root_path,w.repo_path,w.runtime_path,w.meta_path
+                FROM projects p LEFT JOIN workspaces w ON w.project_id=p.id;
+                """;
+            await using var reader = await projects.ExecuteReaderAsync(token);
+            while (await reader.ReadAsync(token))
+            {
+                if (Enumerable.Range(0,6).Any(reader.IsDBNull)) throw new InvalidOperationException("node_workspace_registration_invalid");
+                registrations.Add((reader.GetString(0),reader.GetString(1),reader.GetString(2),reader.GetString(3),reader.GetString(4),reader.GetString(5)));
+            }
+        }
+        foreach (var row in registrations)
+        {
+            if (!WorkspacePathPolicy.AreAllUnderRoot(options.HostedWorkspaceRoot,row.Root,row.Repo,row.Runtime,row.Meta))
+                throw new InvalidOperationException("node_workspace_registration_invalid");
+            RunnerIsolationPolicy.RequireNoReparsePoint(options.HostedWorkspaceRoot,row.Root);
+            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(row.Repo,out var registered) ||
+                registered.AccountId!=row.Account || registered.ProjectId!=row.Project ||
+                !RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(registered))
+                throw new InvalidOperationException("node_workspace_registration_invalid");
+        }
+        await using (var binding = connection.CreateCommand())
+        {
+            binding.Transaction = transaction;
+            binding.CommandText = """
+                INSERT INTO node_binding(singleton_key,node_id,binding_version,initialization_scope,scheduler_clean_shutdown)
+                VALUES(1,$node,1,'single_node_test',0)
+                ON CONFLICT(singleton_key) DO UPDATE SET scheduler_clean_shutdown=0;
+                """;
+            binding.Parameters.AddWithValue("$node",node);
+            await binding.ExecuteNonQueryAsync(token);
+        }
+        await PhaseAMetadataStore.EnsureSingleAdminInsideTransactionAsync(connection,transaction,options,token);
+        if (!completedBinding)
+        {
+            await using var legacy = connection.CreateCommand();
+            legacy.Transaction = transaction;
+            legacy.CommandText = "UPDATE accounts SET home_node_id=$node WHERE home_node_id IS NULL; UPDATE projects SET node_id=$node WHERE node_id IS NULL;";
+            legacy.Parameters.AddWithValue("$node",node);
+            await legacy.ExecuteNonQueryAsync(token);
+        }
+        await using var backfill = connection.CreateCommand();
+        backfill.Transaction = transaction;
+        backfill.CommandText = """
+            INSERT INTO account_node_projections(account_id,home_node_id,is_enabled,authority_revision)
+            SELECT id,home_node_id,CASE WHEN is_disabled=0 THEN 1 ELSE 0 END,authority_revision
+            FROM accounts WHERE home_node_id IS NOT NULL
+            ON CONFLICT(account_id) DO UPDATE SET home_node_id=excluded.home_node_id,
+                is_enabled=excluded.is_enabled,authority_revision=excluded.authority_revision;
+            """;
+        await backfill.ExecuteNonQueryAsync(token);
     }
 
     private static async Task BackfillRunDurationMetricsAsync(
@@ -1015,6 +1177,41 @@ public static class SqliteMetadataSchema
 
     private static readonly string[] SchemaStatements =
     [
+        // ADR-0061 AD25: additive protected local contract, not a notification product/history store.
+        """
+        CREATE TABLE IF NOT EXISTS notice_facts (
+            notice_id TEXT PRIMARY KEY,
+            revision INTEGER NOT NULL CHECK(revision>0),
+            body TEXT NOT NULL,
+            audience_kind TEXT NOT NULL CHECK(audience_kind IN ('all','node','account')),
+            audience_id TEXT NULL,
+            valid_from_utc TEXT NOT NULL,
+            valid_until_utc TEXT NOT NULL,
+            is_active INTEGER NOT NULL CHECK(is_active IN (0,1)),
+            change_revision INTEGER NOT NULL CHECK(change_revision>0),
+            change_ref TEXT NOT NULL
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS node_notice_projections (
+            node_id TEXT NOT NULL,
+            notice_id TEXT NOT NULL REFERENCES notice_facts(notice_id),
+            source_revision INTEGER NOT NULL CHECK(source_revision>0),
+            change_revision INTEGER NOT NULL CHECK(change_revision>0),
+            change_ref TEXT NOT NULL,
+            is_visible INTEGER NOT NULL CHECK(is_visible IN (0,1)),
+            PRIMARY KEY(node_id,notice_id)
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS notice_read_state (
+            account_id TEXT NOT NULL REFERENCES accounts(id),
+            notice_id TEXT NOT NULL REFERENCES notice_facts(notice_id),
+            revision INTEGER NOT NULL CHECK(revision>0),
+            is_read INTEGER NOT NULL CHECK(is_read IN (0,1)),
+            PRIMARY KEY(account_id,notice_id,revision)
+        );
+        """,
         """
         CREATE TABLE IF NOT EXISTS accounts (
             id TEXT PRIMARY KEY,

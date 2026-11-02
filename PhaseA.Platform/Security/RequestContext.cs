@@ -2,6 +2,25 @@ namespace PhaseA.Platform.Security;
 
 public sealed record RequestContext
 {
+    private static readonly AsyncLocal<RequestContext?> CurrentSlot = new();
+    internal static RequestContext? Current => CurrentSlot.Value;
+    internal string? TicketProjectId { get; init; }
+    internal long? TicketAuthorityRevision { get; init; }
+    internal bool IsStartupMaintenance { get; init; }
+
+    // ADR-0061 AD17/19: transport only. Every consumer revalidates central facts;
+    // constructing or copying a context (including this scope) grants no authority.
+    public static IDisposable UseCurrent(RequestContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var prior=CurrentSlot.Value;CurrentSlot.Value=context;return new ContextScope(prior);
+    }
+
+    private sealed class ContextScope(RequestContext? prior) : IDisposable
+    {
+        private bool _disposed;
+        public void Dispose(){if(_disposed)return;_disposed=true;CurrentSlot.Value=prior;}
+    }
     public RequestContext(string principalId, string accountId, IReadOnlySet<string> roles, string credentialId, string correlationId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(principalId);

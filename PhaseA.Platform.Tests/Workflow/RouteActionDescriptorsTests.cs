@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Data;
+using PhaseA.Platform.Tests.NodeIdentity;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Workflow;
 using Xunit;
@@ -137,31 +138,16 @@ public sealed class RouteActionDescriptorsTests
 
     private sealed class RouteStateFixture : IDisposable
     {
-        private readonly string _root;
+        private readonly S206AuthorityFixture _authority;
+        private readonly IDisposable? _current;
 
-        private RouteStateFixture(string root)
+        private RouteStateFixture()
         {
-            _root = root;
-            Project = new ProjectSnapshot(
-                "project-1",
-                "owner-1",
-                "Workflow Game",
-                "Game",
-                "RPG",
-                "default",
-                false,
-                "[]",
-                "succeeded",
-                null,
-                "workspace-1",
-                root,
-                Path.Combine(root, "repo"),
-                Path.Combine(root, "runtime"),
-                Path.Combine(root, "meta"),
-                "{}");
-            Directory.CreateDirectory(Project.RepoPath);
-            Directory.CreateDirectory(Project.MetaPath);
-            Service = new ProjectRouteStateArtifactService();
+            // ADR-0061: recommendation parsing retains its real current read prerequisites.
+            _authority = S206AuthorityFixture.CreateAsync().GetAwaiter().GetResult();
+            _current = S206TestSupport.EnterCurrentContext(_authority.First.Context);
+            Project = _authority.First.Project;
+            Service = new ProjectRouteStateArtifactService(_authority.Store);
         }
 
         public ProjectSnapshot Project { get; }
@@ -170,17 +156,13 @@ public sealed class RouteActionDescriptorsTests
 
         public static RouteStateFixture Create()
         {
-            var root = Path.Combine(Path.GetTempPath(), "phasea-route-action-tests", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(root);
-            return new RouteStateFixture(root);
+            return new RouteStateFixture();
         }
 
         public void Dispose()
         {
-            if (Directory.Exists(_root))
-            {
-                Directory.Delete(_root, recursive: true);
-            }
+            _current?.Dispose();
+            _authority.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
     }
 }

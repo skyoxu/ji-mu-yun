@@ -1,3 +1,4 @@
+using PhaseA.Platform.Security;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,8 +24,8 @@ public sealed class ProjectAssetLibraryService
     private static readonly string[] ImportableAssetExtensions = [".png", ".jpg", ".jpeg", ".webp", ".glb", ".gltf", ".obj", ".fbx", ".zip"];
     private static readonly string[] RuntimeAssetExtensions = [".png", ".jpg", ".jpeg", ".webp", ".glb", ".gltf", ".obj", ".fbx"];
     private static readonly string[] BlockedArchiveExtensions = [".cs", ".gd", ".dll", ".exe", ".bat", ".cmd", ".ps1", ".sh", ".js", ".ts", ".json", ".pck", ".so", ".dylib"];
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ProjectAssetImageGenerator _imageGenerator;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly HeavyRunnerQueueService _assetRunnerQueue;
@@ -35,8 +36,8 @@ public sealed class ProjectAssetLibraryService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectAssetLibraryService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ProjectAssetImageGenerator imageGenerator,
         ILlmRouteEngine? llmRouteEngine = null,
         [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
@@ -46,17 +47,21 @@ public sealed class ProjectAssetLibraryService
         PrototypeEngineeringClosureService? engineeringClosure = null,
         HostedContextManifestIssuer? contextManifestIssuer = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(assetRunnerQueue is null || processRunner is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _imageGenerator = imageGenerator;
         _llmRouteEngine = llmRouteEngine;
-        _assetRunnerQueue = assetRunnerQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(4), options.MaxConcurrentAssetGenerations);
+        _assetRunnerQueue = assetRunnerQueue;
         _assetConcurrencyLimiter = assetConcurrencyLimiter ?? new AssetGenerationConcurrencyLimiter(options.MaxConcurrentAssetGenerationsPerAccount);
         _httpClient = httpClient ?? new HttpClient(new HttpClientHandler
         {
             AllowAutoRedirect = false
         });
-        _processRunner = processRunner ?? new HostedProcessRunner();
+        _processRunner = processRunner;
         _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
         _contextManifestIssuer = contextManifestIssuer;
     }
@@ -102,6 +107,7 @@ public sealed class ProjectAssetLibraryService
 
         await using var accountGenerationLease = concurrency.Lease;
         var actionId = await ResolveActionIdAsync(project, unit, request.FloatingPrompt, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var entryId = Guid.NewGuid().ToString("N");
         var outputRelativeDirectory = ToSlash(Path.Combine("Game.Godot", "Prototypes", "ProjectAssetLibrary", unit.Key, entryId));
         var outputAbsoluteDirectory = Path.Combine(project.RepoPath, outputRelativeDirectory.Replace('/', Path.DirectorySeparatorChar));
@@ -305,6 +311,7 @@ public sealed class ProjectAssetLibraryService
             var smoke = request.ValidateWithSmoke == true
                 ? await RunSelectionSmokeAsync(project, patch, cancellationToken)
                 : null;
+            _metadataStore.DemandWorkspace(project.RepoPath);
             var validation = ValidateReplacement(project, selectedUnit, selectedEntry, patch, smoke);
             if (ShouldRollbackSelection(validation))
             {
@@ -585,6 +592,7 @@ public sealed class ProjectAssetLibraryService
         ProjectAssetLibraryEntry entry,
         CancellationToken cancellationToken)
     {
+        _metadataStore.DemandWorkspace(project.RepoPath);
         _engineeringClosure.EnsureProjectFiles(project);
         var path = Path.Combine(project.RepoPath, PrototypeEngineeringClosureService.AssetsRelativePath.Replace('/', Path.DirectorySeparatorChar));
         var validation = entry.SelectionValidation;
@@ -783,6 +791,7 @@ public sealed class ProjectAssetLibraryService
             "asset-quarantine");
         Directory.CreateDirectory(quarantineDirectory);
         using var response = await _httpClient.GetAsync(sourceUri, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (IsRedirectStatusCode(response.StatusCode))
         {
             throw new ArgumentException("Imported asset redirects are not allowed.");
@@ -814,13 +823,15 @@ public sealed class ProjectAssetLibraryService
         var fileName = $"{SanitizeFileStem(Path.GetFileNameWithoutExtension(sourceUri.AbsolutePath), "asset-whitelist-import")}{extension}";
         var quarantinePath = Path.Combine(quarantineDirectory, fileName);
         await using (var input = await response.Content.ReadAsStreamAsync(cancellationToken))
-        await using (var output = File.Create(quarantinePath))
         {
+            _metadataStore.DemandWorkspace(project.RepoPath);
+            await using var output = File.Create(quarantinePath);
             var buffer = new byte[81920];
             long total = 0;
             while (true)
             {
                 var read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                _metadataStore.DemandWorkspace(project.RepoPath);
                 if (read == 0)
                 {
                     break;
@@ -836,6 +847,7 @@ public sealed class ProjectAssetLibraryService
             }
         }
 
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
         {
             return ExtractAllowedArchiveAssets(project, quarantinePath, outputAbsoluteDirectory);
@@ -1872,5 +1884,75 @@ public sealed record ProjectAssetSelectionSmokeResult(
     public static ProjectAssetSelectionSmokeResult Skipped(string reason, string? scenePath)
     {
         return new ProjectAssetSelectionSmokeResult(false, 0, reason, scenePath, "", "");
+    }
+}
+
+
+public sealed record NodeApprovedSourceCopy(NodeApprovedSourceRef SourceRef,string RelativePath,
+    string ActualContentHash,bool IsOriginal,string RunId);
+
+public sealed partial class NodeApprovedSourceReader
+{
+    private readonly object _copyGate=new();
+
+    // ADR-0061 AD19/24: explicit authorized copy only; no update watcher or overwrite.
+    public async Task<NodeApprovedSourceCopy> CopyAsync(string accountId,string projectId,NodeApprovedSourceRef reference,
+        CancellationToken cancellationToken=default)
+    {
+        var project=await DemandProjectAsync(accountId,projectId,true,cancellationToken);
+        LoadVerified(reference);
+        var run=await _metadata.CreateRunAsync(projectId,project.WorkspaceId,"approved-source-copy",cancellationToken);
+        if(!await _metadata.TryAcquireRunnerLockAsync(projectId,run,cancellationToken))
+        {
+            await _metadata.CompleteRunAsync(run,"blocked",423,"","Project is busy.","{}",CancellationToken.None);
+            throw new InvalidOperationException("project_runner_busy");
+        }
+        try
+        {
+            await _metadata.MarkRunStartedAsync(run,cancellationToken);
+            var current=await DemandProjectAsync(accountId,projectId,true,cancellationToken);
+            if(current.WorkspaceId!=project.WorkspaceId || current.RepoPath!=project.RepoPath)
+                throw new UnauthorizedAccessException("approved_copy_workspace_generation_changed");
+            var source=LoadVerified(reference);
+            var relative="Game.Godot/ApprovedSources/"+reference.SourceId+"/"+reference.ContentHash+".txt";
+            var path=Path.GetFullPath(Path.Combine(project.RepoPath,relative.Replace('/',Path.DirectorySeparatorChar)));
+            string actualHash;
+            lock(_copyGate)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                _metadata.DemandCurrent(accountId,projectId,write:true);
+                _metadata.DemandWorkspace(project.RepoPath);
+                if(!WorkspacePathPolicy.IsUnderRoot(project.RepoPath,path))
+                    throw new UnauthorizedAccessException("approved_copy_path_outside_current_project");
+                RunnerIsolationPolicy.RequireNoReparsePoint(project.RepoPath,path);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                RunnerIsolationPolicy.RequireNoReparsePoint(project.RepoPath,path);
+                if(!File.Exists(path))
+                {
+                    using var stream=new FileStream(path,FileMode.CreateNew,FileAccess.Write,FileShare.None);
+                    stream.Write(source.Bytes);stream.Flush(flushToDisk:true);
+                }
+                // Existing user bytes are always retained, even on a repeated explicit copy.
+                actualHash=ContentHash(File.ReadAllBytes(path));
+            }
+            var result=new NodeApprovedSourceCopy(reference,relative,actualHash,actualHash==reference.ContentHash,run);
+            var evidence=JsonSerializer.Serialize(result);
+            await _metadata.AddArtifactAsync(new ArtifactCreationCommand(run,projectId,"approved-source-copy",relative,
+                "Explicit approved source copy; current bytes and source provenance recorded."),cancellationToken);
+            await _metadata.CompleteRunAsync(run,"succeeded",0,"","",evidence,cancellationToken);
+            return result;
+        }
+        catch
+        {
+            try{await _metadata.CompleteRunAsync(run,"failed",1,"","Approved source copy failed.","{}",CancellationToken.None);}
+            catch(UnauthorizedAccessException){/* Revocation retains the existing blocker; never manufacture cleanup authority. */}
+            throw;
+        }
+        finally
+        {
+            // The existing current-authority/owned lock protocol remains in force.
+            // A denied cleanup does not become a false released/success receipt.
+            await _metadata.ReleaseRunnerLockAsync(projectId,run,CancellationToken.None);
+        }
     }
 }

@@ -10,8 +10,8 @@ namespace PhaseA.Platform.Projects;
 
 public sealed class ProjectCreationService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ProjectRuleCatalog _ruleCatalog;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
@@ -22,16 +22,17 @@ public sealed class ProjectCreationService
     private readonly IProjectRunnerProvisioner? _runnerProvisioner;
 
     public ProjectCreationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ProjectRuleCatalog ruleCatalog)
-        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new ProjectCreationConcurrencyLimiter(), ProjectGameTypeMatchService.Offline(options))
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public ProjectCreationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ProjectRuleCatalog ruleCatalog,
         IProjectWorkspaceSeeder workspaceSeeder,
         PrototypeRouteStateWriter? routeStateWriter = null,
@@ -60,6 +61,7 @@ public sealed class ProjectCreationService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentNullException.ThrowIfNull(request);
+        _metadataStore.DemandCurrent(accountId:accountId,write:true);
 
         if (!string.IsNullOrWhiteSpace(request.GitUrl) ||
             !string.IsNullOrWhiteSpace(request.RepositoryUrl) ||

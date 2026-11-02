@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Llm;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
@@ -26,6 +27,279 @@ public sealed partial class PhaseAMetadataStore
         StringComparer.Ordinal);
     private readonly string _connectionString;
     private readonly PhaseAPlatformOptions _options;
+
+    // Trusted central construction narrows authority; no reverse conversion or raw-store getter exists.
+    public static implicit operator NodeProjectMetadata(PhaseAMetadataStore source) => new(source);
+    public static implicit operator NodeOperationGuard(PhaseAMetadataStore source) => new(source);
+
+    public WorkspaceStorageService CreateWorkspaceStorageService()
+    {
+        DemandNodeCapability();
+        return new WorkspaceStorageService(new CentralWorkspaceStorageBackend(_connectionString),DemandNodeCapability,
+            (context,account,project,write)=>DemandCurrentNodeOperation(account,project,context,write));
+    }
+    public RestoreService CreateRestoreService(RouteRecoveryAuthorityResolver? routeAuthorityResolver=null)
+    {
+        DemandNodeCapability();
+        return new RestoreService(new CentralRestoreBackend(_connectionString,routeAuthorityResolver),DemandNodeCapability,
+            (context,account,project,write)=>DemandCurrentNodeOperation(account,project,context,write));
+    }
+
+    internal void DemandNodeCapability()
+    {
+        _options.ValidateServiceIdentity();
+        if(!_options.ProductionRoleEnabled) throw new UnauthorizedAccessException("production_role_disabled");
+        if(_options.NodeProductionStopping) throw new UnauthorizedAccessException("production_admission_closed");
+        DemandPersistedNodeBinding();
+    }
+
+    private void DemandPersistedNodeBinding()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText="SELECT count(*) FROM node_binding WHERE singleton_key=1 AND node_id=$node AND binding_version=1 AND initialization_scope='single_node_test';";
+        command.Parameters.AddWithValue("$node",_options.NodeId!);
+        if(Convert.ToInt64(command.ExecuteScalar())!=1) throw new UnauthorizedAccessException("node_binding_unavailable");
+    }
+
+    // ADR-0061 AD17/19: a fresh check, not a reusable permission or local authenticator.
+    internal long DemandCurrentNodeOperation(string? accountId=null,string? projectId=null,
+        RequestContext? context=null,bool write=false)
+        => DemandCurrentNodeOperationCore(accountId,projectId,context,write,requireProduction:true);
+
+    // ADR-0061 AD20: fixed queue observation/cancellation callers only. This
+    // retains all current identity/ownership checks and cannot admit production.
+    internal long DemandCurrentNodeControlOperation(string? accountId=null,string? projectId=null,bool write=false)
+        => DemandCurrentNodeOperationCore(accountId,projectId,null,write,requireProduction:false);
+
+    private long DemandCurrentNodeOperationCore(string? accountId,string? projectId,
+        RequestContext? context,bool write,bool requireProduction)
+    {
+        if(requireProduction)DemandNodeCapability();
+        else
+        {
+            _options.ValidateServiceIdentity();
+            DemandPersistedNodeBinding();
+        }
+        context ??= RequestContext.Current ?? throw new UnauthorizedAccessException("current_context_required");
+        var verified=ResolveAccountByTokenHashAsync(context.CredentialId).GetAwaiter().GetResult();
+        var role=verified?.IsAdmin==true?PhaseAAuth.AdminRole:PhaseAAuth.UserRole;
+        if(verified is null || context.AccountId!=verified.AccountId || !context.Roles.SetEquals(new[]{role}))
+            throw new UnauthorizedAccessException("current_account_required");
+        var maintenance=context.IsStartupMaintenance && verified.IsAdmin && context.TicketProjectId is null;
+        if(context.IsStartupMaintenance && !maintenance)
+            throw new UnauthorizedAccessException("current_admin_required");
+        if(accountId is not null && accountId!=verified.AccountId && !maintenance)
+            throw new UnauthorizedAccessException("account_ownership_mismatch");
+        if(context.TicketProjectId is not null && (write || projectId!=context.TicketProjectId))
+            throw new UnauthorizedAccessException("ticket_scope_mismatch");
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText="""
+            SELECT a.authority_revision FROM accounts a
+            JOIN account_node_projections pr ON pr.account_id=a.id
+            JOIN node_binding n ON n.singleton_key=1
+            WHERE a.id=$account AND a.token_hash=$credential AND a.is_disabled=0
+              AND (a.valid_until_utc IS NULL OR a.valid_until_utc>$now)
+              AND a.home_node_id=$node AND pr.home_node_id=a.home_node_id
+              AND pr.is_enabled=1 AND pr.authority_revision=a.authority_revision
+              AND n.node_id=$node AND n.binding_version=1 AND n.initialization_scope='single_node_test';
+            """;
+        command.Parameters.AddWithValue("$account",verified.AccountId);
+        command.Parameters.AddWithValue("$credential",context.CredentialId);
+        command.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("$node",_options.NodeId!);
+        var revision=command.ExecuteScalar();
+        if(revision is null)throw new UnauthorizedAccessException("current_node_authority_required");
+        if(context.TicketProjectId is not null && context.TicketAuthorityRevision!=Convert.ToInt64(revision))
+            throw new UnauthorizedAccessException("ticket_authority_expired");
+        var targetAccount=accountId??verified.AccountId;
+        if(maintenance && accountId is null && projectId is not null)
+        {
+            command.CommandText="SELECT account_id FROM projects WHERE id=$project;";
+            command.Parameters.AddWithValue("$project",projectId);
+            targetAccount=command.ExecuteScalar() as string??throw new UnauthorizedAccessException("project_not_found");
+        }
+        if(targetAccount!=verified.AccountId)
+        {
+            command.CommandText="""
+                SELECT count(*) FROM accounts a JOIN account_node_projections pr ON pr.account_id=a.id
+                WHERE a.id=$account AND a.is_disabled=0
+                  AND (a.valid_until_utc IS NULL OR a.valid_until_utc>$now)
+                  AND a.home_node_id=$node AND pr.home_node_id=$node
+                  AND pr.is_enabled=1 AND pr.authority_revision=a.authority_revision;
+                """;
+            command.Parameters["$account"].Value=targetAccount;
+            if(Convert.ToInt64(command.ExecuteScalar())!=1)
+                throw new UnauthorizedAccessException("current_node_authority_required");
+        }
+        if(projectId is not null)
+        {
+            command.CommandText="SELECT count(*) FROM projects WHERE id=$project AND account_id=$account AND node_id=$node;";
+            command.Parameters["$account"].Value=targetAccount;
+            if(!command.Parameters.Contains("$project"))command.Parameters.AddWithValue("$project",projectId);
+            if(Convert.ToInt64(command.ExecuteScalar())!=1)
+                throw new UnauthorizedAccessException("project_ownership_mismatch");
+        }
+        return Convert.ToInt64(revision);
+    }
+
+    // ADR-0061 AD17/19: the trusted composition root alone recovers local work.
+    // No browser context, caller-supplied account or node can create this scope.
+    internal async Task<RequestContext> ResolveStartupMaintenanceContextAsync(CancellationToken cancellationToken=default)
+    {
+        var credential=_options.AdminTokenHash;
+        if(string.IsNullOrWhiteSpace(credential))throw new UnauthorizedAccessException("current_admin_required");
+        var admin=await ResolveAccountByTokenHashAsync(credential,cancellationToken);
+        if(admin?.IsAdmin!=true)throw new UnauthorizedAccessException("current_admin_required");
+        return new RequestContext(admin.AccountId,admin.AccountId,
+            new HashSet<string>(StringComparer.Ordinal){PhaseAAuth.AdminRole},credential,"startup-maintenance")
+            {IsStartupMaintenance=true};
+    }
+
+    // Metadata only: validate a signed ticket before any workspace/path adoption.
+    internal async Task<string?> GetProjectAccountForAuthorizationAsync(string projectId,CancellationToken cancellationToken)
+    {
+        await using var connection=await OpenConnectionAsync(cancellationToken);
+        await using var command=connection.CreateCommand();
+        command.CommandText="SELECT account_id FROM projects WHERE id=$project;";
+        command.Parameters.AddWithValue("$project",projectId);
+        return await command.ExecuteScalarAsync(cancellationToken) as string;
+    }
+
+    internal void DemandCurrentWorkspace(string repositoryPath)
+    {
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText=OperatingSystem.IsWindows()
+            ? "SELECT project_id FROM workspaces WHERE repo_path=$repo COLLATE NOCASE;"
+            : "SELECT project_id FROM workspaces WHERE repo_path=$repo;";
+        command.Parameters.AddWithValue("$repo",Path.TrimEndingDirectorySeparator(Path.GetFullPath(repositoryPath)));
+        var project=command.ExecuteScalar() as string??throw new UnauthorizedAccessException("project_workspace_required");
+        DemandCurrentNodeOperation(projectId:project,write:true);
+    }
+
+    // Explicit inactivity is not corrupt home authority. Maintenance leaves
+    // those projects untouched while preserving service for enabled owners.
+    internal bool SkipInactiveMaintenanceProject(string projectId)
+    {
+        if(RequestContext.Current?.IsStartupMaintenance!=true)return false;
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText="""
+            SELECT count(*) FROM projects p JOIN accounts a ON a.id=p.account_id
+            WHERE p.id=$project AND (a.is_disabled=1 OR (a.valid_until_utc IS NOT NULL AND a.valid_until_utc<=$now));
+            """;
+        command.Parameters.AddWithValue("$project",projectId);
+        command.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToString("O"));
+        return Convert.ToInt64(command.ExecuteScalar())==1;
+    }
+
+    // ADR-0061 AD16/19: an installed binding is not a new legacy migration.
+    // This read-only host precondition must run before an installer can backfill.
+    internal static async Task ValidateCompletedNodeBindingAsync(string connectionString,CancellationToken token=default)
+    {
+        var builder=new SqliteConnectionStringBuilder(connectionString);
+        if(!File.Exists(builder.DataSource))return;
+        builder.Mode=SqliteOpenMode.ReadOnly;
+        await using var connection=new SqliteConnection(builder.ToString());
+        await connection.OpenAsync(token);
+        await using var command=connection.CreateCommand();
+        command.CommandText="SELECT count(*) FROM sqlite_master WHERE type='table' AND name='node_binding';";
+        if(Convert.ToInt64(await command.ExecuteScalarAsync(token))==0)return;
+        command.CommandText="SELECT count(*) FROM node_binding;";
+        var count=Convert.ToInt64(await command.ExecuteScalarAsync(token));
+        if(count==0)return;
+        if(count!=1)throw new InvalidOperationException("completed_node_binding_integrity_required");
+        command.CommandText="""
+            SELECT
+              (SELECT count(*) FROM accounts a LEFT JOIN account_node_projections pr ON pr.account_id=a.id
+               JOIN node_binding n ON n.singleton_key=1
+               WHERE a.home_node_id IS NULL OR a.home_node_id<>n.node_id
+                 OR pr.account_id IS NULL OR pr.home_node_id<>a.home_node_id
+                 OR pr.authority_revision<>a.authority_revision
+                 OR pr.is_enabled<>CASE WHEN a.is_disabled=0 THEN 1 ELSE 0 END) +
+              (SELECT count(*) FROM projects p LEFT JOIN accounts a ON a.id=p.account_id
+               WHERE a.id IS NULL OR p.node_id IS NULL OR p.node_id<>a.home_node_id);
+            """;
+        if(Convert.ToInt64(await command.ExecuteScalarAsync(token))!=0)
+            throw new InvalidOperationException("completed_node_binding_integrity_required");
+    }
+
+    internal string ResolveNodeReference(string table,string id)
+    {
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText=table switch
+        {
+            "run"=>"SELECT project_id FROM runs WHERE id=$id;",
+            "artifact"=>"SELECT project_id FROM artifacts WHERE id=$id;",
+            "session"=>"SELECT project_id FROM project_iteration_sessions WHERE id=$id;",
+            "goal"=>"SELECT s.project_id FROM project_iteration_goals g JOIN project_iteration_sessions s ON s.id=g.session_id WHERE g.id=$id;",
+            _=>throw new ArgumentOutOfRangeException(nameof(table))
+        };
+        command.Parameters.AddWithValue("$id",id);
+        return command.ExecuteScalar() as string ?? throw new UnauthorizedAccessException("project_not_found");
+    }
+
+    internal void DemandCurrentNodeAdminOperation()
+    {
+        DemandCurrentNodeOperation();
+        if(RequestContext.Current?.IsAdmin!=true)throw new UnauthorizedAccessException("current_admin_required");
+    }
+
+    internal bool IsCurrentTicketAuthority(string accountId,string projectId,long revision)
+    {
+        DemandNodeCapability();
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText="""
+            SELECT count(*) FROM accounts a JOIN account_node_projections pr ON pr.account_id=a.id
+            JOIN projects p ON p.account_id=a.id JOIN node_binding n ON n.singleton_key=1
+            WHERE a.id=$account AND p.id=$project AND a.authority_revision=$revision
+              AND a.is_disabled=0 AND a.token_hash IS NOT NULL
+              AND (a.valid_until_utc IS NULL OR a.valid_until_utc>$now)
+              AND a.home_node_id=$node AND p.node_id=$node AND n.node_id=$node
+              AND pr.home_node_id=$node AND pr.is_enabled=1 AND pr.authority_revision=a.authority_revision;
+            """;
+        command.Parameters.AddWithValue("$account",accountId);command.Parameters.AddWithValue("$project",projectId);
+        command.Parameters.AddWithValue("$revision",revision);command.Parameters.AddWithValue("$node",_options.NodeId!);
+        command.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToString("O"));
+        return Convert.ToInt64(command.ExecuteScalar())==1;
+    }
+
+    internal IDisposable UseCurrentTicketRead(string ticket,string accountId,string projectId,string file)
+    {
+        // The private trusted adapter verifies the actual signature itself. Public
+        // account/revision facts alone must never mint a current credential scope.
+        var tickets=new PhaseA.Platform.Readback.ProjectPackageDownloadTicketService((NodeTicketSigner)_options,(NodeProjectMetadata)this);
+        var revision=tickets.RequireCurrentRevision(ticket,accountId,projectId,file);
+        return UseVerifiedTicketRead(accountId,projectId,revision);
+    }
+
+    internal IDisposable UseCurrentAssetTicketRead(string ticket,string accountId,string projectId,string resource)
+    {
+        var tickets=new PhaseA.Platform.Readback.ProjectAssetPreviewTicketService((NodeTicketSigner)_options,(NodeProjectMetadata)this);
+        var revision=tickets.RequireCurrentRevision(ticket,accountId,projectId,resource);
+        return UseVerifiedTicketRead(accountId,projectId,revision);
+    }
+
+    // Only the two signature-verifying private adapters can enter this transient read scope.
+    private IDisposable UseVerifiedTicketRead(string accountId,string projectId,long revision)
+    {
+        if(!IsCurrentTicketAuthority(accountId,projectId,revision))throw new UnauthorizedAccessException("ticket_authority_expired");
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText="SELECT token_hash,is_admin FROM accounts WHERE id=$id AND authority_revision=$revision;";
+        command.Parameters.AddWithValue("$id",accountId);
+        command.Parameters.AddWithValue("$revision",revision);using var reader=command.ExecuteReader();
+        if(!reader.Read() || reader.IsDBNull(0))throw new UnauthorizedAccessException("current_account_required");
+        return RequestContext.UseCurrent(new RequestContext(accountId,accountId,new HashSet<string>(StringComparer.Ordinal)
+            {reader.GetInt64(1)==1?PhaseAAuth.AdminRole:PhaseAAuth.UserRole},reader.GetString(0),"ticket-read")
+            {TicketProjectId=projectId,TicketAuthorityRevision=revision});
+    }
+
 
     private sealed record BoundaryDiagnosticContext(
         string ConnectionString,
@@ -127,9 +401,18 @@ public sealed partial class PhaseAMetadataStore
     public async Task<string> EnsureSingleAdminAsync(CancellationToken cancellationToken = default)
     {
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var id = await EnsureSingleAdminInsideTransactionAsync(connection, transaction, _options, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return id;
+    }
+
+    internal static async Task<string> EnsureSingleAdminInsideTransactionAsync(
+        SqliteConnection connection, SqliteTransaction transaction, PhaseAPlatformOptions options,
+        CancellationToken cancellationToken)
+    {
         var now = DateTimeOffset.UtcNow.ToString("O");
 
-        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 
         var existingId = await ExecuteScalarStringAsync(
             connection,
@@ -138,31 +421,30 @@ public sealed partial class PhaseAMetadataStore
 
         if (!string.IsNullOrWhiteSpace(existingId))
         {
-            await SyncAdminSecretsAsync(connection, existingId, cancellationToken);
-            await UpsertProjectLimitAsync(connection, existingId, _options.HostedProjectLimit, now, cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            await SyncAdminSecretsAsync(connection, existingId, options, cancellationToken);
+            await UpsertProjectLimitAsync(connection, existingId, options.HostedProjectLimit, now, cancellationToken);
             return existingId;
         }
 
         var accountId = NewId();
         await using (var command = connection.CreateCommand())
         {
+            command.Transaction = transaction;
             command.CommandText =
                 """
                 INSERT INTO accounts (id, username, password_hash, token_hash, is_admin, created_utc)
                 VALUES ($id, $username, $password_hash, $token_hash, 1, $created_utc);
                 """;
             command.Parameters.AddWithValue("$id", accountId);
-            command.Parameters.AddWithValue("$username", _options.AdminUsername);
-            command.Parameters.AddWithValue("$password_hash", (object?)_options.AdminPasswordHash ?? DBNull.Value);
-            command.Parameters.AddWithValue("$token_hash", (object?)_options.AdminTokenHash ?? DBNull.Value);
+            command.Parameters.AddWithValue("$username", options.AdminUsername);
+            command.Parameters.AddWithValue("$password_hash", (object?)options.AdminPasswordHash ?? DBNull.Value);
+            command.Parameters.AddWithValue("$token_hash", (object?)options.AdminTokenHash ?? DBNull.Value);
             command.Parameters.AddWithValue("$created_utc", now);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
 
-        await UpsertProjectLimitAsync(connection, accountId, _options.HostedProjectLimit, now, cancellationToken);
+        await UpsertProjectLimitAsync(connection, accountId, options.HostedProjectLimit, now, cancellationToken);
 
-        await transaction.CommitAsync(cancellationToken);
         return accountId;
     }
 
@@ -264,14 +546,16 @@ public sealed partial class PhaseAMetadataStore
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var homeNode = await ResolveNewAccountHomeAsync(connection, transaction, cancellationToken);
         await using (var command = connection.CreateCommand())
         {
             command.Transaction = transaction;
             command.CommandText =
                 """
-                INSERT INTO accounts (id, username, password_hash, token_hash, is_admin, valid_until_utc, spend_limit_cny, created_utc)
-                VALUES ($id, $username, NULL, $token_hash, 0, $valid_until_utc, $spend_limit_cny, $created_utc);
+                INSERT INTO accounts (id, username, password_hash, token_hash, is_admin, valid_until_utc, spend_limit_cny, created_utc, home_node_id)
+                VALUES ($id, $username, NULL, $token_hash, 0, $valid_until_utc, $spend_limit_cny, $created_utc, $home_node_id);
                 """;
+            command.Parameters.AddWithValue("$home_node_id", (object?)homeNode ?? DBNull.Value);
             command.Parameters.AddWithValue("$id", accountId);
             command.Parameters.AddWithValue("$username", normalizedUsername);
             command.Parameters.AddWithValue("$token_hash", tokenHash);
@@ -302,6 +586,49 @@ public sealed partial class PhaseAMetadataStore
         CancellationToken cancellationToken)
     {
         return CreateUserAccountAsync(username, projectLimit, null, null, false, cancellationToken);
+    }
+
+    private async Task<string?> ResolveNewAccountHomeAsync(SqliteConnection connection,
+        SqliteTransaction transaction, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT node_id FROM node_binding WHERE singleton_key = 1;";
+        var bound = await command.ExecuteScalarAsync(cancellationToken) as string;
+        if (bound is null && _options.NodeId is null) return null; // Unbound offline legacy fixture, never execution authority.
+        if (bound is null || !StringComparer.Ordinal.Equals(bound, _options.NodeId))
+            throw new InvalidOperationException("node_binding_unavailable");
+        if (!_options.EntryRoleEnabled) throw new UnauthorizedAccessException("central_account_role_required");
+        if (_options.AcceptNewAccounts != true) throw new InvalidOperationException("account_admission_closed");
+        return bound;
+    }
+
+    public async Task<NodeAccountProjection?> GetCurrentNodeProjectionAsync(RequestContext context,
+        string? requestedAccountId = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var current = await ResolveAccountByTokenHashAsync(context.CredentialId, cancellationToken);
+        if (current is null || !StringComparer.Ordinal.Equals(current.AccountId, context.AccountId)) return null;
+        var target = requestedAccountId ?? current.AccountId;
+        if (target != current.AccountId && (!current.IsAdmin || !_options.EntryRoleEnabled)) return null;
+        if (_options.NodeId is null) return null;
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT a.id,a.home_node_id,a.is_disabled,a.authority_revision
+            FROM accounts a
+            JOIN account_node_projections p ON p.account_id=a.id
+            JOIN node_binding n ON n.singleton_key=1
+            WHERE a.id=$id AND a.home_node_id=$node AND n.node_id=$node
+              AND p.home_node_id=a.home_node_id AND p.authority_revision=a.authority_revision
+              AND p.is_enabled=CASE WHEN a.is_disabled=0 THEN 1 ELSE 0 END;
+            """;
+        command.Parameters.AddWithValue("$id", target);
+        command.Parameters.AddWithValue("$node", _options.NodeId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken)
+            ? new NodeAccountProjection(reader.GetString(0), reader.GetString(1), reader.GetInt64(2)==0, reader.GetInt64(3))
+            : null;
     }
 
     public async Task<IReadOnlyList<AdminUserListItem>> ListAccountsAsync(CancellationToken cancellationToken = default)
@@ -1321,7 +1648,8 @@ public sealed partial class PhaseAMetadataStore
         ArgumentException.ThrowIfNullOrWhiteSpace(create.MetaPath);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        var nodeId = await ResolveNewProjectNodeAsync(connection, transaction, create.AccountId, cancellationToken);
 
         var limit = await GetProjectLimitInsideTransactionAsync(connection, create.AccountId, cancellationToken);
         var count = await ExecuteScalarLongAsync(
@@ -1346,6 +1674,7 @@ public sealed partial class PhaseAMetadataStore
                 INSERT INTO projects (
                     id,
                     account_id,
+                    node_id,
                     name,
                     game_name,
                     game_type_source,
@@ -1360,6 +1689,7 @@ public sealed partial class PhaseAMetadataStore
                 VALUES (
                     $id,
                     $account_id,
+                    $node_id,
                     $name,
                     $game_name,
                     $game_type_source,
@@ -1374,6 +1704,7 @@ public sealed partial class PhaseAMetadataStore
                 """;
             command.Parameters.AddWithValue("$id", create.ProjectId);
             command.Parameters.AddWithValue("$account_id", create.AccountId);
+            command.Parameters.AddWithValue("$node_id", (object?)nodeId ?? DBNull.Value);
             command.Parameters.AddWithValue("$name", create.ProjectName);
             command.Parameters.AddWithValue("$game_name", create.GameName);
             command.Parameters.AddWithValue("$game_type_source", create.GameTypeSource);
@@ -1410,6 +1741,38 @@ public sealed partial class PhaseAMetadataStore
             create.TemplateRuleId,
             create.LlmBindingRequired,
             create.AllowedWorkflows);
+    }
+
+    // ADR-0061 AD16/17: caller/game fields never supply project-node authority.
+    private async Task<string?> ResolveNewProjectNodeAsync(SqliteConnection connection,
+        SqliteTransaction transaction, string accountId, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = "SELECT node_id FROM node_binding WHERE singleton_key = 1;";
+        var bound = await command.ExecuteScalarAsync(cancellationToken) as string;
+        // Preserve schema-only offline central fixtures. The node facade still requires a binding.
+        if (bound is null && _options.NodeId is null) return null;
+        _options.ValidateServiceIdentity();
+        if (!_options.ProductionRoleEnabled)
+            throw new UnauthorizedAccessException("production_role_disabled");
+        if (!StringComparer.Ordinal.Equals(bound, _options.NodeId))
+            throw new UnauthorizedAccessException("node_binding_unavailable");
+        command.CommandText = """
+            SELECT a.home_node_id
+            FROM accounts a
+            JOIN account_node_projections p ON p.account_id = a.id
+            JOIN node_binding n ON n.singleton_key = 1
+            WHERE a.id = $account_id AND a.is_disabled = 0
+              AND a.home_node_id = $node AND n.node_id = $node
+              AND n.binding_version = 1 AND n.initialization_scope = 'single_node_test'
+              AND p.home_node_id = a.home_node_id AND p.is_enabled = 1
+              AND p.authority_revision = a.authority_revision;
+            """;
+        command.Parameters.AddWithValue("$account_id", accountId);
+        command.Parameters.AddWithValue("$node", bound!);
+        return await command.ExecuteScalarAsync(cancellationToken) as string
+            ?? throw new UnauthorizedAccessException("project_node_authority_unavailable");
     }
 
     public async Task<ProjectSnapshot?> GetProjectSnapshotAsync(string projectId, CancellationToken cancellationToken = default)
@@ -6621,7 +6984,7 @@ public sealed partial class PhaseAMetadataStore
         }
     }
 
-    private async Task SyncAdminSecretsAsync(SqliteConnection connection, string accountId, CancellationToken cancellationToken)
+    private static async Task SyncAdminSecretsAsync(SqliteConnection connection, string accountId, PhaseAPlatformOptions options, CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
         command.CommandText =
@@ -6634,9 +6997,9 @@ public sealed partial class PhaseAMetadataStore
               AND is_admin = 1;
             """;
         command.Parameters.AddWithValue("$id", accountId);
-        command.Parameters.AddWithValue("$username", _options.AdminUsername);
-        command.Parameters.AddWithValue("$password_hash", (object?)_options.AdminPasswordHash ?? DBNull.Value);
-        command.Parameters.AddWithValue("$token_hash", (object?)_options.AdminTokenHash ?? DBNull.Value);
+        command.Parameters.AddWithValue("$username", options.AdminUsername);
+        command.Parameters.AddWithValue("$password_hash", (object?)options.AdminPasswordHash ?? DBNull.Value);
+        command.Parameters.AddWithValue("$token_hash", (object?)options.AdminTokenHash ?? DBNull.Value);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -7070,4 +7433,1011 @@ public sealed partial class PhaseAMetadataStore
     {
         return Guid.NewGuid().ToString("N");
     }
+}
+
+// ADR-0061 AD19/20: trusted root creates this opaque maintenance capability.
+// It exposes no public context, credential, callback runner or central writer.
+public sealed class NodeOperationGuard
+{
+    private readonly PhaseAMetadataStore _store;
+    internal NodeOperationGuard(PhaseAMetadataStore store)=>_store=store;
+
+    internal async Task RecoverAsync(
+        PhaseA.Platform.Projects.ProjectInitializationService initialization,
+        ProjectWorkspaceMaintenanceService maintenance,
+        Func<InterruptedRunSnapshot,TimeSpan?> timeout,
+        Func<InterruptedRunSnapshot,string> failure,
+        CancellationToken cancellationToken)
+    {
+        using var current=RequestContext.UseCurrent(await _store.ResolveStartupMaintenanceContextAsync(cancellationToken));
+        _store.DemandCurrentNodeAdminOperation();
+        await maintenance.EnsureAllWorkspacesSeededAsync(cancellationToken);
+        await initialization.ReconcileStaleInitializationsAsync(cancellationToken);
+        // Validate every target before entering the existing recovery writer.
+        var projects=await ((NodeProjectMetadata)_store).ListProjectSnapshotsAsync(cancellationToken);
+        foreach(var project in projects)_store.DemandCurrentNodeOperation(projectId:project.ProjectId,write:true);
+        await _store.ReconcileAbandonedRunsAsync(run=>
+        {
+            if(_store.SkipInactiveMaintenanceProject(run.ProjectId))return null;
+            _store.DemandCurrentNodeOperation(projectId:run.ProjectId,write:true);
+            return timeout(run);
+        },failure,cancellationToken);
+    }
+}
+
+public sealed record NodeAccountProjection(string AccountId, string HomeNodeId, bool IsEnabled, long AuthorityRevision);
+
+// ADR-0061 AD14: sealed project/readback capability over private trusted metadata backing.
+// Account creation/home/credential mutation, raw SQL, connection strings and provider access are absent.
+// Current credential checks at sensitive callers and protected transactions remain independently required.
+public sealed class NodeProjectMetadata
+{
+    private readonly PhaseAMetadataStore _store;
+    internal NodeProjectMetadata(PhaseAMetadataStore store) => _store=store ?? throw new ArgumentNullException(nameof(store));
+    internal long DemandCurrent(string? accountId=null,string? projectId=null,RequestContext? context=null,bool write=false)
+        => _store.DemandCurrentNodeOperation(accountId,projectId,context,write);
+    internal long DemandCurrentControl(string? accountId=null,string? projectId=null,bool write=false)
+        => _store.DemandCurrentNodeControlOperation(accountId,projectId,write);
+    internal void DemandRunControl(string runId)
+    {
+        _store.DemandCurrentNodeControlOperation(write:true);
+        var projectId=_store.ResolveNodeReference("run",runId);
+        _store.DemandCurrentNodeControlOperation(projectId:projectId,write:true);
+    }
+    internal void DemandWorkspace(string repositoryPath)=>_store.DemandCurrentWorkspace(repositoryPath);
+    internal bool IsCurrentTicket(string account,string project,long revision)=>_store.IsCurrentTicketAuthority(account,project,revision);
+    internal IDisposable UseTicketRead(string ticket,string account,string project,string file)=>_store.UseCurrentTicketRead(ticket,account,project,file);
+    internal IDisposable UseAssetTicketRead(string ticket,string account,string project,string resource)=>_store.UseCurrentAssetTicketRead(ticket,account,project,resource);
+    public WorkspaceStorageService CreateWorkspaceStorageService() => _store.CreateWorkspaceStorageService();
+    public Task<AccountSnapshot?> ResolveAccountByTokenHashAsync(string tokenHash, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation();
+        if(tokenHash!=RequestContext.Current?.CredentialId)throw new UnauthorizedAccessException("credential_scope_mismatch");
+        return _store.ResolveAccountByTokenHashAsync(tokenHash, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<AdminUserListItem>> ListAccountsAsync(CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListAccountsAsync(cancellationToken);
+    }
+
+    public Task RecordAdminAccountAuditEventAsync(
+        string actorAccountId,
+        string action,
+        string? targetAccountId,
+        object metadata,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.RecordAdminAccountAuditEventAsync(actorAccountId, action, targetAccountId, metadata, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<StaleProjectInitializationSnapshot>> ListOrphanedProjectInitializationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        var rows=await _store.ListOrphanedProjectInitializationsAsync(cancellationToken);
+        var allowed=rows.Where(row=>!_store.SkipInactiveMaintenanceProject(row.ProjectId)).ToArray();
+        foreach(var row in allowed)_store.DemandCurrentNodeOperation(projectId:row.ProjectId,write:false);
+        return allowed;
+    }
+
+    public async Task<IReadOnlyList<StaleProjectInitializationSnapshot>> ListStaleProjectInitializationsAsync(
+        TimeSpan maxAge,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        var rows=await _store.ListStaleProjectInitializationsAsync(maxAge, cancellationToken);
+        var allowed=rows.Where(row=>!_store.SkipInactiveMaintenanceProject(row.ProjectId)).ToArray();
+        foreach(var row in allowed)_store.DemandCurrentNodeOperation(projectId:row.ProjectId,write:false);
+        return allowed;
+    }
+
+    public Task<int> ReconcileAbandonedRunsAsync(
+        Func<InterruptedRunSnapshot, TimeSpan?> maxAgeSelector,
+        Func<InterruptedRunSnapshot, string> failureMessageSelector,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ReconcileAbandonedRunsAsync(maxAgeSelector, failureMessageSelector, cancellationToken);
+    }
+
+    public Task<ProjectCreationResult> CreateProjectAsync(
+        ProjectCreationCommand create,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:create.AccountId,write:true);
+        return _store.CreateProjectAsync(create, cancellationToken);
+    }
+
+    public Task<ProjectSnapshot?> GetProjectSnapshotAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetProjectSnapshotAsync(projectId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,write:false);
+        return _store.ListProjectsAsync(accountId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ProjectSnapshot>> ListProjectSnapshotsAsync(CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        var rows=await _store.ListProjectSnapshotsAsync(cancellationToken);
+        var allowed=rows.Where(row=>!_store.SkipInactiveMaintenanceProject(row.ProjectId)).ToArray();
+        foreach(var row in allowed)_store.DemandCurrentNodeOperation(projectId:row.ProjectId,write:false);
+        return allowed;
+    }
+
+    public Task<IReadOnlyList<ProjectPurgeTarget>> PurgeProjectRecordsAsync(
+        IReadOnlyList<string> projectIds,
+        Func<ProjectPurgeTarget, bool>? purgeWorkspace = null,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.PurgeProjectRecordsAsync(projectIds, purgeWorkspace, cancellationToken);
+    }
+
+    public Task SetProjectBootstrapStatusAsync(
+        string projectId,
+        string status,
+        string? error,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.SetProjectBootstrapStatusAsync(projectId, status, error, cancellationToken);
+    }
+
+    public Task<bool> HasRunnerLockAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.HasRunnerLockAsync(projectId, cancellationToken);
+    }
+
+    public Task<bool> HasActiveRunAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.HasActiveRunAsync(projectId, cancellationToken);
+    }
+
+    public Task DeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.DeleteProjectAsync(projectId, cancellationToken);
+    }
+
+    public Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.SoftDeleteProjectAsync(projectId, cancellationToken);
+    }
+
+    public Task<ProjectAdminReviewQueueEntry> UpsertProjectAdminReviewQueueEntryAsync(
+        ProjectAdminReviewQueueCommand entry,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:entry.AccountId,projectId:entry.ProjectId,write:true);
+        return _store.UpsertProjectAdminReviewQueueEntryAsync(entry, cancellationToken);
+    }
+
+    public Task ReconcileProjectAdminReviewQueueAsync(
+        string accountId,
+        string projectId,
+        string routeId,
+        IReadOnlySet<string> activeRequirementIds,
+        string sourceArtifactPath,
+        string evidenceRefsJson,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:true);
+        return _store.ReconcileProjectAdminReviewQueueAsync(accountId, projectId, routeId, activeRequirementIds, sourceArtifactPath, evidenceRefsJson, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectAdminReviewQueueEntry>> ListProjectAdminReviewQueueForProjectAsync(
+        string accountId,
+        string projectId,
+        string status = "open",
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.ListProjectAdminReviewQueueForProjectAsync(accountId, projectId, status, limit, cancellationToken);
+    }
+
+    public Task<ProjectDiagnosticSpoolEntry> RecordProjectDiagnosticSpoolEntryAsync(
+        ProjectDiagnosticSpoolCommand entry,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:entry.AccountId,projectId:entry.ProjectId,write:true);
+        return _store.RecordProjectDiagnosticSpoolEntryAsync(entry, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectDiagnosticSpoolEntry>> ListProjectDiagnosticSpoolForAdminAsync(
+        string triageStatus = "unresolved",
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListProjectDiagnosticSpoolForAdminAsync(triageStatus, limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectDiagnosticSpoolEntry>> ListProjectDiagnosticSpoolForAdminAsync(
+        ProjectDiagnosticSpoolQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListProjectDiagnosticSpoolForAdminAsync(query, cancellationToken);
+    }
+
+    public Task<int> CountUnresolvedBlockingDiagnosticsAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.CountUnresolvedBlockingDiagnosticsAsync(accountId, projectId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectDeleteTombstone>> ListProjectDeleteTombstonesForAdminAsync(
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListProjectDeleteTombstonesForAdminAsync(limit, cancellationToken);
+    }
+
+    public Task UpdateProjectGameTypeMatchAsync(
+        string projectId,
+        string gameTypeMatchJson,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.UpdateProjectGameTypeMatchAsync(projectId, gameTypeMatchJson, cancellationToken);
+    }
+
+    public Task RecordProjectCreationFailureAsync(
+        ProjectCreationFailureCommand failure,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:failure.AccountId,write:true);
+        return _store.RecordProjectCreationFailureAsync(failure, cancellationToken);
+    }
+
+    public Task<ProjectCreationFailureSnapshot?> GetLatestProjectCreationFailureAsync(
+        string accountId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,write:false);
+        return _store.GetLatestProjectCreationFailureAsync(accountId, cancellationToken);
+    }
+
+    public Task RecordProjectGameTypeMatchFailureAsync(
+        ProjectGameTypeMatchFailureCommand failure,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:failure.AccountId,write:true);
+        return _store.RecordProjectGameTypeMatchFailureAsync(failure, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectGameTypeMatchFailureSnapshot>> ListProjectGameTypeMatchFailuresForAdminAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListProjectGameTypeMatchFailuresForAdminAsync(limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectGameTypeMatchFailureSnapshot>> ListProjectGameTypeMatchRecordsForAdminAsync(
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListProjectGameTypeMatchRecordsForAdminAsync(limit, cancellationToken);
+    }
+
+    public Task<string> CreateRunAsync(
+        string projectId,
+        string? workspaceId,
+        string runType,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.CreateRunAsync(projectId, workspaceId, runType, cancellationToken);
+    }
+
+    public Task<RunSnapshot> GetOrCreateProjectOperationRunAsync(
+        string projectId,
+        string workspaceId,
+        string runType,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetOrCreateProjectOperationRunAsync(projectId, workspaceId, runType, cancellationToken);
+    }
+
+    public Task MarkRunStartedAsync(string runId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.MarkRunStartedAsync(runId, cancellationToken);
+    }
+
+    public Task MarkRunStartedAsync(string runId, int? queuePositionAtStart, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.MarkRunStartedAsync(runId, queuePositionAtStart, cancellationToken);
+    }
+
+    public Task<bool> TryMarkRunStartedAsync(string runId, int? queuePositionAtStart, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.TryMarkRunStartedAsync(runId, queuePositionAtStart, cancellationToken);
+    }
+
+    public Task UpdateRunProgressAsync(
+        string runId,
+        string step,
+        string substep,
+        string label,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.UpdateRunProgressAsync(runId, step, substep, label, cancellationToken);
+    }
+
+    public Task CompleteRunAsync(
+        string runId,
+        string status,
+        int exitCode,
+        string stdoutText,
+        string stderrText,
+        string evidenceJson,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.CompleteRunAsync(runId, status, exitCode, stdoutText, stderrText, evidenceJson, cancellationToken);
+    }
+
+    public Task AddArtifactAsync(ArtifactCreationCommand create, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:create.ProjectId,write:true);
+        return _store.AddArtifactAsync(create, cancellationToken);
+    }
+
+    public Task<RunSnapshot?> GetRunSnapshotAsync(string runId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:false);
+        return _store.GetRunSnapshotAsync(runId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<RunSnapshot>> ListRunsForProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.ListRunsForProjectAsync(projectId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<RunSnapshot>> ListLlmRunsForAccountAsync(
+        string accountId,
+        int limit = 20,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,write:false);
+        return _store.ListLlmRunsForAccountAsync(accountId, limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<(AdminUserListItem Account, RunSnapshot Run)>> ListLlmRunsForAdminAsync(
+        int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListLlmRunsForAdminAsync(limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<LlmUsageRunRow>> ListLlmUsageRowsForAdminAsync(
+        string fromUtc,
+        string toUtc,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListLlmUsageRowsForAdminAsync(fromUtc, toUtc, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<AdminRunMetricsRow>> ListRunMetricsForAdminAsync(
+        string? accountId,
+        string? runType,
+        int limit = 500,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListRunMetricsForAdminAsync(accountId, runType, limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<AdminChatRunMetricSnapshotRow>> ListChatRunMetricSnapshotsForAdminAsync(
+        string? accountId,
+        int limit = 500,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListChatRunMetricSnapshotsForAdminAsync(accountId, limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<AdminAssetRunMetricsRow>> ListAssetRunMetricsForAdminAsync(
+        string? accountId,
+        string? runType,
+        int limit = 500,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListAssetRunMetricsForAdminAsync(accountId, runType, limit, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<AdminChatRunMetricsRow>> ListChatRunMetricsForAdminAsync(
+        string? accountId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeAdminOperation();
+        return _store.ListChatRunMetricsForAdminAsync(accountId, cancellationToken);
+    }
+
+    public Task<RunSnapshot?> GetActiveRunForAccountAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,write:false);
+        return _store.GetActiveRunForAccountAsync(accountId, cancellationToken);
+    }
+
+    public Task RecordRunLlmAuditAsync(
+        string runId,
+        string llmGateway,
+        string? llmRequestId,
+        string? llmModel,
+        string llmCostJson,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.RecordRunLlmAuditAsync(runId, llmGateway, llmRequestId, llmModel, llmCostJson, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<string>> ListAccountLlmCostJsonForUtcDayAsync(
+        string accountId,
+        DateOnly utcDay,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,write:false);
+        return _store.ListAccountLlmCostJsonForUtcDayAsync(accountId, utcDay, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForRunAsync(string runId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:false);
+        return _store.ListArtifactsForRunAsync(runId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForProjectAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.ListArtifactsForProjectAsync(projectId, cancellationToken);
+    }
+
+    public Task UpsertProjectRoutePromptEvidenceBindingAsync(
+        ProjectRoutePromptEvidenceBindingCommand binding,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:binding.ProjectId,write:true);
+        return _store.UpsertProjectRoutePromptEvidenceBindingAsync(binding, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectRoutePromptEvidenceBinding>> ListProjectRoutePromptEvidenceBindingsAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.ListProjectRoutePromptEvidenceBindingsAsync(projectId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ArtifactSnapshot>> ListArtifactsForRunsAsync(
+        IReadOnlyCollection<string> runIds,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation();
+        foreach(var id in runIds)_store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",id));
+        return _store.ListArtifactsForRunsAsync(runIds, cancellationToken);
+    }
+
+    public Task<ArtifactSnapshot?> GetArtifactAsync(string artifactId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("artifact",artifactId));
+        return _store.GetArtifactAsync(artifactId, cancellationToken);
+    }
+
+    public Task<bool> TryAcquireRunnerLockAsync(
+        string projectId,
+        string runId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.TryAcquireRunnerLockAsync(projectId, runId, cancellationToken);
+    }
+
+    public Task ReleaseRunnerLockAsync(string projectId, string runId, CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.ReleaseRunnerLockAsync(projectId, runId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectChatMessageSnapshot>> ListProjectChatMessagesAsync(
+        string accountId,
+        string projectId,
+        int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.ListProjectChatMessagesAsync(accountId, projectId, limit, cancellationToken);
+    }
+
+    public Task AddProjectChatMessageAsync(
+        string accountId,
+        string projectId,
+        string role,
+        string content,
+        string? kind = null,
+        int retainLatest = 50,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:true);
+        return _store.AddProjectChatMessageAsync(accountId, projectId, role, content, kind, retainLatest, cancellationToken);
+    }
+
+    public Task<ProjectChatMemorySnapshot?> GetProjectChatMemoryAsync(
+        string accountId,
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.GetProjectChatMemoryAsync(accountId, projectId, cancellationToken);
+    }
+
+    public Task UpsertProjectChatMemoryAsync(
+        string accountId,
+        string projectId,
+        string memorySummary,
+        string? providerSessionRef,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:true);
+        return _store.UpsertProjectChatMemoryAsync(accountId, projectId, memorySummary, providerSessionRef, cancellationToken);
+    }
+
+    public Task<ProjectIterationSessionSnapshot> CreateProjectIterationSessionAsync(
+        string accountId,
+        string projectId,
+        string sourceKind,
+        string sourceMessage,
+        string overallGoal,
+        IReadOnlyList<ProjectIterationGoalCreateCommand> goals,
+        CancellationToken cancellationToken = default,
+        string? sessionId = null,
+        string? requestIdentityHash = null,
+        string? routeStateJson = null,
+        string initialStatus = "planning",
+        string? initialSummary = null)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:true);
+        return _store.CreateProjectIterationSessionAsync(accountId, projectId, sourceKind, sourceMessage, overallGoal, goals, cancellationToken, sessionId, requestIdentityHash, routeStateJson, initialStatus, initialSummary);
+    }
+
+    public Task UpdateProjectIterationSessionStatusAsync(
+        string sessionId,
+        string status,
+        int currentGoalIndex,
+        string? latestSummary,
+        string? latestEvaluationJson = null,
+        string? completedUtc = null,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("session",sessionId),write:true);
+        return _store.UpdateProjectIterationSessionStatusAsync(sessionId, status, currentGoalIndex, latestSummary, latestEvaluationJson, completedUtc, cancellationToken);
+    }
+
+    public Task<ProjectIterationSessionDetails?> GetLatestProjectIterationSessionAsync(
+        string projectId,
+        CancellationToken cancellationToken)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetLatestProjectIterationSessionAsync(projectId, cancellationToken);
+    }
+
+    public Task SetProjectIterationTraceabilityAnchorAsync(
+        string sessionId,
+        string traceabilityAnchorJson,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("session",sessionId),write:true);
+        return _store.SetProjectIterationTraceabilityAnchorAsync(sessionId, traceabilityAnchorJson, cancellationToken);
+    }
+
+    public Task<ProjectIterationSessionDetails?> GetLatestProjectIterationSessionAsync(
+        string projectId,
+        string? sourceKind = null,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetLatestProjectIterationSessionAsync(projectId, sourceKind, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<ProjectIterationSessionDetails>> ListProjectIterationSessionsAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.ListProjectIterationSessionsAsync(projectId, cancellationToken);
+    }
+
+    public Task<ProjectIterationSessionDetails?> GetProjectIterationSessionAsync(
+        string projectId,
+        string sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetProjectIterationSessionAsync(projectId, sessionId, cancellationToken);
+    }
+
+    public Task<ProjectIterationSessionDetails?> GetProjectIterationSessionByRequestIdentityAsync(
+        string accountId,
+        string projectId,
+        string requestIdentityHash,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.GetProjectIterationSessionByRequestIdentityAsync(accountId, projectId, requestIdentityHash, cancellationToken);
+    }
+
+    public Task<int> DeleteProjectIterationSessionAsync(
+        string projectId,
+        string accountId,
+        string sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:true);
+        return _store.DeleteProjectIterationSessionAsync(projectId, accountId, sessionId, cancellationToken);
+    }
+
+    public Task UpdateProjectIterationGoalStatusAsync(
+        string goalId,
+        string status,
+        string? resultSummary,
+        string? completedUtc,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("goal",goalId),write:true);
+        return _store.UpdateProjectIterationGoalStatusAsync(goalId, status, resultSummary, completedUtc, cancellationToken);
+    }
+
+    public Task UpsertProjectRunMemoryAsync(
+        string projectId,
+        string scope,
+        string status,
+        string currentObjective,
+        string completedItemsJson,
+        string currentBlockersJson,
+        string nextRecommendedAction,
+        string allowedScopeJson,
+        string? lastVerifiedResult,
+        string? lastRunOutcome,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.UpsertProjectRunMemoryAsync(projectId, scope, status, currentObjective, completedItemsJson, currentBlockersJson, nextRecommendedAction, allowedScopeJson, lastVerifiedResult, lastRunOutcome, cancellationToken);
+    }
+
+    public Task<ProjectRunMemorySnapshot?> GetProjectRunMemoryAsync(
+        string projectId,
+        string scope,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetProjectRunMemoryAsync(projectId, scope, cancellationToken);
+    }
+
+    public Task LinkProjectIterationGoalRunAsync(
+        string sessionId,
+        string goalId,
+        string runId,
+        string runType,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:_store.ResolveNodeReference("run",runId),write:true);
+        return _store.LinkProjectIterationGoalRunAsync(sessionId, goalId, runId, runType, cancellationToken);
+    }
+
+    public Task<ProjectPrototypeDraftSnapshot?> GetProjectPrototypeDraftAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetProjectPrototypeDraftAsync(projectId, cancellationToken);
+    }
+
+    public Task UpsertProjectPrototypeDraftAsync(
+        string projectId,
+        string status,
+        string? runId,
+        string? fileName,
+        string? prototypeSlug,
+        string? hypothesis,
+        string? corePlayerFantasy,
+        string? minimumPlayableLoop,
+        string successCriteriaJson,
+        string? gameFeature,
+        string? coreGameplayLoop,
+        string? winFailConditions,
+        string matchedFieldsJson,
+        string warningsJson,
+        string? draftText,
+        int coveragePercent,
+        string? coverageSummary,
+        string coverageMissingTopicsJson,
+        string? failureCode,
+        int lineCount,
+        int byteCount,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
+        return _store.UpsertProjectPrototypeDraftAsync(projectId, status, runId, fileName, prototypeSlug, hypothesis, corePlayerFantasy, minimumPlayableLoop, successCriteriaJson, gameFeature, coreGameplayLoop, winFailConditions, matchedFieldsJson, warningsJson, draftText, coveragePercent, coverageSummary, coverageMissingTopicsJson, failureCode, lineCount, byteCount, cancellationToken);
+    }
+
+    public Task<bool> IsCurrentWorkspaceGenerationAsync(ProjectSnapshot project, string runId,
+        CancellationToken token = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:project.AccountId,projectId:project.ProjectId,write:false);
+        return _store.IsCurrentWorkspaceGenerationAsync(project, runId, token);
+    }
+
+    public Task<string?> GetRunnerLockOwnerAsync(string projectId, CancellationToken token = default)
+    {
+        _store.DemandCurrentNodeOperation(projectId:projectId,write:false);
+        return _store.GetRunnerLockOwnerAsync(projectId, token);
+    }
+
+    public Task ActivateWorkspaceGenerationAsync(ProjectSnapshot project, string runId,
+        string snapshotId, string attemptId, string generationRoot, string credentialHash, CancellationToken token = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:project.AccountId,projectId:project.ProjectId,write:true);
+        return _store.ActivateWorkspaceGenerationAsync(project, runId, snapshotId, attemptId, generationRoot, credentialHash, token);
+    }
+
+    public Task<DateTimeOffset?> GetLastWorkspaceActivationUtcAsync(string accountId,
+        string projectId, CancellationToken token = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.GetLastWorkspaceActivationUtcAsync(accountId, projectId, token);
+    }
+
+    public Task<bool> RequiresRestoreValidationAsync(string accountId, string projectId,
+        CancellationToken token = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId:accountId,projectId:projectId,write:false);
+        return _store.RequiresRestoreValidationAsync(accountId, projectId, token);
+    }
+}
+
+// ADR-0061 AD14: production may read an existing binding but cannot receive its central writer.
+public sealed class NodeLlmBindingReader
+{
+    private readonly LlmBindingService _central;
+    internal NodeLlmBindingReader(LlmBindingService central) => _central=central ?? throw new ArgumentNullException(nameof(central));
+    public static implicit operator NodeLlmBindingReader(LlmBindingService central) => new(central);
+    public Task<LlmBindingSnapshot?> GetAsync(string accountId, CancellationToken cancellationToken=default) =>
+        _central.GetAsync(accountId,cancellationToken);
+}
+
+// ADR-0061 AD14: existing shared execution lookup only; no account/key import, allocation, rotation or administration.
+// The original shared service retains all credential storage and runtime-selection semantics.
+public sealed class NodeRuntimeCredentialReader
+{
+    private readonly AiCodeMirrorKeyPoolService _central;
+    internal NodeRuntimeCredentialReader(AiCodeMirrorKeyPoolService central) =>
+        _central=central ?? throw new ArgumentNullException(nameof(central));
+    public static implicit operator NodeRuntimeCredentialReader(AiCodeMirrorKeyPoolService central) => new(central);
+    public Task<string?> ResolveKeyNameForAccountAsync(string accountId,CancellationToken cancellationToken=default) =>
+        _central.ResolveKeyNameForAccountAsync(accountId,cancellationToken);
+    public Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialForAccountAsync(string accountId,CancellationToken cancellationToken=default) =>
+        _central.ResolveRuntimeCredentialForAccountAsync(accountId,cancellationToken);
+}
+
+// ADR-0061 AD14/17/25: fixed trusted in-process notice adapters, not project services.
+public sealed partial class PhaseAMetadataStore
+{
+    internal CentralNoticePublisher CreateNoticePublisher() => new(PublishNoticeAsync);
+    internal NodeNoticeReader CreateNoticeReader() => new(ReadNoticesAsync,MarkNoticeReadAsync);
+
+    private RequestContext DemandNoticeContext(bool publication)
+    {
+        if(publication && !_options.EntryRoleEnabled)
+            throw new UnauthorizedAccessException("central_notice_role_required");
+        var context=RequestContext.Current ?? throw new UnauthorizedAccessException("current_context_required");
+        if(context.TicketProjectId is not null || context.IsStartupMaintenance)
+            throw new UnauthorizedAccessException("notice_user_context_required");
+        DemandCurrentNodeOperationCore(null,null,context,write:publication,requireProduction:!publication);
+        if(publication && !context.IsAdmin)
+            throw new UnauthorizedAccessException("current_admin_required");
+        return context;
+    }
+
+    // The ordinary central verifier runs before acquiring the SQLite write reservation,
+    // because its retained last-used update is a separate connection. Recheck the
+    // same current authoritative identity/home/projection inside the transaction.
+    private void DemandNoticeTransaction(SqliteConnection connection,SqliteTransaction transaction,
+        RequestContext context,bool publication)
+    {
+        if(publication ? !_options.EntryRoleEnabled : !_options.ProductionRoleEnabled)
+            throw new UnauthorizedAccessException("notice_role_required");
+        using var command=connection.CreateCommand();command.Transaction=transaction;
+        command.CommandText="""
+            SELECT count(*) FROM accounts a
+            JOIN account_node_projections pr ON pr.account_id=a.id
+            JOIN node_binding n ON n.singleton_key=1
+            WHERE a.id=$account AND a.token_hash=$credential AND a.is_disabled=0
+              AND a.is_admin=$admin AND (a.valid_until_utc IS NULL OR a.valid_until_utc>$now)
+              AND a.home_node_id=$node AND pr.home_node_id=a.home_node_id AND pr.is_enabled=1
+              AND pr.authority_revision=a.authority_revision AND n.node_id=$node
+              AND n.binding_version=1 AND n.initialization_scope='single_node_test';
+            """;
+        command.Parameters.AddWithValue("$account",context.AccountId);
+        command.Parameters.AddWithValue("$credential",context.CredentialId);
+        command.Parameters.AddWithValue("$admin",context.IsAdmin?1:0);
+        command.Parameters.AddWithValue("$node",_options.NodeId!);
+        command.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToString("O"));
+        if(Convert.ToInt64(command.ExecuteScalar())!=1 || (publication && !context.IsAdmin))
+            throw new UnauthorizedAccessException("current_notice_authority_required");
+    }
+
+    private async Task<bool> PublishNoticeAsync(NodeNoticePublication input,CancellationToken cancellationToken)
+    {
+        var context=DemandNoticeContext(publication:true);
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentException.ThrowIfNullOrWhiteSpace(input.NoticeId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(input.ChangeRef);
+        if(input.Revision<1 || input.ChangeRevision<1 || input.Body is null ||
+            input.ValidUntilUtc<=input.ValidFromUtc ||
+            input.AudienceKind is not ("all" or "node" or "account") ||
+            (input.AudienceKind=="all" ? input.AudienceId is not null : string.IsNullOrWhiteSpace(input.AudienceId)))
+            throw new ArgumentException("invalid_notice_publication");
+        // Use existing redaction policy; body is stored/read only, never interpreted.
+        if(SecretRedactionPolicy.FindViolations(input.Body).Count>0 ||
+            SecretRedactionPolicy.FindViolations(input.ChangeRef).Count>0)
+            throw new ArgumentException("notice_content_not_safe");
+        var value=input with {ValidFromUtc=input.ValidFromUtc.ToUniversalTime(),ValidUntilUtc=input.ValidUntilUtc.ToUniversalTime()};
+        await using var connection=await OpenConnectionAsync(cancellationToken);
+        await using var transaction=connection.BeginTransaction();
+        DemandNoticeTransaction(connection,transaction,context,publication:true);
+        await using var command=connection.CreateCommand();command.Transaction=transaction;
+        command.CommandText="SELECT revision,body,audience_kind,audience_id,valid_from_utc,valid_until_utc,is_active,change_revision,change_ref FROM notice_facts WHERE notice_id=$id;";
+        command.Parameters.AddWithValue("$id",value.NoticeId);
+        NodeNoticePublication? previous=null;
+        await using(var row=await command.ExecuteReaderAsync(cancellationToken))
+            if(await row.ReadAsync(cancellationToken))previous=new NodeNoticePublication(value.NoticeId,row.GetInt64(0),
+                row.GetString(1),row.GetString(2),row.IsDBNull(3)?null:row.GetString(3),
+                DateTimeOffset.Parse(row.GetString(4)),DateTimeOffset.Parse(row.GetString(5)),row.GetInt64(6)==1,row.GetInt64(7),row.GetString(8));
+        if(previous==value){await transaction.CommitAsync(cancellationToken);return true;}
+        if(previous is not null && (value.Revision<previous.Revision || value.ChangeRevision<=previous.ChangeRevision ||
+            (value.Revision==previous.Revision && (value.Body!=previous.Body || value.AudienceKind!=previous.AudienceKind ||
+                value.AudienceId!=previous.AudienceId || value.ValidFromUtc!=previous.ValidFromUtc || value.ValidUntilUtc!=previous.ValidUntilUtc ||
+                value.Active || !previous.Active))))
+            throw new InvalidOperationException("notice_revision_conflict");
+        command.Parameters.Clear();
+        command.CommandText="""
+            INSERT INTO notice_facts(notice_id,revision,body,audience_kind,audience_id,valid_from_utc,valid_until_utc,is_active,change_revision,change_ref)
+            VALUES($id,$revision,$body,$audience,$target,$from,$until,$active,$change,$reference)
+            ON CONFLICT(notice_id) DO UPDATE SET revision=excluded.revision,body=excluded.body,
+                audience_kind=excluded.audience_kind,audience_id=excluded.audience_id,
+                valid_from_utc=excluded.valid_from_utc,valid_until_utc=excluded.valid_until_utc,
+                is_active=excluded.is_active,change_revision=excluded.change_revision,change_ref=excluded.change_ref;
+            """;
+        command.Parameters.AddWithValue("$id",value.NoticeId);command.Parameters.AddWithValue("$revision",value.Revision);
+        command.Parameters.AddWithValue("$body",value.Body);command.Parameters.AddWithValue("$audience",value.AudienceKind);
+        command.Parameters.AddWithValue("$target",(object?)value.AudienceId??DBNull.Value);
+        command.Parameters.AddWithValue("$from",value.ValidFromUtc.ToString("O"));command.Parameters.AddWithValue("$until",value.ValidUntilUtc.ToString("O"));
+        command.Parameters.AddWithValue("$active",value.Active?1:0);command.Parameters.AddWithValue("$change",value.ChangeRevision);
+        command.Parameters.AddWithValue("$reference",value.ChangeRef);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        // Fact and derived projection are one existing local transaction; no remote ingest/cursor.
+        command.CommandText="""
+            INSERT INTO node_notice_projections(node_id,notice_id,source_revision,change_revision,change_ref,is_visible)
+            VALUES($node,$id,$revision,$change,$reference,
+                CASE WHEN $active=1 AND ($audience='all' OR ($audience='node' AND $target=$node) OR
+                    ($audience='account' AND EXISTS(SELECT 1 FROM accounts WHERE id=$target AND home_node_id=$node)))
+                THEN 1 ELSE 0 END)
+            ON CONFLICT(node_id,notice_id) DO UPDATE SET source_revision=excluded.source_revision,
+                change_revision=excluded.change_revision,change_ref=excluded.change_ref,is_visible=excluded.is_visible;
+            """;
+        command.Parameters.AddWithValue("$node",_options.NodeId!);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
+    }
+
+    private async Task<IReadOnlyList<NodeNotice>> ReadNoticesAsync(string? noticeId,CancellationToken cancellationToken)
+    {
+        var context=DemandNoticeContext(publication:false);
+        await using var connection=await OpenConnectionAsync(cancellationToken);
+        await using var transaction=connection.BeginTransaction();
+        DemandNoticeTransaction(connection,transaction,context,publication:false);
+        var result=await SelectNoticeRowsAsync(connection,transaction,context.AccountId,noticeId,cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return result;
+    }
+
+    private async Task<IReadOnlyList<NodeNotice>> SelectNoticeRowsAsync(SqliteConnection connection,SqliteTransaction transaction,
+        string accountId,string? noticeId,CancellationToken cancellationToken)
+    {
+        await using var command=connection.CreateCommand();command.Transaction=transaction;
+        command.CommandText="""
+            SELECT f.notice_id,f.revision,f.body,COALESCE(r.is_read,0),p.change_revision,p.change_ref
+            FROM notice_facts f JOIN node_notice_projections p ON p.notice_id=f.notice_id AND p.node_id=$node
+                AND p.source_revision=f.revision AND p.change_revision=f.change_revision AND p.change_ref=f.change_ref
+            LEFT JOIN notice_read_state r ON r.account_id=$account AND r.notice_id=f.notice_id AND r.revision=f.revision
+            WHERE f.is_active=1 AND p.is_visible=1 AND f.valid_from_utc<=$now AND f.valid_until_utc>$now
+                AND ($id IS NULL OR f.notice_id=$id)
+                AND (f.audience_kind='all' OR (f.audience_kind='node' AND f.audience_id=$node)
+                    OR (f.audience_kind='account' AND f.audience_id=$account))
+            ORDER BY f.notice_id;
+            """;
+        command.Parameters.AddWithValue("$node",_options.NodeId!);command.Parameters.AddWithValue("$account",accountId);
+        command.Parameters.AddWithValue("$now",DateTimeOffset.UtcNow.ToString("O"));command.Parameters.AddWithValue("$id",(object?)noticeId??DBNull.Value);
+        var result=new List<NodeNotice>();
+        await using var rows=await command.ExecuteReaderAsync(cancellationToken);
+        while(await rows.ReadAsync(cancellationToken))result.Add(new NodeNotice(rows.GetString(0),rows.GetInt64(1),
+            rows.GetString(2),rows.GetInt64(3)==1,rows.GetInt64(4),rows.GetString(5)));
+        return result;
+    }
+
+    private async Task<bool> MarkNoticeReadAsync(string noticeId,long revision,CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(noticeId);
+        var context=DemandNoticeContext(publication:false);
+        await using var connection=await OpenConnectionAsync(cancellationToken);
+        await using var transaction=connection.BeginTransaction();
+        DemandNoticeTransaction(connection,transaction,context,publication:false);
+        var eligible=await SelectNoticeRowsAsync(connection,transaction,context.AccountId,noticeId,cancellationToken);
+        if(eligible.Count!=1 || eligible[0].Revision!=revision)return false;
+        await using var command=connection.CreateCommand();command.Transaction=transaction;
+        command.CommandText="""
+            INSERT INTO notice_read_state(account_id,notice_id,revision,is_read) VALUES($account,$id,$revision,1)
+            ON CONFLICT(account_id,notice_id,revision) DO UPDATE SET is_read=1;
+            """;
+        command.Parameters.AddWithValue("$account",context.AccountId);command.Parameters.AddWithValue("$id",noticeId);
+        command.Parameters.AddWithValue("$revision",revision);
+        await command.ExecuteNonQueryAsync(cancellationToken);await transaction.CommitAsync(cancellationToken);
+        return true;
+    }
+}
+
+public sealed record NodeNoticePublication(string NoticeId,long Revision,string Body,string AudienceKind,string? AudienceId,
+    DateTimeOffset ValidFromUtc,DateTimeOffset ValidUntilUtc,bool Active,long ChangeRevision,string ChangeRef);
+public sealed record NodeNotice(string NoticeId,long Revision,string Body,bool Read,long ChangeRevision,string ChangeRef);
+
+// No public constructor/factory or central-writer conversion is supplied to a project.
+public sealed class CentralNoticePublisher
+{
+    private readonly Func<NodeNoticePublication,CancellationToken,Task<bool>> _publish;
+    internal CentralNoticePublisher(Func<NodeNoticePublication,CancellationToken,Task<bool>> publish)=>_publish=publish;
+    public Task<bool> PublishAsync(NodeNoticePublication publication,CancellationToken cancellationToken=default)=>_publish(publication,cancellationToken);
+}
+
+public sealed class NodeNoticeReader
+{
+    private readonly Func<string?,CancellationToken,Task<IReadOnlyList<NodeNotice>>> _read;
+    private readonly Func<string,long,CancellationToken,Task<bool>> _markRead;
+    internal NodeNoticeReader(Func<string?,CancellationToken,Task<IReadOnlyList<NodeNotice>>> read,
+        Func<string,long,CancellationToken,Task<bool>> markRead){_read=read;_markRead=markRead;}
+    public Task<IReadOnlyList<NodeNotice>> ListAsync(CancellationToken cancellationToken=default)=>_read(null,cancellationToken);
+    public async Task<NodeNotice?> DetailAsync(string noticeId,CancellationToken cancellationToken=default)=>
+        (await _read(noticeId,cancellationToken)).SingleOrDefault();
+    public async Task<int> UnreadCountAsync(CancellationToken cancellationToken=default)=>
+        (await _read(null,cancellationToken)).Count(r=>!r.Read);
+    public Task<bool> MarkReadAsync(string noticeId,long revision,CancellationToken cancellationToken=default)=>_markRead(noticeId,revision,cancellationToken);
 }

@@ -12,27 +12,28 @@ public sealed class PrototypeFeedbackIterationService
 {
     private const string RunType = "prototype-feedback-iteration";
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(30);
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly SkillActionCatalog _skillActionCatalog;
     private readonly IAiCodeMirrorBillingClient _billingClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly TimeSpan _executionTimeout;
 
     public PrototypeFeedbackIterationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), null)
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public PrototypeFeedbackIterationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder)
         : this(metadataStore, options, processRunner, workspaceSeeder, new SkillActionCatalog(), null)
@@ -40,16 +41,20 @@ public sealed class PrototypeFeedbackIterationService
     }
 
     public PrototypeFeedbackIterationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         SkillActionCatalog skillActionCatalog,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         TimeSpan? executionTimeout = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
@@ -57,7 +62,7 @@ public sealed class PrototypeFeedbackIterationService
         _skillActionCatalog = skillActionCatalog;
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 

@@ -9,6 +9,24 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class ProjectRouteStateArtifactService
 {
+    private readonly NodeProjectMetadata? _authority;
+    public ProjectRouteStateArtifactService(NodeProjectMetadata? authority = null) => _authority = authority;
+
+    // ADR-0061 AD19: a retained/caller-created DTO cannot select private file roots.
+    private ProjectSnapshot RequireCurrentProject(ProjectSnapshot supplied)
+    {
+        if (_authority is null) throw new UnauthorizedAccessException("route_source_authority_required");
+        var current = _authority.GetProjectSnapshotAsync(supplied.ProjectId).GetAwaiter().GetResult()
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        bool SamePath(string left, string right) => string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), comparison);
+        if (current.AccountId != supplied.AccountId || current.WorkspaceId != supplied.WorkspaceId ||
+            !SamePath(current.WorkspaceRootPath, supplied.WorkspaceRootPath) || !SamePath(current.RepoPath, supplied.RepoPath) ||
+            !SamePath(current.RuntimePath, supplied.RuntimePath) || !SamePath(current.MetaPath, supplied.MetaPath))
+            throw new UnauthorizedAccessException("current_project_paths_required");
+        return current;
+    }
+
     private static readonly IReadOnlyList<string> RouteReadbackStatuses = RouteStatusVocabulary.Values(RouteStatusVocabulary.RouteReadback).ToArray();
 
     private static readonly IReadOnlyList<string> RequirementMapStatuses = ["ready", "needs_review", "blocked", "stale", "unknown"];
@@ -38,6 +56,7 @@ public sealed class ProjectRouteStateArtifactService
         ArgumentNullException.ThrowIfNull(promptBindings);
         ArgumentNullException.ThrowIfNull(projectArtifactIds);
 
+        project = RequireCurrentProject(project);
         var context = ProjectRouteStateContext.Load(project, promptBindings, projectArtifactIds);
         var summaries = new List<ProjectRouteStateArtifactSummary>
         {

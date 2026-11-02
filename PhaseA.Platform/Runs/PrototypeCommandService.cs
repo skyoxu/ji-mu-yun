@@ -7,8 +7,8 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class PrototypeCommandService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly PrototypeCommandBuilder _commandBuilder;
     private readonly PrototypeTddArtifactIndexer _artifactIndexer;
@@ -16,31 +16,36 @@ public sealed class PrototypeCommandService
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
 
     public PrototypeCommandService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         PrototypeCommandBuilder commandBuilder,
         PrototypeTddArtifactIndexer artifactIndexer)
-        : this(metadataStore, options, processRunner, commandBuilder, artifactIndexer, new ProjectWorkspaceSeeder(options))
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public PrototypeCommandService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         PrototypeCommandBuilder commandBuilder,
         PrototypeTddArtifactIndexer artifactIndexer,
         IProjectWorkspaceSeeder workspaceSeeder,
         HeavyRunnerQueueService? heavyRunnerQueue = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
         _workspaceSeeder = workspaceSeeder;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
     }
 
     public async Task<HostedCommandResult> RunTddAsync(string accountId, string projectId, PrototypeTddRequest request, CancellationToken cancellationToken = default)
@@ -110,6 +115,8 @@ public sealed class PrototypeCommandService
             var slug = slugFactory(project);
             var command = commandFactory(project, slug);
             var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
+            // AD19/20: both command entrypoints must retain the same current workspace.
+            _metadataStore.DemandWorkspace(project.RepoPath);
             var normalizedProcess = NormalizeProcessResult(runType, process);
             var status = normalizedProcess.ExitCode == 0 ? "succeeded" : "failed";
             var artifacts = _artifactIndexer.Discover(project.RepoPath, runId, project.ProjectId, slug);

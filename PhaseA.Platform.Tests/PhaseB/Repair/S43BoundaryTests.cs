@@ -299,7 +299,7 @@ public sealed class S43BoundaryTests
             }
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), lifecycle);
             var context = RequestContext.FromIdentity(new AccountIdentity("account-s43", "s43", PhaseAAuth.UserRole), "principal-s43", "credential-s43", "correlation-s43");
-            var storage = new WorkspaceStorageService($"Data Source={databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={databasePath}");
             storage.SetQuota("account-s43", 1_000_000);
 
             SetProjectOwner(databasePath, "drifted-owner");
@@ -321,7 +321,7 @@ public sealed class S43BoundaryTests
         }
     }
 
-    private static bool TryCreateSnapshot(WorkspaceStorageService storage, RequestContext context, string root, string snapshotId)
+    private static bool TryCreateSnapshot(CentralWorkspaceStorageBackend storage, RequestContext context, string root, string snapshotId)
     {
         try
         {

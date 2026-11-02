@@ -4,9 +4,9 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class PrototypeWorkflowCommandBuilder
 {
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
 
-    public PrototypeWorkflowCommandBuilder(PhaseAPlatformOptions options)
+    public PrototypeWorkflowCommandBuilder(NodeExecutionOptions options)
     {
         _options = options;
     }

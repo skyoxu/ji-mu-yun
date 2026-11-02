@@ -23,13 +23,13 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
     private static readonly TimeSpan DefaultCreationInactivityTimeout = TimeSpan.FromMinutes(25);
     private static readonly TimeSpan RepairExecutionTimeout = TimeSpan.FromMinutes(12);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly PrototypeRecordWriter _recordWriter;
     private readonly PrototypeWorkflowCommandBuilder _commandBuilder;
     private readonly PrototypeArtifactIndexer _artifactIndexer;
-    private readonly LlmBindingService _llmBindingService;
+    private readonly NodeLlmBindingReader _llmBindingService;
     private readonly LlmStopLossService _llmStopLossService;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly GameTypeTemplateCatalog _templateCatalog;
@@ -38,7 +38,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
     private readonly PrototypeContractFreezeService _contractFreezeService;
     private readonly PrototypeEngineeringClosureService _engineeringClosure;
     private readonly IAiCodeMirrorBillingClient _billingClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HeavyRunnerQueueService _prototypeCreationQueue;
     private readonly TimeSpan _creationTotalTimeout;
@@ -48,26 +48,27 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
     private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeWorkflowService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         PrototypeRecordWriter recordWriter,
         PrototypeWorkflowCommandBuilder commandBuilder,
         PrototypeArtifactIndexer artifactIndexer,
-        LlmBindingService llmBindingService,
+        NodeLlmBindingReader llmBindingService,
         LlmStopLossService llmStopLossService)
-        : this(metadataStore, options, processRunner, recordWriter, commandBuilder, artifactIndexer, llmBindingService, llmStopLossService, new ProjectWorkspaceSeeder(options), new GameTypeTemplateCatalog(options), new PrototypeRouteStateWriter(), new PrototypeContractService())
     {
+        // ADR-0061 AD20: compatibility never constructs an implicit producer.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public PrototypeWorkflowService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         PrototypeRecordWriter recordWriter,
         PrototypeWorkflowCommandBuilder commandBuilder,
         PrototypeArtifactIndexer artifactIndexer,
-        LlmBindingService llmBindingService,
+        NodeLlmBindingReader llmBindingService,
         LlmStopLossService llmStopLossService,
         IProjectWorkspaceSeeder workspaceSeeder,
         GameTypeTemplateCatalog templateCatalog,
@@ -75,7 +76,7 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         PrototypeContractService? contractService = null,
         PrototypeEngineeringClosureService? engineeringClosure = null,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         [FromKeyedServices("prototype-creation")] HeavyRunnerQueueService? prototypeCreationQueue = null,
         TimeSpan? creationTotalTimeout = null,
@@ -85,6 +86,10 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(heavyRunnerQueue is null || prototypeCreationQueue is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
@@ -101,8 +106,8 @@ public sealed class PrototypeWorkflowService : IPrototypeFromGddWorkflow
         _engineeringClosure = engineeringClosure ?? new PrototypeEngineeringClosureService();
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
-        _prototypeCreationQueue = prototypeCreationQueue ?? _heavyRunnerQueue;
+        _heavyRunnerQueue = heavyRunnerQueue;
+        _prototypeCreationQueue = prototypeCreationQueue;
         _creationTotalTimeout = creationTotalTimeout ?? DefaultCreationTotalTimeout;
         _creationInactivityTimeout = creationInactivityTimeout ?? DefaultCreationInactivityTimeout;
         _contextManifestIssuer = contextManifestIssuer;

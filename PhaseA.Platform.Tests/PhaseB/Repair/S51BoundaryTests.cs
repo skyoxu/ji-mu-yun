@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Net;
 using System.Diagnostics;
 using System.Net.Http.Headers;
@@ -50,7 +51,7 @@ public sealed class S51BoundaryTests
             DataSource = Path.Combine(root, "metadata.sqlite3"),
             Pooling = false
         }.ToString();
-        _ = new RestoreService(cs);
+        _ = new CentralRestoreBackend(cs);
         const string attemptId = "s51-active-attempt";
         const string key = "s51-active-publication";
         var destination = Path.Combine(root, "destination");
@@ -96,7 +97,7 @@ public sealed class S51BoundaryTests
         });
         try
         {
-            _ = new RestoreService(cs);
+            _ = new CentralRestoreBackend(cs);
             await finishPublication;
             await using var connection = new SqliteConnection(cs);
             await connection.OpenAsync();
@@ -160,9 +161,9 @@ public sealed class S51BoundaryTests
         var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-project", account.AccountId, "S51", "S51", "manual", "default", false, [], workspace, source, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S51 service fixture project setup failed.");
         var context = new RequestContext("s51-principal", account.AccountId, new HashSet<string> { "user" }, "s51-credential", "s51-correlation");
-        var storage = new WorkspaceStorageService(cs); storage.SetQuota(account.AccountId, 1024 * 1024);
+        var storage = new CentralWorkspaceStorageBackend(cs); storage.SetQuota(account.AccountId, 1024 * 1024);
         var manifest = storage.CreateSnapshot(context, source, "s51-snapshot", "s51-workspace", project.ProjectId, "s51-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
-        var service = new RestoreService(cs);
+        var service = new CentralRestoreBackend(cs);
         var lease = new RunnerLease("s51-lease", account.AccountId, project.ProjectId, 1);
         await InsertLeaseAsync(cs, lease);
         await InsertRouteAuthorityAsync(cs);
@@ -223,7 +224,7 @@ public sealed class S51BoundaryTests
         var source = Path.Combine(root, "service", "interrupt-source"); Directory.CreateDirectory(source);
         for (var index = 0; index < 1500; index++) File.WriteAllText(Path.Combine(source, $"file-{index:D4}.txt"), "S51 interrupted content");
         var destination = Path.Combine(root, "service", "interrupted"); Directory.CreateDirectory(destination);
-        var interruptedManifest = new WorkspaceStorageService(cs).CreateSnapshot(context, source, "s51-interrupted-snapshot", manifest.WorkspaceId, lease.ProjectId, "s51-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
+        var interruptedManifest = new CentralWorkspaceStorageBackend(cs).CreateSnapshot(context, source, "s51-interrupted-snapshot", manifest.WorkspaceId, lease.ProjectId, "s51-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
         var input = Path.Combine(root, "service", "interruption-input.json");
         File.WriteAllText(input, JsonSerializer.Serialize(new { cs, context, lease, manifest = interruptedManifest, source, destination }));
         var repository = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
@@ -294,7 +295,7 @@ public sealed class S51BoundaryTests
             worker.Kill(entireProcessTree: true);
             await worker.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
             terminatedAtCheckpoint = true;
-            _ = new RestoreService(cs);
+            _ = new CentralRestoreBackend(cs);
             await using (var connection = new SqliteConnection(cs))
             {
                 await connection.OpenAsync();
@@ -357,10 +358,10 @@ public sealed class S51BoundaryTests
         var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-r4-" + checkpoint, account.AccountId, "R4", "R4", "manual", "default", false, [], workspace, source, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("R4 matrix project setup failed.");
         var context = new RequestContext("s51-r4-principal", account.AccountId, new HashSet<string> { "user" }, "s51-r4-credential", "s51-r4-correlation-" + checkpoint);
-        var storage = new WorkspaceStorageService(cs); storage.SetQuota(account.AccountId, 100 * 1024 * 1024);
+        var storage = new CentralWorkspaceStorageBackend(cs); storage.SetQuota(account.AccountId, 100 * 1024 * 1024);
         var manifest = storage.CreateSnapshot(context, source, "s51-r4-snapshot-" + checkpoint, "s51-r4-workspace", project.ProjectId, "s51-r4-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
         var lease = new RunnerLease("s51-r4-lease-" + checkpoint, account.AccountId, project.ProjectId, 1);
-        _ = new RestoreService(cs);
+        _ = new CentralRestoreBackend(cs);
         await InsertLeaseAsync(cs, lease); await InsertRouteAuthorityAsync(cs);
         var input = Path.Combine(caseRoot, "input.json");
         File.WriteAllText(input, JsonSerializer.Serialize(new { cs, context, lease, manifest, source, destination, checkpoint }));
@@ -377,7 +378,7 @@ public sealed class S51BoundaryTests
         var terminated = winner == reached.Task && !worker.HasExited;
         if (terminated) { worker.Kill(entireProcessTree: true); await worker.WaitForExitAsync(); }
         watcher.Dispose();
-        _ = new RestoreService(cs);
+        _ = new CentralRestoreBackend(cs);
         string? status;
         await using (var connection = new SqliteConnection(cs)) { await connection.OpenAsync(); await using var command = connection.CreateCommand(); command.CommandText = "SELECT status FROM restore_attempts WHERE idempotency_key=$key"; command.Parameters.AddWithValue("$key", "s51-r4-request-" + checkpoint); status = (await command.ExecuteScalarAsync())?.ToString(); }
         var stagingRoot = Path.Combine(destination, ".restore-staging");
@@ -495,7 +496,7 @@ public sealed class S51BoundaryTests
         var item = data.RootElement;
         var contextNode = item.GetProperty("context");
         var context = new RequestContext(contextNode.GetProperty("PrincipalId").GetString()!, contextNode.GetProperty("AccountId").GetString()!, new HashSet<string> { "user" }, contextNode.GetProperty("CredentialId").GetString()!, contextNode.GetProperty("CorrelationId").GetString()!);
-        var service = new RestoreService(item.GetProperty("cs").GetString());
+        var service = new CentralRestoreBackend(item.GetProperty("cs").GetString());
         var result = service.RestorePrepared(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-r4-request-" + item.GetProperty("checkpoint").GetString());
         var resultFile = Environment.GetEnvironmentVariable("S51_R4_RESULT_FILE");
         if (!string.IsNullOrWhiteSpace(resultFile))
@@ -517,7 +518,7 @@ public sealed class S51BoundaryTests
         using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "service", "interruption-input.json")));
         var item = data.RootElement; var contextJson = item.GetProperty("context");
         var context = new RequestContext(contextJson.GetProperty("PrincipalId").GetString()!, contextJson.GetProperty("AccountId").GetString()!, new HashSet<string> { "user" }, contextJson.GetProperty("CredentialId").GetString()!, contextJson.GetProperty("CorrelationId").GetString()!);
-        var service = new RestoreService(item.GetProperty("cs").GetString());
+        var service = new CentralRestoreBackend(item.GetProperty("cs").GetString());
         service.RestorePrepared(context, item.GetProperty("manifest").Deserialize<SnapshotManifest>()!, item.GetProperty("source").GetString()!, item.GetProperty("destination").GetString()!, item.GetProperty("lease").Deserialize<RunnerLease>()!, "s51-interrupted-request");
     }
 
@@ -525,16 +526,32 @@ public sealed class S51BoundaryTests
     {
         var db = Path.Combine(root, "http", "metadata.sqlite3"); Directory.CreateDirectory(Path.GetDirectoryName(db)!);
         var workspace = Path.Combine(root, "http", "workspace", "owned"); Directory.CreateDirectory(Path.Combine(workspace, "repo"));
-        var cs = new SqliteConnectionStringBuilder { DataSource = db, Pooling = false }.ToString(); await SqliteMetadataSchema.InitializeAsync(cs);
+        var cs = new SqliteConnectionStringBuilder { DataSource = db, Pooling = false }.ToString();
         var adminToken = "s51-admin-" + Guid.NewGuid().ToString("N");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"), ["PHASEA_REPOSITORY_ROOT"] = repository, ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken) });
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"), ["PHASEA_REPOSITORY_ROOT"] = repository, ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
+            ["PHASEA_NODE_ID"] = "test-physical-node",
+            ["PHASEA_NODE_SCOPE"] = "single_node_test",
+            ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+            ["PHASEA_ENABLED_ROLES"] = "entry,production",
+            ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+});
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(cs,options);
         var store = new PhaseAMetadataStore(cs, options); await store.EnsureSingleAdminAsync();
         var owner = await store.CreateUserAccountAsync("s51-http-owner", 1); var stranger = await store.CreateUserAccountAsync("s51-http-stranger", 1);
         var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-http-project", owner.AccountId, "S51 HTTP", "S51 HTTP", "manual", "default", false, [], workspace, Path.Combine(workspace, "repo"), Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S51 HTTP project setup failed."); await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
+        if(!OperatingSystem.IsWindows())
+            PhaseA.Platform.Tests.NodeIdentity.S206TestSupport.RegisterLogicalReadbackProject(
+                await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."));
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}"; listener.Stop();
         var start = new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory = Path.Combine(repository, "PhaseA.Platform"), UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "PhaseA.Platform.dll")); start.Environment["APP_BIND_URL"] = address; start.Environment["ASPNETCORE_URLS"] = address; start.Environment["PUBLIC_BASE_URL"] = "https://localhost"; start.Environment["PHASEA_METADATA_DB_PATH"] = db; start.Environment["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"); start.Environment["PHASEA_REPOSITORY_ROOT"] = repository; start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken); start.Environment["PHASEA_SERVICE_STATE"] = "test";
+        start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+
         using var host = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("S51 HTTP host failed to start."); host.OutputDataReceived += (_, _) => { }; host.ErrorDataReceived += (_, _) => { }; host.BeginOutputReadLine(); host.BeginErrorReadLine();
         try
         {

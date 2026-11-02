@@ -14,9 +14,9 @@ public sealed class PrototypeContractFreezeService
     private const string RequirementMapRelativePath = "meta/routes/gdd-requirements/latest.json";
     private const string ContractRelativePath = "routes/prototype-contract/latest.json";
     private const string ContractMirrorRelativePath = "meta/routes/prototype-contract/latest.json";
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
 
-    public PrototypeContractFreezeService(PhaseAMetadataStore metadataStore)
+    public PrototypeContractFreezeService(NodeProjectMetadata metadataStore)
     {
         _metadataStore = metadataStore;
     }
@@ -153,6 +153,17 @@ public sealed class PrototypeContractFreezeService
 
     public NewChainGuardResult EvaluateNewChainGuard(ProjectSnapshot project)
     {
+        ArgumentNullException.ThrowIfNull(project);
+        // ADR-0061 AD19: caller snapshots cannot authorize private source reads.
+        var current = _metadataStore.GetProjectSnapshotAsync(project.ProjectId).GetAwaiter().GetResult()
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        bool SamePath(string left, string right) => string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), comparison);
+        if (current.AccountId != project.AccountId || current.WorkspaceId != project.WorkspaceId ||
+            !SamePath(current.WorkspaceRootPath, project.WorkspaceRootPath) || !SamePath(current.RepoPath, project.RepoPath) ||
+            !SamePath(current.RuntimePath, project.RuntimePath) || !SamePath(current.MetaPath, project.MetaPath))
+            throw new UnauthorizedAccessException("current_project_paths_required");
+        project = current;
         var active = HasExplicitNewChainArtifact(project);
         if (!active)
         {

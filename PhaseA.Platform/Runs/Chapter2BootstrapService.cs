@@ -10,8 +10,8 @@ public sealed class Chapter2BootstrapService
     private const string RunType = "chapter2-bootstrap";
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(12);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly Chapter2BootstrapCommandBuilder _commandBuilder;
     private readonly ProjectHealthArtifactIndexer _artifactIndexer;
@@ -20,18 +20,19 @@ public sealed class Chapter2BootstrapService
     private readonly TimeSpan _executionTimeout;
 
     public Chapter2BootstrapService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         Chapter2BootstrapCommandBuilder commandBuilder,
         ProjectHealthArtifactIndexer artifactIndexer)
-        : this(metadataStore, options, processRunner, commandBuilder, artifactIndexer, new ProjectWorkspaceSeeder(options))
     {
+        // ADR-0061 AD20: compatibility never constructs an implicit producer.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public Chapter2BootstrapService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         Chapter2BootstrapCommandBuilder commandBuilder,
         ProjectHealthArtifactIndexer artifactIndexer,
@@ -40,13 +41,17 @@ public sealed class Chapter2BootstrapService
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         ProjectCreationRunnerQueue? projectCreationRunnerQueue = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(projectCreationRunnerQueue?.Queue is null && heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _commandBuilder = commandBuilder;
         _artifactIndexer = artifactIndexer;
         _workspaceSeeder = workspaceSeeder;
-        _heavyRunnerQueue = projectCreationRunnerQueue?.Queue ?? heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = (projectCreationRunnerQueue?.Queue ?? heavyRunnerQueue)!;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
     }
 
@@ -125,6 +130,8 @@ public sealed class Chapter2BootstrapService
                     $"Chapter 2 bootstrap timed out after {_executionTimeout.TotalMinutes:0} minutes.");
             }
 
+            // AD19/20: rebind the original workspace after the external execution wait.
+            _metadataStore.DemandWorkspace(project.RepoPath);
             var exitCode = bootstrapPreflight.ExitCode;
             var status = exitCode == 0 ? "succeeded" : "failed";
             var stdout = bootstrapPreflight.Stdout;

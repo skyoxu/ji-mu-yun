@@ -12,7 +12,7 @@ internal static class PrototypeGodotSmokeService
         RegexOptions.Compiled);
 
     public static async Task<PrototypeGodotSmokeResult> RunAsync(
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         string projectRepoPath,
         string scenePath,
@@ -28,7 +28,7 @@ internal static class PrototypeGodotSmokeService
     }
 
     public static async Task<PrototypeGodotSmokeResult> RunPostPrototypeAcceptanceAsync(
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         string projectRepoPath,
         string scenePath,
@@ -44,7 +44,7 @@ internal static class PrototypeGodotSmokeService
     }
 
     private static async Task<PrototypeGodotSmokeResult> RunAsync(
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         string projectRepoPath,
         string scenePath,
@@ -181,7 +181,7 @@ internal static class PrototypeGodotSmokeService
         ProjectSnapshot project,
         ProjectIterationGoalSnapshot goal,
         string prototypeStateJson,
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         CancellationToken cancellationToken = default)
     {
@@ -203,7 +203,7 @@ internal static class PrototypeGodotSmokeService
         ProjectSnapshot project,
         ProjectIterationGoalSnapshot goal,
         string? scenePath,
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         CancellationToken cancellationToken = default)
     {
@@ -227,7 +227,7 @@ internal static class PrototypeGodotSmokeService
     }
 
     public static async Task<PrototypeRpgGdUnitValidationResult> RunRpgGdUnitValidationAsync(
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         ProjectSnapshot project,
         string slug,
@@ -389,7 +389,7 @@ internal static class PrototypeGodotSmokeService
         return string.IsNullOrWhiteSpace(normalized) ? "rpg" : normalized;
     }
 
-    private static string ResolveRepositoryScriptPath(PhaseAPlatformOptions options, string relativePath)
+    private static string ResolveRepositoryScriptPath(NodeExecutionOptions options, string relativePath)
     {
         if (string.IsNullOrWhiteSpace(options.RepositoryRoot))
         {

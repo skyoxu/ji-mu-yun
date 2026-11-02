@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -64,7 +65,7 @@ public sealed class S13BoundaryTests
                 command.Parameters.AddWithValue("$fence", lease.Fence);
                 command.ExecuteNonQuery();
             }
-            var service = new RestoreService(connectionString);
+            var service = new CentralRestoreBackend(connectionString);
             var currentAttempt = service.RestorePrepared(
                 currentSecret,
                 manifest,
@@ -159,7 +160,7 @@ public sealed class S13BoundaryTests
                 "secret-lease",
                 "correlation-lease");
             var staleLease = new RunnerLease("lease-stale", accountId, "project-lease", 1);
-            var service = new RestoreService(connectionString);
+            var service = new CentralRestoreBackend(connectionString);
             var first = service.RestorePrepared(context, manifest, source.FullName, destination.FullName, staleLease, "lease-first");
             Require(first.Status == RestoreAttemptStatus.Published, "FAILURE-O-F17C15697A79", "Initial restore did not publish its staged result.");
 
@@ -217,7 +218,7 @@ public sealed class S13BoundaryTests
                 "principal-drift",
                 "secret-drift",
                 "correlation-drift");
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.SetQuota("account-drift", 1_000_000);
 
             SetProjectOwner(connectionString, "drifted-owner");
@@ -250,7 +251,7 @@ public sealed class S13BoundaryTests
         }
     }
 
-    private static bool TryCreateSnapshot(WorkspaceStorageService storage, RequestContext context, string root, string snapshotId, string policyVersion)
+    private static bool TryCreateSnapshot(CentralWorkspaceStorageBackend storage, RequestContext context, string root, string snapshotId, string policyVersion)
     {
         try
         {
@@ -278,7 +279,7 @@ public sealed class S13BoundaryTests
             projectId, account.AccountId, "S13 boundary", "S13 boundary", "manual", "default", false, [],
             projectRoot.FullName, Path.Combine(projectRoot.FullName, "repo"),
             Path.Combine(projectRoot.FullName, "runtime"), Path.Combine(projectRoot.FullName, "meta"))).GetAwaiter().GetResult();
-        _ = new RestoreService(connectionString);
+        _ = new CentralRestoreBackend(connectionString);
         using (var connection = new SqliteConnection(connectionString))
         {
             connection.Open();

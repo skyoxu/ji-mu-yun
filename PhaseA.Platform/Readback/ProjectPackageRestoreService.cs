@@ -16,7 +16,7 @@ public sealed record ProjectPackageRestoreAdmission(string? OperationId, string?
 // ADR-0035/0038/0061: server-bound version, project lock, immutable generation,
 // atomic active pointer, additive history, and explicit post-restore validation.
 public sealed class ProjectPackageRestoreService(
-    PhaseAMetadataStore store, PhaseAPlatformOptions options, ProjectPackageService packages,
+    NodeProjectMetadata store, NodeExecutionOptions options, ProjectPackageService packages,
     WorkspaceStorageService storage, RestoreService restores, HeavyRunnerQueueService queue,
     RunCancellationService cancellation, ILogger<ProjectPackageRestoreService> logger)
 {

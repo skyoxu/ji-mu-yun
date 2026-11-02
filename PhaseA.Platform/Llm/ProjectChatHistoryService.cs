@@ -10,9 +10,9 @@ public sealed class ProjectChatHistoryService
         @"下一步建议[：:]\s*([\s\S]{1,800}?)(?:\r?\n\s*\r?\n(?:如果你同意|如你同意|若你同意)|$)",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
 
-    public ProjectChatHistoryService(PhaseAMetadataStore metadataStore)
+    public ProjectChatHistoryService(NodeProjectMetadata metadataStore)
     {
         _metadataStore = metadataStore;
     }

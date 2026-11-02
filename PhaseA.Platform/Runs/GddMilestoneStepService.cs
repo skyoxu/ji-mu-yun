@@ -18,7 +18,7 @@ public sealed class GddMilestoneStepService
         WriteIndented = true
     };
 
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly PrototypeIterationGoalService _iterationGoalService;
     private readonly IPrototypeFromGddWorkflow? _prototypeWorkflowService;
     private readonly PrototypeNeedsFixRouteService _needsFixRouteService;
@@ -29,7 +29,7 @@ public sealed class GddMilestoneStepService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public GddMilestoneStepService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         PrototypeIterationGoalService iterationGoalService,
         PrototypeNeedsFixRouteService needsFixRouteService,
         ILlmRouteEngine? llmRouteEngine = null,
@@ -256,9 +256,11 @@ public sealed class GddMilestoneStepService
             {feedback}
             """;
         var needsFixRequest = new PrototypeNeedsFixRouteRequest(scopedFeedback, request.Model, null, goal.GoalId, goal.GoalIndex, request.SourceKind);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var result = requireTraceability
             ? await _needsFixRouteService.RunStrictAsync(accountId, projectId, needsFixRequest, cancellationToken)
             : await _needsFixRouteService.RunLegacyCompatibleAsync(accountId, projectId, needsFixRequest, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
 
         var completed = result.Status is "completed" or "succeeded";
         var needsFix = string.Equals(result.Status, "needs_fix", StringComparison.OrdinalIgnoreCase);
@@ -277,6 +279,7 @@ public sealed class GddMilestoneStepService
         var feedbackEvidencePath = string.IsNullOrWhiteSpace(result.RunId)
             ? step.LatestEvidenceRelativePath
             : (await WriteStepEvidenceAsync(project, result.RunId, "feedback-repair", outcome.Status, step.StepId, outcome.LastRepairRun is null ? 0 : 1, outcome.LightweightValidationRun, cancellationToken)).RelativePath;
+        _metadataStore.DemandWorkspace(project.RepoPath);
         await _engineeringClosure.TouchMemoryAsync(project, "feedback-repair", FirstNonEmpty(result.RunId, outcome.LastRepairRun?.RunId, "unknown"), outcome.Status, step.StepId, cancellationToken);
 
         var latestRepairRunId = FirstNonEmpty(outcome.LastRepairRun?.RunId, result.RunId, step.FeedbackRunId);
@@ -468,9 +471,11 @@ public sealed class GddMilestoneStepService
                 FailureCode: m1Queued ? null : prototypeResult.Status);
         }
 
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var execution = requireTraceability
             ? await _iterationGoalService.ExecuteNextAsync(accountId, project.ProjectId, cancellationToken)
             : await _iterationGoalService.ExecuteNextLegacyCompatibleAsync(accountId, project.ProjectId, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var succeeded = await IsMilestoneStepExecutionCompleteAsync(project, execution, cancellationToken);
         if (succeeded)
         {
@@ -494,6 +499,7 @@ public sealed class GddMilestoneStepService
             var executionEvidencePath = string.IsNullOrWhiteSpace(execution.RunId)
                 ? state.Steps[index].LatestEvidenceRelativePath
                 : (await WriteStepEvidenceAsync(project, execution.RunId, "module-execute", outcome.Status, step.StepId, outcome.LastRepairRun is null ? 0 : 1, outcome.LightweightValidationRun, cancellationToken)).RelativePath;
+            _metadataStore.DemandWorkspace(project.RepoPath);
             await _engineeringClosure.TouchMemoryAsync(project, "module-execute", FirstNonEmpty(execution.RunId, outcome.LastRepairRun?.RunId, "unknown"), outcome.Status, step.StepId, cancellationToken);
 
             state.Steps[index] = state.Steps[index] with
@@ -2098,6 +2104,7 @@ public sealed class GddMilestoneStepService
         PrototypeWorkflowResult? lightweightValidationRun,
         CancellationToken cancellationToken)
     {
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var checkStatus = status is "executed" or "feedback_submitted" ? "passed" :
             status is "needs_fix" or "execution_failed" or "feedback_failed" or "timed_out" ? "failed" : "skipped";
         var check = BuildLightweightEvidenceCheck(checkStatus, status, lightweightValidationRun);
@@ -2167,13 +2174,15 @@ public sealed class GddMilestoneStepService
             : PrototypeEngineeringCheckResult.Skipped("local entry contract was not the failing check");
     }
 
-    private static async Task WriteSpecFilesAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)
+    private async Task WriteSpecFilesAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)
     {
+        _metadataStore.DemandWorkspace(project.RepoPath);
         NormalizeState(state);
         var gddPath = Path.Combine(project.RepoPath, GddRelativePath.Replace('/', Path.DirectorySeparatorChar));
         if (File.Exists(gddPath))
         {
             var gddText = await File.ReadAllTextAsync(gddPath, Encoding.UTF8, cancellationToken);
+            _metadataStore.DemandWorkspace(project.RepoPath);
             await GddMilestoneSpecDocumentWriter.WriteFromMilestoneStateAsync(project, ToResult(project.ProjectId, state).Steps, gddText, cancellationToken);
         }
     }
@@ -2198,8 +2207,9 @@ public sealed class GddMilestoneStepService
         return await JsonSerializer.DeserializeAsync<GddMilestoneState>(stream, JsonOptions, cancellationToken);
     }
 
-    private static async Task WriteStateAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)
+    private async Task WriteStateAsync(ProjectSnapshot project, GddMilestoneState state, CancellationToken cancellationToken)
     {
+        _metadataStore.DemandWorkspace(project.RepoPath);
         NormalizeState(state);
         var serialized = JsonSerializer.Serialize(state, JsonOptions);
         var metaPath = Path.Combine(project.MetaPath, StateRelativePath.Replace('/', Path.DirectorySeparatorChar));
