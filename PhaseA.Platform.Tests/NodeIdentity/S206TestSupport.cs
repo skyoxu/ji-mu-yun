@@ -60,6 +60,55 @@ internal static class S206TestSupport
             project.AccountId,project.ProjectId,"logical-readback-fixture",path,true,false,false));
     }
 
+    // ADR-0035/0061: a real Windows registration is mandatory for owned HTTP fixture restart.
+    internal static IDisposable RegisterOwnedProjectBoundary(ProjectSnapshot project, PhaseAPlatformOptions options)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            RegisterLogicalReadbackProject(project);
+            return new OwnedProjectRegistration(project.WorkspaceRootPath, null);
+        }
+        var layout = new WorkspaceLayout(project.WorkspaceRootPath, project.RepoPath, project.RuntimePath, project.MetaPath);
+        new WindowsProjectRunnerProvisioner(options).Provision(project.AccountId, project.ProjectId, layout);
+        if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var descriptor))
+            throw new InvalidOperationException("Owned Windows Runner registration missing.");
+        return new OwnedProjectRegistration(project.WorkspaceRootPath, descriptor);
+    }
+
+    private sealed class OwnedProjectRegistration(string root, RunnerIsolationDescriptor? descriptor) : IDisposable
+    {
+        private bool _disposed;
+        public void Dispose()
+        {
+            if (_disposed) return;
+            if (descriptor is not null) WindowsProjectRunnerProvisioner.RemoveTestRegistration(descriptor);
+            else RunnerIsolationPolicy.ForgetWorkspace(root);
+            _disposed = true;
+        }
+    }
+
+    // ADR-0061: explicit isolated test configuration, never process/global production defaults.
+    internal static PhaseAPlatformOptions OwnedNodeOptions(Dictionary<string, string?> values)
+    {
+        var settings = new Dictionary<string, string?>(values);
+        settings.TryAdd("PHASEA_NODE_ID", "owned-ci-node");
+        settings.TryAdd("PHASEA_NODE_SCOPE", "single_node_test");
+        settings.TryAdd("PHASEA_NODE_TOPOLOGY", "single_service");
+        settings.TryAdd("PHASEA_ENABLED_ROLES", "entry,production");
+        settings.TryAdd("PHASEA_ACCEPT_NEW_ACCOUNTS", "true");
+        settings.TryAdd("PHASEA_SERVICE_STATE", "test");
+        settings.TryAdd("PHASEA_ADMIN_TOKEN_HASH", PhaseAAuth.HashTokenForStorage(Guid.NewGuid().ToString("N")));
+        return PhaseAPlatformOptionsLoader.FromDictionary(settings);
+    }
+
+    internal static async Task<RequestContext> FixtureContextAsync(PhaseAMetadataStore store, string tokenHash)
+    {
+        var account = await store.ResolveAccountByTokenHashAsync(tokenHash)
+            ?? throw new InvalidOperationException("Owned fixture credential did not authenticate.");
+        return RequestContext.FromIdentity(new AccountIdentity(account.AccountId, account.Username,
+            account.IsAdmin ? PhaseAAuth.AdminRole : PhaseAAuth.UserRole), account.AccountId, tokenHash, "owned-ci-fixture");
+    }
+
     internal static async Task<object> ObserveRoleAsync(string phase, string? roles,
         bool acceptNewAccounts = true, string? existingRoot = null,
         string? instanceId = null, string? requestedReference = null, bool exerciseExistingProject = false)
@@ -343,6 +392,7 @@ internal sealed class S206AuthorityFixture : IAsyncDisposable
     internal Resource Second { get; private set; } = null!;
     internal Resource Admin { get; private set; } = null!;
     private readonly Dictionary<string,string> _tokens = new(StringComparer.Ordinal);
+    private readonly List<RunnerIsolationDescriptor> _ownedWindowsRegistrations = [];
 
     internal static async Task<S206AuthorityFixture> CreateAsync(bool startHost=false)
     {
@@ -391,13 +441,22 @@ internal sealed class S206AuthorityFixture : IAsyncDisposable
         var context=RequestContext.FromIdentity(new AccountIdentity(account.AccountId,account.Username,
             account.IsAdmin?PhaseAAuth.AdminRole:PhaseAAuth.UserRole),account.AccountId,credential,"s206-current");
         using var current=S206TestSupport.EnterCurrentContext(context);
-        var creation=new ProjectCreationService(Store,Options,new ProjectRuleCatalog(),new MinimalSeeder(sentinel));
+        var creation=new ProjectCreationService(Store,Options,new ProjectRuleCatalog(),new MinimalSeeder(sentinel),
+            runnerProvisioner: OperatingSystem.IsWindows() ? new WindowsProjectRunnerProvisioner(Options) : null);
         var request=new ProjectCreationRequest(sentinel,sentinel,"manual",ProjectRuleCatalog.DefaultRuleId,null,null,null);
         var created=await creation.CreateProjectAsync(account.AccountId,request);
         if(!created.Succeeded || created.ProjectId is null) throw new InvalidOperationException("Project fixture creation failed: "+created.FailureCode);
         var project=await Store.GetProjectSnapshotAsync(created.ProjectId)
             ?? throw new InvalidOperationException("Real project registration unavailable.");
-        S206TestSupport.RegisterLogicalReadbackProject(project);
+        if (OperatingSystem.IsWindows())
+        {
+            if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.WorkspaceRootPath, out var descriptor) ||
+                descriptor.AccountId != account.AccountId || descriptor.ProjectId != project.ProjectId ||
+                !RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor))
+                throw new InvalidOperationException("Actual owned Windows Runner registration unavailable.");
+            _ownedWindowsRegistrations.Add(descriptor);
+        }
+        else S206TestSupport.RegisterLogicalReadbackProject(project);
         var run=await Store.CreateRunAsync(project.ProjectId,project.WorkspaceId,"project-package");
         await Store.AddArtifactAsync(new ArtifactCreationCommand(run,project.ProjectId,"sample","private.txt","S2-06 fixture"));
         var artifact=(await Store.ListArtifactsForRunAsync(run)).Single();
@@ -483,6 +542,14 @@ internal sealed class S206AuthorityFixture : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         if(Host is not null)await Host.DisposeAsync();
+        List<Exception>? errors = null;
+        foreach (var descriptor in _ownedWindowsRegistrations)
+        {
+            try { WindowsProjectRunnerProvisioner.RemoveTestRegistration(descriptor); }
+            catch (Exception error) { (errors ??= []).Add(error); }
+        }
+        _ownedWindowsRegistrations.Clear();
+        if (errors is not null) throw new AggregateException("Owned Windows fixture cleanup failed.", errors);
     }
 
     private sealed class MinimalSeeder(string value):IProjectWorkspaceSeeder

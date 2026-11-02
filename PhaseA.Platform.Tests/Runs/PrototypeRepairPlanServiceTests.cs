@@ -1,3 +1,6 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -28,12 +31,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var writer = new PrototypeRouteStateWriter();
         var service = new PrototypeRepairPlanService(store, quickFix, writer);
 
@@ -76,12 +80,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedNavigationPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var codex = new LlmRepairPlanCodexClient();
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
 
@@ -111,12 +116,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedNavigationPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
 
         var result = await service.CreateAsync(accountId, projectId);
@@ -138,12 +144,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedServiceRestartPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var codex = new LlmRepairPlanCodexClient();
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
 
@@ -165,12 +172,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedBuildContaminationPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var codex = new LlmRepairPlanCodexClient();
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
 
@@ -193,12 +201,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedGodotNodePrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
 
         var result = await service.CreateAsync(accountId, projectId);
@@ -221,12 +230,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedPlayableLoopPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
 
         var result = await service.CreateAsync(accountId, projectId);
@@ -247,14 +257,15 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         var project = await store.GetProjectSnapshotAsync(projectId);
         SeedGdUnitConsole(project!.RepoPath);
         await SeedFailedRpgGdUnitPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var codex = new LlmRepairPlanCodexClient();
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), null, codex);
 
@@ -284,12 +295,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Action");
         await SeedFailedPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
 
         var result = await service.CreateAsync(accountId, projectId);
@@ -313,11 +325,12 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
 
         var result = await service.CreateAsync(accountId, projectId);
@@ -334,13 +347,14 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedPrototypeRunAsync(store, projectId);
         var runner = new GoalRepairPromptCaptureRunner();
-        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var quickFix = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
         await service.CreateAsync(accountId, projectId);
 
@@ -362,13 +376,14 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedPrototypeRunAsync(store, projectId);
         var runner = new GoalRepairPromptCaptureRunner();
-        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var quickFix = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
         await service.CreateAsync(accountId, projectId);
 
@@ -389,13 +404,14 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedPrototypeRunAsync(store, projectId);
         var runner = new GoalRepairPromptCaptureRunner();
-        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var quickFix = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var writer = new PrototypeRouteStateWriter();
         var service = new PrototypeRepairPlanService(store, quickFix, writer);
         await service.CreateAsync(accountId, projectId);
@@ -427,13 +443,14 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedFailedPrototypeRunAsync(store, projectId);
         var runner = new GoalRepairPromptCaptureRunner();
-        var quickFix = new PrototypeQuickFixService(store, options, runner);
+        var quickFix = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var service = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter());
         await service.CreateAsync(accountId, projectId);
 
@@ -452,12 +469,13 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "RPG");
         await SeedServiceRestartPrototypeRunAsync(store, projectId);
-        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+        var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var writer = new PrototypeRouteStateWriter();
         var service = new PrototypeRepairPlanService(store, quickFix, writer);
         await service.CreateAsync(accountId, projectId);
@@ -631,7 +649,7 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         await store.UpdateProjectGameTypeMatchAsync(result.ProjectId!, MatchEvidence(gameTypeSource).ToJson());
@@ -653,7 +671,7 @@ public sealed class PrototypeRepairPlanServiceTests : IDisposable
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

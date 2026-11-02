@@ -1,3 +1,5 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
@@ -14,6 +16,7 @@ public sealed class S20BoundaryTests
     public async Task O_0D256558EC1D()
     {
         using var scope = await S20Scope.CreateAsync(projectLimit: 1);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateActiveProjectAsync("retained-data");
 
         var deleted = await scope.Service.DeleteProjectAsync(
@@ -39,6 +42,7 @@ public sealed class S20BoundaryTests
     public async Task O_AE14D92CB000()
     {
         using var scope = await S20Scope.CreateAsync(projectLimit: 1);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateActiveProjectAsync("logical-quota");
 
         var initialDelete = await scope.Service.DeleteProjectAsync(
@@ -72,6 +76,7 @@ public sealed class S20BoundaryTests
     public async Task O_ED5AFFFDE466()
     {
         using var scope = await S20Scope.CreateAsync(projectLimit: 1);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateActiveProjectAsync("soft-delete-state");
 
         var deleted = await scope.Service.DeleteProjectAsync(
@@ -97,6 +102,7 @@ public sealed class S20BoundaryTests
     public async Task O_FD2C50597483()
     {
         using var scope = await S20Scope.CreateAsync(projectLimit: 1);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateActiveProjectAsync("retained-owner");
 
         var deleted = await scope.Service.DeleteProjectAsync(
@@ -145,14 +151,14 @@ public sealed class S20BoundaryTests
             var database = TempSqliteDatabase.Create();
             var workspaceRoot = Path.Combine(Path.GetTempPath(), $"phase-s20-{Guid.NewGuid():N}");
             Directory.CreateDirectory(workspaceRoot);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
                 ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot()
             });
 
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var owner = await store.CreateUserAccountAsync($"s20-owner-{Guid.NewGuid():N}", projectLimit);
             return new S20Scope(

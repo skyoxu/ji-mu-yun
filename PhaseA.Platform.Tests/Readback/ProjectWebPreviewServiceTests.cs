@@ -1,3 +1,7 @@
+using Xunit.Abstractions;
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
 using System.Text;
 using System.Text.Json;
 using System.IO.Compression;
@@ -13,7 +17,7 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Readback;
 
-public sealed class ProjectWebPreviewServiceTests
+public sealed class ProjectWebPreviewServiceTests(ITestOutputHelper output)
 {
     [Theory]
     [InlineData("index.js", true)]
@@ -313,9 +317,11 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-status-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
         project.Should().NotBeNull();
@@ -337,7 +343,7 @@ const Engine = (function () {
             {"run_type":"project-web-preview","package_file":"Towerdemo2-v0.1.20260627.002.zip","failure_code":"godot3_export_failed","mode":"godot3-html5-towerdemo2-template-subset"}
             """);
 
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
         var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
 
         status.Status.Should().Be("failed");
@@ -354,15 +360,17 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-queue-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-queue-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-queue-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "Towerdemo2-v0.1.20260627.002.zip";
         WriteMinimalGodotPackage(project.RepoPath, packageFile);
 
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
         var queued = await service.QueuePreviewAsync(account.AccountId, project.ProjectId, packageFile);
         var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
 
@@ -380,14 +388,16 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-invalid-zip-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-invalid-zip-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-invalid-zip-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "BrokenPackage-v0.1.20260627.001.zip";
         WritePackage(project.RepoPath, packageFile, "not a zip");
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
 
         var validation = await service.ValidatePreviewQueueAsync(account.AccountId, project.ProjectId, packageFile);
         var queued = await service.QueuePreviewAsync(account.AccountId, project.ProjectId, packageFile);
@@ -405,9 +415,11 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-ready-failure-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-ready-failure-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-ready-failure-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "Towerdemo2-v0.1.20260627.002.zip";
@@ -445,7 +457,7 @@ const Engine = (function () {
             {"run_type":"project-web-preview","package_file":"Towerdemo2-v0.1.20260627.002.zip","failure_code":"godot3_export_failed","mode":"godot3-html5-towerdemo2-template-subset"}
             """);
 
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
         var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
 
         status.Status.Should().Be("ready");
@@ -463,9 +475,11 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-legacy-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-legacy-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-legacy-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "Towerdemo2-v0.1.20260627.002.zip";
@@ -486,7 +500,7 @@ const Engine = (function () {
                 "2026-01-01T00:00:00.0000000+00:00"),
             Encoding.UTF8);
 
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
         var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
         var read = await service.ReadPreviewAsync(project.ProjectId, previewId, "index.html");
 
@@ -504,9 +518,11 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-unsigned-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-unsigned-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-unsigned-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "Towerdemo2-v0.1.20260627.002.zip";
@@ -520,7 +536,7 @@ const Engine = (function () {
         {"mode":"godot3-html5-towerdemo2-template-subset","created_utc":"2026-01-01T00:00:00.0000000+00:00"}
         """, Encoding.UTF8);
 
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
         var status = await service.ResolvePreviewForPackageAsync(project, packageFile);
         var read = await service.ReadPreviewAsync(project.ProjectId, previewId, "index.html");
 
@@ -535,9 +551,11 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-batch-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-batch-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-batch-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var failedPackage = "Towerdemo2-v0.1.20260627.002.zip";
@@ -558,7 +576,7 @@ const Engine = (function () {
         var queuedRunId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "project-web-preview");
         await store.UpdateRunProgressAsync(queuedRunId, "project-web-preview", queuedPackage, "Queued Godot 3 browser preview.");
         var runs = await store.ListRunsForProjectAsync(project.ProjectId);
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
 
         var statuses = service.ResolvePreviewsForPackages(project, [failedPackage, queuedPackage], runs);
 
@@ -608,14 +626,16 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-dedicated-queue-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "ExperimentalPreview-v0.1.20260627.001.zip";
             WriteGenericGodotPackage(project.RepoPath, packageFile, "ExperimentalPreview", "Experimental Preview");
-            var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+            var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store);
             await using var queueBlocker = await webPreviewQueue.EnterAsync(
                 "held-web-preview-run",
                 account.AccountId,
@@ -631,7 +651,7 @@ const Engine = (function () {
             await Task.Delay(200);
     
             var runWhileQueued = await store.GetRunSnapshotAsync(queued.RunId);
-            var queueReadback = webPreviewQueue.GetReadback(account.AccountId, includeAll: true);
+            var queueReadback = webPreviewQueue.GetReadback(account.AccountId, includeAll: false);
             runWhileQueued!.Status.Should().Be("queued");
             queueReadback.QueuedCount.Should().Be(1);
             queueReadback.Items.Single().RunId.Should().Be(queued.RunId);
@@ -643,7 +663,7 @@ const Engine = (function () {
             // ADR-0005: a failed release export is followed by the existing debug fallback.
             exportRunner.Commands.Select(command => command.Arguments.Single(argument =>
                 argument is "--export" or "--export-debug")).Should().Equal("--export", "--export-debug");
-            webPreviewQueue.GetReadback(account.AccountId, includeAll: true).QueuedCount.Should().Be(0);
+            webPreviewQueue.GetReadback(account.AccountId, includeAll: false).QueuedCount.Should().Be(0);
         }
         finally { Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot); }
     }
@@ -655,24 +675,26 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-account-limit-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-account-limit-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-account-limit-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "Towerdemo2-v0.1.20260627.002.zip";
         WriteMinimalGodotPackage(project.RepoPath, packageFile);
-        var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store);
         var accountLimiter = new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1);
         var held = await accountLimiter.TryAcquireAsync(account.AccountId);
         await using var heldLease = held.Lease!;
-        var service = new ProjectWebPreviewService(store, options, webPreviewQueue, accountLimiter);
+        var service = new ProjectWebPreviewService(store, options, webPreviewQueue, accountLimiter, new HostedProcessRunner(authority: store));
         var queued = await service.QueuePreviewAsync(account.AccountId, project.ProjectId, packageFile);
 
         queued.Status.Should().Be("failed");
         queued.FailureCode.Should().Be("user_web_preview_concurrency_limit_exceeded");
         queued.RunId.Should().BeEmpty();
-        webPreviewQueue.GetReadback(account.AccountId, includeAll: true).QueuedCount.Should().Be(0);
+        webPreviewQueue.GetReadback(account.AccountId, includeAll: false).QueuedCount.Should().Be(0);
     }
 
     [Fact]
@@ -682,14 +704,16 @@ const Engine = (function () {
         using var workspaceRoot = TempDirectory.Create("phase-a-web-preview-project-busy-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-web-preview-project-busy-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("web-preview-project-busy-user", 1);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var packageFile = "BusyPreview-v0.1.20260627.001.zip";
         WriteMinimalGodotPackage(project.RepoPath, packageFile);
-        var service = new ProjectWebPreviewService(store, options);
+        var service = new ProjectWebPreviewService(store, options, new HeavyRunnerQueueService(null, 1, store), processRunner: new HostedProcessRunner(authority: store));
         var queued = await service.QueuePreviewAsync(account.AccountId, project.ProjectId, packageFile);
         var lockRunId = await store.CreateRunAsync(project.ProjectId, project.WorkspaceId, "prototype-7day-playable");
         (await store.TryAcquireRunnerLockAsync(project.ProjectId, lockRunId)).Should().BeTrue();
@@ -719,9 +743,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-generic-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "ExperimentalPreview-v0.1.20260627.001.zip";
@@ -730,11 +756,12 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             var manifestPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "web-preview-manifest.json");
             var previewContractPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "web", "preview-contract.json");
@@ -867,9 +894,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-generic-dedicated-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "GenericAdventure-v0.1.20260628.006.zip";
@@ -888,16 +917,17 @@ const Engine = (function () {
             func _physics_process(delta):
                 velocity = move_and_slide(velocity)
             """);
-            var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner);
+            var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner, projectAuthority: store);
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 godotRunner,
                 dedicatedAdapterService: dedicatedService);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
             var dedicatedMainScriptPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "Main.gd");
@@ -961,25 +991,28 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-generic-dedicated-fallback-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "PlainDemo-v0.1.20260628.007.zip";
             WriteGenericGodotPackage(project.RepoPath, packageFile, "PlainDemo");
             var godotRunner = new FakeGodot3WebExportRunner();
             var dedicatedRunner = new FailingDedicatedAdapterRunner();
-            var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner);
+            var dedicatedService = new ProjectWebPreviewDedicatedAdapterService(options, dedicatedRunner, projectAuthority: store);
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 godotRunner,
                 dedicatedAdapterService: dedicatedService);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
             var dedicatedMainScriptPath = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion, "Main.gd");
@@ -1019,9 +1052,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-towerdemo2-changed-scene-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "Towerdemo2-v0.1.20260628.004.zip";
@@ -1030,11 +1065,12 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             var adapterVersion = Path.GetFileNameWithoutExtension(packageFile);
             var dedicatedAdapterRoot = Path.Combine(project.RepoPath, "exports", "web-preview-dedicated-adapters", adapterVersion);
@@ -1095,9 +1131,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-towerdemo2-adapter-reuse-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "Towerdemo2-v0.1.20260628.005.zip";
@@ -1106,7 +1144,7 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
@@ -1149,9 +1187,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-legacy-tower-type-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "Towerdemo2-v0.1.20260627.004.zip";
@@ -1160,11 +1200,12 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
 
@@ -1195,9 +1236,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-rpg-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "RpgQuest-v0.1.20260627.001.zip";
@@ -1206,11 +1249,12 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
             var contract = previewData.RootElement.GetProperty("web_preview_manifest").GetProperty("conversion_contract");
@@ -1266,9 +1310,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync($"web-preview-{gameTypeId}-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = $"{gameName}-v0.1.20260627.001.zip";
@@ -1277,11 +1323,12 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
             var contract = previewData.RootElement.GetProperty("web_preview_manifest").GetProperty("conversion_contract");
@@ -1314,9 +1361,11 @@ const Engine = (function () {
         try
         {
             var options = Options(workspaceRoot.Path, repoRoot.Path, Path.Combine(workspaceRoot.Path, "metadata.sqlite3"));
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.CreateUserAccountAsync("web-preview-guide-user", 1);
+            using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
             var projectId = await CreateProjectAsync(store, options, account.AccountId);
             var project = (await store.GetProjectSnapshotAsync(projectId))!;
             var packageFile = "GuideMismatch-v0.1.20260627.001.zip";
@@ -1325,11 +1374,12 @@ const Engine = (function () {
             var service = new ProjectWebPreviewService(
                 store,
                 options,
-                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+                new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store),
                 new ProjectWebPreviewConcurrencyLimiter(maxConcurrentWebPreviewsPerAccount: 1),
                 runner);
 
             var result = await service.GeneratePreviewAsync(account.AccountId, project.ProjectId, packageFile);
+            output.WriteLine("OWNED_PREVIEW_RESULT:" + JsonSerializer.Serialize(result));
             var previewDataPath = Path.Combine(project.RepoPath, "exports", "web-previews", result.PreviewId, "preview-data.json");
             using var previewData = JsonDocument.Parse(await File.ReadAllTextAsync(previewDataPath, Encoding.UTF8));
 
@@ -1346,7 +1396,7 @@ const Engine = (function () {
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         result.Succeeded.Should().BeTrue(result.FailureCode);
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
@@ -1355,7 +1405,7 @@ const Engine = (function () {
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string databasePath)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = databasePath,

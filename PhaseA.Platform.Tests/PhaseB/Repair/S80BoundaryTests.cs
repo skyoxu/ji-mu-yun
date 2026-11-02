@@ -1,3 +1,5 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -15,6 +17,7 @@ public sealed class S80BoundaryTests
     public async Task O_D92173A93038()
     {
         using var scope = await S80Scope.CreateAsync();
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateProjectAsync("restore-not-implicit");
 
         var projectExists = await scope.Store.GetProjectSnapshotAsync(project.ProjectId) is not null;
@@ -29,6 +32,7 @@ public sealed class S80BoundaryTests
     public async Task O_FCAFEB88277C()
     {
         using var scope = await S80Scope.CreateAsync();
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateProjectAsync("snapshot-not-implicit");
 
         var projectExists = await scope.Store.GetProjectSnapshotAsync(project.ProjectId) is not null;
@@ -73,7 +77,7 @@ public sealed class S80BoundaryTests
             var database = TempSqliteDatabase.Create();
             var workspaceRoot = Path.Combine(Path.GetTempPath(), $"phase-s80-{Guid.NewGuid():N}");
             Directory.CreateDirectory(workspaceRoot);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

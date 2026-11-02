@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using PhaseA.Platform.Runs;
 using Xunit;
@@ -16,8 +17,10 @@ public sealed class S33BoundaryTests
     [InlineData(6000)]
     public async Task O_BD42DD72212F(int startupDelayMilliseconds)
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1);
-        var root = Directory.CreateTempSubdirectory("s33-cancel-");
+        await using var fixture = await S206AuthorityFixture.CreateAsync();
+        using var current = S206TestSupport.EnterCurrentContext(fixture.Admin.Context);
+        var queue = fixture.Queue();
+        var root = Directory.CreateDirectory(Path.Combine(fixture.Admin.Project.RepoPath, "s33-cancel-" + Guid.NewGuid().ToString("N")));
         var started = Path.Combine(root.FullName, "started.txt");
         using var operationCancellation = new CancellationTokenSource();
         Task<HostedProcessResult>? operation = null;
@@ -39,28 +42,28 @@ time.sleep(30)
         try
         {
             operation = queue.ExecuteAsync(
-                "s33-cancel-run",
-                "s33-account",
-                "s33-project",
+                fixture.Admin.RunId,
+                fixture.Admin.AccountId,
+                fixture.Admin.Project.ProjectId,
                 "heavy-write",
-                token => new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+                token => new HostedProcessRunner(authority: fixture.Store).RunAsync(new HostedProcessCommand(
                     "py",
                     ["-3", script, started, startupDelayMilliseconds.ToString(System.Globalization.CultureInfo.InvariantCulture)],
                     root.FullName,
                     new Dictionary<string, string>(),
-                    RunId: "s33-cancel-run"), token),
+                    RunId: fixture.Admin.RunId), token),
                 operationCancellation.Token);
 
             // ADR-0035/0061: readiness is separate from the cancellation deadline.
             await WaitForFileAsync(started, operation, TimeSpan.FromSeconds(30));
 
-            cancellationRequested = queue.CancelRun("s33-cancel-run");
+            cancellationRequested = queue.CancelRun(fixture.Admin.RunId);
             // ADR-0035/0061: observe the actual cancellation/cleanup boundary,
             // rather than sampling a loaded Windows host after a fixed sleep.
             // A lost cancellation still fails: the real process sleeps 30s.
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => operation.WaitAsync(TimeSpan.FromSeconds(5)));
             stoppedAfterCancellation = operation.IsCanceled;
-            var readback = queue.GetReadback("s33-account", includeAll: true);
+            var readback = queue.GetReadback(fixture.Admin.AccountId, includeAll: true);
             queueClearedAfterCancellation = !readback.Running &&
                                             readback.Current is null &&
                                             readback.QueuedCount == 0 &&
@@ -93,34 +96,36 @@ time.sleep(30)
     [Fact]
     public async Task O_8E338FFA23D1()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1);
+        await using var fixture = await S206AuthorityFixture.CreateAsync();
+        using var current = S206TestSupport.EnterCurrentContext(fixture.Admin.Context);
+        var queue = fixture.Queue();
         var workStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowTerminalWork = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var operation = queue.ExecuteAsync(
-            "s33-cleanup-run",
-            "s33-account",
-            "s33-project",
+            fixture.Admin.RunId,
+            fixture.Admin.AccountId,
+            fixture.Admin.Project.ProjectId,
             "heavy-write",
             async _ =>
             {
                 workStarted.TrySetResult(true);
                 await allowTerminalWork.Task;
-                return await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+                return await new HostedProcessRunner(authority: fixture.Store).RunAsync(new HostedProcessCommand(
                     "cmd.exe",
                     ["/d", "/c", "echo S33_RUNNER_COMPLETED"],
-                    Path.GetTempPath(),
+                    fixture.Admin.Project.RepoPath,
                     new Dictionary<string, string>()));
             });
 
         await workStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        var active = queue.GetReadback("s33-account", includeAll: true);
+        var active = queue.GetReadback(fixture.Admin.AccountId, includeAll: true);
         allowTerminalWork.TrySetResult(true);
         var runnerResult = await operation;
-        var cleaned = queue.GetReadback("s33-account", includeAll: true);
+        var cleaned = queue.GetReadback(fixture.Admin.AccountId, includeAll: true);
 
         Require(
             active.Running &&
-            active.Current?.RunId == "s33-cleanup-run" &&
+            active.Current?.RunId == fixture.Admin.RunId &&
             runnerResult.ExitCode == 0 &&
             runnerResult.Stdout.Contains("S33_RUNNER_COMPLETED", StringComparison.Ordinal) &&
             !cleaned.Running &&

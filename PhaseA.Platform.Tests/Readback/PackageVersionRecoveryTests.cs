@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
@@ -23,7 +24,8 @@ public sealed class PackageVersionRecoveryTests
     public async Task SelectedVersionBecomesActive_AndHistoricalDownloadsSurviveRestart()
     {
         using var scope = await Scope.CreateAsync();
-        var first = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId);
+        using var current = S206TestSupport.EnterCurrentContext(scope.Context);
+        var first = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, requestContext: scope.Context);
         Assert.Equal("succeeded", first.Status);
         Assert.NotNull(first.SnapshotId);
         var zip = await scope.Packages.ReadPackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, first.FileName);
@@ -31,9 +33,9 @@ public sealed class PackageVersionRecoveryTests
         using (var reader = new StreamReader(archive.GetEntry("Game.Core/Version.cs")!.Open()))
             Assert.Equal("version-one", await reader.ReadToEndAsync());
         File.WriteAllText(scope.Source, "version-two");
-        var second = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId);
+        var second = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, requestContext: scope.Context);
         Assert.Equal("succeeded", second.Status);
-        await using (var occupied = await scope.Queue.EnterAsync("occupied", "other", "other", "test"))
+        await using (var occupied = await scope.Queue.EnterAsync("occupied", scope.Owner.AccountId, scope.BlockingProjectId, "test"))
         {
             var firstRequest = await scope.Restorer.AdmitAsync(scope.Context, scope.Project.ProjectId, first.FileName, "restore-one");
             var duplicate = await scope.Restorer.AdmitAsync(scope.Context, scope.Project.ProjectId, first.FileName, "restore-one");
@@ -51,10 +53,10 @@ public sealed class PackageVersionRecoveryTests
         Assert.True(RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(scope.Descriptor, active.RepoPath));
         Assert.NotNull(await scope.Packages.ReadPackageAsync(scope.Owner.AccountId, active.ProjectId, second.FileName));
         Assert.Equal("restore_revalidation_required",
-            (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId)).FailureCode);
+            (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId, requestContext: scope.Context)).FailureCode);
         var revalidation = await scope.Store.CreateRunAsync(active.ProjectId, active.WorkspaceId, "prototype-7day-playable");
         await scope.Store.CompleteRunAsync(revalidation, "succeeded", 0, "", "", ValidationEvidence(active));
-        var repackaged = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId);
+        var repackaged = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, active.ProjectId, requestContext: scope.Context);
         Assert.Equal("succeeded", repackaged.Status);
         var activeZip = await scope.Packages.ReadPackageAsync(scope.Owner.AccountId, active.ProjectId, repackaged.FileName);
         using (var archive = new ZipArchive(new MemoryStream(activeZip!.Content)))
@@ -65,7 +67,7 @@ public sealed class PackageVersionRecoveryTests
             active.ProjectId, first.FileName, "restore-one")).OperationId);
         // Reload the persisted snapshot catalog and active metadata as a fresh consumer.
         var storage = scope.Store.CreateWorkspaceStorageService();
-        var packages = new ProjectPackageService(scope.Store, scope.Options, storage: storage);
+        var packages = new ProjectPackageService(scope.Store, scope.Options, scope.Queue, processRunner: new HostedProcessRunner(authority: scope.Store), storage: storage);
         var restore = scope.NewRestorer(packages, storage);
         var request = await restore.AdmitAsync(scope.Context, active.ProjectId, second.FileName, "restore-two");
         Assert.Equal("succeeded", (await scope.WaitAsync(request.OperationId!)).Status);
@@ -91,11 +93,12 @@ public sealed class PackageVersionRecoveryTests
     public async Task FailedRestoreKeepsCurrentFiles_AndReleasesTheProject(string fault)
     {
         using var scope = await Scope.CreateAsync();
-        var package = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId);
+        using var current = S206TestSupport.EnterCurrentContext(scope.Context);
+        var package = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, requestContext: scope.Context);
         Assert.Equal("succeeded", package.Status);
         File.WriteAllText(scope.Source, "current-work");
         ProjectPackageRestoreAdmission request;
-        await using (var occupied = await scope.Queue.EnterAsync("occupied", "other", "other", "test"))
+        await using (var occupied = await scope.Queue.EnterAsync("occupied", scope.Owner.AccountId, scope.BlockingProjectId, "test"))
         {
             request = await scope.Restorer.AdmitAsync(scope.Context, scope.Project.ProjectId, package.FileName, "failed-restore");
             Assert.NotNull(request.OperationId);
@@ -115,7 +118,8 @@ public sealed class PackageVersionRecoveryTests
     public async Task OtherAccountAndMissingSnapshotCannotAdmitRestoration()
     {
         using var scope = await Scope.CreateAsync();
-        var package = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId);
+        using var current = S206TestSupport.EnterCurrentContext(scope.Context);
+        var package = await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, requestContext: scope.Context);
         var other = await scope.Store.CreateUserAccountAsync("other-" + Guid.NewGuid().ToString("N"), 2);
         var context = new RequestContext(other.Username, other.AccountId, new HashSet<string> { "user" },
             PhaseAAuth.HashTokenForStorage(other.Token), "other-request");
@@ -129,8 +133,9 @@ public sealed class PackageVersionRecoveryTests
     public async Task SnapshotFailureCannotPublishAPackageWithoutRecovery()
     {
         using var scope = await Scope.CreateAsync();
+        using var current = S206TestSupport.EnterCurrentContext(scope.Context);
         scope.Storage.SetQuota(scope.Owner.AccountId, 0);
-        Assert.Equal("failed", (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId)).Status);
+        Assert.Equal("failed", (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, requestContext: scope.Context)).Status);
         Assert.Empty((await scope.Packages.ListPackagesAsync(scope.Owner.AccountId, scope.Project.ProjectId))!.Packages);
         Assert.Empty(scope.Storage.ListSnapshots(scope.Owner.AccountId, scope.Project.ProjectId));
         Assert.False(await scope.Store.HasRunnerLockAsync(scope.Project.ProjectId));
@@ -150,8 +155,9 @@ public sealed class PackageVersionRecoveryTests
         public WorkspaceStorageService Storage = null!;
         public ProjectPackageService Packages = null!;
         public ProjectPackageRestoreService Restorer = null!;
-        public HeavyRunnerQueueService Queue = new(TimeSpan.FromSeconds(1), 1);
+        public HeavyRunnerQueueService Queue = null!;
         public RequestContext Context = null!;
+        public string BlockingProjectId = "";
         public string Root = "";
         public string? PendingRun;
         private string? _previousKeys;
@@ -162,7 +168,7 @@ public sealed class PackageVersionRecoveryTests
             var scope = new Scope { Database = TempSqliteDatabase.Create(), Root = Path.Combine(Path.GetTempPath(), "phase-version-" + Guid.NewGuid().ToString("N")) };
             scope._previousKeys = Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT");
             Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", Path.Combine(scope.Root, "keys"));
-            scope.Options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            scope.Options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(scope.Root, "workspaces"), ["PHASEA_REPOSITORY_ROOT"] = AppContext.BaseDirectory,
                 ["PHASEA_NODE_ID"] = "test-physical-node", ["PHASEA_NODE_SCOPE"] = "single_node_test",
                 ["PHASEA_NODE_TOPOLOGY"] = "single_service", ["PHASEA_ENABLED_ROLES"] = "entry,production",
@@ -170,6 +176,9 @@ public sealed class PackageVersionRecoveryTests
             await SqliteMetadataSchema.InitializeSingleNodeTestAsync(scope.Database.ConnectionString,scope.Options);
             scope.Store = new PhaseAMetadataStore(scope.Database.ConnectionString, scope.Options);
             scope.Owner = await scope.Store.CreateUserAccountAsync("version-owner-" + Guid.NewGuid().ToString("N"), 2);
+            scope.Context = await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token));
+            using var current = S206TestSupport.EnterCurrentContext(scope.Context);
+            scope.Queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), 1, scope.Store);
             var creator = new ProjectCreationService(scope.Store, scope.Options, new ProjectRuleCatalog(), new Seed(),
                 runnerProvisioner: new WindowsProjectRunnerProvisioner(scope.Options));
             var created = await creator.CreateProjectAsync(scope.Owner.AccountId, new(null, "Version Game", "default", null, null, null, null));
@@ -181,11 +190,15 @@ public sealed class PackageVersionRecoveryTests
             Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(scope.Project.WorkspaceRootPath, out scope.Descriptor));
             var run = await scope.Store.CreateRunAsync(created.ProjectId!, scope.Project.WorkspaceId, "prototype-7day-playable");
             await scope.Store.CompleteRunAsync(run, "succeeded", 0, "", "", "{}");
+            scope.BlockingProjectId = Guid.NewGuid().ToString("N");
+            var blockedLayout = WorkspaceLayoutBuilder.Build(scope.Options.HostedWorkspaceRoot, scope.Owner.AccountId, scope.BlockingProjectId);
+            var blocking = await scope.Store.CreateProjectAsync(new(scope.BlockingProjectId, scope.Owner.AccountId,
+                "Queue blocker", "Queue blocker", "manual", "default", false, [], blockedLayout.RootPath,
+                blockedLayout.RepoPath, blockedLayout.RuntimePath, blockedLayout.MetaPath));
+            Assert.True(blocking.Succeeded);
             scope.Storage = scope.Store.CreateWorkspaceStorageService();
-            scope.Packages = new ProjectPackageService(scope.Store, scope.Options, storage: scope.Storage);
+            scope.Packages = new ProjectPackageService(scope.Store, scope.Options, scope.Queue, processRunner: new HostedProcessRunner(authority: scope.Store), storage: scope.Storage);
             scope.Restorer = scope.NewRestorer(scope.Packages, scope.Storage);
-            scope.Context = new(scope.Owner.Username, scope.Owner.AccountId, new HashSet<string> { "user" },
-                PhaseAAuth.HashTokenForStorage(scope.Owner.Token), "version-request");
             return scope;
         }
         public ProjectPackageRestoreService NewRestorer(ProjectPackageService packages, WorkspaceStorageService storage) =>

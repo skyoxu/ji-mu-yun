@@ -61,7 +61,8 @@ public sealed class S25BoundaryTests
         var admin = (await store.ListAccountsAsync()).Single(account => account.IsAdmin);
         var target = await store.CreateUserAccountAsync("s25-target", 1);
         var actor = await store.CreateUserAccountAsync("s25-non-admin", 1);
-        var projectRoot = Path.Combine(workspaceRoot, "retained-project");
+        var layout = WorkspaceLayoutBuilder.Build(workspaceRoot, target.AccountId, "s25-project-" + nonce);
+        var projectRoot = layout.RootPath;
         var repo = Path.Combine(projectRoot, "repo");
         Directory.CreateDirectory(repo);
         File.WriteAllText(Path.Combine(repo, "retained.txt"), nonce);
@@ -73,9 +74,8 @@ public sealed class S25BoundaryTests
         // Seed an already initialized project, not an abandoned bootstrap candidate.
         // This is fixture setup only; no Chapter 2 workflow or live state is invoked.
         await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
-        if(!OperatingSystem.IsWindows())
-            PhaseA.Platform.Tests.NodeIdentity.S206TestSupport.RegisterLogicalReadbackProject(
-                await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."));
+        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(
+            await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."), options);
         if (readerMode == "verify-failures")
             await ObserveServiceFailuresAsync(root, repository);
         var listener = new TcpListener(IPAddress.Loopback, 0);
@@ -104,11 +104,9 @@ public sealed class S25BoundaryTests
         start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
 
         using var host = Process.Start(start) ?? throw new InvalidOperationException("S25 disposable host did not start.");
-        // Drain streams continuously, without persisting credential-bearing response bodies.
-        host.OutputDataReceived += (_, _) => { };
-        host.ErrorDataReceived += (_, _) => { };
-        host.BeginOutputReadLine();
-        host.BeginErrorReadLine();
+        // ADR-0061: preserve owned host diagnostics on startup failure; redact the synthetic credential.
+        var hostStdout = host.StandardOutput.ReadToEndAsync();
+        var hostStderr = host.StandardError.ReadToEndAsync();
         try
         {
             using var client = new HttpClient { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(2) };
@@ -123,7 +121,13 @@ public sealed class S25BoundaryTests
                 catch (Exception error) when (error is HttpRequestException or TaskCanceledException) { }
                 await Task.Delay(250);
             }
-            if (!healthy) throw new InvalidOperationException("S25 disposable host failed health precondition.");
+            if (!healthy)
+            {
+                if (!host.HasExited) { host.Kill(entireProcessTree: true); await host.WaitForExitAsync(); }
+                var diagnostic = ((await hostStdout) + "\n" + (await hostStderr)).Replace(adminToken, "[redacted-owned-token]", StringComparison.Ordinal);
+                File.WriteAllText(Path.Combine(root, "host-startup-failure.log"), diagnostic);
+                throw new InvalidOperationException("S25 disposable host failed health precondition: " + diagnostic);
+            }
             var readerStart = new ProcessStartInfo("py")
             {
                 UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true,

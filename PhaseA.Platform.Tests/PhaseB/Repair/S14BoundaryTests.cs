@@ -47,6 +47,7 @@ public sealed class S14BoundaryTests
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(Guid.NewGuid().ToString("N")),
             ["PHASEA_NODE_ID"] = "test-physical-node",
             ["PHASEA_NODE_SCOPE"] = "single_node_test",
             ["PHASEA_NODE_TOPOLOGY"] = "single_service",
@@ -99,7 +100,7 @@ public sealed class S14BoundaryTests
             var url = $"http://127.0.0.1:{FreePort()}";
             var seedSourceRoot = Path.Combine(root, "seed-source");
             Directory.CreateDirectory(seedSourceRoot);
-            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot);
+            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot, options.AdminTokenHash);
             using var healthClient = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(10) };
             await WaitForHealthAsync(healthClient, process);
 
@@ -126,7 +127,7 @@ public sealed class S14BoundaryTests
             process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
             process.Dispose();
-            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot);
+            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot, options.AdminTokenHash);
             await WaitForHealthAsync(healthClient, process);
             foreach (var interrupted in new[] { queuedBeforeRestart, runningBeforeRestart })
             {
@@ -288,7 +289,7 @@ public sealed class S14BoundaryTests
         binding.ExecuteNonQuery();
     }
 
-    private static Process StartServer(string url, string databasePath, string workspaceRoot, string seedSourceRoot)
+    private static Process StartServer(string url, string databasePath, string workspaceRoot, string seedSourceRoot, string adminTokenHash)
     {
         var start = new ProcessStartInfo("dotnet", $"\"{PlatformAssemblyPath}\"")
         {
@@ -302,6 +303,7 @@ public sealed class S14BoundaryTests
         start.Environment["ASPNETCORE_URLS"] = url;
         start.Environment["PUBLIC_BASE_URL"] = "https://localhost";
         start.Environment["PHASEA_METADATA_DB_PATH"] = databasePath;
+        start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = adminTokenHash;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = seedSourceRoot;
         start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
