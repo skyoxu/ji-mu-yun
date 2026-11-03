@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
@@ -95,7 +96,7 @@ public sealed class S68BoundaryTests : IDisposable
             new Dictionary<string, string>());
         try
         {
-            return await new HostedProcessRunner().RunAsync(command);
+            return await OwnedCiOperation.Runner().RunAsync(command);
         }
         catch (Exception error) when (error is Win32Exception or InvalidOperationException)
         {

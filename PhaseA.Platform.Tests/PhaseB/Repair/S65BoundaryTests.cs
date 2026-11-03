@@ -1,3 +1,5 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -80,11 +82,12 @@ public sealed class S65BoundaryTests
 
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
             });
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
             var store = new PhaseAMetadataStore(connectionString, options);
             var address = $"http://127.0.0.1:{FreePort()}";
             var process = StartServer(address, databasePath, workspaceRoot);
@@ -189,6 +192,8 @@ public sealed class S65BoundaryTests
             start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
             start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
             start.Environment["PHASEA_SERVICE_STATE"] = "test";
+            start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage("s65-owned-fixture-administrator");
+            S206TestSupport.ConfigureOwnedHost(start);
             return Process.Start(start) ?? throw new InvalidOperationException("S65 fixture could not start PhaseA.Platform.");
         }
 

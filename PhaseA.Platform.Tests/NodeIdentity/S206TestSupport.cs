@@ -106,6 +106,29 @@ internal static class S206TestSupport
         return PhaseAPlatformOptionsLoader.FromDictionary(settings);
     }
 
+    // ADR-0061: explicit matching node identity for disposable legacy HTTP hosts.
+    // Call sites opt in; missing/invalid production configuration remains rejected.
+    internal static void ConfigureOwnedHost(ProcessStartInfo start)
+    {
+        start.Environment["PHASEA_NODE_ID"] = "owned-ci-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+    }
+
+    // Only called after the fixture has killed and awaited its own host.
+    internal static async Task<bool> ObserveStoppedHostAsync(HttpClient client)
+    {
+        try
+        {
+            using var response = await client.GetAsync("/api/session");
+            return false;
+        }
+        catch (HttpRequestException) { return true; }
+        catch (TaskCanceledException error) when (error.InnerException is TimeoutException) { return true; }
+    }
+
     internal static async Task<RequestContext> FixtureContextAsync(PhaseAMetadataStore store, string tokenHash)
     {
         var account = await store.ResolveAccountByTokenHashAsync(tokenHash)
@@ -258,12 +281,7 @@ internal static class S206TestSupport
             {
                 process.Kill(entireProcessTree: true);
                 await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10));
-                try
-                {
-                    using var unexpected = await client.GetAsync("/api/session");
-                    unavailableTransportObserved = false;
-                }
-                catch (HttpRequestException) { unavailableTransportObserved = true; }
+                unavailableTransportObserved = await ObserveStoppedHostAsync(client);
             }
             return new { phase, roles, started = true, startupRejected = false, roleDiagnostic = false,
                 sessionStatus = (int)session.StatusCode, projectsStatus = (int)projects.StatusCode, ownership,

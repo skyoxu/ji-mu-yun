@@ -108,11 +108,13 @@ public sealed class S31BoundaryTests
         var database = Path.Combine(data, "metadata.sqlite3");
         var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
 
+        // ADR-0061: these HTTP contracts need an owned seed, not the live repository or device indexes.
+        var seedRepository = Path.Combine(repository, "PhaseA.Platform.Tests", "Fixtures", "ProjectSeedRepository");
         var adminToken = "s31-disposable-admin-" + Guid.NewGuid().ToString("N");
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces"),
-            ["PHASEA_REPOSITORY_ROOT"] = repository,
+            ["PHASEA_REPOSITORY_ROOT"] = seedRepository,
             ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
             ["PHASEA_NODE_ID"] = "test-physical-node",
             ["PHASEA_NODE_SCOPE"] = "single_node_test",
@@ -130,9 +132,8 @@ public sealed class S31BoundaryTests
             workspace, repo, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 HTTP project setup failed.");
         await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
-        if(!OperatingSystem.IsWindows())
-            PhaseA.Platform.Tests.NodeIdentity.S206TestSupport.RegisterLogicalReadbackProject(
-                await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."));
+        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(
+            await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."), options);
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}";
@@ -148,7 +149,7 @@ public sealed class S31BoundaryTests
         start.Environment["PUBLIC_BASE_URL"] = "https://localhost";
         start.Environment["PHASEA_METADATA_DB_PATH"] = database;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces");
-        start.Environment["PHASEA_REPOSITORY_ROOT"] = repository;
+        start.Environment["PHASEA_REPOSITORY_ROOT"] = seedRepository;
         start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken);
         start.Environment["PHASEA_SERVICE_STATE"] = "test";
         start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
@@ -170,6 +171,8 @@ public sealed class S31BoundaryTests
             using var delayHandler = new FirstInventoryDelayHandler(firstInventoryDelayMs);
             using var client = new HttpClient(delayHandler) { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(5) };
             var readinessAttempts = await WaitForHttpReadyAsync(client, host, owner.Token, project.ProjectId);
+            if (Directory.Exists(Path.Combine(repo, "knowledge")) || Directory.Exists(Path.Combine(repo, ".skill-input-work")))
+                throw new InvalidOperationException("HTTP fixture unexpectedly materialized device knowledge or toolchain work records.");
             if (firstInventoryDelayMs > 5000 && (!delayHandler.CancellationObserved || readinessAttempts < 3))
                 throw new InvalidOperationException("S31 delayed inventory control did not exercise startup timeout recovery.");
 

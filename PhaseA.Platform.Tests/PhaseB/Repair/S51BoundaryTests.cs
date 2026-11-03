@@ -527,8 +527,10 @@ public sealed class S51BoundaryTests
         var db = Path.Combine(root, "http", "metadata.sqlite3"); Directory.CreateDirectory(Path.GetDirectoryName(db)!);
         var workspace = Path.Combine(root, "http", "workspace", "owned"); Directory.CreateDirectory(Path.Combine(workspace, "repo"));
         var cs = new SqliteConnectionStringBuilder { DataSource = db, Pooling = false }.ToString();
+        // ADR-0061: these HTTP contracts need an owned seed, not the live repository or device indexes.
+        var seedRepository = Path.Combine(repository, "PhaseA.Platform.Tests", "Fixtures", "ProjectSeedRepository");
         var adminToken = "s51-admin-" + Guid.NewGuid().ToString("N");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"), ["PHASEA_REPOSITORY_ROOT"] = repository, ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
+        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"), ["PHASEA_REPOSITORY_ROOT"] = seedRepository, ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
             ["PHASEA_NODE_ID"] = "test-physical-node",
             ["PHASEA_NODE_SCOPE"] = "single_node_test",
             ["PHASEA_NODE_TOPOLOGY"] = "single_service",
@@ -540,12 +542,11 @@ public sealed class S51BoundaryTests
         var owner = await store.CreateUserAccountAsync("s51-http-owner", 1); var stranger = await store.CreateUserAccountAsync("s51-http-stranger", 1);
         var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-http-project", owner.AccountId, "S51 HTTP", "S51 HTTP", "manual", "default", false, [], workspace, Path.Combine(workspace, "repo"), Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S51 HTTP project setup failed."); await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
-        if(!OperatingSystem.IsWindows())
-            PhaseA.Platform.Tests.NodeIdentity.S206TestSupport.RegisterLogicalReadbackProject(
-                await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."));
+        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(
+            await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."), options);
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}"; listener.Stop();
         var start = new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory = Path.Combine(repository, "PhaseA.Platform"), UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
-        start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "PhaseA.Platform.dll")); start.Environment["APP_BIND_URL"] = address; start.Environment["ASPNETCORE_URLS"] = address; start.Environment["PUBLIC_BASE_URL"] = "https://localhost"; start.Environment["PHASEA_METADATA_DB_PATH"] = db; start.Environment["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"); start.Environment["PHASEA_REPOSITORY_ROOT"] = repository; start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken); start.Environment["PHASEA_SERVICE_STATE"] = "test";
+        start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "PhaseA.Platform.dll")); start.Environment["APP_BIND_URL"] = address; start.Environment["ASPNETCORE_URLS"] = address; start.Environment["PUBLIC_BASE_URL"] = "https://localhost"; start.Environment["PHASEA_METADATA_DB_PATH"] = db; start.Environment["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"); start.Environment["PHASEA_REPOSITORY_ROOT"] = seedRepository; start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken); start.Environment["PHASEA_SERVICE_STATE"] = "test";
         start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
         start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
         start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
@@ -556,6 +557,8 @@ public sealed class S51BoundaryTests
         try
         {
             using var client = new HttpClient { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(5) }; for (var i = 0; i < 40; i++) { try { using var health = await client.GetAsync("/healthz"); if (health.IsSuccessStatusCode) break; } catch { } await Task.Delay(250); }
+            if (Directory.Exists(Path.Combine(workspace, "repo", "knowledge")) || Directory.Exists(Path.Combine(workspace, "repo", ".skill-input-work")))
+                throw new InvalidOperationException("HTTP fixture unexpectedly materialized device knowledge or toolchain work records.");
             await ObserveHttp(client, "unauthenticated", "/api/session", null, 401, "authentication_required", observed, valid);
             await ObserveHttp(client, "forbidden", "/api/admin/users", stranger.Token, 403, "admin_required", observed, valid);
             await ObserveHttp(client, "ownership_mismatch", "/api/projects/" + project.ProjectId, stranger.Token, 404, "project_not_found", observed, valid);

@@ -106,6 +106,13 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Bind owned fixture Python executable
+        shell: pwsh
+        run: |
+          $python = (Get-Command python -ErrorAction Stop).Source
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) { throw 'Owned fixture Python executable missing.' }
+          "S206_TEST_PYTHON=$python" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: CI process runner regression (Python)
         shell: pwsh
         run: |

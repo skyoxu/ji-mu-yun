@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.AspNetCore.Http;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -43,6 +44,7 @@ public sealed class S15BoundaryTests
         const string passwordOnly = "s15-password-only";
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
             ["PHASEA_ADMIN_PASSWORD_HASH"] = PhaseAAuth.HashTokenForStorage(passwordOnly)
         });
 
@@ -131,6 +133,7 @@ public sealed class S15BoundaryTests
     {
         return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath(),
             ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminBearer)
         });
     }
@@ -167,6 +170,7 @@ public sealed class S15BoundaryTests
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = repositoryRoot;
         start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken);
+        S206TestSupport.ConfigureOwnedHost(start);
         return Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
     }
 
