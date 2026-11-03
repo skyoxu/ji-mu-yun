@@ -7,20 +7,24 @@ public sealed class ProjectInitializationService
 {
     private static readonly TimeSpan StaleInitializationAge = TimeSpan.FromMinutes(15);
 
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly Chapter2BootstrapService _chapter2;
     private readonly ILogger<ProjectInitializationService> _logger;
 
     public ProjectInitializationService(
-        IServiceScopeFactory scopeFactory,
+        NodeProjectMetadata metadataStore,
+        Chapter2BootstrapService chapter2,
         ILogger<ProjectInitializationService> logger)
     {
-        _scopeFactory = scopeFactory;
+        _metadataStore = metadataStore;
+        _chapter2 = chapter2;
         _logger = logger;
     }
 
     public void StartChapter2Bootstrap(string projectId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
+        _metadataStore.DemandCurrent(projectId:projectId,write:true);
         _ = Task.Run(() => RunChapter2BootstrapSafelyAsync(projectId));
     }
 
@@ -38,8 +42,8 @@ public sealed class ProjectInitializationService
         TimeSpan maxAge,
         CancellationToken cancellationToken)
     {
-        using var scope = _scopeFactory.CreateScope();
-        var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
+
+        var metadataStore = _metadataStore;
         var staleProjects = maxAge == TimeSpan.Zero
             ? (await metadataStore.ListOrphanedProjectInitializationsAsync(cancellationToken))
                 .Concat(await metadataStore.ListStaleProjectInitializationsAsync(maxAge, cancellationToken))
@@ -77,14 +81,18 @@ public sealed class ProjectInitializationService
         {
             await RunChapter2BootstrapAsync(projectId);
         }
+        catch (UnauthorizedAccessException)
+        {
+            _logger.LogWarning("Project initialization guard refused {ProjectId}; no failure compensation was performed.",projectId);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled project initialization failure for {ProjectId}", projectId);
 
             try
             {
-                using var scope = _scopeFactory.CreateScope();
-                var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
+
+                var metadataStore = _metadataStore;
                 await RecordFailureAndDeleteProjectAsync(metadataStore, projectId, ex.Message);
             }
             catch (Exception cleanupEx)
@@ -98,9 +106,9 @@ public sealed class ProjectInitializationService
     {
         try
         {
-            using var scope = _scopeFactory.CreateScope();
-            var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
-            var chapter2 = scope.ServiceProvider.GetRequiredService<Chapter2BootstrapService>();
+
+            var metadataStore = _metadataStore;
+            var chapter2 = _chapter2;
             await metadataStore.SetProjectBootstrapStatusAsync(projectId, "running", null);
             var project = await metadataStore.GetProjectSnapshotAsync(projectId)
                 ?? throw new InvalidOperationException("Project not found.");
@@ -120,17 +128,21 @@ public sealed class ProjectInitializationService
                 projectId,
                 FirstNonEmpty(ExtractFailureSummary(result.Stdout), result.Stderr, result.Stdout, result.Status));
         }
+        catch (UnauthorizedAccessException)
+        {
+            _logger.LogWarning("Project initialization guard refused {ProjectId}; no failure compensation was performed.",projectId);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Project initialization failed for {ProjectId}", projectId);
-            using var scope = _scopeFactory.CreateScope();
-            var metadataStore = scope.ServiceProvider.GetRequiredService<PhaseAMetadataStore>();
+
+            var metadataStore = _metadataStore;
             await RecordFailureAndDeleteProjectAsync(metadataStore, projectId, ex.Message);
         }
     }
 
     private static async Task RecordFailureAndDeleteProjectAsync(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         string projectId,
         string failureError)
     {

@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -20,8 +22,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var service = Service(store, options);
@@ -41,8 +44,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -127,8 +131,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -180,8 +185,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -236,8 +242,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -297,8 +304,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -330,8 +338,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -363,8 +372,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -396,8 +406,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -448,8 +459,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -489,8 +501,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, seedPrototypeBaseline: false);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -535,8 +548,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, seedPrototypeBaseline: false);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -583,8 +597,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -650,8 +665,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -694,8 +710,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -733,8 +750,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -771,8 +789,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -831,8 +850,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -868,8 +888,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -913,8 +934,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -947,8 +969,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -976,8 +999,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1019,8 +1043,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1087,8 +1112,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1131,8 +1157,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1168,8 +1195,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1214,8 +1242,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1256,8 +1285,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1479,8 +1509,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1546,8 +1577,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1577,8 +1609,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1612,8 +1645,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1637,7 +1671,9 @@ public sealed class GddMilestoneStepServiceTests
             "",
             "",
             $$"""{"codex_output":"{{outputRelativePath}}"}""");
-        WriteNeedsFixStepState(project.MetaPath, project.RepoPath, runId);
+        var legacySession = await store.CreateProjectIterationSessionAsync(accountId, projectId, "manual_feedback",
+            "Legacy module", "Legacy module", [new ProjectIterationGoalCreateCommand(1, "M1", "M1", "M1")]);
+        WriteNeedsFixStepState(project.MetaPath, project.RepoPath, runId, legacySession.SessionId);
         var service = Service(store, options);
 
         var result = await service.GetOrCreateLatestAsync(accountId, projectId);
@@ -1658,8 +1694,9 @@ public sealed class GddMilestoneStepServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1698,8 +1735,8 @@ public sealed class GddMilestoneStepServiceTests
         runner ??= new FakeHostedProcessRunner(runnerOutput);
         return new GddMilestoneStepService(
             store,
-            new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter()),
-            new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), new PrototypeRouteStateWriter()),
+            new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PrototypeRouteStateWriter(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)),
+            new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), new PrototypeRouteStateWriter()),
             llmRouteEngine,
             validationService,
             prototypeWorkflowService: prototypeWorkflow,
@@ -1717,7 +1754,7 @@ public sealed class GddMilestoneStepServiceTests
         string accountId,
         bool seedPrototypeBaseline = true)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "Action Roguelike", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(result.ProjectId!);
@@ -1735,7 +1772,7 @@ public sealed class GddMilestoneStepServiceTests
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
@@ -2053,7 +2090,7 @@ public sealed class GddMilestoneStepServiceTests
         WriteStepState(metaPath, repoPath, payload);
     }
 
-    private static void WriteNeedsFixStepState(string metaPath, string repoPath, string runId)
+    private static void WriteNeedsFixStepState(string metaPath, string repoPath, string runId, string sessionId)
     {
         var payload = $$"""
 {
@@ -2076,7 +2113,7 @@ public sealed class GddMilestoneStepServiceTests
       "nextStepReview": "",
       "status": "needs_fix",
       "locked": false,
-      "iterationSessionId": "legacy-session-1",
+      "iterationSessionId": "{{sessionId}}",
       "executionRunId": "{{runId}}"
     }
   ]

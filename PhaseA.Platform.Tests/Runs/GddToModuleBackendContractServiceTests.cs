@@ -1,3 +1,5 @@
+using System.IO.Compression;
+using PhaseA.Platform.Readback;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +13,9 @@ using PhaseA.Platform.Projects;
 using PhaseA.Platform.Prototypes;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Tests.Data;
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Skills;
 using PhaseA.Platform.Workspaces;
 using PhaseA.Platform.Workflow;
 using Xunit;
@@ -19,10 +24,1872 @@ namespace PhaseA.Platform.Tests.Runs;
 
 public sealed class GddToModuleBackendContractServiceTests
 {
+
+    // ADR-0061 AD19/20: observe the existing shared mutation wait, never a replacement authorization gate.
+    internal static async Task<object> ObserveMilestoneMutationWaitsAsync()
+    {
+        var rows = new List<object>();
+        foreach (var entry in new[] { "feedback", "feedback-strict", "iteration-plan", "execute", "execute-strict" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var runner = new PendingOwnedDirectRunner();
+            runner.Release();
+            var seeder = new ProjectWorkspaceSeeder(fixture.Options, fixture.Store);
+            var writer = new PrototypeRouteStateWriter();
+            var quickFix = new PrototypeQuickFixService(node, fixture.Options, runner, seeder, new SkillActionCatalog(), heavyRunnerQueue: queue);
+            var service = new GddMilestoneStepService(node,
+                new PrototypeIterationGoalService(node, fixture.Options, runner, seeder, heavyRunnerQueue: queue),
+                new PrototypeNeedsFixRouteService(node, quickFix, writer));
+            var gdd = Path.Combine(project.RepoPath, "docs", "gdd", "GDD.md");
+            Directory.CreateDirectory(Path.GetDirectoryName(gdd)!);
+            await File.WriteAllTextAsync(gdd, "# Two Step GDD\nM1: First playable module.\nM2: Core loop validation.\n");
+            var plan = await service.GetOrCreateLatestAsync(fixture.AccountId, fixture.ProjectId);
+            if (plan is null || plan.Steps.Count != 2) throw new InvalidOperationException("Actual milestone prerequisite unavailable.");
+            // A completed prior-step fixture selects M2; this is not real prior Runner evidence.
+            foreach (var path in new[] { Path.Combine(project.MetaPath,"routes","gdd-milestones","latest.json"),
+                         Path.Combine(project.RepoPath,"meta","routes","gdd-milestones","latest.json") }.Distinct())
+            {
+                var state = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+                state["steps"]![0]!["status"] = "confirmed";
+                state["steps"]![0]!["confirmedUtc"] = DateTimeOffset.UtcNow.ToString("O");
+                state["steps"]![1]!["locked"] = false;
+                state["currentStepId"] = plan.Steps[1].StepId;
+                await File.WriteAllTextAsync(path,state.ToJsonString());
+            }
+            var registry = ProjectMutationLockRegistry.Shared;
+            IAsyncDisposable? held = await registry.AcquireAsync(fixture.AccountId,fixture.ProjectId,CancellationToken.None);
+            try
+            {
+                var feedback = new GddMilestoneStepFeedbackRequest("Owned current module feedback.");
+                Task<GddMilestoneStepActionResult?> operation = entry switch
+                {
+                    "feedback" => service.SubmitFeedbackAsync(fixture.AccountId,fixture.ProjectId,plan.Steps[1].StepId,feedback),
+                    "feedback-strict" => service.SubmitFeedbackStrictAsync(fixture.AccountId,fixture.ProjectId,plan.Steps[1].StepId,feedback),
+                    "iteration-plan" => service.CreateIterationPlanForCurrentStepAsync(fixture.AccountId,fixture.ProjectId),
+                    "execute" => service.ExecuteCurrentStepAsync(fixture.AccountId,fixture.ProjectId),
+                    "execute-strict" => service.ExecuteCurrentStepStrictAsync(fixture.AccountId,fixture.ProjectId),
+                    _ => throw new InvalidOperationException("Unknown milestone entry.")
+                };
+                // Read the existing waiter's count only. No semaphore, source or guard is modified.
+                var entries = (System.Collections.IDictionary)typeof(ProjectMutationLockRegistry)
+                    .GetField("_entries",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(registry)!;
+                int References()
+                {
+                    var value = entries[fixture.AccountId+":"+fixture.ProjectId]!;
+                    return (int)value.GetType().GetProperty("ReferenceCount")!.GetValue(value)!;
+                }
+                var deadline = System.Diagnostics.Stopwatch.StartNew();
+                while (References() < 2 && !operation.IsCompleted && deadline.Elapsed < TimeSpan.FromSeconds(10))
+                    await Task.Delay(10);
+                if (References() < 2 || operation.IsCompleted)
+                    throw new InvalidOperationException("Actual milestone mutation wait unavailable: "+entry+" "+
+                        (operation.IsCompleted ? JsonSerializer.Serialize(await operation) : "deadline"));
+                Dictionary<string,string> Files() => Directory.EnumerateFiles(project.WorkspaceRootPath,"*",SearchOption.AllDirectories)
+                    .ToDictionary(path=>Path.GetRelativePath(project.WorkspaceRootPath,path),path=>Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))),StringComparer.Ordinal);
+                var before = Files();
+                try { await ApplyOwnedPendingModelFaultAsync(fixture,mode,roles); }
+                finally { await held.DisposeAsync(); held=null; }
+                var denied=false;
+                GddMilestoneStepActionResult? result=null;
+                try { result=await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+                catch(UnauthorizedAccessException) { denied=true; }
+                var after=Files();
+                var changed=before.Keys.Union(after.Keys).Where(path=>!before.TryGetValue(path,out var left)||
+                    !after.TryGetValue(path,out var right)||left!=right).Order().ToArray();
+                rows.Add(new{entry,mode,waitObserved=true,denied,returned=result is not null,status=result?.Status,runnerCalls=runner.Calls,changed,
+                    proofScope="actual caller and current-authority check after shared mutation wait; inherited business preflight outcome is recorded, not execution success"});
+            }
+            finally { if(held is not null) await held.DisposeAsync(); }
+        }
+        return rows;
+    }
+
+    internal static async Task<object> ObserveRepairExecutionAndNewRoundAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "repair-execute", "new-round" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            // A server-approved rebind before a new request is not a stale-request path fault.
+            if (family == "new-round" && mode == "swapped-path") continue;
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var runner = new PendingOwnedDirectRunner();
+            var seeder = new ProjectWorkspaceSeeder(fixture.Options, fixture.Store);
+            var writer = new PrototypeRouteStateWriter();
+            var quickFix = new PrototypeQuickFixService(node, fixture.Options, runner, seeder, new SkillActionCatalog(), heavyRunnerQueue: queue);
+            var repair = new PrototypeRepairPlanService(node, quickFix, writer);
+            var milestone = new GddMilestoneStepService(node,
+                new PrototypeIterationGoalService(node, fixture.Options, runner, seeder, heavyRunnerQueue: queue),
+                new PrototypeNeedsFixRouteService(node, quickFix, writer));
+            var gdd = Path.Combine(project.RepoPath, "docs", "gdd", "GDD.md");
+            if (family == "repair-execute")
+            {
+                var failed = await fixture.Store.CreateRunAsync(fixture.ProjectId, project.WorkspaceId, "prototype-7day-playable");
+                await fixture.Store.MarkRunStartedAsync(failed);
+                await fixture.Store.CompleteRunAsync(failed, "failed", 1,
+                    "Prototype workflow failed.\nDAY4_IMPLEMENTATION_VALIDATION failed",
+                    "Permission denied\nrpg_scene_node_contract_drift=Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn", "{}");
+                var plan = await repair.CreateAsync(fixture.AccountId, fixture.ProjectId);
+                if (plan.Goals.Count == 0) throw new InvalidOperationException("Actual repair plan prerequisite unavailable.");
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(gdd)!);
+                await File.WriteAllTextAsync(gdd, "# Two Step GDD\nM1: First playable module.\nM2: Core loop validation.\n");
+                var plan = await milestone.GetOrCreateLatestAsync(fixture.AccountId, fixture.ProjectId);
+                if (plan is null || plan.Steps.Count != 2) throw new InvalidOperationException("Actual two-milestone prerequisite unavailable.");
+                foreach (var path in new[] { Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json"),
+                             Path.Combine(project.RepoPath, "meta", "routes", "gdd-milestones", "latest.json") }.Distinct())
+                {
+                    var state = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+                    foreach (var step in state["steps"]!.AsArray())
+                    {
+                        step!["status"] = "confirmed";
+                        step["confirmedUtc"] = DateTimeOffset.UtcNow.ToString("O");
+                    }
+                    await File.WriteAllTextAsync(path, state.ToJsonString());
+                }
+            }
+            Dictionary<string, string> Files()
+            {
+                var files = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var (prefix, root) in new[] { ("repo/", project.RepoPath), ("meta/", project.MetaPath) })
+                    foreach (var path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+                        files[prefix+Path.GetRelativePath(root,path)] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
+                return files;
+            }
+            static async Task<object?> Box<T>(Task<T> operation) => await operation;
+            Task<object?>? operation = null;
+            if (family == "repair-execute")
+            {
+                operation = Box(repair.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId, new PrototypeRepairStepExecutionRequest()));
+                await Task.WhenAny(runner.Started, operation).WaitAsync(TimeSpan.FromSeconds(10));
+                if (!runner.Started.IsCompletedSuccessfully)
+                    throw new InvalidOperationException("Actual repair execution did not reach runner: " + JsonSerializer.Serialize(await operation));
+                if (string.IsNullOrWhiteSpace(runner.RunId)) throw new InvalidOperationException("Actual repair run binding absent.");
+            }
+            async Task<string> RepairRows()
+            {
+                var rows = new List<object>();
+                await using var connection = new SqliteConnection(fixture.ConnectionString);
+                await connection.OpenAsync();
+                foreach (var table in new[] { "runs", "project_iteration_sessions", "project_iteration_goals", "project_iteration_goal_runs" })
+                {
+                    await using var command = connection.CreateCommand();
+                    var where = table is "project_iteration_goals" or "project_iteration_goal_runs"
+                        ? "session_id IN (SELECT id FROM project_iteration_sessions WHERE project_id=$project)"
+                        : "project_id=$project";
+                    command.CommandText = "SELECT * FROM " + table + " WHERE " + where + " ORDER BY rowid;";
+                    command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                    await using var reader = await command.ExecuteReaderAsync();
+                    var values = new List<object?[]>();
+                    while (await reader.ReadAsync())
+                    {
+                        var row = new object?[reader.FieldCount];
+                        for (var i=0; i<row.Length; i++) row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                        values.Add(row);
+                    }
+                    rows.Add(new { table, values });
+                }
+                return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(rows)));
+            }
+            var before = Files();
+            var beforeRows = await RepairRows();
+            try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+            finally { runner.Release(); }
+            if (family == "new-round")
+                operation = Box(milestone.CreateNewRoundStepAsync(fixture.AccountId, fixture.ProjectId,
+                    new GddMilestoneNewRoundRequest("Owned next module control.")));
+            object? result = null;
+            var denied = false;
+            try { result = await operation!.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path,out var left) || !after.TryGetValue(path,out var right) || left != right).Order().ToArray();
+            rows.Add(new { family, mode, denied, returned = result is not null,
+                status = result?.GetType().GetProperty("Status")?.GetValue(result),
+                reachedRunner = runner.Started.IsCompletedSuccessfully, calls = runner.Calls, changed,
+                appendedModule = family == "new-round" && File.ReadAllText(gdd).Contains("M3", StringComparison.Ordinal),
+                publishedRowsChanged = beforeRows != await RepairRows() });
+        }
+        return rows;
+    }
+
+    // The four remaining direct producers use actual service continuations and owned external providers.
+    internal static async Task<object> ObserveDirectExecutionContinuationsAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "skill-action", "chapter2-bootstrap", "prototype-tdd", "prototype-scene" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var seeder = new ProjectWorkspaceSeeder(fixture.Options, fixture.Store);
+            var model = new BlockingRequirementMapLlmEngine("Owned current skill reply");
+            var runner = new PendingOwnedDirectRunner();
+            static async Task<object> Box<T>(Task<T> operation) => (await operation)!;
+            Task<object> operation = family switch
+            {
+                "skill-action" => Box(new SkillActionService(node, fixture.Options, new SkillActionCatalog(), runner, seeder,
+                    llmRouteEngine: model, heavyRunnerQueue: queue, assetRunnerQueue: queue)
+                    .RunAsync(fixture.AccountId, fixture.ProjectId, "game-design-master", new SkillActionRunRequest("Owned direct caller"))),
+                "chapter2-bootstrap" => Box(new Chapter2BootstrapService(node, fixture.Options, runner,
+                    new Chapter2BootstrapCommandBuilder(fixture.Options), new ProjectHealthArtifactIndexer(), seeder,
+                    heavyRunnerQueue: queue).RunAsync(fixture.AccountId, fixture.ProjectId)),
+                "prototype-tdd" => Box(new PrototypeCommandService(node, fixture.Options, runner,
+                    new PrototypeCommandBuilder(fixture.Options), new PrototypeTddArtifactIndexer(), seeder, queue)
+                    .RunTddAsync(fixture.AccountId, fixture.ProjectId, new PrototypeTddRequest("s236", "green"))),
+                "prototype-scene" => Box(new PrototypeCommandService(node, fixture.Options, runner,
+                    new PrototypeCommandBuilder(fixture.Options), new PrototypeTddArtifactIndexer(), seeder, queue)
+                    .CreateSceneAsync(fixture.AccountId, fixture.ProjectId, new PrototypeSceneRequest("s236"))),
+                _ => throw new InvalidOperationException("Unknown direct consumer.")
+            };
+            var started = family == "skill-action" ? model.Started : runner.Started;
+            await Task.WhenAny(started, operation).WaitAsync(TimeSpan.FromSeconds(10));
+            if (!started.IsCompletedSuccessfully)
+            {
+                var premature = await operation;
+                throw new InvalidOperationException("Actual direct positive did not reach external boundary: " + family + " " + JsonSerializer.Serialize(premature));
+            }
+            if (family == "skill-action" && (model.Request?.Purpose != "skill-action" || model.Request.BillingAccountId != fixture.AccountId))
+                throw new InvalidOperationException("Actual skill provider request binding unavailable.");
+            if (family != "skill-action" && string.IsNullOrWhiteSpace(runner.RunId))
+                throw new InvalidOperationException("Actual direct runner request has no real run binding.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path), path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            async Task<string> PublishedRows()
+            {
+                var tables = new List<object>();
+                await using var connection = new SqliteConnection(fixture.ConnectionString);
+                await connection.OpenAsync();
+                foreach (var table in new[] { "runs", "artifacts" })
+                {
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = "SELECT * FROM " + table + " WHERE project_id=$project ORDER BY rowid;";
+                    command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                    await using var reader = await command.ExecuteReaderAsync();
+                    var values = new List<object?[]>();
+                    while (await reader.ReadAsync())
+                    {
+                        var row = new object?[reader.FieldCount];
+                        for (var i=0; i<row.Length; i++) row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                        values.Add(row);
+                    }
+                    tables.Add(new { table, values });
+                }
+                return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(tables)));
+            }
+            var beforeFiles = Files();
+            var beforeRows = await PublishedRows();
+            try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+            finally { model.Release(); runner.Release(); }
+            var denied = false;
+            object? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var afterFiles = Files();
+            var changed = beforeFiles.Keys.Union(afterFiles.Keys).Where(path =>
+                !beforeFiles.TryGetValue(path, out var left) || !afterFiles.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            rows.Add(new { family, mode, denied, reachedProvider = started.IsCompletedSuccessfully,
+                calls = family == "skill-action" ? model.CallCount : runner.Calls,
+                returned = result is not null, status = result?.GetType().GetProperty("Status")?.GetValue(result),
+                changed, publishedRowsChanged = beforeRows != await PublishedRows() });
+        }
+        return rows;
+    }
+
+    private sealed class PendingOwnedDirectRunner : IHostedProcessRunner
+    {
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task Started => _started.Task;
+        internal int Calls { get; private set; }
+        internal string? RunId { get; private set; }
+        internal void Release() => _release.TrySetResult();
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Calls++; RunId = command.RunId; _started.TrySetResult();
+            await _release.Task.WaitAsync(cancellationToken);
+            return new HostedProcessResult(0, "Owned external executor result; not real Windows or engine evidence.", "");
+        }
+    }
+
+    // ADR-0061 AD19/20: the actual chat continuation cannot publish a reply after authority changes.
+    internal static async Task<object> ObserveChatReplyBoundaryAsync()
+    {
+        var rows = new List<object>();
+        var oldMode = Environment.GetEnvironmentVariable("PHASEA_CHAT_TEST_MODE");
+        var oldBackend = Environment.GetEnvironmentVariable("PHASEA_CHAT_BACKEND");
+        var oldOwnedToken = Environment.GetEnvironmentVariable("S206_OWNED_CHAT_TOKEN");
+        try
+        {
+            // Select the real Codex-route service branch with an owned external-provider double.
+            // Neither device model configuration nor the production guard is replaced.
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_TEST_MODE", null);
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", null);
+            Environment.SetEnvironmentVariable("S206_OWNED_CHAT_TOKEN", "owned-test-token-not-a-secret");
+            foreach (var backend in new[] { "codex-route", "new-api" })
+            foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+            {
+                using var fixture = await BackendContractFixture.CreateAsync();
+                using var current = fixture.EnterCurrent();
+                var roles = new HashSet<string> { "entry", "production" };
+                NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+                var engine = new BlockingRequirementMapLlmEngine("Owned current chat reply");
+                var client = new PendingOwnedChatApi();
+                var binding = new LlmBindingService(fixture.Store, fixture.Options);
+                Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", backend == "new-api" ? "new-api" : null);
+                if (backend == "new-api")
+                    await binding.BindAsync(fixture.AccountId, new LlmBindingRequest("new-api", "https://owned.invalid", "owned-test-account", "env:S206_OWNED_CHAT_TOKEN"));
+                var service = new ChatService(node, fixture.Options,
+                    binding, new LlmStopLossService(node, fixture.Options),
+                    backend == "new-api" ? client : new UnexpectedClosureNewApi(), new UnexpectedInventoryCodex(),
+                    new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), new SkillActionCatalog(), engine);
+                var operation = service.SendAsync(fixture.AccountId, fixture.ProjectId, new ChatRequest("Remember this owned project request."));
+                var started = backend == "new-api" ? client.Started : engine.Started;
+                await Task.WhenAny(started, operation).WaitAsync(TimeSpan.FromSeconds(10));
+                if (!started.IsCompletedSuccessfully)
+                    throw new InvalidOperationException("Actual chat positive did not reach its provider: " + JsonSerializer.Serialize(await operation));
+                if (backend == "codex-route" && (engine.Request?.Purpose != "project-chat" || engine.Request.BillingAccountId != fixture.AccountId || engine.Request.OperationKey != "llm:project-chat"))
+                    throw new InvalidOperationException("Actual chat model request binding unavailable.");
+                async Task<string> PublishedRows()
+                {
+                    var tables = new List<object>();
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    foreach (var table in new[] { "runs", "project_chat_memories" })
+                    {
+                        await using var command = connection.CreateCommand();
+                        command.CommandText = "SELECT * FROM " + table + " WHERE project_id=$project ORDER BY rowid;";
+                        command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                        await using var reader = await command.ExecuteReaderAsync();
+                        var values = new List<object?[]>();
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new object?[reader.FieldCount];
+                            for (var i=0; i<row.Length; i++) row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                            values.Add(row);
+                        }
+                        tables.Add(new { table, values });
+                    }
+                    return Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(tables)));
+                }
+                var before = await PublishedRows();
+                try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+                finally { engine.Release(); client.Release(); }
+                var denied = false;
+                ChatResult? result = null;
+                try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+                catch (UnauthorizedAccessException) { denied = true; }
+                var after = await PublishedRows();
+                rows.Add(new { backend, mode, denied, reachedModel = started.IsCompletedSuccessfully, calls = backend == "new-api" ? client.Calls : engine.CallCount,
+                    returned = result is not null, reply = result?.AssistantMessage, status = result?.Status,
+                    publishedRowsChanged = before != after });
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_TEST_MODE", oldMode);
+            Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", oldBackend);
+            Environment.SetEnvironmentVariable("S206_OWNED_CHAT_TOKEN", oldOwnedToken);
+        }
+        return rows;
+    }
+
+    private sealed class UnexpectedClosureNewApi : INewApiChatClient
+    {
+        public Task<NewApiChatClientResult> CompleteAsync(LlmBindingSnapshot binding, string bearerToken, string model,
+            IReadOnlyList<ChatMessage> messages, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Owned chat route unexpectedly attempted the network client.");
+    }
+
+    private sealed class PendingOwnedChatApi : INewApiChatClient
+    {
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task Started => _started.Task;
+        internal int Calls { get; private set; }
+        internal void Release() => _release.TrySetResult();
+        public async Task<NewApiChatClientResult> CompleteAsync(LlmBindingSnapshot binding, string bearerToken, string model,
+            IReadOnlyList<ChatMessage> messages, CancellationToken cancellationToken = default)
+        {
+            if (binding.ExternalAccountRef != "owned-test-account" || bearerToken != "owned-test-token-not-a-secret" || messages.Count == 0)
+                throw new InvalidOperationException("Actual owned API request binding unavailable.");
+            Calls++; _started.TrySetResult();
+            await _release.Task.WaitAsync(cancellationToken);
+            return new NewApiChatClientResult(true, "Owned current chat reply", null, "owned-request", null);
+        }
+    }
+
+    // ADR-0061 AD19/20: inventory publication must retain current workspace binding after model wait.
+    internal static async Task<object> ObserveAssetInventoryReplyBoundaryAsync()
+    {
+        var rows = new List<object>();
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            await fixture.Store.CreateProjectIterationSessionAsync(fixture.AccountId, fixture.ProjectId,
+                "manual_feedback", "Inventory prerequisite", "Inventory prerequisite",
+                [new ProjectIterationGoalCreateCommand(1, "Done", "Done", "Done")]);
+            var goals = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId);
+            foreach (var goal in goals!.Goals)
+                await fixture.Store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "succeeded", "Done", DateTimeOffset.UtcNow.ToString("O"));
+            var scene = Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "S236Inventory.tscn");
+            Directory.CreateDirectory(Path.GetDirectoryName(scene)!);
+            await File.WriteAllTextAsync(scene, "[gd_scene format=3]\n[node name=\"Player\" type=\"Sprite2D\"]\n");
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var engine = new BlockingRequirementMapLlmEngine("{\"items\":[]}");
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var service = new PhaseA.Platform.Readback.ProjectAssetInventoryService(node, fixture.Options,
+                new UnexpectedInventoryCodex(), new ProjectWorkspaceSeeder(fixture.Options, fixture.Store),
+                engine, queue, new RunCancellationService());
+            var operation = service.GetInventoryAsync(fixture.AccountId, fixture.ProjectId, includeLlmJudgement: true, forceRefresh: true);
+            await engine.Started.WaitAsync(TimeSpan.FromSeconds(10));
+            if (engine.Request?.Purpose != "asset-inventory-judgement" || engine.Request.BillingAccountId != fixture.AccountId)
+                throw new InvalidOperationException("Actual inventory model request binding unavailable.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+            finally { engine.Release(); }
+            var denied = false;
+            PhaseA.Platform.Readback.ProjectAssetInventoryResult? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            var cache = Path.Combine(project.RepoPath, "_phasea", "asset-inventory-cache.json");
+            var cachedReturn = false;
+            if (mode == "valid" && result?.CanReadInventory == true)
+            {
+                var cached = await service.GetInventoryAsync(fixture.AccountId, fixture.ProjectId, includeLlmJudgement: true);
+                cachedReturn = cached?.CanReadInventory == true && cached.GenerationCandidates.Count == result.GenerationCandidates.Count;
+            }
+            rows.Add(new { mode, denied, reachedModel = engine.Started.IsCompletedSuccessfully, calls = engine.CallCount,
+                resultReturned = result is not null, canReadInventory = result?.CanReadInventory,
+                candidateCount = result?.GenerationCandidates.Count, changed, cacheExists = File.Exists(cache), cachedReturn });
+        }
+        return rows;
+    }
+
+    private static async Task ApplyOwnedPendingModelFaultAsync(BackendContractFixture fixture, string mode, HashSet<string> roles)
+    {
+            if (mode == "entry-only") roles.Remove("production");
+            else if (mode != "valid")
+            {
+                await using var connection = new SqliteConnection(fixture.ConnectionString);
+                await connection.OpenAsync();
+                await using var transaction = connection.BeginTransaction();
+                var triggers = new List<string>();
+                await using (var read = connection.CreateCommand())
+                {
+                    read.Transaction = transaction;
+                    read.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                    await using var reader = await read.ExecuteReaderAsync();
+                    while (await reader.ReadAsync()) triggers.Add(reader.GetString(0));
+                }
+                if (triggers.Count != 3) throw new InvalidOperationException("Owned inventory trigger prerequisites missing.");
+                await using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = "DROP TRIGGER account_home_immutable; DROP TRIGGER project_node_immutable; DROP TRIGGER account_node_update;";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = mode switch
+                {
+                    "revoked" => "UPDATE accounts SET is_disabled=1 WHERE id=$account;",
+                    "stale-projection" => "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;",
+                    "foreign-home" => "UPDATE accounts SET home_node_id='foreign-node' WHERE id=$account;",
+                    "foreign-project" => "UPDATE projects SET node_id='foreign-node' WHERE id=$project;",
+                    "swapped-path" => "UPDATE workspaces SET repo_path=repo_path||'-unselected' WHERE project_id=$project;",
+                    _ => throw new InvalidOperationException("Unknown owned inventory fault.")
+                };
+                command.Parameters.AddWithValue("$account", fixture.AccountId);
+                command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned inventory fault changed no row.");
+                command.Parameters.Clear();
+                foreach (var trigger in triggers) { command.CommandText = trigger; await command.ExecuteNonQueryAsync(); }
+                var restored = new List<string>();
+                command.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                await using (var reader = await command.ExecuteReaderAsync())
+                    while (await reader.ReadAsync()) restored.Add(reader.GetString(0));
+                if (!triggers.SequenceEqual(restored)) throw new InvalidOperationException("Owned inventory triggers not restored exactly.");
+                await transaction.CommitAsync();
+            }
+    }
+
+    // ADR-0061 AD19/20: actual repair and milestone publications after pending model results.
+    internal static async Task<object> ObserveRepairAndMilestoneReplyBoundaryAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "repair-plan", "gdd-next-step-review" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var seeder = new ProjectWorkspaceSeeder(fixture.Options, fixture.Store);
+            var runner = new CountingHostedProcessRunner();
+            var quickFix = new PrototypeQuickFixService(node, fixture.Options, runner, seeder, new SkillActionCatalog(), heavyRunnerQueue: queue);
+            var engine = new BlockingRequirementMapLlmEngine(family == "repair-plan" ? "{}" : "{\"shouldAdjust\":false,\"summary\":\"Boundary control\"}");
+            var repair = new PrototypeRepairPlanService(node, quickFix, new PrototypeRouteStateWriter(), llmRouteEngine: engine);
+            var milestone = new GddMilestoneStepService(node,
+                new PrototypeIterationGoalService(node, fixture.Options, runner, seeder, heavyRunnerQueue: queue),
+                new PrototypeNeedsFixRouteService(node, quickFix, new PrototypeRouteStateWriter()), llmRouteEngine: engine);
+            string stepId = "";
+            if (family == "repair-plan")
+            {
+                var failure = await fixture.Store.CreateRunAsync(fixture.ProjectId, project.WorkspaceId, "prototype-boundary-source");
+                await fixture.Store.CompleteRunAsync(failure, "failed", 1, "", "Ordinary repair boundary input", "{}");
+            }
+            else
+            {
+                var gdd = Path.Combine(project.RepoPath, "docs", "gdd", "GDD.md");
+                Directory.CreateDirectory(Path.GetDirectoryName(gdd)!);
+                await File.WriteAllTextAsync(gdd, "# Two Step GDD\n\nM1: First playable scene and controls.\nM2: Core loop validation and package prompt.\n");
+                var plan = await milestone.GetOrCreateLatestAsync(fixture.AccountId, fixture.ProjectId);
+                if (plan is null || plan.Steps.Count < 2) throw new InvalidOperationException("Actual two-milestone prerequisite unavailable.");
+                stepId = plan!.Steps[0].StepId;
+                // Seed a completed-step prerequisite; this is not a Runner/Windows execution claim.
+                foreach (var path in new[] { Path.Combine(project.MetaPath, "routes", "gdd-milestones", "latest.json"),
+                             Path.Combine(project.RepoPath, "meta", "routes", "gdd-milestones", "latest.json") }.Distinct())
+                {
+                    var state = JsonNode.Parse(await File.ReadAllTextAsync(path))!;
+                    state["steps"]![0]!["status"] = "executed";
+                    await File.WriteAllTextAsync(path, state.ToJsonString());
+                }
+            }
+            var returned = false; string? status = null; var count = 0;
+            async Task InvokeAsync()
+            {
+                if (family == "repair-plan")
+                {
+                    var result = await repair.CreateAsync(fixture.AccountId, fixture.ProjectId);
+                    returned = true; status = result.Status; count = result.Goals.Count;
+                }
+                else
+                {
+                    var result = await milestone.ConfirmAsync(fixture.AccountId, fixture.ProjectId, stepId,
+                        new GddMilestoneStepConfirmRequest("Boundary completed-step control"));
+                    returned = result is not null; status = result?.Status; count = result?.Plan?.Steps.Count ?? 0;
+                }
+            }
+            var operation = InvokeAsync();
+            await engine.Started.WaitAsync(TimeSpan.FromSeconds(10));
+            if (engine.Request?.Purpose != family || engine.Request.OperationKey != "llm:" + family ||
+                (family == "repair-plan" && engine.Request.BillingAccountId != fixture.AccountId))
+                throw new InvalidOperationException("Actual scoped model request unavailable.");
+            Dictionary<string, string> Files()
+            {
+                var files = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var (prefix, root) in new[] { ("repo/", project.RepoPath), ("meta/", project.MetaPath) })
+                    foreach (var path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+                        files[prefix + Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/')] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path)));
+                return files;
+            }
+            var before = Files();
+            async Task<int> CountSessionsAsync()
+            {
+                await using var connection = new SqliteConnection(fixture.ConnectionString);
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT COUNT(*) FROM project_iteration_sessions WHERE project_id=$project;";
+                command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                return Convert.ToInt32(await command.ExecuteScalarAsync());
+            }
+            var beforeSessions = await CountSessionsAsync();
+            try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+            finally { engine.Release(); }
+            var denied = false;
+            try { await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            var afterSessions = await CountSessionsAsync();
+            rows.Add(new { family, mode, denied, returned, status, count, changed,
+                reachedModel = engine.Started.IsCompletedSuccessfully, calls = engine.CallCount,
+                beforeSessions, afterSessions });
+        }
+        return rows;
+    }
+
+    // ADR-0061: portable caller publication proof only, never native AI/Godot/Windows evidence.
+    internal static async Task<object> ObserveAssetAndPreviewPublicationAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "asset-decision", "preview-direct", "preview-queued" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            var options = fixture.Options with { EnabledRoles = roles, WebPreviewSigningSecret = "owned-synthetic-preview-signing-secret" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, options);
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var engine = new BlockingRequirementMapLlmEngine("{\"actionId\":\"character-making-master\"}");
+            var imageRunner = new OwnedImageArtifactStub();
+            var assets = new ProjectAssetLibraryService(node, options, CreateOwnedImageGenerator(options, imageRunner, node),
+                engine, queue, processRunner: imageRunner);
+            var exportRunner = new PendingExportBoundaryRunner();
+            var previews = new ProjectWebPreviewService(node, (NodePreviewRuntime)options, queue,
+                new ProjectWebPreviewConcurrencyLimiter(1), exportRunner);
+            var fakeGodot = Path.Combine(options.RepositoryRoot, "owned-export-provider.bin");
+            await File.WriteAllTextAsync(fakeGodot, "Only a provider boundary stub; never executed.");
+            var previousGodot = Environment.GetEnvironmentVariable("PHASEA_GODOT3_BIN");
+            Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", fakeGodot);
+            try
+            {
+                const string packageFile = "S236Preview-v0.1.20261102.001.zip";
+                WriteBoundaryGodotPackage(project.RepoPath, packageFile);
+                var scene = Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "S236Asset.tscn");
+                Directory.CreateDirectory(Path.GetDirectoryName(scene)!);
+                await File.WriteAllTextAsync(scene, "[gd_scene format=3]\n[node name=\"Player\" type=\"Sprite2D\"]\n");
+                Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                    .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                        path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+                HashSet<string> Dirs() => Directory.EnumerateDirectories(project.RepoPath, "*", SearchOption.AllDirectories)
+                    .Select(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/')).ToHashSet(StringComparer.Ordinal);
+                var original = Files();
+                var returned = false; var published = false; string? status = null;
+                async Task InvokeAsync()
+                {
+                    if (family == "asset-decision")
+                    {
+                        var result = await assets.GenerateAsync(fixture.AccountId, fixture.ProjectId,
+                            new ProjectAssetGenerationRunRequest("Owned caller boundary", new ProjectAssetUnitRequest(
+                                "s236-owned", "Player", "Sprite2D", "res://Game.Godot/Scenes/S236Asset.tscn", null,
+                                "sprite", "Player sprite", "Caller boundary control")));
+                        returned = result is not null; status = result?.Status;
+                        published = result?.Status == "succeeded" && result.Entry.ArtifactPaths.Count > 0 && result.Library.Units.Count > 0;
+                    }
+                    else
+                    {
+                        ProjectWebPreviewResult result;
+                        if (family == "preview-queued")
+                        {
+                            var queued = await previews.QueuePreviewAsync(fixture.AccountId, fixture.ProjectId, packageFile);
+                            result = await previews.GenerateQueuedPreviewAsync(fixture.AccountId, fixture.ProjectId, packageFile, queued.RunId);
+                        }
+                        else result = await previews.GeneratePreviewAsync(fixture.AccountId, fixture.ProjectId, packageFile);
+                        returned = true; status = result.Status;
+                        published = result.Status == "succeeded" && !string.IsNullOrWhiteSpace(result.PreviewUrl);
+                    }
+                }
+                var operation = InvokeAsync();
+                await (family == "asset-decision" ? engine.Started : exportRunner.Started).WaitAsync(TimeSpan.FromSeconds(10));
+                if (family == "asset-decision" && (engine.Request?.Purpose != "project-asset-library-skill-selection" || engine.Request.BillingAccountId != fixture.AccountId))
+                    throw new InvalidOperationException("Actual asset decision request unavailable.");
+                var before = Files(); var beforeDirs = Dirs();
+                try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+                finally { engine.Release(); exportRunner.Release(); }
+                var denied = false;
+                try { await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+                catch (UnauthorizedAccessException) { denied = true; }
+                var after = Files();
+                var addedOrChanged = after.Where(pair => !before.TryGetValue(pair.Key, out var old) || old != pair.Value).Select(pair => pair.Key).Order().ToArray();
+                var newDirectories = Dirs().Except(beforeDirs).Order().ToArray();
+                var originalsUnchanged = original.All(pair => after.TryGetValue(pair.Key, out var value) && value == pair.Value);
+                rows.Add(new { family, mode, denied, returned, published, status, addedOrChanged, newDirectories,
+                    originalsUnchanged, modelCalls = engine.CallCount, imageCalls = imageRunner.Calls, exportCalls = exportRunner.Calls,
+                    boundaryReached = family == "asset-decision" ? engine.Started.IsCompletedSuccessfully : exportRunner.Started.IsCompletedSuccessfully,
+                    nativeWindowsOrProviderEvidence = false });
+            }
+            finally { Environment.SetEnvironmentVariable("PHASEA_GODOT3_BIN", previousGodot); }
+        }
+        return rows;
+    }
+
+    // ADR-0061 AD19/20: the actual import and selection continuations retain current authority.
+    internal static async Task<object> ObserveAssetImportAndSelectionAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "asset-import", "asset-import-stream", "asset-import-read", "asset-selection" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            var isImport = family.StartsWith("asset-import", StringComparison.Ordinal);
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            var options = fixture.Options with { EnabledRoles = roles, GodotBin = "owned-smoke-provider",
+                AssetAllowedUrlPrefixes = new[] { "https://assets.example.invalid/" } };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, options);
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, node);
+            var engine = new BlockingRequirementMapLlmEngine("{\"actionId\":\"character-making-master\"}");
+            engine.Release();
+            var imageRunner = new OwnedImageArtifactStub();
+            var smoke = new PendingSelectionSmokeRunner();
+            using var handler = new PendingOwnedAssetHandler(family);
+            using var http = new HttpClient(handler);
+            var assets = new ProjectAssetLibraryService(node, options, CreateOwnedImageGenerator(options, imageRunner, node),
+                engine, queue, httpClient: http, processRunner: smoke);
+            var scene = Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "S236Decoration.tscn");
+            Directory.CreateDirectory(Path.GetDirectoryName(scene)!);
+            await File.WriteAllTextAsync(scene, "[gd_scene format=3]\n[node name=\"Decoration\" type=\"Sprite2D\"]\n");
+            var unit = new ProjectAssetUnitRequest("s236-decoration", "Decoration", "Sprite2D",
+                "res://Game.Godot/Scenes/S236Decoration.tscn", null, "sprite", "Background decoration", "Continuation control");
+            string? entryId = null;
+            string? unitKey = null;
+            if (family == "asset-selection")
+            {
+                var generated = await assets.GenerateAsync(fixture.AccountId, fixture.ProjectId,
+                    new ProjectAssetGenerationRunRequest("Owned selected decoration", unit));
+                if (generated?.Status != "succeeded" || generated.Entry.ArtifactPaths.Count == 0)
+                    throw new InvalidOperationException("Actual selection prerequisite did not generate an owned artifact.");
+                entryId = generated.Entry.EntryId;
+                unitKey = generated.Library.Units.Single().Key;
+            }
+            var initialPaths = Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories).ToHashSet(StringComparer.Ordinal);
+            var pausedEmptyFiles = new HashSet<string>(StringComparer.Ordinal);
+            string HashOwnedFile(string path)
+            {
+                try { return Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))); }
+                catch (IOException) when (family == "asset-import-read" && handler.BodyStarted.IsCompletedSuccessfully
+                    && !handler.BodyReleased && !initialPaths.Contains(path) && new FileInfo(path).Length == 0
+                    && path.StartsWith(Path.Combine(project.RepoPath, "logs", "prototype-evidence", project.ProjectId) + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+                    && path.EndsWith(Path.Combine("asset-quarantine", "owned.png"), StringComparison.Ordinal))
+                {
+                    // The real writer is paused before its first read. This first-created owned file has exactly zero bytes.
+                    pausedEmptyFiles.Add(Path.GetRelativePath(project.RepoPath, path));
+                    return Convert.ToHexString(SHA256.HashData(Array.Empty<byte>()));
+                }
+            }
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    HashOwnedFile, StringComparer.Ordinal);
+            var returned = false; var published = false; string? status = null;
+            async Task InvokeAsync()
+            {
+                if (isImport)
+                {
+                    var result = await assets.ImportAsync(fixture.AccountId, fixture.ProjectId,
+                        new ProjectAssetImportRequest("https://assets.example.invalid/owned.png", unit));
+                    returned = result is not null; status = result?.Status;
+                    published = result?.Status == "imported" && result.SourceUrlAllowed && result.Entry.ArtifactPaths.Count > 0;
+                }
+                else
+                {
+                    var result = await assets.SelectAsync(fixture.AccountId, fixture.ProjectId,
+                        new ProjectAssetSelectionRequest(unitKey!, entryId!, true));
+                    returned = result is not null;
+                    var selected = result?.Units.Single().Entries.Single(e => e.EntryId == entryId);
+                    status = selected?.SelectionValidation?.Status;
+                    published = selected?.Selected == true && status == "smoke_passed";
+                }
+            }
+            var operation = InvokeAsync();
+            await (isImport ? (family == "asset-import" ? handler.Started : handler.BodyStarted) : smoke.Started).WaitAsync(TimeSpan.FromSeconds(10));
+            var before = Files();
+            try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+            finally { handler.Release(); handler.ReleaseBody(); smoke.Release(); }
+            var denied = false;
+            try { await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = after.Where(pair => !before.TryGetValue(pair.Key, out var old) || old != pair.Value).Select(pair => pair.Key).Order().ToArray();
+            var removed = before.Keys.Except(after.Keys).Order().ToArray();
+            rows.Add(new { family, mode, returned, denied, published, status, changed, removed,
+                httpCalls = handler.Calls, smokeCalls = smoke.Calls, imageCalls = imageRunner.Calls, pausedEmptyFiles = pausedEmptyFiles.Order().ToArray(),
+                boundaryReached = isImport ? (family == "asset-import" ? handler.Started : handler.BodyStarted).IsCompletedSuccessfully : smoke.Started.IsCompletedSuccessfully,
+                externalProviderOrWindowsEvidence = false });
+        }
+        return rows;
+    }
+
+    private sealed class PendingSelectionSmokeRunner : IHostedProcessRunner
+    {
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task Started => _started.Task;
+        internal int Calls { get; private set; }
+        internal void Release() => _release.TrySetResult();
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            if (!command.Arguments.Any(arg => arg.EndsWith("smoke_headless.py", StringComparison.Ordinal)))
+                throw new InvalidOperationException("Unexpected owned selection provider command.");
+            Calls++; _started.TrySetResult();
+            await _release.Task.WaitAsync(cancellationToken);
+            return new HostedProcessResult(0, "Owned successful smoke callback only; not actual Godot evidence", "");
+        }
+    }
+
+    private sealed class PendingOwnedAssetHandler(string family) : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly PendingOwnedAssetContent _body = new(family);
+        internal Task Started => _started.Task;
+        internal Task BodyStarted => _body.Started;
+        internal bool BodyReleased => _body.Released;
+        internal int Calls { get; private set; }
+        internal void Release() => _release.TrySetResult();
+        internal void ReleaseBody() => _body.Release();
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri?.AbsoluteUri != "https://assets.example.invalid/owned.png")
+                throw new InvalidOperationException("Unexpected owned import URL.");
+            Calls++;
+            if (family == "asset-import")
+            {
+                _started.TrySetResult();
+                await _release.Task.WaitAsync(cancellationToken);
+            }
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK) { RequestMessage = request,
+                Content = family == "asset-import" ? new ByteArrayContent(PendingOwnedAssetContent.Bytes) : _body };
+        }
+    }
+
+    private sealed class PendingOwnedAssetContent(string family) : HttpContent
+    {
+        internal static readonly byte[] Bytes = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j2N8AAAAASUVORK5CYII=");
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task Started => _started.Task;
+        internal bool Released => _release.Task.IsCompleted;
+        internal void Release() => _release.TrySetResult();
+        internal async Task WaitForReadAsync(CancellationToken token)
+        {
+            _started.TrySetResult();
+            await _release.Task.WaitAsync(token);
+        }
+        protected override bool TryComputeLength(out long length) { length = Bytes.Length; return true; }
+        protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context)
+            => throw new InvalidOperationException("Owned import must reach the actual read-stream boundary.");
+        protected override Task<Stream> CreateContentReadStreamAsync() => CreateStreamAsync(CancellationToken.None);
+        protected override Task<Stream> CreateContentReadStreamAsync(CancellationToken token) => CreateStreamAsync(token);
+        private async Task<Stream> CreateStreamAsync(CancellationToken token)
+        {
+            if (family == "asset-import-stream") await WaitForReadAsync(token);
+            return family == "asset-import-read" ? new PendingOwnedAssetReadStream(this) : new MemoryStream(Bytes, writable: false);
+        }
+    }
+
+    private sealed class PendingOwnedAssetReadStream(PendingOwnedAssetContent owner) : MemoryStream(PendingOwnedAssetContent.Bytes, writable: false)
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            await owner.WaitForReadAsync(cancellationToken);
+            return await base.ReadAsync(buffer, cancellationToken);
+        }
+    }
+
+    private static ProjectAssetImageGenerator CreateOwnedImageGenerator(NodeExecutionOptions options, IHostedProcessRunner runner, NodeProjectMetadata node)
+    {
+        var guarded = typeof(ProjectAssetImageGenerator).GetConstructor(new[] { typeof(NodeExecutionOptions), typeof(IHostedProcessRunner), typeof(NodeProjectMetadata) });
+        return guarded is null ? new ProjectAssetImageGenerator(options, runner)
+            : (ProjectAssetImageGenerator)guarded.Invoke(new object?[] { options, runner, node });
+    }
+
+    private static ProjectWebPreviewSemanticAdapterService CreateOwnedSemanticProducer(NodeExecutionOptions options, IHostedProcessRunner runner, NodeProjectMetadata node)
+    {
+        var guarded = typeof(ProjectWebPreviewSemanticAdapterService).GetConstructors()
+            .SingleOrDefault(c => c.GetParameters().Length == 7 && c.GetParameters()[6].ParameterType == typeof(NodeProjectMetadata));
+        return guarded is null ? new ProjectWebPreviewSemanticAdapterService(options, runner)
+            : (ProjectWebPreviewSemanticAdapterService)guarded.Invoke(new object?[] { options, runner, null, null, null, null, node });
+    }
+
+    private static ProjectWebPreviewDedicatedAdapterService CreateOwnedDedicatedProducer(NodeExecutionOptions options, IHostedProcessRunner runner, NodeProjectMetadata node)
+    {
+        var guarded = typeof(ProjectWebPreviewDedicatedAdapterService).GetConstructors()
+            .SingleOrDefault(c => c.GetParameters().Length == 7 && c.GetParameters()[6].ParameterType == typeof(NodeProjectMetadata));
+        return guarded is null ? new ProjectWebPreviewDedicatedAdapterService(options, runner)
+            : (ProjectWebPreviewDedicatedAdapterService)guarded.Invoke(new object?[] { options, runner, null, null, null, null, node });
+    }
+
+    // ADR-0061 AD19/20: child producers must not publish after a pending process loses current authority.
+    internal static async Task<object> ObserveChildProducerPublicationAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "image-sidecar", "semantic-fallback", "dedicated-adapter" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            var options = fixture.Options with { EnabledRoles = roles };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, options);
+            var runId = await node.CreateRunAsync(project.ProjectId, project.WorkspaceId, "owned-child-producer");
+            var runner = new PendingChildArtifactRunner(family);
+            var images = CreateOwnedImageGenerator(options, runner, node);
+            var semantic = CreateOwnedSemanticProducer(options, runner, node);
+            var dedicated = CreateOwnedDedicatedProducer(options, runner, node);
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var returned = false; var published = false; string? status = null;
+            async Task InvokeAsync()
+            {
+                const string package = "S236Child-v0.1.20261102.001.zip";
+                if (family == "image-sidecar")
+                {
+                    const string relative = "meta/s236-owned-image";
+                    var result = await images.GenerateAsync(project, runId, "Owned producer continuation",
+                        Path.Combine(project.RepoPath, relative.Replace('/', Path.DirectorySeparatorChar)), relative, "owned");
+                    returned = true; status = result.Status;
+                    published = result.Status == "succeeded" && File.Exists(Path.Combine(project.RepoPath, relative, "direct-generation-result.json"));
+                }
+                else if (family == "semantic-fallback")
+                {
+                    var result = await semantic.ResolveAsync(new ProjectWebPreviewSemanticAdapterRequest(fixture.AccountId, runId,
+                        project, project.RepoPath, package, "owned-package-hash", 1, "Owned Game", "Owned source", "rpg", "Owned guide",
+                        "res://Main.tscn", new[] { "res://Main.tscn" }, "{}", "{}"));
+                    returned = true; status = result.Status;
+                    published = result.Status == "generated_by_fallback" && File.Exists(result.AdapterPath);
+                }
+                else
+                {
+                    var result = await dedicated.ResolveAsync(new ProjectWebPreviewDedicatedAdapterRequest(fixture.AccountId, runId,
+                        project, project.RepoPath, package, "owned-package-hash", "Owned Project", "Owned Game", "rpg", "Owned guide",
+                        "owned-converter", "owned-mode", "res://Main.tscn", new[] { "res://Main.tscn" }, "{}", "{}", "{}"),
+                        "extends Node\nfunc _ready():\n    pass\n");
+                    returned = true; status = result.Resolution.Status;
+                    published = result.Resolution.Status == "generated_by_codex" && File.Exists(result.AdapterPath);
+                }
+            }
+            var operation = InvokeAsync();
+            await runner.Started.WaitAsync(TimeSpan.FromSeconds(10));
+            var before = Files();
+            try { await ApplyOwnedPendingModelFaultAsync(fixture, mode, roles); }
+            finally { runner.Release(); }
+            var denied = false;
+            try { await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = after.Where(pair => !before.TryGetValue(pair.Key, out var old) || old != pair.Value).Select(pair => pair.Key).Order().ToArray();
+            var removed = before.Keys.Except(after.Keys).Order().ToArray();
+            rows.Add(new { family, mode, denied, returned, published, status, changed, removed, calls = runner.Calls,
+                boundaryReached = runner.Started.IsCompletedSuccessfully, realProviderOrWindowsEvidence = false });
+        }
+        return rows;
+    }
+
+    private sealed class PendingChildArtifactRunner(string family) : IHostedProcessRunner
+    {
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task Started => _started.Task;
+        internal int Calls { get; private set; }
+        internal void Release() => _release.TrySetResult();
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            if (family == "image-sidecar")
+                await new OwnedImageArtifactStub().RunAsync(command, cancellationToken);
+            _started.TrySetResult();
+            await _release.Task.WaitAsync(cancellationToken);
+            // A real failed provider result exercises semantic fallback; no external model/process is started by this stub.
+            return family == "semantic-fallback" ? new HostedProcessResult(1, "{}", "Owned provider failure")
+                : new HostedProcessResult(0, "extends Node\nfunc _ready():\n    pass\n", "");
+        }
+    }
+
+    private sealed class OwnedImageArtifactStub : IHostedProcessRunner
+    {
+        internal int Calls { get; private set; }
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            var args = command.Arguments.ToList();
+            var path = args[args.IndexOf("--out") + 1];
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllBytes(path, Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j2N8AAAAASUVORK5CYII="));
+            return Task.FromResult(new HostedProcessResult(0, "Owned image artifact stub only", ""));
+        }
+    }
+
+    private sealed class PendingExportBoundaryRunner : IHostedProcessRunner
+    {
+        private readonly OwnedExportArtifactStub _stub = new();
+        private readonly TaskCompletionSource _started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        internal Task Started => _started.Task;
+        internal int Calls => _stub.Commands.Count;
+        internal void Release() => _release.TrySetResult();
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            // All provider-owned outputs precede the fault. Only caller continuation can change them afterward.
+            var result = await _stub.RunAsync(command, cancellationToken);
+            _started.TrySetResult();
+            await _release.Task.WaitAsync(cancellationToken);
+            return result;
+        }
+    }
+
+    private static void AddBoundaryZipEntry(ZipArchive archive, string path, string content)
+    {
+        using var writer = new StreamWriter(archive.CreateEntry(path).Open(), new UTF8Encoding(false));
+        writer.Write(content);
+    }
+
+    private static void WriteBoundaryGodotPackage(string projectRoot, string packageFile)
+    {
+        var packagePath = Path.Combine(projectRoot, "exports", packageFile);
+        Directory.CreateDirectory(Path.GetDirectoryName(packagePath)!);
+        using var stream = File.Create(packagePath);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Create);
+        AddBoundaryZipEntry(archive, "PACKAGE-MANIFEST.json", """
+        {
+          "package_version": "v0.1.20260627.001",
+          "project_name": "Towerdemo2",
+          "game_name": "Towerdemo2",
+          "game_type_source": "Phantom Tower"
+        }
+        """);
+        AddBoundaryZipEntry(archive, "project.godot", """
+        config_version=5
+
+        [application]
+        config/name="Towerdemo2"
+        run/main_scene="res://Game.Godot/Prototypes/Towerdemo2/Towerdemo2Prototype.tscn"
+        """);
+    }
+
+    private sealed class OwnedExportArtifactStub : IHostedProcessRunner
+    {
+        public List<HostedProcessCommand> Commands { get; } = [];
+        public List<string> MainScripts { get; } = [];
+        public List<string> MainScenes { get; } = [];
+
+        public Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command);
+            MainScripts.Add(File.ReadAllText(Path.Combine(command.WorkingDirectory, "Main.gd"), Encoding.UTF8));
+            MainScenes.Add(File.ReadAllText(Path.Combine(command.WorkingDirectory, "Main.tscn"), Encoding.UTF8));
+            var outputPath = command.Arguments.Last();
+            var webRoot = Path.GetDirectoryName(outputPath)!;
+            Directory.CreateDirectory(webRoot);
+            File.WriteAllText(Path.Combine(webRoot, "index.html"), """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+            		#status-progress-inner {
+            			height: 100%;
+            		}
+                </style>
+            </head>
+            <body>
+                <div id='status-progress' style='display: none;' oncontextmenu='event.preventDefault();'><div id ='status-progress-inner'></div></div>
+                <script type='text/javascript' src='index.js'></script>
+                <script type='text/javascript'>
+                    const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"executable":"index","fileSizes":{"index.pck":10,"index.wasm":20}};
+                    var engine = new Engine(GODOT_CONFIG);
+                    (function() {
+            			var statusProgressInner = document.getElementById('status-progress-inner');
+            			var statusIndeterminate = document.getElementById('status-indeterminate');
+            			var initializing = true;
+            			var statusMode = 'hidden';
+            			[statusProgress, statusIndeterminate, statusNotice].forEach(elem => {
+            			});
+            			statusProgress.style.display = 'block';
+            						break;
+            			statusIndeterminate.style.display = 'block';
+            						animationCallbacks.push(animateStatusIndeterminate);
+            			statusProgressInner.style.width = current/total * 100 + '%';
+            							setStatusMode('progress');
+            			setStatusMode('hidden');
+            					initializing = false;
+                    })();
+                </script>
+            </body>
+            </html>
+            """, Encoding.UTF8);
+            File.WriteAllText(Path.Combine(webRoot, "index.js"), """
+            const Preloader = function () {
+                this.preload = function (pathOrBuffer, destPath, fileSize) {};
+                this.loadPromise = function (file, fileSize, raw = false) {};
+            };
+            const InternalConfig = function (initConfig) { // eslint-disable-line no-unused-vars
+            };
+            Config.prototype.getModuleConfig = function (loadPath, response) {
+                return {
+                        'locateFile': function (path) {
+                            if (path.endsWith('.worker.js')) {
+                                return `${loadPath}.worker.js`;
+                            } else if (path.endsWith('.audio.worklet.js')) {
+                                return `${loadPath}.audio.worklet.js`;
+                            } else if (path.endsWith('.js')) {
+                                return `${loadPath}.js`;
+                            } else if (path.endsWith('.side.wasm')) {
+                                return `${loadPath}.side.wasm`;
+                            } else if (path.endsWith('.wasm')) {
+                                return `${loadPath}.wasm`;
+                            }
+                            return path;
+                        },
+                    };
+            };
+            const Engine = (function () {
+                const preloader = new Preloader();
+                let loadPromise = null;
+                let loadPath = '';
+                Engine.load = function (basePath, size) {
+                    if (loadPromise == null) {
+                        loadPath = basePath;
+                        loadPromise = preloader.loadPromise(`${loadPath}.wasm`, size, true);
+                    }
+                };
+                const proto = {
+                        preloadFile: function (file, path) {
+                            return preloader.preload(file, path, this.config.fileSizes[file]);
+                        },
+                };
+            }());
+            """, Encoding.UTF8);
+            File.WriteAllBytes(Path.Combine(webRoot, "index.wasm"), [0]);
+            File.WriteAllBytes(Path.Combine(webRoot, "index.pck"), [0]);
+            return Task.FromResult(new HostedProcessResult(0, "fake export ok", ""));
+        }
+    }
+
+    private sealed class UnexpectedInventoryCodex : ICodexChatClient
+    {
+        public Task<CodexChatClientResult> CompleteAsync(string projectRoot, string model, string prompt,
+            CodexChatClientOptions? options = null, string? billingApiKeyName = null, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Explicit inventory LLM engine was bypassed.");
+    }
+
+    // ADR-0061 AD19/20: actual planning model failures cannot return under expired project authority.
+    internal static async Task<object> ObserveIterationPlanReplyBoundaryAsync()
+    {
+        var rows = new List<object>();
+        foreach (var reply in new[] { "empty-json", "malformed-json" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only", "foreign-home", "foreign-project", "swapped-path" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var engine = new BlockingRequirementMapLlmEngine(reply == "empty-json" ? "{}" : "{broken");
+            var planner = new PrototypeIterationPlanService(node, new PrototypeRouteStateWriter(), llmRouteEngine: engine);
+            var operation = planner.CreateAsync(fixture.AccountId, fixture.ProjectId,
+                new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+            await engine.Started.WaitAsync(TimeSpan.FromSeconds(10));
+            if (engine.Request?.Purpose != "goal-plan" || engine.Request.OperationKey != "llm:goal-plan" ||
+                engine.Request.BillingAccountId != fixture.AccountId)
+                throw new InvalidOperationException("Actual iteration-plan model request binding unavailable.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            var beforeSessions = await fixture.Store.ListProjectIterationSessionsAsync(fixture.ProjectId);
+            try
+            {
+                if (mode == "entry-only") roles.Remove("production");
+                else if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var transaction = connection.BeginTransaction();
+                    var triggers = new List<string>();
+                    await using (var read = connection.CreateCommand())
+                    {
+                        read.Transaction = transaction;
+                        read.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                        await using var reader = await read.ExecuteReaderAsync();
+                        while (await reader.ReadAsync()) triggers.Add(reader.GetString(0));
+                    }
+                    if (triggers.Count != 3) throw new InvalidOperationException("Owned planning immutable-trigger prerequisites missing.");
+                    await using var command = connection.CreateCommand();
+                    command.Transaction = transaction;
+                    // Existing disposable-fault protocol: restore exact production triggers before consumer resumes.
+                    command.CommandText = "DROP TRIGGER account_home_immutable; DROP TRIGGER project_node_immutable; DROP TRIGGER account_node_update;";
+                    await command.ExecuteNonQueryAsync();
+                    command.CommandText = mode switch
+                    {
+                        "revoked" => "UPDATE accounts SET is_disabled=1 WHERE id=$account;",
+                        "stale-projection" => "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;",
+                        "foreign-home" => "UPDATE accounts SET home_node_id='foreign-node' WHERE id=$account;",
+                        "foreign-project" => "UPDATE projects SET node_id='foreign-node' WHERE id=$project;",
+                        "swapped-path" => "UPDATE workspaces SET repo_path=repo_path||'-unselected' WHERE project_id=$project;",
+                        _ => throw new InvalidOperationException("Unknown owned planning fault.")
+                    };
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                    if (await command.ExecuteNonQueryAsync() != 1)
+                        throw new InvalidOperationException("Owned planning fault changed no row.");
+                    command.Parameters.Clear();
+                    foreach (var trigger in triggers) { command.CommandText = trigger; await command.ExecuteNonQueryAsync(); }
+                    var restored = new List<string>();
+                    command.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                    await using (var reader = await command.ExecuteReaderAsync())
+                        while (await reader.ReadAsync()) restored.Add(reader.GetString(0));
+                    if (!triggers.SequenceEqual(restored)) throw new InvalidOperationException("Owned planning triggers were not restored exactly.");
+                    await transaction.CommitAsync();
+                }
+            }
+            finally { engine.Release(); }
+            var denied = false;
+            PrototypeIterationPlanResult? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            var afterSessions = await fixture.Store.ListProjectIterationSessionsAsync(fixture.ProjectId);
+            rows.Add(new { reply, mode, denied, reachedModel = engine.Started.IsCompletedSuccessfully,
+                calls = engine.CallCount, resultReturned = result is not null, status = result?.Status,
+                changed, beforeSessions = beforeSessions.Count, afterSessions = afterSessions.Count });
+        }
+        return rows;
+    }
+
+    // ADR-0061 AD19/20: every backfill entry must guard before source dispatch or cached return.
+    internal static async Task<object> ObserveGameTypeBackfillEntriesAsync()
+    {
+        var rows = new List<object>();
+        foreach (var entry in new[] { "existing", "resolve", "refresh" })
+        foreach (var mode in new[] { "valid", "entry-only", "revoked", "stale-projection", "foreign-home", "foreign-project", "swapped-path", "no-context", "forged-context" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            var original = await fixture.GetProjectAsync();
+            if (entry == "resolve")
+                await fixture.Store.UpdateProjectGameTypeMatchAsync(fixture.ProjectId,
+                    ProjectGameTypeMatchEvidence.Empty("not_resolved").ToJson());
+            var project = await fixture.GetProjectAsync();
+            var before = project.GameTypeMatchJson;
+            var roles = new HashSet<string> { "entry", "production" };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options with { EnabledRoles = roles });
+            var matcher = new BackfillObservationMatcher(ProjectGameTypeMatchEvidence.FromJson(original.GameTypeMatchJson));
+            var service = new ProjectGameTypeMatchBackfillService(node, matcher, fixture.Options);
+            if (mode == "entry-only") roles.Remove("production");
+            else if (mode is not ("valid" or "no-context" or "forged-context"))
+            {
+                await using var connection = new SqliteConnection(fixture.ConnectionString);
+                await connection.OpenAsync();
+                await using var transaction = connection.BeginTransaction();
+                var triggers = new List<string>();
+                await using (var read = connection.CreateCommand())
+                {
+                    read.Transaction = transaction;
+                    read.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                    await using var reader = await read.ExecuteReaderAsync();
+                    while (await reader.ReadAsync()) triggers.Add(reader.GetString(0));
+                }
+                if (triggers.Count != 3) throw new InvalidOperationException("Owned backfill trigger prerequisites missing.");
+                await using var command = connection.CreateCommand(); command.Transaction = transaction;
+                command.CommandText = "DROP TRIGGER account_home_immutable; DROP TRIGGER project_node_immutable; DROP TRIGGER account_node_update;";
+                await command.ExecuteNonQueryAsync();
+                command.CommandText = mode switch
+                {
+                    "revoked" => "UPDATE accounts SET is_disabled=1 WHERE id=$account;",
+                    "stale-projection" => "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;",
+                    "foreign-home" => "UPDATE accounts SET home_node_id='foreign-node' WHERE id=$account;",
+                    "foreign-project" => "UPDATE projects SET node_id='foreign-node' WHERE id=$project;",
+                    "swapped-path" => "UPDATE workspaces SET repo_path=repo_path||'-unselected' WHERE project_id=$project;",
+                    _ => throw new InvalidOperationException("Unknown owned backfill fault.")
+                };
+                command.Parameters.AddWithValue("$account", fixture.AccountId);
+                command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned backfill fault changed no row.");
+                command.Parameters.Clear();
+                foreach (var trigger in triggers) { command.CommandText = trigger; await command.ExecuteNonQueryAsync(); }
+                var restored = new List<string>();
+                command.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                await using (var reader = await command.ExecuteReaderAsync())
+                    while (await reader.ReadAsync()) restored.Add(reader.GetString(0));
+                if (!triggers.SequenceEqual(restored)) throw new InvalidOperationException("Owned backfill triggers not restored.");
+                await transaction.CommitAsync();
+            }
+            var filesBefore = Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => path, path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))));
+            var denied = false; var returned = false; string? status = null;
+            using (var current = mode == "no-context" ? null : mode == "forged-context"
+                ? S206TestSupport.EnterCurrentContext(new RequestContext(fixture.AccountId, fixture.AccountId,
+                    new HashSet<string> { PhaseAAuth.AdminRole }, "unregistered-synthetic-credential", "owned-backfill-fault"))
+                : fixture.EnterCurrent())
+            {
+                try
+                {
+                    if (entry == "refresh")
+                    {
+                        var result = await service.RefreshContractSnapshotAsync(project.ProjectId);
+                        returned = result.ProjectId == fixture.ProjectId; status = result.Status;
+                    }
+                    else
+                    {
+                        var result = await service.EnsureResolvedAsync(project);
+                        returned = result.ProjectId == fixture.ProjectId;
+                        status = ProjectGameTypeMatchEvidence.FromJson(result.GameTypeMatchJson).Status;
+                    }
+                }
+                catch (UnauthorizedAccessException) { denied = true; }
+            }
+            var after = (await fixture.GetProjectAsync()).GameTypeMatchJson;
+            var filesAfter = Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => path, path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))));
+            rows.Add(new { entry, mode, denied, returned, status, calls = matcher.Calls,
+                metadataUnchanged = before == after,
+                filesUnchanged = filesBefore.Count == filesAfter.Count && filesBefore.All(pair => filesAfter.TryGetValue(pair.Key, out var value) && value == pair.Value) });
+        }
+        return rows;
+    }
+
+    private sealed class BackfillObservationMatcher(ProjectGameTypeMatchEvidence evidence) : IProjectGameTypeMatchService
+    {
+        internal int Calls { get; private set; }
+        public Task<ProjectGameTypeMatchEvidence> ResolveAsync(string source, CancellationToken cancellationToken)
+        { Calls++; return Task.FromResult(evidence); }
+    }
+
+    // ADR-0061 AD19/20: actual scene-route result/fallback cannot outlive current authority.
+    internal static async Task<object> ObserveSceneReplyBoundaryAsync()
+    {
+        var rows = new List<object>();
+        foreach (var reply in new[] { "valid-json", "invalid-json", "invalid-shape" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection", "entry-only" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            var marker = "owned-scene-" + fixture.ProjectId[..8];
+            var validJson = JsonSerializer.Serialize(new
+            {
+                sceneCountIntent = "multi", entryScene = "map",
+                scenes = new[] {
+                    new { id = "map", name = marker, role = "hub", m1Required = true, playerGoal = "Choose encounter" },
+                    new { id = "combat", name = "Combat", role = "combat", m1Required = true, playerGoal = "Win encounter" }
+                },
+                transitions = new[] { new { from = "map", to = "combat", trigger = "Choose", returnsTo = "map", stateCarried = new[] { "hp" } } },
+                singleSceneConfirmation = new { allowed = false, reason = "Multiple scenes" }, notes = new[] { "Owned scene observation" }
+            });
+            var engine = new BlockingRequirementMapLlmEngine(reply == "valid-json" ? validJson : reply == "invalid-json" ? "{broken" : "{}");
+            var roles = new HashSet<string> { "entry", "production" };
+            var options = fixture.Options with { EnabledRoles = roles };
+            NodeProjectMetadata node = new PhaseAMetadataStore(fixture.ConnectionString, options);
+            var service = new GameDesignSceneRouteService(node, options, engine);
+            var operation = service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignSceneRouteDraftRequest("Owned current scene route"));
+            await engine.Started.WaitAsync(TimeSpan.FromSeconds(10));
+            if (engine.Request?.Purpose != "gdd-scene-route-draft" || engine.Request.OperationKey != "llm:gdd-scene-route-draft"
+                || engine.Request.BillingAccountId != fixture.AccountId)
+                throw new InvalidOperationException("Actual scene-route model request binding unavailable.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            try
+            {
+                if (mode == "entry-only")
+                {
+                    if (!roles.Remove("production") || !roles.SetEquals(new[] { "entry" }))
+                        throw new InvalidOperationException("Owned scene responsibility closure was not applied.");
+                }
+                else if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = mode == "revoked"
+                        ? "UPDATE accounts SET is_disabled=1 WHERE id=$account;"
+                        : "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;";
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned scene fault changed no row.");
+                    command.CommandText = mode == "revoked"
+                        ? "SELECT count(*) FROM accounts WHERE id=$account AND is_disabled=1;"
+                        : "SELECT count(*) FROM account_node_projections pr JOIN accounts a ON a.id=pr.account_id WHERE a.id=$account AND pr.authority_revision<>a.authority_revision;";
+                    if (Convert.ToInt64(await command.ExecuteScalarAsync()) != 1) throw new InvalidOperationException("Owned scene fault was not verified.");
+                }
+            }
+            finally { engine.Release(); }
+            var denied = false;
+            GameDesignSceneRouteDraftResult? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            rows.Add(new { reply, mode, reachedModel = engine.Started.IsCompletedSuccessfully, calls = engine.CallCount,
+                denied, resultReturned = result is not null, source = result?.Source, status = result?.Status,
+                payloadMatches = result?.SceneRoute.Scenes.Any(scene => scene.Name == marker) == true,
+                failureCode = result?.FailureCode, changed });
+        }
+        return rows;
+    }
+
+    // ADR-0061 AD19: cache decisions must not dispatch a new model under expired authority.
+    internal static async Task<object> ObserveWarmQuestionFormAsync()
+    {
+        var rows = new List<object>();
+        foreach (var decision in new[] { "keep", "rebuild" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            const string formJson = """{"fields": [{"id": "reference_signal", "label": "\u53c2\u8003\u6807\u6746", "placeholder": "\u53c2\u8003\u5bf9\u8c61\u548c\u7981\u5fcc\u65b9\u5411\u3002", "inputType": "textarea", "rows": 2, "maxLength": 300, "required": true}, {"id": "player_fantasy", "label": "\u73a9\u5bb6\u5e7b\u60f3", "placeholder": "\u73a9\u5bb6\u7b2c\u4e00\u5206\u949f\u7684\u611f\u53d7\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "combat_loop", "label": "\u6218\u6597\u5faa\u73af", "placeholder": "\u8fdb\u5165\u3001\u6218\u6597\u3001\u6389\u843d\u3001\u56de\u57ce\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "first_dungeon", "label": "\u9996\u4e2a\u5730\u7262", "placeholder": "\u5730\u56fe\u3001\u654c\u4eba\u3001\u76ee\u6807\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "controls_camera", "label": "\u64cd\u4f5c\u89c6\u89d2", "placeholder": "\u79fb\u52a8\u3001\u6280\u80fd\u3001\u955c\u5934\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "pressure_fail", "label": "\u538b\u529b\u5931\u8d25", "placeholder": "\u53d7\u538b\u548c\u5931\u8d25\u6761\u4ef6\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "loot_growth", "label": "\u6389\u843d\u6210\u957f", "placeholder": "\u88c5\u5907\u3001\u6280\u80fd\u3001\u6570\u503c\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false}, {"id": "hud_feedback", "label": "HUD\u53cd\u9988", "placeholder": "\u8840\u91cf\u3001\u8d44\u6e90\u3001\u6389\u843d\u63d0\u793a\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false}]}""";
+            var firstMarker = "owned-initial-" + fixture.ProjectId[..8];
+            var nextMarker = "owned-rebuilt-" + fixture.ProjectId[..8];
+            string Reply(string marker)
+            {
+                var json = JsonNode.Parse(formJson)!;
+                json["fields"]!.AsArray()[0]!.AsObject()["placeholder"] = marker;
+                return json.ToJsonString();
+            }
+            var engine = new WarmQuestionFormLlmEngine(Reply(firstMarker), Reply(nextMarker), decision == "rebuild");
+            var service = new GameDesignQuestionFormService(fixture.Store, fixture.Options, engine);
+            var first = await service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignQuestionFormRequest());
+            System.Collections.IDictionary Cache() => (System.Collections.IDictionary)typeof(GameDesignQuestionFormService)
+                .GetField("_schemaCache", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(service)!;
+            if (first?.Source != "agent" || !first.Fields.Any(field => field.Placeholder == firstMarker) || Cache().Count != 1)
+                throw new InvalidOperationException("Actual initial private schema/cache positive control unavailable.");
+            var priorCache = Cache().Values.Cast<object>().Single();
+            var operation = service.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignQuestionFormRequest());
+            await engine.DecisionStarted.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            if (engine.Decision?.Purpose != "gdd-question-form-cache-decision"
+                || engine.Decision.OperationKey != "llm:gdd-question-form-cache-decision"
+                || engine.Decision.BillingAccountId != fixture.AccountId)
+                throw new InvalidOperationException("Actual cache-decision model request binding unavailable.");
+            try
+            {
+                if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = mode == "revoked"
+                        ? "UPDATE accounts SET is_disabled=1 WHERE id=$account;"
+                        : "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;";
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned cache fault changed no row.");
+                    command.CommandText = mode == "revoked"
+                        ? "SELECT count(*) FROM accounts WHERE id=$account AND is_disabled=1;"
+                        : "SELECT count(*) FROM account_node_projections pr JOIN accounts a ON a.id=pr.account_id WHERE a.id=$account AND pr.authority_revision<>a.authority_revision;";
+                    if (Convert.ToInt64(await command.ExecuteScalarAsync()) != 1) throw new InvalidOperationException("Owned cache fault was not verified.");
+                }
+            }
+            finally { engine.DecisionRelease.TrySetResult(); }
+            var denied = false;
+            GameDesignQuestionFormResult? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var expectedMarker = decision == "rebuild" ? nextMarker : firstMarker;
+            rows.Add(new { decision, mode, denied, resultReturned = result is not null, calls = engine.Calls,
+                payloadMatches = result?.Source == "agent" && result.Fields.Any(field => field.Placeholder == expectedMarker),
+                cacheCount = Cache().Count, cacheUnchanged = Cache().Count == 1 && ReferenceEquals(priorCache, Cache().Values.Cast<object>().Single()),
+                reachedDecision = engine.DecisionStarted.Task.IsCompletedSuccessfully,
+                scope = "actual existing schema/cache decision; external JSON engine supplies no current authorization" });
+        }
+        return rows;
+    }
+
+    private sealed class WarmQuestionFormLlmEngine(string first, string next, bool rebuild) : ILlmRouteEngine
+    {
+        public TaskCompletionSource DecisionStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource DecisionRelease { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public int Calls { get; private set; }
+        public LlmRouteRequest? Decision { get; private set; }
+        public async Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            string json;
+            if (Calls == 1) json = first;
+            else if (Calls == 2)
+            {
+                Decision = request;
+                DecisionStarted.TrySetResult();
+                await DecisionRelease.Task.WaitAsync(cancellationToken);
+                json = rebuild ? "{\"rebuild\":true}" : "{\"rebuild\":false}";
+            }
+            else if (Calls == 3 && rebuild) json = next;
+            else throw new InvalidOperationException("Unexpected schema model dispatch.");
+            return new LlmRouteResult(true, json, json, request.Model, null, null, 0, "", "", null,
+                1, request.Prompt.Length, Encoding.UTF8.GetByteCount(request.Prompt), 1);
+        }
+    }
+
+
+    // ADR-0061 AD19: a completed structured model reply cannot retain current project authority.
+    internal static async Task<object> ObserveModelReplyBoundaryAsync(string family)
+    {
+        var rows = new List<object>();
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            if (family == "requirements") fixture.SeedConfirmedSceneRouteAndGdd();
+            const string formJson = """{"fields": [{"id": "reference_signal", "label": "\u53c2\u8003\u6807\u6746", "placeholder": "\u53c2\u8003\u5bf9\u8c61\u548c\u7981\u5fcc\u65b9\u5411\u3002", "inputType": "textarea", "rows": 2, "maxLength": 300, "required": true}, {"id": "player_fantasy", "label": "\u73a9\u5bb6\u5e7b\u60f3", "placeholder": "\u73a9\u5bb6\u7b2c\u4e00\u5206\u949f\u7684\u611f\u53d7\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "combat_loop", "label": "\u6218\u6597\u5faa\u73af", "placeholder": "\u8fdb\u5165\u3001\u6218\u6597\u3001\u6389\u843d\u3001\u56de\u57ce\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "first_dungeon", "label": "\u9996\u4e2a\u5730\u7262", "placeholder": "\u5730\u56fe\u3001\u654c\u4eba\u3001\u76ee\u6807\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "controls_camera", "label": "\u64cd\u4f5c\u89c6\u89d2", "placeholder": "\u79fb\u52a8\u3001\u6280\u80fd\u3001\u955c\u5934\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "pressure_fail", "label": "\u538b\u529b\u5931\u8d25", "placeholder": "\u53d7\u538b\u548c\u5931\u8d25\u6761\u4ef6\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": true}, {"id": "loot_growth", "label": "\u6389\u843d\u6210\u957f", "placeholder": "\u88c5\u5907\u3001\u6280\u80fd\u3001\u6570\u503c\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false}, {"id": "hud_feedback", "label": "HUD\u53cd\u9988", "placeholder": "\u8840\u91cf\u3001\u8d44\u6e90\u3001\u6389\u843d\u63d0\u793a\u3002", "inputType": "textarea", "rows": 3, "maxLength": 500, "required": false}]}""";
+            var marker = "owned-private-form-" + fixture.ProjectId[..8];
+            var form = JsonNode.Parse(formJson)!;
+            form["fields"]!.AsArray()[0]!.AsObject()["placeholder"] = marker;
+            const string requirementsJson = """
+                {"requirements":[
+                {"requirement_id":"REQ-001","normalized_requirement":"Player moves on the field map.","priority":"P0","kind":"scene","mapped_scene_ids":["field_map"],"mapped_required_module_ids":["field_map"],"status":"mapped"},
+                {"requirement_id":"REQ-002","normalized_requirement":"HUD shows HP and reward feedback.","priority":"P1","kind":"ui","mapped_scene_ids":["field_map"],"mapped_required_module_ids":["combat_hud"],"status":"mapped","capability_domain_ids":["ui_component_system","ui_overlays_feedback"]}]}
+                """;
+            var engine = new BlockingRequirementMapLlmEngine(family == "requirements" ? requirementsJson : form.ToJsonString());
+            GameDesignRequirementMapResult? mapResult = null;
+            GameDesignQuestionFormResult? formResult = null;
+            var formService = family == "question-form" ? new GameDesignQuestionFormService(fixture.Store, fixture.Options, engine) : null;
+            async Task RunConsumerAsync()
+            {
+                if (family == "requirements")
+                    mapResult = await new GameDesignRequirementMapService(fixture.Store, engine)
+                        .CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
+                else if (formService is not null)
+                    formResult = await formService.CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignQuestionFormRequest());
+                else throw new InvalidOperationException("Unknown model-boundary family.");
+            }
+            var operation = RunConsumerAsync();
+            await engine.Started.WaitAsync(TimeSpan.FromSeconds(10));
+            var purpose = family == "requirements" ? "gdd-requirement-map" : "gdd-question-form";
+            if (engine.Request?.Purpose != purpose || engine.Request.OperationKey != "llm:" + purpose
+                || engine.Request.BillingAccountId != fixture.AccountId)
+                throw new InvalidOperationException("Actual project model request binding unavailable.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            try
+            {
+                if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = mode == "revoked"
+                        ? "UPDATE accounts SET is_disabled=1 WHERE id=$account;"
+                        : "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;";
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned model-boundary fault changed no row.");
+                    command.CommandText = mode == "revoked"
+                        ? "SELECT count(*) FROM accounts WHERE id=$account AND is_disabled=1;"
+                        : "SELECT count(*) FROM account_node_projections pr JOIN accounts a ON a.id=pr.account_id WHERE a.id=$account AND pr.authority_revision<>a.authority_revision;";
+                    if (Convert.ToInt64(await command.ExecuteScalarAsync()) != 1) throw new InvalidOperationException("Owned model-boundary fault was not verified.");
+                }
+            }
+            finally { engine.Release(); }
+            var denied = false;
+            try { await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            var cacheCount = formService is null ? 0 : ((System.Collections.IDictionary)typeof(GameDesignQuestionFormService)
+                .GetField("_schemaCache", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(formService)!).Count;
+            var matches = family == "requirements" ? mapResult?.Status == "ready"
+                && mapResult.SourceGddHash == fixture.GddHash
+                && mapResult.Requirements.Select(item => item.RequirementId).Order().SequenceEqual(new[] { "REQ-001", "REQ-002" })
+                : formResult?.Status == "ready" && formResult.ProjectId == fixture.ProjectId && formResult.Source == "agent"
+                && formResult.Fields.Any(field => field.Placeholder == marker);
+            rows.Add(new { family, mode, reachedModel = engine.Started.IsCompletedSuccessfully, calls = engine.CallCount,
+                denied, resultReturned = mapResult is not null || formResult is not null, payloadMatches = matches,
+                cacheCount, changed, scope = "actual structured service; model double returns JSON only and supplies no authorization" });
+        }
+        return rows;
+    }
+
+    // ADR-0061 AD19: real feedback and UI consumers must retain current write authority after an executor wait.
+    internal static async Task<object> ObservePostprocessConsumersAsync()
+    {
+        var rows = new List<object>();
+        foreach (var family in new[] { "feedback", "ui" })
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection" })
+        {
+            using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            var project = await fixture.GetProjectAsync();
+            if (family == "ui")
+            {
+                await fixture.SeedRequirementMapAsync();
+                if ((await new PrototypeContractFreezeService(fixture.Store).FreezeAsync(fixture.AccountId,
+                        fixture.ProjectId, new PrototypeContractFreezeRequest())).Status != "fresh")
+                    throw new InvalidOperationException("Actual UI contract prerequisite unavailable.");
+                await fixture.SeedPrototypeSkeletonAsync();
+                var planner = new PrototypeIterationPlanService(fixture.Store);
+                var plan = await planner.CreateAsync(fixture.AccountId, fixture.ProjectId,
+                    new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+                if ((await planner.ConfirmAsync(fixture.AccountId, fixture.ProjectId,
+                        new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status != "confirmed")
+                    throw new InvalidOperationException("Actual UI iteration prerequisite unavailable.");
+                var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId)
+                    ?? throw new InvalidOperationException("Actual UI persisted session unavailable.");
+                foreach (var goal in details.Goals)
+                    await fixture.Store.UpdateProjectIterationGoalStatusAsync(goal.GoalId, "completed", "Owned completed prerequisite.", DateTimeOffset.UtcNow.ToString("O"));
+            }
+            var prerequisite = await fixture.Store.CreateRunAsync(fixture.ProjectId, project.WorkspaceId, "prototype-7day-playable");
+            await fixture.Store.CompleteRunAsync(prerequisite, "succeeded", 0, "Owned prerequisite fixture.", "", "{}");
+            var marker = "owned-feedback-" + Guid.NewGuid().ToString("N");
+            var bomFile = Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "S236OwnedBoundary", "OwnedBoundary.tscn");
+            var expectedGodotBytes = new UTF8Encoding(false).GetBytes("[gd_scene format=3]\n[node name=\"OwnedBoundary\" type=\"Node\"]\n");
+            if (family == "ui")
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(bomFile)!);
+                await File.WriteAllBytesAsync(bomFile, new byte[] { 0xef, 0xbb, 0xbf }.Concat(expectedGodotBytes).ToArray());
+            }
+            var runner = new PublicationObservationRunner();
+            async Task<string> RunConsumerAsync()
+            {
+                if (family == "feedback")
+                {
+                    var result = await new PrototypeFeedbackIterationService(fixture.Store, fixture.Options, runner,
+                        new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), new SkillActionCatalog(), heavyRunnerQueue: fixture.Queue)
+                        .SubmitAsync(fixture.AccountId, fixture.ProjectId, new PrototypeFeedbackRequest(marker, "gpt-5.4"));
+                    return result.RunId;
+                }
+                var ui = await new PrototypeUiOptimizationService(fixture.Store, fixture.Options, runner,
+                    new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue)
+                    .RunAsync(fixture.AccountId, fixture.ProjectId);
+                return ui.RunId;
+            }
+            var operation = RunConsumerAsync();
+            await runner.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            var actualRunId = runner.RunId ?? throw new InvalidOperationException("Actual consumer run binding missing.");
+            var actualRun = await fixture.Store.GetRunSnapshotAsync(actualRunId);
+            if (actualRun?.ProjectId != fixture.ProjectId) throw new InvalidOperationException("Consumer executor run belongs to another project.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            var beforeRun = JsonSerializer.Serialize(actualRun);
+            try
+            {
+                if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = mode == "revoked"
+                        ? "UPDATE accounts SET is_disabled=1 WHERE id=$account;"
+                        : "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;";
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned current fault did not affect exactly one row.");
+                    command.CommandText = mode == "revoked"
+                        ? "SELECT count(*) FROM accounts WHERE id=$account AND is_disabled=1;"
+                        : "SELECT count(*) FROM account_node_projections pr JOIN accounts a ON a.id=pr.account_id WHERE a.id=$account AND pr.authority_revision<>a.authority_revision;";
+                    if (Convert.ToInt64(await command.ExecuteScalarAsync()) != 1) throw new InvalidOperationException("Owned current fault was not confirmed.");
+                }
+            }
+            finally { runner.Release.TrySetResult(); }
+            var denied = false;
+            string? returnedRunId = null;
+            try { returnedRunId = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            var payloadMatches = family == "ui" ? File.ReadAllBytes(bomFile).SequenceEqual(expectedGodotBytes)
+                : changed.Where(path => path.EndsWith("/result-log.md", StringComparison.Ordinal)).Any(path =>
+                    File.ReadAllText(Path.Combine(project.RepoPath, path)).Contains(marker, StringComparison.Ordinal)
+                    && File.ReadAllText(Path.Combine(project.RepoPath, path)).Contains(actualRunId, StringComparison.Ordinal));
+            rows.Add(new { family, mode, reachedExecutor = runner.Started.Task.IsCompletedSuccessfully, calls = runner.Calls,
+                denied, resultReturned = returnedRunId == actualRunId, changed, payloadMatches,
+                runUnchanged = beforeRun == JsonSerializer.Serialize(await fixture.Store.GetRunSnapshotAsync(actualRunId)),
+                scope = "actual service and owned project; executor double performs no file edits and supplies no authority" });
+        }
+        return rows;
+    }
+
+    // ADR-0061 AD19: executor completion is not permission to publish retained project state.
+    internal static async Task<object> ObserveGoalPublicationAfterProcessAsync()
+    {
+        var rows = new List<object>();
+        foreach (var mode in new[] { "valid", "revoked", "stale-projection" })
+        {
+            using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            await fixture.SeedRequirementMapAsync();
+            var frozen = await new PrototypeContractFreezeService(fixture.Store)
+                .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+            if (frozen.Status != "fresh") throw new InvalidOperationException("Actual contract prerequisite unavailable.");
+            await fixture.SeedPrototypeSkeletonAsync();
+            var planner = new PrototypeIterationPlanService(fixture.Store);
+            var plan = await planner.CreateAsync(fixture.AccountId, fixture.ProjectId,
+                new PrototypeIterationPlanRequest("Complete field movement and HUD feedback.", "manual_feedback"));
+            if ((await planner.ConfirmAsync(fixture.AccountId, fixture.ProjectId,
+                    new PrototypeIterationPlanConfirmationRequest(plan.SessionId, plan.PlanHash))).Status != "confirmed")
+                throw new InvalidOperationException("Actual confirmed iteration prerequisite unavailable.");
+            var details = await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId)
+                ?? throw new InvalidOperationException("Actual persisted iteration session unavailable.");
+            await fixture.Store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "ready", 0,
+                details.Session.LatestSummary, JsonSerializer.Serialize(new PrototypeIterationPlanEvaluationResult(
+                    "ready_to_execute", "Owned publication-boundary control.", "Actual external executor pause.", "execute_next_goal")), null);
+            var project = await fixture.GetProjectAsync();
+            new PrototypeRouteStateWriter().WritePrototypeState(project, new
+            {
+                route = "prototype-7day-playable", status = "succeeded", prototype_completion = new { succeeded = true }
+            });
+            var runner = new PublicationObservationRunner();
+            var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner,
+                new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
+            var operation = service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
+            await runner.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(project.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(project.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            var earlierSession = JsonSerializer.Serialize(await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId));
+            try
+            {
+                if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var command = connection.CreateCommand();
+                    command.CommandText = mode == "revoked"
+                        ? "UPDATE accounts SET is_disabled=1 WHERE id=$account;"
+                        : "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;";
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    if (await command.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("Owned projection fault unavailable.");
+                    command.CommandText = mode == "revoked"
+                        ? "SELECT count(*) FROM accounts WHERE id=$account AND is_disabled=1;"
+                        : "SELECT count(*) FROM account_node_projections pr JOIN accounts a ON a.id=pr.account_id WHERE a.id=$account AND pr.authority_revision<>a.authority_revision;";
+                    if (Convert.ToInt64(await command.ExecuteScalarAsync()) != 1)
+                        throw new InvalidOperationException("Owned authority fault was not confirmed before executor completion.");
+                }
+            }
+            finally { runner.Release.TrySetResult(); }
+            var denied = false;
+            PrototypeIterationGoalExecutionResult? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(20)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            rows.Add(new { mode, reachedExecutor = runner.Started.Task.IsCompletedSuccessfully, calls = runner.Calls,
+                denied, resultReturned = result is not null, changed,
+                resultLogPublished = changed.Any(path => path.EndsWith("/goal-result.md", StringComparison.Ordinal)),
+                sessionUnchanged = earlierSession == JsonSerializer.Serialize(await fixture.Store.GetLatestProjectIterationSessionAsync(fixture.ProjectId)),
+                scope = "actual iteration service and own project; external process double writes no project bytes and grants no authority" });
+        }
+        return rows;
+    }
+
+    private sealed class PublicationObservationRunner : IHostedProcessRunner
+    {
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public int Calls { get; private set; }
+        public string? RunId { get; private set; }
+        public async Task<HostedProcessResult> RunAsync(HostedProcessCommand command, CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            RunId = command.RunId;
+            Started.TrySetResult();
+            await Release.Task.WaitAsync(cancellationToken);
+            return new HostedProcessResult(1, "", "Owned external executor control finished without changes.");
+        }
+    }
+
+    // ADR-0061 AD19: the actual contract writer must recheck after its real project lease wait.
+    internal static async Task<object> ObserveContractFreezeAfterMutationWaitAsync()
+    {
+        var rows = new List<object>();
+        foreach (var mode in new[] { "valid", "revoked", "foreign-home", "stale-projection", "foreign-project" })
+        {
+            using var fixture = await BackendContractFixture.CreateAsync();
+            using var current = fixture.EnterCurrent();
+            await fixture.SeedRequirementMapAsync();
+            var service = new PrototypeContractFreezeService(fixture.Store);
+            var control = await service.FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
+            if (control.Status != "fresh" || string.IsNullOrEmpty(control.ContractHash))
+                throw new InvalidOperationException("Actual contract writer positive control unavailable.");
+            NodeProjectMetadata node = fixture.Store;
+            var earlierProject = await node.GetProjectSnapshotAsync(fixture.ProjectId)
+                ?? throw new InvalidOperationException("Actual pre-wait project authority unavailable.");
+            Dictionary<string, string> Files() => Directory.EnumerateFiles(earlierProject.RepoPath, "*", SearchOption.AllDirectories)
+                .ToDictionary(path => Path.GetRelativePath(earlierProject.RepoPath, path).Replace(Path.DirectorySeparatorChar, '/'),
+                    path => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))), StringComparer.Ordinal);
+            var before = Files();
+            var lease = await ProjectMutationLockRegistry.Shared.AcquireAsync(fixture.AccountId, fixture.ProjectId, CancellationToken.None);
+            Task<PrototypeContractStatusResult> operation;
+            bool waited;
+            var triggersPreserved = true;
+            try
+            {
+                operation = service.FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest(Refresh: true));
+                waited = !operation.IsCompleted;
+                if (!waited) throw new InvalidOperationException("Actual contract writer did not wait for its owned project lease.");
+                if (mode != "valid")
+                {
+                    await using var connection = new SqliteConnection(fixture.ConnectionString);
+                    await connection.OpenAsync();
+                    await using var transaction = connection.BeginTransaction();
+                    var triggers = new List<string>();
+                    await using (var read = connection.CreateCommand())
+                    {
+                        read.Transaction = transaction;
+                        read.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                        await using var reader = await read.ExecuteReaderAsync();
+                        while (await reader.ReadAsync()) triggers.Add(reader.GetString(0));
+                    }
+                    if (triggers.Count != 3) throw new InvalidOperationException("Owned immutable-node trigger prerequisites missing.");
+                    await using var command = connection.CreateCommand();
+                    command.Transaction = transaction;
+                    // Existing disposable-fault protocol: restore exact production triggers before releasing the real consumer.
+                    command.CommandText = "DROP TRIGGER account_home_immutable; DROP TRIGGER project_node_immutable; DROP TRIGGER account_node_update;";
+                    await command.ExecuteNonQueryAsync();
+                    command.CommandText = mode switch
+                    {
+                        "revoked" => "UPDATE accounts SET is_disabled=1 WHERE id=$account;",
+                        "foreign-home" => "UPDATE accounts SET home_node_id='foreign-node' WHERE id=$account;",
+                        "stale-projection" => "UPDATE account_node_projections SET authority_revision=authority_revision+1 WHERE account_id=$account;",
+                        "foreign-project" => "UPDATE projects SET node_id='foreign-node' WHERE id=$project;",
+                        _ => throw new InvalidOperationException("Unknown owned fault.")
+                    };
+                    command.Parameters.AddWithValue("$account", fixture.AccountId);
+                    command.Parameters.AddWithValue("$project", fixture.ProjectId);
+                    if (await command.ExecuteNonQueryAsync() != 1)
+                        throw new InvalidOperationException("Owned current-authority fault did not affect exactly one row.");
+                    command.Parameters.Clear();
+                    foreach (var trigger in triggers) { command.CommandText = trigger; await command.ExecuteNonQueryAsync(); }
+                    var restored = new List<string>();
+                    command.CommandText = "SELECT sql FROM sqlite_master WHERE type='trigger' AND name IN ('account_home_immutable','project_node_immutable','account_node_update') ORDER BY name;";
+                    await using (var reader = await command.ExecuteReaderAsync())
+                        while (await reader.ReadAsync()) restored.Add(reader.GetString(0));
+                    triggersPreserved = triggers.SequenceEqual(restored);
+                    if (!triggersPreserved) throw new InvalidOperationException("Owned fault did not restore exact production triggers.");
+                    await transaction.CommitAsync();
+                }
+            }
+            finally { await lease.DisposeAsync(); }
+            var denied = false;
+            PrototypeContractStatusResult? result = null;
+            try { result = await operation.WaitAsync(TimeSpan.FromSeconds(10)); }
+            catch (UnauthorizedAccessException) { denied = true; }
+            var after = Files();
+            var changed = before.Keys.Union(after.Keys).Where(path =>
+                !before.TryGetValue(path, out var left) || !after.TryGetValue(path, out var right) || left != right).Order().ToArray();
+            rows.Add(new { mode, waited, triggersPreserved, earlierProjectObserved = earlierProject.ProjectId == fixture.ProjectId,
+                denied, fresh = result?.Status == "fresh", contractHashRetained = result?.ContractHash == control.ContractHash,
+                changed, scope = "actual contract writer after the existing project mutation lease; owned temporary database only" });
+        }
+        return rows;
+    }
+
     [Fact]
     public async Task Phase1State_ConfirmSceneRouteAsync_WritesAuthoritySidecarAndRealHashReadback()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         var sceneRoute = new GameDesignSceneRouteDocument(
             "gdd-scene-route.v1",
@@ -60,6 +1927,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_WritesDocumentStateAndSceneHashThrough()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -99,14 +1967,14 @@ public sealed class GddToModuleBackendContractServiceTests
             .Should().Be(expectedAuthorityHashes[HostedRouteRecoveryContract.SelectedRouteSkillPromptBlockHashKey]);
         var routeBindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
             .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
-        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), routeBindings);
+        var routeReadback = new ProjectRouteStateArtifactService(fixture.Store).Read(await fixture.GetProjectAsync(), routeBindings);
         routeReadback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.StartsWith("meta/routes/gdd-document/latest.json:prompt_evidence", StringComparison.Ordinal));
         var statusReadback = await service.GetGddDocumentStateAsync(fixture.AccountId, fixture.ProjectId);
         statusReadback!.Status.Should().Be("ready");
 
         using var changedPromptPolicy = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
-        var staleReadback = new ProjectRouteStateArtifactService().Read(project, routeBindings);
+        var staleReadback = new ProjectRouteStateArtifactService(fixture.Store).Read(project, routeBindings);
         staleReadback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-document/latest.json:source_hashes_authority_mismatch");
     }
@@ -115,6 +1983,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_ConfirmSceneRouteAsync_ReusesSameHashWithoutErasingGeneratedGddHash()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         var sceneRoute = fixture.DefaultSceneRoute();
         var first = await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, sceneRoute);
@@ -134,6 +2003,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedForInvalidSceneState()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
         fixture.WriteJson("meta/routes/scene-route/latest.json", "{ invalid");
         var service = new GddToModulePhase1StateService(fixture.Store);
@@ -150,6 +2020,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWithoutRunPromptArtifact()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -183,6 +2054,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenPersistedPromptWasTampered()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -202,6 +2074,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenPromptEvidenceAndFilesDivergeFromDatabaseBinding()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -229,6 +2102,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenSelectedPromptBlockHashIsMissing()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -250,6 +2124,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenPromptBlockAuthorityChangesAfterRun()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -268,6 +2143,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedWhenGeneratedFileChangedAfterRun()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Original generated content.\n");
@@ -286,6 +2162,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_RecordGeneratedGddAsync_FailsClosedForAnotherProjectsRun()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -293,7 +2170,7 @@ public sealed class GddToModuleBackendContractServiceTests
             fixture.Store,
             fixture.Options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(fixture.Options),
+            new ProjectWorkspaceSeeder(fixture.Options, fixture.Store),
             gameTypeMatchService: new FixedGameTypeMatchService());
         var other = await creation.CreateProjectAsync(
             fixture.AccountId,
@@ -313,6 +2190,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_GetGddDocumentStateAsync_RejectsIncompleteOrMismatchedWriteThrough()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -343,6 +2221,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_GetGddDocumentStateAsync_RevalidatesPromptSourceBoundary(string scenario)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
         await service.ConfirmSceneRouteAsync(fixture.AccountId, fixture.ProjectId, fixture.DefaultSceneRoute());
         fixture.WriteGdd("# Deckbuilder\n\n- Player must select a route node.\n");
@@ -399,6 +2278,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task Phase1State_ReadAndWriteOperations_EnforceAccountBoundary()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var service = new GddToModulePhase1StateService(fixture.Store);
 
         var confirm = await service.ConfirmSceneRouteAsync("other-account", fixture.ProjectId, fixture.DefaultSceneRoute());
@@ -415,6 +2295,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_WritesStableRowsAndSourceBoundary()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var service = new GameDesignRequirementMapService(fixture.Store);
 
@@ -436,7 +2317,7 @@ public sealed class GddToModuleBackendContractServiceTests
         File.Exists(fixture.PathForTest("meta/routes/gdd-requirements/prompt-evidence.json")).Should().BeTrue();
         var routeBindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
             .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
-        var routeReadback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), routeBindings);
+        var routeReadback = new ProjectRouteStateArtifactService(fixture.Store).Read(await fixture.GetProjectAsync(), routeBindings);
         routeReadback.BlockingIssues.Should().NotContain(issue =>
             issue.IssueId.StartsWith("meta/routes/gdd-requirements/latest.json:prompt_evidence", StringComparison.Ordinal));
         sidecar.RootElement.GetProperty("requirements")[0].GetProperty("requirement_id").GetString().Should().Be("REQ-001");
@@ -446,6 +2327,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_ReconcilesRemovedAdminReviewBlockerWithoutErasingHistory()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var obsolete = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId,
@@ -485,6 +2367,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_UsesStructuredLlmAndPreservesCapabilityEvidence()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var engine = new FixedRequirementMapLlmEngine("""
         {
@@ -574,6 +2457,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_ReadbackRejectsCoordinatedPromptEvidenceTamperAgainstDatabaseBinding()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         await new GameDesignRequirementMapService(fixture.Store)
             .CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
@@ -590,7 +2474,7 @@ public sealed class GddToModuleBackendContractServiceTests
         var bindings = (await fixture.Store.ListProjectRoutePromptEvidenceBindingsAsync(fixture.ProjectId))
             .ToDictionary(binding => binding.RouteId, StringComparer.Ordinal);
 
-        var readback = new ProjectRouteStateArtifactService().Read(await fixture.GetProjectAsync(), bindings);
+        var readback = new ProjectRouteStateArtifactService(fixture.Store).Read(await fixture.GetProjectAsync(), bindings);
 
         readback.BlockingIssues.Should().Contain(issue =>
             issue.IssueId == "meta/routes/gdd-requirements/latest.json:prompt_evidence_invalid" &&
@@ -604,6 +2488,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_FallsBackToNeedsReviewForInvalidStructuredLlm(string json, string marker)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var service = new GameDesignRequirementMapService(fixture.Store, new FixedRequirementMapLlmEngine(json));
 
@@ -618,6 +2503,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_RejectsSameCountLlmRowsThatReplaceTheDeterministicFloor()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var service = new GameDesignRequirementMapService(fixture.Store, new FixedRequirementMapLlmEngine("""
         {
@@ -639,6 +2525,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_ReusesSingleFlightForConcurrentSameProjectRequests()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var engine = new BlockingRequirementMapLlmEngine("""
         {
@@ -691,6 +2578,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_FailsClosedForInvalidSources(string scenario, string domainCode)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         fixture.ApplyRequirementMapScenario(scenario);
         var service = new GameDesignRequirementMapService(fixture.Store);
@@ -708,6 +2596,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_DeduplicatesUnresolvedDiagnosticsAcrossRetries()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         fixture.ApplyRequirementMapScenario("missing_gdd");
         var service = new GameDesignRequirementMapService(fixture.Store);
@@ -723,6 +2612,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_QueuesConflictForAdminReviewAndContractFreezeFailsClosed()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var service = new GameDesignRequirementMapService(fixture.Store, new FixedRequirementMapLlmEngine("""
         {
@@ -757,6 +2647,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_SourceHashChangeSupersedesPriorHumanDecisionEvenWhenRowsStayStable()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         const string firstGdd = """
         # Demo RPG
 
@@ -806,6 +2697,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_BlocksNeedsReviewRequirementMapWithoutAdminQueueRow()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         await new GameDesignRequirementMapService(fixture.Store, new FixedRequirementMapLlmEngine("{ invalid"))
             .CreateAsync(fixture.AccountId, fixture.ProjectId, new GameDesignRequirementMapRequest());
@@ -822,6 +2714,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task RequirementMap_CreateAsync_FallsBackToNeedsReviewRowWhenNoRequirementCanBeExtracted()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd("# Empty\n\nShort.");
         var service = new GameDesignRequirementMapService(fixture.Store);
 
@@ -837,6 +2730,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_WritesV2ContractWithSourceHashesAndMirror()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var service = new PrototypeContractFreezeService(fixture.Store);
 
@@ -868,6 +2762,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task PrototypeContract_WriteFromRequest_PreservesFrozenV2AuthorityAndRepairsMirror()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var frozen = await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -905,6 +2800,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_BlocksSceneSemanticTamperWithUnchangedDeclaredHash()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var scenePath = fixture.PathForTest("meta/routes/scene-route/latest.json");
         var scene = JsonNode.Parse(File.ReadAllText(scenePath, Encoding.UTF8))!.AsObject();
@@ -923,6 +2819,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task PrototypeContract_ReadAndWriteFromRequest_FailClosedForTamperedFrozenContract()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -946,6 +2843,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_GetStatusAsync_AcceptsMirrorWithMatchingContractHashAndRejectsMismatch()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var service = new PrototypeContractFreezeService(fixture.Store);
         var frozen = await service.FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -975,6 +2873,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_GetStatusAsync_RejectsTamperedCanonicalHashAndMissingFreshnessField()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var service = new PrototypeContractFreezeService(fixture.Store);
         await service.FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -995,6 +2894,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_IsIdempotentForUnchangedSources()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var service = new PrototypeContractFreezeService(fixture.Store);
 
@@ -1010,6 +2910,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_SerializesConcurrentSameProjectWrites()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var service = new PrototypeContractFreezeService(fixture.Store);
 
@@ -1033,6 +2934,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_BlocksStaleOrMismatchedSources(string scenario, string domainCode)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         fixture.ApplyContractScenario(scenario);
         var service = new PrototypeContractFreezeService(fixture.Store);
@@ -1048,6 +2950,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_BlocksOpenP0P1AdminReviewQueueItems()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId,
@@ -1074,6 +2977,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_DoesNotMissBlockerAfterFiveHundredRows()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         for (var index = 0; index < 500; index++)
         {
@@ -1101,6 +3005,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_UsesBoundedAdminReviewBlockingPolicy(string decisionStatus, bool shouldBlock)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var entry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId,
@@ -1149,6 +3054,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_IgnoresSupersededBlockingHistory()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var oldEntry = await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId, fixture.ProjectId, "gdd-requirements", "REQ-HISTORY", "P1", "Historical blocker.",
@@ -1178,6 +3084,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ContractFreeze_FreezeAsync_DoesNotLoseProjectBlockerBehindGlobalQueueLimit()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await fixture.Store.UpsertProjectAdminReviewQueueEntryAsync(new ProjectAdminReviewQueueCommand(
             fixture.AccountId,
@@ -1227,6 +3134,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task DeckbuilderChain_PreservesRouteHandHudRewardAndStyleEvidence()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd("""
         # Deckbuilder
 
@@ -1264,6 +3172,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task NewChainGuard_DoesNotBlockLegacyPrototypeContract()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.WriteJson("routes/prototype-contract/latest.json", """
         {
           "schema_version": 1,
@@ -1287,6 +3196,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task NewChainGuard_BlocksExplicitNewChainUntilFreshContractExists()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var project = await fixture.GetProjectAsync();
         var service = new PrototypeContractFreezeService(fixture.Store);
@@ -1303,6 +3213,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var contract = await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1372,6 +3283,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync("""
         {
           "requirements": [
@@ -1398,6 +3310,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlan_CreateAsync_RecordsAndDeduplicatesNewChainGuardFailure()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var service = new PrototypeIterationPlanService(fixture.Store);
 
@@ -1421,6 +3334,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ExecuteNextAsync_RecordsAndDeduplicatesLegacySourceFailureBeforeRunnerUse()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var project = await fixture.GetProjectAsync();
         new PrototypeRouteStateWriter().WriteIterationPlanState(project, new
         {
@@ -1429,7 +3343,7 @@ public sealed class GddToModuleBackendContractServiceTests
             plan_hash = "legacy-plan-hash"
         });
         var runner = new CountingHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
 
         var first = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
         var second = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
@@ -1446,9 +3360,10 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task ExecuteNextAsync_RecordsAndDeduplicatesMissingContractFailureBeforeRunnerUse()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         fixture.SeedConfirmedSceneRouteAndGdd();
         var runner = new CountingHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
 
         var first = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
         var second = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
@@ -1465,6 +3380,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlan_CreateAsync_RedactsAdminReviewRowIdentityAndRawEvidence()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1500,6 +3416,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlan_CreateAsync_RedactsDiagnosticIdentityAndRawEvidence()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1537,6 +3454,7 @@ public sealed class GddToModuleBackendContractServiceTests
         string expectedDomainCode)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var contract = await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1569,6 +3487,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlan_CreateAsync_BlocksSkeletonSnapshotOrMirrorDriftBeforeLlm()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var contract = await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1635,6 +3554,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlan_CreateAsync_BlocksIncompleteSkeletonSourceBoundaryBeforeLlm(string scenario)
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         var contract = await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1658,6 +3578,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1702,7 +3623,7 @@ public sealed class GddToModuleBackendContractServiceTests
         """);
         new PrototypeRouteStateWriter().WriteIterationPlanState(await fixture.GetProjectAsync(), sidecar);
         var runner = new CountingHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
 
         var first = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
         var second = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
@@ -1720,6 +3641,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1757,7 +3679,7 @@ public sealed class GddToModuleBackendContractServiceTests
         artifact["scene_node_owners"] = new JsonArray("module:tampered:interaction-owner");
         File.WriteAllText(artifactPath, artifact.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
         var runner = new CountingHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
 
         var result = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
 
@@ -1774,6 +3696,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1822,6 +3745,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1867,6 +3791,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1899,6 +3824,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1927,6 +3853,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1954,7 +3881,7 @@ public sealed class GddToModuleBackendContractServiceTests
         state["confirmation"]!["status"] = "unconfirmed";
         new PrototypeRouteStateWriter().WriteIterationPlanState(project, state);
 
-        var result = await new PrototypeIterationGoalService(fixture.Store, fixture.Options, new CountingHostedProcessRunner())
+        var result = await new PrototypeIterationGoalService(fixture.Store, fixture.Options, new CountingHostedProcessRunner(), new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue)
             .ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
         var repaired = JsonNode.Parse(new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project))!.AsObject();
 
@@ -1968,6 +3895,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -1987,6 +3915,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlan_DatabaseIdentityConstraintRejectsSecondStoreDuplicate()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var secondStore = new PhaseAMetadataStore(fixture.ConnectionString, fixture.Options);
         const string identity = "shared-request-identity";
         var goals = new[] { new ProjectIterationGoalCreateCommand(1, "Goal", "Goal", "Acceptance") };
@@ -2031,6 +3960,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -2091,6 +4021,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -2130,6 +4061,7 @@ public sealed class GddToModuleBackendContractServiceTests
     public async Task IterationPlanSessionSnapshot_SerializationHidesCanonicalDatabaseFields()
     {
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var session = await fixture.Store.CreateProjectIterationSessionAsync(
             fixture.AccountId,
             fixture.ProjectId,
@@ -2152,6 +4084,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -2169,7 +4102,7 @@ public sealed class GddToModuleBackendContractServiceTests
         var runner = new CountingHostedProcessRunner();
         var service = new PrototypeNeedsFixRouteService(
             fixture.Store,
-            new PrototypeQuickFixService(fixture.Store, fixture.Options, runner),
+            new PrototypeQuickFixService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), new SkillActionCatalog(), heavyRunnerQueue: fixture.Queue),
             new PrototypeRouteStateWriter());
 
         var result = await service.RunStrictAsync(
@@ -2229,6 +4162,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -2269,7 +4203,7 @@ public sealed class GddToModuleBackendContractServiceTests
             await command.ExecuteNonQueryAsync();
         }
         var runner = new CountingHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+        var service = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
 
         var result = await service.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
         var project = await fixture.GetProjectAsync();
@@ -2287,6 +4221,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -2320,7 +4255,7 @@ public sealed class GddToModuleBackendContractServiceTests
             prototype_completion = new { succeeded = true }
         });
         var runner = new BlockingHostedProcessRunner();
-        var executionService = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner);
+        var executionService = new PrototypeIterationGoalService(fixture.Store, fixture.Options, runner, new ProjectWorkspaceSeeder(fixture.Options, fixture.Store), heavyRunnerQueue: fixture.Queue);
 
         var executionTask = executionService.ExecuteNextAsync(fixture.AccountId, fixture.ProjectId);
         await runner.Started.Task.WaitAsync(TimeSpan.FromSeconds(10));
@@ -2341,6 +4276,7 @@ public sealed class GddToModuleBackendContractServiceTests
     {
         using var genericMode = GameTypeRouteProfiles.UseGenericPrototypeRouteOnlyForTesting(true);
         using var fixture = await BackendContractFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedRequirementMapAsync();
         await new PrototypeContractFreezeService(fixture.Store)
             .FreezeAsync(fixture.AccountId, fixture.ProjectId, new PrototypeContractFreezeRequest());
@@ -2366,29 +4302,66 @@ public sealed class GddToModuleBackendContractServiceTests
         new PrototypeRouteStateWriter().ReadLatestIterationPlanState(project).Should().Contain(plan.PlanHash);
     }
 
+    // ADR-0061: the final Python business verdict owns S2 database disposal.
+    private sealed class BackendFixtureDatabase : IDisposable
+    {
+        private readonly string _root;
+        private readonly bool _pythonOwned;
+        private BackendFixtureDatabase(string root, bool pythonOwned)
+        {
+            _root = root;
+            _pythonOwned = pythonOwned;
+            ConnectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = Path.Combine(root, "metadata.sqlite3"), Pooling = false
+            }.ToString();
+        }
+        internal string ConnectionString { get; }
+        internal static BackendFixtureDatabase Create()
+        {
+            var root = S206TestSupport.CreateOwnedFixtureRoot("phase-a-backend-db-");
+            Directory.CreateDirectory(root);
+            return new BackendFixtureDatabase(root,
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT")));
+        }
+        public void Dispose()
+        {
+            if (!_pythonOwned && Directory.Exists(_root)) Directory.Delete(_root, recursive: true);
+        }
+    }
+
     private sealed class BackendContractFixture : IDisposable
     {
-        private readonly TempSqliteDatabase _database;
+        private readonly BackendFixtureDatabase _database;
         private readonly TempDirectory _workspaceRoot;
         private readonly TempDirectory _repoRoot;
 
         private BackendContractFixture(
-            TempSqliteDatabase database,
+            BackendFixtureDatabase database,
             TempDirectory workspaceRoot,
             TempDirectory repoRoot,
             PhaseAMetadataStore store,
             PhaseAPlatformOptions options,
             string accountId,
-            string projectId)
+            string projectId,
+            RequestContext context)
         {
             _database = database;
             _workspaceRoot = workspaceRoot;
             _repoRoot = repoRoot;
             Store = store;
+            Queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store);
             Options = options;
             AccountId = accountId;
             ProjectId = projectId;
+            _context = context;
         }
+
+        private readonly RequestContext _context;
+
+        public IDisposable? EnterCurrent() => S206TestSupport.EnterCurrentContext(_context);
+
+        public HeavyRunnerQueueService Queue { get; }
 
         public PhaseAMetadataStore Store { get; }
 
@@ -2406,14 +4379,23 @@ public sealed class GddToModuleBackendContractServiceTests
 
         public static async Task<BackendContractFixture> CreateAsync()
         {
-            var database = TempSqliteDatabase.Create();
+            var database = BackendFixtureDatabase.Create();
             var workspaceRoot = TempDirectory.Create("phase-a-backend-contract-workspaces");
             var repoRoot = TempDirectory.Create("phase-a-backend-contract-repo");
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var token = Guid.NewGuid().ToString("N");
+            var credential = PhaseAAuth.HashTokenForStorage(token);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot.Path,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot.Path, "metadata.sqlite3"),
-                ["PHASEA_REPOSITORY_ROOT"] = repoRoot.Path
+                ["PHASEA_REPOSITORY_ROOT"] = repoRoot.Path,
+                ["PHASEA_SERVICE_STATE"] = "test",
+                ["PHASEA_NODE_ID"] = "backend-contract-test-node",
+                ["PHASEA_NODE_SCOPE"] = "single_node_test",
+                ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+                ["PHASEA_ENABLED_ROLES"] = "entry,production",
+                ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+                ["PHASEA_ADMIN_TOKEN_HASH"] = credential
             });
             var guideRoot = Path.Combine(repoRoot.Path, "docs", "game-type-guides");
             Directory.CreateDirectory(guideRoot);
@@ -2425,23 +4407,33 @@ public sealed class GddToModuleBackendContractServiceTests
                 Path.Combine(guideRoot, "rpg.md"),
                 "# RPG Guide\n\nThis stable guide paragraph defines an RPG field-map, encounter, reward, and return loop for source-boundary fingerprint tests.\n",
                 Encoding.UTF8);
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
-            var accountId = await store.EnsureSingleAdminAsync();
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
+            var account = await store.ResolveAccountByTokenHashAsync(credential)
+                ?? throw new InvalidOperationException("Current fixture credential did not authenticate.");
+            var accountId = account.AccountId;
+            var context = RequestContext.FromIdentity(
+                new AccountIdentity(accountId, account.Username, PhaseAAuth.AdminRole),
+                accountId, credential, "backend-contract-fixture");
+            using var current = S206TestSupport.EnterCurrentContext(context);
             var creation = new ProjectCreationService(
                 store,
                 options,
                 new ProjectRuleCatalog(),
-                new ProjectWorkspaceSeeder(options),
+                new ProjectWorkspaceSeeder(options, store),
                 gameTypeMatchService: new FixedGameTypeMatchService());
             var result = await creation.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo RPG", "RPG", null, null, null, null));
+            if (!result.Succeeded || result.ProjectId is null)
+                throw new InvalidOperationException("Backend fixture project creation failed: " + result.FailureCode);
             await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
             var project = await store.GetProjectSnapshotAsync(result.ProjectId!);
+            if (!OperatingSystem.IsWindows()) S206TestSupport.RegisterLogicalReadbackProject(project!);
             var hostedGuideRoot = Path.Combine(project!.RepoPath, "docs", "game-type-guides");
             Directory.CreateDirectory(hostedGuideRoot);
             File.Copy(Path.Combine(guideRoot, "game-types.csv"), Path.Combine(hostedGuideRoot, "game-types.csv"), overwrite: true);
             File.Copy(Path.Combine(guideRoot, "rpg.md"), Path.Combine(hostedGuideRoot, "rpg.md"), overwrite: true);
-            return new BackendContractFixture(database, workspaceRoot, repoRoot, store, options, accountId, result.ProjectId!);
+            return new BackendContractFixture(database, workspaceRoot, repoRoot, store, options, accountId, result.ProjectId!, context);
         }
 
         public async Task<ProjectSnapshot> GetProjectAsync()
@@ -2963,12 +4955,15 @@ public sealed class GddToModuleBackendContractServiceTests
 
         public Task Started => _started.Task;
 
+        public LlmRouteRequest? Request { get; private set; }
+
         public int CallCount => Volatile.Read(ref _callCount);
 
         public void Release() => _release.TrySetResult();
 
         public async Task<LlmRouteResult> CompleteAsync(LlmRouteRequest request, CancellationToken cancellationToken = default)
         {
+            Request = request;
             Interlocked.Increment(ref _callCount);
             _started.TrySetResult();
             await _release.Task.WaitAsync(cancellationToken);
@@ -2978,23 +4973,25 @@ public sealed class GddToModuleBackendContractServiceTests
 
     private sealed class TempDirectory : IDisposable
     {
+        private readonly bool _pythonOwned;
         private TempDirectory(string path)
         {
             Path = path;
+            _pythonOwned = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT"));
         }
 
         public string Path { get; }
 
         public static TempDirectory Create(string prefix)
         {
-            var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"{prefix}-{Guid.NewGuid():N}");
+            var path = S206TestSupport.CreateOwnedFixtureRoot(prefix + "-");
             Directory.CreateDirectory(path);
             return new TempDirectory(path);
         }
 
         public void Dispose()
         {
-            if (Directory.Exists(Path))
+            if (!_pythonOwned && Directory.Exists(Path))
             {
                 Directory.Delete(Path, recursive: true);
             }

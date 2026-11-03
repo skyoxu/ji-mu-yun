@@ -1,3 +1,7 @@
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -14,9 +18,10 @@ public sealed class LlmStopLossServiceTests
     public async Task CheckAsync_BlocksWhenSingleRunEstimateExceedsLimit()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new LlmStopLossService(store, options);
 
@@ -30,13 +35,14 @@ public sealed class LlmStopLossServiceTests
     public async Task CheckAsync_BlocksWhenDailyTotalWouldExceedLimit()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["LLM_COST_STOP_LOSS_PER_RUN_CNY"] = "2.00",
             ["LLM_COST_STOP_LOSS_DAILY_ACCOUNT_CNY"] = "2.00"
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
@@ -53,13 +59,14 @@ public sealed class LlmStopLossServiceTests
     public async Task RecordRunLlmAuditAsync_AppendsMultipleLlmCalls_AndStopLossSumsMergedCost()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["LLM_COST_STOP_LOSS_PER_RUN_CNY"] = "2.00",
             ["LLM_COST_STOP_LOSS_DAILY_ACCOUNT_CNY"] = "2.00"
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
@@ -82,7 +89,7 @@ public sealed class LlmStopLossServiceTests
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return result.ProjectId!;
     }

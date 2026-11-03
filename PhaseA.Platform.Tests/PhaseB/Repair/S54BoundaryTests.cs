@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
@@ -93,16 +94,16 @@ public sealed class S54BoundaryTests : IDisposable
     [Fact]
     public async Task O_270713F3B6BC()
     {
-        var childStarted = Path.Combine(_root, "child-started.txt");
+        var childStarted = Path.Combine(_workspace, "child-started.txt");
         using var cancellation = new CancellationTokenSource();
-        var runner = new HostedProcessRunner();
+        var runner = OwnedCiOperation.Runner();
         // ADR-0061: use a real long-lived child without cmd's interactive timeout input.
         var childCode = Convert.ToBase64String(Encoding.Unicode.GetBytes("[Threading.Thread]::Sleep(120000)"));
         var launcher = $"$start = [Diagnostics.ProcessStartInfo]::new('powershell.exe', '-NoProfile -NonInteractive -EncodedCommand {childCode}'); $start.UseShellExecute = $false; $start.CreateNoWindow = $true; $child = [Diagnostics.Process]::Start($start); [IO.File]::WriteAllText('{childStarted}', [string]$child.Id); [Threading.Thread]::Sleep(120000)";
         var run = runner.RunAsync(new HostedProcessCommand(
             "powershell.exe",
             ["-NoProfile", "-NonInteractive", "-Command", launcher],
-            _root,
+            _workspace,
             new Dictionary<string, string>()), cancellation.Token);
 
         try
@@ -175,7 +176,7 @@ public sealed class S54BoundaryTests : IDisposable
         await File.WriteAllTextAsync(probePath, "@echo off\r\n" + command + "\r\n", Encoding.ASCII);
         try
         {
-            var result = await new HostedProcessRunner().RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", probePath], _workspace, new Dictionary<string, string>()));
+            var result = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand("cmd.exe", ["/d", "/c", probePath], _workspace, new Dictionary<string, string>()));
             return RunnerProof.FromResult(result);
         }
         catch (Exception error) when (error is Win32Exception or InvalidOperationException)

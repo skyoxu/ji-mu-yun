@@ -1,3 +1,5 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -15,6 +17,7 @@ public sealed class S80BoundaryTests
     public async Task O_D92173A93038()
     {
         using var scope = await S80Scope.CreateAsync();
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateProjectAsync("restore-not-implicit");
 
         var projectExists = await scope.Store.GetProjectSnapshotAsync(project.ProjectId) is not null;
@@ -29,10 +32,11 @@ public sealed class S80BoundaryTests
     public async Task O_FCAFEB88277C()
     {
         using var scope = await S80Scope.CreateAsync();
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateProjectAsync("snapshot-not-implicit");
 
         var projectExists = await scope.Store.GetProjectSnapshotAsync(project.ProjectId) is not null;
-        var persistedSnapshots = new WorkspaceStorageService(scope.ConnectionString)
+        var persistedSnapshots = new CentralWorkspaceStorageBackend(scope.ConnectionString)
             .ListSnapshots(scope.Owner.AccountId, project.ProjectId, includeDeleted: true);
         var manifests = Directory.EnumerateFiles(
             project.WorkspaceRootPath,
@@ -73,14 +77,19 @@ public sealed class S80BoundaryTests
             var database = TempSqliteDatabase.Create();
             var workspaceRoot = Path.Combine(Path.GetTempPath(), $"phase-s80-{Guid.NewGuid():N}");
             Directory.CreateDirectory(workspaceRoot);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
-                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot()
+                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot(),
+                ["PHASEA_NODE_ID"] = "test-physical-node",
+                ["PHASEA_NODE_SCOPE"] = "single_node_test",
+                ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+                ["PHASEA_ENABLED_ROLES"] = "entry,production",
+                ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true"
             });
 
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString,options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var owner = await store.CreateUserAccountAsync($"s80-owner-{Guid.NewGuid():N}", projectLimit: 1);
             var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new DisposableWorkspaceSeeder());
@@ -93,7 +102,8 @@ public sealed class S80BoundaryTests
                 null, gameName, "manual", null, null, null, null));
             if (!created.Succeeded || string.IsNullOrWhiteSpace(created.ProjectId))
             {
-                throw new InvalidOperationException($"S80 fixture could not create its disposable Project: {created.FailureCode}");
+                var failure=await Store.GetLatestProjectCreationFailureAsync(Owner.AccountId);
+                throw new InvalidOperationException($"S80 fixture could not create its disposable Project: {created.FailureCode}; {System.Text.Json.JsonSerializer.Serialize(failure)}");
             }
 
             return await Store.GetProjectSnapshotAsync(created.ProjectId)

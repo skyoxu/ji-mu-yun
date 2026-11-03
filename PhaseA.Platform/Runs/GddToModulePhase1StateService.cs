@@ -20,15 +20,15 @@ public sealed class GddToModulePhase1StateService
     private const string GddDocumentPromptEvidenceRelativePath = "meta/routes/gdd-document/prompt-evidence.json";
     private const string GddRelativePath = "docs/gdd/GDD.md";
     private const string GddFormRelativePath = "meta/routes/gdd-question-form/latest.json";
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly ProjectRouteStateArtifactService _routeStateArtifacts;
 
     public GddToModulePhase1StateService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         ProjectRouteStateArtifactService? routeStateArtifacts = null)
     {
         _metadataStore = metadataStore;
-        _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService();
+        _routeStateArtifacts = routeStateArtifacts ?? new ProjectRouteStateArtifactService(metadataStore);
     }
 
     public async Task<SceneRouteStateResult?> ConfirmSceneRouteAsync(

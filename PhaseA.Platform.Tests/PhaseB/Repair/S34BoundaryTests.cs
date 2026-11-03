@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -243,12 +244,14 @@ public sealed class S34BoundaryTests
             Directory.CreateDirectory(workspaceRoot);
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath, Pooling = false }.ToString();
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot, ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot, ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken) });
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?> { ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot, ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot, ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken) });
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
             var store = new PhaseAMetadataStore(connectionString, options);
             await store.EnsureSingleAdminAsync();
             var address = $"http://127.0.0.1:{FreePort()}";
             var start = new ProcessStartInfo("dotnet", $"\"{typeof(Program).Assembly.Location}\"") { WorkingDirectory = Path.GetDirectoryName(typeof(Program).Assembly.Location)!, UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true };
             start.Environment["APP_BIND_URL"] = address; start.Environment["ASPNETCORE_URLS"] = address; start.Environment["PUBLIC_BASE_URL"] = "https://localhost"; start.Environment["PHASEA_METADATA_DB_PATH"] = databasePath; start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot; start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot; start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken); start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform"); start.Environment["PHASEA_SERVICE_STATE"] = "test";
+            S206TestSupport.ConfigureOwnedHost(start);
             var process = Process.Start(start) ?? throw new InvalidOperationException("S34 could not start PhaseA.Platform.");
             var client = new HttpClient { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(10) };
             for (var attempt = 0; attempt < 40; attempt++) { if (process.HasExited) throw new InvalidOperationException($"S34 temporary PhaseA.Platform exited: {await process.StandardError.ReadToEndAsync()}"); try { if ((await client.GetAsync("/healthz")).IsSuccessStatusCode) return new Fixture(root, databasePath, store, process, client); } catch (HttpRequestException) { } await Task.Delay(250); }

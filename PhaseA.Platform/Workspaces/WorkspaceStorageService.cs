@@ -13,8 +13,48 @@ public sealed record WorkspaceQuota(long LimitBytes, long UsedBytes)
 
 public sealed record WorkspaceSnapshotRecord(SnapshotManifest Manifest, string ManifestPath, bool Deleted = false);
 
+// ADR-0061 AD14: ordinary facade has no SQL constructor or central/configuration getter.
 public sealed class WorkspaceStorageService
 {
+    private readonly CentralWorkspaceStorageBackend _backend;
+    private readonly Action _authorize;
+    private readonly Action<RequestContext?,string?,string?,bool> _authorizeCurrent;
+    internal WorkspaceStorageService(CentralWorkspaceStorageBackend backend, Action authorize,
+        Action<RequestContext?,string?,string?,bool> authorizeCurrent)
+    { _backend=backend; _authorize=authorize; _authorizeCurrent=authorizeCurrent; }
+    public WorkspaceQuota SetQuota(string accountId,long limitBytes)
+    { _authorize(); _authorizeCurrent(null,accountId,null,true);throw new UnauthorizedAccessException("quota_writer_not_a_node_capability"); }
+    public WorkspaceSnapshotRecord CreateSnapshot(RequestContext context,string root,string snapshotId,string workspaceId,
+        string projectId,string policyVersion,ISet<string> blacklist)
+    { _authorize(); _authorizeCurrent(context,context.AccountId,projectId,true);
+      return _backend.CreateSnapshot(context,root,snapshotId,workspaceId,projectId,policyVersion,blacklist,
+          () => _authorizeCurrent(context,context.AccountId,projectId,true)); }
+    // ADR-0061: packaging and durable workspace operations capture the current workspace envelope.
+    // Ordinary snapshot callers retain their repository-only root contract.
+    internal WorkspaceSnapshotRecord CreateProjectWorkspaceSnapshot(RequestContext context, string root, string snapshotId,
+        string workspaceId, string projectId, string policyVersion, ISet<string> blacklist)
+    {
+        _authorize(); _authorizeCurrent(context, context.AccountId, projectId, true);
+        return _backend.CreateSnapshot(context, root, snapshotId, workspaceId, projectId, policyVersion, blacklist,
+            () => _authorizeCurrent(context, context.AccountId, projectId, true), workspaceEnvelope: true);
+    }
+    public void SoftDeleteSnapshot(RequestContext context,string snapshotId)
+    {
+        _authorize();var record=_backend.RequireSnapshot(snapshotId);
+        _authorizeCurrent(context,record.Manifest.AccountId,record.Manifest.ProjectId,true);
+        _backend.SoftDeleteSnapshot(context,snapshotId,
+            ()=>_authorizeCurrent(context,record.Manifest.AccountId,record.Manifest.ProjectId,true));
+    }
+    public WorkspaceQuota GetQuota(string accountId)
+    { _authorize(); _authorizeCurrent(null,accountId,null,false);return _backend.GetQuota(accountId); }
+    public IReadOnlyList<WorkspaceSnapshotRecord> ListSnapshots(string accountId,string projectId,bool includeDeleted=false)
+    { _authorize(); _authorizeCurrent(null,accountId,projectId,false);return _backend.ListSnapshots(accountId,projectId,includeDeleted); }
+}
+
+internal sealed class CentralWorkspaceStorageBackend
+{
+    internal WorkspaceSnapshotRecord RequireSnapshot(string id)
+    { lock(_gate)return _snapshots.TryGetValue(id,out var value)?value:throw new KeyNotFoundException(id); }
     private static readonly string[] BuiltInSnapshotExclusions = [".tmp", ".cache", ".log", ".secret", ".ticket", ".trx", ".protected"];
     private static readonly EnumerationOptions SkipReparsePointEnumeration = new()
     {
@@ -26,7 +66,7 @@ public sealed class WorkspaceStorageService
     private readonly Dictionary<string, WorkspaceSnapshotRecord> _snapshots = new(StringComparer.Ordinal);
     private readonly string? _connectionString;
 
-    public WorkspaceStorageService(string? connectionString = null)
+    internal CentralWorkspaceStorageBackend(string? connectionString = null)
     {
         _connectionString = connectionString;
         if (!string.IsNullOrWhiteSpace(connectionString))
@@ -49,9 +89,14 @@ public sealed class WorkspaceStorageService
     }
 
     public WorkspaceSnapshotRecord CreateSnapshot(RequestContext context, string root, string snapshotId, string workspaceId, string projectId, string policyVersion, ISet<string> blacklist)
+        => CreateSnapshot(context,root,snapshotId,workspaceId,projectId,policyVersion,blacklist,null);
+
+    internal WorkspaceSnapshotRecord CreateSnapshot(RequestContext context, string root, string snapshotId, string workspaceId, string projectId, string policyVersion, ISet<string> blacklist, Action? authorizeBeforeWrite, bool workspaceEnvelope = false)
     {
         context.DemandAccount(context.AccountId);
         DemandProjectOwnership(context, projectId);
+        if(authorizeBeforeWrite is not null)
+            DemandCurrentSnapshotBinding(context,root,workspaceId,projectId,workspaceEnvelope);
         if (!string.IsNullOrWhiteSpace(_connectionString))
         {
             PhaseAMetadataStore.RegisterBoundaryDiagnosticContext(
@@ -68,6 +113,10 @@ public sealed class WorkspaceStorageService
         var total = files.Sum(item => (long)item.Item2.LongLength);
         lock (_gate)
         {
+            // ADR-0061 AD19: admission before a wait is not authority for this write.
+            authorizeBeforeWrite?.Invoke();
+            if(authorizeBeforeWrite is not null)
+                DemandCurrentSnapshotBinding(context,root,workspaceId,projectId,workspaceEnvelope);
             if (_snapshots.ContainsKey(snapshotId)) throw new InvalidOperationException("snapshot is immutable");
             var quota = GetCurrentQuota(context.AccountId);
             var aggregateUsage = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes(context.AccountId, root));
@@ -110,13 +159,40 @@ public sealed class WorkspaceStorageService
         }
     }
 
+    // ADR-0061 AD19/21: root arguments do not override protected current generation.
+    private void DemandCurrentSnapshotBinding(RequestContext context,string root,string workspaceId,string projectId,bool workspaceEnvelope)
+    {
+        if(string.IsNullOrWhiteSpace(_connectionString))
+            throw new UnauthorizedAccessException("current_workspace_binding_required");
+        using var connection=new SqliteConnection(_connectionString);connection.Open();
+        using var command=connection.CreateCommand();
+        command.CommandText=$"""
+            SELECT w.{(workspaceEnvelope ? "root_path" : "repo_path")} FROM workspaces w JOIN projects p ON p.id=w.project_id
+            WHERE w.id=$workspace AND w.project_id=$project AND p.account_id=$account;
+            """;
+        command.Parameters.AddWithValue("$workspace",workspaceId);
+        command.Parameters.AddWithValue("$project",projectId);
+        command.Parameters.AddWithValue("$account",context.AccountId);
+        var registered=command.ExecuteScalar() as string;
+        var comparison=OperatingSystem.IsWindows()?StringComparison.OrdinalIgnoreCase:StringComparison.Ordinal;
+        if(registered is null || !string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(registered)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)),comparison))
+            throw new UnauthorizedAccessException("current_workspace_binding_required");
+    }
+
     public void SoftDeleteSnapshot(RequestContext context, string snapshotId)
+        => SoftDeleteSnapshot(context,snapshotId,null);
+
+    internal void SoftDeleteSnapshot(RequestContext context,string snapshotId,Action? authorizeBeforeWrite)
     {
         lock (_gate)
         {
             if (!_snapshots.TryGetValue(snapshotId, out var record))
                 throw new KeyNotFoundException(snapshotId);
             context.DemandAccount(record.Manifest.AccountId);
+            // ADR-0061 AD19/21: revalidate after admission inside the real retention/quota write lock.
+            // Historical snapshots remain deletable without requiring their root to be the active generation.
+            authorizeBeforeWrite?.Invoke();
             if (record.Manifest.SnapshotId.StartsWith("pinned-", StringComparison.Ordinal)) return;
             if (record.Deleted) return;
             var bytes = record.Manifest.Files.Sum(file => file.Length);

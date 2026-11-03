@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -20,6 +21,7 @@ public sealed class WorkspaceGenerationAdmissionTests
     public async Task ValidationRejectsThePreflightGenerationWhenActivationCompletesBeforeItsLock()
     {
         await using var scope = await Scope.CreateAsync();
+        using var currentContext = S206TestSupport.EnterCurrentContext(scope.Context);
         var prototype = await scope.Store.CreateRunAsync(scope.Project.ProjectId, scope.Project.WorkspaceId, "prototype-7day-playable");
         await scope.Store.CompleteRunAsync(prototype, "succeeded", 0, "", "",
             JsonSerializer.Serialize(new { prototype_record = "docs/prototypes/2026-10-08-demo.md" }));
@@ -32,7 +34,7 @@ public sealed class WorkspaceGenerationAdmissionTests
             new PrototypeRecordWriter(scope.Options), new PrototypeWorkflowCommandBuilder(scope.Options),
             new PrototypeArtifactIndexer(), new LlmBindingService(scope.Store, scope.Options),
             new LlmStopLossService(scope.Store, scope.Options),
-            new CallbackSeeder(scope.ActivateAsync), new GameTypeTemplateCatalog(scope.Options));
+            new CallbackSeeder(scope.ActivateAsync), new GameTypeTemplateCatalog(scope.Options), heavyRunnerQueue: scope.Queue, prototypeCreationQueue: scope.Queue);
 
         var result = await service.ValidateAsync(scope.Project.AccountId, scope.Project.ProjectId);
 
@@ -49,6 +51,7 @@ public sealed class WorkspaceGenerationAdmissionTests
     public async Task LockedAdmissionRejectsAnInactiveSnapshotAndAcceptsOnlyTheCurrentOwner()
     {
         await using var scope = await Scope.CreateAsync();
+        using var currentContext = S206TestSupport.EnterCurrentContext(scope.Context);
         await scope.ActivateAsync();
         var current = (await scope.Store.GetProjectSnapshotAsync(scope.Project.ProjectId))!;
         var runId = await scope.Store.CreateRunAsync(current.ProjectId, current.WorkspaceId, "project-package");
@@ -69,6 +72,7 @@ public sealed class WorkspaceGenerationAdmissionTests
     public async Task ANewerReceiptCannotReleaseRestoreReadinessUnlessItValidatesTheActiveGeneration(string fault)
     {
         await using var scope = await Scope.CreateAsync();
+        using var currentContext = S206TestSupport.EnterCurrentContext(scope.Context);
         await scope.ActivateAsync();
         var current = (await scope.Store.GetProjectSnapshotAsync(scope.Project.ProjectId))!;
         await scope.ValidationAsync(current, "succeeded", Scope.Evidence(current));
@@ -88,7 +92,7 @@ public sealed class WorkspaceGenerationAdmissionTests
         var restarted = new PhaseAMetadataStore(scope.Database.ConnectionString, scope.Options);
         Assert.Equal(expected, await restarted.RequiresRestoreValidationAsync(current.AccountId, current.ProjectId));
         if (expected)
-            Assert.Equal("restore_revalidation_required", (await new ProjectPackageService(restarted, scope.Options)
+            Assert.Equal("restore_revalidation_required", (await new ProjectPackageService(restarted, scope.Options, scope.Queue, processRunner: new RecordingRunner())
                 .CreatePackageAsync(current.AccountId, current.ProjectId)).FailureCode);
         await scope.ValidationAsync(current, "succeeded", Scope.Evidence(current));
         Assert.False(await scope.Store.RequiresRestoreValidationAsync(current.AccountId, current.ProjectId));
@@ -117,6 +121,8 @@ public sealed class WorkspaceGenerationAdmissionTests
         public PhaseAMetadataStore Store = null!;
         public PhaseAPlatformOptions Options = null!;
         public ProjectSnapshot Project = null!;
+        public RequestContext Context = null!;
+        public HeavyRunnerQueueService Queue = null!;
         private string _root = "";
         private string _credential = "";
 
@@ -124,12 +130,14 @@ public sealed class WorkspaceGenerationAdmissionTests
         {
             var scope = new Scope { Database = TempSqliteDatabase.Create(),
                 _root = Path.Combine(Path.GetTempPath(), "phase-generation-" + Guid.NewGuid().ToString("N")) };
-            scope.Options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            scope.Options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
                 { ["HOSTED_WORKSPACE_ROOT"] = scope._root, ["PHASEA_REPOSITORY_ROOT"] = AppContext.BaseDirectory });
-            await SqliteMetadataSchema.InitializeAsync(scope.Database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(scope.Database.ConnectionString, scope.Options);
             scope.Store = new PhaseAMetadataStore(scope.Database.ConnectionString, scope.Options);
             var owner = await scope.Store.CreateUserAccountAsync("generation-" + Guid.NewGuid().ToString("N"), 2);
             scope._credential = PhaseAAuth.HashTokenForStorage(owner.Token);
+            scope.Context = await S206TestSupport.FixtureContextAsync(scope.Store, scope._credential);
+            scope.Queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, scope.Store);
             var id = Guid.NewGuid().ToString("N");
             var layout = WorkspaceLayoutBuilder.Build(scope._root, owner.AccountId, id);
             var created = await scope.Store.CreateProjectAsync(new(id, owner.AccountId, "Generation", "Generation", "default",

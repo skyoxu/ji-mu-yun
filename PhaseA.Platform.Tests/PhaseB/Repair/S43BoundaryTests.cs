@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Principal;
@@ -68,7 +69,7 @@ public sealed class S43BoundaryTests
                 ["/d", "/c", $"if defined {authorizedName} echo S43_AUTHORIZED_PRESENT & if defined {unauthorizedName} echo S43_UNAUTHORIZED_PRESENT"],
                 Path.GetTempPath(),
                 new Dictionary<string, string> { [authorizedName] = "s43-authorized-fixture" });
-            var result = await new HostedProcessRunner().RunAsync(command);
+            var result = await OwnedCiOperation.Runner().RunAsync(command);
             Require(
                 result.ExitCode == 0 &&
                 result.Stdout.Contains("S43_AUTHORIZED_PRESENT", StringComparison.Ordinal) &&
@@ -91,7 +92,7 @@ public sealed class S43BoundaryTests
         try
         {
             Environment.SetEnvironmentVariable(platformSecretName, "s43-platform-fixture");
-            var result = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            var result = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "cmd.exe",
                 ["/d", "/c", $"if defined {platformSecretName} echo S43_PLATFORM_SECRET_PRESENT"],
                 Path.GetTempPath(),
@@ -122,7 +123,7 @@ public sealed class S43BoundaryTests
                 ["-NoProfile", "-NonInteractive", "-Command", $"[IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30; [IO.File]::WriteAllText('{leaked}', $env:S43_CLEANUP_SECRET)"],
                 root.FullName,
                 new Dictionary<string, string> { ["S43_CLEANUP_SECRET"] = "s43-cleanup-fixture" });
-            var running = new HostedProcessRunner().RunAsync(command, cancellation.Token);
+            var running = OwnedCiOperation.Runner().RunAsync(command, cancellation.Token);
             await WaitForFileAsync(started, TimeSpan.FromSeconds(5));
             if (!File.Exists(started))
                 throw new InvalidOperationException("S43 cancellation fixture did not start the real Runner process.");
@@ -158,7 +159,7 @@ public sealed class S43BoundaryTests
         {
             // ADR-0035: bound the real Runner, including interpreter initialization.
             // The script marker is diagnostic; a valid total timeout may precede it.
-            var result = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            var result = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", $"Start-Sleep -Milliseconds {startupDelayMilliseconds}; [IO.File]::WriteAllText('{started}', 'started'); Start-Sleep -Seconds 30"],
                 root.FullName,
@@ -299,7 +300,7 @@ public sealed class S43BoundaryTests
             }
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), lifecycle);
             var context = RequestContext.FromIdentity(new AccountIdentity("account-s43", "s43", PhaseAAuth.UserRole), "principal-s43", "credential-s43", "correlation-s43");
-            var storage = new WorkspaceStorageService($"Data Source={databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={databasePath}");
             storage.SetQuota("account-s43", 1_000_000);
 
             SetProjectOwner(databasePath, "drifted-owner");
@@ -321,7 +322,7 @@ public sealed class S43BoundaryTests
         }
     }
 
-    private static bool TryCreateSnapshot(WorkspaceStorageService storage, RequestContext context, string root, string snapshotId)
+    private static bool TryCreateSnapshot(CentralWorkspaceStorageBackend storage, RequestContext context, string root, string snapshotId)
     {
         try
         {
@@ -421,7 +422,7 @@ public sealed class S43BoundaryTests
         {
             try
             {
-                return await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+                return await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                     "cmd.exe", ["/d", "/c", $"echo S43_RUNNER_LAUNCHED & whoami /user /fo csv /nh & echo S43_OPERATION_ATTEMPTED & {operation}"], Workspace, new Dictionary<string, string>()));
             }
             catch (Exception error) when (error is Win32Exception or InvalidOperationException)

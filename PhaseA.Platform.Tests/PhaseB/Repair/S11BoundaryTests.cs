@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
@@ -25,7 +26,7 @@ public sealed class S11BoundaryTests
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "read-content");
             var context = CreateContext("account-read");
             var connectionString = $"Data Source={databasePath}";
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.CreateSnapshot(
                 context,
                 root.FullName,
@@ -35,7 +36,7 @@ public sealed class S11BoundaryTests
                 "policy-read",
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
-            var restarted = new WorkspaceStorageService(connectionString);
+            var restarted = new CentralWorkspaceStorageBackend(connectionString);
             var records = restarted.ListSnapshots("account-read", "project-read");
             var record = records.SingleOrDefault();
             var valid = record is not null
@@ -65,7 +66,7 @@ public sealed class S11BoundaryTests
         {
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "lifecycle-content");
             var context = CreateContext("account-lifecycle");
-            var storage = new WorkspaceStorageService($"Data Source={databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={databasePath}");
             storage.CreateSnapshot(
                 context,
                 root.FullName,
@@ -106,7 +107,7 @@ public sealed class S11BoundaryTests
         {
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "representative-content");
             var context = CreateContext("account-drill");
-            var storage = new WorkspaceStorageService($"Data Source={databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={databasePath}");
             var snapshot = storage.CreateSnapshot(
                 context,
                 root.FullName,
@@ -115,7 +116,7 @@ public sealed class S11BoundaryTests
                 "project-drill",
                 "policy-drill",
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-            var attempt = new RestoreService().RestorePrepared(
+            var attempt = new CentralRestoreBackend().RestorePrepared(
                 context,
                 snapshot.Manifest,
                 root.FullName,
@@ -147,7 +148,7 @@ public sealed class S11BoundaryTests
         {
             File.WriteAllText(Path.Combine(root.FullName, "project.godot"), "bounded-content");
             var context = CreateContext("account-count");
-            var storage = new WorkspaceStorageService($"Data Source={databasePath}");
+            var storage = new CentralWorkspaceStorageBackend($"Data Source={databasePath}");
             var snapshot = storage.CreateSnapshot(
                 context,
                 root.FullName,

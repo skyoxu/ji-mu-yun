@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
@@ -149,7 +150,7 @@ public sealed class S44BoundaryTests
             var store = new PhaseAMetadataStore(
                 connectionString,
                 PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>()));
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             var account = await store.CreateUserAccountAsync($"s44-user-{sequence}-{Guid.NewGuid():N}", 1);
             var projectId = $"s44-project-{sequence}-{Guid.NewGuid():N}";
             var workspace = Directory.CreateDirectory(Path.Combine(root, "workspace"));
@@ -204,7 +205,7 @@ public sealed class S44BoundaryTests
         }
 
         public RestoreAttempt Restore(string category, string condition) =>
-            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+            new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
                 Context,
                 Manifest,
                 condition switch

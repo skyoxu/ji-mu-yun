@@ -1,3 +1,4 @@
+using PhaseA.Platform.Security;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using PhaseA.Platform.Configuration;
@@ -62,8 +63,8 @@ public sealed partial class ProjectAssetInventoryService
         "TextureRect"
     };
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
@@ -71,16 +72,17 @@ public sealed partial class ProjectAssetInventoryService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ProjectAssetInventoryService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ICodexChatClient codexChatClient)
-        : this(metadataStore, options, codexChatClient, new ProjectWorkspaceSeeder(options))
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public ProjectAssetInventoryService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ICodexChatClient codexChatClient,
         IProjectWorkspaceSeeder workspaceSeeder,
         ILlmRouteEngine? llmRouteEngine = null,
@@ -88,11 +90,15 @@ public sealed partial class ProjectAssetInventoryService
         RunCancellationService? runCancellation = null,
         HostedContextManifestIssuer? contextManifestIssuer = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _llmRouteEngine = llmRouteEngine ?? new LlmRouteEngine(codexChatClient);
         _workspaceSeeder = workspaceSeeder;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _runCancellation = runCancellation ?? new RunCancellationService();
         _contextManifestIssuer = contextManifestIssuer;
     }
@@ -182,6 +188,7 @@ public sealed partial class ProjectAssetInventoryService
             distinctCandidates);
         if (includeLlmJudgement)
         {
+            _metadataStore.DemandWorkspace(project.RepoPath);
             await WriteCachedInventoryAsync(project, projectRoot, result, cancellationToken);
         }
 
@@ -365,6 +372,8 @@ public sealed partial class ProjectAssetInventoryService
                     OperationKey: "llm:asset-inventory-judgement",
                     ContextEnvelope: envelope),
                 runToken);
+            // ADR-0061 AD19/20: a pending model result cannot retain an old workspace binding.
+            _metadataStore.DemandWorkspace(project.RepoPath);
             string? judgementFailureCode = null;
             var judged = completion.Succeeded
                 ? ApplyLlmJudgement(candidates, completion.JsonObjectText ?? completion.AssistantMessage, out judgementFailureCode)
@@ -1007,4 +1016,134 @@ public sealed partial class ProjectAssetInventoryService
         ProjectAssetInventoryResult Inventory);
 
     private sealed record ImageDimensions(int Width, int Height);
+}
+
+
+// ADR-0061 AD24: this local contract reuses the protected repository guide catalog.
+// It is not a Locator consumer, approval publisher or project-selected source loader.
+public sealed record NodeApprovedSourceRef(string SourceId,string Version,string ContentHash,string ApprovalRef);
+public sealed record NodeApprovedSourceRead(NodeApprovedSourceRef Reference,string Content,string ContentHash);
+public sealed record NodeApprovedSourceQuery(bool Matched,bool CacheHit,int ResidentEntries,int EffectiveEntryBound);
+
+public sealed partial class NodeApprovedSourceReader
+{
+    private readonly NodeProjectMetadata _metadata;
+    private readonly string _repositoryRoot;
+    private readonly string _approvedRoot;
+    private readonly string _hostedRoot;
+    private readonly Func<PhaseA.Platform.Prototypes.GameTypeGuideCatalog> _catalog;
+    private readonly object _cacheGate=new();
+    private byte[]? _cacheKey;
+    private bool _cachedMatch;
+
+    internal NodeApprovedSourceReader(NodeProjectMetadata metadata,string repositoryRoot,string hostedRoot,
+        Func<PhaseA.Platform.Prototypes.GameTypeGuideCatalog> catalog)
+    {
+        _metadata=metadata;_repositoryRoot=Path.GetFullPath(repositoryRoot);
+        _approvedRoot=Path.Combine(_repositoryRoot,"docs","game-type-guides");
+        _hostedRoot=Path.GetFullPath(hostedRoot);_catalog=catalog;
+        if(WorkspacePathPolicy.IsUnderRoot(_hostedRoot,_approvedRoot))
+            throw new UnauthorizedAccessException("approved_source_cannot_be_project_owned");
+    }
+
+    public async Task<NodeApprovedSourceRef> ResolveAsync(string accountId,string projectId,string sourceId,
+        CancellationToken cancellationToken=default)
+    {
+        await DemandProjectAsync(accountId,projectId,false,cancellationToken);
+        var value=LoadApproved(sourceId);
+        _metadata.DemandCurrent(accountId,projectId,write:false);
+        return value.Reference;
+    }
+
+    public async Task<NodeApprovedSourceRead> ReadAsync(string accountId,string projectId,NodeApprovedSourceRef reference,
+        CancellationToken cancellationToken=default)
+    {
+        await DemandProjectAsync(accountId,projectId,false,cancellationToken);
+        var value=LoadVerified(reference);
+        _metadata.DemandCurrent(accountId,projectId,write:false);
+        return new(value.Reference,value.Content,value.Reference.ContentHash);
+    }
+
+    public async Task<NodeApprovedSourceQuery> QueryAsync(string accountId,string projectId,NodeApprovedSourceRef reference,
+        string term,string implementation,CancellationToken cancellationToken=default)
+    {
+        ArgumentNullException.ThrowIfNull(term);
+        var comparison=implementation switch
+        {
+            "contains-ordinal-v1"=>StringComparison.Ordinal,
+            "contains-ignorecase-v1"=>StringComparison.OrdinalIgnoreCase,
+            _=>throw new UnauthorizedAccessException("unsupported_approved_query_implementation")
+        };
+        var project=await DemandProjectAsync(accountId,projectId,false,cancellationToken);
+        var value=LoadVerified(reference); // Source integrity and approval are required even on a hit.
+        lock(_cacheGate)
+        {
+            var revision=_metadata.DemandCurrent(accountId,projectId,write:false);
+            var key=SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                reference.SourceId,reference.Version,reference.ContentHash,reference.ApprovalRef,
+                implementation,term,accountId,projectId,project.WorkspaceId,project.RepoPath,revision
+            })));
+            var hit=_cacheKey is not null && key.AsSpan().SequenceEqual(_cacheKey);
+            if(!hit)
+            {
+                _cachedMatch=value.Content.Contains(term,comparison);
+                _cacheKey=key;
+            }
+            // One digest/result slot is an intrinsically finite cache, not a measured
+            // S2-03A capacity/concurrency promise. No file contents or query strings persist.
+            return new(_cachedMatch,hit,_cacheKey is null?0:1,1);
+        }
+    }
+
+    private async Task<ProjectSnapshot> DemandProjectAsync(string accountId,string projectId,bool write,
+        CancellationToken cancellationToken)
+    {
+        _metadata.DemandCurrent(accountId,projectId,write:write);
+        var project=await _metadata.GetProjectSnapshotAsync(projectId,cancellationToken);
+        if(project is null || !string.Equals(project.AccountId,accountId,StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("approved_source_project_scope_mismatch");
+        _metadata.DemandCurrent(accountId,projectId,write:write);
+        return project;
+    }
+
+    private sealed record VerifiedSource(NodeApprovedSourceRef Reference,byte[] Bytes,string Content);
+
+    private VerifiedSource LoadVerified(NodeApprovedSourceRef reference)
+    {
+        if(reference is null)throw new UnauthorizedAccessException("approved_source_reference_required");
+        var actual=LoadApproved(reference.SourceId);
+        if(actual.Reference!=reference)
+            throw new UnauthorizedAccessException("approved_source_reference_changed_or_unapproved");
+        return actual;
+    }
+
+    private VerifiedSource LoadApproved(string id)
+    {
+        if(string.IsNullOrWhiteSpace(id))throw new UnauthorizedAccessException("approved_source_identity_required");
+        RunnerIsolationPolicy.RequireNoReparsePoint(_repositoryRoot,_approvedRoot);
+        var catalogPath=Path.Combine(_approvedRoot,"game-types.csv");
+        RunnerIsolationPolicy.RequireNoReparsePoint(_approvedRoot,catalogPath);
+        var before=ContentHash(File.ReadAllBytes(catalogPath));
+        var catalog=_catalog();
+        if(before!=catalog.CatalogHash)throw new InvalidDataException("approved_catalog_changed_during_read");
+        var entry=catalog.FindById(id);
+        if(entry is null || !entry.GuideExists || entry.Id!=id)
+            throw new UnauthorizedAccessException("source_not_in_protected_approved_catalog");
+        var path=Path.GetFullPath(Path.Combine(_repositoryRoot,entry.FragmentRelativePath));
+        if(!WorkspacePathPolicy.IsUnderRoot(_approvedRoot,path) || WorkspacePathPolicy.IsUnderRoot(_hostedRoot,path))
+            throw new UnauthorizedAccessException("approved_source_path_outside_protected_catalog");
+        RunnerIsolationPolicy.RequireNoReparsePoint(_approvedRoot,path);
+        var bytes=File.ReadAllBytes(path);var hash=ContentHash(bytes);
+        RunnerIsolationPolicy.RequireNoReparsePoint(_approvedRoot,path);
+        if(ContentHash(File.ReadAllBytes(catalogPath))!=before)
+            throw new InvalidDataException("approved_catalog_changed_during_read");
+        string text;
+        try{text=new System.Text.UTF8Encoding(false,true).GetString(bytes);}
+        catch(System.Text.DecoderFallbackException ex){throw new InvalidDataException("approved_text_encoding_invalid",ex);}
+        // Catalog and content addresses are both part of the concrete version.
+        return new(new(id,before+":"+hash,hash,before),bytes,text);
+    }
+
+    private static string ContentHash(byte[] value)=>Convert.ToHexString(SHA256.HashData(value)).ToLowerInvariant();
 }

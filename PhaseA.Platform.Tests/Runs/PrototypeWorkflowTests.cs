@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
@@ -30,12 +32,13 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runId = await store.CreateRunAsync(projectId, null, "prototype-7day-playable");
         var marker = Path.Combine(workspaceRoot.Path, "queued-write.txt");
         var published = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var allowWrite = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _completionQueue = new HeavyRunnerQueueService(maxConcurrentRuns: 1, estimatedTaskDuration: TimeSpan.FromSeconds(1));
+        _completionQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), 1, store);
         var operation = _completionQueue.ExecuteAsync(runId, accountId, projectId, "prototype-7day-playable", async _ =>
         {
             await store.CompleteRunAsync(runId, "succeeded", 0, "", "", "{}");
@@ -107,7 +110,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
     [Fact]
     public void CommandBuilder_DelegatesToRunPrototypeWorkflow()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -264,6 +267,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -353,6 +357,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "搜打撤的测试", "逃离鸭科夫");
         var project = await store.GetProjectSnapshotAsync(projectId);
         var expectedSlug = PrototypeRecordWriter.ResolveProjectSlug("搜打撤的测试", projectId, "搜打撤的测试", project!.Name);
@@ -387,6 +392,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             smokeExitCode: 14,
@@ -414,6 +420,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var lockRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
@@ -436,6 +443,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new ThrowingHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -458,6 +466,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (ownerAccountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var otherAccount = await store.CreateUserAccountAsync("workflow-other-account", 1);
         var runner = new FakeHostedProcessRunner();
@@ -479,10 +488,11 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
-        var otherRunsQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
-        var prototypeCreationQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        var otherRunsQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store);
+        var prototypeCreationQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), 1, store);
         var otherQueueCanFinish = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var otherQueueStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = Service(store, options, runner, otherRunsQueue, prototypeCreationQueue);
@@ -518,6 +528,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var service = Service(store, options, new FakeHostedProcessRunner());
 
@@ -535,6 +546,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "Phantom Tower Like", "Phantom Tower");
         var project = await store.GetProjectSnapshotAsync(projectId);
         WriteFile(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md"), """
@@ -584,6 +596,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "搜打撤的测试", "逃离鸭科夫");
         var project = await store.GetProjectSnapshotAsync(projectId);
         WriteFile(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md"), """
@@ -633,6 +646,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "Shell Demo", "Action Roguelike");
         var project = await store.GetProjectSnapshotAsync(projectId);
         WriteFile(Path.Combine(project!.RepoPath, "docs", "gdd", "GDD.md"), """
@@ -671,6 +685,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var wrongEntryScene = "res://Game.Godot/Prototypes/demo-prototype/GenericPrototype.tscn";
         var expectedEntryScene = "res://Game.Godot/Prototypes/demo-prototype/DemoPrototypePrototype.tscn";
@@ -703,6 +718,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new InactiveTimeoutHostedProcessRunner();
         var service = Service(
@@ -730,6 +746,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -757,6 +774,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (_, projectId) = await CreateProjectWithAccountAsync(store, options);
         var otherAccount = await store.CreateUserAccountAsync("workflow-progress-other", 1);
         var service = Service(store, options, new FakeHostedProcessRunner());
@@ -775,6 +793,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             smokeExitCode: 1,
@@ -802,6 +821,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new DeferredSmokeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -869,6 +889,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         SeedRepoRpgTemplate(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -892,6 +913,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         SeedRepoRpgTemplate(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var existingScene = Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "DefaultRpgTemplate", "DefaultRpgPrototype.tscn");
@@ -914,6 +936,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(writeActiveState: false);
         var service = Service(store, options, runner);
@@ -934,6 +957,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             workflowExitCode: 1,
@@ -958,6 +982,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             workflowExitCode: 1,
@@ -980,6 +1005,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(skippedDays: [3, 4]);
         var service = Service(store, options, runner);
@@ -1005,6 +1031,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(mainMenuNavigationExitCode: 9, mainMenuNavigationStderrOverride: "MAIN_MENU_PROTOTYPE_NAV FAIL prototype_scene_not_loaded");
         var service = Service(store, options, runner);
@@ -1029,6 +1056,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(skippedDays: [2]);
         var service = Service(store, options, runner);
@@ -1049,6 +1077,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             smokeExitCode: 1,
@@ -1072,6 +1101,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             smokeExitCode: 1,
@@ -1096,6 +1126,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             smokeExitCode: 0,
@@ -1119,6 +1150,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(writePrototypeScene: false);
         var service = Service(store, options, runner);
@@ -1143,6 +1175,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(writePackagingArtifacts: false);
         var service = Service(store, options, runner);
@@ -1163,6 +1196,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var service = Service(store, options, new FakeHostedProcessRunner());
 
@@ -1204,6 +1238,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var service = Service(store, options, new FakeHostedProcessRunner());
 
@@ -1242,9 +1277,10 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var creationQueue = new HeavyRunnerQueueService();
+        var creationQueue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store);
         var service = Service(store, options, new FakeHostedProcessRunner(), prototypeCreationQueue: creationQueue);
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
         if (executionState != "queued")
@@ -1326,6 +1362,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var service = Service(store, options, new FakeHostedProcessRunner());
@@ -1374,6 +1411,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -1414,6 +1452,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(
             dotnetBuildExitCode: 1,
@@ -1450,6 +1489,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -1472,6 +1512,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -1496,6 +1537,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var setupRunner = new FakeHostedProcessRunner();
         var setupService = Service(store, options, setupRunner);
@@ -1526,6 +1568,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -1557,6 +1600,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -1581,6 +1625,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(gdUnitExitCode: 1, gdUnitStderrOverride: "Node not found: CanvasLayer/UI/MapScene/RpgEnemyAsset");
         var service = Service(store, options, runner);
@@ -1620,6 +1665,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(gdUnitStdoutOverride: "No test cases found");
         var service = Service(store, options, runner);
@@ -1643,6 +1689,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner(gdUnitStdoutOverride: "GDUNIT_DONE rc=1 out=logs/e2e/2026-05-31");
         var service = Service(store, options, runner);
@@ -1667,6 +1714,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var lockRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
@@ -1689,6 +1737,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner();
         var service = Service(store, options, runner);
@@ -1712,6 +1761,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var draftRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
@@ -1772,6 +1822,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var failedRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
@@ -1807,6 +1858,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-rpgdemo1.md";
@@ -1841,6 +1893,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
@@ -1911,6 +1964,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
@@ -1984,6 +2038,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
@@ -2042,6 +2097,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var prototypeRecordPath = "docs/prototypes/2026-05-14-dq-rpg.md";
@@ -2094,6 +2150,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var failedRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
@@ -2131,6 +2188,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var service = Service(store, options, new FakeHostedProcessRunner());
 
@@ -2148,6 +2206,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         await new LlmBindingService(store, options).BindAsync(accountId, new LlmBindingRequest(
             "new-api",
@@ -2203,7 +2262,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
-        await SqliteMetadataSchema.InitializeAsync(connectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         return store;
@@ -2216,7 +2275,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new FakeGameTypeMatchService());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return (accountId, result.ProjectId!);
@@ -2259,7 +2318,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new FakeGameTypeMatchService());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return result.ProjectId!;
@@ -2405,8 +2464,9 @@ public sealed class PrototypeWorkflowTests : IDisposable
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
-        heavyRunnerQueue ??= new HeavyRunnerQueueService();
-        _completionQueue = prototypeCreationQueue ?? heavyRunnerQueue;
+        heavyRunnerQueue ??= new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store);
+        prototypeCreationQueue ??= heavyRunnerQueue;
+        _completionQueue = prototypeCreationQueue;
         return new PrototypeWorkflowService(
             store,
             options,
@@ -2416,7 +2476,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
             new PrototypeArtifactIndexer(),
             new LlmBindingService(store, options),
             new LlmStopLossService(store, options),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             new GameTypeTemplateCatalog(options),
             heavyRunnerQueue: heavyRunnerQueue,
             prototypeCreationQueue: prototypeCreationQueue,
@@ -2510,7 +2570,7 @@ public sealed class PrototypeWorkflowTests : IDisposable
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

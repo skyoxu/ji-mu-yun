@@ -1,0 +1,53 @@
+..                                                                       [100%]
+=============================== warnings summary ===============================
+logs/s2-06-bmad-20261028/tooling/venv/lib/python3.12/site-packages/_pytest/config/__init__.py:831
+  /workspace/ji-mu-yun/logs/s2-06-bmad-20261028/tooling/venv/lib/python3.12/site-packages/_pytest/config/__init__.py:831: PytestAssertRewriteWarning: Module already imported so cannot be rewritten: trx_support
+    self.import_plugin(import_spec)
+
+tests/s2_06/test_node_authority.py:10
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:10: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(
+
+tests/s2_06/test_node_authority.py:54
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:54: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(
+
+tests/s2_06/test_node_authority.py:92
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:92: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('A-O-71CCE9337ECA-1', 'A-O-71CCE9337ECA-2',
+
+tests/s2_06/test_node_authority.py:129
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:129: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('A-O-AEDD71ADAEA1-1', 'A-O-AEDD71ADAEA1-2',
+
+tests/s2_06/test_node_authority.py:164
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:164: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('A-O-EFCE3FE74915-1', 'A-O-EFCE3FE74915-2',
+
+tests/s2_06/test_node_authority.py:191
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:191: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('S206_BROWSER_GAME_CONTENT_CANNOT_STAMP_PROJECT_NODE',
+
+tests/s2_06/test_node_authority.py:223
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:223: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(
+
+tests/s2_06/test_node_authority.py:354
+  /workspace/ji-mu-yun/tests/s2_06/test_node_authority.py:354: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('S206_REFINEMENT_EXCLUDES_UNRELATED_FEATURES', 'S206_REFINEMENT_PRESERVES_FROZEN_TRANSACTIONS', 'S206_REFINEMENT_PRESERVES_RESTRICTED_SEAMS')
+
+tests/s2_06/test_node_role_closure.py:12
+  /workspace/ji-mu-yun/tests/s2_06/test_node_role_closure.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion('A-O-7486EC7571D0-1')
+
+tests/s2_06/test_node_role_closure.py:44
+  /workspace/ji-mu-yun/tests/s2_06/test_node_role_closure.py:44: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(
+
+tests/s2_06/test_node_role_closure.py:95
+  /workspace/ji-mu-yun/tests/s2_06/test_node_role_closure.py:95: PytestUnknownMarkWarning: Unknown pytest.mark.cer_assertion - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.cer_assertion(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /workspace/ji-mu-yun/logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/actual-results.xml -
+2 passed, 12 warnings in 44.79s

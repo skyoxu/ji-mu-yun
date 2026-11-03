@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -32,7 +33,7 @@ public sealed class S59BoundaryTests
             var sourceFile = Path.Combine(source.FullName, "project.godot");
             File.WriteAllBytes(sourceFile, originalBytes);
 
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.SetQuota(accountId, 1024 * 1024);
             var snapshot = storage.CreateSnapshot(
                 context,
@@ -44,7 +45,7 @@ public sealed class S59BoundaryTests
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
             File.Delete(sourceFile);
-            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
+            var restored = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 snapshot.Manifest,
                 source.FullName,
@@ -85,7 +86,7 @@ public sealed class S59BoundaryTests
             var sourceFile = Path.Combine(source.FullName, "project.godot");
             File.WriteAllBytes(sourceFile, publishedA);
 
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             storage.SetQuota(accountId, 1024 * 1024);
             var snapshotA = storage.CreateSnapshot(
                 context,
@@ -96,7 +97,7 @@ public sealed class S59BoundaryTests
                 "s59-policy",
                 new HashSet<string>(StringComparer.OrdinalIgnoreCase));
 
-            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
+            var published = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 snapshotA.Manifest,
                 source.FullName,
@@ -132,7 +133,7 @@ public sealed class S59BoundaryTests
                 throw new InvalidOperationException("The disposable S59 recovery runner lease could not be acquired.");
             var recoveryLease = await ReadLeaseAsync(connectionString, recoveryRunId)
                 ?? throw new InvalidOperationException("The disposable S59 recovery runner lease could not be read.");
-            var restored = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
+            var restored = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 snapshotA.Manifest,
                 source.FullName,
@@ -158,7 +159,7 @@ public sealed class S59BoundaryTests
     }
 
     private static bool SnapshotPublicationIsInterrupted(
-        WorkspaceStorageService storage,
+        CentralWorkspaceStorageBackend storage,
         RequestContext context,
         string sourceRoot,
         string snapshotId,

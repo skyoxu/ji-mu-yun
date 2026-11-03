@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Globalization;
 using System.Text.Json;
 
@@ -115,8 +116,31 @@ public static class PhaseAPlatformOptionsLoader
             aiCodeMirrorCodexHomeRoot,
             assetAllowedUrlPrefixes)
         {
-            PhaseServiceState = phaseServiceState
+            PhaseServiceState = phaseServiceState,
+            NodeId = get("PHASEA_NODE_ID"),
+            NodeScope = GetOptionalString(get, "PHASEA_NODE_SCOPE"),
+            NodeTopology = GetOptionalString(get, "PHASEA_NODE_TOPOLOGY"),
+            AcceptNewAccounts = GetOptionalBoolean(get, "PHASEA_ACCEPT_NEW_ACCOUNTS"),
+            EnabledRoles = ParseEnabledRoles(get("PHASEA_ENABLED_ROLES"))
         };
+    }
+
+    private static bool? GetOptionalBoolean(Func<string, string?> get, string name)
+    {
+        var value = get(name);
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (bool.TryParse(value.Trim(), out var result)) return result;
+        throw new PhaseAPlatformConfigException($"{name} must be true or false.");
+    }
+
+    private static IReadOnlySet<string> ParseEnabledRoles(string? value)
+    {
+        // Offline metadata readers may omit service configuration; Program demands it before startup.
+        if (string.IsNullOrWhiteSpace(value)) return Array.Empty<string>().ToFrozenSet(StringComparer.Ordinal);
+        var roles = value.Split(',').Select(role => role.Trim()).ToArray();
+        if (roles.Any(role => role is not "entry" and not "production"))
+            throw new PhaseAPlatformConfigException("PHASEA_ENABLED_ROLES contains an unknown or empty role.");
+        return roles.ToFrozenSet(StringComparer.Ordinal);
     }
 
     private static string GetString(Func<string, string?> get, string name, string defaultValue)

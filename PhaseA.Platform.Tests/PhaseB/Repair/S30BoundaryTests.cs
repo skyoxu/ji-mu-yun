@@ -114,7 +114,7 @@ public sealed class S30BoundaryTests
                 "principal-s30",
                 "credential-s30",
                 "correlation-s30");
-            return new WorkspaceStorageService($"Data Source={_databasePath}").CreateSnapshot(
+            return new CentralWorkspaceStorageBackend($"Data Source={_databasePath}").CreateSnapshot(
                 context,
                 _root.FullName,
                 "snapshot-s30",

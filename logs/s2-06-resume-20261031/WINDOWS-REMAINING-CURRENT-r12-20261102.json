@@ -1,0 +1,124 @@
+{
+  "utc": "2026-11-02T11:04:30.227219+00:00",
+  "plan": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+  "plan_sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267",
+  "platform": "Linux current host only",
+  "actual_windows_available": false,
+  "scope": "No new environment/install/security modification authorized. Tests and implementation must occur on authorized isolated real Windows. Linux cases do not replace native proof.",
+  "remaining": [
+    {
+      "slice": "S9",
+      "acceptance_ids": [
+        "A-F246A3DA8D93",
+        "A-FAE5CC003C64"
+      ],
+      "required_commands": [
+        [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/s2_06/test_node_scheduling_owner.py::test_o_4e76b3b2904d"
+        ],
+        [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/s2_06/test_node_scheduling_owner.py::test_o_5205d4f22e0c"
+        ]
+      ],
+      "planned_nodes_current_reality": [
+        {
+          "node": "tests/s2_06/test_node_scheduling_owner.py::test_o_4e76b3b2904d",
+          "file_exists": false,
+          "literal_def_exists": false
+        },
+        {
+          "node": "tests/s2_06/test_node_scheduling_owner.py::test_o_5205d4f22e0c",
+          "file_exists": false,
+          "literal_def_exists": false
+        }
+      ],
+      "windows_contract_excerpt": "An isolated authorized Windows test host has no live platform service, two disposable production host configurations/databases and accounts/projects, and the approved fixed protected CommonApplicationData/JiMuYun/PhaseA/node-owner anchor. The first real production process can acquire ownership and reach an observable authorized control operation; a second process uses a different port/instance/database/node label to challenge the same physical-host ownership.",
+      "state": "pending actual Windows; absent nodes are authoring gaps, not RED"
+    },
+    {
+      "slice": "S35",
+      "acceptance_ids": [
+        "A-F723A4FF3FEA"
+      ],
+      "required_commands": [
+        [
+          "python",
+          "-m",
+          "pytest",
+          "tests/s2_06/test_node_scheduling_owner.py::test_o_0ea08dd323f9",
+          "-q"
+        ]
+      ],
+      "planned_nodes_current_reality": [
+        {
+          "node": "tests/s2_06/test_node_scheduling_owner.py::test_o_0ea08dd323f9",
+          "file_exists": false,
+          "literal_def_exists": false
+        }
+      ],
+      "windows_contract_excerpt": "A real isolated Windows host test installation runs the actual Program production composition with one protected physical node, genuine fixed-host ownership handle and actual registered Windows Runner/Job Object children. Capture durable dirty/clean state and existing owned run/lock/recovery records. Tests own their child process trees and fixture metadata; unknown process IDs or an unrelated service may never be killed. No mocked handle or in-memory dirty flag substitutes for crash evidence.",
+      "state": "pending actual Windows; absent nodes are authoring gaps, not RED"
+    },
+    {
+      "slice": "S158",
+      "acceptance_ids": [
+        "A-53B1C70CE272"
+      ],
+      "required_commands": [
+        [
+          "python",
+          "-m",
+          "pytest",
+          "tests/s2_06/test_node_role_closure.py::test_o_21ded73bc95c",
+          "-q"
+        ]
+      ],
+      "planned_nodes_current_reality": [
+        {
+          "node": "tests/s2_06/test_node_role_closure.py::test_o_21ded73bc95c",
+          "file_exists": true,
+          "literal_def_exists": false
+        }
+      ],
+      "windows_contract_excerpt": "The current S2-06 implementation candidate and nine declared scenario definitions are available for assessment. Test inputs are disposable SQLite databases and workspace roots distinct from live metadata. Current observations have not yet been assumed or obtained.",
+      "state": "pending actual Windows; absent nodes are authoring gaps, not RED"
+    },
+    {
+      "slice": "S237",
+      "acceptance_ids": [
+        "A-3D87BF3872BC"
+      ],
+      "required_commands": [
+        [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "tests/s2_06/test_node_role_closure.py::test_o_607c6020e9db"
+        ]
+      ],
+      "planned_nodes_current_reality": [
+        {
+          "node": "tests/s2_06/test_node_role_closure.py::test_o_607c6020e9db",
+          "file_exists": true,
+          "literal_def_exists": false
+        }
+      ],
+      "windows_contract_excerpt": "An isolated owned Windows same-host fixture exercises actual changed file, queue and background consumers with two current central accounts/homes/projections and registered project Runners. Capture their existing authorization, low-privilege identity/ACL/Job Object, global/account budget/cancellation and approved-network policy baseline; each path has a valid authorized local control.",
+      "state": "pending actual Windows; absent nodes are authoring gaps, not RED"
+    }
+  ],
+  "S9_S35_production_gap": "Fixed protected scheduler owner / crash-dirty cleanup barrier draft remains not integrated. Cannot implement before required genuine Windows product RED.",
+  "consumer_closure": "r12 portable probe active; terminal includes native test which has known actual Linux platform prerequisite failure, never skip/xfail or product RED.",
+  "Q8": false,
+  "Acceptance": false,
+  "authorizes": []
+}

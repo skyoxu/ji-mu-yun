@@ -15,15 +15,15 @@ public sealed class PrototypeIterationGoalService
     private const string ReasoningEffort = "low";
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(12);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
     private readonly PrototypeContractFreezeService _contractFreezeService;
     private readonly IAiCodeMirrorBillingClient _billingClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly TimeSpan _executionTimeout;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
@@ -31,22 +31,23 @@ public sealed class PrototypeIterationGoalService
     private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeIterationGoalService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new PrototypeContractService(), null)
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public PrototypeIterationGoalService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         PrototypeRouteStateWriter? stateWriter = null,
         PrototypeContractService? contractService = null,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         TimeSpan? executionTimeout = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         PrototypeContractFreezeService? contractFreezeService = null,
@@ -54,6 +55,10 @@ public sealed class PrototypeIterationGoalService
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
@@ -64,7 +69,7 @@ public sealed class PrototypeIterationGoalService
         _billingClient = billingClient ?? new DisabledAiCodeMirrorBillingClient();
         _keyPoolService = keyPoolService;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _contextManifestIssuer = contextManifestIssuer;
         _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
         _contextManifestValidator = contextManifestValidator;
@@ -95,6 +100,9 @@ public sealed class PrototypeIterationGoalService
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
+        var admittedProject = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (admittedProject is null || !string.Equals(admittedProject.AccountId, accountId, StringComparison.Ordinal))
+            throw new InvalidOperationException("Project not found.");
         ProjectSnapshot project;
         ProjectIterationSessionDetails details;
         ProjectIterationGoalSnapshot nextGoal;
@@ -102,6 +110,8 @@ public sealed class PrototypeIterationGoalService
         string runId;
         await using (var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken))
         {
+        // AD19/20: retain the entry workspace binding across the actual mutation wait.
+        _metadataStore.DemandWorkspace(admittedProject.RepoPath);
         project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken)
             ?? throw new InvalidOperationException("Project not found.");
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
@@ -264,6 +274,7 @@ public sealed class PrototypeIterationGoalService
         {
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
+        project = await RequireCurrentProjectAsync(project, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "running", nextGoal.GoalIndex, $"正在执行任务 {nextGoal.GoalIndex}。", details.Session.LatestEvaluationJson, null, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", $"正在准备任务 {nextGoal.GoalIndex}。", CancellationToken.None);
@@ -327,6 +338,7 @@ public sealed class PrototypeIterationGoalService
             var billingBefore = await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None);
             var codexCommand = await BuildCodexCommandAsync(prompt, codexRuntimeOutputPath, model, project, runId, timeout.Token);
             var codexResult = await _processRunner.RunAsync(CodexHostedProcessCommandFactory.ApplyRuntime(codexCommand, runtimeCredential).WithRunId(runId), timeout.Token);
+            project = await RequireCurrentProjectAsync(project, CancellationToken.None);
             var providerBilling = new AiCodeMirrorBillingDelta(billingBefore, await _billingClient.CaptureAsync(billingApiKeyName, CancellationToken.None));
             if (File.Exists(codexRuntimeOutputPath) && !string.Equals(codexRuntimeOutputPath, codexOutputAbsolutePath, StringComparison.OrdinalIgnoreCase))
             {
@@ -379,6 +391,7 @@ public sealed class PrototypeIterationGoalService
                     ? new IterationGoalOutcome("needs_fix", "needs_fix", false)
                 : DetermineGoalOutcome(publicSummary, codexResult, codexOutput);
 
+            project = await RequireCurrentProjectAsync(project, CancellationToken.None);
             await File.WriteAllTextAsync(resultAbsolutePath, BuildResultLog(details.Session, nextGoal, runId, model, publicSummary, codexResult, codexOutput, now), Encoding.UTF8, CancellationToken.None);
 
             await _metadataStore.AddArtifactAsync(new ArtifactCreationCommand(runId, project.ProjectId, "prototype-iteration-goal-input", goalRelativePath, "Prototype iteration goal input"), CancellationToken.None);
@@ -442,6 +455,7 @@ public sealed class PrototypeIterationGoalService
                 refreshed?.Session.LatestEvaluationJson ?? details.Session.LatestEvaluationJson,
                 hasNeedsFix || hasMoreGoals ? null : now,
                 CancellationToken.None);
+            project = await RequireCurrentProjectAsync(project, CancellationToken.None);
             PrototypeIterationPlanningAnalysisUpdater.Refresh(_stateWriter, project, iterationPlanState, nextGoal, goalOutcome.GoalStatus, publicSummary, now, sessionSummary);
             _stateWriter.WriteExecuteNextGoalState(project, nextGoal.GoalIndex, new
             {
@@ -518,6 +532,20 @@ public sealed class PrototypeIterationGoalService
             await _metadataStore.ReleaseRunnerLockAsync(project.ProjectId, runId, CancellationToken.None);
         }
         }
+    }
+
+    // ADR-0061 AD19: queue/executor completion cannot retain project or path authority.
+    private async Task<ProjectSnapshot> RequireCurrentProjectAsync(ProjectSnapshot supplied, CancellationToken cancellationToken)
+    {
+        var current = await _metadataStore.GetProjectSnapshotAsync(supplied.ProjectId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        bool SamePath(string left, string right) => string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), comparison);
+        if (current.AccountId != supplied.AccountId || current.WorkspaceId != supplied.WorkspaceId ||
+            !SamePath(current.WorkspaceRootPath, supplied.WorkspaceRootPath) || !SamePath(current.RepoPath, supplied.RepoPath) ||
+            !SamePath(current.RuntimePath, supplied.RuntimePath) || !SamePath(current.MetaPath, supplied.MetaPath))
+            throw new UnauthorizedAccessException("current_project_paths_required");
+        return current;
     }
 
     private async Task<PrototypeIterationGoalExecutionResult> FailRunClaimAsync(

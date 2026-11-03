@@ -6,10 +6,10 @@ namespace PhaseA.Platform.Llm;
 
 public sealed class LlmStopLossService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
 
-    public LlmStopLossService(PhaseAMetadataStore metadataStore, PhaseAPlatformOptions options)
+    public LlmStopLossService(NodeProjectMetadata metadataStore, NodeExecutionOptions options)
     {
         _metadataStore = metadataStore;
         _options = options;

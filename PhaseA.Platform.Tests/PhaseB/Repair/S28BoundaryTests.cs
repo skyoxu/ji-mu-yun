@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -227,7 +228,7 @@ public sealed class S28BoundaryTests
             }.ToString();
             // ADR-0061: use the real account and project metadata boundary for restore and Run.
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = root,
@@ -256,7 +257,7 @@ public sealed class S28BoundaryTests
         }
 
         public RestoreAttempt Restore(RequestContext context, RunnerLease lease, string idempotencyKey) =>
-            new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+            new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
                 context, Manifest, PreRestoreRoot, RestoredRoot, lease, idempotencyKey,
                 RunnerScope.Describe(Manifest.AccountId, Manifest.ProjectId, RestoredRoot));
 
@@ -273,7 +274,7 @@ public sealed class S28BoundaryTests
                          (releasePath is null
                              ? "while ($true) { [Threading.Thread]::Sleep(100) }"
                              : $"while (-not [IO.File]::Exists('{EscapePowerShell(releasePath)}')) {{ [Threading.Thread]::Sleep(100) }}");
-            return new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            return OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", script],
                 workingDirectory,
@@ -284,7 +285,7 @@ public sealed class S28BoundaryTests
         {
             var scopePath = Path.Combine(RestoredWorkspaceRoot, "scope.txt");
             var script = $"Get-Content '{EscapePowerShell(scopePath)}'; Write-Output 'S28_CONTROLLED_RUN_OK'";
-            return new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            return OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", script],
                 RestoredWorkspaceRoot,

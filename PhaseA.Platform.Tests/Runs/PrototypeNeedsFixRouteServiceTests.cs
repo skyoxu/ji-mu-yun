@@ -1,3 +1,6 @@
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -20,10 +23,11 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var fakeGodotBin = Path.Combine(workspaceRoot.Path, "fake-godot.exe");
         await File.WriteAllTextAsync(fakeGodotBin, "");
         var options = Options(workspaceRoot.Path, repoRoot.Path, fakeGodotBin);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         await store.UpdateProjectGameTypeMatchAsync(created.ProjectId!, MatchEvidence("RPG").ToJson());
@@ -47,7 +51,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         var plan = TestRpgIterationPlanServiceFactory.Create(store);
         await plan.CreateAsync(accountId, created.ProjectId!, new PrototypeIterationPlanRequest("1. Stabilize map movement\n2. Finish battle"));
         var runner = new SuccessRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         var result = await route.RunAsync(accountId, created.ProjectId!, new PrototypeNeedsFixRouteRequest(Feedback: "Godot error"));
 
@@ -70,11 +74,12 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, new SuccessRunner()), new PrototypeRouteStateWriter());
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, new SuccessRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), new PrototypeRouteStateWriter());
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1));
 
@@ -89,8 +94,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -113,7 +119,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         });
         writer.WriteNeedsFixState(project!, 2, new { route = "needs-fix", goal_index = 2, marker = "wrong-step" });
         var runner = new SuccessRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -153,8 +159,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -194,7 +201,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             }
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "keep current smoke blocker"));
 
@@ -215,8 +222,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         using var outsideRoot = TempDirectory.Create("phase-a-outside");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -243,7 +251,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             }
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "keep current blocker"));
 
@@ -258,8 +266,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -277,7 +286,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             marker = "execute-next-current-step"
         });
         var runner = new SuccessRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -294,8 +303,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -327,7 +337,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             summary = "current-execute-state"
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -344,8 +354,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -370,7 +381,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             summary = "stale-execute-state"
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -388,8 +399,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -414,7 +426,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         }
 
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -433,8 +445,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -485,7 +498,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             updatedUtc = "2026-06-03T00:00:00+00:00"
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
         var feedback = string.Concat(Enumerable.Repeat("leading-noise ", 900)) + "KEEP_CURRENT_BLOCKER prototype_main_menu_navigation_failed";
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: feedback));
@@ -503,10 +516,11 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Empty Guide Guard", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         await store.UpdateProjectGameTypeMatchAsync(created.ProjectId!, MatchEvidence("RPG").ToJson());
@@ -527,8 +541,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -539,7 +554,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
         var state = writer.ReadLatestNeedsFixState(project!, 1);
@@ -558,8 +573,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -592,7 +608,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -623,8 +639,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -650,7 +667,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -667,8 +684,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -689,7 +707,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             acceptance_validation_details = "missing_file=Game.Godot/Prototypes/dq-rpg/Scripts/MapScene.cs"
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -705,8 +723,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -731,7 +750,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -748,8 +767,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -774,7 +794,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -794,8 +814,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -806,7 +827,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var firstRunner = new GoalRepairPackageFailureRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, firstRunner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, firstRunner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         var firstResult = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
         var ledger = writer.ReadNeedsFixRepairLedger(project!, 1);
@@ -820,7 +841,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.ReadLatestNeedsFixState(project!, 1).Should().Contain("repair_ledger_path");
 
         var secondRunner = new NeedsFixRunner();
-        route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, secondRunner), writer);
+        route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, secondRunner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step again"));
 
@@ -840,8 +861,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -883,7 +905,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
             updatedUtc = "2026-06-03T00:00:00+00:00"
         });
         var runner = new NeedsFixRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "continue current step"));
 
@@ -901,8 +923,9 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectWithNeedsFixGoalAsync(
             store,
@@ -918,7 +941,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         writer.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-fallback" });
         writer.WriteExecuteNextGoalState(project!, 1, CurrentExecuteNextState(goal));
         var runner = new SuccessRunner();
-        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), writer);
+        var route = new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)), writer);
 
         var result = await route.RunAsync(accountId, projectId, new PrototypeNeedsFixRouteRequest(GoalIndex: 1, Feedback: "finish current step"));
         var ledger = writer.ReadNeedsFixRepairLedger(project!, 1);
@@ -936,7 +959,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
         bool prototypeSucceeded,
         string gameTypeSource = "RPG")
     {
-        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var projectService = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await projectService.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         await store.UpdateProjectGameTypeMatchAsync(created.ProjectId!, MatchEvidence(gameTypeSource).ToJson());
@@ -974,7 +997,7 @@ public sealed class PrototypeNeedsFixRouteServiceTests
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot, string? godotBin = null)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

@@ -956,3 +956,165 @@ def test_published_guard_fixture_is_self_contained_and_preserves_all_failure_rol
     preparer = '.agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py'
     assert all(preparer in baseline.fingerprint(ROOT, skill)['files']
                for skill in ('quick-dev', 'vdd'))
+
+
+# ADR-0041, owner-approved 2026-10-31: native publication-only readmission.
+@pytest.fixture(scope='module')
+def native_refresh_pair(tmp_path_factory):
+    from scripts.toolchain.knowledge_query.tests.test_planning_query import _prepare_published_main_fixture
+    import publish_knowledge_catalog as publication
+    root = _prepare_published_main_fixture(tmp_path_factory.mktemp('baseline-publication-base'))
+    tooling = small_root(tmp_path_factory.mktemp('tiny-baseline-tooling'))
+    for source in tooling.rglob('*'):
+        if source.is_file():
+            target = root / source.relative_to(tooling)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    policy = baseline.read_json(root / baseline.POLICY)
+    policy['shared_roots'].append('knowledge/projections')
+    (root / baseline.POLICY).write_text(json.dumps(policy), encoding='utf-8')
+    # Native validation code is actual source, not a replacement verifier.
+    for relative in publication.CONTROL_PATHS:
+        assert (root / relative).read_bytes() == (ROOT / relative).read_bytes()
+    candidate_file(root, 'seed.json')
+    seed = invoke(root, 'test', '--candidate', 'logs/seed.json', '--out', 'logs/seed',
+                  '--bootstrap', '--defer-admission')
+    assert seed.returncode == 0, seed.stdout + seed.stderr
+    admitted = invoke(root, 'admit', '--measurement', 'logs/seed/measurement.json')
+    assert admitted.returncode == 0, admitted.stdout + admitted.stderr
+    before = baseline.current(root)
+    agents = root / 'AGENTS.md'
+    agents.write_bytes(agents.read_bytes() + b'\nRead-only fixture source refresh.\n')
+    _refresh_fixture_commit(root, ['AGENTS.md'])
+    _native_fixture_publish(root, 'refresh')
+    assert baseline.current(root) == before
+    return root
+
+
+def _refresh_fixture_commit(root, paths):
+    subprocess.run(['git', 'add', '--', *paths], cwd=root, check=True, capture_output=True)
+    subprocess.run(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                    'commit', '-qm', 'Fixture publication source update'], cwd=root, check=True, capture_output=True)
+
+
+def _native_fixture_publish(root, name):
+    import publish_knowledge_catalog as publication
+    relative = 'logs/knowledge-context/publication-requests/' + name + '.json'
+    command = [sys.executable, '-B', str(ROOT / '.agents/skills/maintain-knowledge-base/scripts/prepare_publication_request.py'),
+        '--repository-root', str(root), '--request-id', 'fixture-' + name, '--trigger', 'operator-requested',
+        '--target-plan', 'execution-plans/2026-07-26-knowledge-locator-workflow-integration',
+        '--output', relative, '--ack-maintainer']
+    subprocess.run(command, check=True, capture_output=True, timeout=20)
+    result = publication.run(root, publish=True, repeat=1, publication_request=Path(relative))
+    assert result['status'] == 'published', result
+    return result
+
+
+def _refresh_copy(base, path):
+    from scripts.toolchain.knowledge_query.tests.test_planning_query import _copy_published_fixture
+    return _copy_published_fixture(base, path)
+
+
+def test_native_publication_refresh_requires_full_remeasurement_and_activates_both_skills(native_refresh_pair, tmp_path):
+    root = _refresh_copy(native_refresh_pair, tmp_path / 'refresh')
+    before = baseline.current(root)
+    _, enrolled = candidate_file(root)
+    for name, skill in enrolled['skills'].items():
+        old = baseline.record(root, before['platforms'][baseline.platform_key()][name])['candidate_skill']
+        assert old['suite'] == skill['suite']
+        assert {p for p in old['fingerprint']['files'] | skill['fingerprint']['files']
+                if old['fingerprint']['files'].get(p) != skill['fingerprint']['files'].get(p)} == {
+                    'knowledge/projections/consumer-projections.v1.json'}
+    denied = invoke(root, 'check')
+    assert denied.returncode != 0 and 'mismatch' in denied.stdout
+    measured = invoke(root, 'test', '--candidate', 'logs/candidate.json', '--out', 'logs/refreshed', '--defer-admission')
+    assert measured.returncode == 0, measured.stdout + measured.stderr
+    assert baseline.current(root) == before
+    value = baseline.read_json(root / 'logs/refreshed/measurement.json')
+    assert set(value['units']) == set(baseline.SKILLS)
+    assert all(len(value['units'][name]) == len(enrolled['skills'][name]['suite']['targets']) for name in baseline.SKILLS)
+    assert all(value['increments'][name] == [] for name in baseline.SKILLS)
+    accepted = invoke(root, 'admit', '--measurement', 'logs/refreshed/measurement.json')
+    assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+    for name in baseline.SKILLS:
+        approved = baseline.approved(root, name)
+        assert approved['predecessor'] == before['platforms'][baseline.platform_key()][name]
+        assert approved['derived_publication']['pointer']['generation_id'] == baseline.read_json(root / 'knowledge/indexes/current.json')['generation_id']
+    assert invoke(root, 'check').returncode == 0
+    previous = baseline.record(root, before['platforms'][baseline.platform_key()]['vdd'])
+    proof = root / previous['results'][0]['proof']
+    proof.write_bytes(proof.read_bytes() + b'changed')
+    refused = invoke(root, 'check')
+    assert refused.returncode != 0 and 'proof-corrupt' in refused.stdout
+
+
+@pytest.mark.parametrize('defect', ['code', 'test-bytes', 'unknown-derived', 'projection-permission',
+    'corrupt-layer', 'corrupt-manifest', 'missing-request', 'corrupt-predecessor', 'missing-predecessor',
+    'missing-predecessor-proof', 'corrupt-predecessor-proof'])
+def test_native_publication_refresh_exception_refuses_unproved_or_mixed_change(native_refresh_pair, tmp_path, defect):
+    root = _refresh_copy(native_refresh_pair, tmp_path / 'negative')
+    if defect == 'code': put(root, 'shared.py', 'VALUE = 2\n')
+    elif defect == 'test-bytes':
+        target = root / 'tests/test_feature.py'; target.write_bytes(target.read_bytes() + b'\n# no semantic growth\n')
+    elif defect == 'unknown-derived': put(root, 'knowledge/projections/unrecognized.json', '{}')
+    elif defect == 'projection-permission':
+        target = root / 'knowledge/projections/consumer-projections.v1.json'; value = baseline.read_json(target)
+        value['projections'][0]['eligible_module_ids'] = []; target.write_text(json.dumps(value), encoding='utf-8')
+    elif defect == 'corrupt-layer':
+        pointer = baseline.read_json(root / 'knowledge/indexes/current.json')
+        target = root / 'knowledge/indexes/generations' / pointer['generation_id'] / 'layers/repository-knowledge-catalog.v2.json'
+        target.write_bytes(target.read_bytes() + b' ')
+    elif defect == 'corrupt-manifest':
+        pointer = baseline.read_json(root / 'knowledge/indexes/current.json')
+        target = root / 'knowledge/indexes/generations' / pointer['generation_id'] / 'manifest.json';target.write_bytes(target.read_bytes() + b' ')
+    elif defect == 'missing-request':
+        (root / 'logs/knowledge-context/publication-requests/refresh.json').unlink()
+    elif defect == 'corrupt-predecessor':
+        ref = baseline.current(root)['platforms'][baseline.platform_key()]['vdd']; target = root / ref['path'];target.write_bytes(target.read_bytes() + b' ')
+    elif defect == 'missing-predecessor': (root / baseline.STORE / 'current.json').unlink()
+    elif defect in {'missing-predecessor-proof', 'corrupt-predecessor-proof'}:
+        ref = baseline.current(root)['platforms'][baseline.platform_key()]['vdd']
+        proof = root / baseline.record(root, ref)['results'][0]['proof']
+        if defect == 'missing-predecessor-proof': proof.unlink()
+        else: proof.write_bytes(proof.read_bytes() + b'changed')
+    before = (root / baseline.STORE / 'current.json').read_bytes() if (root / baseline.STORE / 'current.json').exists() else None
+    candidate_file(root)
+    denied = invoke(root, 'test', '--candidate', 'logs/candidate.json', '--out', 'logs/must-not-run', '--defer-admission')
+    assert denied.returncode != 0 and 'SKILL_ADMISSION' in denied.stdout
+    assert not (root / 'logs/must-not-run').exists()
+    assert ((root / baseline.STORE / 'current.json').read_bytes() if before is not None else None) == before
+
+
+@pytest.mark.parametrize('kind', ['policy', 'scope'])
+def test_native_valid_publication_cannot_hide_policy_or_scope_change(native_refresh_pair, tmp_path, kind):
+    root = _refresh_copy(native_refresh_pair, tmp_path / 'semantic-change')
+    if kind == 'policy':
+        target = root / 'knowledge/policies/consumer-policies.v2.json'; value = baseline.read_json(target)
+        next(p for p in value['policies'] if p['consumer'] == 'vdd')['max_candidates'] = 19
+        target.write_text(json.dumps(value, sort_keys=True), encoding='utf-8'); paths = ['knowledge/policies/consumer-policies.v2.json']
+    else:
+        relative = 'docs/adr/ADR-9998-fixture-scope.md'
+        put(root, relative, '# ADR-9998 Fixture-only additional scope\n\nStatus: Accepted\n\nRead-only fixture scope.\n'); paths = [relative]
+    _refresh_fixture_commit(root, paths)
+    _native_fixture_publish(root, 'semantic-' + kind)
+    candidate_file(root)
+    result = invoke(root, 'test', '--candidate', 'logs/candidate.json', '--out', 'logs/semantic-denied', '--defer-admission')
+    assert result.returncode != 0 and 'SKILL_ADMISSION' in result.stdout
+    assert not (root / 'logs/semantic-denied').exists()
+
+
+@pytest.mark.parametrize('defect', ['incomplete', 'other-publication', 'post-measure-code'])
+def test_native_refresh_measurement_cannot_approve_other_or_partial_content(native_refresh_pair, tmp_path, defect):
+    root = _refresh_copy(native_refresh_pair, tmp_path / 'measurement')
+    candidate_file(root)
+    measured = invoke(root, 'test', '--candidate', 'logs/candidate.json', '--out', 'logs/measured', '--defer-admission')
+    assert measured.returncode == 0, measured.stdout + measured.stderr
+    pointer_before = baseline.current(root)
+    target = root / 'logs/measured/measurement.json'; value = baseline.read_json(target)
+    if defect == 'incomplete': value['units']['vdd'] = []
+    elif defect == 'other-publication': value['derived_publications']['vdd']['pointer']['generation_id'] = '0' * 64
+    else: put(root, 'shared.py', 'VALUE = 100\n')
+    target.write_bytes(baseline.wire(value))
+    refused = invoke(root, 'admit', '--measurement', 'logs/measured/measurement.json')
+    assert refused.returncode != 0 and 'SKILL_ADMISSION' in refused.stdout
+    assert baseline.current(root) == pointer_before

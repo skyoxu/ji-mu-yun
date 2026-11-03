@@ -44,7 +44,7 @@ public sealed class S56BoundaryTests
                 throw new InvalidOperationException("S56 fixture could not create its disposable Project.");
             }
 
-            var snapshots = new WorkspaceStorageService(connectionString);
+            var snapshots = new CentralWorkspaceStorageBackend(connectionString);
             var before = snapshots.ListSnapshots(account.AccountId, projectId, includeDeleted: true);
             var runId = await store.CreateRunAsync(projectId, project.WorkspaceId, "s56-run-completion");
             var started = await store.TryMarkRunStartedAsync(runId, null);

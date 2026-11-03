@@ -1,3 +1,5 @@
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -33,23 +35,27 @@ public sealed class AdminReviewQueueHttpIntegrationTests
         var connectionString = $"Data Source={databasePath}";
         const string adminToken = "integration-admin-token";
         Process? process = null;
+        IDisposable? registration = null;
         try
         {
-            await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
-                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot
+                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
+                ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken)
             });
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
             var store = new PhaseAMetadataStore(connectionString, options);
             var adminId = await store.EnsureSingleAdminAsync();
             var user = await store.CreateUserAccountAsync("http-user", 1);
-            var projectRoot = Path.Combine(workspaceRoot, "project-http");
+            var layout = WorkspaceLayoutBuilder.Build(workspaceRoot, adminId, "project-http");
+            var projectRoot = layout.RootPath;
             var project = await store.CreateProjectAsync(new ProjectCreationCommand(
                 "project-http", adminId, "HTTP", "HTTP", "manual", "default", false, [],
-                projectRoot, Path.Combine(projectRoot, "repo"), Path.Combine(projectRoot, "runtime"), Path.Combine(projectRoot, "repo", "meta")));
+                layout.RootPath, layout.RepoPath, layout.RuntimePath, layout.MetaPath));
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
             var projectSnapshot = await store.GetProjectSnapshotAsync(project.ProjectId!);
+            registration = S206TestSupport.RegisterOwnedProjectBoundary(projectSnapshot!, options);
             var decisionEvidencePath = Path.Combine(projectSnapshot!.RepoPath, "meta", "reviews", "http-decision.json");
             Directory.CreateDirectory(Path.GetDirectoryName(decisionEvidencePath)!);
             await File.WriteAllTextAsync(decisionEvidencePath, "{}");
@@ -177,6 +183,7 @@ public sealed class AdminReviewQueueHttpIntegrationTests
                 await process.WaitForExitAsync();
             }
             process?.Dispose();
+            registration?.Dispose();
             Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
             if (Directory.Exists(root))
             {
@@ -201,6 +208,12 @@ public sealed class AdminReviewQueueHttpIntegrationTests
         start.Environment["PHASEA_METADATA_DB_PATH"] = databasePath;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
+        start.Environment["PHASEA_NODE_ID"] = "owned-ci-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+        start.Environment["PHASEA_SERVICE_STATE"] = "test";
         start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken);
         var process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
         return process;

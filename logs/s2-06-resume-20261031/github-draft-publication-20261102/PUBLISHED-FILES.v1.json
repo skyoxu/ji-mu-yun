@@ -1,0 +1,3198 @@
+{
+  "schema": "s2-06.publication-content-manifest.v1",
+  "source_base_commit": "75323d05b9b1b730e311c0631c3aa1fcde66186a",
+  "source_candidate": "current dirty worktree, same source as final A/B; not a completed acceptance tree",
+  "files": [
+    {
+      "path": ".agents/skill-baselines/capability-coverage.v1.json",
+      "bytes": 283882,
+      "sha256": "f269c6e72338f2639941e31ea3571392d0af1a04aaec8374fb62e9add80abe7b",
+      "group": "shared-toolchain-prerequisite",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/ApprovedSourceTests.cs",
+      "bytes": 19053,
+      "sha256": "b686dad8eae1ab2de17fdd938cafd73d95333c8f118431adc82e38eccbd4db6d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+      "bytes": 62865,
+      "sha256": "348971b78a915f21f3ada7e82e813c5c0f5945dcced276af662fcca7f4ac0997",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/NodeConfigurationTests.cs",
+      "bytes": 10088,
+      "sha256": "5aef7083446b1a2b5dc773f470228f855277c686ed4da5864c919226ae61185c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/NodeNoticeTests.cs",
+      "bytes": 39238,
+      "sha256": "661f76af008c14b8adb2094b4c780771ee178e3a082fe3bc1d234168fede589c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/NodePersistenceTests.cs",
+      "bytes": 19774,
+      "sha256": "4078ee2ac06baaa00a56a945e22541d6222bcfeddc6dea7a273a5e68c080178c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/NodeRoleClosureTests.cs",
+      "bytes": 83566,
+      "sha256": "1bb81aeeed109da86797f10c7013877ef3df8da692bde36656f3936c9c6d40f4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+      "bytes": 31444,
+      "sha256": "7e195a47b7f7019a0ea767ddf852c7f10d982681ee6f0fa0317e5cd01384f87d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/R7QuotaBoundaryTests.cs",
+      "bytes": 4148,
+      "sha256": "c413cc932db7ee54590b26eac0555e1c2bf5e1f679fd66e503dbe581b599e8c8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/RestoreTreeSecurityRegressionTests.cs",
+      "bytes": 2870,
+      "sha256": "15712c98e841261b606530bb4031ef9b36d1dd542427e8f49a39b2fc81710941",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S11BoundaryTests.cs",
+      "bytes": 8738,
+      "sha256": "122c1daca47c82405fe63a93b265c69a617fd74d4e9756bcd7b01c46c9425044",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S13BoundaryTests.cs",
+      "bytes": 16068,
+      "sha256": "8a8619e6e6f9f70729be1c2e825fc7934e2eef70a5f7b2235a853d86df4e75f9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S14BoundaryTests.cs",
+      "bytes": 22322,
+      "sha256": "bc73eb4481266b1245f9cdff71d6588afd99f50b19ffc039c43207624a19553f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S16BoundaryTests.cs",
+      "bytes": 4655,
+      "sha256": "58e8d0cc1258156e6d53dc1fe54a45cd52a9466eefba6e3d6274eb3683bb79be",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S17BoundaryTests.cs",
+      "bytes": 21409,
+      "sha256": "7a9268e81cf305dc3aca81f88d0eeaab903a2d781950135c67729a8934976840",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S19BoundaryTests.cs",
+      "bytes": 8949,
+      "sha256": "126192557c017884102d44bcd84ee7c6b9c0882080187ac3abfaac322df3d5fb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S21BoundaryTests.cs",
+      "bytes": 24459,
+      "sha256": "e60665e549e7298245ca0911b055a74a5834b62b86b300d88f0dd8dd65c9eaa0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S22BoundaryTests.cs",
+      "bytes": 6053,
+      "sha256": "09234dd29596f2d633900b0c78a2b3b4e65cf85d615b4d131abecc0c5902d154",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S24BoundaryTests.cs",
+      "bytes": 7562,
+      "sha256": "2c5f0a8631429b59d1891ef7365f90c8ebf85494f9518b2fa86a0606a40d3727",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S25BoundaryTests.cs",
+      "bytes": 29809,
+      "sha256": "d855947fcfbf56bab879db2d50cd3f5d1dca8d82aca9f7364ed74ac6b154f082",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S27BoundaryTests.cs",
+      "bytes": 8401,
+      "sha256": "e198118fae6ac66ce0e4270a5d587c2bac1fb11ed834da6a402ffe57d2d18d68",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S28BoundaryTests.cs",
+      "bytes": 15283,
+      "sha256": "97d30b0c1da78740f5d9b709601cb248a7144a761f742d87b9d6ab61584b3d57",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S30BoundaryTests.cs",
+      "bytes": 5998,
+      "sha256": "95dafcc7893f890c9d2eb4e5e51a1e25e50baa43a79913684d4e57bb4a5620c3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S31BoundaryTests.cs",
+      "bytes": 21692,
+      "sha256": "c26db47aef45736197ae82f334fb86db563ec0986a195834936b6e05c826f773",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S32BoundaryTests.cs",
+      "bytes": 15450,
+      "sha256": "da0ef4f43fec92dbd7442d890a4b0c60373f60b0a4bc9d1f48aea12f5e2fb03e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S35BoundaryTests.cs",
+      "bytes": 2684,
+      "sha256": "e107d1b5a2c1fce8dd581352e7b215f9d4be486c1040bd6969b7e78c25c63d17",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S40BoundaryTests.cs",
+      "bytes": 21750,
+      "sha256": "54b252fd24b7342dae31eb021a9a6fb90da453fd144a80bc1944e8bd330f37a3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S43BoundaryTests.cs",
+      "bytes": 21733,
+      "sha256": "f95271ea8e38254312d4c15f526f164492b3e31cf38dc4be87f1fdd3d64158c3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S44BoundaryTests.cs",
+      "bytes": 11280,
+      "sha256": "9c88e5a08363c1b27807e26c5c17a95c22f0e5019aa3b9b522196ee489265666",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S46BoundaryTests.cs",
+      "bytes": 19999,
+      "sha256": "6f7c4c5bfc4e71c5e47d3c65c74171a8b41e6bb5b448239b5e03d5db9350fc35",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S48BoundaryTests.cs",
+      "bytes": 7610,
+      "sha256": "0de654657b8bfb12b0021c6b0b3d308bde6b449e44ec1594fb5724ca0640e58d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S4BoundaryTests.cs",
+      "bytes": 22619,
+      "sha256": "ec94b9b6fde6ae38754af7ecdf0824f37eb13f6acf83897dd69cda878ba1c272",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S50BoundaryTests.cs",
+      "bytes": 13575,
+      "sha256": "f8cf85defaec047543b2bc09311ceda0d45eb1fe0d2578eb9dcf39be98043450",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S51BoundaryTests.cs",
+      "bytes": 46100,
+      "sha256": "230fcb4d1023be89551158124fa71ce1980a2b0aac6a4587a7ac74f403348c60",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S52BoundaryTests.cs",
+      "bytes": 7129,
+      "sha256": "b2c6f5a038e2f4042abd44d9aa06b50057664d39c7be5018e467b0c96401c10a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S53BoundaryTests.cs",
+      "bytes": 21825,
+      "sha256": "825c5e8caf69b28385b0b12c7eac5136a51b0eaae73ba6e60e7ba471436283fc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S56BoundaryTests.cs",
+      "bytes": 3735,
+      "sha256": "c3d19ce618160039bce17b06a312902eb5d084ffefde7f51ec96c58af340293b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S59BoundaryTests.cs",
+      "bytes": 12268,
+      "sha256": "64ad1577970928953c1670e62cd0b312013dfc3a792f4197f62b057f420a44b0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S61BoundaryTests.cs",
+      "bytes": 11167,
+      "sha256": "d2f047552152a29a37f1aec42afef3eb87617f43d4c4ddff366e8f35b6090fc0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S62BoundaryTests.cs",
+      "bytes": 7732,
+      "sha256": "20c6a1927e0f8b0fc07737bae8c4adb5584810fac37d3f3143ec9a92fb467f3f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S6BoundaryTests.cs",
+      "bytes": 16409,
+      "sha256": "2d8fca1056a80cb6c8e52ebe32d8361a664bec4d28c5914d623c9a5cd8230030",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S73BoundaryTests.cs",
+      "bytes": 8157,
+      "sha256": "541caad8eacb148ff80c1afb02e042cef59b6bef017812492affcdeea94ed6d0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S78BoundaryTests.cs",
+      "bytes": 17514,
+      "sha256": "ca1b496319f95037c7813af03f9234dd88bd275e4b0bdbcce623dffafd067cf0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/PhaseB/Repair/S80BoundaryTests.cs",
+      "bytes": 6487,
+      "sha256": "86475652046e2ec0beee3e20a3298e7e2541cb0afcaa97a61a942701a810c759",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Readback/PackageVersionRecoveryTests.cs",
+      "bytes": 15345,
+      "sha256": "8a2994a044554f9a8ed1889f9ac75009c2089cf690df1ccf28f7be3291375110",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/GddToModuleBackendContractServiceTests.cs",
+      "bytes": 305961,
+      "sha256": "4ab7ca284f9405922741df281e5020a1a79a58f7cbcdc00ff792dc044703a079",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Runs/ProjectRouteStateArtifactServiceTests.cs",
+      "bytes": 87408,
+      "sha256": "4e8277259cdbe17517785558213748e0954f4453d352682796f49d336a14f8c2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/RunnerIsolationTests.cs",
+      "bytes": 4046,
+      "sha256": "399bbeaf00fd58ee5a069bc6414cfe4b9b2e9b35f6bf79a6e9ce2e47a9e48e00",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Security/WorkspaceRecoveryBehaviorTests.cs",
+      "bytes": 12380,
+      "sha256": "e57e974bf1f54f5739eb67b8533129a9a028d35104daf784a3ae515f48fa45c4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/Workflow/RouteActionDescriptorsTests.cs",
+      "bytes": 8365,
+      "sha256": "e4dcf57494d354b0eab64c82a36169eccc7a9abe07643939869fc550ea8b950a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform.Tests/packages.lock.json",
+      "bytes": 7383,
+      "sha256": "ead257996c6ee73713ee553c8876be9134187d2495ac6dd17834349d0328cee5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformOptions.cs",
+      "bytes": 12751,
+      "sha256": "302f76be6c3b82c06a417fa234b14d2a08896f556c77afaaedf8301701d8363d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Configuration/PhaseAPlatformOptionsLoader.cs",
+      "bytes": 17766,
+      "sha256": "5eda224a617bab77ddc323a762f05729d2d179dcc1c71ab845eeb06e675c7964",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+      "bytes": 389387,
+      "sha256": "c6b7494b2ce6406207fc1dcee110b7b83b506ee6cafba465bbcfcd5034d1ea35",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+      "bytes": 94364,
+      "sha256": "0281f1c228bfab52b0f207ffc6c1569e6321df955e23cd7dacad5b3c52f79cca",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ChatService.cs",
+      "bytes": 26712,
+      "sha256": "7f35f52ce50b4fcc2771276fa7001317c1c0b2303938b76faf2ec7a232958e9f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Llm/LlmStopLossService.cs",
+      "bytes": 2055,
+      "sha256": "e2e10e514b2811b414f9dd158b352a109bce30f65c2438b767b896f977eb6116",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Llm/ProjectChatHistoryService.cs",
+      "bytes": 4096,
+      "sha256": "660b1a4994374fd9e380eaf0edc41296f74f701452a718d18d4a6e47645b86f4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Program.cs",
+      "bytes": 168010,
+      "sha256": "e39aaa2789133839ea580bc70a592435c902a991ffd6774700418330fc4b6d95",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectCreationService.cs",
+      "bytes": 15137,
+      "sha256": "9ef34f09de64092866eff63784c4da3a9198ef29a0a5e6594e4643b8a6ae14fa",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+      "bytes": 58022,
+      "sha256": "e00be386f781dc5aae63579161cfeb8dcfe75e6cdafacc285cf21e08700267e6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectInitializationRecoveryService.cs",
+      "bytes": 6119,
+      "sha256": "52ecc3fdaf5e065c49f4dba1f75e55dfc6428c90f0e62edc10480c55fcc20d7a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Projects/ProjectInitializationService.cs",
+      "bytes": 16491,
+      "sha256": "b2173f825a3688b145e6e0cdc0d025e6324520c87d3e5487f894126254f10237",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Projects/WindowsProjectRunnerProvisioner.cs",
+      "bytes": 7999,
+      "sha256": "b25baa724e6dcb4abda6178c46afb3585acd5ec82a7c3dfc50a17484dba03e49",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/ProjectGameTypeMatchBackfillService.cs",
+      "bytes": 9476,
+      "sha256": "b5fa63c602471657d9ebd2ff03a407f1d7378d44792ff157b4765e547ee8d12d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Prototypes/ProjectGameTypeMatchService.cs",
+      "bytes": 4353,
+      "sha256": "f12f725a978322070d8ec77066919c98fe6d9d43db58a58e79237332c165670f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/README.md",
+      "bytes": 6264,
+      "sha256": "6978e2bae3f0fac6f22c9c44cc99808e4e841d31b4d2363feb55889013846cc4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ArtifactReadbackService.cs",
+      "bytes": 33221,
+      "sha256": "48051fb06e96c3a68b8d070bb89652f1ebd4cbf593c82a9ddb451aebb99310e1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetImageGenerator.cs",
+      "bytes": 8400,
+      "sha256": "cdbef94b644f1a8471225aa9a65b92f23a6cc2263dbd8ea20bbfe6ca98e8f774",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetInventoryService.cs",
+      "bytes": 46976,
+      "sha256": "640898c2b70fc847c27e78dd279e1319d09a1a1816b5820fb48f3925abafab53",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetLibraryService.cs",
+      "bytes": 84496,
+      "sha256": "060ae61760e653ab2bfa8aa42e39a1ab88f4696e5ed700c451b04f79708552ad",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectAssetPreviewTicketService.cs",
+      "bytes": 6447,
+      "sha256": "2e7dd9f8e48e8c8332824fb4f96fce791dabe72d85f3f185408dd8f2b7909ce1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageDownloadTicketService.cs",
+      "bytes": 5411,
+      "sha256": "31634bda97b879355d2fe4a779f01c21232f6ec536aa853b984e9b444e115621",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageRestoreService.cs",
+      "bytes": 9362,
+      "sha256": "8a03f638b7fbe6992976c0015b0cc72522ae0960d6505dd831a094b106a0e793",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectPackageService.cs",
+      "bytes": 66762,
+      "sha256": "49f2353551a25bfb8b0236ae622f86fe5d1e9038ff27e6801c5ce41a81f36f5c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewDedicatedAdapterService.cs",
+      "bytes": 29497,
+      "sha256": "9c912da1bbcbc24b3e82e4e16e6f90dae48ffe28c70df095830f2733cab4cea6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewSemanticAdapterService.cs",
+      "bytes": 42321,
+      "sha256": "6a4c563149879963b45ee30ad21e14f67e66f053ff64f1899215bb109dd98e2c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Readback/ProjectWebPreviewService.cs",
+      "bytes": 245424,
+      "sha256": "40818e50f9695004acbf6003b91e0a8bb2d905cae6159d9d7e0b5afba37f0a06",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/Chapter2BootstrapCommandBuilder.cs",
+      "bytes": 1899,
+      "sha256": "b3daa1d32de7bd0c958637a20d5d942ee70a550c79960a119682e919350e8441",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/Chapter2BootstrapService.cs",
+      "bytes": 7358,
+      "sha256": "09f5c0f7faacd64932a9420173c509e900e59c536163a5d52765eb10938f841e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignDocumentService.cs",
+      "bytes": 159834,
+      "sha256": "6cd9baab5de2e7110d8b2dfc2c73840be772c0f152434d676eb51c2b443c3df1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormRestoreService.cs",
+      "bytes": 6028,
+      "sha256": "fe6ed7008d603568ecdefdadbf658a54ed5b226694c3259417c8aa6078c766e3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignQuestionFormService.cs",
+      "bytes": 32769,
+      "sha256": "fb440fc65e8087f7a6e63b8bfb541aaca5fa4bd1c9b75b1f562c9fd6ca243e9a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignRequirementMapService.cs",
+      "bytes": 58031,
+      "sha256": "e17c4f18b6b855336d9decb4476d460cd88e4eeaf553ca8b1a5cd7d2803b340f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GameDesignSceneRouteService.cs",
+      "bytes": 41848,
+      "sha256": "35ceb1a9fa35a827faf425ee81a68b3866f1d3e2730309adf28c96481d4eecee",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddMilestoneStepService.cs",
+      "bytes": 107094,
+      "sha256": "22a2749ecdfd68665a6c569ff36f3b867aff91b8e7832a00ec7b74d4f00dd943",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GddToModulePhase1StateService.cs",
+      "bytes": 43266,
+      "sha256": "68ad3da0504d7499f22e91a452351588f8cbf9b3f804c7c24f1b55be8c152052",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/GodotFailureDiagnosticService.cs",
+      "bytes": 11295,
+      "sha256": "4af5774b925ab28666df2a840cfa8c5708de2c4ed62009fea7ecb526a9e9ff97",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HeavyRunnerQueueService.cs",
+      "bytes": 16068,
+      "sha256": "8129b32e1f82fdc63a08bcf590692178929ae03cf3a2496bca07343ba682b5ae",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/HostedProcessRunner.cs",
+      "bytes": 31807,
+      "sha256": "00b080fc938f219b09e151a54dde8fbb574ebd587ee15fb8f5143841de2719de",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectRouteStateArtifactService.cs",
+      "bytes": 85774,
+      "sha256": "1222a2aa009df74f04c798f5d5c3fb35699f31c1ee28684bc62938a5099bfc22",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/ProjectWorkflowRouteService.cs",
+      "bytes": 49849,
+      "sha256": "7812290e04641f65109847d5aa12c27f39124b52f2d857c76750408d2b5d1b36",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeCommandBuilder.cs",
+      "bytes": 11381,
+      "sha256": "58c8910899cef44ce9939e369fd5999de2fd94eecc06fa947930479d83c11ca1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeCommandService.cs",
+      "bytes": 8156,
+      "sha256": "1cc8f1b2cfef3c8114de8f5edab07d5f2fa76036847048d643789d861f387f67",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeContractFreezeService.cs",
+      "bytes": 42613,
+      "sha256": "6008b293fee8b5d99ef1ca4ea5b5a485353df35a869c25bfc7dd42eda9a5bd75",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeFeedbackIterationService.cs",
+      "bytes": 19968,
+      "sha256": "09b1dd5994cc104a8448cc5d2613e47dd328988961b138f0b40a61d617d2829a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeGodotSmokeService.cs",
+      "bytes": 39366,
+      "sha256": "b541aaa1aa3020ec9f27aab3686690e5c3f3f4856c53ad5ccff572f259f9c8af",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationGoalService.cs",
+      "bytes": 75131,
+      "sha256": "81fbef9521940a31f142115bd37e6354f9733e2b6e651399a3cd0f80be8db38a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeIterationPlanService.cs",
+      "bytes": 307166,
+      "sha256": "bbd785db2c93f1a478a9620befeae3d46a733f5bd65f6da9c2cfeb1f6de7f05e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeNeedsFixRouteService.cs",
+      "bytes": 48012,
+      "sha256": "9c70087391b5c8c34d69d65d2922e44d31659cb177e4b033652a4f2ef23c7f75",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeQuickFixService.cs",
+      "bytes": 194583,
+      "sha256": "a1559cc82b892f13545535692ad846c5042ce72447f3f8a03ce977fcfdd3fa55",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRecordWriter.cs",
+      "bytes": 8416,
+      "sha256": "9fb424f6f431833f7c21e8a5987f49704040791908df569659052dadbd9480b5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeRepairPlanService.cs",
+      "bytes": 75637,
+      "sha256": "0b7ddc48334e15833b5f925cf556c10f46fb492f02b9ec94c5f596b59911f366",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeSmokeSceneResolver.cs",
+      "bytes": 9011,
+      "sha256": "6eeaed7955b6c1cfeca563d6eb0b5cd362a6631b358948636f782740dde0f0dc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeUiOptimizationService.cs",
+      "bytes": 43979,
+      "sha256": "2ef0cdcdd11e11ba01858a34f0470bd4b21ff5e4b4c3c24b903d0306a5897720",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowCommandBuilder.cs",
+      "bytes": 1992,
+      "sha256": "0037d8bc7ff7ab9f684ab21145af13a27a1a4da9c0e907bfc68bd666470ec05a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/PrototypeWorkflowService.cs",
+      "bytes": 172202,
+      "sha256": "a6955ae1bffd19483240d6a326c7af2e96022e13825e0bdb898f1b1195bfead7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Runs/RunCancellationService.cs",
+      "bytes": 2169,
+      "sha256": "ff57bcd368cdd207834ebcbe8a3045d8d1389a8100c3d3ec22b58e3267727c02",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Security/RequestContext.cs",
+      "bytes": 2946,
+      "sha256": "6ba30504f7a00676c9f20a8c80b94c4444908cf92cf0cacf3a0871fc5b17d5b4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Security/RunnerIsolationPolicy.cs",
+      "bytes": 21529,
+      "sha256": "02c4dd788fe68f9daeb63b639a7c4cdb0f147d4caeea8583d98b0e627a06106f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Skills/SkillActionService.cs",
+      "bytes": 18720,
+      "sha256": "484cb2022b831dd84832dbb935ad280e78b2e501e2e267f1838c058b0c67e83b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/ProjectWorkspaceMaintenanceService.cs",
+      "bytes": 1464,
+      "sha256": "b4423e88c6261c1f9b884f8a26b9b6f08cde71340c4b4b5bfe9f8ead144516d9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/ProjectWorkspaceSeeder.cs",
+      "bytes": 27038,
+      "sha256": "1632ffb27d1ba145cc167d41020894de14d4636f5f95fc8e598e3104e25e16f5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/RestoreService.cs",
+      "bytes": 43306,
+      "sha256": "0cb68e56ede4a142299a4cad1532ceb30e48d34e3b021ce8a85546aa16dca1df",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs",
+      "bytes": 27246,
+      "sha256": "5ab35f134896077922e4683aae66436ae885539f946326f7a7cd4d042ad81f10",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/architecture/architecture-s2-06-20261028/ARCHITECTURE-SPINE.md",
+      "bytes": 42599,
+      "sha256": "df6549c9f72595bfd883ea8f3d557935ae0f2daf835b500803618be2ef6ef7f2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-s2-06-20261028/addendum.md",
+      "bytes": 8777,
+      "sha256": "1cdb52e7a841e62a18ebd322851b6baa8c0be2fea1434fd407096626674c4142",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-s2-06-20261028/memlog-audit.md",
+      "bytes": 9755,
+      "sha256": "eed6db7ab9e1a9a4f3a65d4cd5b2a4e78a30ce95753fe6e3179849225df2a5b7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-s2-06-20261028/prd.md",
+      "bytes": 27072,
+      "sha256": "9a256107f765b7f39b8dfd655b8d25eb81e01fa9df21d6a6b3d2a836e82bf857",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-s2-06-20261028/reconcile-dependencies.md",
+      "bytes": 2840,
+      "sha256": "38bdd28f70cf89f97c5458cdcb49f76d68f138a849a6edea6b708a66781041f9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-s2-06-20261028/reconcile-s2-06.md",
+      "bytes": 2912,
+      "sha256": "e6ebdbe5483647111e493ffa6caf006203b5c916b9df3a7d7c9065fa8baeb14b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/prds/prd-s2-06-20261028/reconcile-shared-scope.md",
+      "bytes": 3188,
+      "sha256": "080a53476d31a31960d52294d707998ef6075455a6ca139005a58ef87f4b9b35",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/current/SPEC-s2-06.json",
+      "bytes": 174,
+      "sha256": "5e2afc6812df99cc179a75c20d6dbc379b412959e610354f43c8359d18fe7e18",
+      "group": "s2-source-identity-input",
+      "mode": 420
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/sha256-cd7cc9c4c5e1dc66ce0f576f6d80cbcef71d3bb499a18ffbfff56ff58dad0dc3.json",
+      "bytes": 1270,
+      "sha256": "39cf0c9bc99d9d8deed254d94623de46a47c76eb8548128afc44246b6ad3ec8a",
+      "group": "s2-source-identity-input",
+      "mode": 420
+    },
+    {
+      "path": "_bmad-output/specs/canonical-spec-package-selections/sha256-f085e26d53cb3fc8b2708532780a11295e12be2de5edc168a1e3b06f2ba9e2a4.json",
+      "bytes": 1137,
+      "sha256": "c617ebc13514a1ffe605fb8f2290641838286c624943d1cee1e13ed51ca60e0d",
+      "group": "s2-source-identity-input",
+      "mode": 420
+    },
+    {
+      "path": "_bmad-output/specs/spec-s2-06/SPEC.md",
+      "bytes": 8925,
+      "sha256": "159e7f9abaf16bb061de6e111dc5a1cb59ecb86965ac3836747c31ee2cf6be3d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/specs/spec-s2-06/consumer-and-role-boundaries.md",
+      "bytes": 9593,
+      "sha256": "d066f04b12e8be8907fa71ddb729a50f8908625c4a082bd2c5bc31c4848dccd5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/specs/spec-s2-06/identity-and-persistence.md",
+      "bytes": 12183,
+      "sha256": "47ebd27a79ef001fe6fee52cd4d9a60c079907f1470c33189be4d1998c9ea51a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/specs/spec-s2-06/shared-content-and-notifications.md",
+      "bytes": 7820,
+      "sha256": "21a94ef0f78f6737e0af1eaef557868d9a9e39a0e85e5e49a2c152707684adba",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "_bmad-output/specs/spec-s2-06/verification-and-traceability.md",
+      "bytes": 11215,
+      "sha256": "d2bb514d8e281f98d19da9fda2b0de225105efe61538832ec84ed6d1370f2ba9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md",
+      "bytes": 54121,
+      "sha256": "b4350e0c7d6c96fdc5df4b4fc8e283e7c704e6a4e47d6fdc16d986ed85f24cda",
+      "group": "shared-toolchain-prerequisite",
+      "mode": 384
+    },
+    {
+      "path": "docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md",
+      "bytes": 15955,
+      "sha256": "2792b5ae5d890120a630787e82b97299434e88252bfc3fb9b9603ce336fc986c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/architecture/ADR_INDEX_PHASE.md",
+      "bytes": 6474,
+      "sha256": "c5e2e069d9f104c83bcc980a0cb40c172f566db37b1857ff7aa51f9d95a2d399",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/requirements/s2-06/source/00-shared-scope-and-contracts.md",
+      "bytes": 22503,
+      "sha256": "d327150ab20892084d00a8f6d2e8c632b1eb372b30f929e329e14463d982e3e5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/requirements/s2-06/source/01-dependencies-and-delivery.md",
+      "bytes": 14450,
+      "sha256": "160028ba7b29c0fe5fe778806902f3bd0774fec66a183a3facabaff60b6c9cdd",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/requirements/s2-06/source/step2/S2-06/S2-06-requirements.md",
+      "bytes": 7998,
+      "sha256": "5a013274f838433ef14b6a0dc612e9757692e2b8ddceac5efe91d2649cda16c7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/requirements/s2-06/vdd-input.md",
+      "bytes": 100475,
+      "sha256": "f6e4bacdd952da675a0aeb70c94da6cb7478b0b2f7d6543b0a8b48072db90654",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/workflows/phase-service-node-identity-and-roles.md",
+      "bytes": 8297,
+      "sha256": "56de3c8f138910b5a9b933536fe7beee9e9a920b1ebad129f0e5949638e20728",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "docs/workflows/toolchain-skill-baseline.md",
+      "bytes": 19038,
+      "sha256": "eb20ecf4112386ed4631d31b863477df286840f9a1d472a842e1bb2a8c4c58b5",
+      "group": "shared-toolchain-prerequisite",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/acceptances.v1.json",
+      "bytes": 1418687,
+      "sha256": "3c4cd86bfb870555e4d075bbd82b448e103ee4a2d1e3df9c112f51d977f5fd6a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S1/agent-context.json",
+      "bytes": 32967,
+      "sha256": "2eec790d7a996e0433182676e1871398c3833d89322fd16674cef26f898c5ba7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S10/agent-context.json",
+      "bytes": 3833,
+      "sha256": "fab9188f0767bcfc55b213f99a2a1867a33df37796143f44a8257f9bb04403f3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S100/agent-context.json",
+      "bytes": 10790,
+      "sha256": "cf29ba9da892745640b93c9a039218e95d423dd8cc0cf665c7165baef94df1fc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S101/agent-context.json",
+      "bytes": 3366,
+      "sha256": "4b0f99173a8e6d2ab6e8041f3c8597d79fe0bc44c8b099e198ee85e1d8ae53b2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S102/agent-context.json",
+      "bytes": 15906,
+      "sha256": "b5e86a95d5b1cb586ab8c18351e33f80ecdcf2b8ccde6bd82cd2be182255ace4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S103/agent-context.json",
+      "bytes": 11438,
+      "sha256": "1d02d59348c27dfa6405113f35968942d465bdd78ddfdba0a7cb4dc86bf0e57a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S104/agent-context.json",
+      "bytes": 5453,
+      "sha256": "455b5a7bf5fe29f72efdd2975798a75d72f2941686cd457d64b33295ee2a3edb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S105/agent-context.json",
+      "bytes": 57091,
+      "sha256": "1e12ceb1701b2e36f514c868c2070dc5045609ef7c560684e81b97a3e0c73c57",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S106/agent-context.json",
+      "bytes": 24525,
+      "sha256": "f76b8194035ca2b94328522e4bd747a928a5b91adb5f29095d846c91f69a9fdf",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S107/agent-context.json",
+      "bytes": 3170,
+      "sha256": "014ccaa6abc4631bb512d881d92d0b11732c5b2bf1165a679826db4df86958ae",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S108/agent-context.json",
+      "bytes": 5297,
+      "sha256": "bb62454b9267a4885788535865f1c9d359802800d165b83b7919a8261e6711e2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S109/agent-context.json",
+      "bytes": 3640,
+      "sha256": "0f824ed929c7983e9c1a83f95640bddcb6e9ef64b1aea9962e83dbbebfdd08a7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S11/agent-context.json",
+      "bytes": 3691,
+      "sha256": "4f08b462544844436e1faad66ebf6d321a0d660a9b2f9cf3901c03bfd8701f79",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S110/agent-context.json",
+      "bytes": 3566,
+      "sha256": "c4e7ee7a37f37ed9014699d16717101b63c002325b45716cf31d0c3d24e003b7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S111/agent-context.json",
+      "bytes": 4803,
+      "sha256": "0d842627e5e0ebcd50865c8046cea22960f79462230d13ede79b198bed272885",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S112/agent-context.json",
+      "bytes": 8594,
+      "sha256": "eabe71fb11d6055847233bafbcf1ec8aef7093e7e486360c940702b6cd08999c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S113/agent-context.json",
+      "bytes": 5189,
+      "sha256": "5651c0674f76c872e3a8f9eecba8e31cca9b97439b4bd849709168ecaadcad4e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S114/agent-context.json",
+      "bytes": 14008,
+      "sha256": "9ce146b3f8480cd77fbae09e3427ffdc55ec964240d842f1b3e97f80bfb6e917",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S115/agent-context.json",
+      "bytes": 2400,
+      "sha256": "e7cc7b878ebf36d724a39d90e3cbdefdd9314c09a7e96d9f9675ce3de9f8d40e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S116/agent-context.json",
+      "bytes": 4184,
+      "sha256": "074652e88c63d1aea72fd8a2283e27347e34b28903826654220ca0a7f54ca19b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S117/agent-context.json",
+      "bytes": 2015,
+      "sha256": "f2eb8ec07829f9827a24c05a1a276aa4531ab12074410210f36526ca7cde9d4d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S118/agent-context.json",
+      "bytes": 5009,
+      "sha256": "7c9d0349789f5899f24337e69d6f98964e5928a6d80aa39aff35c842c75847b5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S119/agent-context.json",
+      "bytes": 4382,
+      "sha256": "a281734414cdd7d6576f561b02ee1c93e0eb1c3cdb72ef36bc12df0434cafb13",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S12/agent-context.json",
+      "bytes": 5568,
+      "sha256": "9a0d10273982a7090f26cb50aacf2f9f0d145b150802addd2cdb870923194e0d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S120/agent-context.json",
+      "bytes": 2982,
+      "sha256": "7c34b40bc706e16fc3483778bd0efb08adbead0e1c7093c084af738e8eb091ae",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S121/agent-context.json",
+      "bytes": 3201,
+      "sha256": "6ab17ed1b5496f6730108fa20d30f6f324b3b71225db062a0d34251ff89f3b40",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S122/agent-context.json",
+      "bytes": 5102,
+      "sha256": "a54b88f112e05e34c068a4be929c549820b0199011b282d9b7e6db764e69976e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S123/agent-context.json",
+      "bytes": 4065,
+      "sha256": "2e8fe321af4ce87791c28122e4f59e477d4eee7dcf4bdc887dc49896dad3d738",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S124/agent-context.json",
+      "bytes": 32064,
+      "sha256": "7515d02e762182a64da83d378d7812cb55c945b99127cb5c4e7b88163b1cf6ac",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S125/agent-context.json",
+      "bytes": 2964,
+      "sha256": "ce38d350416d3160a552819f1064ba4cd393806fff87d6971d28e0e94bf6f3fb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S126/agent-context.json",
+      "bytes": 3603,
+      "sha256": "db1ea3caf546f6e76e9c1c6a3fe2408f7244e4e9dba71032750c3ff5380138b1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S127/agent-context.json",
+      "bytes": 3421,
+      "sha256": "64f902feca3520aac257a1da410e3fd5439d67a0c701050bd4d4008ae70e27da",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S128/agent-context.json",
+      "bytes": 13874,
+      "sha256": "48e9ad1d42aac780578c86329aa78f47f57ecf65612c9783e1cd73adc9419b10",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S129/agent-context.json",
+      "bytes": 3287,
+      "sha256": "c34a5b8789f61ae333119c3646ef6aafddb1bf4360bfb6dd351f7c9100f2184d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S13/agent-context.json",
+      "bytes": 10478,
+      "sha256": "8805cbaef3ac4a08f8fced644b73692d7bfe6e14012bebf27812ed4b2af35a2a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S130/agent-context.json",
+      "bytes": 3454,
+      "sha256": "6f54f03d8aaf108f2c2fa5bb5e1ed6ba8a59d53880e7a21fdab893ec99a1ea24",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S131/agent-context.json",
+      "bytes": 8185,
+      "sha256": "d4c12e8ef3db45643a1e6863bab7b175962f019e8fb4e266e1958b2a2a448435",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S132/agent-context.json",
+      "bytes": 6591,
+      "sha256": "4bc0d1c69a5ce30885aa627fc9c0d2ce966bb7c4b05ce1f2f1a9f588c9eba558",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S133/agent-context.json",
+      "bytes": 16587,
+      "sha256": "09065f0ff476764d3d92f9c47fbd6dc43f7ad916aab72198a4911d954ac7bab2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S134/agent-context.json",
+      "bytes": 9184,
+      "sha256": "ab42624c65d4d57eed4425775c32bda25678a3bf60b2660a67fb1e1371becf14",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S135/agent-context.json",
+      "bytes": 4739,
+      "sha256": "23f5ebd102e9e9f41295c3462f8695f0d02d9e22b322495d7ea24ccd23a26895",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S136/agent-context.json",
+      "bytes": 4381,
+      "sha256": "ed513c2044f8f7d75553c9a6aec8cda0a776eb5ab3b554b552f8e0d8ec8d99cb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S137/agent-context.json",
+      "bytes": 4662,
+      "sha256": "171c2a180cfcbe07a4df6d2f6863b29a48b8ccbd3f3848f3fc0df338c910b18d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S138/agent-context.json",
+      "bytes": 3885,
+      "sha256": "fd9295c6dd70d5199409e1c462b2553a277921930757fa667ebdce8da784c2a9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S139/agent-context.json",
+      "bytes": 4312,
+      "sha256": "9260dfb60f1740ea503fe673e0b1243990458d9f162ae5ca18bfba02fc20d8b6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S14/agent-context.json",
+      "bytes": 3864,
+      "sha256": "358b7e567e62ee0db6ef42694815259d638b091c085b7550d8269209d4553c07",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S140/agent-context.json",
+      "bytes": 2419,
+      "sha256": "dde21c222fd842bb418075fdae2d287a670c52033f5abcac3fa3123655f75403",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S141/agent-context.json",
+      "bytes": 6097,
+      "sha256": "7e45d33bb8b92f1e1ccd0afc8b71d8d3219bf4f9fc97f2f23f6aa7db26035d2a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S142/agent-context.json",
+      "bytes": 3526,
+      "sha256": "bad630b9ff93734682eff8683c39eab7252389cdc7cbbce503255fc2187103af",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S143/agent-context.json",
+      "bytes": 2993,
+      "sha256": "cdaf535c733c5c38acfea34e29c89ce980afefe0f3d142057da24e707fa556ee",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S144/agent-context.json",
+      "bytes": 4939,
+      "sha256": "509a3b58dfa40901c38aee31a9c8571088df813b442a35637e87a99c36c338b7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S145/agent-context.json",
+      "bytes": 10549,
+      "sha256": "983d9c6981598a971a5d11c67fb39234b8a3e7fab8466a6aa345440dc1921e73",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S146/agent-context.json",
+      "bytes": 3785,
+      "sha256": "c5d2e5d6438d41fe0c3789709f3083ce1e09b1577d8f9f3ee8913cc93147296e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S147/agent-context.json",
+      "bytes": 5173,
+      "sha256": "4ea93c12655a79df7195b24d408ccad7726a2c45696b146f86cdf15191bdffa7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S148/agent-context.json",
+      "bytes": 11345,
+      "sha256": "787e4977ca0238ac70399e76658ddc8346888850367cf97bffa0130ffad0a816",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S149/agent-context.json",
+      "bytes": 9094,
+      "sha256": "5b0755d453090f17d4162c9d59fe24e5b431ad60cf021e2dec79f3cfba9f8b1f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S15/agent-context.json",
+      "bytes": 3747,
+      "sha256": "30b4b113ee29e83d6248835e2db778ad936fd3ec4254574865c98f6c3f5642a0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S150/agent-context.json",
+      "bytes": 2924,
+      "sha256": "8336c56071cbd2d111255f048848ba4f79d0a08c54894e438ba5878dab370c48",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S151/agent-context.json",
+      "bytes": 3320,
+      "sha256": "94ca22fdf1f1f75f1cf7373d156d728eac7417f1c15ecec282b1e0d276431053",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S152/agent-context.json",
+      "bytes": 6739,
+      "sha256": "db1ecce45b20c33ecf70346956d82a47764c7667c34e3918eea6de06ce4c3e28",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S153/agent-context.json",
+      "bytes": 6230,
+      "sha256": "30b7fa23340c476ad8c35500d851712045e1a8710e2381aaa26cc0c72d66fac7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S154/agent-context.json",
+      "bytes": 37517,
+      "sha256": "dc7da2f293b4644dfcf5bce14aa6efd327e3d5588e23e8509e9cd0cde9878f5b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S155/agent-context.json",
+      "bytes": 19636,
+      "sha256": "7d85477225922420048e08234f12a0a1538cfe9304d85da4b441a8351655a7ef",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S156/agent-context.json",
+      "bytes": 2902,
+      "sha256": "964874ea238a5610f043f8b81a4975258a4965b181d8041b2334b217b161e415",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S157/agent-context.json",
+      "bytes": 3050,
+      "sha256": "893687cba2047d143c1e42c72b916644d50061d2f67f680c6cdaeb84fe4f8cf0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S158/agent-context.json",
+      "bytes": 10206,
+      "sha256": "b53a2921342525cfd9bd8fcf6d7a1c67ed8b4ea9fafea7e1e66ed4dd274fc8de",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S159/agent-context.json",
+      "bytes": 2880,
+      "sha256": "c8e4f8883ab37c653a1e7c885afa92339dd1e3bbdf43cae08f4790fa4291ec4b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S16/agent-context.json",
+      "bytes": 7808,
+      "sha256": "df1303ad818c50173b97b54f79f7ce118d210b2d95769a8aa0c08f1d6f734093",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S160/agent-context.json",
+      "bytes": 4840,
+      "sha256": "4a1d1c4f4ff1ac4c7bd9aa792bd9ab28048bf69fdc2e91aa0356e413afd3b24c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S161/agent-context.json",
+      "bytes": 5182,
+      "sha256": "447f7e973e42a19f561de9c9d67ca4e9a8f75d6b21ca88dd1ddfeea273c43691",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S162/agent-context.json",
+      "bytes": 23570,
+      "sha256": "d288ac7c97d55d8e16b4a1958d67baaa1301a262a890ce3cc56e869dedaa2c1e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S163/agent-context.json",
+      "bytes": 5468,
+      "sha256": "b5c55c51eaed651ed4aefdd539b5257f0a8e00d209599bd4bd28a041dd59b3b5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S164/agent-context.json",
+      "bytes": 2383,
+      "sha256": "c96f9a50bc5ed99855eccab72f0e5822afcbddd4b6873217ac46e3739dcda315",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S165/agent-context.json",
+      "bytes": 2736,
+      "sha256": "cb452439f8fa8b79fb88b0100fc100beae4777383dc7c7ef60daa44dc2d4685e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S166/agent-context.json",
+      "bytes": 3280,
+      "sha256": "b1ecad4d69be4b59c482301d686a33d72df3599415166c9b7214a4168c5b6b5f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S167/agent-context.json",
+      "bytes": 4153,
+      "sha256": "2a93ef5e6014861c4d9bea0f218727f9e132011a9c94bcbc30f4e7ca765b918c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S168/agent-context.json",
+      "bytes": 4310,
+      "sha256": "583777af74776aebf0d5f1ad9583107bdffabd4df818fab4d3fce14b824da9b3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S169/agent-context.json",
+      "bytes": 7379,
+      "sha256": "f09005de87d0c64185e9d3dffe1205e111225385105ac808d122f298e7cc9a05",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S17/agent-context.json",
+      "bytes": 3373,
+      "sha256": "ea9d78b4313bd912d9267a89b70840d6ebc08c8f4fa8b617b359e881cad29204",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S170/agent-context.json",
+      "bytes": 5429,
+      "sha256": "60642f30ef2979f2d95efdcb6144007ff1d42eaa778f75414b028cb4dbc9c5b2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S171/agent-context.json",
+      "bytes": 3626,
+      "sha256": "e7943dacdac930f489f87651bb9eb5418047e3365fb797fa95c0296e4f21b57a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S172/agent-context.json",
+      "bytes": 5904,
+      "sha256": "f732aad450fbe6387efed17eba6fd465f384019a26e2e3dba5198d438466b033",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S173/agent-context.json",
+      "bytes": 4610,
+      "sha256": "31e0dbfc9ef21e2bc74ed59e6475d137096d1e8e31c75119d66a6d487a3c65ec",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S174/agent-context.json",
+      "bytes": 3825,
+      "sha256": "322278cd06844f6b9bbcc74bd8001f82f8c3fe6d55c69f11f9300ed3df131fc8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S175/agent-context.json",
+      "bytes": 2200,
+      "sha256": "bb390404fcb93825803e9bd5a1ce332e228390d60a36d77da4aa719d6e20c2f8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S176/agent-context.json",
+      "bytes": 4958,
+      "sha256": "8f57b26200fe333dcadbd7e1d83f2574836affa3a8d3b08e3e7a58650928857b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S177/agent-context.json",
+      "bytes": 3875,
+      "sha256": "dfae5856f5ef878cde7a01bc7d67a2372182cf36a22f0914c9348cc03f8314ba",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S178/agent-context.json",
+      "bytes": 12267,
+      "sha256": "0cd3f3e5391ba49828ca221e4899d725d9f6d192b479315d1a963808ed375425",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S179/agent-context.json",
+      "bytes": 3335,
+      "sha256": "ca84d0d55ca96311c3c1699be31d9ffee5772953da907c4385147bec0f44dae3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S18/agent-context.json",
+      "bytes": 17166,
+      "sha256": "074dbd9288f7d0af238feaaab26eca0bb1b240682d7c76edef6617e0c0ec1b49",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S180/agent-context.json",
+      "bytes": 6536,
+      "sha256": "38a2074a52d4fe2ae84ce49476092f806cec5074895d4a7bc27eaf1351c65309",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S181/agent-context.json",
+      "bytes": 5359,
+      "sha256": "a010ae18698483fe52b166226421f9c43e99aa907f1153ac548192fefa98a753",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S182/agent-context.json",
+      "bytes": 3924,
+      "sha256": "d083b9a03f2defd14ed1def571465f7a30d72013bc28c2a9a530c976b096d2a3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S183/agent-context.json",
+      "bytes": 2229,
+      "sha256": "92e64f065231d2641a01d9e25d30a161bbd5f97f68a0abda1af5290c9b2a48cb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S184/agent-context.json",
+      "bytes": 2132,
+      "sha256": "8df5c8664952be108a5f3228db0624b331a42e4cc737edc240d7f9089fbfb4d9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S185/agent-context.json",
+      "bytes": 13795,
+      "sha256": "e2303280ca7a0c151d3f01c3955497837a89659ca3eff1922244a7eba4aa24f6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S186/agent-context.json",
+      "bytes": 6466,
+      "sha256": "cce537967844b11502b46207f5e04f9e15477900458b4ff9536d9eaa3fe08eb5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S187/agent-context.json",
+      "bytes": 3583,
+      "sha256": "a156c4ae2318ccb0f2f88878865864623afe9c642975db116a36453dbb7fac50",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S188/agent-context.json",
+      "bytes": 3829,
+      "sha256": "d17f586cfc3dee0ee1e4303774e1888598bb782976210813cb6bd02f31597484",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S189/agent-context.json",
+      "bytes": 14939,
+      "sha256": "61ac230cc949e2c9e3dadaf541ab659b574c68c767030638c47f3c16373471e3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S19/agent-context.json",
+      "bytes": 4179,
+      "sha256": "fe1f9096b0349cb85cae86acbe410bdfbf86bb1893ad370c0d9a29a734d17d22",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S190/agent-context.json",
+      "bytes": 5423,
+      "sha256": "f13b0a07fa007cbec5a67dd25cdddcba12071d58e57af614a584c97d89696be1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S191/agent-context.json",
+      "bytes": 3810,
+      "sha256": "fbdb83cd5529d532765b66e03351854255d7fffadb8f6412481010c203ca25d0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S192/agent-context.json",
+      "bytes": 4431,
+      "sha256": "706194ef9ec6a52bdadf7af48949ef73ad90929ee78a63358f2a62d4ab60fcdc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S193/agent-context.json",
+      "bytes": 4251,
+      "sha256": "d61986781a7fdb244f488b0a725fa2d536d00b065442d46225f1e35858e4c864",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S194/agent-context.json",
+      "bytes": 11515,
+      "sha256": "70b2369f71919c74d0b525cb9ee99611db760fc20d8a9864fe22652e2f6d1232",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S195/agent-context.json",
+      "bytes": 4226,
+      "sha256": "17ae420765178d153285472706959d4be7a820c87ae424d65018d4bddf3608d8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S196/agent-context.json",
+      "bytes": 4000,
+      "sha256": "9398f83ca9d7ca0c0279fc9719ffca933a464cfb41152c11ba891c747cdcabd8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S197/agent-context.json",
+      "bytes": 5395,
+      "sha256": "1e56b91277ae25d580671173775abf6ade20481dfb73bde6dbb85fe1303dae40",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S198/agent-context.json",
+      "bytes": 8013,
+      "sha256": "6bef4261ce2e2b61e5cd5a7e296692083f8be73e4a57ade31ab3c9e6747ff73e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S199/agent-context.json",
+      "bytes": 2372,
+      "sha256": "2dc100b3c819827cddc2b12ea6b1d6798466b41b37371873da767810d8ab4abf",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S2/agent-context.json",
+      "bytes": 3686,
+      "sha256": "9d34a21ff1c9d35b81a323483b5521051d6f6a353c160246c44233639bf2ca21",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S20/agent-context.json",
+      "bytes": 4125,
+      "sha256": "579928ea1268ed40855a31bac036c4bea55f37bc37982c2de83542437ea88821",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S200/agent-context.json",
+      "bytes": 3727,
+      "sha256": "4dc63489aac1cc4e2566f1a522fe589c473344284328853d0fe2cc1d012b87f7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S201/agent-context.json",
+      "bytes": 3375,
+      "sha256": "9cf9ff0c626ae897da36fcbbd0903d06adaea7499675dd946561962e1a6d5c30",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S202/agent-context.json",
+      "bytes": 2165,
+      "sha256": "af833feb0e044cc2507ca9a6691eb1f7386deababb515c2194f19d320465a7ea",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S203/agent-context.json",
+      "bytes": 4139,
+      "sha256": "c4ff7d72166a59914685f6bf0bd807936ba7336019bc5d624409c7bf531015e8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S204/agent-context.json",
+      "bytes": 5117,
+      "sha256": "f39c3dab72b1ddb58b61e2bdb5a541447534e99bb32ed6ce10aed39a4a5eab2a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S205/agent-context.json",
+      "bytes": 3763,
+      "sha256": "fdd3c85af0216b82ba6e52cd9aaf06b2d70aaf99eb4289bf6ef3cac0808b9029",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S206/agent-context.json",
+      "bytes": 5301,
+      "sha256": "66d11e0e89c530dcf70750eb418e5583ce09022d47e9eb36f4147d4c11d1938a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S207/agent-context.json",
+      "bytes": 4136,
+      "sha256": "cd520c4100b47cd9c180a0bfc43f869700bac54b0d6fe8a0c93a766d3f0a2b73",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S208/agent-context.json",
+      "bytes": 5636,
+      "sha256": "67b8a06abb1b5a7bd2d1ed42473f98b82c4440abfc5bf4ff90b379bd22e854e7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S209/agent-context.json",
+      "bytes": 4102,
+      "sha256": "a52cf46151da12655d2b8d6f3f2d519d8e03c5c578e633a3a81003e3b6d3856b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S21/agent-context.json",
+      "bytes": 3419,
+      "sha256": "6e62ab19a87d864cbde1802403c88dc1551fd328c9b98e7e6d673e19d5978fff",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S210/agent-context.json",
+      "bytes": 7524,
+      "sha256": "b7c81348f590c9f7de8dfd121c3240f82f6e8c9ce527205cb8da32f3db5acac5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S211/agent-context.json",
+      "bytes": 4895,
+      "sha256": "a76d11ce1dd0c8ef69f506a91c3731db2ece8165f0f6c413d560dec5a174837c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S212/agent-context.json",
+      "bytes": 3934,
+      "sha256": "cdfd0a4bed88595b606c044babe0150821f0f3c4e1d7b04514e4f8a9209973e9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S213/agent-context.json",
+      "bytes": 15563,
+      "sha256": "2b66102b0ddf824bfc1860a017efb9607f29304fc3bc32addb637b7b12832af6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S214/agent-context.json",
+      "bytes": 3443,
+      "sha256": "ae461f1d87643588dcd68fd4e41611c2c5f6fd8014b7ee5f5b6080570dfd0431",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S215/agent-context.json",
+      "bytes": 4048,
+      "sha256": "aecc86d2fc9b8c637e23f84fcb99c93d934e6f032bf934fce39526e1789e7652",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S216/agent-context.json",
+      "bytes": 5515,
+      "sha256": "ebd6c6dafa4329cfff4eba8b62e2c38fe7fc553cc7b8ecaafe04629760d1619a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S217/agent-context.json",
+      "bytes": 3238,
+      "sha256": "196717f6625e6baa97f170e5ac741683918754494fd59d505c396b22d60ef040",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S218-R1/agent-context.json",
+      "bytes": 59752,
+      "sha256": "fcee93863ddfd5c47bf5dbaa32ee2e2305b4e3fabf5e20043dfdfdae949f5a46",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S218-R2-1/agent-context.json",
+      "bytes": 3805,
+      "sha256": "ee8d0d811649b40f59a12bd9e0618e46de3185876e51d575ae84d8e3f49ecd49",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S219/agent-context.json",
+      "bytes": 3907,
+      "sha256": "b310a0be31bf7dada2b459a85181116db64f99577b5340171f98c2920245d45d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S22/agent-context.json",
+      "bytes": 4031,
+      "sha256": "3911ba4c75a21224e26b36b4b891d6343612806f3844f0cf20971146d08ba07a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S220/agent-context.json",
+      "bytes": 12651,
+      "sha256": "30bcd6d754fb165e0c2bd57db31bd3bdd04ebe1c9048cd3b699c591142452207",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S221/agent-context.json",
+      "bytes": 12392,
+      "sha256": "778390d0d57a3f385ac61cca6fbb1ccacbb8ef6f55bf77ab921d0ea9d5ad3abe",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S222/agent-context.json",
+      "bytes": 3427,
+      "sha256": "72cf76c35be3a477fd3dcb3977f7c6ab55ed1c479da43e9762e5741e82b52902",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S223/agent-context.json",
+      "bytes": 11390,
+      "sha256": "a75febae67a0f0dc17e467f661e3fca54f11943858040b57246c182519aa5019",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S224/agent-context.json",
+      "bytes": 3992,
+      "sha256": "7d79ebc83172019b755dfb99e07033395e3ee0b670d39b12da7082965e45d190",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S225/agent-context.json",
+      "bytes": 4912,
+      "sha256": "1d47ed9305547b070899cb45ddf0bbdb322d0a0e7fe540cd20988950d9a40aea",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S226/agent-context.json",
+      "bytes": 2876,
+      "sha256": "211d9e52e067bc0e0d9cc17c7d055bde0d94cc9e70fe17bef04f6697539d2c98",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S227/agent-context.json",
+      "bytes": 4987,
+      "sha256": "8fa5c0f5c57682a8bfd97c1cb487ff7578d26c1cd53a0f190e181a69492b2a4c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S228/agent-context.json",
+      "bytes": 4986,
+      "sha256": "e13b053f12a8a20aee9885172b740707eb645629e8517986805da73f4d663423",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S229/agent-context.json",
+      "bytes": 55273,
+      "sha256": "dd5ef215bc939b8c432573909aff216e610c13041d5211e9dec4be9f43cf5ecf",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S23/agent-context.json",
+      "bytes": 16769,
+      "sha256": "881e4c649bef2fc870b8387bf04b61a54ef0090ce2db18b73d2b510bd17ea2d2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S230/agent-context.json",
+      "bytes": 3969,
+      "sha256": "617cef6db763f16f07cd987475688c2a470af6784ef7c77679dfc9f9ab30f535",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S231/agent-context.json",
+      "bytes": 4897,
+      "sha256": "b9996084d855375e5360c61ae1396841cc6687b5d82f032cc73af70d56737c79",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S232/agent-context.json",
+      "bytes": 3061,
+      "sha256": "20108fcb16153f580325b809167983fa7a6b15ab465926eaf347883d04e20501",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S233/agent-context.json",
+      "bytes": 2622,
+      "sha256": "0a7bd5f718c5744aeacdfad222a51744b1863356573e868aa7e2e3c32f3e3929",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S234/agent-context.json",
+      "bytes": 2764,
+      "sha256": "9539fd7d75302127f5a575da097d9f5780ade5046341acc41bdd28da476591a3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S235/agent-context.json",
+      "bytes": 3510,
+      "sha256": "5c34b5c6ea6a7feb7144db0f77cad71f0f68fb60c2c2fb30a88dd3a5de38f209",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S236-R1-1/agent-context.json",
+      "bytes": 8595,
+      "sha256": "a83500682677a08d180455ecf01f3494e2ff44e21043dc806d806a491e906cc5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S236-R2-1/agent-context.json",
+      "bytes": 9595,
+      "sha256": "a27d5e13e84efc7df3a59b53a29d6b7804142fc99d04ed61a00aa0f64aeb333f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S237/agent-context.json",
+      "bytes": 8237,
+      "sha256": "c8d4f131b860a5b1b683363610536437dbf175a3cb7392493ddce68fac9c6cbc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S24/agent-context.json",
+      "bytes": 7023,
+      "sha256": "fb37173e125fb85f28be626b2cfb795e32b4cce68235b90e3259424e7ae9459d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S25/agent-context.json",
+      "bytes": 3052,
+      "sha256": "172cf2ffe6c68d294102ba9b68aa91aaca35ce780a7f0819519394db6b82bcb4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S26/agent-context.json",
+      "bytes": 13627,
+      "sha256": "081664f91c49fb75f09a7b658c096886a3cddd52a0a4d106f166f047eb2e9c76",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S27/agent-context.json",
+      "bytes": 7888,
+      "sha256": "6a67fb35e57a0a529255df5bfec6e291738b4f1c54a4b3800dc7b16595480f7f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S28/agent-context.json",
+      "bytes": 3124,
+      "sha256": "dacb9706234e7c60d4918f9d872ebd78c737ebf127c5dc5f3f32964bef9186d1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S29/agent-context.json",
+      "bytes": 2215,
+      "sha256": "590f2e0f272f52d11495a2ca6bf9fc1fc3fb37e3d810a2bc85962f11e4e27694",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S3/agent-context.json",
+      "bytes": 2069,
+      "sha256": "b102e9a7aae2dae3c5817cf76f6eed816bdbf9644856da9599086119f9242246",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S30/agent-context.json",
+      "bytes": 5300,
+      "sha256": "02767161f11cdd47d381b3c4f904109f28db29b4335f42baef58697cbc36f584",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S31/agent-context.json",
+      "bytes": 2482,
+      "sha256": "8b6916d3640eac96ed41bee31a19e0215115a812695fffecd64d50cd4de95b55",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S32/agent-context.json",
+      "bytes": 2928,
+      "sha256": "c9f105fd3e128cc2c49da7698eef1343f9650441822d757b6f1b128965139585",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S33/agent-context.json",
+      "bytes": 3436,
+      "sha256": "e817e402826fe57e1c0f02c654934c9efce9f21d9d10ea012c3222f31561fd1b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S34/agent-context.json",
+      "bytes": 3775,
+      "sha256": "7ffebdaf9c3bc0b28eae142b3f09b93c2af505b436f7bdf13e39af091580b9ad",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S35/agent-context.json",
+      "bytes": 9105,
+      "sha256": "7763d365ef4a1769270e6fed9bb84168b8cb73667c4fbb058735ea43aafa0542",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S36/agent-context.json",
+      "bytes": 8734,
+      "sha256": "8fe0c7bac1c5ce38dfff4848a00006bc4279b5c9cb61c1b945fcca0fade76182",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S37/agent-context.json",
+      "bytes": 3903,
+      "sha256": "5f582a806ea7ae1a77a99d8d1884aeaf3e97653d2cf10c41f29fa436b05ff366",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S38/agent-context.json",
+      "bytes": 6211,
+      "sha256": "627ed94e3e704ad78a287410617169788a0691ddf9022421cc78e8c24bc61e05",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S39/agent-context.json",
+      "bytes": 3786,
+      "sha256": "f820d27f6ba18e95318a7a28cc062f32ab29b2e2ae966e107645fe2a81429ca3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S4/agent-context.json",
+      "bytes": 2995,
+      "sha256": "bb3ba7a3e3e4bc030fcd21417200f902222d054a95b2d1d4955b6c663a5041e1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S40/agent-context.json",
+      "bytes": 4171,
+      "sha256": "8eeb0785cb5b2d317766aea38b26a480f232e9125f3190b80d2d55648236c2d6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S41/agent-context.json",
+      "bytes": 2276,
+      "sha256": "70eaad9a58b23ce7f7c97c679573b56dec699a56794c25180442adf4d37159da",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S42/agent-context.json",
+      "bytes": 12357,
+      "sha256": "1c98ecb2693cdf256fe2a2e7e8b260b0cf60c7b4d53c4be64ef2a7f169be7a77",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S43/agent-context.json",
+      "bytes": 5978,
+      "sha256": "89920165e8885d84f770daa3dd01135d316faf3c00d1c278b55563a29c1115b3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S44/agent-context.json",
+      "bytes": 3879,
+      "sha256": "8e8f90c7ba7c5977633ab4b543a3e05789fdb4253a930afc75c3e1bf34add99b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S45/agent-context.json",
+      "bytes": 7889,
+      "sha256": "d1156106a7352831a4a363d440eb3f41fdb10b88a976c00192c8284d48ffe825",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S46/agent-context.json",
+      "bytes": 5130,
+      "sha256": "14e113cb595557a489e2cef9c8f6200090f3966f7b5bcf5195792e2ce4a83996",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S47/agent-context.json",
+      "bytes": 4020,
+      "sha256": "f73c8652a3c9292de7b1aa50383a6c7c0559128ff8d5b7d2d725f65444af2e81",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S48/agent-context.json",
+      "bytes": 4281,
+      "sha256": "d1d2bd117d3a69a35a42d7e6de3f65d27aa637c148dd4fd17c8f6695a03d5d2c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S49/agent-context.json",
+      "bytes": 2456,
+      "sha256": "b5f07d86fd0228a8d0ee9f39ecba23663a6967001f502bc6b8ac7dba88379867",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S5/agent-context.json",
+      "bytes": 5491,
+      "sha256": "a7937ad54df5bba550a50f2eaefafa4686dcd1c5bd0c41803011164029633d97",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S50/agent-context.json",
+      "bytes": 4303,
+      "sha256": "d0d4d867be2fc7edfec80c76ca20dbb59e911d0dea779b8a9b0c6e5da610d208",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S51/agent-context.json",
+      "bytes": 6582,
+      "sha256": "ce34fac8820c79cf4971c53f1554f07d341a5cf7f2b8da66163ded61ac61f476",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S52/agent-context.json",
+      "bytes": 4981,
+      "sha256": "f2da4b7017687944b9cb14924fc2904e2cf6abc73d7e75caeb20d6274731bea4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S53/agent-context.json",
+      "bytes": 5361,
+      "sha256": "41f856113ea05f978539124d8fd4bab556559d191529b090d6c9ccd3acbf2fa0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S54/agent-context.json",
+      "bytes": 5170,
+      "sha256": "ec75c0be798c2c051714615d814cb3d0bfcff18af6cf9c0e1a4f45c9220e33c8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S55/agent-context.json",
+      "bytes": 2954,
+      "sha256": "9bf5c74bbf4099f0ea0bacc5525c911d80728288e0922d5f91c5e0edd7ede9d2",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S56/agent-context.json",
+      "bytes": 5421,
+      "sha256": "17247ecb987273fabca3e4462fb78d4434f2f84fd6c979e45583aade6b96e88b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S57/agent-context.json",
+      "bytes": 4114,
+      "sha256": "4b6b927f97c539a239f46871445ac6877f14256ff75eed0a05f8c6319bdcdd35",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S58/agent-context.json",
+      "bytes": 6850,
+      "sha256": "56ed5362b91cd3a931e6c197ea273564a6c66059aa57ee55a01664d95960a966",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S59/agent-context.json",
+      "bytes": 5247,
+      "sha256": "14b3a0288e70d55dd56ff1da12e40127f0e2aa44bb0736098d1e5949890aedd8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S6/agent-context.json",
+      "bytes": 4202,
+      "sha256": "8a7f8d5a0742cfa9ca598b5775e0322ab81458b46c8bd37c02560ee715fd821b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S60/agent-context.json",
+      "bytes": 14223,
+      "sha256": "069d77d9e2f630591218582d533a92cf0aba848faea5f5ee68dadeae761a410a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S61/agent-context.json",
+      "bytes": 5688,
+      "sha256": "2bbc5bb7b2e116b951d9f00483afa9ee14f53a631fc50ae43318aed854e73b67",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S62/agent-context.json",
+      "bytes": 2945,
+      "sha256": "ace59f5084e00e4b216558ecf9f9e7493d68b0f54627d35d75a4f366a764cbfc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S63/agent-context.json",
+      "bytes": 4842,
+      "sha256": "de7e241071bd7e9263d3b738ee7611c048de3c09b1292df47e0f1695248b2f93",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S64/agent-context.json",
+      "bytes": 5097,
+      "sha256": "d1fe709eb749fcde955cbac8d86e29908bb2af991594e16f25a3acd861c52e0d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S65/agent-context.json",
+      "bytes": 5883,
+      "sha256": "e634946574298730e60a00139dc8ce96d1523f6b7315d22c4f6c7fc78fdf5792",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S66/agent-context.json",
+      "bytes": 3754,
+      "sha256": "b4a6a77226fab43216bd9bd5adf90467c5ad4c8197ea9c07081c2c1517c25941",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S67/agent-context.json",
+      "bytes": 2997,
+      "sha256": "044e136da0d72d3ee784e872ee3a3dd214a98bfc5ebefe7b497d25c752bc031a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S68/agent-context.json",
+      "bytes": 10495,
+      "sha256": "8d6885c2980d87b2e972f7d646fd04047ebfddf16f88acab0e6a463ae4a9d253",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S69/agent-context.json",
+      "bytes": 2864,
+      "sha256": "c10fa82b53a9eed0369bca4c5f829840b24d676fe24c542966decb981253f958",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S7/agent-context.json",
+      "bytes": 4733,
+      "sha256": "54bb6e627372564c6f78a2db8d78a0973e950278a2c869f33e2c56185d113ac0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S70/agent-context.json",
+      "bytes": 3274,
+      "sha256": "fff92aabebd45260a90a943bb9e5b4bb16f55e89e848bb54a5b000afbfb8489f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S71/agent-context.json",
+      "bytes": 7066,
+      "sha256": "41dd1fd16a206fdff080b4760bc960597038bbeb475289b49a854dfb7cf17ba4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S72/agent-context.json",
+      "bytes": 2832,
+      "sha256": "5ae1e9f949808c5c4790d5e429abaaee2aea17c37379bee31e94d92a2b92cec1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S73/agent-context.json",
+      "bytes": 5466,
+      "sha256": "a622f6548ef220c40b02ff0ed1e95d8a6b68f0ef6073af4a3356536fee1f0483",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S74/agent-context.json",
+      "bytes": 3766,
+      "sha256": "62c84fce53c3e1d895e1b32f88e0fcd2cb32ca5052650dfece0978a6a7105ba4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S75/agent-context.json",
+      "bytes": 5213,
+      "sha256": "2b5741e3e1c7dee7ca5f04aa92fda5bebf2abbf2ddc5f6cda3c8f5a5e1ae23c0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S76/agent-context.json",
+      "bytes": 9549,
+      "sha256": "5db49cd97027928d28972ee186d42636ff6d3f3249ee0f978c555bd1bd77d926",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S77/agent-context.json",
+      "bytes": 7930,
+      "sha256": "dd2d11964fd897893c63ba7aa8dc66af79bd9a542c7edc9b3a98de40ec5d529b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S78/agent-context.json",
+      "bytes": 5328,
+      "sha256": "cb1a45d04291bccf95eec0f016c5d4b97d9b96dfe0f8927154693f1806ce12dd",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S79/agent-context.json",
+      "bytes": 6042,
+      "sha256": "b8601eea7833ffcc19d865eda952b6337ced5de81ca2a05fa9454f760c6fda0d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S8/agent-context.json",
+      "bytes": 2232,
+      "sha256": "6e679667c5f8d3d49341de12648c730a64a357bf11a34f6562f000f8fa7d27e1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S80/agent-context.json",
+      "bytes": 5318,
+      "sha256": "8a568ef7adfd282ee898b0de8e8f25876a4e3cc14d3d7b63d39458d00874f535",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S81/agent-context.json",
+      "bytes": 10641,
+      "sha256": "195def7d4e33009d6be2f657ade0fbf507d463379cf731cd66f70162d5b73372",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S82/agent-context.json",
+      "bytes": 3554,
+      "sha256": "79f7f771b6198e039347a35db308990704c11f7dc280bcb346d081d642cfa6eb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S83/agent-context.json",
+      "bytes": 32273,
+      "sha256": "86ed00b45e93ebb719848115b4325b4033c7dc7732170df25bf18e3cddc994a0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S84/agent-context.json",
+      "bytes": 5319,
+      "sha256": "40f4866b33c02ce96392f67b8c38430f04db1970f33eb77aac086c8b3bb314ea",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S85/agent-context.json",
+      "bytes": 17650,
+      "sha256": "eeb98fadce86acb1052b602600bb4db7096a7e6f10bb55028fe2d9eba0884e1e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S86/agent-context.json",
+      "bytes": 2792,
+      "sha256": "1063756727f541e16d97cda5e80c95e71162f2a9173c8601db4966584bcbb974",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S87/agent-context.json",
+      "bytes": 2162,
+      "sha256": "700582984972e5fe47da82824be6cdc972e95c41c22be1d08256ca442ea20f9f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S88/agent-context.json",
+      "bytes": 8986,
+      "sha256": "0543e8539423bbd2353129822c04800879b552e9ef33fd4309964fe806cc3ce4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S89/agent-context.json",
+      "bytes": 7303,
+      "sha256": "56e3ead40f7433ced5e6be681b95f34cf03ade4b5febd0d973f40d0a8a7939fc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S9/agent-context.json",
+      "bytes": 9299,
+      "sha256": "e96dac90d1abdcccc989bf607c7d6f686816f9130d84eb4c0c3c63fb89b5762f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S90/agent-context.json",
+      "bytes": 6697,
+      "sha256": "c23ac940486205aa8990cd9cdb8c6aaddc7159e09868da7e9e8943eb3bd5f698",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S91/agent-context.json",
+      "bytes": 8566,
+      "sha256": "aa416060d751bf83e7b2da850fdc590fb4087c2cc56f1941cee738334ade76ca",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S92/agent-context.json",
+      "bytes": 3221,
+      "sha256": "8ae778cd24320b6303d976c551d6cd08568429125fea8810f8aa360b4dabd4cc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S93/agent-context.json",
+      "bytes": 3690,
+      "sha256": "e294b33cced0aa1f96c86d946fc2b1cc012e291e9dbb864cc7802e983015fab0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S94/agent-context.json",
+      "bytes": 6259,
+      "sha256": "0489015b3353ec6de9feedf806a9788ef928836f5c0697b7d8b17293fcc83f35",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S95/agent-context.json",
+      "bytes": 6365,
+      "sha256": "d8b6f1a335a0fdee14837d2c621ff58221ed3872f4d55c12b13c443f039e267e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S96/agent-context.json",
+      "bytes": 3327,
+      "sha256": "42f3adda1a26cf9b27168e241f6ded0056717993b106bdcc2d33a76d7836b4cb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S97/agent-context.json",
+      "bytes": 3280,
+      "sha256": "546d2671c8cf1c36209a2ce58c9af762a76d8e01bf6553a7580365d2b857938e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S98/agent-context.json",
+      "bytes": 3436,
+      "sha256": "6a229e72383caab3f5a0134fdbeb3a70143e448dcdd8cd6a8d5fa4c30129ee8e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S99/agent-context.json",
+      "bytes": 11024,
+      "sha256": "b66d8f9583f06ac73d3b0394b7e7d92691a77081781756d01be4792f5259b5d7",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/atomic-recall-alignment.v1.json",
+      "bytes": 8290,
+      "sha256": "fc1e61b6d51a1ed2d45fef87be0e3acddf9db0a3923ef9b6a8ecc0e0ac1af888",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/compiler-state.v1.json",
+      "bytes": 262,
+      "sha256": "8b60a9de638cc1d1431244bb3fcd2bb2148dff99066b4fde0f1c5be5eb2eeef4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/execution-record.md",
+      "bytes": 129727,
+      "sha256": "9142ee5f3c4763b63ea072eaf9bda60f4e417a94bf06da4ac217004f7fd9d4d8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/failure-intents.v1.json",
+      "bytes": 647459,
+      "sha256": "e0b68f62e71c573b55194d67f7fea62c2d65af69609e280bf39e637c07fa35d1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/feasibility.v1.json",
+      "bytes": 63,
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/final-plan-coverage.v1.json",
+      "bytes": 3247469,
+      "sha256": "9bfa0ec2dee4ae8f7805203032ef046429b6208e3447ab3b4020e632a31399d6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/obligations.v1.json",
+      "bytes": 477035,
+      "sha256": "db0cdd622d7aed1aad69fd667f4737980f586cb1024320ee9dbefdff488fb932",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/pre-slice-coverage.v1.json",
+      "bytes": 102845,
+      "sha256": "484cb310ff32963e3e1c578efd6b76a798e053deadc1df589cb181b36e7436ba",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-alignment.v1.json",
+      "bytes": 8020,
+      "sha256": "d3d6761c6cc13431b64bb63a5ba228a551d9348d659f23faf8837867b83b4397",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-chain-audit.v1.json",
+      "bytes": 368,
+      "sha256": "403b7a9bbe990ce475d35f14010b8fd1bfd0d15d5087036af90a83bf9f0eeac8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-plan-bundle.v1.json",
+      "bytes": 14265867,
+      "sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/slices.v1.json",
+      "bytes": 2812390,
+      "sha256": "ba65a1ee372dc11692f87f8ae46b35bffedfb6a68228fa45327dd5a1997c8bf6",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/source-index.v1.json",
+      "bytes": 208635,
+      "sha256": "129ce29bb055179053ec376dd0fd4aa915cbba715fd5ffa154a23ad0fa5d1030",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "knowledge/planning-query.toml",
+      "bytes": 172,
+      "sha256": "fe2864ceb58a42b0ff7203e75100e696f2dfd7431b13a5214cffda808129550a",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-bmad-20261028/AUTHORIZATION-UPDATE-20261028T1708.json",
+      "bytes": 1414,
+      "sha256": "f87409fff8e940df89c21a04d45b89271984ba1bd47ef6be3d51bbdb159ca588",
+      "group": "s2-source-identity-input",
+      "mode": 420
+    },
+    {
+      "path": "logs/s2-06-bmad-20261028/source-scope-build-inputs.v1.json",
+      "bytes": 6513,
+      "sha256": "dcd3dfcfad00aefe9dd9140fb454b6e0e34b81c6fd8b8b90e8a0f5e502397a78",
+      "group": "s2-source-identity-input",
+      "mode": 420
+    },
+    {
+      "path": "logs/s2-06-bmad-20261028/source-scope.v1.json",
+      "bytes": 6425,
+      "sha256": "92e4cfa179acf9cad42dd9258b9288f76569e2dc2bb13183877be1ce245f7e86",
+      "group": "s2-source-identity-input",
+      "mode": 420
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/CURRENT-LINUX-NATIVE-PROOF-AND-WINDOWS-BLOCKERS-r73-20261102.json",
+      "bytes": 4475,
+      "sha256": "df22ad7316b295aa7ebf12ab8e062b4d5f09119e4a90f91c730302ffdd5825c0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/LINUX-CLOSURE-AND-WINDOWS-CONTINUATION-READY-20261102.json",
+      "bytes": 6943,
+      "sha256": "fba7afc03cc98f98f57965348462e020bd0b5434d0c2c66d395b6f8df18aa3f3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S215-ROOT-PATH-AUTHORIZATION-20261031.json",
+      "bytes": 983,
+      "sha256": "45376fa35b4b778ad3d5382c9661753e7d0066f9919a0480ac8a9aa9e408dd49",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S215-root-command-v3-repair-r6.json",
+      "bytes": 10971,
+      "sha256": "68278c0706fa0125b122140a1d840a6ec3b14ecb8b82e0184726dadfee7b829b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S215-root-path-v3-repair-r5.json",
+      "bytes": 10845,
+      "sha256": "ce23d29535f87687e7711b069710132825a86f8914e0aba456b834e16fe2975f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S218-runtime-bootstrap-v3-repair-r7-20261101.json",
+      "bytes": 16293,
+      "sha256": "6965993278612e735fc3a6b48e2baa026ef1170e8e44c63c79dc7b63893399ad",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S218-runtime-bootstrap-v3-repair-r7b-20261101.json",
+      "bytes": 16300,
+      "sha256": "aee5df70f4c47ea16ef24dd2353f9723a3ad4d77b482736d155eb24cf28ecb72",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-legacy-fixture-support-v3-repair-r8-20261101.json",
+      "bytes": 25974,
+      "sha256": "23fef008595e2069b3f15170c03229285d36f179e11568c43f269631f1692a54",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/actual-results.xml",
+      "bytes": 445,
+      "sha256": "527d9520c585d89e340da68b304181109a0a3660f64a966e13d396270de54971",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output/test_legacy_route_reader_compa0/legacy-route-reader-trx/_89faf6ef2feb_2026-11-02_11_10_15.trx",
+      "bytes": 280190,
+      "sha256": "7c82dd92d7dd7007be6da69fe3a9520b55cf6608321b0ec263b880fd1dec7988",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output/test_legacy_route_reader_compa0/s206-owned-fixtures-a0711622a6204e16bedf04917d636585.cleanup.json",
+      "bytes": 992423,
+      "sha256": "1246cb69f3876052a8e5ff04f39e1da728bfd5cdb360f8da429d5b3eca790a7e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output/test_o_bc733e9990010/s206-owned-fixtures-8b62fd2303574c94ba7f8f0092eb2de9.cleanup.json",
+      "bytes": 311565,
+      "sha256": "3a0bda6fafb05a455233df25dc9da9fd5893b94fc2b1dce78a8058018b5f4d70",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output/test_o_bc733e9990010/s236-counterexample-trx/_89faf6ef2feb_2026-11-02_11_10_10.trx",
+      "bytes": 16524,
+      "sha256": "c4d1f502b032fa63b3cf319f31c4bbe03d3012908deb1014d1625ab7afa147b5",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/process.json",
+      "bytes": 635,
+      "sha256": "6fa372859d832b9aa9a8baad4070f2514a81a557098ebaf926e95cbba4f2537d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/raw-command.json",
+      "bytes": 1426,
+      "sha256": "6fce8591d32391e55e4f5caa1ac60b4b5b60758d117a0fb0b2a34206ba70f323",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/raw-exit.json",
+      "bytes": 111,
+      "sha256": "02e19cd82ebb762c70ced3037bdf3a69b5de323b67b141b82eb321365839e64e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/stdout.log",
+      "bytes": 4796,
+      "sha256": "7a335528f1f99dd9945c51bf9fe9b10c445b51664949de7fd35a29b4d4d516cf",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-r12-published-semantic-delta-proof-20261102.json",
+      "bytes": 914,
+      "sha256": "9035c4a12f48edd50e84e7fd1be0658a628172347b8983ad20c175f4e3c6f3a0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-r74-portable-required-raw-results-index-20261102.json",
+      "bytes": 964,
+      "sha256": "251807eae937723a9afbfe4754e75ad33758b2b75c560d245aa86b5ff0a5eb48",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-readonly-return-scope-reconciliation-20261102.json",
+      "bytes": 3205,
+      "sha256": "338e6e730ee49f5b0a936bd494ed9859a48f00426df2f21a0a28857d2450045c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-subconsumer-owner-v3-repair-r10-20261102.json",
+      "bytes": 52095,
+      "sha256": "66e182ed679b62ef32ef3a6cfaa4cf9f38de08455b2b9171d4f14c0a3fc8ea8e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-subconsumer-owner-v3-repair-r10b-20261102.json",
+      "bytes": 51633,
+      "sha256": "eef985c9be6272be5033f467a61b306bc41df9df21006fff7c888c8d97f42049",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-terminal-binding-r12-author-delta-20261102.json",
+      "bytes": 1425,
+      "sha256": "6ba65607bf1f82f3b8468dff2f113108503fbebd0e690b346016cd79b174a55d",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-terminal-binding-v3-repair-r12-20261102.json",
+      "bytes": 27693,
+      "sha256": "36f4ca322ddce20ade886fcfbc694fa2de757fae51b87c21ec89f90ecc6f1998",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-terminal-module-native-proof-v3-repair-r11-20261102.json",
+      "bytes": 27273,
+      "sha256": "541e803574a5a82eebdcaf758526f1e6874fcaa1094d0fbaee5d5d547b56c0c0",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/WINDOWS-REMAINING-CURRENT-r12-20261102.json",
+      "bytes": 5487,
+      "sha256": "5223829f9e4d6b0e5cede5e4184ceacc52f18d0ce9dc93a666c4d8439b085013",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/execution-complete.v1.json",
+      "bytes": 181,
+      "sha256": "263d54af385e0e96fcd532b5dac042f62e2d2792cc53776272f91994bdc67bdb",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/execution-input.v1.json",
+      "bytes": 15130,
+      "sha256": "7139e893074da7aa4b5321f66101d16fa4fe302784ec9a509a1cb63fc85c1b55",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/observation.v2.json",
+      "bytes": 645,
+      "sha256": "5a1e6f5386f88287bcc24ae956acd801c9c30a4f12e18b4369dc1bbd4e34ebff",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/process-receipt.v2.json",
+      "bytes": 67482,
+      "sha256": "86afd9cd3512475234f0a1e4a38f7fe87221761d0c6a13494e5aedcaf275b233",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/reuse-complete.v1.json",
+      "bytes": 184,
+      "sha256": "d463c8dbd5be47971b534f1293b2b1198edb6ce0c256a5d443d75148a565d8a3",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/reuse-decision.v1.json",
+      "bytes": 64,
+      "sha256": "5c8871c8bca3a31327a6db7a9430d32575d9260795693824f145e915278c26b4",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/reuse-request.v1.json",
+      "bytes": 274,
+      "sha256": "3e2b6341ad7a5f47420c7c74be1b006789d7fab26302b40d9ca6a2e6c7a38d26",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/stage-result.v2.json",
+      "bytes": 10268,
+      "sha256": "152bec000021976074a47794e33433fec57aec711b7832a6b0ce04ada58bfe1e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/stdout.bin",
+      "bytes": 618,
+      "sha256": "434ce2a83b843538f7b239d01c1d0935e02c9c16d71d062bae472c4317238323",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/descriptors/probe.json",
+      "bytes": 4558,
+      "sha256": "9c5f571c9338efe8d10bc0b15098387b05a0381a526c0fe9c4f4cab7a9f58bed",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/pytest-retention-incident-20261102/CURRENT-HANDOFF.json",
+      "bytes": 4983,
+      "sha256": "493eed35cd6508f696ba9807eb2dbf1acdfbd67921c4e6f88ef3e1af5560253b",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/pytest-retention-incident-20261102/READONLY-INCIDENT-ADDENDUM-20261102.json",
+      "bytes": 7211,
+      "sha256": "96212f0decd9965be079a1b4b4fb6f337312beaab0431edcec7ffd56fb5b4aac",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-capability-leaves.v1.json",
+      "bytes": 6726,
+      "sha256": "59593184c28c1bf1bdd733b4899936319b76023766a939e161c8ee348bcca1fe",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-capability-migration-r3.v1.json",
+      "bytes": 9155,
+      "sha256": "f7c2bfaf6c0dd8d0db69805fb98f9ca5ab28d07334ea4e5e338a49dd96f6f52f",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-capability-migration-r4.v1.json",
+      "bytes": 9389,
+      "sha256": "a5d00e704ede787014bf45e5af170abc3e332cb733c40ffe23047dd3a4e3e91c",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-capability-migration.v1.json",
+      "bytes": 9092,
+      "sha256": "c6d901e85f5b1e8646282a3ba1c5061c53cec775a43a9abb94f886cae79ccdc9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-readback-fixtures-r6.v1.json",
+      "bytes": 9607,
+      "sha256": "46d6dc6a1b69fd43a13ef2056afecaf5b5e354af018ed135b01045178f33d7df",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-readback-fixtures-r7.v1.json",
+      "bytes": 9676,
+      "sha256": "5c51d3b13abcffde7a2e6922f52f8971def7aab51a4b00e35d261837ed997c78",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-root-path-r5.v1.json",
+      "bytes": 9456,
+      "sha256": "065c33a48b3b4c91ab214749c07d60ca4ee86ea40ecff8c6af58df643297c5f9",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-481/test_o_7486ec7571d00/s236-counterexample-trx/_89faf6ef2feb_2026-11-02_11_03_17.trx",
+      "bytes": 111982,
+      "sha256": "d84a8ab10379bf5abbe1dda37e0b6f0a88a641c089a318c544f6eead0b7c54ee",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-481/test_program_detached_preview_0/program-boundary-trx/_89faf6ef2feb_2026-11-02_11_03_25.trx",
+      "bytes": 5161,
+      "sha256": "bf73b22704b06e92f220dcee4616c7b82d9609d5ea40809337ec3d2d875a47a8",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "scripts/skill_baseline.py",
+      "bytes": 72157,
+      "sha256": "0c3c5f9781d994599720f300db02d71fb794d00f10015bcb7afaf45d7b673448",
+      "group": "shared-toolchain-prerequisite",
+      "mode": 384
+    },
+    {
+      "path": "scripts/tests/test_skill_baseline.py",
+      "bytes": 64581,
+      "sha256": "5d4fbb9ec98f4a4689d45f1d61cea75eff79f28ee3ffd83359c1fb56dbab47ed",
+      "group": "shared-toolchain-prerequisite",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/test_approved_source.py",
+      "bytes": 7682,
+      "sha256": "460da43919849e882be38887e440f331cca583cc0bab340cda31830105dd6715",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/test_node_authority.py",
+      "bytes": 24121,
+      "sha256": "50de38c2c53c046b0fb3105a7f46b1faf8d583fbe4c03570015c24694856d768",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/test_node_configuration.py",
+      "bytes": 19363,
+      "sha256": "e72adbf5934ee68732e28d2de5b47c13a55cd5906f6639d048165d79c5884ca1",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/test_node_notice.py",
+      "bytes": 28264,
+      "sha256": "228d75512e14076e8e21e4deba2494c44b326e8e14701132c1171604f856c18e",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/test_node_persistence.py",
+      "bytes": 10974,
+      "sha256": "ff5cbd9a72a9af2f754cb50f0f245e295b5f0527a768592491900aa544673f35",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/test_node_role_closure.py",
+      "bytes": 50252,
+      "sha256": "a5539f4975b1bf7c21ea1cffa79a0d5fe03bb62ddef1e33c434aca54024104cc",
+      "group": "s2-candidate",
+      "mode": 384
+    },
+    {
+      "path": "tests/s2_06/trx_support.py",
+      "bytes": 13373,
+      "sha256": "66cc5a5b34784bed44184e743c15069993e49edbe2d6dd04715c6ca7ff00571a",
+      "group": "s2-candidate",
+      "mode": 384
+    }
+  ],
+  "excluded_tracked_dirty_retained": [
+    "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json",
+    "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+    "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+    "knowledge/indexes/current.json",
+    "knowledge/indexes/last-known-good.json",
+    "knowledge/projections/consumer-projections.v1.json",
+    "knowledge/snapshots/repository-source-snapshot.v1.json"
+  ],
+  "excluded_recovery_materials": "Historical predecessor plans/compiler caches, large repair authoring payloads and older raw histories remain local; current r12 canonical files and r73/r74 selected originals only are published.",
+  "local_original_reports": "A/B outcome is recorded in PUBLICATION-NOTES; full originals are retained locally to avoid publishing personal skill-resource identifiers.",
+  "asserts_complete_replay": false,
+  "authorizes": []
+}

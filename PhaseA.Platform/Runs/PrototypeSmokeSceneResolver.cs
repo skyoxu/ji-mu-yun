@@ -5,7 +5,7 @@ namespace PhaseA.Platform.Runs;
 internal static class PrototypeSmokeSceneResolver
 {
     public static async Task<string?> ResolveLatestAsync(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         ProjectSnapshot project,
         PrototypeRouteStateWriter stateWriter,
         int? goalIndex = null,
@@ -71,7 +71,7 @@ internal static class PrototypeSmokeSceneResolver
     }
 
     private static async Task<string?> ResolveRecordedPrototypeSceneAsync(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         ProjectSnapshot project,
         PrototypeRouteStateWriter stateWriter,
         CancellationToken cancellationToken,

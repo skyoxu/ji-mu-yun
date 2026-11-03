@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -28,10 +30,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var admin = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(admin, Request("Keep Game"));
 
         var result = await service.PurgeProjectsAsync(admin, [created.ProjectId!], "delete");
@@ -47,10 +50,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Purge Game"));
         created.Succeeded.Should().BeTrue();
         var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -89,10 +93,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
 
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(
             ProjectName: "demo-project",
@@ -132,14 +137,15 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new FixedGameTypeMatchService("rpg"));
 
         var result = await service.CreateProjectAsync(accountId, Request("Game One"));
@@ -169,14 +175,15 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new FixedGameTypeMatchService(""));
 
         var result = await service.CreateProjectAsync(accountId, Request("Game One"));
@@ -198,8 +205,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = Guid.NewGuid().ToString("N");
         var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
@@ -235,8 +243,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = Guid.NewGuid().ToString("N");
         var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
@@ -293,8 +302,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = Guid.NewGuid().ToString("N");
         var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
@@ -356,8 +366,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = Guid.NewGuid().ToString("N");
         var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
@@ -429,8 +440,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = Guid.NewGuid().ToString("N");
         var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, accountId, projectId);
@@ -485,14 +497,15 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new InvalidFailureGameTypeMatchService());
 
         var result = await service.CreateProjectAsync(accountId, Request("Game One"));
@@ -510,10 +523,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
 
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(
             ProjectName: "demo-project",
@@ -535,8 +549,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(
             store,
@@ -564,10 +579,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
 
         await service.CreateProjectAsync(accountId, Request("Game One"));
         var first = (await store.ListProjectsAsync(accountId)).Single();
@@ -588,17 +604,19 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var other = await store.CreateUserAccountAsync("phaseb-other", 1);
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
 
         var ownerFirst = await service.CreateProjectAsync(owner, Request("Owner One"));
         await store.SetProjectBootstrapStatusAsync(ownerFirst.ProjectId!, "succeeded", null);
         var ownerSecond = await service.CreateProjectAsync(owner, Request("Owner Two"));
         await store.SetProjectBootstrapStatusAsync(ownerSecond.ProjectId!, "succeeded", null);
         var ownerThird = await service.CreateProjectAsync(owner, Request("Owner Three"));
+        using var otherCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(other.Token)));
         var otherFirst = await service.CreateProjectAsync(other.AccountId, Request("Other One"));
 
         ownerThird.Succeeded.Should().BeFalse();
@@ -613,14 +631,15 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var service = new ProjectCreationService(
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             creationConcurrencyLimiter: new ProjectCreationConcurrencyLimiter(2, 2));
 
         var first = await service.CreateProjectAsync(accountId, Request("Game One"));
@@ -636,8 +655,9 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var limiter = new ProjectCreationConcurrencyLimiter(2, 1);
         var held = await limiter.TryAcquireAsync(accountId);
@@ -645,7 +665,7 @@ public sealed class ProjectCreationServiceTests
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             creationConcurrencyLimiter: limiter);
 
         try
@@ -670,10 +690,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game One"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -694,14 +715,16 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var other = await store.CreateUserAccountAsync("phaseb-delete-other", 1);
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(owner, Request("Owner Game"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
 
+        using var otherCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(other.Token)));
         var deleted = await service.DeleteProjectAsync(other.AccountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
 
         deleted.Succeeded.Should().BeFalse();
@@ -715,12 +738,15 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var admin = await store.EnsureSingleAdminAsync();
         var owner = await store.CreateUserAccountAsync("phaseb-delete-owned", 1);
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
-        var created = await service.CreateProjectAsync(owner.AccountId, Request("Owner Game"));
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
+        ProjectCreationResult created;
+        using (S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(owner.Token))))
+            created = await service.CreateProjectAsync(owner.AccountId, Request("Owner Game"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
 
@@ -738,10 +764,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var first = await service.CreateProjectAsync(accountId, Request("Game One"));
         await store.SetProjectBootstrapStatusAsync(first.ProjectId!, "succeeded", null);
         var second = await service.CreateProjectAsync(accountId, Request("Game Two"));
@@ -821,10 +848,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game One"));
 
         var deleted = await service.DeleteProjectAsync(accountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
@@ -839,10 +867,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game One"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var runId = await store.CreateRunAsync(created.ProjectId!, created.WorkspaceId, "prototype-draft-analysis");
@@ -860,10 +889,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game Cancel"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var runId = await store.CreateRunAsync(created.ProjectId!, created.WorkspaceId, "prototype-draft-analysis");
@@ -882,10 +912,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game One"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "failed", "hard checks failed");
         var snapshot = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -903,10 +934,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game One"));
         var runId = await store.CreateRunAsync(created.ProjectId!, created.WorkspaceId, "chapter2-bootstrap");
         await store.MarkRunStartedAsync(runId);
@@ -937,10 +969,11 @@ public sealed class ProjectCreationServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, Request("Game One"));
 
         var orphaned = await store.ListOrphanedProjectInitializationsAsync();
@@ -958,7 +991,7 @@ public sealed class ProjectCreationServiceTests
 
     private static PhaseAPlatformOptions Options(string workspaceRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

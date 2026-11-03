@@ -15,7 +15,7 @@ public sealed class PrototypeRepairPlanService
         IgnoreRules: true,
         ReasoningEffort: "minimal");
 
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly PrototypeQuickFixService _quickFixService;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
@@ -23,7 +23,7 @@ public sealed class PrototypeRepairPlanService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public PrototypeRepairPlanService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         PrototypeQuickFixService quickFixService,
         ICodexChatClient? codexChatClient = null)
         : this(metadataStore, quickFixService, new PrototypeRouteStateWriter(), new PrototypeContractService(), codexChatClient)
@@ -31,7 +31,7 @@ public sealed class PrototypeRepairPlanService
     }
 
     public PrototypeRepairPlanService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         PrototypeQuickFixService quickFixService,
         PrototypeRouteStateWriter stateWriter,
         PrototypeContractService? contractService = null,
@@ -66,6 +66,7 @@ public sealed class PrototypeRepairPlanService
         var failureText = BuildFailureText(project, failedRun);
         var planContext = BuildPlanContext(project, prototypeContract, failedRun, failureText, routeProfile, promptAuthorities);
         var goals = await BuildRepairGoalsAsync(project, planContext, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var summary = $"已基于最近一次失败生成 {goals.Count} 个修复任务。请逐项执行，最后一步必须做全量验收。";
         var session = await _metadataStore.CreateProjectIterationSessionAsync(
             accountId,
@@ -82,6 +83,7 @@ public sealed class PrototypeRepairPlanService
         await _metadataStore.UpdateProjectIterationSessionStatusAsync(session.SessionId, "ready", 0, summary, null, null, cancellationToken);
 
         var details = await _metadataStore.GetLatestProjectIterationSessionAsync(project.ProjectId, SourceKind, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         _stateWriter.WriteRepairPlanState(project, new
         {
             route = "repair-plan",

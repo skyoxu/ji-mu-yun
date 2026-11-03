@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,21 +31,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.AddProjectChatMessageAsync(accountId, projectId, "user", "I want a cozy RPG loop.", null, 50);
         await store.AddProjectChatMessageAsync(accountId, projectId, "assistant", "Focus on exploration and battles.", null, 50);
         await store.UpsertProjectChatMemoryAsync(accountId, projectId, "The project is a cozy RPG prototype.", "session-1");
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -187,9 +186,12 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
-        var accountId = (await store.CreateUserAccountAsync("account-guide-boundary", 10)).AccountId;
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
+        var account = await store.CreateUserAccountAsync("account-guide-boundary", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
+        var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var catalog = new BmadGameTypeDesignCatalog(options);
         var approvedEntry = catalog.Find("rpg")!;
@@ -206,12 +208,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             .First(item => !approvedChunkHashes.Contains(item.ContentHash))
             .Content;
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -232,17 +229,15 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
-        var accountId = (await store.CreateUserAccountAsync("account-raw-prompt-boundary", 10)).AccountId;
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
+        var account = await store.CreateUserAccountAsync("account-raw-prompt-boundary", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
+        var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -263,18 +258,15 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId, "Deckbuilder");
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -308,9 +300,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -320,12 +314,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         var existingOutline = """{"title":"Existing","summary":"Keep","sections":[]}""";
         await File.WriteAllTextAsync(outlinePath, existingOutline);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -344,9 +333,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
@@ -356,12 +347,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), existingOutline);
         await File.WriteAllTextAsync(Path.Combine(gddDir, "GDD.md"), existingGdd);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateForAuthorityRecoveryAsync(
             account.AccountId,
@@ -396,9 +382,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var gddDir = Path.Combine(project!.RepoPath, "docs", "gdd");
@@ -410,12 +398,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         await File.WriteAllTextAsync(outlinePath, existingOutline);
         await File.WriteAllTextAsync(gddPath, existingGdd);
         var runner = new FakeHostedProcessRunner { ExitCode = 17, ShouldWriteOutline = false };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateForAuthorityRecoveryAsync(
             account.AccountId,
@@ -437,22 +420,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             ModelCapacityFailuresBeforeSuccess = 3
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5),
-            modelCapacityRetryDelay: TimeSpan.Zero);
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), modelCapacityRetryDelay: TimeSpan.Zero, heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -474,22 +453,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             ModelCapacityFailuresBeforeSuccess = 4
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5),
-            modelCapacityRetryDelay: TimeSpan.Zero);
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), modelCapacityRetryDelay: TimeSpan.Zero, heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -515,18 +490,15 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var database = TempSqliteDatabase.Create();
         WriteGameTypeTemplate(repoRoot.Root, "rpg", "Edited RPG Template", "custom-edited-rpg-marker");
         var options = Options(workspace.Root, repoRoot.Root);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -548,18 +520,15 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var database = TempSqliteDatabase.Create();
         WriteGameTypeTemplate(repoRoot.Root, "rpg", "Edited RPG Template", "custom-edited-rpg-marker");
         var options = Options(workspace.Root, repoRoot.Root);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId, "custom-action");
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -580,9 +549,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId, "Phantom Tower");
         await store.AddProjectChatMessageAsync(
@@ -598,12 +569,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             "用户要做第三人称动作 Roguelike，参考游戏是 Phantom Tower，但玩法是随机地城、波次刷怪、死亡保留灵魂货币。",
             "session-1");
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -631,18 +597,15 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId, "custom-design");
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -705,9 +668,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -727,12 +692,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             ExitCode = 17,
             ShouldWriteOutline = false
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -751,18 +711,15 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new UserCancelHostedProcessRunner(store, accountId);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -785,21 +742,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             OutlineMode = FakeOutlineMode.GarbledDraft
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -821,21 +775,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             OutlineMode = FakeOutlineMode.ThinDraft
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -857,21 +808,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             OutlineMode = FakeOutlineMode.PlaceholderDraft
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -893,21 +841,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             OutlineMode = FakeOutlineMode.MissingUiUxDraft
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -929,21 +874,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             OutlineMode = FakeOutlineMode.UiSubstringOnlyDraft
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -960,21 +902,18 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner
         {
             OutlineMode = FakeOutlineMode.GenericTitleRealDraft
         };
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CreateAsync(
             accountId,
@@ -993,9 +932,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1010,12 +951,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.ExportOutlineMarkdownAsync(accountId, projectId);
 
@@ -1032,9 +968,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1049,12 +987,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.ReadOutlineAsync(accountId, projectId);
 
@@ -1070,9 +1003,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1087,12 +1022,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var action = async () => await service.ExportOutlineMarkdownAsync(accountId, projectId);
 
@@ -1106,9 +1036,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1116,12 +1048,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         Directory.CreateDirectory(gddDir);
         await File.WriteAllTextAsync(Path.Combine(gddDir, "gdd-outline.json"), """{"title":"Outline","summary":"Summary","sections":[]}""");
         await File.WriteAllTextAsync(Path.Combine(gddDir, "GDD.md"), "# Old GDD");
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.DeleteOutlineAsync(accountId, projectId);
 
@@ -1140,9 +1067,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1159,12 +1088,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             }
             """);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CompleteMissingSectionsAsync(
             accountId,
@@ -1217,9 +1141,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1238,12 +1164,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             }
             """);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CompleteMissingSectionsAsync(
             accountId,
@@ -1281,9 +1202,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1303,12 +1226,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         var runner = new FakeHostedProcessRunner();
         runner.NonZeroExitSectionIds.Add("m2");
         runner.SkipDraftSectionIds.Add("m2");
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CompleteMissingSectionsAsync(
             accountId,
@@ -1339,9 +1257,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1359,12 +1279,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             """);
         var runner = new FakeHostedProcessRunner();
         runner.WriteBomSectionIds.Add("m1");
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.CompleteMissingSectionsAsync(
             accountId,
@@ -1386,9 +1301,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1405,12 +1322,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             }
             """);
         var runner = new FakeHostedProcessRunner();
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, runner, new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.SaveSectionAsync(
             accountId,
@@ -1436,9 +1348,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1464,12 +1378,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.SaveSectionAsync(
             accountId,
@@ -1502,9 +1411,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1530,12 +1441,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.SaveSectionAsync(
             accountId,
@@ -1560,9 +1466,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1588,12 +1496,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var outline = await service.ReadOutlineAsync(accountId, projectId);
 
@@ -1616,9 +1519,11 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
         var projectId = await CreateProjectAsync(store, options, accountId, "Phantom Tower");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1638,12 +1543,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
               ]
             }
             """);
-        var service = new GameDesignDocumentService(
-            store,
-            options,
-            new FakeHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(5));
+        var service = new GameDesignDocumentService(store, options, new FakeHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(5), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var exportResult = await service.ExportOutlineMarkdownAsync(accountId, projectId);
 
@@ -1690,7 +1590,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new FakeGameTypeMatchService(gameType, options));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
@@ -1775,7 +1675,7 @@ public sealed class GameDesignDocumentServiceTests : IClassFixture<HostedSourceR
     private PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
         var resolvedRepoRoot = _sourceFixture.RepositoryRoot(ResolveRepositoryRoot(repoRoot));
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

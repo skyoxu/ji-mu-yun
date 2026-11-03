@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -70,7 +71,7 @@ public sealed class S40BoundaryTests
     public void O_2B15F2179A84()
     {
         using var fixture = S40Fixture.Create();
-        _ = new WorkspaceStorageService(fixture.ConnectionString).GetQuota(fixture.AccountId);
+        _ = new CentralWorkspaceStorageBackend(fixture.ConnectionString).GetQuota(fixture.AccountId);
         var evidence = fixture.ReadRouteRecoveryEvidence();
 
         Require(
@@ -89,7 +90,7 @@ public sealed class S40BoundaryTests
     {
         using var fixture = S40Fixture.Create();
         fixture.SeedInterruptedAttempt("pre-commit-attempt", "verified");
-        _ = new RestoreService(fixture.ConnectionString);
+        _ = new CentralRestoreBackend(fixture.ConnectionString);
         var state = fixture.ReadAttemptById("pre-commit-attempt");
 
         Require(
@@ -105,7 +106,7 @@ public sealed class S40BoundaryTests
     public void O_3618B7A10715()
     {
         using var fixture = S40Fixture.Create();
-        var service = new RestoreService(fixture.ConnectionString);
+        var service = new CentralRestoreBackend(fixture.ConnectionString);
         var first = service.RestorePrepared(fixture.Context, fixture.Manifest, fixture.SourceRoot, fixture.DestinationRoot, fixture.Lease, "equivalent-request");
         var second = service.RestorePrepared(fixture.Context, fixture.Manifest, fixture.SourceRoot, fixture.DestinationRoot, fixture.Lease, "equivalent-request");
 
@@ -182,7 +183,7 @@ public sealed class S40BoundaryTests
     {
         using var fixture = S40Fixture.Create();
         fixture.SeedInterruptedAttempt("post-verification-attempt", "verified");
-        _ = new RestoreService(fixture.ConnectionString);
+        _ = new CentralRestoreBackend(fixture.ConnectionString);
         var state = fixture.ReadAttemptById("post-verification-attempt");
 
         Require(
@@ -202,7 +203,7 @@ public sealed class S40BoundaryTests
         var denied = false;
         try
         {
-            _ = new RestoreService(fixture.ConnectionString).RestorePrepared(
+            _ = new CentralRestoreBackend(fixture.ConnectionString).RestorePrepared(
                 unauthorized,
                 fixture.Manifest,
                 fixture.SourceRoot,
@@ -269,7 +270,7 @@ public sealed class S40BoundaryTests
                 Pooling = false
             }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = root,
@@ -333,7 +334,7 @@ public sealed class S40BoundaryTests
             return new S40Fixture(root, connectionString, manifest, context, lease);
         }
 
-        public RestoreAttempt Restore(string key) => new RestoreService(ConnectionString).RestorePrepared(Context, Manifest, SourceRoot, DestinationRoot, Lease, key);
+        public RestoreAttempt Restore(string key) => new CentralRestoreBackend(ConnectionString).RestorePrepared(Context, Manifest, SourceRoot, DestinationRoot, Lease, key);
 
         public AttemptRow? ReadAttempt(string key)
         {

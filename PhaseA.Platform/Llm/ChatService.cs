@@ -20,9 +20,9 @@ public sealed class ChatService
     private const int MaxChatMemoryChars = 1500;
     private const int MaxMemorySourceChars = 400;
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
-    private readonly LlmBindingService _llmBindingService;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
+    private readonly NodeLlmBindingReader _llmBindingService;
     private readonly LlmStopLossService _llmStopLossService;
     private readonly INewApiChatClient _chatClient;
     private readonly ILlmRouteEngine _llmRouteEngine;
@@ -33,20 +33,21 @@ public sealed class ChatService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public ChatService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
-        LlmBindingService llmBindingService,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
+        NodeLlmBindingReader llmBindingService,
         LlmStopLossService llmStopLossService,
         INewApiChatClient chatClient,
         ICodexChatClient codexChatClient)
-        : this(metadataStore, options, llmBindingService, llmStopLossService, chatClient, codexChatClient, new ProjectWorkspaceSeeder(options), new SkillActionCatalog())
     {
+        // ADR-0061 AD20: compatibility never constructs an implicit producer.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public ChatService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
-        LlmBindingService llmBindingService,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
+        NodeLlmBindingReader llmBindingService,
         LlmStopLossService llmStopLossService,
         INewApiChatClient chatClient,
         ICodexChatClient codexChatClient,
@@ -155,6 +156,8 @@ public sealed class ChatService
         var memorySummary = memory?.MemorySummary;
         var messages = BuildMessages(request, memorySummary);
         var completion = await _chatClient.CompleteAsync(binding, token, model, messages, runToken);
+        // AD19/20: gateway completion cannot retain a stale workspace binding.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var exitCode = completion.Succeeded ? 0 : 1;
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
@@ -250,6 +253,8 @@ public sealed class ChatService
                     OperationKey: "llm:project-chat",
                     ContextEnvelope: envelope),
                 runToken);
+        // AD19/20: a model wait does not retain authority over a replaced workspace.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var status = completion.Succeeded ? "succeeded" : "failed";
         var sanitizedAssistantMessage = PublicChatSanitizer.Sanitize(completion.AssistantMessage);
         var stdout = sanitizedAssistantMessage ?? "";

@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -20,6 +22,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPrototypeMissing_RecommendsPrototypeCreation()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
 
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
 
@@ -63,6 +66,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenSkeletonAcceptedButNoPlan_RecommendsIterationPlan()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
 
         var result = await fixture.Service.QueryAsync(fixture.AccountId, fixture.ProjectId);
@@ -76,6 +80,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenIterationHasPendingGoal_RecommendsExecuteNextGoal()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["pending", "pending"]);
 
@@ -89,6 +94,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenIterationHasNeedsFixGoal_RecommendsNeedsFixRoute()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "needs_fix"]);
 
@@ -102,6 +108,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenIterationCompletedButNoPostIterationAcceptance_RecommendsPrototypeAcceptance()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
 
@@ -117,6 +124,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenOnlyOldValidationPredatesCompletedIteration_RecommendsPrototypeAcceptance()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.SeedValidationOnlyRunAsync("succeeded");
         await Task.Delay(20);
@@ -132,6 +140,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenOnlyOldFailedValidationPredatesCompletedIteration_RecommendsPrototypeAcceptance()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.SeedValidationOnlyRunAsync("failed");
         await Task.Delay(20);
@@ -148,6 +157,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenLatestValidationSucceedsAfterFailure_MarksAcceptanceDone()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
         await fixture.SeedValidationOnlyRunAsync("failed");
@@ -166,6 +176,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenUiOptimizationRunsExist_DoesNotExposeUiOptimizationAsMainStep()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedUiOptimizationRunAsync("failed");
         await Task.Delay(20);
         await fixture.SeedUiOptimizationRunAsync("succeeded");
@@ -180,6 +191,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPackageExists_RecommendsDownload()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
         await Task.Delay(20);
@@ -202,6 +214,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPackageExistsForDragonQuestLikeRoute_UsesGenericActions()
     {
         var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
         await Task.Delay(20);
@@ -223,6 +236,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPackageExistsAndUiOptimizationAlreadySucceeded_UsesGenericActions()
     {
         var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
         await Task.Delay(20);
@@ -246,6 +260,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPackageExistsForGenericRoute_DoesNotRecommendSpecializedUiOrAssets()
     {
         var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "platformer");
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded", "succeeded"]);
         await Task.Delay(20);
@@ -267,6 +282,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPlaytestFeedbackAndPackageExists_RecommendsNextIterationPlan()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded"]);
         await Task.Delay(20);
@@ -287,6 +303,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task QueryAsync_WhenPlaytestFeedbackAndUiOptimizationAlreadySucceeded_HidesUiOptimizationAction()
     {
         var fixture = await WorkflowFixture.CreateAsync(gameTypeSource: "勇者斗恶龙");
+        using var current = fixture.EnterCurrent();
         await fixture.SeedPrototypeCreationAsync("succeeded");
         await fixture.CreateIterationSessionAsync(["succeeded"]);
         await Task.Delay(20);
@@ -308,6 +325,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task ClassifyIntentAsync_WhenLlmRoutesNextStep_ReturnsRouteIntent()
     {
         var fixture = await WorkflowFixture.CreateAsync("""{"shouldRoute":true,"intent":"next_step","routeReason":"用户询问下一步","feedbackSummary":""}""");
+        using var current = fixture.EnterCurrent();
 
         var result = await fixture.Service.ClassifyIntentAsync(
             fixture.AccountId,
@@ -324,6 +342,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task ClassifyIntentAsync_ShouldIssueHostedContextEnvelope()
     {
         var fixture = await WorkflowFixture.CreateAsync();
+        using var current = fixture.EnterCurrent();
         var llm = new CapturingLlmRouteEngine("""{"shouldRoute":true,"intent":"next_step","routeReason":"next","feedbackSummary":""}""");
         var issuer = new HostedContextManifestIssuer(
             fixture.Store,
@@ -351,6 +370,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task ClassifyIntentAsync_WhenUserAsksHowToStartCreatingGame_RoutesWithoutLlm()
     {
         var fixture = await WorkflowFixture.CreateAsync("""{"shouldRoute":false,"intent":"general_chat","routeReason":"","feedbackSummary":""}""");
+        using var current = fixture.EnterCurrent();
 
         var result = await fixture.Service.ClassifyIntentAsync(
             fixture.AccountId,
@@ -366,6 +386,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task ClassifyIntentAsync_WhenLlmRoutesPlaytestFeedback_ReturnsFeedbackSummary()
     {
         var fixture = await WorkflowFixture.CreateAsync("""{"shouldRoute":true,"intent":"playtest_feedback","routeReason":"用户描述试玩问题","feedbackSummary":"战斗反馈不足，需要二次迭代。"}""");
+        using var current = fixture.EnterCurrent();
 
         var result = await fixture.Service.ClassifyIntentAsync(
             fixture.AccountId,
@@ -382,6 +403,7 @@ public sealed class ProjectWorkflowRouteServiceTests
     public async Task ClassifyIntentAsync_WhenLlmMarksGeneralChatAsRoute_DisablesRouting()
     {
         var fixture = await WorkflowFixture.CreateAsync("""{"shouldRoute":true,"intent":"general_chat","routeReason":"模型误判","feedbackSummary":""}""");
+        using var current = fixture.EnterCurrent();
 
         var result = await fixture.Service.ClassifyIntentAsync(
             fixture.AccountId,
@@ -418,6 +440,9 @@ public sealed class ProjectWorkflowRouteServiceTests
             Service = service;
         }
 
+        public RequestContext Context { get; private set; } = null!;
+        public IDisposable? EnterCurrent() => S206TestSupport.EnterCurrentContext(Context);
+
         public PhaseAPlatformOptions Options { get; }
 
         public PhaseAMetadataStore Store { get; }
@@ -440,18 +465,20 @@ public sealed class ProjectWorkflowRouteServiceTests
             var database = TempSqliteDatabase.Create();
             var workspaceRoot = TempDirectory.Create("phase-a-workflow-route-workspaces");
             var repoRoot = TempDirectory.Create("phase-a-workflow-route-repo");
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot.Path,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot.Path, "metadata.sqlite3"),
                 ["PHASEA_REPOSITORY_ROOT"] = repoRoot.Path
             });
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var accountId = await store.EnsureSingleAdminAsync();
+            var context = await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash);
+            using var current = S206TestSupport.EnterCurrentContext(context);
             var projectId = await CreateProjectAsync(store, options, accountId, gameTypeSource);
             var service = CreateService(store, options, llmJson);
-            return new WorkflowFixture(database, workspaceRoot, repoRoot, options, store, accountId, projectId, service);
+            return new WorkflowFixture(database, workspaceRoot, repoRoot, options, store, accountId, projectId, service) { Context = context };
         }
 
         public async Task SeedPrototypeCreationAsync(string status)
@@ -548,6 +575,7 @@ public sealed class ProjectWorkflowRouteServiceTests
             HostedContextManifestIssuer? contextManifestIssuer = null)
         {
             var codex = new FakeCodexClient(llmJson);
+            var queue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store);
             var workflow = new PrototypeWorkflowService(
                 store,
                 options,
@@ -557,18 +585,18 @@ public sealed class ProjectWorkflowRouteServiceTests
                 new PrototypeArtifactIndexer(),
                 new LlmBindingService(store, options),
                 new LlmStopLossService(store, options),
-                new ProjectWorkspaceSeeder(options),
-                new GameTypeTemplateCatalog(options));
-            var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner());
+                new ProjectWorkspaceSeeder(options, store),
+                new GameTypeTemplateCatalog(options), heavyRunnerQueue: queue, prototypeCreationQueue: queue);
+            var quickFix = new PrototypeQuickFixService(store, options, new NoopRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: queue);
             var repair = new PrototypeRepairPlanService(store, quickFix, new PrototypeRouteStateWriter(), llmRouteEngine: new LlmRouteEngine(codex));
-            var packages = new ProjectPackageService(store, options);
-            var inventory = new ProjectAssetInventoryService(store, options, codex, new ProjectWorkspaceSeeder(options), new LlmRouteEngine(codex));
+            var packages = new ProjectPackageService(store, options, queue, processRunner: new NoopRunner());
+            var inventory = new ProjectAssetInventoryService(store, options, codex, new ProjectWorkspaceSeeder(options, store), new LlmRouteEngine(codex), heavyRunnerQueue: queue);
             return new ProjectWorkflowRouteService(store, options, workflow, repair, packages, inventory, llmRouteEngine ?? new LlmRouteEngine(codex), contextManifestIssuer: contextManifestIssuer);
         }
 
         private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId, string gameTypeSource)
         {
-            var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+            var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
             var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
             await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
             return result.ProjectId!;

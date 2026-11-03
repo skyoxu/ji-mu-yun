@@ -9,7 +9,7 @@ internal static class GodotFailureDiagnosticService
     private const int MaxExcerptLength = 1600;
 
     public static async Task<GodotFailureDiagnostic> AnalyzeLatestAsync(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         ProjectSnapshot project,
         CancellationToken cancellationToken = default)
     {

@@ -19,8 +19,8 @@ public sealed class GameDesignSceneRouteService
     private const int MaxTransitions = 16;
     private static readonly TimeSpan DefaultSceneRouteGenerationTimeout = TimeSpan.FromSeconds(120);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
     private readonly ProjectGameTypeMatchBackfillService? _gameTypeMatchBackfill;
@@ -28,8 +28,8 @@ public sealed class GameDesignSceneRouteService
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public GameDesignSceneRouteService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ILlmRouteEngine llmRouteEngine,
         QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
         ProjectGameTypeMatchBackfillService? gameTypeMatchBackfill = null,
@@ -55,7 +55,7 @@ public sealed class GameDesignSceneRouteService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        var project = await _metadataStore.GetOwnedProjectSnapshotAsync(accountId, projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return null;
@@ -65,6 +65,7 @@ public sealed class GameDesignSceneRouteService
             project = await _gameTypeMatchBackfill.EnsureResolvedAsync(project, cancellationToken);
         }
 
+        project = await RequireCurrentProjectAsync(project, cancellationToken);
         var message = Trim(request.Message, MaxMessageChars);
         var answers = NormalizeAnswers(request.Answers);
         var model = PrototypeModelPolicy.Normalize(request.Model);
@@ -73,10 +74,12 @@ public sealed class GameDesignSceneRouteService
         var concurrency = await _concurrencyLimiter.TryAcquireAsync(accountId, cancellationToken);
         if (concurrency.Lease is null)
         {
+            project = await RequireCurrentProjectAsync(project, cancellationToken);
             return RateLimited(project, SceneRouteConcurrencyFailureCode(concurrency.FailureCode));
         }
 
         await using var lease = concurrency.Lease;
+        project = await RequireCurrentProjectAsync(project, cancellationToken);
         using var timeout = new CancellationTokenSource(_sceneRouteGenerationTimeout);
         using var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
         HostedContextEnvelope? envelope;
@@ -97,6 +100,7 @@ public sealed class GameDesignSceneRouteService
         }
         catch (InvalidOperationException)
         {
+            project = await RequireCurrentProjectAsync(project, cancellationToken);
             return Fallback(project, "context_manifest_issue_failed");
         }
 
@@ -118,13 +122,16 @@ public sealed class GameDesignSceneRouteService
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
+            project = await RequireCurrentProjectAsync(project, cancellationToken);
             return Fallback(project, "scene_route_timeout");
         }
         catch (JsonException)
         {
+            project = await RequireCurrentProjectAsync(project, cancellationToken);
             return Fallback(project, "invalid_json");
         }
 
+        project = await RequireCurrentProjectAsync(project, cancellationToken);
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
         {
             return Fallback(project, completion.FailureCode ?? "llm_failed");
@@ -144,6 +151,20 @@ public sealed class GameDesignSceneRouteService
         {
             return Fallback(project, "invalid_json");
         }
+    }
+
+    // ADR-0061 AD19/20: model wait/fallback never retains prior project authority.
+    private async Task<ProjectSnapshot> RequireCurrentProjectAsync(ProjectSnapshot supplied, CancellationToken cancellationToken)
+    {
+        var current = await _metadataStore.GetProjectSnapshotAsync(supplied.ProjectId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        bool SamePath(string left, string right) => string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), comparison);
+        if (current.AccountId != supplied.AccountId || current.WorkspaceId != supplied.WorkspaceId ||
+            !SamePath(current.WorkspaceRootPath, supplied.WorkspaceRootPath) || !SamePath(current.RepoPath, supplied.RepoPath) ||
+            !SamePath(current.RuntimePath, supplied.RuntimePath) || !SamePath(current.MetaPath, supplied.MetaPath))
+            throw new UnauthorizedAccessException("current_project_paths_required");
+        return current;
     }
 
     private static string BuildContextSnapshotId(ProjectSnapshot project)
@@ -191,7 +212,7 @@ public sealed class GameDesignSceneRouteService
 
     internal static GameDesignSceneRouteDocument BuildFallbackSceneRoute(
         ProjectSnapshot project,
-        PhaseAPlatformOptions? options = null)
+        NodeExecutionOptions? options = null)
     {
         var defaultContractRoute = BuildFallbackSceneRouteFromDefaultContract(project, options);
         if (defaultContractRoute is not null)
@@ -284,7 +305,7 @@ public sealed class GameDesignSceneRouteService
 
     private static GameDesignSceneRouteDocument? BuildFallbackSceneRouteFromDefaultContract(
         ProjectSnapshot project,
-        PhaseAPlatformOptions? options)
+        NodeExecutionOptions? options)
     {
         var evidence = ProjectGameTypeMatchEvidence.FromJson(project.GameTypeMatchJson);
         var snapshotRoute = BuildFallbackSceneRouteFromContractSnapshot(evidence.ContractSnapshot);
@@ -303,7 +324,7 @@ public sealed class GameDesignSceneRouteService
             return null;
         }
 
-        var entry = new BmadGameTypeDesignCatalog(options).Find(evidence.MatchedGameTypeId);
+        var entry = new BmadGameTypeDesignCatalog(options.RepositoryRoot).Find(evidence.MatchedGameTypeId);
         if (entry is null || string.IsNullOrWhiteSpace(entry.GuideExcerpt))
         {
             return null;
@@ -606,7 +627,7 @@ public sealed class GameDesignSceneRouteService
             return "(none)";
         }
 
-        var entry = new BmadGameTypeDesignCatalog(_options).Find(evidence.MatchedGameTypeId);
+        var entry = new BmadGameTypeDesignCatalog(_options.RepositoryRoot).Find(evidence.MatchedGameTypeId);
         if (entry is null || string.IsNullOrWhiteSpace(entry.GuideExcerpt))
         {
             return "(none)";

@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -53,7 +54,7 @@ public sealed class S62BoundaryTests
                 command.Parameters.AddWithValue("$account", lease.AccountId);
                 command.Parameters.AddWithValue("$project", lease.ProjectId);
                 command.Parameters.AddWithValue("$fence", lease.Fence);
-                new RestoreService(connectionString);
+                new CentralRestoreBackend(connectionString);
                 command.ExecuteNonQuery();
             }
 
@@ -82,7 +83,7 @@ public sealed class S62BoundaryTests
             {
                 Files = manifest.Files.SetItem(0, manifest.Files[0] with { Length = manifest.Files[0].Length + 1 }),
             };
-            var service = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
+            var service = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
             var cancelled = service.RestorePrepared(context, badHash, source.FullName, destination.FullName, lease, "s62-cancelled");
             var failed = service.RestorePrepared(context, badSize, source.FullName, destination.FullName, lease, "s62-failed");
 

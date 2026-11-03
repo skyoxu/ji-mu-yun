@@ -112,3 +112,19 @@ Use `runtime/phase-a/start-phasea.ps1` for the live process. Ordinary
 - `../docs/architecture/ADR_INDEX_PHASE.md`
 - `../docs/standards/phase-service.md`
 - `AGENTS.md`
+
+## Local node notice contract
+
+The trusted composition root selects `CentralNoticePublisher` for the entry role
+and `NodeNoticeReader` for the production role. These sealed adapters are not
+injected into ordinary project/Runner consumers and expose no public constructor
+or central-store conversion. The reader supports current-account list, detail,
+unread count and exact current-revision mark-read operations.
+
+The existing protected SQLite schema owns `notice_facts`,
+`node_notice_projections` and `notice_read_state`. Central publication and its
+derived local projection commit together; read state is keyed by account, notice
+and revision. Current central identity, home/local-node binding, audience and UTC
+validity are checked on every operation. Body is inert data. This is the S2-06
+same-host contract, with no new HTTP ingest, notification UI, remote transport
+or deployment authority. See the node-identity workflow for boundaries.

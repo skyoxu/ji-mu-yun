@@ -1,3 +1,7 @@
+using Xunit.Abstractions;
+using System.Text.Json;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
@@ -16,7 +20,7 @@ using Xunit;
 
 namespace PhaseA.Platform.Tests.Runs;
 
-public sealed class DiablolikeGddWorkflowIntegrationTests
+public sealed class DiablolikeGddWorkflowIntegrationTests(ITestOutputHelper output)
 {
     [Fact]
     public async Task DiablolikeStyleGddFlow_ShouldCreateSkeletonStepsAssetsAndPackage()
@@ -25,15 +29,16 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var project = await store.GetProjectSnapshotAsync(projectId);
         Write(project!.RepoPath, "docs/gdd/GDD.md", DiablolikeGdd);
 
         var runner = new DiablolikePrototypeRunner();
-        var completionQueue = new HeavyRunnerQueueService();
+        var completionQueue = new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store);
         var routeStateWriter = new PrototypeRouteStateWriter();
         var workflow = new PrototypeWorkflowService(
             store,
@@ -44,10 +49,10 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
             new PrototypeArtifactIndexer(),
             new LlmBindingService(store, options),
             new LlmStopLossService(store, options),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             new GameTypeTemplateCatalog(options),
             routeStateWriter,
-            heavyRunnerQueue: completionQueue);
+            heavyRunnerQueue: completionQueue, prototypeCreationQueue: completionQueue);
 
         var skeleton = await workflow.QueueFromGddAsync(accountId, projectId, new PrototypeFromGddRequest(Model: "gpt-5.5"));
         await WaitForRunStatusAsync(store, skeleton.RunId, "succeeded", completionQueue);
@@ -71,8 +76,8 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
         """;
         var steps = new GddMilestoneStepService(
             store,
-            new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), routeStateWriter),
-            new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner), routeStateWriter),
+            new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), routeStateWriter, heavyRunnerQueue: completionQueue),
+            new PrototypeNeedsFixRouteService(store, new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: completionQueue), routeStateWriter),
             new FakeLlmRouteEngine(reviewJson));
         var plan = await steps.GetOrCreateLatestAsync(accountId, projectId);
         plan!.Steps.Select(step => step.StepId).Should().ContainInOrder("M1", "M2", "M10-1", "M10-2", "M10-3");
@@ -92,6 +97,7 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
             options,
             new ProjectAssetImageGenerator(options, runner),
             new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
+            assetRunnerQueue: completionQueue,
             httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng())),
             processRunner: runner);
         var imported = await assetLibrary.ImportAsync(
@@ -117,8 +123,10 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
         File.ReadAllText(Path.Combine(project.RepoPath, "Game.Godot", "Scenes", "Main.tscn"))
             .Should().Contain("res://Game.Godot/Prototypes/ProjectAssetLibrary/player-knight/");
 
-        var packageService = new ProjectPackageService(store, options, processRunner: runner);
-        var package = await packageService.CreatePackageAsync(accountId, projectId);
+        var packageService = new ProjectPackageService(store, options, completionQueue, processRunner: runner);
+        var package = await packageService.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
+        output.WriteLine("OWNED_PACKAGE_RESULT:" + JsonSerializer.Serialize(package));
+        if (!string.IsNullOrEmpty(package.RunId)) output.WriteLine("OWNED_PACKAGE_RUN:" + JsonSerializer.Serialize(await store.GetRunSnapshotAsync(package.RunId)));
         var download = await packageService.ReadPackageAsync(accountId, projectId, package.FileName);
 
         package.Status.Should().Be("succeeded");
@@ -156,7 +164,7 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest("diablolike-e2e", "Phantom Tower Like", "Action Roguelike", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
@@ -164,7 +172,7 @@ public sealed class DiablolikeGddWorkflowIntegrationTests
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

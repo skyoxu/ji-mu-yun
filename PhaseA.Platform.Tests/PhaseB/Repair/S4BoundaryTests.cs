@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Collections.Immutable;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
@@ -91,7 +92,7 @@ public sealed class S4BoundaryTests
             var root = Directory.CreateTempSubdirectory("s4-boundary-").FullName;
             var connectionString = new SqliteConnectionStringBuilder { DataSource = Path.Combine(root, "metadata.sqlite3"), Pooling = false }.ToString();
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
+            _ = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
             // ADR-0061: use a real enabled account while exercising the restore boundary.
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
@@ -118,7 +119,7 @@ public sealed class S4BoundaryTests
 
         public RestoreAttempt Restore(SnapshotManifest manifest, string key = "s4-request")
         {
-            return new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context, manifest, Source, Destination, Lease, key);
+            return new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context, manifest, Source, Destination, Lease, key);
         }
         public SnapshotManifest CorruptHash() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { Sha256 = new string('0', 64) }) };
         public SnapshotManifest CorruptSize() => Manifest with { Files = Manifest.Files.SetItem(0, Manifest.Files[0] with { Length = Manifest.Files[0].Length + 1 }) };
@@ -136,12 +137,12 @@ public sealed class S4BoundaryTests
         public bool WrongTenantDeniedAndPreserves()
         {
             var before = Previous();
-            try { _ = new RestoreService(ConnectionString).RestorePrepared(Context with { AccountId = "other-account" }, Manifest, Source, Destination, Lease, "wrong-tenant"); return false; }
+            try { _ = new CentralRestoreBackend(ConnectionString).RestorePrepared(Context with { AccountId = "other-account" }, Manifest, Source, Destination, Lease, "wrong-tenant"); return false; }
             catch (UnauthorizedAccessException) { return Previous() == before; }
         }
         public bool QuotaDeniedAndPreserves()
         {
-            new WorkspaceStorageService(ConnectionString).SetQuota(AccountId, 0);
+            new CentralWorkspaceStorageBackend(ConnectionString).SetQuota(AccountId, 0);
             return DeniedBeforePublication(Manifest);
         }
         public bool ActiveInputsSurviveCleanup()
@@ -191,14 +192,14 @@ public sealed class S4BoundaryTests
                 command.CommandText = "INSERT INTO restore_attempts(attempt_id,idempotency_key,snapshot_id,workspace_id,account_id,project_id,status,fence,updated_utc) VALUES($attempt,$key,'s4-snapshot','s4-workspace',$account,'s4-project','Staging',1,$updated); INSERT INTO restore_attempt_history(attempt_id,sequence,stage,outcome) VALUES($attempt,1,$phase,'interrupted'); INSERT INTO restore_attempt_history(attempt_id,sequence,stage,outcome) VALUES($attempt,2,'verification','verified')";
                 command.Parameters.AddWithValue("$attempt", attemptId); command.Parameters.AddWithValue("$key", "restart-" + phase); command.Parameters.AddWithValue("$phase", phase); command.Parameters.AddWithValue("$account", AccountId); command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O")); command.ExecuteNonQuery();
             }
-            _ = new RestoreService(ConnectionString);
+            _ = new CentralRestoreBackend(ConnectionString);
             return AttemptStatus(attemptId) == RestoreAttemptStatus.Quarantined.ToString() && HasHistory(attemptId, "reconciliation", "reconciled");
         }
         public bool TimerDoesNotStartRestore() => CountAttempts() == 0;
         public bool HasDisablementAuditAfterBoundary()
         {
             var denied = false;
-            try { _ = new RestoreService(ConnectionString).RestorePrepared(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "atomic-boundary"); }
+            try { _ = new CentralRestoreBackend(ConnectionString).RestorePrepared(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "atomic-boundary"); }
             catch (UnauthorizedAccessException) { denied = true; }
             return denied && HasAuditAction("account-disabled");
         }
@@ -206,7 +207,7 @@ public sealed class S4BoundaryTests
         {
             var before = Previous();
             var denied = false;
-            try { _ = new RestoreService(ConnectionString).RestorePrepared(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "disabled-at-publication"); }
+            try { _ = new CentralRestoreBackend(ConnectionString).RestorePrepared(Context with { AccountId = "disabled-account" }, Manifest, Source, Destination, Lease, "disabled-at-publication"); }
             catch (UnauthorizedAccessException) { denied = true; }
             return denied && Previous() == before && HasAuditAction("account-disabled");
         }
@@ -218,7 +219,7 @@ public sealed class S4BoundaryTests
             var nextLease = new RunnerLease("s4-reallocated", AccountId, "s4-project", 2);
             InsertLease(nextLease);
             SetCurrentCredential("s4-reallocated-credential");
-            var next = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context with { CredentialId = "s4-reallocated-credential" }, Manifest, Source, Destination, nextLease, "capability-current");
+            var next = new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context with { CredentialId = "s4-reallocated-credential" }, Manifest, Source, Destination, nextLease, "capability-current");
             return initial.Status == RestoreAttemptStatus.Published && next.Status == RestoreAttemptStatus.Published && previous == Context.CredentialId && CurrentCredential() == "s4-reallocated-credential";
         }
         public bool PreRestoreCredentialIsNotAuthoritative()
@@ -230,7 +231,7 @@ public sealed class S4BoundaryTests
             var nextLease = new RunnerLease("s4-next", AccountId, "s4-project", 2);
             InsertLease(nextLease);
             SetCurrentCredential("s4-new-credential");
-            try { _ = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context, Manifest, Source, Destination, nextLease, "new-runtime"); }
+            try { _ = new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(Context, Manifest, Source, Destination, nextLease, "new-runtime"); }
             catch (UnauthorizedAccessException) { }
             return CurrentCredential() != Context.CredentialId;
         }

@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using System.Diagnostics;
 using System.Net;
@@ -45,10 +46,10 @@ public sealed class S31BoundaryTests
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 fixture project creation failed.");
         RouteAuthorityFixture.Seed(connectionString, account.AccountId, project.ProjectId, workspace);
         var context = new RequestContext("s31-owner", account.AccountId, new HashSet<string> { "user" }, "s31-disposable-credential", "s31-" + nonce);
-        var storage = new WorkspaceStorageService(connectionString);
+        var storage = new CentralWorkspaceStorageBackend(connectionString);
         storage.SetQuota(account.AccountId, 1024 * 1024);
         var manifest = storage.CreateSnapshot(context, source, "snapshot-control", "workspace-control", project.ProjectId, "s31-policy", new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Manifest;
-        var service = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
+        var service = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString));
         var issues = new List<string>();
         var observations = new List<object>();
         var controlLease = new RunnerLease("lease-control", account.AccountId, project.ProjectId, 1);
@@ -100,29 +101,44 @@ public sealed class S31BoundaryTests
     {
         // ADR-0061/0038: request-aware producer evidence, never test-written diagnostic rows.
         var data = Path.Combine(root, "data");
-        var workspace = Path.Combine(root, "workspaces", "owned-project");
-        var repo = Path.Combine(workspace, "repo");
         Directory.CreateDirectory(data);
-        Directory.CreateDirectory(repo);
         var database = Path.Combine(data, "metadata.sqlite3");
         var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
-        await SqliteMetadataSchema.InitializeAsync(connectionString);
+
+        // ADR-0061: these HTTP contracts need an owned seed, not the live repository or device indexes.
+        var seedRepository = Path.Combine(repository, "PhaseA.Platform.Tests", "Fixtures", "ProjectSeedRepository");
         var adminToken = "s31-disposable-admin-" + Guid.NewGuid().ToString("N");
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces"),
-            ["PHASEA_REPOSITORY_ROOT"] = repository,
-            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken)
-        });
+            ["PHASEA_REPOSITORY_ROOT"] = seedRepository,
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken),
+            ["PHASEA_NODE_ID"] = "test-physical-node",
+            ["PHASEA_NODE_SCOPE"] = "single_node_test",
+            ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+            ["PHASEA_ENABLED_ROLES"] = "entry,production",
+            ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+});
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString,options);
         var store = new PhaseAMetadataStore(connectionString, options);
         await store.EnsureSingleAdminAsync();
         var owner = await store.CreateUserAccountAsync("s31-http-owner", 1);
         var stranger = await store.CreateUserAccountAsync("s31-http-stranger", 1);
+        var projectId = "s31-http-" + Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, owner.AccountId, projectId);
+        var workspace = layout.RootPath;
+        var repo = layout.RepoPath;
+        Directory.CreateDirectory(repo);
         var project = await store.CreateProjectAsync(new ProjectCreationCommand(
-            "s31-http-" + Guid.NewGuid().ToString("N"), owner.AccountId, "HTTP fixture", "HTTP fixture", "manual", "default", false, [],
-            workspace, repo, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
+            projectId, owner.AccountId, "HTTP fixture", "HTTP fixture", "manual", "default", false, [],
+            workspace, repo, layout.RuntimePath, layout.MetaPath));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 HTTP project setup failed.");
         await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
+        var registeredProject = await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing.");
+        // ADR-0035/0061: prove the real provisioner contract on both portable and native runs.
+        Assert.Equal(WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, registeredProject.AccountId, registeredProject.ProjectId),
+            new WorkspaceLayout(registeredProject.WorkspaceRootPath, registeredProject.RepoPath, registeredProject.RuntimePath, registeredProject.MetaPath));
+        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(registeredProject, options);
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}";
@@ -138,9 +154,15 @@ public sealed class S31BoundaryTests
         start.Environment["PUBLIC_BASE_URL"] = "https://localhost";
         start.Environment["PHASEA_METADATA_DB_PATH"] = database;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces");
-        start.Environment["PHASEA_REPOSITORY_ROOT"] = repository;
+        start.Environment["PHASEA_REPOSITORY_ROOT"] = seedRepository;
         start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken);
         start.Environment["PHASEA_SERVICE_STATE"] = "test";
+        start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+
         using var host = Process.Start(start) ?? throw new InvalidOperationException("S31 HTTP host failed to start.");
         host.OutputDataReceived += (_, _) => { };
         host.ErrorDataReceived += (_, _) => { };
@@ -154,6 +176,8 @@ public sealed class S31BoundaryTests
             using var delayHandler = new FirstInventoryDelayHandler(firstInventoryDelayMs);
             using var client = new HttpClient(delayHandler) { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(5) };
             var readinessAttempts = await WaitForHttpReadyAsync(client, host, owner.Token, project.ProjectId);
+            if (Directory.Exists(Path.Combine(repo, "knowledge")) || Directory.Exists(Path.Combine(repo, ".skill-input-work")))
+                throw new InvalidOperationException("HTTP fixture unexpectedly materialized device knowledge or toolchain work records.");
             if (firstInventoryDelayMs > 5000 && (!delayHandler.CancellationObserved || readinessAttempts < 3))
                 throw new InvalidOperationException("S31 delayed inventory control did not exercise startup timeout recovery.");
 

@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,7 +25,7 @@ public sealed class S46BoundaryTests
     public async Task O_08BA4578BEC0()
     {
         using var fixture = await BoundaryFixture.CreateAsync();
-        var runner = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+        var runner = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
             "cmd.exe",
             ["/d", "/c", "echo S46_JOB_OBJECT_OK"],
             fixture.Root,
@@ -33,7 +34,7 @@ public sealed class S46BoundaryTests
         var processObserved = runner.ExitCode == 0 && runner.Stdout.Contains("S46_JOB_OBJECT_OK", StringComparison.Ordinal);
 
         var restored = fixture.CreateAndRestoreSnapshot();
-        var controlledRun = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+        var controlledRun = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
             "cmd.exe",
             ["/d", "/c", "echo S46_CONTROLLED_RUN_OK"],
             restored,
@@ -133,12 +134,12 @@ public sealed class S46BoundaryTests
 
         public string CreateAndRestoreSnapshot()
         {
-            var storage = new WorkspaceStorageService(ConnectionString);
+            var storage = new CentralWorkspaceStorageBackend(ConnectionString);
             storage.SetQuota(AccountId, 1024 * 1024);
             var snapshot = storage.CreateSnapshot(_context, _source, _snapshotId, _workspaceId, ProjectId, _policy, new HashSet<string>());
             var lease = new RunnerLease("s46-lease", AccountId, ProjectId, 1);
             InsertLease(lease);
-            var attempt = new RestoreService(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
+            var attempt = new CentralRestoreBackend(ConnectionString, new RouteRecoveryAuthorityResolver(ConnectionString)).RestorePrepared(
                 _context, snapshot.Manifest, _source, _destination, lease, "s46-restore",
                 _runnerScope.Describe(AccountId, ProjectId, _destination));
             if (attempt.Status != RestoreAttemptStatus.Published) throw new InvalidOperationException("S46 restore did not publish.");
@@ -179,7 +180,7 @@ public sealed class S46BoundaryTests
                     SqliteMetadataSchema.InitializeAsync(db).GetAwaiter().GetResult();
                     var store = new PhaseAMetadataStore(db, PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>()));
                     var account = store.CreateUserAccountAsync($"s46-topology-{sequence++}-{Guid.NewGuid():N}", 1).GetAwaiter().GetResult();
-                    new WorkspaceStorageService(db).SetQuota(account.AccountId, 4 * 1024 * 1024);
+                    new CentralWorkspaceStorageBackend(db).SetQuota(account.AccountId, 4 * 1024 * 1024);
                     var projectId = $"s46-topology-project-{Guid.NewGuid():N}";
                     var workspace = Directory.CreateDirectory(Path.Combine(root, "workspace"));
                     store.CreateProjectAsync(new ProjectCreationCommand(projectId, account.AccountId, "S46 topology", "S46 topology", "manual", "default", false, [], workspace.FullName, Path.Combine(workspace.FullName, "repo"), Path.Combine(workspace.FullName, "runtime"), Path.Combine(workspace.FullName, "meta"))).GetAwaiter().GetResult();
@@ -195,7 +196,7 @@ public sealed class S46BoundaryTests
                     InsertLease(db, lease);
                     using var runnerScope = TestRunnerCredentialScope.Create(account.AccountId, projectId);
                     var placementReference = condition == "null" ? null : $"{category}-{condition}";
-                    var attempt = new RestoreService(db, new RouteRecoveryAuthorityResolver(db)).RestorePrepared(
+                    var attempt = new CentralRestoreBackend(db, new RouteRecoveryAuthorityResolver(db)).RestorePrepared(
                         context, manifest, source, destination, lease, $"s46-topology-{category}-{condition}",
                         runnerScope.Describe(account.AccountId, projectId, destination));
                     var restored = File.ReadAllText(Path.Combine(destination, ".restore-current", "project.godot"), Encoding.UTF8);

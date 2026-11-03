@@ -7,7 +7,35 @@ using System.Text;
 
 namespace PhaseA.Platform.Workspaces;
 
+// ADR-0061 AD14: protected SQL and credential reauthorization stay in the central backing.
 public sealed class RestoreService
+{
+    private readonly CentralRestoreBackend _backend;
+    private readonly Action _authorize;
+    private readonly Action<RequestContext?,string?,string?,bool> _authorizeCurrent;
+    internal RestoreService(CentralRestoreBackend backend,Action authorize,
+        Action<RequestContext?,string?,string?,bool> authorizeCurrent)
+    { _backend=backend; _authorize=authorize; _authorizeCurrent=authorizeCurrent; }
+    public RestoreAttempt Restore(RequestContext context,SnapshotManifest manifest,string sourceRoot,string destinationRoot,RunnerLease lease)
+        => Restore(context,manifest,sourceRoot,destinationRoot,lease,$"restore:{manifest.SnapshotId}:{manifest.WorkspaceId}");
+    public RestoreAttempt Restore(RequestContext context,SnapshotManifest manifest,string sourceRoot,string destinationRoot,RunnerLease lease,string idempotencyKey)
+    {
+        _authorize();_authorizeCurrent(context,manifest.AccountId,manifest.ProjectId,true);
+        return _backend.RestoreWithNodeAuthorization(context,manifest,sourceRoot,destinationRoot,lease,idempotencyKey,
+            ()=>_authorizeCurrent(context,manifest.AccountId,manifest.ProjectId,true));
+    }
+    public RunnerLease? GetAuthoritativeLease(string accountId,string projectId)
+    { _authorize();_authorizeCurrent(null,accountId,projectId,false);return _backend.GetAuthoritativeLease(accountId,projectId); }
+    internal RestoreAttempt RestoreProjectVersion(RequestContext context,SnapshotManifest manifest,string sourceRoot,
+        string destinationRoot,RunnerLease lease,string idempotencyKey,Func<bool> reauthorize)
+    {
+        _authorize();_authorizeCurrent(context,manifest.AccountId,manifest.ProjectId,true);
+        return _backend.RestoreProjectVersionWithNodeAuthorization(context,manifest,sourceRoot,destinationRoot,lease,
+            idempotencyKey,reauthorize,()=>_authorizeCurrent(context,manifest.AccountId,manifest.ProjectId,true));
+    }
+}
+
+internal sealed class CentralRestoreBackend
 {
     private readonly string? _connectionString;
     // Single-node publication coordination. The durable SQLite row remains the
@@ -18,7 +46,7 @@ public sealed class RestoreService
     private readonly HashSet<string> _invalidatedLeaseIds = new(StringComparer.Ordinal);
     private readonly RouteRecoveryAuthorityResolver? _routeAuthorityResolver;
 
-    public RestoreService(string? connectionString = null, RouteRecoveryAuthorityResolver? routeAuthorityResolver = null)
+    internal CentralRestoreBackend(string? connectionString = null, RouteRecoveryAuthorityResolver? routeAuthorityResolver = null)
     {
         _connectionString = connectionString;
         _routeAuthorityResolver = routeAuthorityResolver;
@@ -58,6 +86,22 @@ public sealed class RestoreService
         }
     }
 
+    // ADR-0061 AD19/21: a separate node guard never substitutes for the existing
+    // runtime credential/route authorization or package-version reauthorization.
+    internal RestoreAttempt RestoreWithNodeAuthorization(RequestContext context,SnapshotManifest manifest,
+        string sourceRoot,string destinationRoot,RunnerLease lease,string idempotencyKey,Action authorizeNode)
+    {
+        lock(_restoreGate)
+            return RestoreCore(context,manifest,sourceRoot,destinationRoot,lease,idempotencyKey,authorizeNode:authorizeNode);
+    }
+
+    internal RestoreAttempt RestoreProjectVersionWithNodeAuthorization(RequestContext context,SnapshotManifest manifest,
+        string sourceRoot,string destinationRoot,RunnerLease lease,string idempotencyKey,Func<bool> reauthorize,Action authorizeNode)
+    {
+        lock(_restoreGate)
+            return RestoreCore(context,manifest,sourceRoot,destinationRoot,lease,idempotencyKey,reauthorize,authorizeNode);
+    }
+
     // ADR-0061 package-version recovery is a file restoration, not permission
     // to resume a route. The owning service verifies the immutable package binding
     // and reauthorizes its credential at each publication boundary. Business
@@ -69,9 +113,11 @@ public sealed class RestoreService
             return RestoreCore(context, manifest, sourceRoot, destinationRoot, lease, idempotencyKey, reauthorize);
     }
 
-    private RestoreAttempt RestoreCore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey, Func<bool>? reauthorize = null)
+    private RestoreAttempt RestoreCore(RequestContext context, SnapshotManifest manifest, string sourceRoot, string destinationRoot, RunnerLease lease, string idempotencyKey, Func<bool>? reauthorize = null, Action? authorizeNode = null)
     {
+        authorizeNode?.Invoke();
         using var coordination = AcquireCrossProcessCoordination(destinationRoot, idempotencyKey);
+        authorizeNode?.Invoke();
         try
         {
             context.DemandAccount(manifest.AccountId);
@@ -108,6 +154,7 @@ public sealed class RestoreService
         }
         if (reauthorize is null && !HasCurrentRouteAuthority(manifest.AccountId, manifest.ProjectId))
         {
+            authorizeNode?.Invoke();
             RecordRouteRecoveryEvidence(0, hasCurrentBlocker: true, isBlocked: true, canContinue: false);
             var blocked = CreateStagingAttempt(manifest).Advance(RestoreAttemptStatus.Quarantined);
             PersistAttempt(blocked, idempotencyKey, lease, context, manifest, destinationRoot, "route_authority_missing", "route_authority_missing");
@@ -116,6 +163,7 @@ public sealed class RestoreService
         }
         var isRetry = existing is not null;
         var attempt = existing?.Retry() ?? CreateStagingAttempt(manifest);
+        authorizeNode?.Invoke();
         PersistAttempt(attempt, idempotencyKey, lease, context, manifest, destinationRoot);
         AppendHistory(attempt.AttemptId, isRetry ? "retry" : "request", "staging");
         var staging = Path.Combine(destinationRoot, ".restore-staging", attempt.AttemptId);
@@ -143,6 +191,7 @@ public sealed class RestoreService
             // Re-check authority at the publication boundary. A lease or
             // runtime capability revoked while content was being staged must
             // not be able to publish a new ready directory.
+            authorizeNode?.Invoke();
             DemandAuthoritativeLease(lease);
             if (reauthorize is null) DemandCurrentRuntimeCredential(context, manifest.WorkspaceId);
             else if (!reauthorize()) throw new UnauthorizedAccessException("Project restore credential is no longer authorized.");
@@ -150,16 +199,19 @@ public sealed class RestoreService
                 throw new RestoreBoundaryFailure("route_authority_missing");
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "post-verification");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "post-verification");
+            authorizeNode?.Invoke();
             if (!RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(destinationDescriptor, staging))
                 throw new RestoreBoundaryFailure("acl_invalid");
             Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
             if (Directory.Exists(published)) Directory.Move(published, backup);
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "previous-moved");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "previous-moved");
+            authorizeNode?.Invoke();
             try { Directory.Move(staging, published); publishedFromStaging = true; }
             catch { if (Directory.Exists(backup) && !Directory.Exists(published)) Directory.Move(backup, published); throw; }
             WritePublicationCheckpoint(destinationRoot, attempt.AttemptId, "current-switched");
             WaitForTestFaultPoint(destinationRoot, attempt.AttemptId, "current-switched");
+            authorizeNode?.Invoke();
             if (!RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(destinationDescriptor, published))
                 throw new RestoreBoundaryFailure("acl_invalid");
             var result = attempt.Advance(RestoreAttemptStatus.Published);
@@ -284,7 +336,7 @@ public sealed class RestoreService
     private void DemandAvailableQuota(SnapshotManifest manifest)
     {
         if (string.IsNullOrWhiteSpace(_connectionString)) return;
-        var quota = new WorkspaceStorageService(_connectionString).GetQuota(manifest.AccountId);
+        var quota = new CentralWorkspaceStorageBackend(_connectionString).GetQuota(manifest.AccountId);
         if (manifest.ContentSize > quota.RemainingBytes)
             throw new RestoreBoundaryFailure("quota_exceeded");
     }

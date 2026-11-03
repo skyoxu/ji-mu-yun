@@ -5,9 +5,9 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class PrototypeRecordWriter
 {
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
 
-    public PrototypeRecordWriter(PhaseAPlatformOptions options)
+    public PrototypeRecordWriter(NodeExecutionOptions options)
     {
         _options = options;
     }

@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
@@ -178,7 +179,7 @@ public sealed class S32BoundaryTests
             }.ToString();
             // ADR-0061: the substitute-root drill uses production account and project metadata.
             SqliteMetadataSchema.InitializeAsync(connectionString).GetAwaiter().GetResult();
-            _ = new RestoreService(connectionString);
+            _ = new CentralRestoreBackend(connectionString);
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = root,
@@ -223,7 +224,7 @@ public sealed class S32BoundaryTests
                 .Sum(path => new FileInfo(path).Length);
             var stopwatch = Stopwatch.StartNew();
             var startedUtc = DateTimeOffset.UtcNow;
-            var restore = new RestoreService(
+            var restore = new CentralRestoreBackend(
                 _connectionString,
                 new RouteRecoveryAuthorityResolver(_connectionString)).RestorePrepared(
                 _context,
@@ -245,7 +246,7 @@ public sealed class S32BoundaryTests
             await Task.Delay(TimeSpan.FromMilliseconds(25));
             var operatorApprovalDuration = stopwatch.Elapsed - approvalStarted;
 
-            var controlledRun = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            var controlledRun = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 [
                     "-NoProfile",

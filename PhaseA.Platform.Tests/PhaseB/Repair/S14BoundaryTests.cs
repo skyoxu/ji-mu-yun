@@ -42,12 +42,19 @@ public sealed class S14BoundaryTests
         try
         {
             var connectionString = $"Data Source={databasePath}";
-            await SqliteMetadataSchema.InitializeAsync(connectionString);
+
             var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
-                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot
-            });
+                ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
+            ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(Guid.NewGuid().ToString("N")),
+            ["PHASEA_NODE_ID"] = "test-physical-node",
+            ["PHASEA_NODE_SCOPE"] = "single_node_test",
+            ["PHASEA_NODE_TOPOLOGY"] = "single_service",
+            ["PHASEA_ENABLED_ROLES"] = "entry,production",
+            ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true",
+});
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString,options);
             var store = new PhaseAMetadataStore(connectionString, options);
             var user = await store.CreateUserAccountAsync("s14-user", 1);
             var projectRoot = Path.Combine(workspaceRoot, "project-s14");
@@ -59,8 +66,8 @@ public sealed class S14BoundaryTests
             Directory.CreateDirectory(projectRoot);
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
             RouteAuthorityFixture.Seed(connectionString, user.AccountId, project.ProjectId!, projectRoot);
-            _ = new RestoreService(connectionString);
-            _ = new WorkspaceStorageService(connectionString).SetQuota(user.AccountId, 1_000_000_000);
+            _ = new CentralRestoreBackend(connectionString);
+            _ = new CentralWorkspaceStorageBackend(connectionString).SetQuota(user.AccountId, 1_000_000_000);
             using (var leaseConnection = new SqliteConnection(connectionString))
             {
                 leaseConnection.Open();
@@ -75,7 +82,7 @@ public sealed class S14BoundaryTests
                 leaseCommand.Parameters.AddWithValue("$account", user.AccountId);
                 leaseCommand.Parameters.AddWithValue("$project", project.ProjectId!);
                 leaseCommand.Parameters.AddWithValue("$workspace", project.WorkspaceId);
-                leaseCommand.Parameters.AddWithValue("$credential", user.Token);
+                leaseCommand.Parameters.AddWithValue("$credential", PhaseAAuth.HashTokenForStorage(user.Token));
                 leaseCommand.ExecuteNonQuery();
             }
             var seededAuthority = new RouteRecoveryAuthorityResolver(connectionString).Resolve(user.AccountId, project.ProjectId!);
@@ -93,7 +100,7 @@ public sealed class S14BoundaryTests
             var url = $"http://127.0.0.1:{FreePort()}";
             var seedSourceRoot = Path.Combine(root, "seed-source");
             Directory.CreateDirectory(seedSourceRoot);
-            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot);
+            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot, options.AdminTokenHash);
             using var healthClient = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(10) };
             await WaitForHealthAsync(healthClient, process);
 
@@ -120,7 +127,7 @@ public sealed class S14BoundaryTests
             process.Kill(entireProcessTree: true);
             await process.WaitForExitAsync();
             process.Dispose();
-            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot);
+            process = StartServer(url, databasePath, workspaceRoot, seedSourceRoot, options.AdminTokenHash);
             await WaitForHealthAsync(healthClient, process);
             foreach (var interrupted in new[] { queuedBeforeRestart, runningBeforeRestart })
             {
@@ -282,7 +289,7 @@ public sealed class S14BoundaryTests
         binding.ExecuteNonQuery();
     }
 
-    private static Process StartServer(string url, string databasePath, string workspaceRoot, string seedSourceRoot)
+    private static Process StartServer(string url, string databasePath, string workspaceRoot, string seedSourceRoot, string adminTokenHash)
     {
         var start = new ProcessStartInfo("dotnet", $"\"{PlatformAssemblyPath}\"")
         {
@@ -296,9 +303,16 @@ public sealed class S14BoundaryTests
         start.Environment["ASPNETCORE_URLS"] = url;
         start.Environment["PUBLIC_BASE_URL"] = "https://localhost";
         start.Environment["PHASEA_METADATA_DB_PATH"] = databasePath;
+        start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = adminTokenHash;
         start.Environment["HOSTED_WORKSPACE_ROOT"] = workspaceRoot;
         start.Environment["PHASEA_REPOSITORY_ROOT"] = seedSourceRoot;
         start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
+        start.Environment["PHASEA_NODE_ID"] = "test-physical-node";
+        start.Environment["PHASEA_NODE_SCOPE"] = "single_node_test";
+        start.Environment["PHASEA_NODE_TOPOLOGY"] = "single_service";
+        start.Environment["PHASEA_ENABLED_ROLES"] = "entry,production";
+        start.Environment["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "true";
+
         return Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
     }
 

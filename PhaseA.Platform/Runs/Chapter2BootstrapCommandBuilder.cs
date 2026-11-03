@@ -4,9 +4,9 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class Chapter2BootstrapCommandBuilder
 {
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
 
-    public Chapter2BootstrapCommandBuilder(PhaseAPlatformOptions options)
+    public Chapter2BootstrapCommandBuilder(NodeExecutionOptions options)
     {
         _options = options;
     }

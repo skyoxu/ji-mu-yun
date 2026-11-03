@@ -11,26 +11,26 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
 {
     private readonly GameTypeGuideCatalog _catalog;
     private readonly ISteamGameTypeMetadataProvider? _steamProvider;
-    private readonly PhaseAPlatformOptions? _options;
+    private readonly NodeExecutionOptions? _options;
 
-    public ProjectGameTypeMatchService(PhaseAPlatformOptions options, ISteamGameTypeMetadataProvider steamProvider)
-        : this(new GameTypeGuideCatalog(options), steamProvider, options)
+    public ProjectGameTypeMatchService(NodeExecutionOptions options, ISteamGameTypeMetadataProvider steamProvider)
+        : this(options.GameTypeGuides, steamProvider, options)
     {
     }
 
     private ProjectGameTypeMatchService(
         GameTypeGuideCatalog catalog,
         ISteamGameTypeMetadataProvider? steamProvider,
-        PhaseAPlatformOptions? options)
+        NodeExecutionOptions? options)
     {
         _catalog = catalog;
         _steamProvider = steamProvider;
         _options = options;
     }
 
-    public static IProjectGameTypeMatchService Offline(PhaseAPlatformOptions options)
+    public static IProjectGameTypeMatchService Offline(NodeExecutionOptions options)
     {
-        return new ProjectGameTypeMatchService(new GameTypeGuideCatalog(options), null, options);
+        return new ProjectGameTypeMatchService(options.GameTypeGuides, null, options);
     }
 
     public async Task<ProjectGameTypeMatchEvidence> ResolveAsync(string gameTypeSource, CancellationToken cancellationToken)
@@ -120,7 +120,7 @@ public sealed class ProjectGameTypeMatchService : IProjectGameTypeMatchService
         };
         return evidence with
         {
-            ContractSnapshot = ProjectGameTypeContractSnapshot.FromProjectMatch(_options, evidence)
+            ContractSnapshot = NodeExecutionOptions.GameTypeContract(_options, evidence)
         };
     }
 

@@ -5,14 +5,14 @@ namespace PhaseA.Platform.Runs;
 
 public sealed class PrototypeNeedsFixRouteService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly PrototypeQuickFixService _quickFixService;
     private readonly PrototypeRouteStateWriter _stateWriter;
     private readonly PrototypeContractService _contractService;
     private readonly PrototypeContractFreezeService _contractFreezeService;
 
     public PrototypeNeedsFixRouteService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         PrototypeQuickFixService quickFixService,
         PrototypeRouteStateWriter stateWriter,
         PrototypeContractService? contractService = null)
@@ -62,7 +62,12 @@ public sealed class PrototypeNeedsFixRouteService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
+        var admittedProject = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (admittedProject is null || !string.Equals(admittedProject.AccountId, accountId, StringComparison.Ordinal))
+            throw new InvalidOperationException("Project not found.");
         await using var mutationLease = await ProjectMutationLockRegistry.Shared.AcquireAsync(accountId, projectId, cancellationToken);
+        // AD19/20: the wait must not silently retarget this invocation to a new workspace.
+        _metadataStore.DemandWorkspace(admittedProject.RepoPath);
 
         var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))

@@ -1,0 +1,160 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:f6e4bacdd952da675a0aeb70c94da6cb7478b0b2f7d6543b0a8b48072db90654",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-EDDBA9629B7A": {
+      "acceptance": {
+        "source_refs": [
+          "docs/requirements/s2-06/vdd-input.md#SM-CONSUMER-CONTRACT"
+        ],
+        "given": "A disposable same-host protected local metadata fixture uses actual existing schema/store/authentication entrypoints. It contains two independently authenticated accounts with distinct own read states and an account on a different authoritative home, protected local-node facts and centrally authorized notice/projection input data. Trusted Program composition selects the approved restricted local notification audience/read-state capability. Separately prepare an ordinary project/Runner/background-task capability graph and caller-supplied account/home/node/admin fields. Do not assume a notification implementation, service scope or correct account filtering exists.",
+        "when": "Obtain the actual approved local service from protected composition and perform its real audience query/read-state operations as each matching authenticated account/home; mark only that account own notice read and inspect protected rows. Attempt another account/read-state key, wrong/missing/stale home/local-node binding, revoked current identity, forged admin/context or a supplied project/node/port authority. Invoke direct/legacy/default paths and attempt capability acquisition from an ordinary project task or entry-only implicit ordinary-task path. Independently inspect the actual production/project-visible graph so mere DI presence or an interface name cannot be treated as authorization. Do not invent a public notice ingest/product UI or require another package integration.",
+        "then": "Only the approved protected local node service admits current matching account/home notification audience/read-state operations. Its actual query results expose only the caller permitted local audience/read state and a permitted mark-read changes only that authenticated account key. Cross-account/home, missing/currently invalid identity or a forged context/admin/node/port cannot see or mutate another account read state. Ordinary project/Runner/background tasks receive no implicit notification publication, audience or read-state authority merely from their project role/RequestContext/DI presence; they cannot construct or acquire a privileged service through a default/legacy escape. Valid approved local account operations remain usable through the small same-host contract, separate from ordinary project execution and central publication authority. No new issuer, remote transport, inbox/UI or full notification product is introduced.",
+        "oracle": {
+          "expected": "Only the approved protected local node service admits current matching account/home notification audience/read-state operations. Its actual query results expose only the caller permitted local audience/read state and a permitted mark-read changes only that authenticated account key. Cross-account/home, missing/currently invalid identity or a forged context/admin/node/port cannot see or mutate another account read state. Ordinary project/Runner/background tasks receive no implicit notification publication, audience or read-state authority merely from their project role/RequestContext/DI presence; they cannot construct or acquire a privileged service through a default/legacy escape. Valid approved local account operations remain usable through the small same-host contract, separate from ordinary project execution and central publication authority. No new issuer, remote transport, inbox/UI or full notification product is introduced.",
+          "forbidden": [
+            "Ordinary project task gains notification authority.",
+            "Cross-account/home read state visible or changed."
+          ],
+          "observable": "Actual approved-service/current-authentication/account-home decisions, returned audience/read-state identities and complete protected before/after account/read-state row sets, plus an actual public capability/constructor/factory reachability matrix for approved-local versus ordinary-project consumers. Python asserts real same-home positive operations, exact own-account-only read-state delta, zero cross-account/home exposure/mutation and no implicit ordinary-task service authority on every direct/default path. Missing current notice capability is an unavailable product observation, not a fake successful denial; positive calls and row deltas are mandatory for GREEN. A test-only filter/service, service-class presence or caller-provided authorization boolean cannot satisfy the oracle."
+        },
+        "assertion_ids": [
+          "A-O-EDDBA9629B7A-1",
+          "A-O-EDDBA9629B7A-2",
+          "A-O-EDDBA9629B7A-3",
+          "A-O-EDDBA9629B7A-4",
+          "A-O-EDDBA9629B7A-5"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "selector_intent": "tests/s2_06/test_node_notice.py::test_o_eddba9629b7a contains literal direct shell=False dotnet test for exact PhaseA.Platform.Tests.NodeIdentity.NodeNoticeTests.O_EDDBA9629B7A, fresh typed TRX and A-O-EDDBA9629B7A-1, A-O-EDDBA9629B7A-2, A-O-EDDBA9629B7A-3, A-O-EDDBA9629B7A-4, A-O-EDDBA9629B7A-5. Emit FAILURE-O-EDDBA9629B7A only for an actual unavailable/mis-scoped local notification service, ordinary-project authority escape, cross-account/home audience/read-state exposure or mutation. Missing-class compilation, binding/TRX/SQL-harness errors are not RED; presence alone is not GREEN.",
+          "expected_outcome": "fail",
+          "failure_id": "FAILURE-O-EDDBA9629B7A"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+          "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+          "PhaseA.Platform/Program.cs",
+          "PhaseA.Platform/Security/RequestContext.cs"
+        ],
+        "verification_lane": "runtime",
+        "behavior_change": "Provide the approved protected same-host notification audience/read-state service through existing Program, schema and metadata owners; perform real current authenticated account/home operations without ordinary project authority.",
+        "affected_subjects": [
+          "Scoped node notification service",
+          "current same-host account/home audience and own read state",
+          "ordinary project capability boundary"
+        ],
+        "state_transition": "Actual protected local service unavailable or mis-scoped -> current matching authenticated callers can perform real permitted query and own-account read-state operations; invalid and ordinary-project callers cannot acquire or widen notification authority.",
+        "rollback_scope": {
+          "production_paths": [
+            "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+            "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+            "PhaseA.Platform/Program.cs",
+            "PhaseA.Platform/Security/RequestContext.cs"
+          ],
+          "state_or_schema_compatibility": "(Keep current account/home/node authority, immutable approved source hashes, protected notice fact/projection/revision/read bindings and prior history. Retain additive schema and safe compatible failures; never move authority into projects, extend expiry or copy credentials to roll back.) AND (Preserve account/home/node/current credential authority, private project/snapshot/generation/cache namespaces, protected notice publication/projection/read revisions and history. Retain compatible additive schema and existing safe callers/errors; no live fixture repair, authority rewrite, remote protocol or release permission on rollback.) AND (Preserve central account/credential/home identities, existing auth/control boundaries and compatible local notice/read-state persistence. Source rollback cannot grant ordinary project authority, expose/mutate cross-account/home read state or reassign homes; missing required scoped support fails closed. Retain historical evidence and additive data, with no new remote notification/product/issuer or live/runtime/shared-entrypoint/scope mutation.) AND (Preserve current account homes/node bindings, credential hashes, private data/generation namespaces, history and existing execution locks/fencing/isolation/budgets. Retain compatible additive schema; do not delete authority/history or widen scope to roll back. Unsupported mixed state fails closed.) AND (Preserve existing caller/auth/error/cache-control contracts, logical IDs and protected homes/node binding, Windows Runner/vault/ACL/Job Object safety, notice/read revisions and history. Additive schema remains compatible; no new UI/product, credential export, authority reset or release claim on rollback.) AND (Preserve existing identities/data, transaction atomicity and restricted dependency direction. This permits implementation spelling/layout only, never procurement, infrastructure, observability, whole-site, React or Godot scope. No source scope, credentials, deployment or authority expansion.) AND (Preserve protected central notice facts/revisions, derived projection provenance, per-account/revision read keys, existing account hashes/homes, compatible auth/error envelopes and history. Revert code compatibly without copying/deleting authority or introducing protocols/opening permissions. Unsupported state fails closed.) AND (Preserve protected current account/home/node authority, immutable approved bytes, notice publication/projection revisions, per-account/per-revision read keys and history. Retain compatible additive schema and safe denial. No deleting authority, new credential protocol, backend or widened project permissions on rollback.) AND (Preserve stable node/account/project/workspace IDs and homes, central token hashes, complete protected publication/projection revisions and per-account/notice/revision read state. Retain compatible additive schema and old history; no partial rollback, source authority deletion, automatic rebinding or deployment/protocol permission.)"
+        },
+        "allowed_write_paths": [
+          "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/NodeNoticeTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+          "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+          "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+          "PhaseA.Platform/Program.cs",
+          "PhaseA.Platform/README.md",
+          "PhaseA.Platform/Security/RequestContext.cs",
+          "docs/workflows/phase-service-node-identity-and-roles.md",
+          "tests/s2_06/test_node_authority.py",
+          "tests/s2_06/test_node_notice.py",
+          "tests/s2_06/trx_support.py"
+        ],
+        "execution_snapshot_paths": [
+          "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/NodeNoticeTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+          "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+          "PhaseA.Platform.Tests/packages.lock.json",
+          "PhaseA.Platform/PhaseA.Platform.csproj",
+          "PhaseA.Platform/README.md",
+          "PhaseA.Platform/packages.lock.json",
+          "docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md",
+          "docs/requirements/s2-06/vdd-input.md",
+          "docs/workflows/phase-service-node-identity-and-roles.md",
+          "logs/s2-06-bmad-20261028/AUTHORIZATION-UPDATE-20261028T1708.json",
+          "logs/s2-06-bmad-20261028/source-scope-build-inputs.v1.json",
+          "logs/s2-06-bmad-20261028/source-scope.v1.json",
+          "logs/s2-06-resume-20261031/S215-ROOT-PATH-AUTHORIZATION-20261031.json",
+          "logs/s2-06-resume-20261031/source-scope-capability-migration-r3.v1.json",
+          "logs/s2-06-resume-20261031/source-scope-capability-migration-r4.v1.json",
+          "logs/s2-06-resume-20261031/source-scope-capability-migration.v1.json",
+          "logs/s2-06-resume-20261031/source-scope-root-path-r5.v1.json",
+          "tests/phase_b_c_identity_isolation/current/s10_fixture.py",
+          "tests/s2_06/test_node_authority.py",
+          "tests/s2_06/test_node_notice.py",
+          "tests/s2_06/trx_support.py"
+        ],
+        "planned_new_files": [
+          "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/NodeNoticeTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+          "docs/workflows/phase-service-node-identity-and-roles.md",
+          "tests/s2_06/test_node_authority.py",
+          "tests/s2_06/test_node_notice.py",
+          "tests/s2_06/trx_support.py"
+        ],
+        "terminal_predicate": "Only the approved protected local node service admits current matching account/home notification audience/read-state operations. Its actual query results expose only the caller permitted local audience/read state and a permitted mark-read changes only that authenticated account key. Cross-account/home, missing/currently invalid identity or a forged context/admin/node/port cannot see or mutate another account read state. Ordinary project/Runner/background tasks receive no implicit notification publication, audience or read-state authority merely from their project role/RequestContext/DI presence; they cannot construct or acquire a privileged service through a default/legacy escape. Valid approved local account operations remain usable through the small same-host contract, separate from ordinary project execution and central publication authority. No new issuer, remote transport, inbox/UI or full notification product is introduced. Actual approved-service/current-authentication/account-home decisions, returned audience/read-state identities and complete protected before/after account/read-state row sets, plus an actual public capability/constructor/factory reachability matrix for approved-local versus ordinary-project consumers. Python asserts real same-home positive operations, exact own-account-only read-state delta, zero cross-account/home exposure/mutation and no implicit ordinary-task service authority on every direct/default path. Missing current notice capability is an unavailable product observation, not a fake successful denial; positive calls and row deltas are mandatory for GREEN. A test-only filter/service, service-class presence or caller-provided authorization boolean cannot satisfy the oracle.",
+        "forbidden_paths": [
+          ".agents/**",
+          ".aws/**",
+          ".git/**",
+          ".ssh/**",
+          "Game.Core/**",
+          "Game.Godot/**",
+          "PhaseA.Platform/Browser/**",
+          "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+          "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+          "PhaseA.Platform/Security/PhaseAAuth.cs",
+          "PhaseA.Platform/Security/RunnerIsolationPolicy.cs",
+          "_bmad-output/**",
+          "docs/requirements/s2-06/source/**",
+          "knowledge/**",
+          "logs/phase-a-innernet/**",
+          "runtime/phase-a/**",
+          "scripts/**",
+          "scripts/sc/**",
+          "secrets/**"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/s2_06/test_node_notice.py::test_o_eddba9629b7a"
+          ],
+          [
+            "python",
+            "-m",
+            "pytest",
+            "-q",
+            "tests/s2_06/test_node_authority.py"
+          ]
+        ],
+        "complexity_class": "complex",
+        "context_lookup_required": true,
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ]
+      }
+    }
+  }
+}

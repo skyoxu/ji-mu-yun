@@ -10,6 +10,7 @@ using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Llm;
 using PhaseA.Platform.Runs;
+using PhaseA.Platform.Security;
 using PhaseA.Platform.Workspaces;
 
 namespace PhaseA.Platform.Readback;
@@ -32,46 +33,63 @@ public sealed class ProjectWebPreviewSemanticAdapterService
         TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
 
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner? _processRunner;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodePreviewRuntime _runtime;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
     private readonly HostedContextGatePolicy _contextGatePolicy;
     private readonly IHostedContextManifestValidator? _contextManifestValidator;
     private readonly bool _enableCodex;
+    private readonly NodeProjectMetadata? _projectAuthority;
 
     public ProjectWebPreviewSemanticAdapterService(
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         AiCodeMirrorKeyPoolService? keyPoolService = null,
         HostedContextManifestIssuer? contextManifestIssuer = null,
         HostedContextGatePolicy? contextGatePolicy = null,
-        IHostedContextManifestValidator? contextManifestValidator = null)
-        : this(options, processRunner, keyPoolService, contextManifestIssuer, contextGatePolicy, contextManifestValidator, enableCodex: true)
+        IHostedContextManifestValidator? contextManifestValidator = null,
+        NodeProjectMetadata? projectAuthority = null)
+        : this(options, processRunner, keyPoolService, contextManifestIssuer, contextGatePolicy, contextManifestValidator, projectAuthority, enableCodex: true)
     {
     }
 
     private ProjectWebPreviewSemanticAdapterService(
-        PhaseAPlatformOptions options,
+        NodeExecutionOptions options,
         IHostedProcessRunner? processRunner,
         AiCodeMirrorKeyPoolService? keyPoolService,
         HostedContextManifestIssuer? contextManifestIssuer,
         HostedContextGatePolicy? contextGatePolicy,
         IHostedContextManifestValidator? contextManifestValidator,
+        NodeProjectMetadata? projectAuthority,
         bool enableCodex)
     {
         _options = options;
         _processRunner = processRunner;
-        _keyPoolService = keyPoolService;
+        _runtime = NodePreviewRuntime.ExecutionOnly(options,keyPoolService);
         _contextManifestIssuer = contextManifestIssuer;
         _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
         _contextManifestValidator = contextManifestValidator;
         _enableCodex = enableCodex;
+        _projectAuthority = projectAuthority;
     }
 
-    public static ProjectWebPreviewSemanticAdapterService DeterministicOnly(PhaseAPlatformOptions options)
+    public static ProjectWebPreviewSemanticAdapterService DeterministicOnly(NodeExecutionOptions options, NodeProjectMetadata? projectAuthority = null)
     {
-        return new ProjectWebPreviewSemanticAdapterService(options, null, null, null, null, null, enableCodex: false);
+        return new ProjectWebPreviewSemanticAdapterService(options, null, null, null, null, null, projectAuthority, enableCodex: false);
+    }
+
+    // ADR-0061 AD19: bound production cannot use an unauthenticated provider continuation.
+    private void DemandCurrentProject(string projectRoot)
+    {
+        if (_projectAuthority is not null)
+        {
+            _projectAuthority.DemandWorkspace(projectRoot);
+            return;
+        }
+        // Preserve unbound offline fixtures; real configured or registered projects require their restricted authority.
+        if (_options.NodeId is not null || RunnerIsolationPolicy.TryGetWorkspaceDescriptor(projectRoot, out _))
+            throw new UnauthorizedAccessException("current_project_authority_required");
     }
 
     public async Task<ProjectWebPreviewSemanticAdapterResult> ResolveAsync(
@@ -79,6 +97,7 @@ public sealed class ProjectWebPreviewSemanticAdapterService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        DemandCurrentProject(request.ProjectRoot);
         var projectRoot = Path.GetFullPath(request.ProjectRoot);
         if (!WorkspacePathPolicy.IsUnderRoot(_options.HostedWorkspaceRoot, projectRoot))
         {
@@ -114,6 +133,7 @@ public sealed class ProjectWebPreviewSemanticAdapterService
         if (previous is not null)
         {
             var decision = await DecideReuseAsync(request, previous, cancellationToken);
+            DemandCurrentProject(request.ProjectRoot);
             if (string.Equals(decision.Decision, "reuse", StringComparison.Ordinal))
             {
                 return new ProjectWebPreviewSemanticAdapterResult(
@@ -166,6 +186,7 @@ public sealed class ProjectWebPreviewSemanticAdapterService
                 codexRun = new CodexAdapterRun(-1, ex.ToString(), Tail(ex.ToString(), 2000));
             }
 
+            DemandCurrentProject(request.ProjectRoot);
             string? validationError = null;
             if (codexRun.ExitCode == 0 &&
                 TryParseAdapterFromFileOrOutput(outputPath, codexRun, request, out var generatedAdapter, out validationError))
@@ -320,28 +341,13 @@ public sealed class ProjectWebPreviewSemanticAdapterService
             _contextGatePolicy,
             _contextManifestValidator,
             cancellationToken);
-        var credential = await ResolveRuntimeCredentialAsync(request.AccountId, cancellationToken);
-        var result = await _processRunner!.RunAsync(
-            CodexHostedProcessCommandFactory.ApplyRuntime(command, credential)
-                .WithRunId(request.RunId)
-                .WithTimeouts(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(2)),
-            cancellationToken);
+        DemandCurrentProject(request.ProjectRoot);
+        var result = await _runtime.ExecuteAsync(command, _processRunner!, request.AccountId, request.RunId,
+            TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(2), cancellationToken);
         var raw = ReadOutputText(outputPath, result);
         return new CodexAdapterRun(result.ExitCode, raw, Tail(raw, 2000));
     }
 
-    private async Task<AiCodeMirrorRuntimeCredential> ResolveRuntimeCredentialAsync(string accountId, CancellationToken cancellationToken)
-    {
-        if (_keyPoolService is null)
-        {
-            return new AiCodeMirrorRuntimeCredential(accountId, null, null);
-        }
-
-        var credential = await _keyPoolService.ResolveRuntimeCredentialForAccountAsync(accountId, cancellationToken);
-        return credential.BillingKeyName is null && credential.CodexHomePath is null
-            ? new AiCodeMirrorRuntimeCredential(accountId, null, null)
-            : credential;
-    }
 
     private static bool TryParseAdapterFromFileOrOutput(
         string outputPath,

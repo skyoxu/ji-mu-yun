@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using System.ComponentModel;
@@ -30,7 +31,7 @@ public sealed class S2BoundaryTests
                 Encoding.ASCII);
             var request = new CodexHostedProcessRequest(root, output, "", "test-model", "low");
             var command = CodexHostedProcessCommandFactory.Build(request with { Prompt = "write harmless marker" });
-            var runner = new HostedProcessRunner();
+            var runner = OwnedCiOperation.Runner();
             HostedProcessResult result;
             try
             {

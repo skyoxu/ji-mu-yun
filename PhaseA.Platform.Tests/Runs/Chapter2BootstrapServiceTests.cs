@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -19,6 +21,7 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(0, "bootstrap preflight ok\n", "")
@@ -58,6 +61,7 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(7, "", "hard checks failed\n")
@@ -84,6 +88,7 @@ public sealed class Chapter2BootstrapServiceTests
         WriteProjectHealthArtifacts(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(0, "hard checks ok\n", "")
@@ -108,6 +113,7 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var existingRunId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
         (await store.TryAcquireRunnerLockAsync(projectId, existingRunId)).Should().BeTrue();
@@ -133,16 +139,10 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new HangingHostedProcessRunner();
-        var service = new Chapter2BootstrapService(
-            store,
-            options,
-            runner,
-            new Chapter2BootstrapCommandBuilder(options),
-            new ProjectHealthArtifactIndexer(),
-            new ProjectWorkspaceSeeder(options),
-            TimeSpan.FromMilliseconds(50));
+        var service = new Chapter2BootstrapService(store, options, runner, new Chapter2BootstrapCommandBuilder(options), new ProjectHealthArtifactIndexer(), new ProjectWorkspaceSeeder(options, store), TimeSpan.FromMilliseconds(50), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId);
 
@@ -163,25 +163,20 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
-        var otherRunsQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
+        var (_, otherProjectId) = await CreateProjectWithAccountAsync(store, options);
+        var otherRunsQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1, authority: store);
         await using var otherRunLease = await otherRunsQueue.EnterAsync(
             "other-run",
             accountId,
-            "other-project",
+            otherProjectId,
             "prototype-ui-optimization");
-        var projectCreationQueue = new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1));
+        var projectCreationQueue = new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1, authority: store));
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(0, "hard checks ok\n", "")
         ]);
-        var service = new Chapter2BootstrapService(
-            store,
-            options,
-            runner,
-            new Chapter2BootstrapCommandBuilder(options),
-            new ProjectHealthArtifactIndexer(),
-            new ProjectWorkspaceSeeder(options),
-            projectCreationRunnerQueue: projectCreationQueue);
+        var service = new Chapter2BootstrapService(store, options, runner, new Chapter2BootstrapCommandBuilder(options), new ProjectHealthArtifactIndexer(), new ProjectWorkspaceSeeder(options, store), projectCreationRunnerQueue: projectCreationQueue, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId);
 
@@ -199,24 +194,19 @@ public sealed class Chapter2BootstrapServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
-        var projectCreationQueue = new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1));
+        var (_, blockingProjectId) = await CreateProjectWithAccountAsync(store, options);
+        var projectCreationQueue = new ProjectCreationRunnerQueue(new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1, authority: store));
         await using var queueBlocker = await projectCreationQueue.Queue.EnterAsync(
             "blocking-run",
             accountId,
-            "blocking-project",
+            blockingProjectId,
             "chapter2-bootstrap");
         var runner = new FakeHostedProcessRunner([
             new HostedProcessResult(0, "should not run\n", "")
         ]);
-        var service = new Chapter2BootstrapService(
-            store,
-            options,
-            runner,
-            new Chapter2BootstrapCommandBuilder(options),
-            new ProjectHealthArtifactIndexer(),
-            new ProjectWorkspaceSeeder(options),
-            projectCreationRunnerQueue: projectCreationQueue);
+        var service = new Chapter2BootstrapService(store, options, runner, new Chapter2BootstrapCommandBuilder(options), new ProjectHealthArtifactIndexer(), new ProjectWorkspaceSeeder(options, store), projectCreationRunnerQueue: projectCreationQueue, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var runTask = service.RunAsync(accountId, projectId);
         var runId = await WaitForRunIdAsync(store, projectId, "chapter2-bootstrap");
@@ -236,8 +226,9 @@ public sealed class Chapter2BootstrapServiceTests
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
-        await SqliteMetadataSchema.InitializeAsync(connectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
         var store = new PhaseAMetadataStore(connectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         await store.EnsureSingleAdminAsync();
         return store;
     }
@@ -245,7 +236,7 @@ public sealed class Chapter2BootstrapServiceTests
     private static async Task<(string AccountId, string ProjectId)> CreateProjectWithAccountAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
     {
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return (accountId, result.ProjectId!);
     }
@@ -253,19 +244,14 @@ public sealed class Chapter2BootstrapServiceTests
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
     {
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return result.ProjectId!;
     }
 
     private static Chapter2BootstrapService Service(PhaseAMetadataStore store, PhaseAPlatformOptions options, IHostedProcessRunner runner)
     {
-        return new Chapter2BootstrapService(
-            store,
-            options,
-            runner,
-            new Chapter2BootstrapCommandBuilder(options),
-            new ProjectHealthArtifactIndexer());
+        return new Chapter2BootstrapService(store, options, runner, new Chapter2BootstrapCommandBuilder(options), new ProjectHealthArtifactIndexer(), new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
     }
 
     private static async Task<string> WaitForRunIdAsync(
@@ -291,7 +277,7 @@ public sealed class Chapter2BootstrapServiceTests
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

@@ -809,3 +809,36 @@ The approved recovery source list adds only compiler_watchdog.py and its exact
 test file for this repair. Original failures, costs and consumed permissions
 remain; targeted diagnostics cannot activate a baseline or authorize another
 complete batch.
+
+
+## 2026-10-31: bounded native derived-publication refresh readmission
+
+The maintainer explicitly approved this narrow exception to the prior rule that
+every changed content fingerprint needs test growth. A pure, verified native
+publication refresh may remeasure unchanged tool content without fabricated test
+increments. This does not exempt code changes, including implementation of this
+rule itself, from genuine permanent RED/GREEN regression coverage.
+
+The canonical consumer projection stays in the live fingerprint. The only
+eligible file delta is that exact projection, with only its source-snapshot and
+catalog binding fields changing. Identical code/imports/tests/runner/policy/tools,
+consumer eligibility, policy/exclusion/query-suite inputs and complete catalog
+source/safety scope are mandatory. Current native publisher validation and its
+actual main-bound authorization request, complete evaluation and source identities
+establish provenance; an arbitrary path, filename, flag or self-assertion does not.
+Indexed source content and anchor positions may refresh, never access authority.
+
+A trusted predecessor admission must seal the previous validated publication.
+Legacy records without it cannot be backfilled. Fresh complete non-skipped
+mandatory process/case evidence and unchanged before/after/admit/activation
+bindings precede a new atomic admission. The same bounded classification applies
+to measurement, admission and startup lineage. Missing/corrupt predecessor proof,
+unknown/mixed/semantic permission changes, invalid publication or unproved source
+scope fail closed. Old evidence, failures, costs and permits are preserved.
+
+Native main-only publication remains independent of tool-content admission.
+Uncommitted source edits are never promoted as main facts; a main-bound Knowledge
+check may remain current while the actual worktree tool candidate is tested.
+This introduces no new execution, write, account or publication permission,
+external authority service or Windows evidence. Maintenance commands and limits
+are owned by docs/workflows/toolchain-skill-baseline.md.

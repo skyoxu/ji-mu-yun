@@ -1,0 +1,72 @@
+{
+  "utc": "2026-11-02T11:07:01.313555+00:00",
+  "branch": "feat/s2-06-preparation-20261028",
+  "HEAD": "75323d05b9b1b730e311c0631c3aa1fcde66186a",
+  "kind": "current Linux implementation/proof checkpoint with explicit external Windows blockers; no completion authority",
+  "plan": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+  "plan_sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267",
+  "obligations": 459,
+  "slices": 239,
+  "latest_native_probe": {
+    "run": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102",
+    "receipt": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/process-receipt.v2.json",
+    "receipt_sha256": "86afd9cd3512475234f0a1e4a38f7fe87221761d0c6a13494e5aedcaf275b233",
+    "stage_result": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/stage-result.v2.json",
+    "stage_result_sha256": "152bec000021976074a47794e33433fec57aec711b7832a6b0ce04ada58bfe1e",
+    "cases": 2,
+    "elapsed_seconds": 61.23334376400089,
+    "process_attempts": 1,
+    "outcome": "pass",
+    "next_action": "run-regression",
+    "actual_stage": "probe; present behavior route, not new RED/GREEN/Q6 or completion"
+  },
+  "old_11_names_reconciled": {
+    "six_completed": "r67 QuickFix propagation and r69 five milestone entry/wait checks had actual RED/GREEN/Q6",
+    "two_supplemental_boundaries": "Program detached callback and safe no-versioned-package restore admission actual five-mode proof r72, now included in native r73 probe",
+    "two_scope_reconciliations": "Readonly-return cancellation was self-added stronger semantics, not frozen scope; preserve required pre-read authority/provenance validation and existing unchanged regressions",
+    "one_windows_dependency": "Restore ExecuteAsync native activation requires actual Windows/ACL prerequisites",
+    "not_a_formal_10_of_11_pass_claim": true
+  },
+  "known_missing_production": [
+    "S9 fixed protected scheduler owner; draft not integrated",
+    "S35 crash/dirty verified-cleanup admission barrier; not integrated"
+  ],
+  "remaining_runtime_authoring": [
+    "S9 three planned Windows owner/isolation proof nodes incl S35 are absent",
+    "S158 exact whole-nine-scenario Python/.NET node absent; existing file alone is not implementation proof",
+    "S237 exact inherited four-security-family Python/.NET node absent; requires actual Windows fixture"
+  ],
+  "required_windows_handoff": "logs/s2-06-resume-20261031/WINDOWS-REMAINING-CURRENT-r12-20261102.json",
+  "required_regression_and_terminal": "Not executed under r12. Both retain mandatory actual native launch; known Linux platform prerequisite failure from r60 is preserved, not silently skipped or retried to create success. Full current-candidate Q7/Q8/Acceptance unavailable.",
+  "readonly_scope_reconciliation": "logs/s2-06-resume-20261031/S236-readonly-return-scope-reconciliation-20261102.json",
+  "preserved_five_unpublished_patches": {
+    "scripts/skill_baseline.py": {
+      "sha256": "0c3c5f9781d994599720f300db02d71fb794d00f10015bcb7afaf45d7b673448",
+      "unchanged": true
+    },
+    "scripts/tests/test_skill_baseline.py": {
+      "sha256": "5d4fbb9ec98f4a4689d45f1d61cea75eff79f28ee3ffd83359c1fb56dbab47ed",
+      "unchanged": true
+    },
+    "docs/workflows/toolchain-skill-baseline.md": {
+      "sha256": "eb20ecf4112386ed4631d31b863477df286840f9a1d472a842e1bb2a8c4c58b5",
+      "unchanged": true
+    },
+    "docs/adr/ADR-0041-bootstrap-review-execution-control-plane-ownership.md": {
+      "sha256": "b4350e0c7d6c96fdc5df4b4fc8e283e7c704e6a4e47d6fdc16d986ed85f24cda",
+      "unchanged": true
+    },
+    ".agents/skill-baselines/capability-coverage.v1.json": {
+      "sha256": "f269c6e72338f2639941e31ea3571392d0af1a04aaec8374fb62e9add80abe7b",
+      "unchanged": true
+    }
+  },
+  "failure_history": "logs/s2-06-resume-20261031/failure-history-after-S236-milestone-observer-20261102.json (29 ordered original records retained); supplemental r70/r71 raw failures retained separately",
+  "incident": "21 missing historical TRX and old failed DB not recovered or replaced; 702 exact restored originals remain historical evidence.",
+  "Q8": false,
+  "acceptance_passed": false,
+  "new_production_edits_this_checkpoint": false,
+  "extra_deletion_commit_push_upload": false,
+  "available_bytes": 1272135680,
+  "authorizes": []
+}

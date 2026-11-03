@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using PhaseA.Platform.Configuration;
@@ -18,13 +19,14 @@ public sealed class ProjectWorkspaceMaintenanceServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
 
         await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = sourceRoot.Path,
             ["HOSTED_PROJECT_LIMIT"] = "4"
         });
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
         var accountId = await store.EnsureSingleAdminAsync();
 
@@ -44,9 +46,13 @@ public sealed class ProjectWorkspaceMaintenanceServiceTests
 
         var service = new ProjectWorkspaceMaintenanceService(
             store,
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             NullLogger<ProjectWorkspaceMaintenanceService>.Instance);
 
+        // ADR-0061: the same real maintenance service rejects an absent actor.
+        await Assert.ThrowsAnyAsync<UnauthorizedAccessException>(() => service.EnsureAllWorkspacesSeededAsync());
+        var context = await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash!);
+        using var current = S206TestSupport.EnterCurrentContext(context);
         await service.EnsureAllWorkspacesSeededAsync();
 
         File.Exists(Path.Combine(firstProject.RepoPath, "Tests.Godot", "addons", "gdUnit4", "bin", "GdUnitCmdTool.gd")).Should().BeTrue();

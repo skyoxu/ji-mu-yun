@@ -1,3 +1,6 @@
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -35,18 +38,25 @@ public sealed class S42BoundaryTests
         {
             var connectionString = $"Data Source={databasePath}";
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot
             });
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
             var store = new PhaseAMetadataStore(connectionString, options);
             var user = await store.CreateUserAccountAsync("s42-user-" + Guid.NewGuid().ToString("N"), 1);
-            var projectRoot = Path.Combine(workspaceRoot, "project-s42");
+            var projectId = "project-s42-" + Guid.NewGuid().ToString("N");
+            var layout = WorkspaceLayoutBuilder.Build(workspaceRoot, user.AccountId, projectId);
             var project = await store.CreateProjectAsync(new ProjectCreationCommand(
-                "project-s42-" + Guid.NewGuid().ToString("N"), user.AccountId, "S42", "S42", "manual", "default", false, [],
-                projectRoot, Path.Combine(projectRoot, "repo"), Path.Combine(projectRoot, "runtime"), Path.Combine(projectRoot, "repo", "meta")));
+                projectId, user.AccountId, "S42", "S42", "manual", "default", false, [],
+                layout.RootPath, layout.RepoPath, layout.RuntimePath, layout.MetaPath));
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
+            var registeredProject = (await store.GetProjectSnapshotAsync(project.ProjectId!))!;
+            // ADR-0035/0061: prove the real provisioner contract on both portable and native runs.
+            Assert.Equal(WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, registeredProject.AccountId, registeredProject.ProjectId),
+                new WorkspaceLayout(registeredProject.WorkspaceRootPath, registeredProject.RepoPath, registeredProject.RuntimePath, registeredProject.MetaPath));
+            using var registration = S206TestSupport.RegisterOwnedProjectBoundary(registeredProject, options);
 
             var url = $"http://127.0.0.1:{FreePort()}";
             process = StartServer(url, databasePath, workspaceRoot);
@@ -130,6 +140,8 @@ public sealed class S42BoundaryTests
         // request burst instead of thousands of requests filling the default.
         start.Environment["Logging__Console__MaxQueueLength"] = "1";
         start.Environment["Logging__Console__QueueFullMode"] = "Wait";
+        start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage("s42-owned-fixture-administrator");
+        S206TestSupport.ConfigureOwnedHost(start);
         var process = Process.Start(start) ?? throw new InvalidOperationException("Failed to start PhaseA.Platform.");
         // ADR-0061: drain both redirected pipes throughout host lifetime.
         // Ignoring them can block console logging and stall an HTTP request.

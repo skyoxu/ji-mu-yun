@@ -208,8 +208,9 @@ public sealed class ProjectWebPreviewService
         WriteIndented = true
     };
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
+    private readonly NodePreviewRuntime _previewRuntime;
     private readonly HeavyRunnerQueueService _webPreviewQueue;
     private readonly ProjectWebPreviewConcurrencyLimiter _webPreviewConcurrencyLimiter;
     private readonly IHostedProcessRunner _processRunner;
@@ -218,21 +219,27 @@ public sealed class ProjectWebPreviewService
     private readonly ConcurrentDictionary<string, ProjectWebPreviewConcurrencyLease> _reservedAccountConcurrencyLeases = new(StringComparer.Ordinal);
 
     public ProjectWebPreviewService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodePreviewRuntime runtime,
         [FromKeyedServices("web-preview")] HeavyRunnerQueueService? webPreviewQueue = null,
         ProjectWebPreviewConcurrencyLimiter? webPreviewConcurrencyLimiter = null,
         IHostedProcessRunner? processRunner = null,
         ProjectWebPreviewSemanticAdapterService? semanticAdapterService = null,
         ProjectWebPreviewDedicatedAdapterService? dedicatedAdapterService = null)
     {
+        // ADR-0061 AD20: only explicitly supplied composition-root producers.
+        if(webPreviewQueue is null || processRunner is null)
+            throw new UnauthorizedAccessException("explicit_production_consumers_required");
+
         _metadataStore = metadataStore;
+        _previewRuntime = runtime;
+        var options = runtime.Settings;
         _options = options;
-        _webPreviewQueue = webPreviewQueue ?? new HeavyRunnerQueueService(TimeSpan.FromMinutes(3), options.MaxConcurrentWebPreviews);
+        _webPreviewQueue = webPreviewQueue;
         _webPreviewConcurrencyLimiter = webPreviewConcurrencyLimiter ?? new ProjectWebPreviewConcurrencyLimiter(options.MaxConcurrentWebPreviewsPerAccount);
-        _processRunner = processRunner ?? new HostedProcessRunner();
-        _semanticAdapterService = semanticAdapterService ?? ProjectWebPreviewSemanticAdapterService.DeterministicOnly(options);
-        _dedicatedAdapterService = dedicatedAdapterService ?? ProjectWebPreviewDedicatedAdapterService.DeterministicOnly(options);
+        _processRunner = processRunner;
+        _semanticAdapterService = semanticAdapterService ?? ProjectWebPreviewSemanticAdapterService.DeterministicOnly(options, metadataStore);
+        _dedicatedAdapterService = dedicatedAdapterService ?? ProjectWebPreviewDedicatedAdapterService.DeterministicOnly(options, metadataStore);
     }
 
     private TimeSpan Godot3ExportTimeout => _options.Godot3WebPreviewExportTimeoutSeconds > 0
@@ -410,7 +417,7 @@ public sealed class ProjectWebPreviewService
                 return Failure(projectId, runId, fileName, "godot3_bin_not_configured");
             }
 
-            if (string.IsNullOrWhiteSpace(ResolvePreviewSigningSecret()))
+            if (!_previewRuntime.SigningConfigured)
             {
                 await CompletePreviewFailureAsync(runId, fileName, "web_preview_signing_secret_missing", "A server-side signing secret is required before publishing guest web previews.", cancellationToken);
                 return Failure(projectId, runId, fileName, "web_preview_signing_secret_missing");
@@ -498,6 +505,7 @@ public sealed class ProjectWebPreviewService
             CreateGodot3Project(projectRoot, godotProjectRoot, packageInfo, converter, dedicatedMainScript);
 
             var exportResult = await ExportGodot3ProjectAsync(godot3Bin, godotProjectRoot, webRoot, runId, cancellationToken);
+            _metadataStore.DemandWorkspace(project.RepoPath);
             if (exportResult.Process.ExitCode != 0 || !HasExpectedWebExport(webRoot))
             {
                 var stderr = string.IsNullOrWhiteSpace(exportResult.Process.Stderr)
@@ -4077,7 +4085,7 @@ func collision_capsule(radius, height):
 
     private HeavyRunnerQueueItemReadback? FindWebPreviewQueueItem(string accountId, string runId)
     {
-        var readback = _webPreviewQueue.GetReadback(accountId, includeAll: true);
+        var readback = _webPreviewQueue.GetReadback(accountId, includeAll: false);
         if (readback.Current is not null &&
             string.Equals(readback.Current.RunId, runId, StringComparison.Ordinal))
         {
@@ -5197,12 +5205,6 @@ var GodotPWA=
         string textCatalogSha256,
         string manifestSha256)
     {
-        var secret = ResolvePreviewSigningSecret();
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            throw new InvalidOperationException("A web preview signing secret is not configured.");
-        }
-
         var payload = string.Join(
             '\n',
             projectId,
@@ -5216,8 +5218,7 @@ var GodotPWA=
             sourceSceneSha256,
             textCatalogSha256,
             manifestSha256);
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-        return Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
+        return Convert.ToHexString(_previewRuntime.Sign(payload)).ToLowerInvariant();
     }
 
     private string ComputeLegacyPreviewSignature(
@@ -5232,12 +5233,6 @@ var GodotPWA=
         string sourceSceneSha256,
         string textCatalogSha256)
     {
-        var secret = ResolvePreviewSigningSecret();
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            throw new InvalidOperationException("A web preview signing secret is not configured.");
-        }
-
         var payload = string.Join(
             '\n',
             projectId,
@@ -5250,13 +5245,7 @@ var GodotPWA=
             converterCompatibilityId,
             sourceSceneSha256,
             textCatalogSha256);
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-        return Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
-    }
-
-    private string? ResolvePreviewSigningSecret()
-    {
-        return _options.WebPreviewSigningSecret;
+        return Convert.ToHexString(_previewRuntime.Sign(payload)).ToLowerInvariant();
     }
 
     private static string ReadJsonString(JsonElement root, string name)

@@ -1,0 +1,33 @@
+{
+  "argv": [
+    "/workspace/ji-mu-yun/logs/s2-06-bmad-20261028/tooling/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "tests/s2_06/test_node_authority.py::test_o_bc733e999001",
+    "tests/s2_06/test_node_role_closure.py::test_legacy_route_reader_compatibility",
+    "--basetemp",
+    "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output",
+    "-o",
+    "tmp_path_retention_count=1000",
+    "-o",
+    "tmp_path_retention_policy=all",
+    "--junitxml",
+    "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/actual-results.xml"
+  ],
+  "cwd": "/workspace/ji-mu-yun",
+  "started_utc": "2026-11-02T11:09:58.808011+00:00",
+  "kind": "actual portable required-command execution only; not native complete regression or terminal",
+  "required_commands": "r12 S236-R2-1 validation_commands[1:3] combined without changing selectors/assertions",
+  "reused_r73_commands": [
+    "test_o_7486ec7571d0",
+    "test_program_detached_preview_current_authority"
+  ],
+  "excluded_execution": "Known native launch Windows/platform prerequisite is retained as mandatory; not skipped in formal contract or counted as pass",
+  "available_before_bytes": 1272123392,
+  "timeout_seconds": 600,
+  "retention": "new absent owned basetemp; retention1000/all; original S2 scratch unchanged"
+}

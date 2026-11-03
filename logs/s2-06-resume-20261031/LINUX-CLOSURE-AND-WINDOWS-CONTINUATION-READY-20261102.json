@@ -1,0 +1,121 @@
+{
+  "utc": "2026-11-02T11:13:18.080420+00:00",
+  "scope": "S236 current Linux executable closure and Windows continuation readiness; not S2 completion",
+  "branch": "feat/s2-06-preparation-20261028",
+  "HEAD": "75323d05b9b1b730e311c0631c3aa1fcde66186a",
+  "plan": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+  "plan_sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267",
+  "retained_mapping": {
+    "active_obligations": 459,
+    "slices": 239,
+    "unchanged_obligation_acceptance_failure_intent_identity_proof": "logs/s2-06-resume-20261031/S236-r12-published-semantic-delta-proof-20261102.json"
+  },
+  "required_commands": [
+    {
+      "declared_command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/s2_06/test_node_role_closure.py::test_o_7486ec7571d0"
+      ],
+      "state": "passed-current-native-probe",
+      "evidence": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/stage-result.v2.json"
+    },
+    {
+      "declared_command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/s2_06/test_node_authority.py::test_o_bc733e999001"
+      ],
+      "state": "passed-current-portable-required-command",
+      "evidence": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/raw-exit.json"
+    },
+    {
+      "declared_command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/s2_06/test_node_role_closure.py::test_legacy_route_reader_compatibility"
+      ],
+      "state": "passed-current-portable-required-command",
+      "evidence": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/raw-exit.json"
+    },
+    {
+      "declared_command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/s2_06/test_node_role_closure.py::test_program_detached_preview_current_authority"
+      ],
+      "state": "passed-current-native-probe",
+      "evidence": "logs/s2-06-resume-20261031/linux-runs/S236-current-consumers-r73-20261102/canonical-evidence/probe/stage-result.v2.json"
+    },
+    {
+      "declared_command": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/s2_06/test_node_role_closure.py::test_native_registered_project_launch_current_authority"
+      ],
+      "state": "not-rerun-known-platform-prerequisite-block",
+      "evidence": "logs/s2-06-resume-20261031/hosted-launch-boundary-20261102/PLATFORM-BOUNDARY-DECISION.json"
+    }
+  ],
+  "current_linux_command_status": {
+    "executable_commands": 4,
+    "passed": 4,
+    "unexecuted_linux_capable_required_commands": 0,
+    "known_platform_blocked_command": 1,
+    "formal_regression_stage": "not complete; four raw/present results do not substitute full native gate"
+  },
+  "new_execution": {
+    "python_cases": 2,
+    "dotnet_case_executions": 187,
+    "dotnet_passed": 187,
+    "stdout": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/stdout.log",
+    "junit": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/actual-results.xml",
+    "trx_index": "logs/s2-06-resume-20261031/S236-r74-portable-required-raw-results-index-20261102.json",
+    "source_changed": false
+  },
+  "exact_gate_blocker": {
+    "S236_not_directly_blocked_by_S9_S35": "S236 has its own required real child-launch selector in regression and terminal. Previously observed Linux PlatformNotSupportedException in HostedProcessRunner.cs:152 (unconditional PasswordInClearText clear after actual process start) predates S2 at main 75323d05/25580d70. The portable child case is not itself proof of Windows isolation; Windows is the supported platform continuation without an unapproved Linux credential-path repair.",
+    "native_regression_chain": [
+      "stage_pipeline.py:150-162 calls run_regression_gate before publishing success/edges",
+      "regression_gate.py:94-100 requires all five standard-profile commands; this exact native-launch selector is not a deferrable whole-tree command",
+      "Missing full successful regression gate and current regression runtime edges prevents Q7; required full terminal also contains native launch; Q8 whole-plan and Acceptance remain unavailable"
+    ],
+    "no_synthetic_failure_or_success": "Known platform failure not rerun, marked passed, skipped, xfailed, converted to product RED or removed from contract"
+  },
+  "windows_continuation_ready": true,
+  "windows_readiness_meaning": "Can move to Windows IMPLEMENTATION AND VALIDATION after user arranges and authorizes actual isolated Windows candidate environment; not final acceptance-only, not migrated, not deployed, not Windows-passed.",
+  "windows_remaining": {
+    "S9": "Author real two-process fixed protected scheduler-handle/ACL/Runner/JobObject/crash tests, obtain legitimate Windows RED, then integrate missing fixed scheduler owner.",
+    "S35": "Author real dirty/crash/verified-cleanup barrier test, obtain legitimate RED, implement missing durable barrier.",
+    "S236": "Run own actual registered-project child case and full current regression/terminal; complete real package restore/activation proof.",
+    "S158": "Exact nine-scenario test node is absent; implement current-candidate AC01-AC09 assessment including actual Windows AC05/AC07 evidence.",
+    "S237": "Exact inherited security test node is absent; author/run actual Windows file/queue/background authorization, low-privilege isolation, bounded resource and approved-network matrix; no blanket completed claim.",
+    "whole_plan": "Revalidate affected current-source evidence; native Q7/Q8, then formal Acceptance."
+  },
+  "windows_start_prerequisites": [
+    "Use this original uncommitted S2 candidate plus five unpublished toolchain patches and exact current r12 inputs; GitHub main alone does not contain it. No transfer/upload/push has been authorized or performed.",
+    "Actual isolated authorized Windows host and required Python/.NET/test dependencies, protected scheduler anchor and low-privilege Runner privileges under existing contract; no production metadata.",
+    "Check actual Windows content-bound skill admission and environment/snapshot identities; Linux admission/receipts cannot impersonate Windows execution.",
+    "Existing planned pytest nodes for S9/S35/S158/S237 are NOT yet runnable; first native Q2 authors them, never use missing-file/build errors as RED."
+  ],
+  "windows_handoff_detail": "logs/s2-06-resume-20261031/WINDOWS-REMAINING-CURRENT-r12-20261102.json",
+  "Q7_current_S236": "not complete",
+  "Q8": false,
+  "acceptance_passed": false,
+  "all_original_failures_budgets_and_incident_retained": true,
+  "no_new_production_contract_or_skill_change": true,
+  "no_cleanup_upload_push_new_environment": true,
+  "active_test_or_model_wait": false,
+  "available_bytes": 1270104064,
+  "authorizes": []
+}

@@ -4,18 +4,34 @@ using System.Text.Json;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Runs;
+using PhaseA.Platform.Security;
 
 namespace PhaseA.Platform.Readback;
 
 public sealed class ProjectAssetImageGenerator
 {
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
+    private readonly NodeProjectMetadata? _projectAuthority;
 
-    public ProjectAssetImageGenerator(PhaseAPlatformOptions options, IHostedProcessRunner processRunner)
+    public ProjectAssetImageGenerator(NodeExecutionOptions options, IHostedProcessRunner processRunner, NodeProjectMetadata? projectAuthority = null)
     {
         _options = options;
         _processRunner = processRunner;
+        _projectAuthority = projectAuthority;
+    }
+
+    // ADR-0061 AD19: bound production cannot use an unauthenticated provider continuation.
+    private void DemandCurrentProject(string projectRoot)
+    {
+        if (_projectAuthority is not null)
+        {
+            _projectAuthority.DemandWorkspace(projectRoot);
+            return;
+        }
+        // Preserve unbound offline fixtures; real configured or registered projects require their restricted authority.
+        if (_options.NodeId is not null || RunnerIsolationPolicy.TryGetWorkspaceDescriptor(projectRoot, out _))
+            throw new UnauthorizedAccessException("current_project_authority_required");
     }
 
     public async Task<ProjectAssetImageGenerationResult> GenerateAsync(
@@ -36,6 +52,7 @@ public sealed class ProjectAssetImageGenerator
         ArgumentException.ThrowIfNullOrWhiteSpace(outputRelativeDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(fileStem);
 
+        DemandCurrentProject(project.RepoPath);
         Directory.CreateDirectory(outputAbsoluteDirectory);
         count = Math.Clamp(count, 1, 4);
         var promptRelativePath = ToSlash(Path.Combine(outputRelativeDirectory, "generation-prompt.txt"));
@@ -91,6 +108,7 @@ public sealed class ProjectAssetImageGenerator
         var stopwatch = Stopwatch.StartNew();
         var process = await _processRunner.RunAsync(command.WithRunId(runId), cancellationToken);
         stopwatch.Stop();
+        DemandCurrentProject(project.RepoPath);
 
         var generatedImagePaths = Directory.EnumerateFiles(outputAbsoluteDirectory, "*", SearchOption.TopDirectoryOnly)
             .Where(path =>

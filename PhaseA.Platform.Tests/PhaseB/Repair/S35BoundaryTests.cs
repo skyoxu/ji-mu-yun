@@ -35,7 +35,7 @@ public sealed class S35BoundaryTests
                 throw new InvalidOperationException("The disposable production migration did not complete.");
             }
 
-            var storage = new WorkspaceStorageService(connectionString);
+            var storage = new CentralWorkspaceStorageBackend(connectionString);
             var snapshots = storage.ListSnapshots("s35-account", "s35-project", includeDeleted: true);
 
             Require(

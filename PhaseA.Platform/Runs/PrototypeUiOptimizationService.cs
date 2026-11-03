@@ -13,11 +13,11 @@ public sealed class PrototypeUiOptimizationService
     private static readonly TimeSpan DefaultExecutionTimeout = TimeSpan.FromMinutes(20);
     private static readonly TimeSpan GodotSmokeValidationTimeout = TimeSpan.FromSeconds(75);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly HeavyRunnerQueueService _heavyRunnerQueue;
     private readonly TimeSpan _executionTimeout;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
@@ -25,31 +25,36 @@ public sealed class PrototypeUiOptimizationService
     private readonly IHostedContextManifestValidator? _contextManifestValidator;
 
     public PrototypeUiOptimizationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner)
-        : this(metadataStore, options, processRunner, new ProjectWorkspaceSeeder(options))
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public PrototypeUiOptimizationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         TimeSpan? executionTimeout = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         HostedContextManifestIssuer? contextManifestIssuer = null,
         HostedContextGatePolicy? contextGatePolicy = null,
         IHostedContextManifestValidator? contextManifestValidator = null)
     {
+        // ADR-0061 AD20: use the composition root's queue, never an implicit scheduler.
+        if(heavyRunnerQueue is null)
+            throw new UnauthorizedAccessException("explicit_node_queue_required");
+
         _metadataStore = metadataStore;
         _options = options;
         _processRunner = processRunner;
         _workspaceSeeder = workspaceSeeder;
         _keyPoolService = keyPoolService;
-        _heavyRunnerQueue = heavyRunnerQueue ?? new HeavyRunnerQueueService();
+        _heavyRunnerQueue = heavyRunnerQueue;
         _executionTimeout = executionTimeout ?? DefaultExecutionTimeout;
         _contextManifestIssuer = contextManifestIssuer;
         _contextGatePolicy = contextGatePolicy ?? new HostedContextGatePolicy();
@@ -105,6 +110,7 @@ public sealed class PrototypeUiOptimizationService
         }
 
         await using var heavyRunnerLease = await _heavyRunnerQueue.EnterAsync(runId, project.AccountId, project.ProjectId, RunType, CancellationToken.None);
+        project = await RequireCurrentProjectAsync(project, CancellationToken.None);
         await _metadataStore.MarkRunStartedAsync(runId, heavyRunnerLease.QueuePositionAtStart, CancellationToken.None);
         await _metadataStore.UpdateRunProgressAsync(runId, "running", "prepare", "\u6b63\u5728\u51c6\u5907 UI \u4f18\u5316\u3002", CancellationToken.None);
         var runLogRelativeDir = Path.Combine("logs", "phase-a-ui-optimization", project.ProjectId, runId);
@@ -168,6 +174,7 @@ public sealed class PrototypeUiOptimizationService
             var process = await _processRunner.RunAsync(
                 CodexHostedProcessCommandFactory.ApplyRuntime(command, runtimeCredential).WithRunId(runId),
                 timeout.Token);
+            project = await RequireCurrentProjectAsync(project, CancellationToken.None);
             var bomCleanedFiles = StripGodotTextResourceBom(project.RepoPath);
             var smokeScene = process.ExitCode == 0
                 ? await ResolveLatestPrototypeSmokeSceneAsync(project, CancellationToken.None)
@@ -305,6 +312,7 @@ public sealed class PrototypeUiOptimizationService
         PrototypeUiWorkspaceSnapshot preCodexPrototypeSnapshot,
         CancellationToken cancellationToken)
     {
+        project = await RequireCurrentProjectAsync(project, cancellationToken);
         var changeDetection = DetectPrototypeUiChanges(project.RepoPath, codexStartedUtc, preCodexPrototypeSnapshot);
         if (changeDetection.ChangedPaths.Count == 0)
         {
@@ -755,6 +763,20 @@ public sealed class PrototypeUiOptimizationService
     {
         return string.Equals(status, "succeeded", StringComparison.OrdinalIgnoreCase) ||
                string.Equals(status, "completed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // ADR-0061 AD19: queue/executor completion does not authorize retained paths or postprocessing writes.
+    private async Task<ProjectSnapshot> RequireCurrentProjectAsync(ProjectSnapshot supplied, CancellationToken cancellationToken)
+    {
+        var current = await _metadataStore.GetProjectSnapshotAsync(supplied.ProjectId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        bool SamePath(string left, string right) => string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), comparison);
+        if (current.AccountId != supplied.AccountId || current.WorkspaceId != supplied.WorkspaceId ||
+            !SamePath(current.WorkspaceRootPath, supplied.WorkspaceRootPath) || !SamePath(current.RepoPath, supplied.RepoPath) ||
+            !SamePath(current.RuntimePath, supplied.RuntimePath) || !SamePath(current.MetaPath, supplied.MetaPath))
+            throw new UnauthorizedAccessException("current_project_paths_required");
+        return current;
     }
 
     private async Task<bool> HasSucceededPrototypeSkeletonAsync(string projectId, CancellationToken cancellationToken)

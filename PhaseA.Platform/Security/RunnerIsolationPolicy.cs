@@ -304,7 +304,7 @@ public static class RunnerIsolationPolicy
 
     public static void RequireNoReparsePoint(string root, string candidate)
     {
-        var fullRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
+        var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
         var fullCandidate = Path.GetFullPath(candidate);
         var relative = Path.GetRelativePath(fullRoot, fullCandidate);
         var current = fullRoot;

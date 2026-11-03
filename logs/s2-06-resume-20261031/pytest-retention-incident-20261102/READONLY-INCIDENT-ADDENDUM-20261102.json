@@ -1,0 +1,122 @@
+{
+  "schema": "s2-06.retention-incident-bounded-readonly-addendum.v1",
+  "utc": "2026-11-02T04:50:27.558607+00:00",
+  "scope": "Existing incident indexes, exact recovered report/source verification, and selected native metadata only. No pytest/dotnet/native stage, cleanup, recovery write, source edit or budget/admission mutation.",
+  "tool_plane": "No FastCtx tools attached; authorized original Linux environment shell fallback used.",
+  "identity": {
+    "branch": "feat/s2-06-preparation-20261028",
+    "head": "75323d05b9b1b730e311c0631c3aa1fcde66186a"
+  },
+  "trigger": {
+    "command_record": "logs/s2-06-resume-20261031/fixture-retention-final-20261102/command.json",
+    "argv": [
+      "/workspace/ji-mu-yun/logs/s2-06-bmad-20261028/tooling/venv/bin/python",
+      "-B",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/s2_06/test_node_role_closure.py::test_fixture_retention_uses_final_python_outcome",
+      "--junitxml",
+      "/workspace/ji-mu-yun/logs/s2-06-resume-20261031/fixture-retention-final-20261102/junit.xml"
+    ],
+    "started_utc": "2026-11-02T04:29:39.097987+00:00",
+    "ended_utc": "2026-11-02T04:29:52.560912+00:00",
+    "omissions": [
+      "native PYTEST_ADDOPTS retention1000/all",
+      "dedicated --basetemp"
+    ],
+    "cleanup_mechanism": [
+      "logs/s2-06-resume-20261031/launch.py:45 already supplies retention1000/all",
+      "_pytest/tmpdir.py:190 applies keep; :229 defaults3",
+      "_pytest/pathlib.py:397 registers exit cleanup_numbered_dir, :369 enumerates cleanup candidates"
+    ],
+    "risk_owner": "Assistant standalone invocation omitted existing safeguards; not authorized six-directory cleanup."
+  },
+  "loss_inventory": {
+    "exact_missing_report_paths_hashes_and_receipt_refs": "exact-TRX-restoration-audit.json#/unresolved",
+    "unresolved_count": 21,
+    "S106": {
+      "reports": 18,
+      "stages": {
+        "probe": 6,
+        "red": 6,
+        "green": 6
+      },
+      "green_was_already_blocked": true
+    },
+    "S138-r2": {
+      "reports": 3,
+      "stages": {
+        "probe": 1,
+        "red": 1,
+        "green": 1
+      }
+    },
+    "known_debug_roots": "CURRENT-HANDOFF.json#/confirmed_older_unique_debug_roots_lost",
+    "confirmed_four_old_roots_before_files": 9860,
+    "confirmed_four_old_roots_before_allocated_file_bytes": 306601984,
+    "additional_r42_failed_fixture": {
+      "root": "logs/s2-06-resume-20261031/testing-scratch/pytest-of-agent/pytest-364/test_o_7486ec7571d00/s206-owned-fixtures-332a073907a0456eb54789e8475128c6",
+      "previously_observed_backend_SQLite_files": 62,
+      "root_now_absent": true
+    },
+    "total_deleted_files_and_bytes": "Not established; known examples are not the full loss inventory."
+  },
+  "recovery_rechecked": {
+    "paths": 702,
+    "bytes": 16491633,
+    "all_current_report_bytes_and_exact_retained_source_bytes_sha256_match": true,
+    "sources": {
+      "logs/s2-06-native-child-artifacts/<sha256>.trx": 681,
+      "PRIVATE-capability-red-checkpoint.zip": 3,
+      "PRIVATE-first-role-capacity-green-checkpoint.zip": 18
+    },
+    "details": "exact-TRX-restoration-audit.json#/restored",
+    "remaining_archives": "recovery-candidates.json#/additional_existing_archives_checked and bounded-remaining-archive-check.json",
+    "new_exact_original_discovered": false,
+    "git_limit": "No new Git recovery source identified. No full object-store search or claim of exhaustive global irrecoverability."
+  },
+  "current_dependency_boundary": {
+    "method": "Keys and values inspected in full JSON metadata, including >4MB reuse-request manifests, of six explicitly listed successor/current run roots; existing older native metadata additionally inspected bounded to <=4MB per file. No executable gate run.",
+    "selected_runs": {
+      "S106-current-closure": 105,
+      "S138-current-closure": 48,
+      "S106-install-current-r2": 105,
+      "S236-iteration-plan-r41-20261102": 103,
+      "S236-backfill-r42-20261102": 34,
+      "S236-backfill-current-r43-20261102": 46
+    },
+    "selected_run_direct_refs_to_unresolved21": [],
+    "selected_run_missing_observed_testing_scratch_file_dependencies": [],
+    "selected_run_execution_reference_receipts": 0,
+    "historical_direct_refs": "Six old process-receipt.v2.json files (probe/red/green of S106 and S138-r2), listing dependency_files. Exact paths in restoration audit.",
+    "Q7_Q8": "Successor S106/S138 slice-ready certificates cover their own regression assertion edges. No selected metadata directly binds these21 old files. This does not establish transitive whole-plan acceptance validity, current snapshot validity, or permission to erase historical gaps. S236 Q7/Q8/Acceptance not completed.",
+    "DB_boundary": "Lost SQLite states are historical test/debug fixtures, not live Phase data or current product inputs in the examined declared execution roots. Loss prevents exact historical forensic replay and invalidates any claim that all failure scenes remain recoverable. Fresh future runs cannot restore them or replace old RED authority."
+  },
+  "preservation_checks": {
+    "current_five_source_files_match_r43_recovery_manifest": true,
+    "five_unpublished_toolchain_files_and_two_KB_pointer_projection_files_match_preincident_audit": true,
+    "main_git_index_sha256": "fb21877d2e41415a1713af65016fd809ea6bb329ae50ae08d3c83bd0fdedf2b7",
+    "six_affected_old_receipts_match_existing_stage_result_canonical_receipt_sha256": true,
+    "failure_history_rows": 21,
+    "failure_history_mtime_utc": "2026-11-02T04:24:02.773615+00:00",
+    "failure_history_was_not_reset": true,
+    "original_skill_baseline_failure_budget": {
+      "failures": 2,
+      "spent": 107.8169117179832
+    },
+    "two_current_admission_files_and_pointer_match_20261031_FINAL_RESULT_sha256": true,
+    "r9_plan_sha256": "f06bce46942149a855225f888f4c967fa9468e37eeb678fc8dbe884bc6a762ca",
+    "limit": "Selected source and identity checks plus existing sealed receipts; not a preincident byte snapshot of every workspace file or budget. No claim that all S2 files survived."
+  },
+  "proposed_minimum_not_executed": [
+    "Preserve the unresolved21 exact identities and DB loss as append-only incident gaps; never synthesize missing reports or historical SQL states.",
+    "Use existing guarded native launcher for formal runs. Any separately authorized supplemental pytest must use a fresh dedicated repository-log --basetemp outside the old shared root plus explicit retention safeguards; do not reuse a nonempty basetemp (pytest may remove it).",
+    "Before any future Q7/Q8, use existing native current-input/evidence checks to decide admissibility per slice; no baseline swap or manual pass.",
+    "Only after owner direction, generate new current-source verification for invalidated or unproven affected behavior under new explicit immutable evidence identities; preserve old failures, cumulative costs and lost-original disclosures. Never relabel new evidence as recovered original.",
+    "Keep S9 real-Windows requirements and remaining S236 consumer closure separate; incident repair does not complete them."
+  ],
+  "stopped": true,
+  "new_tests_or_business_edits_authorized_by_this_report": false,
+  "authorizes": []
+}

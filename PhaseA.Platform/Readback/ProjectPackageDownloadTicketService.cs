@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Readback;
 
@@ -9,11 +10,16 @@ public sealed class ProjectPackageDownloadTicketService
 {
     private static readonly TimeSpan TicketLifetime = TimeSpan.FromMinutes(10);
 
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeTicketSigner _signer;
+    private readonly NodeProjectMetadata? _authority;
 
-    public ProjectPackageDownloadTicketService(PhaseAPlatformOptions options)
+    public ProjectPackageDownloadTicketService(NodeTicketSigner signer)
+        : this(signer,null) { }
+
+    public ProjectPackageDownloadTicketService(NodeTicketSigner signer,NodeProjectMetadata? authority)
     {
-        _options = options;
+        _signer = signer;
+        _authority=authority;
     }
 
     public string CreateTicket(string accountId, string projectId, string fileName)
@@ -24,7 +30,8 @@ public sealed class ProjectPackageDownloadTicketService
 
         var expiresUnix = DateTimeOffset.UtcNow.Add(TicketLifetime).ToUnixTimeSeconds();
         var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(12)).ToLowerInvariant();
-        var payload = JsonSerializer.Serialize(new TicketPayload(accountId, projectId, fileName, expiresUnix, nonce));
+        var revision=_authority?.DemandCurrent(accountId,projectId);
+        var payload = JsonSerializer.Serialize(new TicketPayload(accountId, projectId, fileName, expiresUnix, nonce,revision));
         var signature = SignRequired(payload);
         return $"{Base64UrlEncode(Encoding.UTF8.GetBytes(payload))}.{Base64UrlEncode(signature)}";
     }
@@ -86,8 +93,27 @@ public sealed class ProjectPackageDownloadTicketService
             return false;
         }
 
-        return providedSignature.Length == expectedSignature.Length &&
-               CryptographicOperations.FixedTimeEquals(providedSignature, expectedSignature);
+        if(providedSignature.Length!=expectedSignature.Length ||
+           !CryptographicOperations.FixedTimeEquals(providedSignature,expectedSignature))return false;
+        if(_authority is null)return true; // Untrusted standalone cryptography cannot mint an admitted host ticket.
+        try { return parsed.AuthorityRevision is long revision && _authority.IsCurrentTicket(accountId,projectId,revision); }
+        catch(UnauthorizedAccessException){return false;}
+    }
+
+    // Existing signed-ticket transport, narrowed to this one read operation. No credential
+    // representation leaves the trusted adapter; every subsequent metadata read rechecks it.
+    internal IDisposable BeginRead(string? ticket,string account,string project,string file)
+    {
+        if(_authority is null || !IsValid(ticket,account,project,file))
+            throw new UnauthorizedAccessException("ticket_authority_required");
+        return _authority.UseTicketRead(ticket!,account,project,file);
+    }
+
+    internal long RequireCurrentRevision(string ticket,string account,string project,string file)
+    {
+        if(!IsValid(ticket,account,project,file))throw new UnauthorizedAccessException("ticket_authority_required");
+        return JsonSerializer.Deserialize<TicketPayload>(Encoding.UTF8.GetString(Base64UrlDecode(ticket.Split('.',2)[0])))!
+            .AuthorityRevision ?? throw new UnauthorizedAccessException("ticket_authority_required");
     }
 
     private byte[] SignRequired(string payload)
@@ -96,22 +122,7 @@ public sealed class ProjectPackageDownloadTicketService
                throw new InvalidOperationException("Ticket signing secret is not configured.");
     }
 
-    private byte[]? TrySign(string payload)
-    {
-        var secret = SigningSecret();
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            return null;
-        }
-
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-        return hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-    }
-
-    private string? SigningSecret()
-    {
-        return _options.TicketSigningSecret;
-    }
+    private byte[]? TrySign(string payload) => _signer.TrySign(payload);
 
     private static string Base64UrlEncode(byte[] bytes)
     {
@@ -130,5 +141,6 @@ public sealed class ProjectPackageDownloadTicketService
         string ProjectId,
         string FileName,
         long ExpiresUnix,
-        string Nonce);
+        string Nonce,
+        long? AuthorityRevision=null);
 }

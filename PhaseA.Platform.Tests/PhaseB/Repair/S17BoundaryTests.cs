@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -142,9 +143,9 @@ public sealed class S17BoundaryTests
 
                 Directory.CreateDirectory(Path.Combine(destination, ".restore-current"));
                 File.WriteAllText(Path.Combine(destination, ".restore-current", "previous-ready.txt"), "previous-ready-content");
-                var storage = new WorkspaceStorageService(connectionString);
+                var storage = new CentralWorkspaceStorageBackend(connectionString);
                 storage.SetQuota(account.AccountId, 16 * 1024 * 1024);
-                _ = new RestoreService(connectionString);
+                _ = new CentralRestoreBackend(connectionString);
                 SeedRouteAuthorityEvidence(connectionString);
                 using (var connection = new SqliteConnection(connectionString))
                 {
@@ -245,11 +246,11 @@ public sealed class S17BoundaryTests
         public bool RestoreUsesLogicalStorageIdentity()
         {
             var manifest = CreateSnapshot("logical-identity");
-            var retained = new WorkspaceStorageService(ConnectionString)
+            var retained = new CentralWorkspaceStorageBackend(ConnectionString)
                 .ListSnapshots(Context.AccountId, Lease.ProjectId)
                 .SingleOrDefault(record => record.Manifest.SnapshotId == manifest.SnapshotId);
             var untrustedSource = Directory.CreateDirectory(Path.Combine(Root, "untrusted-caller-source")).FullName;
-            var attempt = new RestoreService(ConnectionString).RestorePrepared(
+            var attempt = new CentralRestoreBackend(ConnectionString).RestorePrepared(
                 Context,
                 retained?.Manifest ?? throw new InvalidOperationException("S17 retained snapshot was not found by logical identity."),
                 untrustedSource,
@@ -268,7 +269,7 @@ public sealed class S17BoundaryTests
         {
             var manifest = CreateSnapshot("readback");
             var attempt = Restore(manifest, "readback");
-            var accountSnapshot = new WorkspaceStorageService(ConnectionString)
+            var accountSnapshot = new CentralWorkspaceStorageBackend(ConnectionString)
                 .ListSnapshots(Context.AccountId, Lease.ProjectId)
                 .SingleOrDefault(record => record.Manifest.SnapshotId == manifest.SnapshotId);
             return attempt.Status == RestoreAttemptStatus.Published &&
@@ -335,7 +336,7 @@ public sealed class S17BoundaryTests
 
         private SnapshotManifest CreateSnapshot(string suffix)
         {
-            return new WorkspaceStorageService(ConnectionString).CreateSnapshot(
+            return new CentralWorkspaceStorageBackend(ConnectionString).CreateSnapshot(
                 Context,
                 Source,
                 $"snapshot-s17-{suffix}",
@@ -346,7 +347,7 @@ public sealed class S17BoundaryTests
         }
 
         private RestoreAttempt Restore(SnapshotManifest manifest, string idempotencyKey) =>
-            new RestoreService(ConnectionString).RestorePrepared(Context, manifest, Source, Destination, Lease, idempotencyKey);
+            new CentralRestoreBackend(ConnectionString).RestorePrepared(Context, manifest, Source, Destination, Lease, idempotencyKey);
 
         private FailureResult InjectDirectorySwitchFailure()
         {

@@ -21,8 +21,8 @@ public sealed class GameDesignQuestionFormService
     private static readonly TimeSpan DefaultSchemaGenerationTimeout = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan DefaultLastWaiterCleanupTimeout = TimeSpan.FromSeconds(2);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ILlmRouteEngine _llmRouteEngine;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
     private readonly QuestionFormConcurrencyLimiter _concurrencyLimiter;
@@ -124,8 +124,8 @@ public sealed class GameDesignQuestionFormService
     }
 
     public GameDesignQuestionFormService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ILlmRouteEngine llmRouteEngine,
         QuestionFormConcurrencyLimiter? concurrencyLimiter = null,
         TimeSpan? schemaGenerationTimeout = null,
@@ -161,8 +161,10 @@ public sealed class GameDesignQuestionFormService
         var cacheKey = CacheKey(project);
         if (TryReadCache(cacheKey, out var cached))
         {
-            if (!string.Equals(cached!.Source, "agent", StringComparison.Ordinal) ||
-                await ShouldReuseCachedSchemaAsync(project, model, cached, accountId, cancellationToken))
+            var reuseCachedSchema = !string.Equals(cached!.Source, "agent", StringComparison.Ordinal) ||
+                await ShouldReuseCachedSchemaAsync(project, model, cached, accountId, cancellationToken);
+            await RequireCurrentCacheSourceAsync(project.ProjectId, cacheKey, cancellationToken);
+            if (reuseCachedSchema)
             {
                 return cached;
             }
@@ -175,7 +177,9 @@ public sealed class GameDesignQuestionFormService
         var schemaTask = schemaWaiter.Task;
         try
         {
-            return await schemaTask.WaitAsync(cancellationToken);
+            var result = await schemaTask.WaitAsync(cancellationToken);
+            await RequireCurrentCacheSourceAsync(project.ProjectId, cacheKey, cancellationToken);
+            return result;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -320,7 +324,7 @@ public sealed class GameDesignQuestionFormService
         }
         catch (InvalidOperationException)
         {
-            return Cache(cacheKey, Fallback(project, "context_manifest_issue_failed"), FallbackSchemaCacheTtl);
+            return await CacheAsync(cacheKey, Fallback(project, "context_manifest_issue_failed"), FallbackSchemaCacheTtl);
         }
 
         LlmRouteResult completion;
@@ -341,12 +345,12 @@ public sealed class GameDesignQuestionFormService
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
-            return Cache(cacheKey, Fallback(project, "schema_timeout"), FallbackSchemaCacheTtl);
+            return await CacheAsync(cacheKey, Fallback(project, "schema_timeout"), FallbackSchemaCacheTtl);
         }
 
         if (!completion.Succeeded || string.IsNullOrWhiteSpace(completion.JsonObjectText))
         {
-            return Cache(cacheKey, Fallback(project, completion.FailureCode ?? "llm_failed"), FallbackSchemaCacheTtl);
+            return await CacheAsync(cacheKey, Fallback(project, completion.FailureCode ?? "llm_failed"), FallbackSchemaCacheTtl);
         }
 
         try
@@ -354,16 +358,16 @@ public sealed class GameDesignQuestionFormService
             var fields = ParseFields(completion.JsonObjectText);
             if (fields.Count is < MinFields or > MaxFields)
             {
-                return Cache(cacheKey, Fallback(project, "invalid_field_count"), FallbackSchemaCacheTtl);
+                return await CacheAsync(cacheKey, Fallback(project, "invalid_field_count"), FallbackSchemaCacheTtl);
             }
 
             var requiredFieldCount = fields.Count(field => field.Required);
             if (requiredFieldCount is < MinRequiredFields or > MaxRequiredFields)
             {
-                return Cache(cacheKey, Fallback(project, "invalid_required_field_count"), FallbackSchemaCacheTtl);
+                return await CacheAsync(cacheKey, Fallback(project, "invalid_required_field_count"), FallbackSchemaCacheTtl);
             }
 
-            return Cache(cacheKey, new GameDesignQuestionFormResult(
+            return await CacheAsync(cacheKey, new GameDesignQuestionFormResult(
                 "ready",
                 project.ProjectId,
                 SchemaVersion,
@@ -374,7 +378,7 @@ public sealed class GameDesignQuestionFormService
         }
         catch (JsonException)
         {
-            return Cache(cacheKey, Fallback(project, "invalid_json"), FallbackSchemaCacheTtl);
+            return await CacheAsync(cacheKey, Fallback(project, "invalid_json"), FallbackSchemaCacheTtl);
         }
     }
 
@@ -786,11 +790,21 @@ public sealed class GameDesignQuestionFormService
         return false;
     }
 
-    private GameDesignQuestionFormResult Cache(
+    // ADR-0061 AD19: cached or pending schemas do not retain prior caller authority.
+    private async Task RequireCurrentCacheSourceAsync(string projectId, string expectedKey, CancellationToken cancellationToken)
+    {
+        var current = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        if (!string.Equals(CacheKey(current), expectedKey, StringComparison.Ordinal))
+            throw new UnauthorizedAccessException("current_schema_source_required");
+    }
+
+    private async Task<GameDesignQuestionFormResult> CacheAsync(
         string cacheKey,
         GameDesignQuestionFormResult result,
         TimeSpan ttl)
     {
+        await RequireCurrentCacheSourceAsync(result.ProjectId, cacheKey, CancellationToken.None);
         lock (_cacheLock)
         {
             var now = DateTimeOffset.UtcNow;

@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -159,13 +160,14 @@ public sealed class S37BoundaryTests
             {
                 var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
                 await SqliteMetadataSchema.InitializeAsync(connectionString);
-                var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+                var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
                 {
                     ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                     ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
                     ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken)
                 });
-                var store = new PhaseAMetadataStore(connectionString, options);
+                await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
+            var store = new PhaseAMetadataStore(connectionString, options);
                 await store.EnsureSingleAdminAsync();
                 var address = $"http://127.0.0.1:{FreePort()}";
                 process = StartServer(address, databasePath, workspaceRoot);
@@ -291,6 +293,7 @@ public sealed class S37BoundaryTests
             start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken);
             start.Environment["ASPNETCORE_CONTENTROOT"] = Path.Combine(RepositoryRoot, "PhaseA.Platform");
             start.Environment["PHASEA_SERVICE_STATE"] = "test";
+            S206TestSupport.ConfigureOwnedHost(start);
             return Process.Start(start) ?? throw new InvalidOperationException("S37 fixture could not start PhaseA.Platform.");
         }
 

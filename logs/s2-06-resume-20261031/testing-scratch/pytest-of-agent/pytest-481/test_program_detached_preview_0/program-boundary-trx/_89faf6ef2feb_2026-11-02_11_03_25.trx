@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="8c320f55-7ccf-48f7-99e5-b6fbe45e0194" name="@89faf6ef2feb 2026-11-02 11:03:25" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T11:03:25.6683497+00:00" queuing="2026-11-02T11:03:25.6683498+00:00" start="2026-11-02T11:03:20.9540342+00:00" finish="2026-11-02T11:03:25.6747391+00:00" />
+  <TestSettings name="default" id="0ec9d6dd-8980-4903-b4c8-91f6836c5c33">
+    <Deployment runDeploymentRoot="_89faf6ef2feb_2026-11-02_11_03_25" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="659e109a-029d-4822-8a5d-18f2b91c535c" testId="8d95faef-8542-4428-ce93-af04ff86859d" testName="PhaseA.Platform.Tests.NodeIdentity.NodeRoleClosureTests.ProgramDetachedPreviewAndRestoreAdmissionObservations" computerName="89faf6ef2feb" duration="00:00:03.8341846" startTime="2026-11-02T11:03:25.5355394+00:00" endTime="2026-11-02T11:03:25.5355544+00:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="659e109a-029d-4822-8a5d-18f2b91c535c">
+      <Output>
+        <StdOut>S206_PROGRAM_BOUNDARIES:[{"mode":"valid","httpAccepted":true,"queueWaitObserved":true,"callbackObserved":true,"started":true,"status":"failed","finished":true,"changed":[],"restoreInitialStatus":409,"restoreInitialCode":"package_snapshot_unavailable","restoreAfterStatus":409,"proofScope":"actual HTTP Task.Run and queue/current-authority boundary; initial restore is a safe non-versioned-package rejection, not native restore/ACL activation"},{"mode":"revoked","httpAccepted":true,"queueWaitObserved":true,"callbackObserved":true,"started":false,"status":"queued","finished":false,"changed":[],"restoreInitialStatus":409,"restoreInitialCode":"package_snapshot_unavailable","restoreAfterStatus":401,"proofScope":"actual HTTP Task.Run and queue/current-authority boundary; initial restore is a safe non-versioned-package rejection, not native restore/ACL activation"},{"mode":"stale-projection","httpAccepted":true,"queueWaitObserved":true,"callbackObserved":true,"started":false,"status":"queued","finished":false,"changed":[],"restoreInitialStatus":409,"restoreInitialCode":"package_snapshot_unavailable","restoreAfterStatus":404,"proofScope":"actual HTTP Task.Run and queue/current-authority boundary; initial restore is a safe non-versioned-package rejection, not native restore/ACL activation"},{"mode":"foreign-home","httpAccepted":true,"queueWaitObserved":true,"callbackObserved":true,"started":false,"status":"queued","finished":false,"changed":[],"restoreInitialStatus":409,"restoreInitialCode":"package_snapshot_unavailable","restoreAfterStatus":404,"proofScope":"actual HTTP Task.Run and queue/current-authority boundary; initial restore is a safe non-versioned-package rejection, not native restore/ACL activation"},{"mode":"foreign-project","httpAccepted":true,"queueWaitObserved":true,"callbackObserved":true,"started":false,"status":"queued","finished":false,"changed":[],"restoreInitialStatus":409,"restoreInitialCode":"package_snapshot_unavailable","restoreAfterStatus":404,"proofScope":"actual HTTP Task.Run and queue/current-authority boundary; initial restore is a safe non-versioned-package rejection, not native restore/ACL activation"}]</StdOut>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="PhaseA.Platform.Tests.NodeIdentity.NodeRoleClosureTests.ProgramDetachedPreviewAndRestoreAdmissionObservations" storage="/workspace/ji-mu-yun/phasea.platform.tests/bin/debug/net8.0/phasea.platform.tests.dll" id="8d95faef-8542-4428-ce93-af04ff86859d">
+      <Execution id="659e109a-029d-4822-8a5d-18f2b91c535c" />
+      <TestMethod codeBase="/workspace/ji-mu-yun/PhaseA.Platform.Tests/bin/Debug/net8.0/PhaseA.Platform.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="PhaseA.Platform.Tests.NodeIdentity.NodeRoleClosureTests" name="ProgramDetachedPreviewAndRestoreAdmissionObservations" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="8d95faef-8542-4428-ce93-af04ff86859d" executionId="659e109a-029d-4822-8a5d-18f2b91c535c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="1" executed="1" passed="1" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.1+ce9211e970 (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.13]   Discovering: PhaseA.Platform.Tests
+[xUnit.net 00:00:00.31]   Discovered:  PhaseA.Platform.Tests
+[xUnit.net 00:00:00.32]   Starting:    PhaseA.Platform.Tests
+[xUnit.net 00:00:04.19]   Finished:    PhaseA.Platform.Tests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

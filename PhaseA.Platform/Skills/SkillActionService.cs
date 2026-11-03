@@ -13,13 +13,13 @@ namespace PhaseA.Platform.Skills;
 public sealed class SkillActionService
 {
     private const string RunType = "skill-action";
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly SkillActionCatalog _catalog;
     private readonly IHostedProcessRunner _processRunner;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly IAiCodeMirrorBillingClient _billingClient;
-    private readonly AiCodeMirrorKeyPoolService? _keyPoolService;
+    private readonly NodeRuntimeCredentialReader? _keyPoolService;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
     private readonly HostedContextGatePolicy _contextGatePolicy;
@@ -29,13 +29,13 @@ public sealed class SkillActionService
     private readonly RunCancellationService _runCancellation;
 
     public SkillActionService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         SkillActionCatalog catalog,
         IHostedProcessRunner processRunner,
         IProjectWorkspaceSeeder workspaceSeeder,
         IAiCodeMirrorBillingClient? billingClient = null,
-        AiCodeMirrorKeyPoolService? keyPoolService = null,
+        NodeRuntimeCredentialReader? keyPoolService = null,
         ILlmRouteEngine? llmRouteEngine = null,
         HeavyRunnerQueueService? heavyRunnerQueue = null,
         [FromKeyedServices("asset-generation")] HeavyRunnerQueueService? assetRunnerQueue = null,
@@ -189,6 +189,8 @@ public sealed class SkillActionService
                     OperationKey: operationKey,
                     ContextEnvelope: envelope),
                 runToken);
+        // AD19/20: provider completion is not a retained workspace write permit.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         var output = FirstNonEmpty(routeResult.AssistantMessage, routeResult.Stderr, routeResult.Stdout, "");
         await File.WriteAllTextAsync(outputAbsolutePath, output, Encoding.UTF8, runToken);
         var status = routeResult.Succeeded ? "succeeded" : "failed";

@@ -167,7 +167,7 @@ public sealed class S21BoundaryTests
 
         private static bool Contains(byte[] payload, string value) => payload.AsSpan().IndexOf(Encoding.UTF8.GetBytes(value)) >= 0;
 
-        private WorkspaceStorageService CreateStorage() => new($"Data Source={_databasePath}");
+        private CentralWorkspaceStorageBackend CreateStorage() => new CentralWorkspaceStorageBackend($"Data Source={_databasePath}");
         private RequestContext Context() => RequestContext.FromIdentity(new AccountIdentity(AccountId, "s21", PhaseAAuth.UserRole), "principal-s21", "credential-s21", "correlation-s21");
         private HashSet<string> Blacklist() => new(StringComparer.OrdinalIgnoreCase) { ".cache", ".bin", ".secret", ".ticket" };
 
@@ -258,7 +258,7 @@ public sealed class S21BoundaryTests
             if (File.Exists(_databasePath)) File.Delete(_databasePath);
         }
 
-        private WorkspaceStorageService CreateStorage() => new($"Data Source={_databasePath}");
+        private CentralWorkspaceStorageBackend CreateStorage() => new CentralWorkspaceStorageBackend($"Data Source={_databasePath}");
         private RequestContext Context() => RequestContext.FromIdentity(new AccountIdentity(AccountId, "s21", PhaseAAuth.UserRole), "principal-s21", "credential-s21", "correlation-s21");
         private HashSet<string> Blacklist() => new(StringComparer.OrdinalIgnoreCase) { ".protected" };
 
@@ -328,7 +328,7 @@ public sealed class S21BoundaryTests
             if (File.Exists(_databasePath)) File.Delete(_databasePath);
         }
 
-        private WorkspaceStorageService CreateStorage() => new($"Data Source={_databasePath}");
+        private CentralWorkspaceStorageBackend CreateStorage() => new CentralWorkspaceStorageBackend($"Data Source={_databasePath}");
         private RequestContext Context() => RequestContext.FromIdentity(new AccountIdentity(AccountId, "s21", PhaseAAuth.UserRole), "principal-s21", "credential-s21", "correlation-s21");
         private void Write(string relativePath, string content) => File.WriteAllText(Path.Combine(_root.FullName, relativePath), content);
 
@@ -406,7 +406,7 @@ public sealed class S21BoundaryTests
             return Convert.ToInt32(audit.ExecuteScalar()) > 0;
         }
 
-        private WorkspaceStorageService CreateStorage() => new($"Data Source={_databasePath}");
+        private CentralWorkspaceStorageBackend CreateStorage() => new CentralWorkspaceStorageBackend($"Data Source={_databasePath}");
         private RequestContext Context() => RequestContext.FromIdentity(new AccountIdentity(AccountId, "s21", PhaseAAuth.UserRole), "principal-s21", "credential-s21", "correlation-s21");
 
         private void Write(string relativePath, string content)

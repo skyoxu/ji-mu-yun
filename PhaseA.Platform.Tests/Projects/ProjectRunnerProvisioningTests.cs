@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Text;
 using PhaseA.Platform.Configuration;
@@ -19,6 +20,7 @@ public sealed class ProjectRunnerProvisioningTests
     {
         Assert.True(OperatingSystem.IsWindows(), "Native provisioning requires Windows.");
         using var scope = await Scope.CreateAsync();
+        using var fixtureCurrent = scope.EnterCurrent();
         var created = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
         Assert.True(created.Succeeded, created.FailureCode);
         var project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
@@ -29,7 +31,7 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.InRange(descriptor.OsIdentity.Length, 1, 20);
         Assert.True(RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor));
         Assert.True(RunnerIsolationPolicy.HasExpectedRestoreTreeSecurity(descriptor, project.RepoPath));
-        await RunProbeAsync(project.RepoPath, descriptor);
+        await RunProbeAsync(project.RepoPath, descriptor, scope.Store);
 
         // A second testhost has empty registration caches in a separate process.
         // The persisted marker and LOCAL_MACHINE vault entry must be sufficient.
@@ -45,6 +47,9 @@ public sealed class ProjectRunnerProvisioningTests
         start.Environment["PHASEA_RUNNER_PROBE_REPO"] = project.RepoPath;
         start.Environment["PHASEA_RUNNER_PROBE_PROJECT"] = project.ProjectId;
         start.Environment["PHASEA_RUNNER_PROBE_ACCOUNT"] = project.AccountId;
+        start.Environment["PHASEA_RUNNER_PROBE_DB"] = scope.ConnectionString;
+        start.Environment["PHASEA_RUNNER_PROBE_ROOT"] = scope.Root;
+        start.Environment["PHASEA_RUNNER_PROBE_CREDENTIAL_HASH"] = scope.Context.CredentialId;
         using var process = Process.Start(start)!;
         var stdout = process.StandardOutput.ReadToEndAsync();
         var stderr = process.StandardError.ReadToEndAsync();
@@ -63,6 +68,7 @@ public sealed class ProjectRunnerProvisioningTests
         {
             // Standalone suite execution still exercises a real registration reload.
             using var scope = await Scope.CreateAsync();
+            using var fixtureCurrent = scope.EnterCurrent();
             var result = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
             Assert.True(result.Succeeded, result.FailureCode);
             var project = (await scope.Store.GetProjectSnapshotAsync(result.ProjectId!))!;
@@ -70,19 +76,26 @@ public sealed class ProjectRunnerProvisioningTests
             scope.Registrations.Add(original);
             RunnerIsolationPolicy.ForgetWorkspace(project.WorkspaceRootPath);
             Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var reloaded));
-            await RunProbeAsync(project.RepoPath, reloaded);
+            await RunProbeAsync(project.RepoPath, reloaded, scope.Store);
             return;
         }
         Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(repo, out var descriptor));
         Assert.Equal(Environment.GetEnvironmentVariable("PHASEA_RUNNER_PROBE_PROJECT"), descriptor.ProjectId);
         Assert.Equal(Environment.GetEnvironmentVariable("PHASEA_RUNNER_PROBE_ACCOUNT"), descriptor.AccountId);
-        await RunProbeAsync(repo, descriptor);
+        var options = S206TestSupport.OwnedNodeOptions(new()
+        { ["HOSTED_WORKSPACE_ROOT"] = Environment.GetEnvironmentVariable("PHASEA_RUNNER_PROBE_ROOT"),
+          ["PHASEA_REPOSITORY_ROOT"] = AppContext.BaseDirectory });
+        var store = new PhaseAMetadataStore(Environment.GetEnvironmentVariable("PHASEA_RUNNER_PROBE_DB")!, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store,
+            Environment.GetEnvironmentVariable("PHASEA_RUNNER_PROBE_CREDENTIAL_HASH")!));
+        await RunProbeAsync(repo, descriptor, store);
     }
 
     [Fact]
     public async Task ProvisioningFailureRollsBackProjectAndNewWorkspace()
     {
         using var scope = await Scope.CreateAsync(new RejectingProvisioner());
+        using var fixtureCurrent = scope.EnterCurrent();
         var result = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
         Assert.False(result.Succeeded);
         Assert.Equal("project_creation_failed", result.FailureCode);
@@ -99,6 +112,7 @@ public sealed class ProjectRunnerProvisioningTests
     public async Task ConfiguredBatchEntryExecutesAndForwardsArgumentsAndInput(string extension)
     {
         using var scope = await Scope.CreateAsync();
+        using var fixtureCurrent = scope.EnterCurrent();
         var created = await scope.Service.CreateProjectAsync(scope.AccountId, Request());
         Assert.True(created.Succeeded, created.FailureCode);
         var project = (await scope.Store.GetProjectSnapshotAsync(created.ProjectId!))!;
@@ -110,7 +124,7 @@ public sealed class ProjectRunnerProvisioningTests
             "set /p INPUT_LINE=\r\necho INPUT_LINE=%INPUT_LINE%\r\nexit /b 0\r\n", Encoding.ASCII);
         var command = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             project.RepoPath, Path.Combine(project.RepoPath, "unused-output.txt"), "test-input\n", "test-model", "low"));
-        var runner = new HostedProcessRunner();
+        var runner = new HostedProcessRunner(authority: scope.Store);
         var result = await runner.RunAsync(command with
         {
             FileName = script, Arguments = ["argument with spaces", "symbols&safe"],
@@ -130,7 +144,7 @@ public sealed class ProjectRunnerProvisioningTests
         Assert.Contains("NATIVE_RETRY_STARTED", retry.Stdout);
     }
 
-    private static async Task RunProbeAsync(string repo, RunnerIsolationDescriptor descriptor)
+    private static async Task RunProbeAsync(string repo, RunnerIsolationDescriptor descriptor, PhaseAMetadataStore store)
     {
         Assert.True(RunnerIsolationPolicy.HasExpectedWorkspaceSecurity(descriptor));
         var probe = Path.Combine(repo, "runner-probe.cmd");
@@ -145,7 +159,7 @@ public sealed class ProjectRunnerProvisioningTests
             $"dir \"{accountRoot}\" >nul 2>nul\r\nif not errorlevel 1 exit /b 41\r\nexit /b 0\r\n", Encoding.ASCII);
         var factory = CodexHostedProcessCommandFactory.Build(new CodexHostedProcessRequest(
             repo, Path.Combine(repo, "unused-output.txt"), "harmless native probe", "test-model", "low"));
-        var result = await new HostedProcessRunner().RunAsync(factory with
+        var result = await new HostedProcessRunner(authority: store).RunAsync(factory with
         {
             FileName = "cmd.exe", Arguments = ["/d", "/c", probe], StandardInput = null,
             TotalTimeout = TimeSpan.FromSeconds(30)
@@ -176,6 +190,9 @@ public sealed class ProjectRunnerProvisioningTests
         private Scope(TempSqliteDatabase database, string root, string accountId,
             PhaseAMetadataStore store, ProjectCreationService service)
         { _database = database; Root = root; AccountId = accountId; Store = store; Service = service; }
+        public string ConnectionString => _database.ConnectionString;
+        public RequestContext Context { get; private set; } = null!;
+        public IDisposable? EnterCurrent() => S206TestSupport.EnterCurrentContext(Context);
         public string Root { get; }
         public string AccountId { get; }
         public PhaseAMetadataStore Store { get; }
@@ -185,14 +202,15 @@ public sealed class ProjectRunnerProvisioningTests
         {
             var database = TempSqliteDatabase.Create();
             var root = Path.Combine(Path.GetTempPath(), "phase-runner-provision-" + Guid.NewGuid().ToString("N"));
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             { ["HOSTED_WORKSPACE_ROOT"] = root, ["PHASEA_REPOSITORY_ROOT"] = AppContext.BaseDirectory });
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var owner = await store.CreateUserAccountAsync("runner-owner-" + Guid.NewGuid().ToString("N"), projectLimit: 2);
             var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new Seed(),
                 runnerProvisioner: provisioner ?? new WindowsProjectRunnerProvisioner(options));
-            return new Scope(database, root, owner.AccountId, store, service);
+            return new Scope(database, root, owner.AccountId, store, service)
+            { Context = await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(owner.Token)) };
         }
         public void Dispose()
         {

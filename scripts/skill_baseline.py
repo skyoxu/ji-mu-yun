@@ -34,6 +34,7 @@ SCHEMA = 'toolchain.skill-admission.v1'
 SKILLS = {'vdd': '.agents/skills/vdd-execution-plan',
           'quick-dev': '.agents/skills/quick-dev-tdd-adapter'}
 SKIP_PARTS = {'__pycache__', '.pytest_cache', '.venv', 'venv', '.git'}
+DERIVED_PROJECTION = 'knowledge/projections/consumer-projections.v1.json'
 
 
 def wire(value):
@@ -417,6 +418,155 @@ def record(root, reference):
     return value
 
 
+def _publication_scope(snapshot, catalog):
+    """Exclude only indexed content/positions, never eligibility or source scope."""
+    semantic = deepcopy(catalog)
+    semantic.pop('source_snapshot', None)
+    for module in semantic['modules']:
+        for field in ('source_sha256', 'content', 'anchor', 'anchors', 'title'):
+            module.pop(field, None)
+        for resource in module.get('resources', []):
+            resource.pop('source_sha256', None)
+    sources = [{k: row[k] for k in ('path', 'source_role')} for row in snapshot['sources']]
+    return digest(wire({'catalog': semantic, 'sources': sources}))
+
+
+def _publication_binding(root, fingerprint_files):
+    """Seal native producer evidence, not a caller-provided exemption flag.
+
+    Ordinary code changes retain their existing admission path when Knowledge
+    is absent/stale. Such a record cannot authorize a later data-only refresh.
+    """
+    if DERIVED_PROJECTION not in fingerprint_files:
+        return None
+    try:
+        directory = path(root, 'scripts/python')
+        if str(directory) not in sys.path:
+            sys.path.insert(0, str(directory))
+        import publish_knowledge_catalog as owner
+        pointer, _ = owner._load_pointer(path(root, 'knowledge/indexes/current.json'), 'admission-publication')
+        generation = 'knowledge/indexes/generations/' + pointer['generation_id'] + '/'
+        path(root, generation + 'manifest.json')
+        manifest, payloads = owner._generation_payloads(root, pointer)
+        for artifact in manifest['artifacts'].values():
+            path(root, generation + artifact['bundle_path'])
+        layers, _ = owner._validate_generation_payloads(manifest, payloads)
+        owner._require_generation_compatible_with_main(root,
+            generation_main=pointer['main_commit'], current_main=owner._main_commit(root),
+            snapshot=layers['snapshot'], payloads=payloads)
+        if not owner.verify_current_publication(root,
+                catalog_path=path(root, owner.LAYER_PATHS['catalog_v2'].as_posix()),
+                policy_path=path(root, owner.INPUT_PATHS['policy'].as_posix()),
+                projections_path=path(root, DERIVED_PROJECTION)):
+            return None
+        projection = path(root, DERIVED_PROJECTION).read_bytes()
+        if digest(projection) != fingerprint_files[DERIVED_PROJECTION]:
+            return None
+        authorization = None
+        summary = manifest['publication_request']
+        requests = path(root, 'logs/knowledge-context/publication-requests')
+        for source in sorted(requests.rglob('*.json')):
+            relative = source.relative_to(root).as_posix()
+            try:
+                source = path(root, relative)
+                if read_json(source).get('request_id') != summary['request_id']:
+                    continue
+                actual = owner._load_publication_request(root, Path(relative), expected_main=pointer['main_commit'])
+                if actual.summary == summary:
+                    authorization = {'path': relative, 'sha256': digest(source.read_bytes()), 'summary': summary}
+                    break
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+        if authorization is None:
+            return None
+        return {'schema': 'toolchain.skill-derived-publication.v1', 'pointer': pointer,
+            'projection_text': projection.decode('utf-8'),
+            'scope_sha256': _publication_scope(layers['snapshot'], layers['catalog_v2']),
+            'inputs_sha256': {k: manifest['artifacts'][k]['sha256'] for k in owner.INPUT_PATHS},
+            'authorization': authorization}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, ImportError):
+        return None
+
+
+def _publication_bindings(root, enrolled):
+    result, observed = {}, {}
+    for name, skill in enrolled['skills'].items():
+        files_ = skill['fingerprint']['files']
+        version = files_.get(DERIVED_PROJECTION)
+        if version and version not in observed:
+            observed[version] = _publication_binding(root, files_)
+        if version and observed[version] is not None:
+            result[name] = observed[version]
+    return result
+
+
+def _sealed_projection(value):
+    """Historical certificates are hash-sealed by native admission records.
+
+    They do not depend on retaining every old Knowledge generation forever.
+    New measurements must separately match freshly validated native evidence.
+    """
+    try:
+        binding = value['derived_publication']
+        if (set(binding) != {'schema', 'pointer', 'projection_text', 'scope_sha256', 'inputs_sha256', 'authorization'}
+                or binding['schema'] != 'toolchain.skill-derived-publication.v1'
+                or digest(binding['projection_text'].encode('utf-8')) != value['candidate_skill']['fingerprint']['files'][DERIVED_PROJECTION]):
+            return None
+        projection = json.loads(binding['projection_text'])
+        if (set(projection) != {'schema_version', 'source_snapshot_id', 'catalog_sha256', 'policy_revision', 'policy_sha256', 'projections'}
+                or projection['source_snapshot_id'] != binding['pointer']['source_snapshot_id']
+                or binding['authorization']['summary']['caller'] != 'maintain-knowledge-base'
+                or set(binding['inputs_sha256']) != {'policy', 'exclusions', 'query_suite'}):
+            return None
+        for key in ('source_snapshot_id', 'catalog_sha256'):
+            projection.pop(key)
+        return projection
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def _derived_refresh(previous, successor):
+    try:
+        old, new = previous['candidate_skill'], successor['candidate_skill']
+        a, b = old['fingerprint']['files'], new['fingerprint']['files']
+        if ({p for p in a.keys() | b.keys() if a.get(p) != b.get(p)} != {DERIVED_PROJECTION}
+                or old['suite'] != new['suite'] or old['suite_sha256'] != new['suite_sha256']
+                or any(previous[k] != successor[k] for k in ('policy_sha256', 'runner_sha256', 'tool_versions'))):
+            return False
+        old_projection, new_projection = _sealed_projection(previous), _sealed_projection(successor)
+        if old_projection is None or new_projection is None or old_projection != new_projection:
+            return False
+        a, b = previous['derived_publication'], successor['derived_publication']
+        return (a['scope_sha256'] == b['scope_sha256'] and a['inputs_sha256'] == b['inputs_sha256']
+                and a['pointer']['generation_id'] != b['pointer']['generation_id'])
+    except (KeyError, TypeError):
+        return False
+
+
+def _transition_increment(root, previous, enrolled, name, bindings):
+    successor = {k: enrolled[k] for k in ('policy_sha256', 'runner_sha256', 'tool_versions')}
+    successor.update(candidate_skill=enrolled['skills'][name], derived_publication=bindings.get(name))
+    if _derived_refresh(previous, successor):
+        _verify_admission_proofs(root, previous)
+        return []
+    return check_increment(previous['candidate_skill']['suite']['cases'], successor['candidate_skill']['suite']['cases'])
+
+
+def _verify_admission_proofs(root, value):
+    targets = value['candidate_skill']['suite']['targets']
+    for unit in value['results']:
+        proof = path(root, unit['proof'])
+        if digest(proof.read_bytes()) != unit['proof_sha256']:
+            fail('regression-proof-corrupt')
+        with gzip.open(proof, 'rb') as stream:
+            raw = stream.read(16 * 1024 * 1024 + 1)
+        if len(raw) > 16 * 1024 * 1024:
+            fail('oversized-regression-proof')
+        validate_report(json.loads(raw), unit['nonce'])
+    if [u['target'] for u in value['results']] != targets:
+        fail('incomplete-mandatory-suite')
+
+
 def lineage(root, name, pointer, reference, value):
     genesis = path(root, STORE + '/bootstrap.json')
     if digest(genesis.read_bytes()) != pointer.get('bootstrap_sha256'):
@@ -436,8 +586,12 @@ def lineage(root, name, pointer, reference, value):
             fail('repeated-bootstrap')
         old = record(root, previous)
         changed = old['candidate_skill']['fingerprint'] != value['candidate_skill']['fingerprint']
-        expected = (check_increment(old['candidate_skill']['suite']['cases'],
-                                    value['candidate_skill']['suite']['cases']) if changed else [])
+        refreshed = _derived_refresh(old, value)
+        if refreshed:
+            _verify_admission_proofs(root, old)
+        expected = ([] if refreshed else
+                    check_increment(old['candidate_skill']['suite']['cases'],
+                                    value['candidate_skill']['suite']['cases'])) if changed else []
         if expected != value.get('incremental_tests'):
             fail('test-increment-lineage-mismatch')
         reference, value = previous, old
@@ -468,17 +622,7 @@ def approved(root, name):
     # Admission and its suite AST were validated by full candidate() at test and
     # admit. Their immutable record hash plus unchanged test bytes/pinned tools
     # avoids rebuilding the identical AST during every ordinary CLI startup.
-    for unit in value['results']:
-        proof = path(root, unit['proof'])
-        if digest(proof.read_bytes()) != unit['proof_sha256']:
-            fail('regression-proof-corrupt')
-        with gzip.open(proof, 'rb') as stream:
-            raw = stream.read(16 * 1024 * 1024 + 1)
-        if len(raw) > 16 * 1024 * 1024:
-            fail('oversized-regression-proof')
-        validate_report(json.loads(raw), unit['nonce'])
-    if [u['target'] for u in value['results']] != targets:
-        fail('incomplete-mandatory-suite')
+    _verify_admission_proofs(root, value)
     return value
 
 
@@ -954,6 +1098,7 @@ def run_tests(root, enrolled, out, *, bootstrap=False, diagnostic_target=None, d
         history = bootstrap_history(root, enrolled)
     elif pointer is None:
         fail('explicit-first-bootstrap-required')
+    bindings = {} if diagnostic_target else _publication_bindings(root, enrolled)
     increments = {}
     for name in names:
         if diagnostic_target:
@@ -961,9 +1106,9 @@ def run_tests(root, enrolled, out, *, bootstrap=False, diagnostic_target=None, d
         previous = (pointer or {}).get('platforms', {}).get(platform_key(), {}).get(name)
         if previous:
             old = record(root, previous)
+            lineage(root, name, pointer, previous, old)
             if old['candidate_skill']['fingerprint'] != enrolled['skills'][name]['fingerprint']:
-                increments[name] = check_increment(old['candidate_skill']['suite']['cases'],
-                                                   enrolled['skills'][name]['suite']['cases'])
+                increments[name] = _transition_increment(root, old, enrolled, name, bindings)
         elif not bootstrap:
             fail('platform-baseline-missing')
     recovery = None
@@ -1020,6 +1165,8 @@ def run_tests(root, enrolled, out, *, bootstrap=False, diagnostic_target=None, d
         result = {'status': 'diagnostic-only', 'authorizes': [], 'target': diagnostic_target}
         atomic(out / 'diagnostic.json', result)
         return result
+    if bindings != _publication_bindings(root, enrolled):
+        fail('derived-publication-changed-during-tests')
     if defer_admission:
         units = {name: [{**{k: row[k] for k in ('target', 'nonce')},
             'source': row['source'].relative_to(root).as_posix(),
@@ -1028,15 +1175,18 @@ def run_tests(root, enrolled, out, *, bootstrap=False, diagnostic_target=None, d
         measurement = {'schema': 'toolchain.skill-baseline-measurement.v1', 'candidate': enrolled,
             'predecessor': pointer, 'bootstrap': bootstrap, 'increments': increments,
             'history': history if bootstrap else None, 'units': units}
+        if bindings:
+            measurement['derived_publications'] = bindings
         if recovery:
             measurement['resource_recovery'] = recovery.complete(out)
         atomic(out / 'measurement.json', measurement)
         return {'status': 'measured-only', 'authorizes': [],
                 'measurement': (out / 'measurement.json').relative_to(root).as_posix()}
-    return publish_admission(root, enrolled, results, pointer, bootstrap, increments, history if bootstrap else None)
+    return publish_admission(root, enrolled, results, pointer, bootstrap, increments,
+                             history if bootstrap else None, publication_bindings=bindings)
 
 
-def publish_admission(root, enrolled, results, pointer, bootstrap, increments, history):
+def publish_admission(root, enrolled, results, pointer, bootstrap, increments, history, *, publication_bindings=None):
     names = list(enrolled['skills'])
     store = path(root, STORE, exists=False)
     store.mkdir(parents=True, exist_ok=True)
@@ -1045,6 +1195,9 @@ def publish_admission(root, enrolled, results, pointer, bootstrap, increments, h
     try:
         if current(root) != pointer:
             fail('admission-concurrent-update')
+        bindings = _publication_bindings(root, enrolled)
+        if publication_bindings is not None and bindings != publication_bindings:
+            fail('measurement-derived-publication-changed')
         updated = deepcopy(pointer or {'schema': SCHEMA, 'platforms': {}})
         scope = updated['platforms'].setdefault(platform_key(), {})
         for name in names:
@@ -1063,6 +1216,8 @@ def publish_admission(root, enrolled, results, pointer, bootstrap, increments, h
                 'runner_sha256': enrolled['runner_sha256'], 'results': proofs,
                 'tool_versions': enrolled['tool_versions'],
                 'predecessor': scope.get(name), 'incremental_tests': increments.get(name, [])}
+            if name in bindings:
+                admission['derived_publication'] = bindings[name]
             p = directory / 'admission.json'
             atomic(p, admission)
             scope[name] = {'path': p.relative_to(root).as_posix(), 'sha256': digest(p.read_bytes())}
@@ -1070,6 +1225,8 @@ def publish_admission(root, enrolled, results, pointer, bootstrap, increments, h
             atomic(store / 'bootstrap.json', {'schema': SCHEMA, 'initial': updated,
                                               'history': history, 'history_sha256': digest(wire(history))})
             updated['bootstrap_sha256'] = digest((store / 'bootstrap.json').read_bytes())
+        if bindings != _publication_bindings(root, enrolled):
+            fail('derived-publication-changed-before-activation')
         atomic(store / 'current.json', updated, replace=pointer is not None)
     finally:
         os.close(fd)
@@ -1094,6 +1251,9 @@ def admit_measurement(root, measurement_path):
         fail('measurement-bootstrap-shape')
     pointer = current(root)
     store = path(root, STORE, exists=False)
+    bindings = _publication_bindings(root, enrolled)
+    if bindings != value.get('derived_publications', {}):
+        fail('measurement-derived-publication-changed')
     if bootstrap:
         if (set(names) != set(SKILLS) or pointer is not None
                 or (store.exists() and any(store.iterdir())) or value['increments'] != {}
@@ -1108,9 +1268,9 @@ def admit_measurement(root, measurement_path):
             if not ref:
                 fail('measurement-platform-baseline-missing')
             old = record(root, ref)
+            lineage(root, name, pointer, ref, old)
             if old['candidate_skill']['fingerprint'] != enrolled['skills'][name]['fingerprint']:
-                increments[name] = check_increment(old['candidate_skill']['suite']['cases'],
-                                                   enrolled['skills'][name]['suite']['cases'])
+                increments[name] = _transition_increment(root, old, enrolled, name, bindings)
         if increments != value['increments']:
             fail('measurement-increment-mismatch')
     if set(value['units']) != set(names):
@@ -1171,7 +1331,8 @@ def admit_measurement(root, measurement_path):
             if not set(test_inventory(root, [row['target']])) <= {n.split('[', 1)[0] for n in observed['selected']}:
                 fail('measurement-mandatory-case-not-observed')
             results[name].append({'target': row['target'], 'nonce': row['nonce'], 'source': report})
-    return publish_admission(root, enrolled, results, pointer, bootstrap, value['increments'], value['history'])
+    return publish_admission(root, enrolled, results, pointer, bootstrap, value['increments'],
+                             value['history'], publication_bindings=bindings)
 
 
 def main():

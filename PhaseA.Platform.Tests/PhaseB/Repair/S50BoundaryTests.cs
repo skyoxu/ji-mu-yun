@@ -10,7 +10,7 @@ public sealed class S50BoundaryTests : IDisposable
     private const string AccountId = "account-s50";
     private readonly string _root = Path.Combine(Path.GetTempPath(), "phase-s50-" + Guid.NewGuid().ToString("N"));
     private readonly string _connectionString;
-    private readonly WorkspaceStorageService _storage;
+    private readonly CentralWorkspaceStorageBackend _storage;
     private readonly RequestContext _context;
 
     public S50BoundaryTests()
@@ -25,7 +25,7 @@ public sealed class S50BoundaryTests : IDisposable
             command.ExecuteNonQuery();
         }
 
-        _storage = new WorkspaceStorageService(_connectionString);
+        _storage = new CentralWorkspaceStorageBackend(_connectionString);
         _context = new RequestContext("principal-s50", AccountId, new HashSet<string>(StringComparer.Ordinal) { "member" }, "credential-s50", "correlation-s50");
     }
 
@@ -131,7 +131,7 @@ public sealed class S50BoundaryTests : IDisposable
         _storage.SetQuota(AccountId, 100);
         var snapshot = CreateSnapshot("soft-deleted-snapshot", "project-restart", 5);
         _storage.SoftDeleteSnapshot(_context, snapshot.Manifest.SnapshotId);
-        var restarted = new WorkspaceStorageService(_connectionString);
+        var restarted = new CentralWorkspaceStorageBackend(_connectionString);
         var measuredActiveWorkspaceBytes = new FileInfo(Path.Combine(liveRoot, "live.dat")).Length;
 
         Assert.True(restarted.GetQuota(AccountId).UsedBytes == measuredActiveWorkspaceBytes, "FAILURE-O-B085F1A35441: restart reconciliation did not retain active live Workspace logical usage.");
@@ -197,7 +197,7 @@ public sealed class S50BoundaryTests : IDisposable
         var original = CreateSnapshot("placement-change", "project-placement", 8, workspaceId: "workspace-placement");
         var newRoot = Path.Combine(_root, "moved-placement");
         Directory.Move(Path.GetDirectoryName(original.ManifestPath)!, newRoot);
-        var restarted = new WorkspaceStorageService(_connectionString);
+        var restarted = new CentralWorkspaceStorageBackend(_connectionString);
         var resolved = restarted.ListSnapshots(AccountId, "project-placement", includeDeleted: true);
 
         Assert.True(

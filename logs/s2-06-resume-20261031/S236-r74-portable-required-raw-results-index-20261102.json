@@ -1,0 +1,27 @@
+{
+  "utc": "2026-11-02T11:12:03.157834+00:00",
+  "python_cases": 2,
+  "python_exit": 0,
+  "actual_trx": [
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output/test_legacy_route_reader_compa0/legacy-route-reader-trx/_89faf6ef2feb_2026-11-02_11_10_15.trx",
+      "bytes": 280190,
+      "sha256": "7c82dd92d7dd7007be6da69fe3a9520b55cf6608321b0ec263b880fd1dec7988",
+      "executed_dotnet_cases": 186,
+      "outcomes": [
+        "Passed"
+      ]
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-portable-required-regressions-r74-20261102/fresh-pytest-output/test_o_bc733e9990010/s236-counterexample-trx/_89faf6ef2feb_2026-11-02_11_10_10.trx",
+      "bytes": 16524,
+      "sha256": "c4d1f502b032fa63b3cf319f31c4bbe03d3012908deb1014d1625ab7afa147b5",
+      "executed_dotnet_cases": 1,
+      "outcomes": [
+        "Passed"
+      ]
+    }
+  ],
+  "dotnet_case_executions": 187,
+  "authorizes": []
+}

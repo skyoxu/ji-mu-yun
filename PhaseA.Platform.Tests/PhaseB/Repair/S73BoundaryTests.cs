@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using Microsoft.Data.Sqlite;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -50,7 +51,7 @@ public sealed class S73BoundaryTests
                 "s73-principal",
                 "s73-runtime-credential",
                 "s73-correlation");
-            var storage = new WorkspaceStorageService();
+            var storage = new CentralWorkspaceStorageBackend();
             storage.SetQuota(lease.AccountId, 1024 * 1024);
             var manifest = storage.CreateSnapshot(
                 context,
@@ -60,7 +61,7 @@ public sealed class S73BoundaryTests
                 ProjectId,
                 "s73-policy",
                 new HashSet<string>()).Manifest;
-            var published = new RestoreService(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
+            var published = new CentralRestoreBackend(connectionString, new RouteRecoveryAuthorityResolver(connectionString)).RestorePrepared(
                 context,
                 manifest,
                 source.FullName,

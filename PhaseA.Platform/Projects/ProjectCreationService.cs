@@ -10,8 +10,8 @@ namespace PhaseA.Platform.Projects;
 
 public sealed class ProjectCreationService
 {
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
     private readonly ProjectRuleCatalog _ruleCatalog;
     private readonly IProjectWorkspaceSeeder _workspaceSeeder;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
@@ -22,16 +22,17 @@ public sealed class ProjectCreationService
     private readonly IProjectRunnerProvisioner? _runnerProvisioner;
 
     public ProjectCreationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ProjectRuleCatalog ruleCatalog)
-        : this(metadataStore, options, ruleCatalog, new ProjectWorkspaceSeeder(options), new PrototypeRouteStateWriter(), new ProjectCreationConcurrencyLimiter(), ProjectGameTypeMatchService.Offline(options))
     {
+        // ADR-0061 AD20: compatibility cannot manufacture production dependencies.
+        throw new UnauthorizedAccessException("explicit_production_consumers_required");
     }
 
     public ProjectCreationService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options,
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options,
         ProjectRuleCatalog ruleCatalog,
         IProjectWorkspaceSeeder workspaceSeeder,
         PrototypeRouteStateWriter? routeStateWriter = null,
@@ -60,6 +61,7 @@ public sealed class ProjectCreationService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountId);
         ArgumentNullException.ThrowIfNull(request);
+        _metadataStore.DemandCurrent(accountId:accountId,write:true);
 
         if (!string.IsNullOrWhiteSpace(request.GitUrl) ||
             !string.IsNullOrWhiteSpace(request.RepositoryUrl) ||
@@ -254,36 +256,7 @@ public sealed class ProjectCreationService
             return ProjectDeletionResult.Failure("delete_confirmation_required");
         }
 
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
-        {
-            // S20/AD-11: a repeated confirmed delete is an idempotent protected-cleanup request.
-            // The tombstone retains owner resolution after the normal project view is withdrawn.
-            var tombstone = (await _metadataStore.ListProjectDeleteTombstonesForAdminAsync(cancellationToken: cancellationToken))
-                .SingleOrDefault(item => item.ProjectId == projectId);
-            if (tombstone is null || (!isAdmin && !string.Equals(tombstone.AccountId, accountId, StringComparison.Ordinal)))
-            {
-                return ProjectDeletionResult.Failure("project_not_found");
-            }
-
-            await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
-            return ProjectDeletionResult.Deleted(projectId);
-        }
-
-        if (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
-        {
-            return ProjectDeletionResult.Failure("project_not_found");
-        }
-
-        if (project.BootstrapStatus == "running" ||
-            await _metadataStore.HasActiveRunAsync(projectId, cancellationToken) ||
-            await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken))
-        {
-            return ProjectDeletionResult.Failure("project_busy");
-        }
-
-        await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
-        return ProjectDeletionResult.Deleted(projectId);
+        return await _metadataStore.DeleteProjectForCurrentActorAsync(accountId, isAdmin, projectId, cancellationToken);
     }
 
     public async Task<AdminProjectPurgeResult> PurgeProjectsAsync(

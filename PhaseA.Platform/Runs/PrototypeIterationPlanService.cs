@@ -43,7 +43,7 @@ public sealed class PrototypeIterationPlanService
     private static readonly string PlanningAnalysisSchemaPath = EnsurePlanningAnalysisSchemaFile();
     private static readonly string GoalPlanSchemaPath = EnsureGoalPlanSchemaFile();
     private static readonly string EvaluationSchemaPath = EnsureEvaluationSchemaFile();
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly PrototypeRouteStateWriter _routeStateWriter;
     private readonly PrototypeContractService _contractService;
     private readonly PrototypeContractFreezeService _contractFreezeService;
@@ -52,13 +52,13 @@ public sealed class PrototypeIterationPlanService
     private readonly GameTypeTemplateCatalog? _templateCatalog;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
-    public PrototypeIterationPlanService(PhaseAMetadataStore metadataStore)
+    public PrototypeIterationPlanService(NodeProjectMetadata metadataStore)
         : this(metadataStore, new PrototypeRouteStateWriter(), new PrototypeContractService(), null, null)
     {
     }
 
     public PrototypeIterationPlanService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         PrototypeRouteStateWriter routeStateWriter,
         PrototypeContractService? contractService = null,
         ICodexChatClient? codexChatClient = null,
@@ -1327,6 +1327,7 @@ public sealed class PrototypeIterationPlanService
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "planning-analysis");
         var options = PlanningCodexOptions with { OutputSchemaPath = PlanningAnalysisSchemaPath };
         var envelope = await TryIssueContextManifestAsync(project, "llm:planning-analysis", modelPrompt, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (_contextManifestIssuer is not null && envelope is null)
         {
             if (routeStrategy.RequiresModelBackedIterationPlanning &&
@@ -1355,6 +1356,8 @@ public sealed class PrototypeIterationPlanService
                 OperationKey: "llm:planning-analysis",
                 ContextEnvelope: envelope),
             cancellationToken);
+        // ADR-0061 AD19/20: a model reply does not preserve earlier workspace authority.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (!completion.Succeeded)
         {
             if (routeStrategy.RequiresModelBackedIterationPlanning &&
@@ -1414,6 +1417,7 @@ public sealed class PrototypeIterationPlanService
         var promptRoot = EnsureIterationPlanPromptWorkspace(project, "goal-plan");
         var options = PlanningCodexOptions with { OutputSchemaPath = GoalPlanSchemaPath };
         var envelope = await TryIssueContextManifestAsync(project, "llm:goal-plan", prompt, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (_contextManifestIssuer is not null && envelope is null)
         {
             throw new PrototypeIterationPlanLlmException("goal_plan_context_manifest_issue_failed");
@@ -1431,6 +1435,8 @@ public sealed class PrototypeIterationPlanService
                 OperationKey: "llm:goal-plan",
                 ContextEnvelope: envelope),
             cancellationToken);
+        // ADR-0061 AD19/20: a model reply does not preserve earlier workspace authority.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (!completion.Succeeded)
         {
             throw new PrototypeIterationPlanLlmException(completion.FailureCode ?? "goal_plan_llm_failed");
@@ -3105,6 +3111,7 @@ public sealed class PrototypeIterationPlanService
             """;
 
         var envelope = await TryIssueContextManifestAsync(project, "llm:prototype-skeleton-regeneration-guard", prompt, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (_contextManifestIssuer is not null && envelope is null)
         {
             return PrototypeSkeletonRegenerationDecision.NotRequired();
@@ -3122,6 +3129,8 @@ public sealed class PrototypeIterationPlanService
                 OperationKey: "llm:prototype-skeleton-regeneration-guard",
                 ContextEnvelope: envelope),
             cancellationToken);
+        // ADR-0061 AD19/20: a model reply does not preserve earlier workspace authority.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (!completion.Succeeded)
         {
             return PrototypeSkeletonRegenerationDecision.NotRequired();
@@ -3182,6 +3191,7 @@ public sealed class PrototypeIterationPlanService
         var options = PlanningCodexOptions with { OutputSchemaPath = EvaluationSchemaPath };
         var prompt = BuildRpgPlanEvaluationPrompt(project, routeProfile, projectExecutionGuide, details, prototypeProgress, routeContext.PlanningAnalysis);
         var envelope = await TryIssueContextManifestAsync(project, "llm:plan-evaluation", prompt, cancellationToken);
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (_contextManifestIssuer is not null && envelope is null)
         {
             return BuildLlmFailedEvaluation("plan_evaluation_context_manifest_issue_failed");
@@ -3199,6 +3209,8 @@ public sealed class PrototypeIterationPlanService
                 OperationKey: "llm:plan-evaluation",
                 ContextEnvelope: envelope),
             cancellationToken);
+        // ADR-0061 AD19/20: a model reply does not preserve earlier workspace authority.
+        _metadataStore.DemandWorkspace(project.RepoPath);
         if (!completion.Succeeded)
         {
             return BuildLlmFailedEvaluation(completion.FailureCode ?? "plan_evaluation_llm_failed");

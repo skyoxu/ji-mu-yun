@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -401,8 +403,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -420,15 +423,7 @@ REMAINING: none
         {
             ["codex:prototype-quick-fix"] = HostedContextGateMode.Enforce
         });
-        var service = new PrototypeQuickFixService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            new SkillActionCatalog(),
-            contextManifestIssuer: issuer,
-            contextGatePolicy: policy,
-            contextManifestValidator: validator);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new SkillActionCatalog(), contextManifestIssuer: issuer, contextGatePolicy: policy, contextManifestValidator: validator, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -463,13 +458,14 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var ownerAccountId = await store.EnsureSingleAdminAsync();
         var otherAccount = await store.CreateUserAccountAsync("quick-fix-other-account", 1);
         var projectId = await CreateProjectAsync(store, options, ownerAccountId, prototypeSucceeded: true);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var act = () => service.SubmitAsync(
             otherAccount.AccountId,
@@ -489,8 +485,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -503,7 +500,7 @@ REMAINING: none
         });
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         var runner = new QuickFixNavigationFailHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("修复 Start Adventure 后空白。", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -525,8 +522,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "勇者斗恶龙");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -538,7 +536,7 @@ REMAINING: none
             }
         });
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -558,8 +556,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -577,7 +576,7 @@ REMAINING: none
             }
         });
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -597,8 +596,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -621,7 +621,7 @@ REMAINING: none
             }
         });
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -641,12 +641,13 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var runner = new TimeoutHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new SkillActionCatalog(), executionTimeout: TimeSpan.FromMilliseconds(50), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest("Fix prototype menu routing.", "gpt-5.4", "normal"));
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -664,8 +665,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -685,7 +687,7 @@ REMAINING: none
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke failed.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new TimedOutValidatedGoalRepairRunner();
-        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new SkillActionCatalog(), executionTimeout: TimeSpan.FromMilliseconds(50), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current Godot smoke failure.",
@@ -712,8 +714,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -741,7 +744,7 @@ REMAINING: none
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke failed.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new TimedOutSmokeFailingGoalRepairRunner();
-        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new SkillActionCatalog(), executionTimeout: TimeSpan.FromMilliseconds(50), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current Godot smoke failure.",
@@ -774,8 +777,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -794,7 +798,7 @@ REMAINING: none
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit asset/import step needs repair.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new GoalRepairStepOneBehaviorGdUnitFailRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -816,8 +820,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -836,7 +841,7 @@ REMAINING: none
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit asset/import step needs repair.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new GoalRepairStepOneInfrastructureGdUnitFailRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -856,8 +861,9 @@ REMAINING: none
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -885,7 +891,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit asset/import step needs repair.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new GoalRepairStepOneBehaviorGdUnitFailRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -912,8 +918,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -921,7 +928,7 @@ namespace Xunit
         WritePrototypeSmokeState(project);
         using var callerCancellation = new CancellationTokenSource();
         var runner = new CancelCallerThenReturnHostedProcessRunner(callerCancellation);
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(
             accountId,
@@ -942,8 +949,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -967,7 +975,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "当前 step 还没可继续。", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"目标 {targetGoal.GoalIndex} 需要修复。");
         var runner = new GoalRepairSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
@@ -998,8 +1006,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1019,7 +1028,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke failed.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new QuickFixNavigationFailHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current Godot smoke failure.",
@@ -1049,8 +1058,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1062,7 +1072,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot smoke scene missing.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new QuickFixMissingSmokeSceneHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current missing Godot smoke scene.",
@@ -1089,8 +1099,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1110,7 +1121,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Player says the module still feels wrong.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Player says the module still feels wrong.",
@@ -1133,8 +1144,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1164,7 +1176,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot smoke scene missing.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new QuickFixNavigationFailHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current missing Godot smoke scene.",
@@ -1397,8 +1409,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1410,7 +1423,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Oversized feedback should not enter Codex in full.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new QuickFixMissingSmokeSceneHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var oversizedFeedback = "KEEP_CURRENT_BLOCKER prototype_smoke_scene_missing\n" +
                                 string.Concat(Enumerable.Repeat("NEEDS_FIX_BULK_CONTEXT ", 2000)) +
                                 "TAIL_SHOULD_NOT_REACH_PROMPT";
@@ -1435,8 +1448,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1456,7 +1470,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "Godot navigation smoke timed out.", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new QuickFixGodotSmokeTimeoutHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current Godot smoke timeout.",
@@ -1482,15 +1496,16 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
         EnsureRpgSmokeSceneFile(project!.RepoPath);
         WritePrototypeSmokeState(project);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var oversizedFeedback = "QUICK_FIX_KEEP_ME repair the start button\n" +
                                 string.Concat(Enumerable.Repeat("QUICK_FIX_BULK_CONTEXT ", 1800)) +
                                 "QUICK_FIX_TAIL_SHOULD_NOT_REACH_PROMPT";
@@ -1512,8 +1527,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1525,7 +1541,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_map_entry_contract", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -1557,8 +1573,9 @@ namespace Xunit
             includeRepairSteps: true,
             includeActiveState: false,
             includeSecondGoal: true);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1588,9 +1605,10 @@ namespace Xunit
             includeRepairSteps: false,
             includeActiveState: false,
             evidenceRecoveryGoal: false);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         WriteNeedsFixCompletionEvidenceSidecar(scenario.Project, scenario.TargetGoal.GoalIndex);
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair current M8 goal.",
@@ -1615,6 +1633,7 @@ namespace Xunit
             completedThroughDay: 7,
             includeRepairSteps: true,
             includeActiveState: false);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var testShimDir = Path.Combine(scenario.Project.RepoPath, "Game.Core.Tests", "Prototypes");
         Directory.CreateDirectory(testShimDir);
         File.WriteAllText(Path.Combine(testShimDir, "XunitShim.cs"), """
@@ -1624,7 +1643,7 @@ namespace Xunit
 }
 """);
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1650,8 +1669,9 @@ namespace Xunit
             completedThroughDay: 6,
             includeRepairSteps: true,
             includeActiveState: false);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1674,8 +1694,9 @@ namespace Xunit
             completedThroughDay: 7,
             includeRepairSteps: false,
             includeActiveState: false);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1698,8 +1719,9 @@ namespace Xunit
             completedThroughDay: 7,
             includeRepairSteps: false,
             includeActiveState: true);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1723,8 +1745,9 @@ namespace Xunit
             includeRepairSteps: false,
             includeActiveState: true,
             activeStatePrototypeRecord: "docs/prototypes/2026-06-22-AnotherTowerdemo.md");
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1747,8 +1770,9 @@ namespace Xunit
             includeRepairSteps: false,
             includeActiveState: true,
             activeStatePrototypeSpec: "docs/prototypes/AnotherTowerdemo.prototype.json");
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1771,8 +1795,9 @@ namespace Xunit
             includeRepairSteps: false,
             includeActiveState: true,
             activeStateSmokeScene: "res://Game.Godot/Prototypes/Towerdemo/AnotherTowerdemoPrototype.tscn");
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1794,10 +1819,11 @@ namespace Xunit
             completedThroughDay: 7,
             includeRepairSteps: false,
             includeActiveState: true);
+        using var scenarioCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scenario.Store, scenario.Options.AdminTokenHash));
         var scenePath = Path.Combine(scenario.Project.RepoPath, "Game.Godot", "Prototypes", "Towerdemo", "TowerdemoPrototype.tscn");
         File.WriteAllText(scenePath, "[resource]\n");
         var runner = new CompletionRecoveryNeedsFixRunner();
-        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner);
+        var service = new PrototypeQuickFixService(scenario.Store, scenario.Options, runner, new ProjectWorkspaceSeeder(scenario.Options, scenario.Store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, scenario.Store));
 
         var result = await service.SubmitAsync(scenario.AccountId, scenario.ProjectId, new PrototypeFeedbackRequest(
             "Repair protected prototype completion state.",
@@ -1819,8 +1845,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1834,7 +1861,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_map_entry_contract", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -1861,8 +1888,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1878,7 +1906,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core test packages missing", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
         var runner = new CoreTestPackageFailurePromptRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -1900,8 +1928,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1917,7 +1946,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core test packages missing", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
         var runner = new AbsolutePathCoreTestPackageFailurePromptRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -1941,8 +1970,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1957,7 +1987,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "core compile error", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
         var runner = new CoreCompileFailurePromptRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -1980,8 +2010,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1996,7 +2027,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "msbuild project extensions path error", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
         var runner = new MsBuildProjectExtensionsPathFailurePromptRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2021,8 +2052,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2034,7 +2066,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_battle_scene_contract", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2058,8 +2090,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "Vampire Survivors-like");
         var planService = new PrototypeIterationPlanService(store);
@@ -2069,7 +2102,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing core weapon markers", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 4, "Goal 4 needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current survivors-like goal.",
@@ -2091,8 +2124,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2103,7 +2137,7 @@ namespace Xunit
         var targetGoal = FindGoal(details!, "battle or challenge resolution");
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "missing_rpg_battle_scene_contract", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
-        var service = new PrototypeQuickFixService(store, options, new ImmediateCanceledHostedProcessRunner());
+        var service = new PrototypeQuickFixService(store, options, new ImmediateCanceledHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2126,8 +2160,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2139,7 +2174,7 @@ namespace Xunit
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "reward values are wrong", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"Goal {targetGoal.GoalIndex} needs fix");
         var runner = new OffTopicSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2163,8 +2198,9 @@ namespace Xunit
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2259,7 +2295,7 @@ public sealed class BattleScene
 """);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2279,8 +2315,9 @@ public sealed class BattleScene
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2357,7 +2394,7 @@ public sealed class MapScene
 """);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2377,8 +2414,9 @@ public sealed class MapScene
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2455,7 +2493,7 @@ public sealed class MapScene
 """);
 
         var runner = new GoalRepairStaleGodotNeedsFixButSmokePassRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2478,8 +2516,9 @@ public sealed class MapScene
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2509,7 +2548,7 @@ public sealed class MapScene
         EnsureRpgAcceptanceMarkers(project.RepoPath);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2534,8 +2573,9 @@ public sealed class MapScene
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2575,7 +2615,7 @@ public sealed class DqRpgPrototype
 """);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2595,8 +2635,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2616,7 +2657,7 @@ public sealed class DqRpgPrototype
             "public sealed class MapScene { dynamic _player; void ResetMap() { _player.Visible = true; } }\n");
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2638,8 +2679,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2656,7 +2698,7 @@ public sealed class DqRpgPrototype
         WriteMainScene(project.RepoPath, hidePrototypeHostUi: false);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2677,8 +2719,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2696,7 +2739,7 @@ public sealed class DqRpgPrototype
         File.WriteAllText(Path.Combine(project.RepoPath, "Game.Godot", ".gdignore"), "");
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2718,8 +2761,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2746,7 +2790,7 @@ public sealed class DqRpgPrototype
         Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2765,8 +2809,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2791,7 +2836,7 @@ public sealed class DqRpgPrototype
         WriteMainScene(project.RepoPath, hidePrototypeHostUi: true);
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2819,8 +2864,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2845,7 +2891,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "GdUnit suite is missing.", null);
         await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", targetGoal.GoalIndex, "Goal needs GdUnit fix.");
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2869,8 +2915,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2897,7 +2944,7 @@ public sealed class DqRpgPrototype
         SeedLatestRpgGdUnitFailureReport(project.RepoPath);
 
         var runner = new GoalRepairFinalGdUnitFailRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2921,8 +2968,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2949,7 +2997,7 @@ public sealed class DqRpgPrototype
         SeedLatestRpgGdUnitFailureReport(project.RepoPath);
 
         var runner = new GoalRepairFinalGdUnitFailRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         _ = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -2971,8 +3019,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2998,7 +3047,7 @@ public sealed class DqRpgPrototype
         Directory.CreateDirectory(Path.Combine(project.RepoPath, "Tests.Godot", "tests", "Prototype", "DqRpgPrototype"));
 
         var runner = new GoalRepairStep5HostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var localDateBefore = DateTimeOffset.Now.ToString("yyyy-MM-dd");
 
         _ = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
@@ -3023,8 +3072,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3047,7 +3097,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "still blocked", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "goal 1 needs fix");
         var runner = new StructuredCompletedHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3068,8 +3118,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3096,7 +3147,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(catalog, "\npublic static class FocusedWorkspaceCatalogMarker { }\n");
             RestoreCoreAcceptanceMarker(workspaceRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3123,8 +3174,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3161,7 +3213,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class TowerdemoFocusedWorkspaceMarker { }\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3182,8 +3234,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3209,7 +3262,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class LatestRunFocusedWorkspaceMarker { }\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3230,8 +3283,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3269,7 +3323,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class ExecuteNextFocusedWorkspaceMarker { }\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3290,8 +3344,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3338,7 +3393,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class CurrentSessionFocusedWorkspaceMarker { }\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3359,8 +3414,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3398,7 +3454,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(Path.Combine(focusedRoot, "Game.Godot", "Prototypes", "Towerdemo", "Scripts", "Hud.cs"), "\npublic static class CurrentGoalBeatsProjectGodotMarker { }\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3426,8 +3482,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3474,7 +3531,7 @@ public sealed class DqRpgPrototype
             File.AppendAllText(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "CustomSuite", "test_custom.gd"), "\n# focused workspace custom gdunit test synced\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3499,8 +3556,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3542,7 +3600,7 @@ public sealed class DqRpgPrototype
             Directory.Exists(Path.Combine(focusedRoot, "Tests.Godot", "tests", "Prototype", "CustomSuite")).Should().BeFalse();
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3562,8 +3620,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3597,7 +3656,7 @@ public sealed class DqRpgPrototype
             File.WriteAllText(Path.Combine(testDirectory, "TowerdemoTest.cs"), "public sealed class TowerdemoTest { }\n");
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3617,8 +3676,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3641,7 +3701,7 @@ public sealed class DqRpgPrototype
             Directory.Delete(Path.Combine(focusedRoot, "Game.Godot", "Scripts", "Prototypes"), recursive: true);
             RestoreCoreAcceptanceMarker(focusedRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3661,8 +3721,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3684,7 +3745,7 @@ public sealed class DqRpgPrototype
             File.Delete(Path.Combine(workspaceRoot, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "StaleRoute.cs"));
             RestoreCoreAcceptanceMarker(workspaceRoot, "MoveOnMap");
         });
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3704,8 +3765,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true, gameTypeSource: "rpg");
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -3715,7 +3777,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "当前 step 还没可继续。", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"目标 {targetGoal.GoalIndex} 需要修复。");
         var runner = new GoalRepairNeedsFixHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
@@ -3738,8 +3800,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -3749,7 +3812,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "当前 step 还没可继续。", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"目标 {targetGoal.GoalIndex} 需要修复。");
         var runner = new StructuredCompletedButMissingGameplayVerificationHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
@@ -3772,8 +3835,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -3783,7 +3847,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(targetGoal.GoalId, "needs_fix", "当前 step 还没可继续。", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", targetGoal.GoalIndex, $"目标 {targetGoal.GoalIndex} 需要修复。");
         var runner = new ImmediateCanceledHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog(), TimeSpan.FromMilliseconds(50));
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new SkillActionCatalog(), executionTimeout: TimeSpan.FromMilliseconds(50), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
@@ -3822,8 +3886,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var session = await store.CreateProjectIterationSessionAsync(
@@ -3838,7 +3903,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
         var runner = new StructuredCompletedHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3863,8 +3928,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -3887,7 +3953,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationSessionStatusAsync(session.SessionId, "needs_fix", 1, "Goal 1 needs fix");
         var details = await store.GetLatestProjectIterationSessionAsync(projectId, "repair_plan");
         var runner = new StructuredCompletedHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "Repair current goal.",
@@ -3912,8 +3978,9 @@ public sealed class DqRpgPrototype
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -3922,7 +3989,7 @@ public sealed class DqRpgPrototype
         await store.UpdateProjectIterationGoalStatusAsync(details!.Goals[0].GoalId, "needs_fix", "当前 step 还没可继续。", null);
         await store.UpdateProjectIterationSessionStatusAsync(details.Session.SessionId, "needs_fix", 1, "目标 1 需要修复。");
         var runner = new OffTopicSuccessHostedProcessRunner();
-        var service = new PrototypeQuickFixService(store, options, runner);
+        var service = new PrototypeQuickFixService(store, options, runner, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.SubmitAsync(accountId, projectId, new PrototypeFeedbackRequest(
             "修复当前目标",
@@ -3969,7 +4036,7 @@ public sealed class DqRpgPrototype
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             gameTypeMatchService: new FakeGameTypeMatchService());
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameTypeSource, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
@@ -4164,7 +4231,7 @@ Exit code: 100
             ["GODOT_BIN"] = string.IsNullOrWhiteSpace(godotBin) ? @"C:\Godot\Godot.exe" : godotBin
         };
 
-        return PhaseAPlatformOptionsLoader.FromDictionary(values);
+        return S206TestSupport.OwnedNodeOptions(values);
     }
 
     private static void EnsureRpgAcceptanceMarkers(string repoPath)
@@ -4497,8 +4564,9 @@ public static class PrototypeCatalog
         var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, prototypeSucceeded: true);
         var project = await store.GetProjectSnapshotAsync(projectId);

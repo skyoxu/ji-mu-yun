@@ -25,12 +25,12 @@ public sealed class GameDesignRequirementMapService
     ];
     private const string ContractRelativePath = "routes/prototype-contract/latest.json";
     private static readonly Regex RequirementLineRegex = new(@"^\s*(?:[-*]|\d+[\.\)、:：])\s*(?<text>.+)$", RegexOptions.Compiled);
-    private readonly PhaseAMetadataStore _metadataStore;
+    private readonly NodeProjectMetadata _metadataStore;
     private readonly ILlmRouteEngine? _llmRouteEngine;
     private readonly HostedContextManifestIssuer? _contextManifestIssuer;
 
     public GameDesignRequirementMapService(
-        PhaseAMetadataStore metadataStore,
+        NodeProjectMetadata metadataStore,
         ILlmRouteEngine? llmRouteEngine = null,
         HostedContextManifestIssuer? contextManifestIssuer = null)
     {
@@ -1108,15 +1108,31 @@ public sealed class GameDesignRequirementMapService
             "rejected");
     }
 
-    private static async Task WriteJsonAsync(ProjectSnapshot project, string relativePath, object payload, CancellationToken cancellationToken)
+    // ADR-0061 AD19: a model reply cannot retain authority over a prior project/path snapshot.
+    private async Task<ProjectSnapshot> RequireCurrentProjectAsync(ProjectSnapshot supplied, CancellationToken cancellationToken)
     {
+        var current = await _metadataStore.GetProjectSnapshotAsync(supplied.ProjectId, cancellationToken)
+            ?? throw new UnauthorizedAccessException("current_project_required");
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        bool SamePath(string left, string right) => string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), comparison);
+        if (current.AccountId != supplied.AccountId || current.WorkspaceId != supplied.WorkspaceId ||
+            !SamePath(current.WorkspaceRootPath, supplied.WorkspaceRootPath) || !SamePath(current.RepoPath, supplied.RepoPath) ||
+            !SamePath(current.RuntimePath, supplied.RuntimePath) || !SamePath(current.MetaPath, supplied.MetaPath))
+            throw new UnauthorizedAccessException("current_project_paths_required");
+        return current;
+    }
+
+    private async Task WriteJsonAsync(ProjectSnapshot project, string relativePath, object payload, CancellationToken cancellationToken)
+    {
+        project = await RequireCurrentProjectAsync(project, cancellationToken);
         var path = Resolve(project.RepoPath, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(payload, JsonOptions()), Utf8NoBom, cancellationToken);
     }
 
-    private static async Task WriteTextAsync(ProjectSnapshot project, string relativePath, string content, CancellationToken cancellationToken)
+    private async Task WriteTextAsync(ProjectSnapshot project, string relativePath, string content, CancellationToken cancellationToken)
     {
+        project = await RequireCurrentProjectAsync(project, cancellationToken);
         var path = Resolve(project.RepoPath, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         await File.WriteAllTextAsync(path, content, Utf8NoBom, cancellationToken);

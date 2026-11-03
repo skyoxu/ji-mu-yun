@@ -1,0 +1,148 @@
+{
+  "schema": "vdd.v3-candidate-repair.v1",
+  "requirements_sha256": "sha256:f6e4bacdd952da675a0aeb70c94da6cb7478b0b2f7d6543b0a8b48072db90654",
+  "authorizes": [],
+  "obligation_contracts": {
+    "O-5A39371CE268": {
+      "acceptance": {
+        "source_refs": [
+          "docs/requirements/s2-06/vdd-input.md#SM-IDENTITY-CONTRACT"
+        ],
+        "given": "A repository-owned temporary account has current protected home equal to the configured/persisted local node. Existing initializer can install nullable projects.node_id for legacy compatibility; browser DTOs and game-project/template content can carry forged node claims as untrusted inputs.",
+        "when": "Create new projects through the actual node-adapter/Program creation and draft-import paths with ordinary, forged browser-node and forged game-project-node inputs. Independently mismatch protected home/local node and inspect actual projects.node_id and project/account/workspace relationships after attempts.",
+        "then": "Only protected local identity plus resolved current account home determines a new project owner. New authorized projects receive their actual matching node; browser/game-project input cannot supply authoritative node values.",
+        "oracle": {
+          "expected": "The additive installation may contain nullable transitional project fields, but every authorized new project persists a non-null node_id equal to both resolved protected home and actual local binding. Browser/game-project node claims are ignored or safely rejected, never stamped as authority. Missing/conflicting protected home/local ownership denies before unauthorized project creation; null ownership cannot authorize a new local operation. Existing logical identity relations remain stable.",
+          "forbidden": [
+            "Browser supplies authoritative project node.",
+            "Game project supplies authoritative project node.",
+            "Project node differs from resolved protected home/local node."
+          ],
+          "observable": "NodeAuthorityTests.O_5A39371CE268 records actual schema nullability, real created project/account/workspace/node rows, protected home/local-node lookup results and spoof/negative creation outcomes in fresh TRX."
+        },
+        "assertion_ids": [
+          "S206_BROWSER_GAME_CONTENT_CANNOT_STAMP_PROJECT_NODE",
+          "S206_CONFLICTING_HOME_LOCAL_DENIES_CREATION",
+          "S206_NEW_PROJECT_NODE_STAMP_PROTECTED_HOME_LOCAL",
+          "S206_PROJECT_NODE_ADDITIVE_NULLABLE_INSTALL_ONLY"
+        ]
+      },
+      "failure_intents": [
+        {
+          "failure_family": "expected-red",
+          "selector_intent": "tests/s2_06/test_node_authority.py::test_o_5a39371ce268. Python function test_o_5a39371ce268 itself contains direct literal subprocess.run([\"dotnet\", \"test\", \"PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj\", \"--filter\", \"FullyQualifiedName=PhaseA.Platform.Tests.NodeIdentity.NodeAuthorityTests.O_5A39371CE268\", \"--logger\", \"trx\", \"--results-directory\", str(results_directory)], cwd=repository_root, shell=False, check=False, capture_output=True, text=True, encoding=\"utf-8\", errors=\"replace\", timeout=180). Create a fresh per-invocation repository-owned results directory, require exactly one fresh TRX and literal FQN PhaseA.Platform.Tests.NodeIdentity.NodeAuthorityTests.O_5A39371CE268 via UnitTest/UnitTestResult linkage, one executed Passed/Failed result and exit/outcome consistency. Generic run_dotnet/script wrappers do not replace this in-selector literal argv/shell=False/FQN binding; shared support may parse only. Emit FAILURE_ID:S206_PROJECT_NODE_STAMP_CALLER_CONTROLLED only for an executed obligation-specific product assertion, never missing setup/API/type, build error or unobserved prerequisites.",
+          "expected_outcome": "fail",
+          "failure_id": "S206_PROJECT_NODE_STAMP_CALLER_CONTROLLED"
+        }
+      ],
+      "slice_hint": {
+        "production_owners": [
+          "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+          "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+          "PhaseA.Platform/Program.cs",
+          "PhaseA.Platform/Projects/ProjectCreationService.cs",
+          "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+          "PhaseA.Platform/Security/RunnerIsolationPolicy.cs"
+        ],
+        "verification_lane": "integration",
+        "behavior_change": "Keep project.node_id nullable only during additive installation and stamp every newly created project through protected server node/home facts, never browser or game-project fields.",
+        "affected_subjects": [
+          "browser/game project node claims",
+          "new project node stamping",
+          "nullable-at-install projects.node_id",
+          "protected local identity/account home"
+        ],
+        "state_transition": "Legacy schema may install nullable column -> actual new project creation resolves current protected home/local node -> non-null matching owner stamp; caller/game claim cannot override or null-authorize.",
+        "rollback_scope": {
+          "production_paths": [
+            "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+            "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+            "PhaseA.Platform/Program.cs",
+            "PhaseA.Platform/Projects/ProjectCreationService.cs",
+            "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+            "PhaseA.Platform/Security/RunnerIsolationPolicy.cs"
+          ],
+          "state_or_schema_compatibility": "Preserve existing project/account/workspace identities and additive migration rules. No client-specified node authority, ownership reassignment, hidden null authorization or live schema/data mutation."
+        },
+        "allowed_write_paths": [
+          "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+          "PhaseA.Platform.Tests/Security/RunnerIsolationTests.cs",
+          "PhaseA.Platform/Data/PhaseAMetadataStore.cs",
+          "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+          "PhaseA.Platform/Program.cs",
+          "PhaseA.Platform/Projects/ProjectCreationService.cs",
+          "PhaseA.Platform/Projects/ProjectDraftImportService.cs",
+          "PhaseA.Platform/Security/RunnerIsolationPolicy.cs",
+          "tests/s2_06/test_node_authority.py",
+          "tests/s2_06/trx_support.py"
+        ],
+        "execution_snapshot_paths": [
+          "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+          "PhaseA.Platform.Tests/Security/RunnerIsolationTests.cs",
+          "PhaseA.Platform/PhaseA.Platform.csproj",
+          "PhaseA.Platform/packages.lock.json",
+          "docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md",
+          "docs/requirements/s2-06/vdd-input.md",
+          "logs/s2-06-bmad-20261028/AUTHORIZATION-UPDATE-20261028T1708.json",
+          "logs/s2-06-bmad-20261028/source-scope-build-inputs.v1.json",
+          "logs/s2-06-bmad-20261028/source-scope.v1.json",
+          "logs/s2-06-resume-20261031/S215-ROOT-PATH-AUTHORIZATION-20261031.json",
+          "logs/s2-06-resume-20261031/source-scope-capability-migration-r3.v1.json",
+          "logs/s2-06-resume-20261031/source-scope-capability-migration-r4.v1.json",
+          "logs/s2-06-resume-20261031/source-scope-capability-migration.v1.json",
+          "logs/s2-06-resume-20261031/source-scope-root-path-r5.v1.json",
+          "tests/phase_b_c_identity_isolation/current/s10_fixture.py",
+          "tests/s2_06/test_node_authority.py",
+          "tests/s2_06/trx_support.py"
+        ],
+        "planned_new_files": [
+          "PhaseA.Platform.Tests/NodeIdentity/NodeAuthorityTests.cs",
+          "PhaseA.Platform.Tests/NodeIdentity/S206TestSupport.cs",
+          "tests/s2_06/test_node_authority.py",
+          "tests/s2_06/trx_support.py"
+        ],
+        "terminal_predicate": "The exact case invokes actual new-project creation and import paths, inspects the real projects.node_id schema/persisted value and tests spoofed browser/project-content node fields plus inconsistent protected home/local facts. Missing future API/type/test, build error, skip, timeout or absent/invalid TRX is harness failure, never product expected-red. Owners already exist; no missing C# helper is pre-seeded. Fixtures use repository-owned disposable test-output, never live metadata or /tmp task artifacts. This response claims no executed business/runtime test result. Python function test_o_5a39371ce268 itself contains direct literal subprocess.run([\"dotnet\", \"test\", \"PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj\", \"--filter\", \"FullyQualifiedName=PhaseA.Platform.Tests.NodeIdentity.NodeAuthorityTests.O_5A39371CE268\", \"--logger\", \"trx\", \"--results-directory\", str(results_directory)], cwd=repository_root, shell=False, check=False, capture_output=True, text=True, encoding=\"utf-8\", errors=\"replace\", timeout=180). Create a fresh per-invocation repository-owned results directory, require exactly one fresh TRX and literal FQN PhaseA.Platform.Tests.NodeIdentity.NodeAuthorityTests.O_5A39371CE268 via UnitTest/UnitTestResult linkage, one executed Passed/Failed result and exit/outcome consistency. Generic run_dotnet/script wrappers do not replace this in-selector literal argv/shell=False/FQN binding; shared support may parse only.",
+        "forbidden_paths": [
+          ".agents/**",
+          "PhaseA.Platform/Llm/LlmRouteEngine.cs",
+          "PhaseA.Platform/Runs/CodexHostedProcessCommandFactory.cs",
+          "PhaseA.Platform/Security/PhaseAAuth.cs",
+          "logs/phase-a-innernet/**",
+          "runtime/phase-a/**",
+          "scripts/sc/**"
+        ],
+        "validation_commands": [
+          [
+            "python",
+            "-m",
+            "pytest",
+            "tests/s2_06/test_node_authority.py::test_o_5a39371ce268",
+            "-q"
+          ],
+          [
+            "python",
+            "scripts/python/run_dotnet.py",
+            "--solution",
+            "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj",
+            "--no-restore",
+            "--filter",
+            "FullyQualifiedName~PhaseA.Platform.Tests.PhaseB.RunnerIsolationTests.RootPath",
+            "--out-dir",
+            "logs/s2-06-resume-20261031/root-path-official-q6"
+          ]
+        ],
+        "complexity_class": "complex",
+        "context_lookup_required": true,
+        "context_lookup_reason": "cross-owner or non-unit verification requires implementation context",
+        "minimum_red_scope": "one bound Acceptance group, its failure family, and all declared assertion ids",
+        "upgrade_conditions": [
+          "selector spans multiple test roots",
+          "independent failure mechanisms require separate observations",
+          "runtime or detached judge evidence becomes mandatory"
+        ]
+      }
+    }
+  }
+}

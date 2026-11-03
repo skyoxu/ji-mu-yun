@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
@@ -85,12 +86,13 @@ public sealed class S26BoundaryTests
 
             var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
             await SqliteMetadataSchema.InitializeAsync(connectionString);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot,
                 ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken),
             });
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
             var store = new PhaseAMetadataStore(connectionString, options);
             await store.EnsureSingleAdminAsync();
 
@@ -237,6 +239,7 @@ public sealed class S26BoundaryTests
             start.Environment["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot;
             start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(AdminToken);
             start.Environment["PHASEA_SERVICE_STATE"] = "test";
+            S206TestSupport.ConfigureOwnedHost(start);
             return Process.Start(start) ?? throw new InvalidOperationException("S26 fixture could not start PhaseA.Platform.");
         }
 

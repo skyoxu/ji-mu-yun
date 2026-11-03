@@ -1,3 +1,6 @@
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -13,7 +16,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildTdd_IncludesStageAndConfiguredGodotBin()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -56,7 +59,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildScene_IncludesPrototypeOnlyEngineRecommendationArgs()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -103,7 +106,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildScene_InfersEngineRecommendationFromPrototypeIntake()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -133,7 +136,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildScene_DoesNotSendEngineRecommendation_WhenIntakeIsEmpty()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -150,7 +153,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildScene_DoesNotSendEngineRecommendation_WhenOnlyGameTypeIsPresent()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -169,7 +172,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildScene_DoesNotTreatRpgMovementAsPhysicsBackendNeed()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -195,7 +198,7 @@ public sealed class PrototypeCommandTests
     [Fact]
     public void BuildScene_DoesNotTreat3dMovementOnlyAsJoltNeed()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_REPOSITORY_ROOT"] = @"C:\repo",
             ["GODOT_BIN"] = @"C:\Godot\Godot.exe"
@@ -237,6 +240,7 @@ public sealed class PrototypeCommandTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new FakeHostedProcessRunner("demo");
         var service = Service(store, options, runner);
@@ -258,6 +262,7 @@ public sealed class PrototypeCommandTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options, "搜打撤的测试", "逃离鸭科夫");
         var project = await store.GetProjectSnapshotAsync(projectId);
         var expectedSlug = PrototypeRecordWriter.ResolveProjectSlug("搜打撤的测试", projectId, project!.GameName, project.Name);
@@ -286,6 +291,7 @@ public sealed class PrototypeCommandTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var runner = new StaticHostedProcessRunner(new HostedProcessResult(
             1,
@@ -314,6 +320,7 @@ public sealed class PrototypeCommandTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var (accountId, projectId) = await CreateProjectWithAccountAsync(store, options);
         var existingRunId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
         (await store.TryAcquireRunnerLockAsync(projectId, existingRunId)).Should().BeTrue();
@@ -328,8 +335,9 @@ public sealed class PrototypeCommandTests
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
-        await SqliteMetadataSchema.InitializeAsync(connectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
         var store = new PhaseAMetadataStore(connectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         await store.EnsureSingleAdminAsync();
         return store;
     }
@@ -341,7 +349,7 @@ public sealed class PrototypeCommandTests
         string gameTypeSource = "manual")
     {
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return (accountId, result.ProjectId!);
     }
@@ -349,7 +357,7 @@ public sealed class PrototypeCommandTests
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options)
     {
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return result.ProjectId!;
     }
@@ -361,12 +369,14 @@ public sealed class PrototypeCommandTests
             options,
             runner,
             new PrototypeCommandBuilder(options),
-            new PrototypeTddArtifactIndexer());
+            new PrototypeTddArtifactIndexer(),
+            new ProjectWorkspaceSeeder(options, store),
+            new HeavyRunnerQueueService(null, 1, store));
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

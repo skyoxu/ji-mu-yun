@@ -13,12 +13,12 @@ public sealed class GameDesignQuestionFormRestoreService
         @"^\s*(\d+)\.\s*(.*?):\s*(.*)\s*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-    private readonly PhaseAMetadataStore _metadataStore;
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeProjectMetadata _metadataStore;
+    private readonly NodeExecutionOptions _options;
 
     public GameDesignQuestionFormRestoreService(
-        PhaseAMetadataStore metadataStore,
-        PhaseAPlatformOptions options)
+        NodeProjectMetadata metadataStore,
+        NodeExecutionOptions options)
     {
         _metadataStore = metadataStore;
         _options = options;

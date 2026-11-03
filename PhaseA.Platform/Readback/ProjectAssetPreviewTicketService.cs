@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
+using PhaseA.Platform.Data;
 
 namespace PhaseA.Platform.Readback;
 
@@ -11,11 +12,15 @@ public sealed class ProjectAssetPreviewTicketService
     private static readonly TimeSpan TicketLifetime = TimeSpan.FromMinutes(10);
     private static readonly ConcurrentDictionary<(string AccountId, string ProjectId), long> TicketGenerations = new();
 
-    private readonly PhaseAPlatformOptions _options;
+    private readonly NodeTicketSigner _signer;
+    private readonly NodeProjectMetadata? _authority;
 
-    public ProjectAssetPreviewTicketService(PhaseAPlatformOptions options)
+    public ProjectAssetPreviewTicketService(NodeTicketSigner signer) : this(signer, null) { }
+
+    public ProjectAssetPreviewTicketService(NodeTicketSigner signer, NodeProjectMetadata? authority)
     {
-        _options = options;
+        _signer = signer;
+        _authority = authority;
     }
 
     public string CreateTicket(string accountId, string projectId, string resourcePath)
@@ -24,6 +29,8 @@ public sealed class ProjectAssetPreviewTicketService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentException.ThrowIfNullOrWhiteSpace(resourcePath);
 
+        // ADR-0061 AD19: the host issuer admits only the current project authority.
+        var revision = _authority?.DemandCurrent(accountId, projectId);
         var expiresUnix = DateTimeOffset.UtcNow.Add(TicketLifetime).ToUnixTimeSeconds();
         var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(12)).ToLowerInvariant();
         var payload = JsonSerializer.Serialize(new TicketPayload(
@@ -32,7 +39,7 @@ public sealed class ProjectAssetPreviewTicketService
             resourcePath,
             expiresUnix,
             nonce,
-            CurrentGeneration(accountId, projectId)));
+            CurrentGeneration(accountId, projectId), revision));
         var signature = SignRequired(payload);
         return $"{Base64UrlEncode(Encoding.UTF8.GetBytes(payload))}.{Base64UrlEncode(signature)}";
     }
@@ -92,8 +99,27 @@ public sealed class ProjectAssetPreviewTicketService
             return false;
         }
 
-        return providedSignature.Length == expectedSignature.Length &&
-               CryptographicOperations.FixedTimeEquals(providedSignature, expectedSignature);
+        if (providedSignature.Length != expectedSignature.Length ||
+            !CryptographicOperations.FixedTimeEquals(providedSignature, expectedSignature)) return false;
+        // A standalone cryptographic helper cannot mint an admitted host ticket.
+        if (_authority is null) return true;
+        try { return parsed.AuthorityRevision is long revision && _authority.IsCurrentTicket(accountId, projectId, revision); }
+        catch (UnauthorizedAccessException) { return false; }
+    }
+
+    internal IDisposable BeginRead(string? ticket, string accountId, string projectId, string resourcePath)
+    {
+        if (_authority is null || !IsValid(ticket, accountId, projectId, resourcePath))
+            throw new UnauthorizedAccessException("ticket_authority_required");
+        return _authority.UseAssetTicketRead(ticket!, accountId, projectId, resourcePath);
+    }
+
+    internal long RequireCurrentRevision(string ticket, string accountId, string projectId, string resourcePath)
+    {
+        if (!IsValid(ticket, accountId, projectId, resourcePath))
+            throw new UnauthorizedAccessException("ticket_authority_required");
+        return JsonSerializer.Deserialize<TicketPayload>(Encoding.UTF8.GetString(Base64UrlDecode(ticket.Split('.', 2)[0])))!
+            .AuthorityRevision ?? throw new UnauthorizedAccessException("ticket_revision_required");
     }
 
     private byte[] SignRequired(string payload)
@@ -102,22 +128,7 @@ public sealed class ProjectAssetPreviewTicketService
                throw new InvalidOperationException("Ticket signing secret is not configured.");
     }
 
-    private byte[]? TrySign(string payload)
-    {
-        var secret = SigningSecret();
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            return null;
-        }
-
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-        return hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-    }
-
-    private string? SigningSecret()
-    {
-        return _options.TicketSigningSecret;
-    }
+    private byte[]? TrySign(string payload) => _signer.TrySign(payload);
 
     public static void InvalidateTickets(string accountId, string projectId)
     {
@@ -157,5 +168,6 @@ public sealed class ProjectAssetPreviewTicketService
         string ResourcePath,
         long ExpiresUnix,
         string Nonce,
-        long Generation);
+        long Generation,
+        long? AuthorityRevision = null);
 }
