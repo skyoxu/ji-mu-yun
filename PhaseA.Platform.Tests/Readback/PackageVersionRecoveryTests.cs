@@ -152,6 +152,7 @@ public sealed class PackageVersionRecoveryTests
         public AdminCreateUserResult Owner = null!;
         public ProjectSnapshot Project = null!;
         public RunnerIsolationDescriptor Descriptor = null!;
+        public RunnerIsolationDescriptor BlockingDescriptor = null!;
         public WorkspaceStorageService Storage = null!;
         public ProjectPackageService Packages = null!;
         public ProjectPackageRestoreService Restorer = null!;
@@ -190,12 +191,13 @@ public sealed class PackageVersionRecoveryTests
             Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(scope.Project.WorkspaceRootPath, out scope.Descriptor));
             var run = await scope.Store.CreateRunAsync(created.ProjectId!, scope.Project.WorkspaceId, "prototype-7day-playable");
             await scope.Store.CompleteRunAsync(run, "succeeded", 0, "", "", "{}");
-            scope.BlockingProjectId = Guid.NewGuid().ToString("N");
-            var blockedLayout = WorkspaceLayoutBuilder.Build(scope.Options.HostedWorkspaceRoot, scope.Owner.AccountId, scope.BlockingProjectId);
-            var blocking = await scope.Store.CreateProjectAsync(new(scope.BlockingProjectId, scope.Owner.AccountId,
-                "Queue blocker", "Queue blocker", "manual", "default", false, [], blockedLayout.RootPath,
-                blockedLayout.RepoPath, blockedLayout.RuntimePath, blockedLayout.MetaPath));
-            Assert.True(blocking.Succeeded);
+            var blocking = await creator.CreateProjectAsync(scope.Owner.AccountId,
+                new(null, "Queue blocker", "manual", null, null, null, null));
+            Assert.True(blocking.Succeeded, blocking.FailureCode);
+            scope.BlockingProjectId = blocking.ProjectId!;
+            var blockingProject = (await scope.Store.GetProjectSnapshotAsync(scope.BlockingProjectId))!;
+            Assert.True(RunnerIsolationPolicy.TryGetWorkspaceDescriptor(blockingProject.WorkspaceRootPath, out scope.BlockingDescriptor));
+            await scope.Store.SetProjectBootstrapStatusAsync(scope.BlockingProjectId, "succeeded", null);
             scope.Storage = scope.Store.CreateWorkspaceStorageService();
             scope.Packages = new ProjectPackageService(scope.Store, scope.Options, scope.Queue, processRunner: new HostedProcessRunner(authority: scope.Store), storage: scope.Storage);
             scope.Restorer = scope.NewRestorer(scope.Packages, scope.Storage);
@@ -217,6 +219,7 @@ public sealed class PackageVersionRecoveryTests
         public void Dispose()
         {
             if (Descriptor is not null) WindowsProjectRunnerProvisioner.RemoveTestRegistration(Descriptor);
+            if (BlockingDescriptor is not null) WindowsProjectRunnerProvisioner.RemoveTestRegistration(BlockingDescriptor);
             Database.Dispose();
             Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", _previousKeys);
             if (Directory.Exists(Root)) Directory.Delete(Root, true);

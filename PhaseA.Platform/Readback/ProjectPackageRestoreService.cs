@@ -58,14 +58,15 @@ public sealed class ProjectPackageRestoreService(
                 await store.CompleteRunAsync(run.RunId, "blocked", 423, "", "Project is busy.", "{}", CancellationToken.None);
                 return new(null, "project_busy");
             }
-            _ = Task.Run(() => ExecuteAsync(context.ForBackground(run.RunId), project, package, run.RunId));
+            var cleanup = await store.CapturePackageRestoreCleanupAsync(run.RunId, token);
+            _ = Task.Run(() => ExecuteAsync(context.ForBackground(run.RunId), project, package, run.RunId, cleanup));
             return new(run.RunId);
         }
         finally { gate.Release(); }
     }
 
     private async Task ExecuteAsync(RequestContext context, ProjectSnapshot admittedProject,
-        ProjectPackageListItem package, string runId)
+        ProjectPackageListItem package, string runId, Func<Task> cleanup)
     {
         using var cancel = cancellation.CreateLinkedTokenSource(runId, CancellationToken.None);
         try
@@ -126,13 +127,13 @@ public sealed class ProjectPackageRestoreService(
         catch (Exception error)
         {
             logger.LogError(error, "Package restore failed for run {RunId}.", runId);
-            await store.CompleteRunAsync(runId, "failed", 500, "", "Project version restore failed.",
-                JsonSerializer.Serialize(new { code = "package_restore_failed" }), CancellationToken.None);
+            // Current authorization may be the failure itself. The exact admitted
+            // cleanup below can only fail this run and release its own lock.
         }
         finally
         {
             cancellation.Unregister(runId);
-            await store.ReleaseRunnerLockAsync(admittedProject.ProjectId, runId, CancellationToken.None);
+            await cleanup();
         }
     }
 }

@@ -7498,6 +7498,8 @@ public sealed class NodeProjectMetadata
 {
     private readonly PhaseAMetadataStore _store;
     internal NodeProjectMetadata(PhaseAMetadataStore store) => _store=store ?? throw new ArgumentNullException(nameof(store));
+    internal Task<Func<Task>> CapturePackageRestoreCleanupAsync(string runId, CancellationToken token = default)
+        => _store.CapturePackageRestoreCleanupAsync(runId, token);
     internal long DemandCurrent(string? accountId=null,string? projectId=null,RequestContext? context=null,bool write=false)
         => _store.DemandCurrentNodeOperation(accountId,projectId,context,write);
     internal long DemandCurrentControl(string? accountId=null,string? projectId=null,bool write=false)

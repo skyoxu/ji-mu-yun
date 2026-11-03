@@ -82,7 +82,7 @@ public sealed class S14BoundaryTests
                 leaseCommand.Parameters.AddWithValue("$account", user.AccountId);
                 leaseCommand.Parameters.AddWithValue("$project", project.ProjectId!);
                 leaseCommand.Parameters.AddWithValue("$workspace", project.WorkspaceId);
-                leaseCommand.Parameters.AddWithValue("$credential", user.Token);
+                leaseCommand.Parameters.AddWithValue("$credential", PhaseAAuth.HashTokenForStorage(user.Token));
                 leaseCommand.ExecuteNonQuery();
             }
             var seededAuthority = new RouteRecoveryAuthorityResolver(connectionString).Resolve(user.AccountId, project.ProjectId!);

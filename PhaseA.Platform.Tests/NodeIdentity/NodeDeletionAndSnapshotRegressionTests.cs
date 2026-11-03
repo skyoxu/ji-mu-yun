@@ -117,6 +117,80 @@ public sealed class NodeDeletionAndSnapshotRegressionTests
         Assert.Empty(Directory.EnumerateFiles(project.WorkspaceRootPath, "*.dll", SearchOption.AllDirectories));
     }
 
+    [Fact]
+    public async Task RevokedPackageRestoreCanOnlyFailItsCapturedRunAndReleaseItsOwnLock()
+    {
+        var f = await Fixture.CreateAsync();
+        var run = await f.Store.CreateRunAsync(f.FirstProject.ProjectId, f.FirstProject.WorkspaceId,
+            "project-package-restore:fixture:revocation");
+        Assert.True(await f.Store.TryAcquireRunnerLockAsync(f.FirstProject.ProjectId, run));
+        NodeProjectMetadata node = f.Store;
+        Func<Task> cleanup;
+        using (S206TestSupport.EnterCurrentContext(f.SecondContext))
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => node.CapturePackageRestoreCleanupAsync(run));
+        using (S206TestSupport.EnterCurrentContext(f.FirstContext))
+            cleanup = await node.CapturePackageRestoreCleanupAsync(run);
+        await f.Store.RotateUserTokenAsync(f.First.AccountId);
+        using (S206TestSupport.EnterCurrentContext(f.FirstContext))
+        {
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => node.CapturePackageRestoreCleanupAsync(run));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => node.CompleteRunAsync(run, "succeeded", 0, "", "", "{}"));
+            await cleanup();
+        }
+        var failed = (await f.Store.GetRunSnapshotAsync(run))!;
+        Assert.Equal("failed", failed.Status);
+        Assert.False(await f.Store.HasRunnerLockAsync(f.FirstProject.ProjectId));
+        Assert.Equal(f.First.AccountId, File.ReadAllText(Path.Combine(f.FirstProject.RepoPath, "owned.txt")));
+        var successor = await f.Store.CreateRunAsync(f.FirstProject.ProjectId, f.FirstProject.WorkspaceId, "successor");
+        Assert.True(await f.Store.TryAcquireRunnerLockAsync(f.FirstProject.ProjectId, successor));
+        await cleanup();
+        Assert.Equal(failed.FinishedUtc, (await f.Store.GetRunSnapshotAsync(run))!.FinishedUtc);
+        Assert.Equal(successor, await f.Store.GetRunnerLockOwnerAsync(f.FirstProject.ProjectId));
+        Assert.Equal("queued", (await f.Store.GetRunSnapshotAsync(successor))!.Status);
+    }
+
+    [Fact]
+    public async Task PackageCleanupRejectsNonRestoreOrUnownedLockAndPreservesSuccess()
+    {
+        var f = await Fixture.CreateAsync();
+        using var current = S206TestSupport.EnterCurrentContext(f.FirstContext);
+        NodeProjectMetadata node = f.Store;
+        var wrong = await f.Store.CreateRunAsync(f.FirstProject.ProjectId, f.FirstProject.WorkspaceId, "ordinary-run");
+        Assert.True(await f.Store.TryAcquireRunnerLockAsync(f.FirstProject.ProjectId, wrong));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => node.CapturePackageRestoreCleanupAsync(wrong));
+        await f.Store.CompleteRunAsync(wrong, "succeeded", 0, "", "", "{}");
+        var run = await f.Store.CreateRunAsync(f.FirstProject.ProjectId, f.FirstProject.WorkspaceId,
+            "project-package-restore:fixture:success");
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => node.CapturePackageRestoreCleanupAsync(run));
+        Assert.True(await f.Store.TryAcquireRunnerLockAsync(f.FirstProject.ProjectId, run));
+        var cleanup = await node.CapturePackageRestoreCleanupAsync(run);
+        await f.Store.CompleteRunAsync(run, "succeeded", 0, "success", "", "{\"activated\":true}");
+        await cleanup();
+        var result = (await f.Store.GetRunSnapshotAsync(run))!;
+        Assert.Equal("succeeded", result.Status);
+        Assert.Equal("success", result.StdoutText);
+    }
+
+    [Fact]
+    public async Task PackageCleanupCannotCrossAChangedNodeBinding()
+    {
+        var f = await Fixture.CreateAsync();
+        using var current = S206TestSupport.EnterCurrentContext(f.FirstContext);
+        NodeProjectMetadata node = f.Store;
+        var run = await f.Store.CreateRunAsync(f.FirstProject.ProjectId, f.FirstProject.WorkspaceId,
+            "project-package-restore:fixture:node");
+        Assert.True(await f.Store.TryAcquireRunnerLockAsync(f.FirstProject.ProjectId, run));
+        var cleanup = await node.CapturePackageRestoreCleanupAsync(run);
+        using var connection = new SqliteConnection(f.ConnectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE node_binding SET node_id='another-node';";
+        command.ExecuteNonQuery();
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => cleanup());
+        Assert.Equal("queued", (await f.Store.GetRunSnapshotAsync(run))!.Status);
+        Assert.Equal(run, await f.Store.GetRunnerLockOwnerAsync(f.FirstProject.ProjectId));
+    }
+
     private sealed class Fixture
     {
         public string ConnectionString = "";
