@@ -246,7 +246,7 @@ public sealed class S32BoundaryTests
             await Task.Delay(TimeSpan.FromMilliseconds(25));
             var operatorApprovalDuration = stopwatch.Elapsed - approvalStarted;
 
-            var controlledRun = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            var controlledRun = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 [
                     "-NoProfile",

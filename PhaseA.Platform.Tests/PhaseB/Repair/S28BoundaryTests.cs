@@ -274,7 +274,7 @@ public sealed class S28BoundaryTests
                          (releasePath is null
                              ? "while ($true) { [Threading.Thread]::Sleep(100) }"
                              : $"while (-not [IO.File]::Exists('{EscapePowerShell(releasePath)}')) {{ [Threading.Thread]::Sleep(100) }}");
-            return new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            return OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", script],
                 workingDirectory,
@@ -285,7 +285,7 @@ public sealed class S28BoundaryTests
         {
             var scopePath = Path.Combine(RestoredWorkspaceRoot, "scope.txt");
             var script = $"Get-Content '{EscapePowerShell(scopePath)}'; Write-Output 'S28_CONTROLLED_RUN_OK'";
-            return new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+            return OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
                 "powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-Command", script],
                 RestoredWorkspaceRoot,

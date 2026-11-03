@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -162,7 +163,7 @@ public sealed class S53BoundaryTests
                 "if ($existingCode -eq 5 -and $missingCode -eq 2) { exit 5 } else { exit 6 }";
             var probeScriptPath = Path.Combine(probeRoot, "s53-probe.ps1");
             File.WriteAllText(probeScriptPath, script, new UTF8Encoding(false));
-            var probe = new HostedProcessRunner().RunAsync(new HostedProcessCommand("powershell.exe",
+            var probe = OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand("powershell.exe",
                 ["-NoProfile", "-NonInteractive", "-File", probeScriptPath],
                 probeRoot, new Dictionary<string, string>())).GetAwaiter().GetResult();
             var runnerSid = ((SecurityIdentifier)new NTAccount(Environment.MachineName, "phase-r-a-p").Translate(typeof(SecurityIdentifier))).Value;

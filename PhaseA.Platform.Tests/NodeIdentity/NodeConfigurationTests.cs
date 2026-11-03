@@ -21,6 +21,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
             // Directly exercise the declared current production parser, without creating a substitute.
             var parsed = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
+                ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
                 ["PHASEA_SERVICE_STATE"] = phase,
                 ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-options-" + Guid.NewGuid().ToString("N"))
             });
@@ -39,6 +40,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
         Directory.CreateDirectory(root);
         var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(root, "metadata.sqlite3"),
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces")
         });
@@ -71,6 +73,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
         var defaults = baseline;
         var overridden = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces"),
             ["PHASEA_MAX_CONCURRENT_OTHER_RUNS"] = "2",
             ["PHASEA_MAX_CONCURRENT_PROJECT_CREATIONS"] = "2"
@@ -80,6 +83,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
         {
             var local = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
             {
+                ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
                 ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "workspaces"),
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(root, "metadata.sqlite3"),
                 ["PHASEA_NODE_ID"] = "test-physical-node",
@@ -131,6 +135,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var baseline = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-capacity-options-" + Guid.NewGuid().ToString("N"))
         });
         return ObserveCapacityMatrixAsync(baseline);
@@ -141,6 +146,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var baseline = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-capacity-options-" + Guid.NewGuid().ToString("N"))
         });
         return ObserveCapacityMatrixAsync(baseline);
@@ -151,6 +157,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var baseline = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-capacity-options-" + Guid.NewGuid().ToString("N"))
         });
         return ObserveCapacityMatrixAsync(baseline);
@@ -161,6 +168,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var baseline = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-capacity-options-" + Guid.NewGuid().ToString("N"))
         });
         return ObserveCapacityMatrixAsync(baseline);
@@ -171,6 +179,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var baseline = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-capacity-options-" + Guid.NewGuid().ToString("N"))
         });
         return ObserveCapacityMatrixAsync(baseline);
@@ -181,6 +190,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var baseline = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-capacity-options-" + Guid.NewGuid().ToString("N"))
         });
         return ObserveCapacityMatrixAsync(baseline);
@@ -191,6 +201,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var configuration = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-authority-options")
         });
         new NodePersistenceTests(output).WriteAuthorityObservation(configuration);
@@ -201,6 +212,7 @@ public sealed class NodeConfigurationTests(ITestOutputHelper output)
     {
         var configuration = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
         {
+            ["PHASEA_REPOSITORY_ROOT"] = S206TestSupport.RepositoryRoot,
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s206-authority-options")
         });
         new NodePersistenceTests(output).WriteAuthorityObservation(configuration);

@@ -50,6 +50,9 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Historical scope observation compares the real approved baseline tree.
+          fetch-depth: 0
 
       - name: Logs seed (ensure artifacts paths)
         shell: pwsh

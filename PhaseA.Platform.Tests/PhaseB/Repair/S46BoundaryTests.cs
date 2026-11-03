@@ -25,7 +25,7 @@ public sealed class S46BoundaryTests
     public async Task O_08BA4578BEC0()
     {
         using var fixture = await BoundaryFixture.CreateAsync();
-        var runner = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+        var runner = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
             "cmd.exe",
             ["/d", "/c", "echo S46_JOB_OBJECT_OK"],
             fixture.Root,
@@ -34,7 +34,7 @@ public sealed class S46BoundaryTests
         var processObserved = runner.ExitCode == 0 && runner.Stdout.Contains("S46_JOB_OBJECT_OK", StringComparison.Ordinal);
 
         var restored = fixture.CreateAndRestoreSnapshot();
-        var controlledRun = await new HostedProcessRunner().RunAsync(new HostedProcessCommand(
+        var controlledRun = await OwnedCiOperation.Runner().RunAsync(new HostedProcessCommand(
             "cmd.exe",
             ["/d", "/c", "echo S46_CONTROLLED_RUN_OK"],
             restored,

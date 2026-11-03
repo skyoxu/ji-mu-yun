@@ -28,7 +28,7 @@ public sealed class NodeAuthorityTests(ITestOutputHelper output)
     public async Task O_2F129B75AF64()
     {
         var root=S206TestSupport.RepositoryRoot;
-        using var scope=JsonDocument.Parse(File.ReadAllText(Path.Combine(root,"logs/s2-06-resume-20261031/source-scope-root-path-r5.v1.json")));
+        using var scope=JsonDocument.Parse(File.ReadAllText(Path.Combine(root,"PhaseA.Platform.Tests/Fixtures/s2-06-source-scope.v1.json")));
         var allowed=scope.RootElement.GetProperty("write_paths").EnumerateArray().Select(x=>x.GetString()!)
             .Concat(scope.RootElement.GetProperty("support_paths").EnumerateArray().Select(x=>x.GetString()!)).ToHashSet(StringComparer.Ordinal);
         var changed=GitScopeText(root,"diff","--name-only","25580d700da91d2702fd234a024a616d55419f90","--","PhaseA.Platform")

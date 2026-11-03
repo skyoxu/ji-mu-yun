@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -15,14 +17,15 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
         project = await StoreProjectAsync(store, project);
         Directory.CreateDirectory(Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "OldMain"));
@@ -64,14 +67,15 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
         project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
@@ -115,14 +119,15 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
         project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
@@ -160,14 +165,15 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
         project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
@@ -203,14 +209,15 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
         project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
@@ -245,14 +252,15 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
         project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
@@ -307,15 +315,17 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
+        project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
         EnsureScene(project.RepoPath, "Towerdemo", "TowerdemoPrototype.tscn");
         File.WriteAllText(
@@ -356,15 +366,17 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
+        project = await StoreProjectAsync(store, project);
         var goal = Goal();
         var writer = new PrototypeRouteStateWriter();
         writer.WriteExecuteNextGoalState(project, goal.GoalIndex, new
@@ -395,15 +407,17 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
+        project = await StoreProjectAsync(store, project);
         var goal = Goal();
         var writer = new PrototypeRouteStateWriter();
         writer.WriteNeedsFixState(project, goal.GoalIndex, new
@@ -535,15 +549,17 @@ public sealed class PrototypeSmokeSceneResolverTests
         using var database = TempSqliteDatabase.Create();
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         using var repo = TempDirectory.Create("phase-a-repo");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = repo.Path
         });
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var project = Project(repo.Path);
+        project = await StoreProjectAsync(store, project);
         EnsureScene(project.RepoPath, "OldMain", "OldMainPrototype.tscn");
         Directory.CreateDirectory(Path.Combine(project.RepoPath, "Game.Godot", "Scenes"));
         File.WriteAllText(

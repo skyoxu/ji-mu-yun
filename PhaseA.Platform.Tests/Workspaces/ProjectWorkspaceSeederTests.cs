@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -24,7 +25,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(templateRoot, "AGENTS.template.md"), "project agents\n");
         File.WriteAllText(Path.Combine(templateRoot, "README.template.md"), "project readme\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -32,7 +33,7 @@ public sealed class ProjectWorkspaceSeederTests
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
 
-        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
 
         File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("project agents\n");
         File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("project readme\n");
@@ -59,7 +60,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(templateRoot, "AGENTS.template.md"), "project agents\n");
         File.WriteAllText(Path.Combine(templateRoot, "README.template.md"), "project readme\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -70,7 +71,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(targetRepo, "README.md"), "custom project readme\n");
         File.WriteAllText(Path.Combine(targetRepo, ".phasea-seed-complete"), "phase-a-workspace-seed.v1\n");
 
-        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
 
         File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("project agents\n");
         File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("custom project readme\n");
@@ -91,7 +92,7 @@ public sealed class ProjectWorkspaceSeederTests
         Directory.CreateDirectory(templateRoot);
         File.WriteAllText(Path.Combine(templateRoot, "AGENTS.template.md"), "project agents\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -99,7 +100,7 @@ public sealed class ProjectWorkspaceSeederTests
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
 
-        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
 
         File.ReadAllText(Path.Combine(targetRepo, "AGENTS.md")).Should().Be("platform agents\n");
         File.ReadAllText(Path.Combine(targetRepo, "README.md")).Should().Be("platform readme\n");
@@ -129,14 +130,14 @@ public sealed class ProjectWorkspaceSeederTests
             return;
         }
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -166,7 +167,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, ".agents", "skills", "bmad-agent-game-designer", "SKILL.md"), "new bmad skill\n");
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototype-type-kits", "rpg.md"), "new manifest\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -189,7 +190,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md"), "old manifest\n");
         File.WriteAllText(Path.Combine(targetRepo, "README.md"), "keep local file\n");
 
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -212,7 +213,7 @@ public sealed class ProjectWorkspaceSeederTests
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         Directory.CreateDirectory(Path.Combine(source.Path, "_bmad", "gds"));
         File.WriteAllText(Path.Combine(source.Path, "_bmad", "gds", "config.yaml"), "project_name: template\n");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -222,7 +223,7 @@ public sealed class ProjectWorkspaceSeederTests
         Directory.CreateDirectory(targetRepo);
         File.WriteAllText(Path.Combine(targetRepo, "README.md"), "existing workspace\n");
 
-        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
 
         File.ReadAllText(Path.Combine(targetRepo, "_bmad", "gds", "config.yaml")).Should().Be("project_name: template\n");
     }
@@ -242,7 +243,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "Game.Core.Tests", "Game.Core.Tests.csproj"), "<Project />\n");
         File.WriteAllText(Path.Combine(sourceRoot, "scripts", "python", "project_health_scan.py"), "print('ok')\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -253,7 +254,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(targetRepo, "scripts", "python", "project_health_scan.py"), "existing helper\n");
         File.WriteAllText(Path.Combine(targetRepo, "local-note.txt"), "keep me\n");
 
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -289,7 +290,7 @@ public sealed class ProjectWorkspaceSeederTests
         Directory.CreateDirectory(Path.GetDirectoryName(ordinarySourcePath)!);
         File.WriteAllText(ordinarySourcePath, "// ordinary source\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -303,7 +304,7 @@ public sealed class ProjectWorkspaceSeederTests
             File.WriteAllText(targetPath, $"existing:{relativePath}\n");
         }
 
-        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
 
         File.ReadAllText(Path.Combine(targetRepo, "Game.Core", "OrdinarySource.cs"))
             .Should().Be("// ordinary source\n");
@@ -319,14 +320,14 @@ public sealed class ProjectWorkspaceSeederTests
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Game.Godot"));
         Directory.CreateDirectory(Path.Combine(sourceRoot, "Tests.Godot"));
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -344,14 +345,14 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "game-type-guides", "rpg.md"), "guide\n");
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototype-type-kits", "rpg.md"), "kit\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -370,7 +371,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "README.md"), "source readme\n");
         File.WriteAllText(Path.Combine(sourceToolCache, "Microsoft.Extensions.Logging.Abstractions.dll"), "source dll\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -381,7 +382,7 @@ public sealed class ProjectWorkspaceSeederTests
         Directory.CreateDirectory(residualToolCache);
         File.WriteAllText(Path.Combine(residualToolCache, "Microsoft.Extensions.Logging.Abstractions.dll"), "residual dll\n");
 
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -402,7 +403,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(realRuntime, "Main.tscn"), "[gd_scene]\n");
         File.WriteAllText(Path.Combine(mirroredRuntime, "stale.txt"), "mirror\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(workspace.Path, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -414,7 +415,7 @@ public sealed class ProjectWorkspaceSeederTests
             "cccccccccccccccccccccccccccccccc",
             "dddddddddddddddddddddddddddddddd",
             "repo");
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -456,14 +457,14 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototypes", "TEMPLATE.md"), "template\n");
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototypes", "2026-05-15-dq-rpg.md"), "generated record\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -493,14 +494,14 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "bin", "GdUnitCmdTool.gd"), "runner\n");
         File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "src", "GdUnitTestSuite.gd"), "suite\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = sourceRoot
         });
         var targetRepo = Path.Combine(workspace.Path, "account", "project", "repo");
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
 
         seeder.EnsureSeeded(targetRepo);
 
@@ -519,7 +520,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(sourceRoot, "Tests.Godot", "addons", "gdUnit4", "src", "LockedSuite.gd"), "new suite\n");
         File.WriteAllText(Path.Combine(sourceRoot, "docs", "prototype-type-kits", "rpg.md"), "new manifest\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -531,7 +532,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src", "LockedSuite.gd"), "old suite\n");
         File.WriteAllText(Path.Combine(targetRepo, "docs", "prototype-type-kits", "rpg.md"), "old manifest\n");
 
-        var seeder = new ProjectWorkspaceSeeder(options);
+        var seeder = OwnedCiOperation.Seeder(options, targetRepo);
         var lockedPath = Path.Combine(targetRepo, "Tests.Godot", "addons", "gdUnit4", "src", "LockedSuite.gd");
         using (var lockedHandle = new FileStream(
                    lockedPath,
@@ -561,7 +562,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(Path.Combine(source.Path, "AGENTS.md"), "agents\n");
         File.WriteAllText(Path.Combine(source.Path, "README.md"), "readme\n");
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -573,7 +574,7 @@ public sealed class ProjectWorkspaceSeederTests
             .Select(_ => Task.Run(() =>
             {
                 start.Wait();
-                new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+                OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
             }))
             .ToArray();
 
@@ -596,7 +597,7 @@ public sealed class ProjectWorkspaceSeederTests
         var newContent = Enumerable.Repeat((byte)'B', 2 * 1024 * 1024).ToArray();
         File.WriteAllBytes(sourcePath, newContent);
 
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -629,12 +630,12 @@ public sealed class ProjectWorkspaceSeederTests
         });
 
         await Task.WhenAll(Enumerable.Range(0, 12).Select(_ => Task.Run(() =>
-            new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo))));
+            OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo))));
         stop.Cancel();
         await reader;
 
         invalidReadObserved.Should().Be(0);
-        new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
         File.ReadAllBytes(targetPath).Should().Equal(newContent);
     }
 
@@ -644,7 +645,7 @@ public sealed class ProjectWorkspaceSeederTests
         using var source = TempDirectory.Create("phase-a-source");
         using var workspace = TempDirectory.Create("phase-a-workspaces");
         File.WriteAllText(Path.Combine(source.Path, "Directory.Build.props"), "new props\n");
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspace.Path,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspace.Path, "metadata.sqlite3"),
@@ -656,7 +657,7 @@ public sealed class ProjectWorkspaceSeederTests
         File.WriteAllText(targetPath, "old props\n");
         using var locked = new FileStream(targetPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-        var act = () => new ProjectWorkspaceSeeder(options).EnsureSeeded(targetRepo);
+        var act = () => OwnedCiOperation.Seeder(options, targetRepo).EnsureSeeded(targetRepo);
 
         act.Should().Throw<IOException>();
         File.Exists(Path.Combine(targetRepo, ".phasea-seed-complete")).Should().BeFalse();
