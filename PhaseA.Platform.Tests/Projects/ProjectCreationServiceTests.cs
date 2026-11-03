@@ -724,6 +724,7 @@ public sealed class ProjectCreationServiceTests
         var created = await service.CreateProjectAsync(owner, Request("Owner Game"));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
 
+        using var otherCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(other.Token)));
         var deleted = await service.DeleteProjectAsync(other.AccountId, created.ProjectId!, new ProjectDeletionRequest("delete", "delete"));
 
         deleted.Succeeded.Should().BeFalse();

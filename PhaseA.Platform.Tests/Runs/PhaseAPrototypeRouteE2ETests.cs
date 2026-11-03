@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -21,11 +23,12 @@ public sealed class PhaseAPrototypeRouteE2ETests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var routeStateWriter = new PrototypeRouteStateWriter();
-        var projectCreation = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options), routeStateWriter);
+        var projectCreation = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store), routeStateWriter);
 
         var created = await projectCreation.CreateProjectAsync(
             accountId,
@@ -37,18 +40,7 @@ public sealed class PhaseAPrototypeRouteE2ETests
         File.ReadAllText(Path.Combine(project.RepoPath, "README.md")).Should().Contain(project.ProjectId);
 
         var prototypeRunner = new PrototypeWorkflowRunner();
-        var prototypeWorkflow = new PrototypeWorkflowService(
-            store,
-            options,
-            prototypeRunner,
-            new PrototypeRecordWriter(options),
-            new PrototypeWorkflowCommandBuilder(options),
-            new PrototypeArtifactIndexer(),
-            new LlmBindingService(store, options),
-            new LlmStopLossService(store, options),
-            new ProjectWorkspaceSeeder(options),
-            new GameTypeTemplateCatalog(options),
-            routeStateWriter);
+        var prototypeWorkflow = new PrototypeWorkflowService(store, options, prototypeRunner, new PrototypeRecordWriter(options), new PrototypeWorkflowCommandBuilder(options), new PrototypeArtifactIndexer(), new LlmBindingService(store, options), new LlmStopLossService(store, options), new ProjectWorkspaceSeeder(options, store), new GameTypeTemplateCatalog(options), routeStateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var prototype = await prototypeWorkflow.RunAsync(accountId, project.ProjectId, PrototypeRequest());
         prototype.Status.Should().Be("succeeded");
         routeStateWriter.ReadLatestPrototypeState(project).Should().Contain(prototype.RunId);
@@ -80,7 +72,7 @@ public sealed class PhaseAPrototypeRouteE2ETests
         var needsFixRunner = new NeedsFixCompletedRunner();
         var needsFixRoute = new PrototypeNeedsFixRouteService(
             store,
-            new PrototypeQuickFixService(store, options, needsFixRunner, new ProjectWorkspaceSeeder(options), new SkillActionCatalog()),
+            new PrototypeQuickFixService(store, options, needsFixRunner, new ProjectWorkspaceSeeder(options, store), new SkillActionCatalog(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store)),
             routeStateWriter);
 
         var fixedResult = await needsFixRoute.RunAsync(
@@ -123,7 +115,7 @@ public sealed class PhaseAPrototypeRouteE2ETests
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

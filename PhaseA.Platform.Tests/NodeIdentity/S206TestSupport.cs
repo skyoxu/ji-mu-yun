@@ -68,6 +68,8 @@ internal static class S206TestSupport
             RegisterLogicalReadbackProject(project);
             return new OwnedProjectRegistration(project.WorkspaceRootPath, null);
         }
+        foreach (var directory in new[] { project.WorkspaceRootPath, project.RepoPath, project.RuntimePath, project.MetaPath })
+            Directory.CreateDirectory(directory);
         var layout = new WorkspaceLayout(project.WorkspaceRootPath, project.RepoPath, project.RuntimePath, project.MetaPath);
         new WindowsProjectRunnerProvisioner(options).Provision(project.AccountId, project.ProjectId, layout);
         if (!RunnerIsolationPolicy.TryGetWorkspaceDescriptor(project.RepoPath, out var descriptor))
@@ -91,6 +93,9 @@ internal static class S206TestSupport
     internal static PhaseAPlatformOptions OwnedNodeOptions(Dictionary<string, string?> values)
     {
         var settings = new Dictionary<string, string?>(values);
+        settings.TryAdd("HOSTED_WORKSPACE_ROOT", CreateOwnedFixtureRoot("owned-ci-workspaces-"));
+        // Metadata-only fixtures use the committed minimal seed, not the test host DLL directory.
+        settings.TryAdd("PHASEA_REPOSITORY_ROOT", Path.Combine(RepositoryRoot, "PhaseA.Platform.Tests", "Fixtures", "ProjectSeedRepository"));
         settings.TryAdd("PHASEA_NODE_ID", "owned-ci-node");
         settings.TryAdd("PHASEA_NODE_SCOPE", "single_node_test");
         settings.TryAdd("PHASEA_NODE_TOPOLOGY", "single_service");

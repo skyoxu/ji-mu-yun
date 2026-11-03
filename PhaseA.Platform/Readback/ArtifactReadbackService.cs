@@ -147,17 +147,23 @@ public sealed class ArtifactReadbackService
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var accounts = await _metadataStore.ListAccountsAsync(cancellationToken);
+        // ADR-0061: administrative aggregation uses the existing admin-only query,
+        // never an owner-scoped read impersonating each account.
+        var costs = (await _metadataStore.ListLlmUsageRowsForAdminAsync(
+            today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("O"),
+            today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("O"), cancellationToken))
+            .ToLookup(row => row.AccountId, row => row.LlmCostJson);
         var items = new List<AdminLlmAccountUsageItem>();
         foreach (var account in accounts)
         {
-            var costJson = await _metadataStore.ListAccountLlmCostJsonForUtcDayAsync(account.AccountId, today, cancellationToken);
+            var costJson = costs[account.AccountId].ToArray();
             items.Add(new AdminLlmAccountUsageItem(
                 account.AccountId,
                 account.Username,
                 account.IsAdmin,
                 account.IsDisabled,
                 account.ProjectCount,
-                costJson.Count,
+                costJson.Length,
                 costJson.Sum(ReadEstimatedCostCny)));
         }
 

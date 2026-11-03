@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using PhaseA.Platform.Runs;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,7 +15,9 @@ public sealed class S63BoundaryTests
     [Fact]
     public async Task O_AB9EF0D40F90()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 2);
+        var fixture = await S206QueueFixture.CreateAsync("s63-project");
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 2, authority: fixture.Store);
         var firstStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseFirst = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -42,7 +46,7 @@ public sealed class S63BoundaryTests
 
         var first = queue.ExecuteAsync(
             "s63-first-writer",
-            "s63-account",
+            fixture.AccountId,
             "s63-project",
             "heavy-write",
             _ => WriteAsync("first", firstStarted, releaseFirst.Task));
@@ -51,7 +55,7 @@ public sealed class S63BoundaryTests
 
         var second = queue.ExecuteAsync(
             "s63-second-writer",
-            "s63-account",
+            fixture.AccountId,
             "s63-project",
             "heavy-write",
             _ => WriteAsync("second", secondStarted, null));

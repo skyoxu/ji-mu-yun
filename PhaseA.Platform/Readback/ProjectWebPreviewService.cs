@@ -4085,7 +4085,7 @@ func collision_capsule(radius, height):
 
     private HeavyRunnerQueueItemReadback? FindWebPreviewQueueItem(string accountId, string runId)
     {
-        var readback = _webPreviewQueue.GetReadback(accountId, includeAll: true);
+        var readback = _webPreviewQueue.GetReadback(accountId, includeAll: false);
         if (readback.Current is not null &&
             string.Equals(readback.Current.RunId, runId, StringComparison.Ordinal))
         {

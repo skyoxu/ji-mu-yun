@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
@@ -15,30 +16,34 @@ public sealed class S23BoundaryTests
     [Fact]
     public async Task O_7E028CBB46E6()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), 1);
-        await using var blocker = await queue.EnterAsync("blocker", "account-s23", "project-s23", "test-run");
+        var fixture = await S206QueueFixture.CreateAsync("project-s23");
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), 1, authority: fixture.Store);
+        await using var blocker = await queue.EnterAsync("blocker", fixture.AccountId, "project-s23", "test-run");
         var revoked = false;
         var workRan = false;
-        var task = queue.ExecuteAuthorizedAsync("target", "account-s23", "project-s23", "test-run",
-            Context(), (_, _) => Task.FromResult(!revoked), _ => { workRan = true; return Task.FromResult("lease"); });
-        var queued = await WaitUntilAsync(() => queue.GetReadback("account-s23", true).QueuedCount == 1);
+        var task = queue.ExecuteAuthorizedAsync("target", fixture.AccountId, "project-s23", "test-run",
+            fixture.Context, (_, _) => Task.FromResult(!revoked), _ => { workRan = true; return Task.FromResult("lease"); });
+        var queued = await WaitUntilAsync(() => queue.GetReadback(fixture.AccountId, true).QueuedCount == 1);
         revoked = true;
         await blocker.DisposeAsync();
         var denied = await IsUnauthorized(task);
-        var readback = queue.GetReadback("account-s23", true);
+        var readback = queue.GetReadback(fixture.AccountId, true);
         _output.WriteLine("S23_OBSERVATION:" + JsonSerializer.Serialize(new { queued, denied, drained = readback.QueuedCount == 0 && !readback.Running, workRan }));
     }
 
     [Fact]
     public async Task O_C81702C3110F()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), 1);
-        await using var blocker = await queue.EnterAsync("blocker", "account-s23", "project-s23", "test-run");
+        var fixture = await S206QueueFixture.CreateAsync("project-s23");
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), 1, authority: fixture.Store);
+        await using var blocker = await queue.EnterAsync("blocker", fixture.AccountId, "project-s23", "test-run");
         var disabled = false;
         var workRan = false;
-        var task = queue.ExecuteAuthorizedAsync("target", "account-s23", "project-s23", "test-run",
-            Context(), (_, _) => Task.FromResult(!disabled), _ => { workRan = true; return Task.FromResult("lease"); });
-        var queued = await WaitUntilAsync(() => queue.GetReadback("account-s23", true).QueuedCount == 1);
+        var task = queue.ExecuteAuthorizedAsync("target", fixture.AccountId, "project-s23", "test-run",
+            fixture.Context, (_, _) => Task.FromResult(!disabled), _ => { workRan = true; return Task.FromResult("lease"); });
+        var queued = await WaitUntilAsync(() => queue.GetReadback(fixture.AccountId, true).QueuedCount == 1);
         disabled = true;
         await blocker.DisposeAsync();
         var denied = await IsUnauthorized(task);
@@ -48,13 +53,15 @@ public sealed class S23BoundaryTests
     [Fact]
     public async Task O_E48D8E1001E0()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), 1);
-        await using var blocker = await queue.EnterAsync("blocker", "account-s23", "project-s23", "test-run");
+        var fixture = await S206QueueFixture.CreateAsync("project-s23");
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), 1, authority: fixture.Store);
+        await using var blocker = await queue.EnterAsync("blocker", fixture.AccountId, "project-s23", "test-run");
         var revoked = false;
         var workRan = false;
-        var task = queue.ExecuteAuthorizedAsync("target", "account-s23", "project-s23", "test-run",
-            Context(), (_, _) => Task.FromResult(!revoked), _ => { workRan = true; return Task.FromResult("lease"); });
-        var queued = await WaitUntilAsync(() => queue.GetReadback("account-s23", true).QueuedCount == 1);
+        var task = queue.ExecuteAuthorizedAsync("target", fixture.AccountId, "project-s23", "test-run",
+            fixture.Context, (_, _) => Task.FromResult(!revoked), _ => { workRan = true; return Task.FromResult("lease"); });
+        var queued = await WaitUntilAsync(() => queue.GetReadback(fixture.AccountId, true).QueuedCount == 1);
         revoked = true;
         await blocker.DisposeAsync();
         var denied = await IsUnauthorized(task);

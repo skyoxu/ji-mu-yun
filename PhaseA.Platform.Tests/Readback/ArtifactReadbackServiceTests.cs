@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using System.IO.Compression;
 using System.Net;
@@ -28,13 +30,14 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var runId = await store.CreateRunAsync(projectId, null, "prototype-tdd-green");
         await store.CompleteRunAsync(runId, "succeeded", 0, "stdout", "", "{}", CancellationToken.None);
         Write(project!.RepoPath, "logs/ci/sample-artifact.txt", "artifact text");
         await store.AddArtifactAsync(new ArtifactCreationCommand(runId, projectId, "sample", "logs/ci/sample-artifact.txt", "Sample artifact"));
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var projects = await service.ListProjectsAsync((await store.GetProjectSnapshotAsync(projectId))!.AccountId);
         var runs = await service.GetProjectRunsAsync(projectId);
@@ -55,6 +58,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var runId = await store.CreateRunAsync(projectId, null, "game-design-gdd");
@@ -73,7 +77,7 @@ public sealed class ArtifactReadbackServiceTests
                 runId, projectId, artifactType, relativePath, "Internal GDD prompt artifact"));
         }
         var internalArtifacts = await store.ListArtifactsForRunAsync(runId);
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         (await service.ListArtifactsForRunAsync(runId)).Should().BeEmpty();
         foreach (var internalArtifact in internalArtifacts)
@@ -91,6 +95,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var firstRunId = await store.CreateRunAsync(projectId, null, "project-package");
         var secondRunId = await store.CreateRunAsync(projectId, null, "project-package");
@@ -121,6 +126,7 @@ public sealed class ArtifactReadbackServiceTests
         SeedGameTypeGuide(repoRoot.Path);
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Deck Game", "Slay the Spire");
         var now = DateTimeOffset.UtcNow.ToString("O");
@@ -185,7 +191,7 @@ public sealed class ArtifactReadbackServiceTests
             "Slay the Spire",
             "Slay the Spire",
             """["Slay the Spire"]"""));
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var readback = await service.GetAdminGameTypeMatchRecordsAsync(10);
 
@@ -208,10 +214,11 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var runId = await store.CreateRunAsync(projectId, null, "prototype-tdd-red");
         (await store.TryAcquireRunnerLockAsync(projectId, runId)).Should().BeTrue();
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var run = await service.GetRunAsync(runId);
         var projectRuns = await service.GetProjectRunsAsync(projectId);
@@ -228,12 +235,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-draft-analysis");
         await store.MarkRunStartedAsync(runId);
         await store.UpdateRunProgressAsync(runId, "analyzing", "", "正在分析草稿。");
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var active = await service.GetActiveRunAsync(project.AccountId);
 
@@ -254,11 +262,12 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
         var chatRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-chat");
         await store.MarkRunStartedAsync(chatRunId);
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var active = await service.GetActiveRunAsync(project.AccountId);
 
@@ -275,26 +284,28 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var project = (await store.GetProjectSnapshotAsync(projectId))!;
-        var prototypeQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1);
-        var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
-        var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1);
+        var prototypeQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1, authority: store);
+        var assetQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1, authority: store);
+        var webPreviewQueue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(10), maxConcurrentRuns: 1, authority: store);
         await using var prototypeLease = await prototypeQueue.EnterAsync(
             "prototype-run",
             project!.AccountId,
             project.ProjectId,
             "prototype-7day-playable");
-        await using var assetLease = await assetQueue.EnterAsync(
-            "asset-current",
-            "other-account",
-            "other-project",
-            "asset-generation");
-        await using var webPreviewLease = await webPreviewQueue.EnterAsync(
-            "web-preview-current",
-            "other-account",
-            "other-project",
-            "project-web-preview");
+        var other = await store.CreateUserAccountAsync("queue-other", 1);
+        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Queue", ownerToken: other.Token);
+        var otherContext = await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(other.Token));
+        HeavyRunnerQueueService.HeavyRunnerLease assetLease, webPreviewLease;
+        using (S206TestSupport.EnterCurrentContext(otherContext))
+        {
+            assetLease = await assetQueue.EnterAsync("asset-current", other.AccountId, otherProject, "asset-generation");
+            webPreviewLease = await webPreviewQueue.EnterAsync("web-preview-current", other.AccountId, otherProject, "project-web-preview");
+        }
+        await using var ownedAssetLease = assetLease;
+        await using var ownedWebPreviewLease = webPreviewLease;
         using var queuedAssetCancellation = new CancellationTokenSource();
         var queuedAssetRun = assetQueue.ExecuteAsync(
             "asset-run",
@@ -314,7 +325,7 @@ public sealed class ArtifactReadbackServiceTests
         var service = new ArtifactReadbackService(
             store,
             options,
-            new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1),
+            new HeavyRunnerQueueService(TimeSpan.FromSeconds(30), maxConcurrentRuns: 1, authority: store),
             prototypeQueue,
             assetQueue,
             webPreviewQueue);
@@ -386,12 +397,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, owner, "Owner Game");
         var runId = await store.CreateRunAsync(projectId, null, "prototype-chat");
         await store.CompleteRunAsync(runId, "succeeded", 0, "secret stdout", "secret stderr", "{}", CancellationToken.None);
         await store.RecordRunLlmAuditAsync(runId, "new-api", "req-owner", "gpt-5.4", """{"estimated_cost_cny":1.25}""");
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var audit = await service.GetAdminLlmRunAuditAsync();
 
@@ -410,12 +422,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var admin = await store.EnsureSingleAdminAsync();
         var user = await store.CreateUserAccountAsync("metrics-user", 1);
         var otherUser = await store.CreateUserAccountAsync("metrics-other", 1);
         var adminProject = await CreateProjectAsync(store, options, admin, "Admin Game");
-        var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Game");
-        var otherProject = await CreateProjectAsync(store, options, otherUser.AccountId, "Other Game");
+        var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Game", ownerToken: user.Token);
+        var otherProject = await CreateProjectAsync(store, options, otherUser.AccountId, "Other Game", ownerToken: otherUser.Token);
         var adminRun = await store.CreateRunAsync(adminProject, null, "prototype-iteration-goal");
         var workflowRun = await store.CreateRunAsync(projectId, null, "prototype-iteration-goal");
         var packageRun = await store.CreateRunAsync(projectId, null, "project-package");
@@ -432,7 +445,7 @@ public sealed class ArtifactReadbackServiceTests
         await CompleteRunWithTimingAsync(database.ConnectionString, store, chatTwo, "2026-06-01T00:00:10.0000000Z", "2026-06-01T00:00:14.0000000Z", "2026-06-01T00:00:23.0000000Z", null);
         await CompleteRunWithTimingAsync(database.ConnectionString, store, assetRun, "2026-06-01T00:00:20.0000000Z", "2026-06-01T00:00:21.0000000Z", "2026-06-01T00:00:31.0000000Z", null);
         await CompleteRunWithTimingAsync(database.ConnectionString, store, otherAssetRun, "2026-06-01T00:00:30.0000000Z", "2026-06-01T00:00:31.0000000Z", "2026-06-01T00:00:41.0000000Z", null);
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var metrics = await service.GetAdminRunMetricsAsync(user.AccountId, "prototype-iteration-goal");
         var userMetrics = await service.GetAdminRunMetricsAsync(user.AccountId, null, limit: 1);
@@ -469,8 +482,9 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var user = await store.CreateUserAccountAsync("metrics-prune-user", 1);
-        var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Prune Game");
+        var projectId = await CreateProjectAsync(store, options, user.AccountId, "Metrics Prune Game", ownerToken: user.Token);
 
         await SeedRunDurationMetricsAsync(
             database.ConnectionString,
@@ -493,7 +507,7 @@ public sealed class ArtifactReadbackServiceTests
                 runType == "prototype-iteration-goal" ? 1 : null);
         }
 
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var metrics = await service.GetAdminRunMetricsAsync(user.AccountId, null, limit: 500);
 
         metrics.Runs.Should().HaveCount(500);
@@ -512,15 +526,16 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var other = await store.CreateUserAccountAsync("audit-user", 1);
         var ownerProject = await CreateProjectAsync(store, options, owner, "Owner Game");
-        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Game");
+        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Game", ownerToken: other.Token);
         var ownerRun = await store.CreateRunAsync(ownerProject, null, "prototype-chat");
         var otherRun = await store.CreateRunAsync(otherProject, null, "prototype-chat");
         await store.RecordRunLlmAuditAsync(ownerRun, "new-api", "req-owner", "gpt-5.4", """{"estimated_cost_cny":1.25}""");
         await store.RecordRunLlmAuditAsync(otherRun, "new-api", "req-other", "gpt-5.5", """{"estimated_cost_cny":2.75}""");
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var usage = await service.GetAdminLlmUsageAsync();
 
@@ -529,6 +544,11 @@ public sealed class ArtifactReadbackServiceTests
         usage.EstimatedCostCny.Should().Be(4.00m);
         usage.Accounts.Should().Contain(account => account.AccountId == owner && account.CallCount == 1 && account.EstimatedCostCny == 1.25m);
         usage.Accounts.Should().Contain(account => account.AccountId == other.AccountId && account.CallCount == 1 && account.EstimatedCostCny == 2.75m);
+        using var otherCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(
+            store, PhaseAAuth.HashTokenForStorage(other.Token)));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => service.GetAdminLlmUsageAsync());
+        NodeProjectMetadata ordinary = store;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => ordinary.ListAccountLlmCostJsonForUtcDayAsync(owner, DateOnly.FromDateTime(DateTime.UtcNow)));
     }
 
     [Fact]
@@ -539,15 +559,16 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var other = await store.CreateUserAccountAsync("aggregate-project-user", 1);
         var firstProject = await CreateProjectAsync(store, options, owner, "First Game");
-        var secondProject = await CreateProjectAsync(store, options, other.AccountId, "Second Game");
+        var secondProject = await CreateProjectAsync(store, options, other.AccountId, "Second Game", ownerToken: other.Token);
         var firstRun = await store.CreateRunAsync(firstProject, null, "prototype-chat");
         var secondRun = await store.CreateRunAsync(secondProject, null, "prototype-chat");
         await store.RecordRunLlmAuditAsync(firstRun, "codex-cli", null, "gpt-5.4", """{"estimated_cost_cny":1.25}""");
         await store.RecordRunLlmAuditAsync(secondRun, "codex-cli", null, "gpt-5.5", """{"estimated_cost_cny":2.75}""");
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var usage = await service.GetAdminLlmUsageAggregateAsync("day", "project", null, null);
 
@@ -567,11 +588,12 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var other = await store.CreateUserAccountAsync("runs-readback-other", 1);
         var ownerProject = await CreateProjectAsync(store, options, owner, "Owner Game");
         var ownerRun = await store.CreateRunAsync(ownerProject, null, "prototype-chat");
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetProjectRunsForAccountAsync(other.AccountId, ownerProject);
 
@@ -587,15 +609,16 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.EnsureSingleAdminAsync();
         var other = await store.CreateUserAccountAsync("other-llm-user", 1);
         var ownerProject = await CreateProjectAsync(store, options, owner, "Owner Game");
-        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Game");
+        var otherProject = await CreateProjectAsync(store, options, other.AccountId, "Other Game", ownerToken: other.Token);
         var ownerRun = await store.CreateRunAsync(ownerProject, null, "prototype-chat");
         var otherRun = await store.CreateRunAsync(otherProject, null, "prototype-chat");
         await store.RecordRunLlmAuditAsync(ownerRun, "new-api", "req-owner", "gpt-5.4", """{"estimated_cost_cny":1.25}""");
         await store.RecordRunLlmAuditAsync(otherRun, "new-api", "req-other", "gpt-5.4", """{"estimated_cost_cny":9.99}""");
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var usage = await service.GetAccountLlmUsageAsync(owner);
 
@@ -613,6 +636,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectOne = await CreateProjectAsync(store, options, accountId, "Game One");
         await store.SetProjectBootstrapStatusAsync(projectOne, "succeeded", null);
@@ -625,7 +649,7 @@ public sealed class ArtifactReadbackServiceTests
         Write(two.RepoPath, "logs/ci/shared.txt", "project two");
         await store.AddArtifactAsync(new ArtifactCreationCommand(runOne, projectOne, "sample", "logs/ci/shared.txt", "Project one artifact"));
         await store.AddArtifactAsync(new ArtifactCreationCommand(runTwo, projectTwo, "sample", "logs/ci/shared.txt", "Project two artifact"));
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var artifactOne = await service.ReadArtifactAsync((await store.ListArtifactsForRunAsync(runOne))[0].ArtifactId);
         var artifactTwo = await service.ReadArtifactAsync((await store.ListArtifactsForRunAsync(runTwo))[0].ArtifactId);
@@ -643,12 +667,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var runId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-feedback-iteration");
         await store.MarkRunStartedAsync(runId);
         (await store.TryAcquireRunnerLockAsync(projectId, runId)).Should().BeTrue();
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var recovered = await store.ReconcileInterruptedRunsAsync("Run was interrupted because the service restarted before completion.");
         var active = await service.GetActiveRunAsync(project.AccountId);
@@ -669,6 +694,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Iteration Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -714,7 +740,10 @@ public sealed class ArtifactReadbackServiceTests
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         Write(repoRoot.Path, "logs/ci/project-health/latest.html", "<html>health</html>");
         Write(repoRoot.Path, "logs/ci/project-health/latest.json", "{\"status\":\"ok\"}");
-        var service = new ArtifactReadbackService(new PhaseAMetadataStore(database.ConnectionString, options), options);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var service = new ArtifactReadbackService(store, options,
+            new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store),
+            new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store));
 
         var html = service.ReadProjectHealth("logs/ci/project-health/latest.html");
         var json = service.ReadProjectHealth("logs/ci/project-health/latest.json");
@@ -769,7 +798,10 @@ public sealed class ArtifactReadbackServiceTests
               ]
             }
             """);
-        var service = new ArtifactReadbackService(new PhaseAMetadataStore(database.ConnectionString, options), options);
+        var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        var service = new ArtifactReadbackService(store, options,
+            new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store),
+            new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store));
 
         var summary = service.ReadProjectHealthSummary();
 
@@ -797,11 +829,12 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var projectId = await CreateProjectAsync(store, options);
         var runId = await store.CreateRunAsync(projectId, null, "readback-test");
         await store.AddArtifactAsync(new ArtifactCreationCommand(runId, projectId, "bad", "../outside.txt", "Bad artifact"));
         var artifactId = (await store.ListArtifactsForRunAsync(runId))[0].ArtifactId;
-        var service = new ArtifactReadbackService(store, options);
+        var service = new ArtifactReadbackService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), prototypeCreationQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), webPreviewQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var act = async () => await service.ReadArtifactAsync(artifactId);
 
@@ -816,6 +849,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -845,10 +879,10 @@ public sealed class ArtifactReadbackServiceTests
         Write(project.RepoPath, "scripts/python/dev_cli.py", "script");
         Write(project.RepoPath, "logs/ci/run.log", "log");
         Write(project.RepoPath, ".agents/skills/demo/SKILL.md", "skill");
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var first = await service.CreatePackageAsync(accountId, projectId);
-        var second = await service.CreatePackageAsync(accountId, projectId);
+        var first = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
+        var second = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var download = await service.ReadPackageAsync(accountId, projectId, first.FileName);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
@@ -906,6 +940,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Tower Demo", "Tower Defense");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -913,9 +948,9 @@ public sealed class ArtifactReadbackServiceTests
         await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         Write(project.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene]");
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var download = await service.ReadPackageAsync(accountId, projectId, created.FileName);
 
         download.Should().NotBeNull();
@@ -932,18 +967,19 @@ public sealed class ArtifactReadbackServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
         await SeedPackagePrerequisitesAsync(store, accountId, projectId);
         Write(project.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1);
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromSeconds(1), maxConcurrentRuns: 1, authority: store);
         await using var lease = await queue.EnterAsync("held-package-run", accountId, projectId, "project-package");
-        var service = new ProjectPackageService(store, options, queue);
-        var packageTask = service.CreatePackageAsync(accountId, projectId);
+        var service = new ProjectPackageService(store, options, queue, processRunner: new HostedProcessRunner(authority: store));
+        var packageTask = service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         string runId = "";
         for (var attempt = 0; attempt < 50; attempt++)
         {
@@ -979,6 +1015,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -987,9 +1024,9 @@ public sealed class ArtifactReadbackServiceTests
         await store.CompleteRunAsync(prototypeRunId, "succeeded", 0, "prototype complete", "", "{}", CancellationToken.None);
         var heldRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "held-run");
         (await store.TryAcquireRunnerLockAsync(projectId, heldRunId)).Should().BeTrue();
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var result = await service.CreatePackageAsync(accountId, projectId);
+        var result = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
 
         result.Status.Should().Be("project_busy");
         result.FailureCode.Should().Be("project_busy");
@@ -1005,6 +1042,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -1055,9 +1093,9 @@ public sealed class ArtifactReadbackServiceTests
               ]
             }
             """.Replace("PROJECT_ID", projectId, StringComparison.Ordinal));
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var result = await service.CreatePackageAsync(accountId, projectId);
+        var result = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var download = await service.ReadPackageAsync(accountId, projectId, result.FileName);
 
         result.Status.Should().Be("succeeded");
@@ -1075,6 +1113,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -1120,9 +1159,9 @@ public sealed class ArtifactReadbackServiceTests
               ]
             }
             """.Replace("PROJECT_ID", projectId, StringComparison.Ordinal));
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var result = await service.CreatePackageAsync(accountId, projectId);
+        var result = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var download = await service.ReadPackageAsync(accountId, projectId, result.FileName);
 
         result.Status.Should().Be("succeeded");
@@ -1139,6 +1178,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -1156,9 +1196,9 @@ public sealed class ArtifactReadbackServiceTests
             """);
         Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
         var runner = new FakeHostedProcessRunner("SMOKE PASS\n");
-        var service = new ProjectPackageService(store, options, processRunner: runner);
+        var service = new ProjectPackageService(store, options, processRunner: runner, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
-        var result = await service.CreatePackageAsync(accountId, projectId);
+        var result = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("succeeded");
@@ -1174,6 +1214,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -1191,9 +1232,9 @@ public sealed class ArtifactReadbackServiceTests
             """);
         Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
         var runner = new FakeHostedProcessRunner("ERROR: missing imported texture", exitCode: 0);
-        var service = new ProjectPackageService(store, options, processRunner: runner);
+        var service = new ProjectPackageService(store, options, processRunner: runner, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
-        var result = await service.CreatePackageAsync(accountId, projectId);
+        var result = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var run = await store.GetRunSnapshotAsync(result.RunId);
 
         result.Status.Should().Be("failed");
@@ -1211,12 +1252,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
         created.Status.Should().Be("prototype_not_created");
@@ -1232,15 +1274,16 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         await SeedPrototypeCreationRunAsync(store, projectId);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var packages = await service.ListPackagesAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(created.RunId);
 
@@ -1264,11 +1307,12 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         Write(project.MetaPath, "routes/gdd-milestones/latest.json", """
@@ -1282,7 +1326,7 @@ public sealed class ArtifactReadbackServiceTests
         }
         """);
 
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
         created.Status.Should().Be("succeeded");
@@ -1298,12 +1342,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         await SeedPrototypeCreationRunAsync(store, projectId);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
         Write(project.MetaPath, "routes/gdd-milestones/latest.json", """
@@ -1316,7 +1361,7 @@ public sealed class ArtifactReadbackServiceTests
         }
         """);
 
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
         created.Status.Should().Be("m1_not_completed");
@@ -1332,16 +1377,17 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         await SeedPrototypeCreationRunAsync(store, projectId);
         await CreateSucceededIterationPlanAsync(store, accountId, projectId);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
         created.Status.Should().Be("succeeded");
@@ -1357,6 +1403,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -1365,10 +1412,10 @@ public sealed class ArtifactReadbackServiceTests
         await Task.Delay(20);
         await CreateSucceededIterationPlanAsync(store, accountId, projectId);
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         Write(project!.RepoPath, "Game.Core/Game.Core.csproj", "<Project />");
-        var created = await service.CreatePackageAsync(accountId, projectId);
+        var created = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
         var packages = await service.ListPackagesAsync(accountId, projectId);
 
         created.Status.Should().Be("succeeded");
@@ -1384,15 +1431,16 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(projectId);
         var activeRunId = await store.CreateRunAsync(projectId, project!.WorkspaceId, "prototype-7day-playable");
         await store.MarkRunStartedAsync(activeRunId);
-        var service = new ProjectPackageService(store, options);
+        var service = new ProjectPackageService(store, options, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
-        var result = await service.CreatePackageAsync(accountId, projectId);
+        var result = await service.CreatePackageAsync(accountId, projectId, requestContext: RequestContext.Current);
 
         result.Status.Should().Be("project_busy");
         result.FailureCode.Should().Be("project_busy");
@@ -1401,7 +1449,7 @@ public sealed class ArtifactReadbackServiceTests
     [Fact]
     public void ProjectPackageDownloadTicketService_CreatesBoundExpiringTicket()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
@@ -1421,7 +1469,7 @@ public sealed class ArtifactReadbackServiceTests
     [Fact]
     public void ProjectPackageDownloadTicketService_RequiresConfiguredSigningSecret()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-no-secret-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
@@ -1438,7 +1486,7 @@ public sealed class ArtifactReadbackServiceTests
     [Fact]
     public void ProjectPackageDownloadTicketService_RejectsAdminAuthHashesAsSigningSecret()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-ticket-password-only-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
@@ -1462,9 +1510,10 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId);
 
@@ -1480,6 +1529,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1518,7 +1568,7 @@ public sealed class ArtifactReadbackServiceTests
                 ["test-key"] = "test-hosted-context-signing-secret"
             }));
         var llm = new CapturingLlmRouteEngine(codex);
-        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder(), llm, contextManifestIssuer: issuer);
+        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder(), llm, contextManifestIssuer: issuer, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
         var preview = await service.ReadPreviewAsync(accountId, projectId, "res://Game.Godot/Assets/player.png");
@@ -1559,6 +1609,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1581,7 +1632,7 @@ public sealed class ArtifactReadbackServiceTests
               ]
             }
             """);
-        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder());
+        var service = new ProjectAssetInventoryService(store, options, codex, new NoopWorkspaceSeeder(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var first = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.5");
         var second = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.5");
@@ -1603,6 +1654,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1611,7 +1663,7 @@ public sealed class ArtifactReadbackServiceTests
             [gd_scene format=3]
             [node name="MapScene" type="Node2D"]
             """);
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new NoopWorkspaceSeeder());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new NoopWorkspaceSeeder(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.5", forceRefresh: true);
         var second = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.5", forceRefresh: true);
@@ -1633,6 +1685,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1649,7 +1702,7 @@ public sealed class ArtifactReadbackServiceTests
             [node name="PlayerToken" type="Sprite2D" parent="."]
             [node name="RewardChest" type="TextureRect" parent="."]
             """);
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("not json"), new NoopWorkspaceSeeder());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("not json"), new NoopWorkspaceSeeder(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
 
@@ -1673,6 +1726,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1681,7 +1735,7 @@ public sealed class ArtifactReadbackServiceTests
             [gd_scene format=3]
             [node name="PlayerToken" type="Sprite2D"]
             """);
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("""{"items":[]}"""), new NoopWorkspaceSeeder());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("""{"items":[]}"""), new NoopWorkspaceSeeder(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId, includeLlmJudgement: true, model: "gpt-5.4");
 
@@ -1698,6 +1752,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1708,7 +1763,7 @@ public sealed class ArtifactReadbackServiceTests
             {nodes}
             [node name="RewardPanel" type="PanelContainer"]
             """);
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("not json"), new NoopWorkspaceSeeder());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient("not json"), new NoopWorkspaceSeeder(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId);
 
@@ -1724,6 +1779,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -1742,7 +1798,7 @@ public sealed class ArtifactReadbackServiceTests
             [node name="RpgMapAsset" type="TextureRect"]
             texture = ExtResource("1")
             """);
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new NoopWorkspaceSeeder());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new NoopWorkspaceSeeder(), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.GetInventoryAsync(accountId, projectId);
 
@@ -1758,9 +1814,10 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
-        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient());
+        var service = new ProjectAssetInventoryService(store, options, new FakeCodexChatClient(), new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var act = async () => await service.ReadPreviewAsync(accountId, projectId, "res://../outside.png");
 
@@ -1770,7 +1827,7 @@ public sealed class ArtifactReadbackServiceTests
     [Fact]
     public void ProjectAssetPreviewTicketService_CreatesBoundExpiringTicket()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
@@ -1790,7 +1847,7 @@ public sealed class ArtifactReadbackServiceTests
     [Fact]
     public void ProjectAssetPreviewTicketService_RequiresConfiguredSigningSecret()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-no-secret-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
@@ -1807,7 +1864,7 @@ public sealed class ArtifactReadbackServiceTests
     [Fact]
     public void ProjectAssetPreviewTicketService_RejectsAdminAuthHashesAsSigningSecret()
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(Path.GetTempPath(), "phase-a-asset-ticket-password-only-test.sqlite3"),
             ["PHASEA_REPOSITORY_ROOT"] = Directory.GetCurrentDirectory(),
@@ -1831,12 +1888,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset generation output");
-        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner, projectAuthority: store);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"map-making-master","reason":"map unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make it like a 16-bit overworld",
@@ -1904,12 +1962,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset generation failed", exitCode: 1, writeGeneratedAsset: false);
-        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner, projectAuthority: store);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make a red slime",
@@ -1937,12 +1996,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset spec only", generatedAssetFileName: "asset-spec.md");
-        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner, projectAuthority: store);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make a red slime",
@@ -1972,20 +2032,16 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset generation output");
-        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner, projectAuthority: store);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
         var limiter = new AssetGenerationConcurrencyLimiter(maxConcurrentAssetGenerationsPerAccount: 1);
         var acquired = await limiter.TryAcquireAsync(accountId);
         await using var lease = acquired.Lease;
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            imageGenerator,
-            routeEngine,
-            assetConcurrencyLimiter: limiter);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine, assetConcurrencyLimiter: limiter, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         var act = () => service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make a red slime",
@@ -2012,12 +2068,13 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var runner = new FakeHostedProcessRunner("asset generation output");
-        var imageGenerator = new ProjectAssetImageGenerator(options, runner);
+        var imageGenerator = new ProjectAssetImageGenerator(options, runner, projectAuthority: store);
         var routeEngine = new FakeLlmRouteEngine("""{"actionId":"character-making-master","reason":"sprite unit"}""");
-        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine);
+        var service = new ProjectAssetLibraryService(store, options, imageGenerator, routeEngine, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new HostedProcessRunner(authority: store));
 
         var generated = await service.GenerateAsync(accountId, projectId, new ProjectAssetGenerationRunRequest(
             "make a red slime",
@@ -2049,6 +2106,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2060,12 +2118,7 @@ public sealed class ArtifactReadbackServiceTests
             [node name="CrateBody" type="StaticBody2D"]
             [node name="CollisionShape2D" type="CollisionShape2D" parent="CrateBody"]
             """);
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng(16, 16))));
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused"), projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng(16, 16))), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new FakeHostedProcessRunner("unused"));
         var unit = new ProjectAssetUnitRequest(
             "crate-unit",
             "Crate",
@@ -2123,6 +2176,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2133,12 +2187,7 @@ public sealed class ArtifactReadbackServiceTests
             [node name="CrateBody" type="StaticBody3D"]
             [node name="CollisionShape3D" type="CollisionShape3D" parent="CrateBody"]
             """);
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new FakeAssetHttpHandler(Encoding.UTF8.GetBytes("glTF placeholder"), "model/gltf-binary")));
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused"), projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new FakeAssetHttpHandler(Encoding.UTF8.GetBytes("glTF placeholder"), "model/gltf-binary")), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new FakeHostedProcessRunner("unused"));
         var unit = new ProjectAssetUnitRequest(
             "crate-model",
             "Crate",
@@ -2169,14 +2218,10 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new RedirectAssetHttpHandler("https://evil.example.com/crate.png")));
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused"), projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new RedirectAssetHttpHandler("https://evil.example.com/crate.png")), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new FakeHostedProcessRunner("unused"));
         var unit = new ProjectAssetUnitRequest(
             "crate-unit",
             "Crate",
@@ -2200,14 +2245,10 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new FinalUriChangedAssetHttpHandler(MinimalPng(16, 16), "https://evil.example.com/crate.png")));
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused"), projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new FinalUriChangedAssetHttpHandler(MinimalPng(16, 16), "https://evil.example.com/crate.png")), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new FakeHostedProcessRunner("unused"));
         var unit = new ProjectAssetUnitRequest(
             "crate-unit",
             "Crate",
@@ -2232,16 +2273,12 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
         Write(project!.RepoPath, "Game.Godot/Scenes/Main.tscn", "[gd_scene format=3]\n[node name=\"Crate\" type=\"Sprite2D\"]\n");
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new FakeAssetHttpHandler(ZipBytes(("props/crate.png", MinimalPng(16, 16))), "application/zip")));
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused"), projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new FakeAssetHttpHandler(ZipBytes(("props/crate.png", MinimalPng(16, 16))), "application/zip")), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new FakeHostedProcessRunner("unused"));
         var unit = new ProjectAssetUnitRequest(
             "crate-unit",
             "Crate",
@@ -2273,15 +2310,11 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused")),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new FakeAssetHttpHandler(ZipBytes((entryName, MinimalPng(16, 16))), "application/zip")));
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, new FakeHostedProcessRunner("unused"), projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new FakeAssetHttpHandler(ZipBytes((entryName, MinimalPng(16, 16))), "application/zip")), assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store), processRunner: new FakeHostedProcessRunner("unused"));
         var unit = new ProjectAssetUnitRequest(
             "crate-unit",
             "Crate",
@@ -2309,6 +2342,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2324,12 +2358,7 @@ public sealed class ArtifactReadbackServiceTests
             """);
         Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
         var runner = new FakeHostedProcessRunner("SMOKE FAIL\n", exitCode: 23);
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, runner),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            processRunner: runner);
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, runner, projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), processRunner: runner, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("player-unit", "entry-1", ValidateWithSmoke: true));
 
@@ -2353,6 +2382,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, godotBin: @"C:\Godot\Godot.exe");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2368,12 +2398,7 @@ public sealed class ArtifactReadbackServiceTests
             """);
         Write(project.RepoPath, "meta/assets/library.json", AssetLibraryJson(projectId));
         var runner = new FakeHostedProcessRunner("SMOKE PASS\n");
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, runner),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            processRunner: runner);
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, runner, projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), processRunner: runner, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var selected = await service.SelectAsync(accountId, projectId, new ProjectAssetSelectionRequest("player-unit", "entry-1", ValidateWithSmoke: true));
 
@@ -2395,6 +2420,7 @@ public sealed class ArtifactReadbackServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, assetAllowedUrls: "https://assets.example.com/kaykit/");
         var store = await CreateStoreAsync(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, "Demo Game");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -2402,13 +2428,7 @@ public sealed class ArtifactReadbackServiceTests
         var heldRunId = await store.CreateRunAsync(projectId, project.WorkspaceId, "held-run");
         (await store.TryAcquireRunnerLockAsync(projectId, heldRunId)).Should().BeTrue();
         var runner = new FakeHostedProcessRunner("asset generation output");
-        var service = new ProjectAssetLibraryService(
-            store,
-            options,
-            new ProjectAssetImageGenerator(options, runner),
-            new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""),
-            httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng(16, 16))),
-            processRunner: runner);
+        var service = new ProjectAssetLibraryService(store, options, new ProjectAssetImageGenerator(options, runner, projectAuthority: store), new FakeLlmRouteEngine("""{"actionId":"character-making-master"}"""), httpClient: new HttpClient(new FakeAssetHttpHandler(MinimalPng(16, 16))), processRunner: runner, assetRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var unit = new ProjectAssetUnitRequest(
             "player-unit",
             "PlayerSprite",
@@ -2431,8 +2451,9 @@ public sealed class ArtifactReadbackServiceTests
 
     private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, PhaseAPlatformOptions options)
     {
-        await SqliteMetadataSchema.InitializeAsync(connectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
         var store = new PhaseAMetadataStore(connectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         await store.EnsureSingleAdminAsync();
         return store;
     }
@@ -2573,9 +2594,12 @@ public sealed class ArtifactReadbackServiceTests
         PhaseAPlatformOptions options,
         string accountId,
         string gameName,
-        string gameTypeSource = "manual")
+        string gameTypeSource = "manual",
+        string? ownerToken = null)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        using var ownerCurrent = ownerToken is null ? null : S206TestSupport.EnterCurrentContext(
+            await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(ownerToken)));
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, gameName, gameTypeSource, null, null, null, null));
         return result.ProjectId!;
     }
@@ -2597,7 +2621,7 @@ public sealed class ArtifactReadbackServiceTests
             values["GODOT_BIN"] = godotBin;
         }
 
-        return PhaseAPlatformOptionsLoader.FromDictionary(values);
+        return S206TestSupport.OwnedNodeOptions(values);
     }
 
     private static void SeedGameTypeGuide(string repoRoot)

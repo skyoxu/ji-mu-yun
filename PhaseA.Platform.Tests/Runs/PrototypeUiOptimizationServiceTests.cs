@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using System.Text.Json;
 using PhaseA.Platform.Configuration;
@@ -20,12 +22,13 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -40,13 +43,14 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: false);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -61,8 +65,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
@@ -79,14 +84,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         {
             ["codex:prototype-ui-optimization"] = HostedContextGateMode.Enforce
         });
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            contextManifestIssuer: issuer,
-            contextGatePolicy: policy,
-            contextManifestValidator: validator);
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), contextManifestIssuer: issuer, contextGatePolicy: policy, contextManifestValidator: validator, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -138,8 +136,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
@@ -150,7 +149,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         var sceneBytes = "\uFEFF[gd_scene format=3]\n"u8.ToArray();
         await File.WriteAllBytesAsync(scenePath, sceneBytes);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -168,14 +167,15 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
         var runner = new FakeHostedProcessRunner(smokeExitCode: 12);
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -195,14 +195,15 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
         var runner = new DirectSceneFailsNavigationPassesRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -222,14 +223,15 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: false);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -248,8 +250,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(
             store,
@@ -260,7 +263,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -277,8 +280,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(
             store,
@@ -293,7 +297,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -310,8 +314,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(
             store,
@@ -326,7 +331,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -343,8 +348,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(
             store,
@@ -359,7 +365,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -377,8 +383,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         using var outsideRoot = TempDirectory.Create("phase-a-outside");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(
             store,
@@ -416,7 +423,7 @@ public sealed class PrototypeUiOptimizationServiceTests
                 }
             }));
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -433,8 +440,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, seedProjectGodot: false);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -460,7 +468,7 @@ public sealed class PrototypeUiOptimizationServiceTests
             }
         });
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -477,8 +485,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(
             store,
@@ -494,7 +503,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true, smokeScene: succeededScene);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -512,8 +521,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         using var outsideRoot = TempDirectory.Create("phase-a-outside");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, seedProjectGodot: false);
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -527,7 +537,7 @@ public sealed class PrototypeUiOptimizationServiceTests
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true, smokeScene: validScene);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true, smokeScene: externalScenePath);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -544,14 +554,15 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, seedProjectGodot: false);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: false);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -570,13 +581,14 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -591,20 +603,16 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
         var project = await store.GetProjectSnapshotAsync(projectId);
         AgePrototypeFiles(project!.RepoPath);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new CancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromMilliseconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new CancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromMilliseconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -627,18 +635,14 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new UserCancelHostedProcessRunner(store, accountId),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromMinutes(20));
+        var service = new PrototypeUiOptimizationService(store, options, new UserCancelHostedProcessRunner(store, accountId), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromMinutes(20), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -659,18 +663,14 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new EditingThenCancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new EditingThenCancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -697,8 +697,9 @@ public sealed class PrototypeUiOptimizationServiceTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
@@ -716,12 +717,7 @@ public sealed class PrototypeUiOptimizationServiceTests
 [node name="DqRpgPrototype" type="Node2D"]
 script = ExtResource("1_hud")
 """);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new ReferencedScriptEditingThenCancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new ReferencedScriptEditingThenCancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -739,8 +735,9 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
@@ -749,12 +746,7 @@ script = ExtResource("1_hud")
         var alternateScenePath = Path.Combine(project!.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "AlternatePrototype.tscn");
         Directory.CreateDirectory(Path.GetDirectoryName(alternateScenePath)!);
         await File.WriteAllTextAsync(alternateScenePath, "[gd_scene format=3]\n[node name=\"AlternatePrototype\" type=\"Node2D\"]\n");
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new ProjectGodotEditingThenCancelingHostedProcessRunner("res://Game.Godot/Prototypes/dq-rpg/AlternatePrototype.tscn"),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new ProjectGodotEditingThenCancelingHostedProcessRunner("res://Game.Godot/Prototypes/dq-rpg/AlternatePrototype.tscn"), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -773,18 +765,14 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new ProjectGodotEditingThenCancelingHostedProcessRunner("res://Game.Godot/Scenes/Main.tscn"),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new ProjectGodotEditingThenCancelingHostedProcessRunner("res://Game.Godot/Scenes/Main.tscn"), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -806,18 +794,14 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new ProjectGodotCommentEditingThenCancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new ProjectGodotCommentEditingThenCancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -836,18 +820,14 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new UnreferencedPrototypeFileEditingThenCancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new UnreferencedPrototypeFileEditingThenCancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -867,18 +847,14 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new HostMainSceneEditingThenCancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new HostMainSceneEditingThenCancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -899,8 +875,9 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var firstScene = "res://Game.Godot/Prototypes/dq-rpg/OldPrototype.tscn";
         var lastScene = "res://Game.Godot/Prototypes/dq-rpg/NewPrototype.tscn";
@@ -913,7 +890,7 @@ script = ExtResource("1_hud")
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: true, smokeScene: firstScene);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options));
+        var service = new PrototypeUiOptimizationService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -929,18 +906,14 @@ script = ExtResource("1_hud")
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId, seedProjectGodot: false);
         await CreateIterationPlanAsync(store, accountId, projectId, complete: true);
         await CreateSucceededPrototypeSkeletonRunAsync(store, projectId, includeSmokeScene: false);
-        var service = new PrototypeUiOptimizationService(
-            store,
-            options,
-            new EditingWithoutSceneThenCancelingHostedProcessRunner(),
-            new ProjectWorkspaceSeeder(options),
-            executionTimeout: TimeSpan.FromSeconds(1));
+        var service = new PrototypeUiOptimizationService(store, options, new EditingWithoutSceneThenCancelingHostedProcessRunner(), new ProjectWorkspaceSeeder(options, store), executionTimeout: TimeSpan.FromSeconds(1), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.RunAsync(accountId, projectId, new PrototypeUiOptimizationRequest("gpt-5.4"));
 
@@ -960,7 +933,7 @@ script = ExtResource("1_hud")
         bool seedProjectGodot = true,
         string mainScene = "res://Game.Godot/Prototypes/dq-rpg/DqRpgPrototype.tscn")
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo RPG", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         if (seedProjectGodot)
@@ -1054,7 +1027,7 @@ script = ExtResource("1_hud")
 
     private static PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -27,9 +29,11 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "RPG");
         var llm = new FakeLlmRouteEngine(ValidSceneRouteJson());
         var service = new GameDesignSceneRouteService(store, options, llm);
@@ -69,9 +73,11 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "RPG");
         var issuer = new HostedContextManifestIssuer(
             store,
@@ -99,9 +105,11 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "卡牌肉鸽");
         var service = new GameDesignSceneRouteService(
             store,
@@ -132,11 +140,15 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var owner = await store.CreateUserAccountAsync("owner-account", 10);
         var otherAccount = await store.CreateUserAccountAsync("other-account", 10);
-        var projectId = await CreateProjectAsync(store, options, owner.AccountId, "RPG");
+        string projectId;
+        using (S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(owner.Token))))
+            projectId = await CreateProjectAsync(store, options, owner.AccountId, "RPG");
+        using var otherCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(otherAccount.Token)));
         var llm = new FakeLlmRouteEngine(ValidSceneRouteJson());
         var service = new GameDesignSceneRouteService(store, options, llm);
 
@@ -155,9 +167,11 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var firstProjectId = await CreateProjectAsync(store, options, account.AccountId, "RPG");
         var secondProjectId = await CreateProjectAsync(store, options, account.AccountId, "Tower defense");
         var llm = new FakeLlmRouteEngine(ValidSceneRouteJson(), completionDelay: TimeSpan.FromMilliseconds(250));
@@ -184,9 +198,11 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Tower defense");
         var llm = new FakeLlmRouteEngine(ValidSceneRouteJson(), completionDelay: TimeSpan.FromMilliseconds(500));
         var service = new GameDesignSceneRouteService(
@@ -351,7 +367,12 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
             store,
             options,
             new ProjectRuleCatalog(),
-            new ProjectWorkspaceSeeder(options),
+            // This suite exercises route generation, not whole-game source copying.
+            // Retain real workspace/current-authority checks with the committed minimal seed.
+            new ProjectWorkspaceSeeder(options with
+            {
+                RepositoryRoot = Path.Combine(S206TestSupport.RepositoryRoot, "PhaseA.Platform.Tests", "Fixtures", "ProjectSeedRepository")
+            }, store),
             gameTypeMatchService: new FakeGameTypeMatchService(gameType, options));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
@@ -416,7 +437,7 @@ public sealed class GameDesignSceneRouteServiceTests : IClassFixture<HostedSourc
 
     private PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

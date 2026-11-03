@@ -4384,7 +4384,7 @@ public sealed class GddToModuleBackendContractServiceTests
             var repoRoot = TempDirectory.Create("phase-a-backend-contract-repo");
             var token = Guid.NewGuid().ToString("N");
             var credential = PhaseAAuth.HashTokenForStorage(token);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot.Path,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot.Path, "metadata.sqlite3"),
@@ -4409,6 +4409,7 @@ public sealed class GddToModuleBackendContractServiceTests
                 Encoding.UTF8);
             await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var account = await store.ResolveAccountByTokenHashAsync(credential)
                 ?? throw new InvalidOperationException("Current fixture credential did not authenticate.");
             var accountId = account.AccountId;

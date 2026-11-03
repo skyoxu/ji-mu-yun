@@ -256,36 +256,7 @@ public sealed class ProjectCreationService
             return ProjectDeletionResult.Failure("delete_confirmation_required");
         }
 
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
-        if (project is null)
-        {
-            // S20/AD-11: a repeated confirmed delete is an idempotent protected-cleanup request.
-            // The tombstone retains owner resolution after the normal project view is withdrawn.
-            var tombstone = (await _metadataStore.ListProjectDeleteTombstonesForAdminAsync(cancellationToken: cancellationToken))
-                .SingleOrDefault(item => item.ProjectId == projectId);
-            if (tombstone is null || (!isAdmin && !string.Equals(tombstone.AccountId, accountId, StringComparison.Ordinal)))
-            {
-                return ProjectDeletionResult.Failure("project_not_found");
-            }
-
-            await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
-            return ProjectDeletionResult.Deleted(projectId);
-        }
-
-        if (!isAdmin && !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
-        {
-            return ProjectDeletionResult.Failure("project_not_found");
-        }
-
-        if (project.BootstrapStatus == "running" ||
-            await _metadataStore.HasActiveRunAsync(projectId, cancellationToken) ||
-            await _metadataStore.HasRunnerLockAsync(projectId, cancellationToken))
-        {
-            return ProjectDeletionResult.Failure("project_busy");
-        }
-
-        await _metadataStore.SoftDeleteProjectAsync(projectId, cancellationToken);
-        return ProjectDeletionResult.Deleted(projectId);
+        return await _metadataStore.DeleteProjectForCurrentActorAsync(accountId, isAdmin, projectId, cancellationToken);
     }
 
     public async Task<AdminProjectPurgeResult> PurgeProjectsAsync(

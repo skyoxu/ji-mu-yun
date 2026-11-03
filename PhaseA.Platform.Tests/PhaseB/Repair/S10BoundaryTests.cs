@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
@@ -18,25 +19,22 @@ public sealed class S10BoundaryTests
     [Fact]
     public async Task O_3E7CE839D9C3()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), maxConcurrentRuns: 1);
+        var fixture = await S206QueueFixture.CreateAsync("project-s10");
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.FromMinutes(1), maxConcurrentRuns: 1, authority: fixture.Store);
         await using var blockingLease = await queue.EnterAsync(
             "blocking-run",
-            "account-s10",
+            fixture.AccountId,
             "project-s10",
             "test-run");
 
         var accountDisabled = false;
         var writeLeaseGranted = false;
-        var context = new RequestContext(
-            "principal-s10",
-            "account-s10",
-            new HashSet<string>(StringComparer.Ordinal) { PhaseAAuth.UserRole },
-            "credential-s10",
-            "correlation-s10");
+        var context = fixture.Context;
 
         var queuedWork = queue.ExecuteAuthorizedAsync(
             "target-run",
-            "account-s10",
+            fixture.AccountId,
             "project-s10",
             "test-run",
             context,
@@ -48,7 +46,7 @@ public sealed class S10BoundaryTests
             });
 
         var queuedBeforeDisable = await WaitUntilAsync(
-            () => queue.GetReadback("account-s10", includeAll: true).QueuedCount == 1,
+            () => queue.GetReadback(fixture.AccountId, includeAll: true).QueuedCount == 1,
             TimeSpan.FromSeconds(2));
         accountDisabled = true;
         await blockingLease.DisposeAsync();
@@ -63,7 +61,7 @@ public sealed class S10BoundaryTests
             reauthorizationDenied = true;
         }
 
-        var afterDispatch = queue.GetReadback("account-s10", includeAll: true);
+        var afterDispatch = queue.GetReadback(fixture.AccountId, includeAll: true);
         _output.WriteLine("S10_OBSERVATION:" + JsonSerializer.Serialize(new
         {
             queuedBeforeDisable,

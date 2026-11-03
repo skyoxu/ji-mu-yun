@@ -213,7 +213,7 @@ public sealed class ProjectPackageService
             var context = requestContext ?? new RequestContext("package-service", accountId,
                 new HashSet<string> { PhaseAAuth.UserRole }, $"package:{runId}", runId);
             context.DemandAccount(accountId);
-            var snapshot = _storage.CreateSnapshot(context, Path.GetDirectoryName(projectRoot)!,
+            var snapshot = _storage.CreateProjectWorkspaceSnapshot(context, project.WorkspaceRootPath,
                 $"package-{runId}", project.WorkspaceId, project.ProjectId, policy.Version, policy.Blacklist);
             capturedSnapshot = snapshot;
             captureContext = context;

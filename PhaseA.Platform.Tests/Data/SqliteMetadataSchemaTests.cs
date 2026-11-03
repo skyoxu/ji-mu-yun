@@ -1,3 +1,6 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Workspaces;
 using FluentAssertions;
 using System.Text;
 using System.Text.Json;
@@ -1679,14 +1682,15 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectChatHistory_MarksLatestSuggestedAssistantMessageConsumed_AfterFormalFeedback()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var project = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
         var chatHistory = new ProjectChatHistoryService(store);
@@ -1719,14 +1723,15 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ProjectChatHistory_RemovesInternalRouteBlocks_WhenListingStoredMessages()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var project = await store.CreateProjectAsync(CreateCommand(accountId, "project-one", "Game One"));
         var chatHistory = new ProjectChatHistoryService(store);
@@ -1749,16 +1754,17 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ReconcileAbandonedRunsAsync_FailsOnlyRunsThatExceededHeartbeatTimeout()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var staleCreated = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Stale Game", "manual", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(staleCreated.ProjectId!, "succeeded", null);
         var freshCreated = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Fresh Game", "manual", null, null, null, null));
@@ -1805,16 +1811,17 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ReconcileAbandonedRunsAsync_FailsQueuedWebPreviewFromPreviousProcess()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Preview Game", "manual", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -1850,16 +1857,17 @@ public sealed class SqliteMetadataSchemaTests
     public async Task HasActiveRunAsync_IgnoresRunningChatRuns()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Chat Game", "manual", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -1882,17 +1890,19 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CancelRunAsync_ShouldMarkRunningRunCancelKeepLockAndIgnoreLateCompletion()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Cancel Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -1929,17 +1939,19 @@ public sealed class SqliteMetadataSchemaTests
     public async Task CancelRunAsync_ShouldReleaseQueuedRunLock()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Queued Cancel Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -1960,17 +1972,19 @@ public sealed class SqliteMetadataSchemaTests
     public async Task HasRunnerLockAsync_ShouldIgnoreCancelledRunLocks()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Lock Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -1986,17 +2000,19 @@ public sealed class SqliteMetadataSchemaTests
     public async Task MarkRunStartedAsync_ShouldNotReviveCancelledQueuedRun()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var accountId = account.AccountId;
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Queued Race Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -2019,16 +2035,18 @@ public sealed class SqliteMetadataSchemaTests
     public async Task TryMarkRunStartedAsync_ShouldNotReviveFailedQueuedRun()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(account.AccountId, new ProjectCreationRequest(null, "Failed Queue Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);
@@ -2048,16 +2066,17 @@ public sealed class SqliteMetadataSchemaTests
     public async Task ReconcileAbandonedRunsAsync_CanRecoverPrototypeQuickFixRuns()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             // ADR-0061: this suite creates disposable projects beneath the OS temp root.
             ["HOSTED_WORKSPACE_ROOT"] = Path.GetTempPath()
         });
 
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var created = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Quick Fix Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(created.ProjectId!, "succeeded", null);
         var project = await store.GetProjectSnapshotAsync(created.ProjectId!);

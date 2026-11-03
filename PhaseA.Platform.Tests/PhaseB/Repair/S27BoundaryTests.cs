@@ -31,7 +31,7 @@ public sealed class S27BoundaryTests
             await SqliteMetadataSchema.InitializeAsync(connectionString);
             await new SqliteMigrationService().MigrateAsync(connectionString, "s27-migration-account", ProjectId, "s27-migration");
 
-            var store = CreateStore(connectionString, root.FullName);
+            var store = await CreateStoreAsync(connectionString, root.FullName);
             var account = await store.CreateUserAccountAsync($"s27-user-{Guid.NewGuid():N}", 1);
             var projectRoot = Directory.CreateDirectory(Path.Combine(root.FullName, "project"));
             var project = await store.CreateProjectAsync(new ProjectCreationCommand(
@@ -52,11 +52,8 @@ public sealed class S27BoundaryTests
                 throw new InvalidOperationException("The disposable S27 project could not be created.");
             }
 
-            var context = RequestContext.FromIdentity(
-                new AccountIdentity(account.AccountId, "s27-owner", PhaseAAuth.UserRole),
-                "s27-principal",
-                "s27-runtime-credential",
-                "s27-correlation");
+            var context = await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token));
+            using var current = S206TestSupport.EnterCurrentContext(context);
             var source = Directory.CreateDirectory(Path.Combine(root.FullName, "source"));
             File.WriteAllText(Path.Combine(source.FullName, "project.godot"), "s27 unpublished result");
             var storage = new CentralWorkspaceStorageBackend(connectionString);
@@ -81,7 +78,7 @@ public sealed class S27BoundaryTests
             var leaseCountBeforeBoundary = CountLeases(connectionString, ProjectId);
             var destination = Directory.CreateDirectory(Path.Combine(root.FullName, "destination"));
 
-            var queue = new HeavyRunnerQueueService(TimeSpan.Zero, maxConcurrentRuns: 1);
+            var queue = new HeavyRunnerQueueService(TimeSpan.Zero, 1, store);
             var blockerStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             var releaseBlocker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             var blocker = queue.ExecuteAsync(
@@ -128,7 +125,9 @@ public sealed class S27BoundaryTests
 
             releaseBlocker.TrySetResult(true);
             await blocker;
-            var attemptResult = await publication;
+            RestoreAttempt? attemptResult;
+            try { attemptResult = await publication; }
+            catch (UnauthorizedAccessException) { attemptResult = null; }
             var publishedPath = Path.Combine(destination.FullName, ".restore-current", "project.godot");
             var deniedAtBoundary = attemptResult is null;
             var noPublishedResult = !File.Exists(publishedPath);
@@ -150,12 +149,13 @@ public sealed class S27BoundaryTests
         }
     }
 
-    private static PhaseAMetadataStore CreateStore(string connectionString, string workspaceRoot)
+    private static async Task<PhaseAMetadataStore> CreateStoreAsync(string connectionString, string workspaceRoot)
     {
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
         });
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
         return new PhaseAMetadataStore(connectionString, options);
     }
 

@@ -1,3 +1,6 @@
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -20,9 +23,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             var service = Service(store, options, new FakeChatClient("reply"));
@@ -45,9 +49,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             await store.UpsertLlmBindingAsync(new LlmBindingCommand(
@@ -78,9 +83,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             await store.UpsertLlmBindingAsync(new LlmBindingCommand(
@@ -123,9 +129,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             await store.UpsertLlmBindingAsync(new LlmBindingCommand(
@@ -173,9 +180,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             await store.UpsertLlmBindingAsync(new LlmBindingCommand(
@@ -219,9 +227,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             await store.UpsertLlmBindingAsync(new LlmBindingCommand(
@@ -262,9 +271,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_BACKEND", "new-api");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             await store.UpsertLlmBindingAsync(new LlmBindingCommand(
@@ -300,14 +310,15 @@ public sealed class ChatServiceTests
     public async Task SendAsync_UsesCodexCliBackend_ByDefault()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient("codex says hello");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello codex", "gpt-5.4-mini"));
 
@@ -334,15 +345,16 @@ public sealed class ChatServiceTests
     public async Task SendAsync_RejectsProjectOwnedByAnotherAccount()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var ownerAccountId = await store.EnsureSingleAdminAsync();
         var otherAccount = await store.CreateUserAccountAsync("chat-other-account", 1);
         var projectId = await CreateProjectAsync(store, options, ownerAccountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient("should not run");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("should not run"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("should not run"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         var act = () => service.SendAsync(otherAccount.AccountId, projectId, new ChatRequest("hello"));
 
@@ -355,15 +367,16 @@ public sealed class ChatServiceTests
     public async Task SendAsync_RedactsSensitivePathsScriptsAndCommands_FromCodexReply()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient(
             "请查看 C:\\jimuyun\\secret\\repo\\scripts\\python\\dev_cli.py，然后运行 dotnet test PhaseA.Platform.Tests\\PhaseA.Platform.Tests.csproj --no-restore。");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         var result = await service.SendAsync(accountId, projectId, new ChatRequest("怎么验证？", "gpt-5.4"));
 
@@ -379,14 +392,15 @@ public sealed class ChatServiceTests
     public async Task SendAsync_FallsBackToDefaultCodexModel_WhenRequestedModelIsNotAllowed()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient("codex says hello");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         var result = await service.SendAsync(accountId, projectId, new ChatRequest("hello codex", "not-allowed-model"));
 
@@ -399,14 +413,15 @@ public sealed class ChatServiceTests
     public async Task SendAsync_IncludesSelectedSkillModeInCodexPrompt()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient("codex says hello");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         await service.SendAsync(accountId, projectId, new ChatRequest("help design", "gpt-5.4", SkillActionId: "game-design-master"));
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -420,14 +435,15 @@ public sealed class ChatServiceTests
     public async Task SendAsync_IncludesTxtAttachmentsInCodexPrompt()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient("codex says hello");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         await service.SendAsync(
             accountId,
@@ -445,14 +461,15 @@ public sealed class ChatServiceTests
     public async Task SendAsync_RejectsMoreThanFiveTxtAttachments()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
         var codex = new FakeCodexChatClient("codex should not run");
-        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex);
+        var service = new ChatService(store, options, binding, new LlmStopLossService(store, options), new FakeChatClient("new-api should not be called"), codex, new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
 
         var result = await service.SendAsync(
             accountId,
@@ -469,9 +486,10 @@ public sealed class ChatServiceTests
     public async Task SendAsync_RejectsWhenGlobalChatConcurrencyLimitIsReached()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
@@ -486,7 +504,7 @@ public sealed class ChatServiceTests
             new LlmStopLossService(store, options),
             new FakeChatClient("new-api should not be called"),
             codex,
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             new SkillActionCatalog(),
             concurrencyLimiter: limiter);
 
@@ -501,9 +519,10 @@ public sealed class ChatServiceTests
     public async Task SendAsync_RejectsWhenAccountChatConcurrencyLimitIsReached()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var binding = new LlmBindingService(store, options);
@@ -520,7 +539,7 @@ public sealed class ChatServiceTests
             new LlmStopLossService(store, options),
             new FakeChatClient("new-api should not be called"),
             codex,
-            new ProjectWorkspaceSeeder(options),
+            new ProjectWorkspaceSeeder(options, store),
             new SkillActionCatalog(),
             concurrencyLimiter: limiter);
 
@@ -538,9 +557,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_TEST_MODE", "deterministic");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             var client = new FakeChatClient("should not be called");
@@ -569,9 +589,10 @@ public sealed class ChatServiceTests
         Environment.SetEnvironmentVariable("PHASEA_CHAT_TEST_MODE", "deterministic");
         try
         {
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
+            using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
             var accountId = await store.EnsureSingleAdminAsync();
             var projectId = await CreateProjectAsync(store, options, accountId);
             var service = Service(store, options, new FakeChatClient("should not be called"));
@@ -590,12 +611,12 @@ public sealed class ChatServiceTests
     private static ChatService Service(PhaseAMetadataStore store, PhaseAPlatformOptions options, INewApiChatClient client)
     {
         var binding = new LlmBindingService(store, options);
-        return new ChatService(store, options, binding, new LlmStopLossService(store, options), client, new FakeCodexChatClient("codex reply"));
+        return new ChatService(store, options, binding, new LlmStopLossService(store, options), client, new FakeCodexChatClient("codex reply"), new ProjectWorkspaceSeeder(options, store), new PhaseA.Platform.Skills.SkillActionCatalog());
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return result.ProjectId!;
     }

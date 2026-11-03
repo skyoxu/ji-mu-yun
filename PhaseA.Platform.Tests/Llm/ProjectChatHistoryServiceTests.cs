@@ -1,3 +1,7 @@
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
@@ -14,9 +18,10 @@ public sealed class ProjectChatHistoryServiceTests
     public async Task ListAsync_ShouldExtractOnlyActionableNextStep_WithoutContinueHint()
     {
         using var database = TempSqliteDatabase.Create();
-        var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>());
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var service = new ProjectChatHistoryService(store);
@@ -40,7 +45,7 @@ public sealed class ProjectChatHistoryServiceTests
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return result.ProjectId!;
     }

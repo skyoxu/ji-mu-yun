@@ -55,7 +55,7 @@ public sealed class GameDesignSceneRouteService
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
         ArgumentNullException.ThrowIfNull(request);
 
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        var project = await _metadataStore.GetOwnedProjectSnapshotAsync(accountId, projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return null;

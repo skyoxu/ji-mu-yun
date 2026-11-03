@@ -134,7 +134,7 @@ public sealed class PackageVersionRecoveryTests
     {
         using var scope = await Scope.CreateAsync();
         using var current = S206TestSupport.EnterCurrentContext(scope.Context);
-        scope.Storage.SetQuota(scope.Owner.AccountId, 0);
+        new CentralWorkspaceStorageBackend(scope.Database.ConnectionString).SetQuota(scope.Owner.AccountId, 0);
         Assert.Equal("failed", (await scope.Packages.CreatePackageAsync(scope.Owner.AccountId, scope.Project.ProjectId, requestContext: scope.Context)).Status);
         Assert.Empty((await scope.Packages.ListPackagesAsync(scope.Owner.AccountId, scope.Project.ProjectId))!.Packages);
         Assert.Empty(scope.Storage.ListSnapshots(scope.Owner.AccountId, scope.Project.ProjectId));

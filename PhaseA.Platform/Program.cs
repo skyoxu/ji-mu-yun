@@ -576,9 +576,7 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
         // The HTTP request only admits durable work.  The queue owns execution;
         // awaiting it here makes a client disconnect indistinguishable from a
         // failed operation and can exhaust the request timeout before work runs.
-        var identity = CurrentIdentity(context);
-        var credential = PhaseAAuth.ReadBearerOrHeaderToken(context.Request) ?? string.Empty;
-        var requestContext = RequestContext.FromIdentity(identity, identity.Username, credential, context.TraceIdentifier);
+        var requestContext = CurrentRequestContext(context);
         _ = Task.Run(async () =>
         {
             try
@@ -599,7 +597,7 @@ static async Task<IResult> HandleDurableWorkspaceOperationAsync(
                         {
                             await store.UpdateRunProgressAsync(run.RunId, "workspace", "snapshot", "snapshot-started", token);
                             var policy = extensionPolicy.ReadSnapshotPolicy();
-                            var snapshot = workspaceStorage.CreateSnapshot(
+                            var snapshot = workspaceStorage.CreateProjectWorkspaceSnapshot(
                                 requestContext,
                                 project.WorkspaceRootPath,
                                 $"snapshot-{run.RunId}",

@@ -106,7 +106,7 @@ public sealed class ProjectDraftImportService
             return basic;
         }
 
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        var project = await _metadataStore.GetOwnedProjectSnapshotAsync(accountId, projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Project not found.");
@@ -243,7 +243,7 @@ public sealed class ProjectDraftImportService
         CancellationToken cancellationToken = default)
     {
         DemandExplicitProductionConsumers();
-        var project = await _metadataStore.GetProjectSnapshotAsync(projectId, cancellationToken);
+        var project = await _metadataStore.GetOwnedProjectSnapshotAsync(accountId, projectId, cancellationToken);
         if (project is null || !string.Equals(project.AccountId, accountId, StringComparison.Ordinal))
         {
             return null;

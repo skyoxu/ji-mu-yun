@@ -29,6 +29,15 @@ public sealed class WorkspaceStorageService
     { _authorize(); _authorizeCurrent(context,context.AccountId,projectId,true);
       return _backend.CreateSnapshot(context,root,snapshotId,workspaceId,projectId,policyVersion,blacklist,
           () => _authorizeCurrent(context,context.AccountId,projectId,true)); }
+    // ADR-0061: packaging and durable workspace operations capture the current workspace envelope.
+    // Ordinary snapshot callers retain their repository-only root contract.
+    internal WorkspaceSnapshotRecord CreateProjectWorkspaceSnapshot(RequestContext context, string root, string snapshotId,
+        string workspaceId, string projectId, string policyVersion, ISet<string> blacklist)
+    {
+        _authorize(); _authorizeCurrent(context, context.AccountId, projectId, true);
+        return _backend.CreateSnapshot(context, root, snapshotId, workspaceId, projectId, policyVersion, blacklist,
+            () => _authorizeCurrent(context, context.AccountId, projectId, true), workspaceEnvelope: true);
+    }
     public void SoftDeleteSnapshot(RequestContext context,string snapshotId)
     {
         _authorize();var record=_backend.RequireSnapshot(snapshotId);
@@ -82,12 +91,12 @@ internal sealed class CentralWorkspaceStorageBackend
     public WorkspaceSnapshotRecord CreateSnapshot(RequestContext context, string root, string snapshotId, string workspaceId, string projectId, string policyVersion, ISet<string> blacklist)
         => CreateSnapshot(context,root,snapshotId,workspaceId,projectId,policyVersion,blacklist,null);
 
-    internal WorkspaceSnapshotRecord CreateSnapshot(RequestContext context, string root, string snapshotId, string workspaceId, string projectId, string policyVersion, ISet<string> blacklist, Action? authorizeBeforeWrite)
+    internal WorkspaceSnapshotRecord CreateSnapshot(RequestContext context, string root, string snapshotId, string workspaceId, string projectId, string policyVersion, ISet<string> blacklist, Action? authorizeBeforeWrite, bool workspaceEnvelope = false)
     {
         context.DemandAccount(context.AccountId);
         DemandProjectOwnership(context, projectId);
         if(authorizeBeforeWrite is not null)
-            DemandCurrentSnapshotBinding(context,root,workspaceId,projectId);
+            DemandCurrentSnapshotBinding(context,root,workspaceId,projectId,workspaceEnvelope);
         if (!string.IsNullOrWhiteSpace(_connectionString))
         {
             PhaseAMetadataStore.RegisterBoundaryDiagnosticContext(
@@ -107,7 +116,7 @@ internal sealed class CentralWorkspaceStorageBackend
             // ADR-0061 AD19: admission before a wait is not authority for this write.
             authorizeBeforeWrite?.Invoke();
             if(authorizeBeforeWrite is not null)
-                DemandCurrentSnapshotBinding(context,root,workspaceId,projectId);
+                DemandCurrentSnapshotBinding(context,root,workspaceId,projectId,workspaceEnvelope);
             if (_snapshots.ContainsKey(snapshotId)) throw new InvalidOperationException("snapshot is immutable");
             var quota = GetCurrentQuota(context.AccountId);
             var aggregateUsage = checked(quota.UsedBytes + MeasureLiveWorkspaceBytes(context.AccountId, root));
@@ -151,14 +160,14 @@ internal sealed class CentralWorkspaceStorageBackend
     }
 
     // ADR-0061 AD19/21: root arguments do not override protected current generation.
-    private void DemandCurrentSnapshotBinding(RequestContext context,string root,string workspaceId,string projectId)
+    private void DemandCurrentSnapshotBinding(RequestContext context,string root,string workspaceId,string projectId,bool workspaceEnvelope)
     {
         if(string.IsNullOrWhiteSpace(_connectionString))
             throw new UnauthorizedAccessException("current_workspace_binding_required");
         using var connection=new SqliteConnection(_connectionString);connection.Open();
         using var command=connection.CreateCommand();
-        command.CommandText="""
-            SELECT w.repo_path FROM workspaces w JOIN projects p ON p.id=w.project_id
+        command.CommandText=$"""
+            SELECT w.{(workspaceEnvelope ? "root_path" : "repo_path")} FROM workspaces w JOIN projects p ON p.id=w.project_id
             WHERE w.id=$workspace AND w.project_id=$project AND p.account_id=$account;
             """;
         command.Parameters.AddWithValue("$workspace",workspaceId);

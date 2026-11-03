@@ -1,3 +1,6 @@
+using PhaseA.Platform.Workspaces;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -51,9 +54,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var otherAccount = await store.CreateUserAccountAsync("account-two", 10);
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "deckbuilder");
         var project = await store.GetProjectSnapshotAsync(projectId);
@@ -88,9 +93,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson());
         var service = new GameDesignQuestionFormService(store, options, llm);
@@ -116,9 +123,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var issuer = new HostedContextManifestIssuer(
             store,
@@ -148,9 +157,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var issuer = new HostedContextManifestIssuer(
             store,
@@ -180,9 +191,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
         var service = new GameDesignQuestionFormService(
             store,
@@ -208,9 +221,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var service = new GameDesignQuestionFormService(
             store,
@@ -232,9 +247,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson());
         var service = new GameDesignQuestionFormService(store, options, llm);
@@ -256,9 +273,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new FakeLlmRouteEngine(new[]
         {
@@ -285,9 +304,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(100));
         var service = new GameDesignQuestionFormService(store, options, llm);
@@ -309,9 +330,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
         var service = new GameDesignQuestionFormService(store, options, llm);
@@ -341,9 +364,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var firstProjectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var secondProjectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
@@ -370,9 +395,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(500));
         var service = new GameDesignQuestionFormService(
@@ -404,9 +431,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var firstProjectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var secondProjectId = await CreateProjectAsync(store, options, account.AccountId, "塔防");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
@@ -433,9 +462,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new FakeLlmRouteEngine(ValidSchemaJson(), completionDelay: TimeSpan.FromMilliseconds(250));
         var service = new GameDesignQuestionFormService(store, options, llm);
@@ -460,9 +491,11 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         using var workspace = new TempWorkspace();
         using var database = TempSqliteDatabase.Create();
         var options = Options(workspace.Root, Directory.GetCurrentDirectory());
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var account = await store.CreateUserAccountAsync("account-one", 10);
+        using var ownerCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(account.Token)));
         var projectId = await CreateProjectAsync(store, options, account.AccountId, "Diablolike ARPG");
         var llm = new BlockingLlmRouteEngine(ValidSchemaJson());
         var service = new GameDesignQuestionFormService(
@@ -554,7 +587,7 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
         string accountId,
         string gameType)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", gameType, null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         return result.ProjectId!;
@@ -563,7 +596,7 @@ public sealed class GameDesignQuestionFormServiceTests : IClassFixture<HostedSou
     private PhaseAPlatformOptions Options(string workspaceRoot, string repoRoot)
     {
         var resolvedRepoRoot = _sourceFixture.RepositoryRoot(ResolveRepositoryRoot(repoRoot));
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),

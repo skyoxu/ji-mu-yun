@@ -1,3 +1,5 @@
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text.Json;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -97,8 +99,9 @@ public sealed record DemoPrototypeState;
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -122,8 +125,9 @@ public sealed record DemoPrototypeState;
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -148,15 +152,7 @@ public sealed record DemoPrototypeState;
         {
             ["codex:prototype-iteration-goal"] = HostedContextGateMode.Enforce
         });
-        var service = new PrototypeIterationGoalService(
-            store,
-            options,
-            runner,
-            new ProjectWorkspaceSeeder(options),
-            stateWriter,
-            contextManifestIssuer: issuer,
-            contextGatePolicy: policy,
-            contextManifestValidator: validator);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, contextManifestIssuer: issuer, contextGatePolicy: policy, contextManifestValidator: validator, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
@@ -251,8 +247,9 @@ public sealed record DemoPrototypeState;
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -272,7 +269,7 @@ public sealed record DemoPrototypeState;
             evaluationJson,
             details.Session.CompletedUtc);
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -296,8 +293,9 @@ public sealed record DemoPrototypeState;
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -311,7 +309,7 @@ public sealed record DemoPrototypeState;
         stateWriter.WriteProjectExecutionGuide(project!, contract, "docs/prototypes/2026-05-20-contract.md", "contract", "prototype-7day-playable", "prototype-run", "succeeded");
         stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new AbsolutePathCorePackageFailureRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
         var targetGoal = FindGoal((await store.GetLatestProjectIterationSessionAsync(projectId))!, "field navigation and stable control");
         await CompleteGoalsBeforeAsync(store, projectId, targetGoal.GoalIndex);
 
@@ -2593,8 +2591,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2619,7 +2618,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
             }
         });
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -2638,8 +2637,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2669,7 +2669,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
             }
         });
         var runner = new StepFiveSmokeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -2691,8 +2691,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2708,7 +2709,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         stateWriter.WriteProjectReadme(project);
         stateWriter.WritePrototypeState(project, PrototypeBaselineState());
         var runner = new FakeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -2727,8 +2728,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2756,7 +2758,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         EnsureRpgAcceptanceMarkers(project!.RepoPath);
         EnsureRpgSmokeSceneFile(project.RepoPath);
         var runner = new StepFiveSmokeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2777,8 +2779,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2822,7 +2825,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
             Path.Combine(project.RepoPath, "Game.Godot", "Prototypes", "dq-rpg", "Scripts", "BattleScene.cs"),
             "public sealed class BattleScene { public void ShowOnly() { } }\n");
         var runner = new StepFiveSmokeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -2842,8 +2845,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2860,7 +2864,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         EnsureRpgSmokeSceneFile(project.RepoPath);
         WriteMismatchedRpgAssetScene(project.RepoPath);
         var runner = new NoopGoalHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var refreshed = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2878,8 +2882,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path, @"C:\Godot\Godot_v4.5.1-stable_mono_win64_console.exe");
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2902,7 +2907,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         EnsureRpgSmokeSceneFile(project.RepoPath);
         OverwriteRpgCoreWithMismatchedFormValues(project.RepoPath);
         var runner = new StepFiveSmokeHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var detailsAfter = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2919,8 +2924,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -2929,7 +2935,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new NeedsFixHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2952,15 +2958,16 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the first playable RPG step."));
         var runner = new FakeHostedProcessRunner();
         var stateWriter = new PrototypeRouteStateWriter();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -2980,14 +2987,15 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
         await planService.CreateAsync(accountId, projectId, new PrototypeIterationPlanRequest("Fix the current project page hint first."));
         var runner = new ExitCodeFailureHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -3006,8 +3014,9 @@ public sealed class SurvivorsLikePrototypeLoopTests
         using var workspaceRoot = TempDirectory.Create("phase-a-workspaces");
         using var repoRoot = TempDirectory.Create("phase-a-repo");
         var options = Options(workspaceRoot.Path, repoRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         var planService = TestRpgIterationPlanServiceFactory.Create(store);
@@ -3016,7 +3025,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
         var stateWriter = new PrototypeRouteStateWriter();
         stateWriter.WritePrototypeState(project!, new { route = "prototype-7day-playable", marker = "prototype-baseline" });
         var runner = new BlockedVerificationHostedProcessRunner();
-        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options), stateWriter);
+        var service = new PrototypeIterationGoalService(store, options, runner, new ProjectWorkspaceSeeder(options, store), stateWriter, heavyRunnerQueue: new HeavyRunnerQueueService(null, HeavyRunnerQueueService.DefaultMaxConcurrentOtherRuns, store));
 
         var result = await service.ExecuteNextLegacyCompatibleAsync(accountId, projectId);
         var details = await store.GetLatestProjectIterationSessionAsync(projectId);
@@ -3030,7 +3039,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "RPG", null, null, null, null));
         await store.SetProjectBootstrapStatusAsync(result.ProjectId!, "succeeded", null);
         await store.UpdateProjectGameTypeMatchAsync(result.ProjectId!, RpgMatchEvidence().ToJson());
@@ -3098,7 +3107,7 @@ public sealed class SurvivorsLikePrototypeLoopTests
             ["GODOT_BIN"] = string.IsNullOrWhiteSpace(godotBin) ? @"C:\Godot\Godot.exe" : godotBin
         };
 
-        return PhaseAPlatformOptionsLoader.FromDictionary(values);
+        return S206TestSupport.OwnedNodeOptions(values);
     }
 
     private static object PrototypeBaselineState()

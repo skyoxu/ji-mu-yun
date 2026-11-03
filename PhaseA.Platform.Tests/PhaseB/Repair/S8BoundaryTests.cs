@@ -1,3 +1,6 @@
+using PhaseA.Platform.Tests.NodeIdentity;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Runs;
 using PhaseA.Platform.Configuration;
 using PhaseA.Platform.Data;
 using PhaseA.Platform.Projects;
@@ -15,6 +18,7 @@ public sealed class S8BoundaryTests
     public async Task O_1939141A84C2()
     {
         using var scope = await S8Scope.CreateAsync();
+        using var current = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(scope.Store, PhaseAAuth.HashTokenForStorage(scope.Owner.Token)));
         var project = await scope.CreateActiveProjectAsync("soft-deleted-listing");
 
         var deleted = await scope.Service.DeleteProjectAsync(
@@ -66,18 +70,18 @@ public sealed class S8BoundaryTests
             var database = TempSqliteDatabase.Create();
             var workspaceRoot = Path.Combine(Path.GetTempPath(), $"phase-s8-{Guid.NewGuid():N}");
             Directory.CreateDirectory(workspaceRoot);
-            var options = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+            var options = S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
             {
                 ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
                 ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3"),
                 ["PHASEA_REPOSITORY_ROOT"] = RepositoryRoot()
             });
 
-            await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+            await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
             var store = new PhaseAMetadataStore(database.ConnectionString, options);
             var owner = await store.CreateUserAccountAsync($"s8-owner-{Guid.NewGuid():N}", projectLimit: 1);
             var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new DisposableWorkspaceSeeder());
-            return new S8Scope(database, workspaceRoot, store, owner, service, new ArtifactReadbackService(store, options));
+            return new S8Scope(database, workspaceRoot, store, owner, service, new ArtifactReadbackService(store, options, new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store), new HeavyRunnerQueueService(null, 1, store)));
         }
 
         public async Task<ProjectSnapshot> CreateActiveProjectAsync(string gameName)

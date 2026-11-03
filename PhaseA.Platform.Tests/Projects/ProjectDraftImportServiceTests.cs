@@ -1,3 +1,6 @@
+using PhaseA.Platform.Runs;
+using PhaseA.Platform.Security;
+using PhaseA.Platform.Tests.NodeIdentity;
 using System.Text;
 using FluentAssertions;
 using PhaseA.Platform.Configuration;
@@ -59,8 +62,9 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -71,7 +75,7 @@ public sealed class ProjectDraftImportServiceTests
               "successCriteria": ["one clear loop"]
             }
             """);
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.AnalyzeAsync(accountId, projectId, "draft.txt", System.Text.Encoding.UTF8.GetBytes("make a game"), "gpt-5.4");
         var run = await store.GetRunSnapshotAsync(result.RunId);
@@ -98,8 +102,9 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -108,9 +113,7 @@ public sealed class ProjectDraftImportServiceTests
         {
             ["test-key"] = "test-hosted-context-signing-secret"
         }));
-        var service = new ProjectDraftImportService(
-            store, options, new FakeCodex("{}"), null, null, new ProjectWorkspaceSeeder(options), engine,
-            contextManifestIssuer: issuer);
+        var service = new ProjectDraftImportService(store, options, new FakeCodex("{}"), null, null, new ProjectWorkspaceSeeder(options, store), engine, contextManifestIssuer: issuer, heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         await service.AnalyzeAsync(accountId, projectId, "draft.txt", Encoding.UTF8.GetBytes("make a game"), "gpt-5.4");
 
@@ -133,15 +136,17 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var ownerAccountId = await store.EnsureSingleAdminAsync();
         var otherAccount = await store.CreateUserAccountAsync("draft-other-account", 1);
         var projectId = await CreateProjectAsync(store, options, ownerAccountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var codex = new FakeCodex("{}");
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
+        using var otherCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, PhaseAAuth.HashTokenForStorage(otherAccount.Token)));
         var act = () => service.AnalyzeAsync(
             otherAccount.AccountId,
             projectId,
@@ -160,8 +165,9 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -169,7 +175,7 @@ public sealed class ProjectDraftImportServiceTests
             Analysis result:
             {"prototypeSlug":"embedded-json","gameFeature":"fast tactical loop","successCriteria":["playable in two minutes"]}
             """);
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
 
         var result = await service.AnalyzeAsync(accountId, projectId, "draft.txt", System.Text.Encoding.UTF8.GetBytes("prototype idea"), "gpt-5.4");
 
@@ -186,13 +192,14 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var codex = new FakeCodex("Please paste the draft first.");
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var draft = string.Join("\n",
             "\u8fd9\u662f\u4e00\u4e2a RPG \u539f\u578b\uff0c\u73a9\u5bb6\u63a2\u7d22\u5730\u56fe\u5e76\u4e0e\u654c\u4eba\u6218\u6597\u3002",
             "\u6838\u5fc3\u4f53\u9a8c\u662f\u627e\u5230\u5b9d\u7bb1\u3001\u63d0\u5347\u89d2\u8272\u3001\u51fb\u8d25 boss\u3002",
@@ -274,13 +281,14 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
         var codex = new FakeCodex("请贴出草稿正文。");
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var draft = string.Join("\n",
             "游戏名：龙境试炼",
             "游戏类型：RPG",
@@ -307,8 +315,9 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -320,7 +329,7 @@ public sealed class ProjectDraftImportServiceTests
               "coverageMissingTopics": ["地图尺寸约束", "奖励规则细节"]
             }
             """);
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var draft = string.Join("\n",
             "游戏名：龙境试炼",
             "游戏类型：RPG",
@@ -339,8 +348,8 @@ public sealed class ProjectDraftImportServiceTests
         result.CoverageMissingTopics.Should().ContainInOrder("地图尺寸约束", "奖励规则细节");
         codex.Prompts.Should().ContainSingle();
         codex.ProjectRoots.Should().ContainSingle();
-        codex.ProjectRoots[0].Should().NotContain("\\repo");
-        codex.ProjectRoots[0].Should().Contain("\\_phasea_llm\\draft-import\\");
+        codex.ProjectRoots[0].Split(Path.DirectorySeparatorChar).Should().NotContain("repo");
+        codex.ProjectRoots[0].Should().Contain(Path.Combine("_phasea_llm", "draft-import") + Path.DirectorySeparatorChar);
         codex.Prompts[0].Should().Contain("coveragePercent, coverageSummary, coverageMissingTopics");
         codex.Prompts[0].Should().Contain("Use only the Draft text and the Filled form JSON included below.");
         codex.Prompts[0].Should().Contain("Do not inspect or infer from repository files, implementation code, workflow docs, tests, or any external context.");
@@ -355,8 +364,9 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -368,7 +378,7 @@ public sealed class ProjectDraftImportServiceTests
               "coverageMissingTopics": ["敌人示例数值表述存在轻微不一致"]
             }
             """);
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var draft = string.Join("\n",
             "游戏名：龙境试炼",
             "游戏类型：RPG",
@@ -392,8 +402,9 @@ public sealed class ProjectDraftImportServiceTests
         using var database = TempSqliteDatabase.Create();
         using var workspaceRoot = TempWorkspaceRoot.Create();
         var options = Options(workspaceRoot.Path);
-        await SqliteMetadataSchema.InitializeAsync(database.ConnectionString);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(database.ConnectionString, options);
         var store = new PhaseAMetadataStore(database.ConnectionString, options);
+        using var fixtureCurrent = S206TestSupport.EnterCurrentContext(await S206TestSupport.FixtureContextAsync(store, options.AdminTokenHash));
         var accountId = await store.EnsureSingleAdminAsync();
         var projectId = await CreateProjectAsync(store, options, accountId);
         await store.SetProjectBootstrapStatusAsync(projectId, "succeeded", null);
@@ -406,7 +417,7 @@ public sealed class ProjectDraftImportServiceTests
               "coverageMissingTopics": ["战斗日志", "遇敌概率规则"]
             }
             """);
-        var service = new ProjectDraftImportService(store, options, codex);
+        var service = new ProjectDraftImportService(store, options, codex, null, null, new ProjectWorkspaceSeeder(options, store), heavyRunnerQueue: new HeavyRunnerQueueService(null, 1, store));
         var draft = string.Join("\n",
             "游戏名：龙境试炼",
             "游戏类型：RPG",
@@ -431,20 +442,23 @@ public sealed class ProjectDraftImportServiceTests
     private static ProjectDraftImportService Service()
     {
         var options = Options(Path.Combine(Path.GetTempPath(), $"phase-a-workspaces-{Guid.NewGuid():N}"));
-        var store = new PhaseAMetadataStore($"Data Source={Path.Combine(Path.GetTempPath(), $"phase-a-{Guid.NewGuid():N}.db")}", options);
+        Directory.CreateDirectory(options.HostedWorkspaceRoot);
+        var connectionString = $"Data Source={options.MetadataDatabasePath}";
+        SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options).GetAwaiter().GetResult();
+        var store = new PhaseAMetadataStore(connectionString, options);
         return new ProjectDraftImportService(store, options, new FakeCodex("{}"));
     }
 
     private static async Task<string> CreateProjectAsync(PhaseAMetadataStore store, PhaseAPlatformOptions options, string accountId)
     {
-        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog());
+        var service = new ProjectCreationService(store, options, new ProjectRuleCatalog(), new ProjectWorkspaceSeeder(options, store));
         var result = await service.CreateProjectAsync(accountId, new ProjectCreationRequest(null, "Demo Game", "manual", null, null, null, null));
         return result.ProjectId!;
     }
 
     private static PhaseAPlatformOptions Options(string workspaceRoot)
     {
-        return PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        return S206TestSupport.OwnedNodeOptions(new Dictionary<string, string?>
         {
             ["HOSTED_WORKSPACE_ROOT"] = workspaceRoot,
             ["PHASEA_METADATA_DB_PATH"] = Path.Combine(workspaceRoot, "metadata.sqlite3")

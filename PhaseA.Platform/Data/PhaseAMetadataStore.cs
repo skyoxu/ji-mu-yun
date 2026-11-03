@@ -83,7 +83,7 @@ public sealed partial class PhaseAMetadataStore
             DemandPersistedNodeBinding();
         }
         context ??= RequestContext.Current ?? throw new UnauthorizedAccessException("current_context_required");
-        var verified=ResolveAccountByTokenHashAsync(context.CredentialId).GetAwaiter().GetResult();
+        var verified=ReadCurrentAccountForAuthorization(context.CredentialId);
         var role=verified?.IsAdmin==true?PhaseAAuth.AdminRole:PhaseAAuth.UserRole;
         if(verified is null || context.AccountId!=verified.AccountId || !context.Roles.SetEquals(new[]{role}))
             throw new UnauthorizedAccessException("current_account_required");
@@ -143,6 +143,25 @@ public sealed partial class PhaseAMetadataStore
                 throw new UnauthorizedAccessException("project_ownership_mismatch");
         }
         return Convert.ToInt64(revision);
+    }
+
+    // ADR-0061: permission rechecks may run under a protected write transaction.
+    // Authentication usage bookkeeping belongs to request authentication, not this read-only check.
+    private AccountSnapshot? ReadCurrentAccountForAuthorization(string tokenHash)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT id, username, is_admin, is_disabled FROM accounts
+            WHERE token_hash=$credential AND is_disabled=0
+              AND (valid_until_utc IS NULL OR valid_until_utc>$now) LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$credential", tokenHash);
+        command.Parameters.AddWithValue("$now", DateTimeOffset.UtcNow.ToString("O"));
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? new AccountSnapshot(reader.GetString(0), reader.GetString(1),
+            reader.GetInt64(2) == 1, reader.GetInt64(3) == 1) : null;
     }
 
     // ADR-0061 AD17/19: the trusted composition root alone recovers local work.
@@ -2151,13 +2170,17 @@ public sealed partial class PhaseAMetadataStore
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    public Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken = default) =>
+        SoftDeleteProjectAsync(projectId, cancellationToken, null);
+
+    internal async Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken, Action? authorizeBeforeWrite)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(projectId);
 
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 
+        authorizeBeforeWrite?.Invoke();
         var activeProjectCount = await ExecuteScalarLongInsideTransactionAsync(
             connection,
             transaction,
@@ -2170,6 +2193,7 @@ public sealed partial class PhaseAMetadataStore
             return;
         }
 
+        authorizeBeforeWrite?.Invoke();
         await RecordProjectDeleteTombstoneInsideTransactionAsync(connection, transaction, projectId, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
@@ -7557,6 +7581,17 @@ public sealed class NodeProjectMetadata
         return _store.GetProjectSnapshotAsync(projectId, cancellationToken);
     }
 
+    // ADR-0061: consumer-level not-found semantics without granting cross-owner metadata reads.
+    internal async Task<ProjectSnapshot?> GetOwnedProjectSnapshotAsync(string accountId, string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DemandCurrentNodeOperation(accountId: accountId, write: false);
+        var project = await _store.GetProjectSnapshotAsync(projectId, cancellationToken);
+        if (project is null || project.AccountId != accountId) return null;
+        _store.DemandCurrentNodeOperation(accountId: accountId, projectId: projectId, write: false);
+        return project;
+    }
+
     public Task<IReadOnlyList<ProjectListItem>> ListProjectsAsync(string accountId, CancellationToken cancellationToken = default)
     {
         _store.DemandCurrentNodeOperation(accountId:accountId,write:false);
@@ -7608,6 +7643,10 @@ public sealed class NodeProjectMetadata
         _store.DemandCurrentNodeOperation(projectId:projectId,write:true);
         return _store.DeleteProjectAsync(projectId, cancellationToken);
     }
+
+    internal Task<PhaseA.Platform.Projects.ProjectDeletionResult> DeleteProjectForCurrentActorAsync(
+        string accountId, bool administratorRequested, string projectId, CancellationToken cancellationToken) =>
+        _store.DeleteProjectForCurrentActorAsync(accountId, administratorRequested, projectId, cancellationToken);
 
     public Task SoftDeleteProjectAsync(string projectId, CancellationToken cancellationToken = default)
     {

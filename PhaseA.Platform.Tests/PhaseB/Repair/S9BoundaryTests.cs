@@ -1,3 +1,4 @@
+using PhaseA.Platform.Tests.NodeIdentity;
 using PhaseA.Platform.Runs;
 using PhaseA.Platform.Security;
 using Xunit;
@@ -9,13 +10,10 @@ public sealed class S9BoundaryTests
     [Fact]
     public async Task O_05CB0734E7E0()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.Zero, maxConcurrentRuns: 1);
-        var queuedContext = new RequestContext(
-            "s9-role-principal",
-            "s9-role-account",
-            new HashSet<string>(StringComparer.Ordinal) { PhaseAAuth.AdminRole },
-            "s9-role-credential",
-            "s9-role-correlation");
+        var fixture = await S206QueueFixture.CreateAsync("s9-role-project", administrator: true);
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.Zero, 1, fixture.Store);
+        var queuedContext = fixture.Context;
         var currentServerRoles = queuedContext.Roles.ToHashSet(StringComparer.Ordinal);
         var blockerStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseBlocker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -69,12 +67,14 @@ public sealed class S9BoundaryTests
     [Fact]
     public async Task O_12B44DD27432()
     {
-        var queue = new HeavyRunnerQueueService(TimeSpan.Zero, maxConcurrentRuns: 1);
+        var fixture = await S206QueueFixture.CreateAsync("s9-disabled-project", administrator: false);
+        using var current = S206TestSupport.EnterCurrentContext(fixture.ControlContext);
+        var queue = new HeavyRunnerQueueService(TimeSpan.Zero, 1, fixture.Store);
         var blockerStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var releaseBlocker = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var blocker = queue.ExecuteAsync(
             "s9-disabled-blocker",
-            "s9-disabled-account",
+            fixture.AccountId,
             "s9-disabled-project",
             "s9-disabled-blocker",
             async cancellationToken =>
@@ -88,15 +88,10 @@ public sealed class S9BoundaryTests
 
         var accountDisabled = false;
         var subsequentWorkStarted = false;
-        var disabledContext = new RequestContext(
-            "s9-disabled-principal",
-            "s9-disabled-account",
-            new HashSet<string>(StringComparer.Ordinal) { PhaseAAuth.UserRole },
-            "s9-disabled-credential",
-            "s9-disabled-correlation");
+        var disabledContext = fixture.Context;
         var deferred = queue.ExecuteAuthorizedAsync(
             "s9-disabled-deferred",
-            "s9-disabled-account",
+            fixture.AccountId,
             "s9-disabled-project",
             "s9-disabled-deferred",
             disabledContext,
