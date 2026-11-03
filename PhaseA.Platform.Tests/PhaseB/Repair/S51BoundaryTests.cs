@@ -525,7 +525,7 @@ public sealed class S51BoundaryTests
     private static async Task ObserveHttpFamiliesAsync(string repository, string root, Dictionary<string, object> observed, HashSet<string> valid)
     {
         var db = Path.Combine(root, "http", "metadata.sqlite3"); Directory.CreateDirectory(Path.GetDirectoryName(db)!);
-        var workspace = Path.Combine(root, "http", "workspace", "owned"); Directory.CreateDirectory(Path.Combine(workspace, "repo"));
+
         var cs = new SqliteConnectionStringBuilder { DataSource = db, Pooling = false }.ToString();
         // ADR-0061: these HTTP contracts need an owned seed, not the live repository or device indexes.
         var seedRepository = Path.Combine(repository, "PhaseA.Platform.Tests", "Fixtures", "ProjectSeedRepository");
@@ -540,10 +540,16 @@ public sealed class S51BoundaryTests
         await SqliteMetadataSchema.InitializeSingleNodeTestAsync(cs,options);
         var store = new PhaseAMetadataStore(cs, options); await store.EnsureSingleAdminAsync();
         var owner = await store.CreateUserAccountAsync("s51-http-owner", 1); var stranger = await store.CreateUserAccountAsync("s51-http-stranger", 1);
-        var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-http-project", owner.AccountId, "S51 HTTP", "S51 HTTP", "manual", "default", false, [], workspace, Path.Combine(workspace, "repo"), Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, owner.AccountId, "s51-http-project");
+        var workspace = layout.RootPath;
+        Directory.CreateDirectory(layout.RepoPath);
+        var project = await store.CreateProjectAsync(new ProjectCreationCommand("s51-http-project", owner.AccountId, "S51 HTTP", "S51 HTTP", "manual", "default", false, [], workspace, layout.RepoPath, layout.RuntimePath, layout.MetaPath));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S51 HTTP project setup failed."); await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
-        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(
-            await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."), options);
+        var registeredProject = await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing.");
+        // ADR-0035/0061: prove the real provisioner contract on both portable and native runs.
+        Assert.Equal(WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, registeredProject.AccountId, registeredProject.ProjectId),
+            new WorkspaceLayout(registeredProject.WorkspaceRootPath, registeredProject.RepoPath, registeredProject.RuntimePath, registeredProject.MetaPath));
+        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(registeredProject, options);
         var listener = new TcpListener(IPAddress.Loopback, 0); listener.Start(); var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}"; listener.Stop();
         var start = new System.Diagnostics.ProcessStartInfo("dotnet") { WorkingDirectory = Path.Combine(repository, "PhaseA.Platform"), UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
         start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "PhaseA.Platform.dll")); start.Environment["APP_BIND_URL"] = address; start.Environment["ASPNETCORE_URLS"] = address; start.Environment["PUBLIC_BASE_URL"] = "https://localhost"; start.Environment["PHASEA_METADATA_DB_PATH"] = db; start.Environment["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "http", "workspace"); start.Environment["PHASEA_REPOSITORY_ROOT"] = seedRepository; start.Environment["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage(adminToken); start.Environment["PHASEA_SERVICE_STATE"] = "test";

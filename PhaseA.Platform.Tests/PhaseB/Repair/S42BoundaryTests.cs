@@ -1,3 +1,4 @@
+using PhaseA.Platform.Workspaces;
 using PhaseA.Platform.Security;
 using PhaseA.Platform.Tests.NodeIdentity;
 using System.Diagnostics;
@@ -45,13 +46,17 @@ public sealed class S42BoundaryTests
             await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
             var store = new PhaseAMetadataStore(connectionString, options);
             var user = await store.CreateUserAccountAsync("s42-user-" + Guid.NewGuid().ToString("N"), 1);
-            var projectRoot = Path.Combine(workspaceRoot, "project-s42");
+            var projectId = "project-s42-" + Guid.NewGuid().ToString("N");
+            var layout = WorkspaceLayoutBuilder.Build(workspaceRoot, user.AccountId, projectId);
             var project = await store.CreateProjectAsync(new ProjectCreationCommand(
-                "project-s42-" + Guid.NewGuid().ToString("N"), user.AccountId, "S42", "S42", "manual", "default", false, [],
-                projectRoot, Path.Combine(projectRoot, "repo"), Path.Combine(projectRoot, "runtime"), Path.Combine(projectRoot, "repo", "meta")));
+                projectId, user.AccountId, "S42", "S42", "manual", "default", false, [],
+                layout.RootPath, layout.RepoPath, layout.RuntimePath, layout.MetaPath));
             await store.SetProjectBootstrapStatusAsync(project.ProjectId!, "succeeded", null);
-            using var registration = S206TestSupport.RegisterOwnedProjectBoundary(
-                (await store.GetProjectSnapshotAsync(project.ProjectId!))!, options);
+            var registeredProject = (await store.GetProjectSnapshotAsync(project.ProjectId!))!;
+            // ADR-0035/0061: prove the real provisioner contract on both portable and native runs.
+            Assert.Equal(WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, registeredProject.AccountId, registeredProject.ProjectId),
+                new WorkspaceLayout(registeredProject.WorkspaceRootPath, registeredProject.RepoPath, registeredProject.RuntimePath, registeredProject.MetaPath));
+            using var registration = S206TestSupport.RegisterOwnedProjectBoundary(registeredProject, options);
 
             var url = $"http://127.0.0.1:{FreePort()}";
             process = StartServer(url, databasePath, workspaceRoot);

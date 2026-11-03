@@ -101,10 +101,7 @@ public sealed class S31BoundaryTests
     {
         // ADR-0061/0038: request-aware producer evidence, never test-written diagnostic rows.
         var data = Path.Combine(root, "data");
-        var workspace = Path.Combine(root, "workspaces", "owned-project");
-        var repo = Path.Combine(workspace, "repo");
         Directory.CreateDirectory(data);
-        Directory.CreateDirectory(repo);
         var database = Path.Combine(data, "metadata.sqlite3");
         var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
 
@@ -127,13 +124,21 @@ public sealed class S31BoundaryTests
         await store.EnsureSingleAdminAsync();
         var owner = await store.CreateUserAccountAsync("s31-http-owner", 1);
         var stranger = await store.CreateUserAccountAsync("s31-http-stranger", 1);
+        var projectId = "s31-http-" + Guid.NewGuid().ToString("N");
+        var layout = WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, owner.AccountId, projectId);
+        var workspace = layout.RootPath;
+        var repo = layout.RepoPath;
+        Directory.CreateDirectory(repo);
         var project = await store.CreateProjectAsync(new ProjectCreationCommand(
-            "s31-http-" + Guid.NewGuid().ToString("N"), owner.AccountId, "HTTP fixture", "HTTP fixture", "manual", "default", false, [],
-            workspace, repo, Path.Combine(workspace, "runtime"), Path.Combine(workspace, "meta")));
+            projectId, owner.AccountId, "HTTP fixture", "HTTP fixture", "manual", "default", false, [],
+            workspace, repo, layout.RuntimePath, layout.MetaPath));
         if (!project.Succeeded || project.ProjectId is null) throw new InvalidOperationException("S31 HTTP project setup failed.");
         await store.SetProjectBootstrapStatusAsync(project.ProjectId, "succeeded", null);
-        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(
-            await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing."), options);
+        var registeredProject = await store.GetProjectSnapshotAsync(project.ProjectId) ?? throw new InvalidOperationException("Owned HTTP fixture project missing.");
+        // ADR-0035/0061: prove the real provisioner contract on both portable and native runs.
+        Assert.Equal(WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, registeredProject.AccountId, registeredProject.ProjectId),
+            new WorkspaceLayout(registeredProject.WorkspaceRootPath, registeredProject.RepoPath, registeredProject.RuntimePath, registeredProject.MetaPath));
+        using var registration = S206TestSupport.RegisterOwnedProjectBoundary(registeredProject, options);
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var address = $"http://127.0.0.1:{((IPEndPoint)listener.LocalEndpoint).Port}";
