@@ -384,3 +384,58 @@ def test_windows_runtime_inventory_allows_missing_base_executable_only(tmp_path,
     assert str(executable.resolve()) in environment_identity()['files']
     monkeypatch.setattr(shared.sys,'platform','linux')
     assert shared._windows_runtime_files()==set()
+
+
+import shared_execution
+
+def _generated_report_fixture(root, monkeypatch):
+    _semantic,bundle,_roots=setup(root)
+    monkeypatch.setattr(shared_execution,'environment_identity',lambda:{'schema':shared_execution.ENVIRONMENT_SCHEMA,'files':{},'environment':{}})
+    project=root/'app';project.mkdir()
+    (project/'app.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>',encoding='utf-8')
+    (project/'source.cs').write_text('class ActualSource {}',encoding='utf-8')
+    output=project/'TestResults';output.mkdir()
+    return bundle,descriptor(bundle),output
+
+def test_generated_reports_are_not_inputs(tmp_path,monkeypatch):
+    bundle,desc,output=_generated_report_fixture(tmp_path,monkeypatch)
+    report=output/'tests.trx';coverage=output/'coverage.cobertura.xml'
+    report.write_text('<TestRun>first</TestRun>',encoding='utf-8');coverage.write_text('<coverage value="first"/>',encoding='utf-8')
+    before=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert 'app/TestResults/tests.trx' not in before['files']
+    assert 'app/TestResults/coverage.cobertura.xml' not in before['files']
+    report.write_text('<TestRun>second</TestRun>',encoding='utf-8');coverage.write_text('<coverage value="second"/>',encoding='utf-8')
+    after=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert shared_execution.invalidation_reason(before,after) is None
+
+def test_explicit_report_fixture_stays_bound(tmp_path,monkeypatch):
+    bundle,desc,output=_generated_report_fixture(tmp_path,monkeypatch)
+    report=output/'tests.trx';report.write_text('fixture-one',encoding='utf-8')
+    desc['fixture_refs'].append('app/TestResults/tests.trx')
+    before=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert before['files']['app/TestResults/tests.trx']['sha256']
+    report.write_text('fixture-two',encoding='utf-8')
+    after=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert shared_execution.invalidation_reason(before,after)=='reuse-dependency-content-changed:app/TestResults/tests.trx'
+
+def test_tracked_report_fixture_stays_bound(tmp_path,monkeypatch):
+    bundle,desc,output=_generated_report_fixture(tmp_path,monkeypatch)
+    report=output/'golden.trx';report.write_text('tracked-one',encoding='utf-8')
+    subprocess.run(['git','add','--','app/TestResults/golden.trx'],cwd=tmp_path,check=True,capture_output=True)
+    before=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert before['files']['app/TestResults/golden.trx']['sha256']
+    report.write_text('tracked-two',encoding='utf-8')
+    after=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert shared_execution.invalidation_reason(before,after)=='reuse-dependency-content-changed:app/TestResults/golden.trx'
+
+def test_other_files_and_source_stay_bound(tmp_path,monkeypatch):
+    bundle,desc,output=_generated_report_fixture(tmp_path,monkeypatch)
+    data=output/'fixture.json';data.write_text('{"actual":1}',encoding='utf-8')
+    other=tmp_path/'fixtures/TestResults';other.mkdir(parents=True)
+    (other/'input.trx').write_text('not-a-project-output',encoding='utf-8')
+    before=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert 'app/TestResults/fixture.json' in before['files']
+    assert 'fixtures/TestResults/input.trx' in before['files']
+    (tmp_path/'app/source.cs').write_text('class ChangedSource {}',encoding='utf-8')
+    after=shared_execution.input_manifest(tmp_path,bundle,desc)
+    assert shared_execution.invalidation_reason(before,after)=='reuse-dependency-content-changed:app/source.cs'

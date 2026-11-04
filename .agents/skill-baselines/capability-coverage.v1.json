@@ -981,17 +981,17 @@
       "implementation": [
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
+          "sha256": "464efdd3f8b7b9006ac2c8ffb74e38b001d2f5681c3211ff5cfdefbac8df2eaf",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:87 manifests repository bytes, full contract minus provenance, argv/cwd, engine and installed environment."
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
+          "sha256": "464efdd3f8b7b9006ac2c8ffb74e38b001d2f5681c3211ff5cfdefbac8df2eaf",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:267 uses exact content key under logs/quick-dev-shared-executions; :149 requires complete nonzero all-passed structured events."
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
+          "sha256": "464efdd3f8b7b9006ac2c8ffb74e38b001d2f5681c3211ff5cfdefbac8df2eaf",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:195 re-reads immutable original descriptor/receipt/output; uses retain original case-report identity and are revalidated at Q7/Q8."
         }
       ],
@@ -1004,7 +1004,11 @@
         ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_q6_cross_slice_and_terminal_share_raw_execution",
         ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_native_terminal_and_q8_accept_reference_but_reject_missing_original",
         ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_unknown_dependencies_and_actual_failures_never_publish_success",
-        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_case_coverage_cannot_be_filled_by_another_assertion"
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_case_coverage_cannot_be_filled_by_another_assertion",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_generated_reports_are_not_inputs",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_explicit_report_fixture_stays_bound",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_tracked_report_fixture_stays_bound",
+        ".agents/skills/quick-dev-tdd-adapter/tools/tests/test_shared_execution.py::test_other_files_and_source_stay_bound"
       ],
       "limits": [
         "Known main P1: validate_saved_request compares historical GREEN manifest to current production at closure; parent owns fix and new changed-refactor regression.",
@@ -1040,7 +1044,7 @@
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
+          "sha256": "464efdd3f8b7b9006ac2c8ffb74e38b001d2f5681c3211ff5cfdefbac8df2eaf",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py uses quick-dev.pytest-environment.v2 and rejects unknown/older environment schema before comparing hashes."
         },
         {

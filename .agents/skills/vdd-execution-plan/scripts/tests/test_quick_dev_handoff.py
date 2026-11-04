@@ -222,3 +222,41 @@ def test_handoff_accepts_python_no_bytecode_option_without_changing_target(tmp_p
     assert handoff_findings(bundle, workspace=tmp_path) == []
     bundle['agent_contexts'][0]['validation_commands'][0] = ['python', '-B', '-c', 'print(1)']
     assert any('missing-authorable-pytest-entry' in f for f in handoff_findings(bundle, workspace=tmp_path))
+
+
+def test_vdd_handoff_keeps_explicit_trx_fixture_and_ignores_generated_coverage(tmp_path, monkeypatch):
+    """ADR-0041: a VDD descriptor retains output-shaped fixture dependencies."""
+    import shared_execution
+    bundle = repaired()
+    item = bundle['slices'][0]
+    monkeypatch.setattr(stable_runner, 'ROOT', tmp_path)
+    context = next(row for row in bundle['agent_contexts'] if row['slice_id'] == item['slice_id'])
+    command, targets, fixtures = _descriptor_inputs(bundle, tmp_path, item['slice_id'], context=context)
+    project = tmp_path / 'consumer'
+    project.mkdir()
+    (project / 'consumer.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"/>', encoding='utf-8')
+    reports = project / 'TestResults'
+    reports.mkdir()
+    golden = reports / 'expected.trx'
+    coverage = reports / 'coverage.cobertura.xml'
+    golden.write_bytes(b'<TestRun name="declared-input"/>')
+    coverage.write_bytes(b'<coverage generated="first"/>')
+    subprocess.run(['git', 'init', '-q'], cwd=tmp_path, check=True, capture_output=True)
+    monkeypatch.setattr(shared_execution, 'environment_identity', lambda: {
+        'schema': shared_execution.ENVIRONMENT_SCHEMA, 'files': {}, 'environment': {}})
+    item['execution_snapshot_paths'].append('consumer/TestResults/expected.trx')
+    descriptor = materialize_descriptor(bundle=bundle, slice_id=item['slice_id'],
+        stage='probe', run_id='vdd-output-fixture', candidate_hash='sha256:' + '1' * 64,
+        argv=command, cwd='.', timeout_seconds=60, target_refs=targets,
+        fixture_refs=[*fixtures, 'consumer/TestResults/expected.trx'])
+    before = shared_execution.input_manifest(tmp_path, bundle, descriptor)
+    assert 'consumer/TestResults/expected.trx' in before['files']
+    assert 'consumer/TestResults/coverage.cobertura.xml' not in before['files']
+    assert all(target in before['files'] for target in targets)
+    coverage.write_bytes(b'<coverage generated="second"/>')
+    after_output = shared_execution.input_manifest(tmp_path, bundle, descriptor)
+    assert shared_execution.invalidation_reason(before, after_output) is None
+    golden.write_bytes(b'<TestRun name="changed-declared-input"/>')
+    after_fixture = shared_execution.input_manifest(tmp_path, bundle, descriptor)
+    assert shared_execution.invalidation_reason(before, after_fixture) == (
+        'reuse-dependency-content-changed:consumer/TestResults/expected.trx')

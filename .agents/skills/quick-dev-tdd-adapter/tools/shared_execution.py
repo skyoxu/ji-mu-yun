@@ -111,6 +111,25 @@ def slice_identity(bundle, slice_id):
     return sha256_value({"slice": row, "contract": semantic_identity(bundle)})
 
 
+def _untracked_dotnet_report(root, relative, tracked):
+    """ADR-0041: default generated TRX/coverage files are not automatic inputs.
+
+    Keep tracked golden reports, explicit declarations (added below), ordinary
+    files and reports outside a real project output directory fully bound.
+    """
+    if relative in tracked or (root / relative).is_symlink():
+        return False
+    path = Path(relative)
+    if path.suffix.lower() != ".trx" and path.name.lower() != "coverage.cobertura.xml":
+        return False
+    parts = path.parts
+    for index, part in enumerate(parts[:-1]):
+        if part.lower() == "testresults":
+            project = root.joinpath(*parts[:index])
+            return any(p.is_file() and not p.is_symlink() for p in project.glob("*.csproj"))
+    return False
+
+
 def input_manifest(workspace, bundle, descriptor):
     root = workspace.resolve()
     command_identity(descriptor["argv"])
@@ -118,9 +137,15 @@ def input_manifest(workspace, bundle, descriptor):
                           cwd=root, capture_output=True, check=False, timeout=30)
     if proc.returncode or not (root / ".git").exists():
         raise ValueError("reuse-dependency-scope-unknown: Git inventory required")
+    cached = subprocess.run(["git", "ls-files", "-z", "--cached"],
+                            cwd=root, capture_output=True, check=False, timeout=30)
+    if cached.returncode:
+        raise ValueError("reuse-dependency-scope-unknown: tracked Git inventory required")
+    tracked = {p for p in cached.stdout.decode("utf-8").split("\0") if p}
     paths = {p for p in proc.stdout.decode("utf-8").split("\0") if p
              and Path(p).parts[0] not in EXCLUDED and not {"__pycache__", ".pytest_cache", ".venv", "venv"} & set(Path(p).parts)
-             and Path(p).suffix not in {".pyc", ".pyo"}}
+             and Path(p).suffix not in {".pyc", ".pyo"}
+             and not _untracked_dotnet_report(root, p, tracked)}
     # Plans/evidence are excluded from automatic inventory to avoid self-invalidating
     # execution. Explicit production/test/fixture dependencies there are still bound.
     for row in bundle.get("slices", []):
