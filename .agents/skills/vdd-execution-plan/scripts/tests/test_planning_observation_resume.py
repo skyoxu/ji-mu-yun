@@ -373,6 +373,55 @@ def test_returned_origin_stays_valid_after_its_deadline(delivered):
     assert result['status'] == 'reference-only' and result['episode_closed']
 
 
+@pytest.mark.parametrize('spelling', ['native-absolute', 'posix-absolute', 'relative'])
+def test_native_progress_accepts_exact_output_path_spellings(delivered, spelling):
+    """ADR-0041/0048: Windows separators do not invalidate an exact delivery."""
+    root, _, origin, _ = delivered
+    import planning_observation_resume as reuse
+    output = Path(json.loads(origin.read_text())['output_path'])
+    assert output.is_absolute()
+    if os.name == 'nt':
+        assert '\\' in str(output) and str(output) != output.as_posix()
+    path = root / 'execution-plans/plan/.compiler-work/compiler-progress.jsonl'
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    starts = [row for row in rows if row['event'] == 'worker-started']
+    assert len(starts) == 1
+    starts[0]['output_last_message'] = {
+        'native-absolute': str(output), 'posix-absolute': output.as_posix(),
+        'relative': output.relative_to(root).as_posix()}[spelling]
+    path.write_text(''.join(json.dumps(row) + '\n' for row in rows), encoding='utf-8')
+    before = (root / 'execution-plans/plan/execution-record.md').read_bytes()
+    result, _ = reuse.reference(root=root, out_dir=root / 'execution-plans/plan',
+                               origin=origin, request=public_request(root))
+    assert result['status'] == 'reference-only' and result['episode_closed']
+    assert (root / 'execution-plans/plan/execution-record.md').read_bytes() == before
+
+
+@pytest.mark.parametrize('defect', ['wrong-absolute-output', 'duplicate-spelling'])
+def test_native_progress_path_normalization_keeps_exact_unique_binding(delivered, defect):
+    """ADR-0041/0048: same basename or alternate spelling cannot widen reuse."""
+    root, _, origin, _ = delivered
+    import planning_observation_resume as reuse
+    output = Path(json.loads(origin.read_text())['output_path'])
+    path = root / 'execution-plans/plan/.compiler-work/compiler-progress.jsonl'
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    starts = [row for row in rows if row['event'] == 'worker-started']
+    assert len(starts) == 1
+    starts[0]['output_last_message'] = str(output)
+    if defect == 'wrong-absolute-output':
+        starts[0]['output_last_message'] = str(output.parent / 'other' / output.name)
+    else:
+        duplicate = deepcopy(starts[0])
+        duplicate['output_last_message'] = output.as_posix()
+        rows.append(duplicate)
+    path.write_text(''.join(json.dumps(row) + '\n' for row in rows), encoding='utf-8')
+    before = (root / 'execution-plans/plan/execution-record.md').read_bytes()
+    with pytest.raises(ValueError, match='PLANNING_OBSERVATION_REUSE_BLOCKED:native_call_ambiguous_or_missing'):
+        reuse.reference(root=root, out_dir=root / 'execution-plans/plan',
+                        origin=origin, request=public_request(root))
+    assert (root / 'execution-plans/plan/execution-record.md').read_bytes() == before
+
+
 def test_reference_advice_keeps_native_budget_input_identity(delivered):
     root, _, origin, prepared = delivered
     import planning_observation_resume as reuse

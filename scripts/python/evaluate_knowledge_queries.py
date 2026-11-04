@@ -9,6 +9,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from _knowledge_catalog_builder import CommittedBlobBatch
+
 
 DEFAULT_SUITE = Path("knowledge/evaluation/repository-knowledge-query-suite.v1.json")
 DEFAULT_CATALOG = Path("knowledge/catalogs/repository-knowledge-catalog.v2.json")
@@ -54,7 +56,7 @@ def _git(repository_root: Path, *args: str, input_bytes: bytes | None = None) ->
 
 
 def _main_blob(repository_root: Path, commit: str, path: str) -> bytes:
-    completed = _git(repository_root, "show", f"{commit}:{path}")
+    completed = _git(repository_root, "cat-file", "blob", f"{commit}:{path}")
     if completed.returncode:
         detail = completed.stderr.decode("utf-8", errors="replace").strip()
         raise ValueError(f"cannot read main blob {path}: {detail}")
@@ -155,42 +157,45 @@ def _check_hashes_and_terms(
     blob_cache: dict[str, bytes] = {}
     expected_primary_path: str | None = None
     verified_bound_resource = False
-    for candidate in candidates:
-        read_set = candidate.get("read_set")
-        if not isinstance(read_set, list) or not read_set:
-            failures.append(f"candidate {candidate.get('module_id')} has no read_set")
-            continue
-        for item in read_set:
-            path = item.get("path") if isinstance(item, dict) else None
-            digest = item.get("source_sha256") if isinstance(item, dict) else None
-            if not isinstance(path, str) or not isinstance(digest, str):
-                failures.append(f"candidate {candidate.get('module_id')} has an invalid read_set item")
+    # ADR-0044: transport is shared only within this case; all rows are checked.
+    with CommittedBlobBatch(repository_root, commit) as batch:
+        for candidate in candidates:
+            read_set = candidate.get("read_set")
+            if not isinstance(read_set, list) or not read_set:
+                failures.append(f"candidate {candidate.get('module_id')} has no read_set")
                 continue
-            if path.replace("\\", "/").startswith("docs/migration/"):
-                failures.append(f"migration path leaked into read_set: {path}")
-                continue
-            try:
-                blob = blob_cache.setdefault(path, _main_blob(repository_root, commit, path))
-            except ValueError as error:
-                failures.append(str(error))
-                continue
-            if hashlib.sha256(blob).hexdigest() != digest:
-                failures.append(f"source hash mismatch: {path}")
-            else:
-                verified += 1
-                if candidate.get("module_id") == expected_module_id and item.get("role") != "primary":
-                    verified_bound_resource = True
-            if candidate.get("module_id") == expected_module_id:
-                if item.get("role") == "primary":
-                    expected_primary_path = path
-                decoded_blob = blob.decode("utf-8", errors="replace")
-                for term in source_terms:
-                    for line_number, line in enumerate(decoded_blob.splitlines(), 1):
-                        if term.casefold() in line.casefold():
-                            evidence_locations[term].append({"path": path, "line": line_number})
-        candidate_path = candidate.get("path")
-        if isinstance(candidate_path, str) and candidate_path.replace("\\", "/").startswith("docs/migration/"):
-            failures.append(f"migration path leaked into candidates: {candidate_path}")
+            for item in read_set:
+                path = item.get("path") if isinstance(item, dict) else None
+                digest = item.get("source_sha256") if isinstance(item, dict) else None
+                if not isinstance(path, str) or not isinstance(digest, str):
+                    failures.append(f"candidate {candidate.get('module_id')} has an invalid read_set item")
+                    continue
+                if path.replace("\\", "/").startswith("docs/migration/"):
+                    failures.append(f"migration path leaked into read_set: {path}")
+                    continue
+                try:
+                    blob = blob_cache.setdefault(path, batch.read(path))
+                except (ValueError, subprocess.CalledProcessError) as error:
+                    detail = (error.stderr or b"Git batch transport failed").decode("utf-8", errors="replace").strip() if isinstance(error, subprocess.CalledProcessError) else str(error)
+                    failures.append(f"cannot read main blob {path}: {detail}")
+                    continue
+                if hashlib.sha256(blob).hexdigest() != digest:
+                    failures.append(f"source hash mismatch: {path}")
+                else:
+                    verified += 1
+                    if candidate.get("module_id") == expected_module_id and item.get("role") != "primary":
+                        verified_bound_resource = True
+                if candidate.get("module_id") == expected_module_id:
+                    if item.get("role") == "primary":
+                        expected_primary_path = path
+                    decoded_blob = blob.decode("utf-8", errors="replace")
+                    for term in source_terms:
+                        for line_number, line in enumerate(decoded_blob.splitlines(), 1):
+                            if term.casefold() in line.casefold():
+                                evidence_locations[term].append({"path": path, "line": line_number})
+            candidate_path = candidate.get("path")
+            if isinstance(candidate_path, str) and candidate_path.replace("\\", "/").startswith("docs/migration/"):
+                failures.append(f"migration path leaked into candidates: {candidate_path}")
     for term in source_terms:
         if not evidence_locations[term]:
             failures.append(f"expected source term not found: {term}")

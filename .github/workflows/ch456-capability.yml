@@ -25,7 +25,7 @@ jobs:
       - name: Install Python and compatibility test dependencies
         shell: pwsh
         run: |
-          py -3 -m pip install pytest openai
+          py -3 -m pip install pytest openai jsonschema==4.26.0
           choco install ripgrep -y --no-progress
       - name: Complete guarded skill regression and admit this runner
         shell: pwsh

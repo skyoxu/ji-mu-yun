@@ -21,6 +21,7 @@ import platform
 import secrets
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import threading
@@ -145,6 +146,16 @@ def suite_files(root, targets):
     return files(root, sorted(sources | test_configuration(root, targets)))
 
 
+def _dependency_import_nodes(tree):
+    """ADR-0041: imports are statements; expression subtrees cannot add any."""
+    pending = [tree]
+    for node in pending:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            yield node
+        if not isinstance(node, ast.expr):
+            pending.extend(ast.iter_child_nodes(node))
+
+
 def dependency_closure(root, inventory):
     """Conservative static local-import closure plus explicit policy data roots."""
     search = {root, root / 'scripts', root / 'scripts/sc', root / 'scripts/python',
@@ -172,7 +183,7 @@ def dependency_closure(root, inventory):
                 if dependency not in inventory:
                     inventory.update(files(root, [dependency]))
                     pending.append(dependency)
-        for node in ast.walk(ast.parse(source.read_text(encoding='utf-8-sig'))):
+        for node in _dependency_import_nodes(ast.parse(source.read_text(encoding='utf-8-sig'))):
             modules = []
             bases = search
             if isinstance(node, ast.Import):
@@ -708,6 +719,20 @@ def _process(pid):
     fail('unsupported-test-channel-platform')
 
 
+
+def _interpreter_image():
+    """ADR-0041: bind the OS image of this trusted runtime, not its launcher."""
+    if platform.system() == 'Windows':
+        base = getattr(sys, '_base_executable', None)
+        if not base or not Path(base).is_absolute():
+            return None
+        image = Path(base).resolve()
+        if image.parent != Path(sys.base_prefix).resolve():
+            return None
+        return image
+    return Path(sys.executable).resolve()
+
+
 def _runner_ancestor(root, pid):
     cursor = os.getpid()
     for _ in range(32):
@@ -716,8 +741,12 @@ def _runner_ancestor(root, pid):
             rest = argv[1:]
             while rest and rest[0] in ('-B', '-u'):
                 rest = rest[1:]
-            if len(rest) < 2 or rest[1] != 'test' or executable != Path(sys.executable).resolve():
+            if len(rest) < 2 or rest[1] != 'test' or executable != _interpreter_image():
                 return False
+            # A redirected Windows runtime must also belong to this exact venv.
+            if platform.system() == 'Windows' and executable != Path(sys.executable).resolve():
+                if parent <= 0 or _process(parent)[3] != Path(sys.executable).resolve():
+                    return False
             entry = Path(rest[0])
             return (entry if entry.is_absolute() else cwd / entry).resolve() == root / 'scripts/skill_baseline.py'
         if parent <= 0 or parent == cursor:
@@ -1082,6 +1111,159 @@ def run_unit(root, target, out, channel, budget_key, recovery=None):
     return {'target': target, 'nonce': nonce, 'source': report}
 
 
+def _cleanup_metadata(target):
+    value = target.lstat()
+    if (stat.S_ISLNK(value.st_mode) or
+            getattr(value, 'st_file_attributes', 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+        fail('scratch-cleanup-reparse-point')
+    if not (stat.S_ISDIR(value.st_mode) or stat.S_ISREG(value.st_mode)):
+        fail('scratch-cleanup-object-type')
+    return value
+
+
+def _cleanup_local_path(value, *, parent=None):
+    """Compare local alias names lexically; never resolve a reparse target."""
+    text = os.fspath(value)
+    if os.name == 'nt' and text.startswith('\\\\?\\'):
+        local = text[4:]
+        if len(local) < 3 or not ('a' <= local[0].lower() <= 'z') or local[1:3] != ':\\':
+            fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+        text = local
+    if text.startswith(('\\\\', '//')):
+        fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+    target = Path(text)
+    if '..' in target.parts:
+        fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+    if not target.is_absolute():
+        if parent is None or target.anchor or target.drive:
+            fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+        target = parent / target
+    return target
+
+
+def _remove_successful_scratch(root, out, skill, index):
+    """ADR-0041: remove only a completed unit's private disposable fixture."""
+    root, out = Path(root), Path(out)
+    if (skill not in SKILLS or isinstance(index, bool) or not isinstance(index, int) or index < 0 or
+            not out.is_relative_to(root / 'logs') or '..' in out.parts):
+        fail('scratch-cleanup-boundary')
+    scratch = out / skill / str(index) / 'scratch'
+
+    def reparse(metadata):
+        return (stat.S_ISLNK(metadata.st_mode) or
+                bool(getattr(metadata, 'st_file_attributes', 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT))
+
+    def identity(metadata):
+        return (metadata.st_dev, metadata.st_ino, metadata.st_mode,
+                getattr(metadata, 'st_file_attributes', 0), getattr(metadata, 'st_reparse_tag', None))
+
+    def checked(target, *, allow_alias=False):
+        if not target.is_relative_to(scratch) or '..' in target.parts:
+            fail('scratch-cleanup-boundary')
+        # These are exclusive, trusted-maintainer fixtures, not an OS sandbox
+        # against concurrent path replacement. Never follow a reparse object.
+        for ancestor in reversed((target, *target.parents)):
+            if ancestor == root or ancestor.is_relative_to(root):
+                value = ancestor.lstat() if allow_alias and ancestor == target and target != scratch else None
+                if value is not None and reparse(value):
+                    # Only standard symlinks/junctions are inspectable aliases.
+                    if ((os.name == 'nt' or getattr(value, 'st_file_attributes', 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT)
+                            and getattr(value, 'st_reparse_tag', None) not in (0xA000000C, 0xA0000003)):
+                        fail('scratch-cleanup-reparse-point')
+                else:
+                    value = _cleanup_metadata(ancestor)
+                if ancestor != target and not stat.S_ISDIR(value.st_mode):
+                    fail('scratch-cleanup-object-type')
+        return value
+
+    def inventory(*, allow_alias):
+        pending = [scratch]
+        while pending:
+            target = pending.pop()
+            metadata = checked(target, allow_alias=allow_alias)
+            yield target, metadata
+            if stat.S_ISDIR(metadata.st_mode) and not reparse(metadata):
+                with os.scandir(target) as children:
+                    pending.extend(Path(child.path) for child in children)
+
+    ordinary, aliases = {}, []
+    for target, metadata in inventory(allow_alias=True):
+        if reparse(metadata):
+            aliases.append((target, metadata, os.readlink(target)))
+        else:
+            ordinary[_cleanup_local_path(target)] = (target, metadata)
+    scratch_name = _cleanup_local_path(scratch)
+    verified = []
+    for alias, metadata, raw_target in aliases:
+        alias_name = _cleanup_local_path(alias)
+        target_name = _cleanup_local_path(raw_target, parent=_cleanup_local_path(alias.parent))
+        if (not target_name.is_relative_to(scratch_name) or target_name == scratch_name or
+                alias_name.is_relative_to(target_name)):
+            fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+        components = []
+        component = target_name
+        while True:
+            if component not in ordinary:
+                fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+            entry = ordinary[component]
+            if component != target_name and not stat.S_ISDIR(entry[1].st_mode):
+                fail('scratch-cleanup-reparse-point:unsafe-alias-target')
+            components.append(entry)
+            if component == scratch_name:
+                break
+            component = component.parent
+        verified.append((alias, metadata, raw_target, components))
+
+    def recheck_alias(record):
+        alias, before, raw_target, components = record
+        if identity(checked(alias, allow_alias=True)) != identity(before) or os.readlink(alias) != raw_target:
+            fail('scratch-cleanup-reparse-point:alias-changed')
+        for target, metadata in components:
+            if identity(checked(target)) != identity(metadata):
+                fail('scratch-cleanup-reparse-point:alias-target-changed')
+
+    # Validate every alias before deleting any object. Targets must be existing
+    # ordinary inventory entries; external, missing and chained targets fail.
+    for record in verified:
+        recheck_alias(record)
+    for record in verified:
+        recheck_alias(record)
+        alias, metadata = record[:2]
+        if os.name == 'nt' and getattr(metadata, 'st_file_attributes', 0) & stat.FILE_ATTRIBUTE_DIRECTORY:
+            alias.rmdir()
+        else:
+            alias.unlink()
+    if verified:
+        for _ in inventory(allow_alias=False):
+            pass
+
+    def retry_readonly(function, filename, error_info):
+        error = error_info[1]
+        if function not in (os.unlink, os.remove) or not isinstance(error, PermissionError):
+            raise error.with_traceback(error_info[2])
+        target = Path(filename)
+        before = checked(target)
+        if (not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or
+                not getattr(before, 'st_file_attributes', 0) & stat.FILE_ATTRIBUTE_READONLY):
+            raise error.with_traceback(error_info[2])
+        # Windows chmod changes the read-only attribute, never the object's ACL.
+        os.chmod(target, before.st_mode | stat.S_IWRITE)
+        try:
+            function(filename)
+        except OSError as retry_error:
+            try:
+                after = checked(target)
+                if (after.st_dev, after.st_ino, after.st_nlink) == (before.st_dev, before.st_ino, 1):
+                    os.chmod(target, before.st_mode)
+                else:
+                    retry_error.add_note('Read-only restoration refused: fixture object identity changed.')
+            except (OSError, ValueError) as restore_error:
+                retry_error.add_note('Read-only restoration failed: ' + str(restore_error))
+            raise
+
+    shutil.rmtree(scratch, onerror=retry_readonly)
+
+
 def run_tests(root, enrolled, out, *, bootstrap=False, diagnostic_target=None, defer_admission=False,
               resource_recovery=None):
     names = list(enrolled['skills'])
@@ -1156,7 +1338,7 @@ def run_tests(root, enrolled, out, *, bootstrap=False, diagnostic_target=None, d
                 results[name].append(result)
                 # Tests own this disposable directory; raw stdout/JUnit/case
                 # reports remain outside it. Never clean other task directories.
-                shutil.rmtree(out / name / str(i) / 'scratch')
+                _remove_successful_scratch(root, out, name, i)
     if failures:
         fail('mandatory-regression-units-failed:' + str(len(failures)))
     if enrolled != candidate(root, names):
@@ -1296,7 +1478,7 @@ def admit_measurement(root, measurement_path):
                 or state['final_ledger']['failures'] != state['prior']['failures']
                 or state['final_ledger']['spent'] <= state['prior']['spent']):
             fail('measurement-resource-recovery-invalid')
-        expected_uses = [str((location.parent / name / str(i)).relative_to(root))
+        expected_uses = [(location.parent / name / str(i)).relative_to(root).as_posix()
                          for name in names for i, target in enumerate(enrolled['skills'][name]['suite']['targets'])
                          if target == state['target']]
         if [row['out'] for row in state['uses']] != expected_uses:

@@ -47,8 +47,10 @@ def test_public_successful_admission_writes_non_authorizing_result(tmp_path):
 def test_candidate_channel_result_arguments_cannot_escape_owned_output(tmp_path, style, stale):
     """ADR-0041: exercise the exact public entry inside the real candidate channel."""
     ticket = json.loads(os.environ['JIMUYUN_REGRESSION_CHANNEL'])
-    channel_root = (ROOT / ticket['context']).parent
-    assert channel_root.name == 'regression'
+    context = (ROOT / ticket['context']).resolve(strict=True)
+    assert context.is_relative_to(ROOT / 'logs') and context.is_file()
+    assert context.name == 'test-channel.json'
+    channel_root = context.parent
     outside = channel_root.parent / f'owned-boundary-probe-{style}-{int(stale)}.json'
     assert not outside.is_relative_to(channel_root)
     sentinel = b'Preserved owned fixture sentinel\n'

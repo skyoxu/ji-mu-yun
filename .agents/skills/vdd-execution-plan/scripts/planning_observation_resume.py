@@ -141,7 +141,7 @@ def _delivery(root, out, origin):
             if (row.get('event') == 'worker-started' and row.get('backend') == 'host-session'
                     and row.get('stage') == 'v3-schema-repair' + match[1]
                     and Path(row.get('output_last_message', '')).as_posix() in {
-                        str(output), _relative(root, output)}):
+                        output.as_posix(), _relative(root, output)}):
                 starts.append(row)
             if row.get('event') == 'worker-returned':
                 returns.append(row)

@@ -178,10 +178,12 @@ def _stream_source_hashes(root, catalog, current_commit, timeout, cancel):
     snapshot = core.catalog_source_snapshot(catalog)
     if snapshot is None or current_commit is None:
         return {}
-    ancestor = subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor',
-                              snapshot['commit'], current_commit], capture_output=True, check=False)
-    if ancestor.returncode:
-        return {}
+    same_commit = snapshot['commit'] == current_commit
+    if not same_commit:
+        ancestor = subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor',
+                                  snapshot['commit'], current_commit], capture_output=True, check=False)
+        if ancestor.returncode:
+            return {}
     paths = [item['path'] for item in snapshot['sources']]
     child = subprocess.Popen(['git', '-C', str(root), 'cat-file', '--batch'],
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -189,34 +191,49 @@ def _stream_source_hashes(root, catalog, current_commit, timeout, cancel):
     started = time.monotonic()
     def writer():
         try:
+            if same_commit:
+                child.stdin.write((current_commit + '\n').encode('ascii'))
             for path in paths:
                 child.stdin.write((current_commit + ':' + path + '\n').encode('utf-8'))
             child.stdin.flush()
         except (OSError, ValueError):
             errors.append('unknown_failure')
         finally:
-            child.stdin.close()
+            try:
+                child.stdin.close()
+            except (OSError, ValueError):
+                errors.append('unknown_failure')
     def reader():
+        def read_object(kind, expected=None):
+            header = child.stdout.readline(512)
+            parts = header.rstrip(b'\n').split(b' ')
+            if (not header.endswith(b'\n') or len(parts) != 3 or parts[1] != kind
+                    or not parts[2].isdigit() or (expected is not None and parts[0] != expected.encode('ascii'))):
+                errors.append('integrity_failed')
+                return None
+            remaining = int(parts[2])
+            digest = hashlib.sha256()
+            while remaining:
+                block = child.stdout.read(min(16384, remaining))
+                if not block:
+                    errors.append('integrity_failed')
+                    return None
+                digest.update(block)
+                remaining -= len(block)
+            if child.stdout.read(1) != b'\n':
+                errors.append('integrity_failed')
+                return None
+            return digest.hexdigest()
         try:
+            # ADR-0048: reflexive ancestry still requires a real commit object.
+            # Validate it in the existing batch; no source hash is cached/skipped.
+            if same_commit and read_object(b'commit', current_commit) is None:
+                return
             for path in paths:
-                header = child.stdout.readline(512)
-                parts = header.rstrip(b'\n').split(b' ')
-                if len(parts) != 3 or parts[1] != b'blob' or not parts[2].isdigit():
-                    errors.append('integrity_failed')
+                digest = read_object(b'blob')
+                if digest is None:
                     return
-                remaining = int(parts[2])
-                digest = hashlib.sha256()
-                while remaining:
-                    block = child.stdout.read(min(16384, remaining))
-                    if not block:
-                        errors.append('integrity_failed')
-                        return
-                    digest.update(block)
-                    remaining -= len(block)
-                if child.stdout.read(1) != b'\n':
-                    errors.append('integrity_failed')
-                    return
-                hashes[path] = digest.hexdigest()
+                hashes[path] = digest
         except (OSError, ValueError):
             errors.append('unknown_failure')
     def stderr():
@@ -352,20 +369,60 @@ def _previous(record):
     return None
 
 
+
+def _dirty_source_paths(git, paths):
+    """ADR-0048: one framed status transport, with exact legacy fallback."""
+    # Keep unusual pathspec and alias behavior in the existing Git path reader.
+    if (any(any(char in name for char in "\\*?[:\r\n")
+            or Path(name).as_posix() != name for name in paths)
+            or len({Path(name) for name in paths}) != len(paths)):
+        return {name for name in paths if git('status', '--porcelain', '--', name).strip()}
+    if not paths:
+        return set()
+    wire = git('status', '--porcelain=v1', '-z', '--untracked-files=all', '--', *paths)
+    if not wire:
+        return set()
+    if not wire.endswith('\0'):
+        raise _Stop('unknown_failure')
+    records, changed, cursor = wire.split('\0')[:-1], set(), 0
+    while cursor < len(records):
+        row = records[cursor]
+        cursor += 1
+        if (len(row) < 4 or row[2] != ' '
+                or any(code not in ' MADRCU?!' for code in row[:2])):
+            raise _Stop('unknown_failure')
+        changed.add(Path(row[3:]))
+        if 'R' in row[:2] or 'C' in row[:2]:
+            if cursor >= len(records) or not records[cursor]:
+                raise _Stop('unknown_failure')
+            if 'R' in row[:2]:
+                changed.add(Path(records[cursor]))
+            cursor += 1
+    return {name for name in paths if Path(name) in changed}
+
+
 def _read_sources(root, paths, origin, index):
     def git(*args):
         proc = subprocess.run(['git', '-C', str(root), *args], capture_output=True,
                               text=True, encoding='utf-8', check=False)
         if proc.returncode:
             raise _Stop('unknown_failure')
-        return proc.stdout.strip()
-    commit = git('rev-parse', 'HEAD')
-    branch = git('rev-parse', '--abbrev-ref', 'HEAD')
+        return proc.stdout
+    # ADR-0048: one Git read retains both identities; malformed output fails closed.
+    identity = git('rev-parse', 'HEAD', '--abbrev-ref', 'HEAD').splitlines()
+    if (len(identity) != 2 or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', identity[0])
+            or not re.fullmatch(r'\S+', identity[1])):
+        raise _Stop('unknown_failure')
+    commit, branch = identity
     reads = []
+    sources = []
     for relative in sorted(set(paths)):
         path = _path(root, relative)
         digest, excerpt = _digest_file(path)
-        dirty = git('status', '--porcelain', '--', relative)
+        sources.append((relative, digest, excerpt))
+    changed = _dirty_source_paths(git, [row[0] for row in sources])
+    for relative, digest, excerpt in sources:
+        dirty = relative in changed
         kind = 'worktree' if dirty else ('main' if branch == 'main' else 'branch')
         identity = {'kind': kind, 'commit': commit}
         if dirty:

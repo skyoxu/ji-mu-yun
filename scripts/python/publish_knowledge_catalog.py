@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from _knowledge_catalog_builder import build_layers, canonical_bytes, compatibility_catalog, prefixed_sha256
+from _knowledge_catalog_builder import build_layers, canonical_bytes, compatibility_catalog, prefixed_sha256, read_commit_blob
 from _knowledge_locator_core import verify_current_publication
 from evaluate_knowledge_queries import evaluate
 
@@ -229,10 +229,10 @@ def _main_commit(repository_root: Path) -> str:
 
 
 def _main_blob(repository_root: Path, commit: str, relative_path: Path) -> bytes:
-    completed = _git(repository_root, "show", f"{commit}:{relative_path.as_posix()}")
-    if completed.returncode:
-        raise ValueError(f"main_input_unavailable:{relative_path.as_posix()}")
-    return completed.stdout
+    try:
+        return read_commit_blob(repository_root, commit, relative_path.as_posix())
+    except (subprocess.CalledProcessError, ValueError) as exc:
+        raise ValueError(f"main_input_unavailable:{relative_path.as_posix()}") from exc
 
 
 def _require_main_controls(repository_root: Path, commit: str) -> None:

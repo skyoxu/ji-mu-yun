@@ -176,7 +176,7 @@ def test_139_edges_check_three_q6_originals_and_main_only_four_times(tmp_path, m
         (other/'process-receipt.v2.json').write_text(json.dumps(rec))
         (other/'stdout.bin').write_bytes(b'')
         (other/'stderr.bin').write_bytes(b'')
-        commands.append({'receipt_ref': str((other/'process-receipt.v2.json').relative_to(tmp_path)),
+        commands.append({'receipt_ref': (other/'process-receipt.v2.json').relative_to(tmp_path).as_posix(),
                          'receipt_sha256': sha256_value(rec), 'descriptor': desc})
     gate = {'commands': commands}
     gate_path = tmp_path/'gate.json'

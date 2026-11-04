@@ -22,6 +22,32 @@ SCHEMA = "quick-dev.shared-execution.v1"
 EXCLUDED = {"logs", "execution-plans"}
 
 
+def _windows_runtime_files():
+    """Inventory fixed interpreter layouts; never admit reads by directory."""
+    if sys.platform != "win32":
+        return set()
+    executables = {Path(sys.executable).resolve()}
+    base_executable = getattr(sys, "_base_executable", None)
+    if base_executable:
+        executables.add(Path(base_executable).resolve())
+    roots = {Path(sys.prefix).resolve(), Path(sys.base_prefix).resolve()}
+    roots.update(path.parent for path in executables)
+    directories = roots | {root / "DLLs" for root in roots}
+    shared = sysconfig.get_config_var("DESTSHARED")
+    if shared:
+        directory = Path(shared)
+        if not directory.is_absolute():
+            raise ValueError("reuse-environment-unknown: native extension directory is not absolute")
+        directories.add(directory.resolve())
+    files = set(executables)
+    for directory in sorted(directories):
+        if directory.is_dir():
+            for path in directory.iterdir():
+                if path.suffix.lower() in {".pyd", ".dll", ".zip"} and path.is_file():
+                    files.add(path.resolve())
+    return files
+
+
 def environment_identity():
     files = set()
     packages = []
@@ -39,6 +65,7 @@ def environment_identity():
     for directory, children, names in os.walk(stdlib):
         children[:] = [name for name in children if name not in {"site-packages", "__pycache__"}]
         files.update((Path(directory) / name).resolve() for name in names if Path(name).suffix in {".py", ".so", ".pyd", ".dll", ".zip"})
+    files.update(_windows_runtime_files())
     files.add(Path(sys.executable).resolve())
     # Common child tool entrypoints are content-bound, without invoking them.
     for name in ("git", "dotnet", "node", "npm", "codex", "uv", "pwsh", "bash"):

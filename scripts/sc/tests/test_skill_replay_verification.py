@@ -8,8 +8,48 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.sc import verify_skill_replay as runner
+
+
+class ChildEnvironmentTests(unittest.TestCase):
+    def test_windows_user_site_directory_is_preserved_without_injection(self):
+        permitted = {"PATH": "standard-bin", "SystemRoot": "standard-system",
+                     "WINDIR": "standard-windows", "TEMP": "standard-temp",
+                     "TMP": "standard-tmp", "HOME": "standard-home",
+                     "USERPROFILE": "standard-profile", "LANG": "standard-lang",
+                     "LC_ALL": "standard-locale", "TC_D1_NATIVE_TRACE_DIR": "standard-trace",
+                     "APPDATA": "standard-roaming"}
+        rejected = {name: "untrusted-value" for name in (
+            "PYTHONPATH", "PYTHONHOME", "PYTHONUSERBASE", "PYTHONSTARTUP",
+            "PYTHONNOUSERSITE", "PYTHONSAFEPATH", "PYTHONWARNINGS",
+            "PYTEST_ADDOPTS", "PYTEST_PLUGINS", "PYTEST_DISABLE_PLUGIN_AUTOLOAD",
+            "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "AWS_SECRET_ACCESS_KEY",
+            "SC_LLM_BACKEND", "TC_D1_TRUST_COMMIT", "UNDECLARED_VARIABLE")}
+        injected = dict(permitted, **rejected, PYTHONUTF8="0",
+                        PYTHONIOENCODING="ascii", PYTHONDONTWRITEBYTECODE="0")
+        with patch.dict(runner.runtime.os.environ, injected, clear=True), \
+             patch.object(runner.runtime.os, "name", "nt"):
+            actual = runner.runtime.child_environment()
+        expected = dict(permitted, PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
+                        PYTHONDONTWRITEBYTECODE="1")
+        self.assertEqual(expected, actual)
+        self.assertTrue(set(rejected).isdisjoint(actual))
+
+    def test_missing_windows_appdata_is_not_synthesized(self):
+        with patch.dict(runner.runtime.os.environ, {"USERPROFILE": "standard-profile"}, clear=True), \
+             patch.object(runner.runtime.os, "name", "nt"):
+            actual = runner.runtime.child_environment()
+        self.assertEqual("standard-profile", actual["USERPROFILE"])
+        self.assertNotIn("APPDATA", actual)
+
+    def test_non_windows_environment_does_not_gain_windows_user_site_directory(self):
+        with patch.dict(runner.runtime.os.environ, {"HOME": "standard-home", "APPDATA": "untrusted"}, clear=True), \
+             patch.object(runner.runtime.os, "name", "posix"):
+            actual = runner.runtime.child_environment()
+        self.assertEqual({"HOME": "standard-home", "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8",
+                          "PYTHONDONTWRITEBYTECODE": "1"}, actual)
 
 
 class ClosureFreshnessTests(unittest.TestCase):

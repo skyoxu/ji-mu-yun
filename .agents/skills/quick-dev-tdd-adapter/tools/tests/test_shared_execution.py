@@ -8,7 +8,7 @@ import sys
 import pytest
 
 from test_cer_behavior_routing import fixture, execute
-from runtime_evidence import create_json, load_json, sha256_value
+from runtime_evidence import create_json, load_json, sha256_value, sha256_bytes
 from current_router import materialize_descriptor
 from shared_execution import (execute_with_reuse, input_manifest, validate_use,
                               environment_identity, admissible)
@@ -98,6 +98,9 @@ def test_content_or_environment_change_invalidates(tmp_path,monkeypatch,kind):
     semantic,bundle,_=setup(tmp_path); calls=measured(monkeypatch)
     (tmp_path/'helper.py').write_text('VALUE=1\n')
     first=run(tmp_path,semantic,bundle,descriptor(bundle))
+    unchanged=run(tmp_path,semantic,bundle,descriptor(bundle,'S2','terminal','unchanged'))
+    assert unchanged['process_attempts']==0 and len(calls)==1
+    assert unchanged['case_report']==first['case_report']
     if kind in {'code','dependency','test'}:
         name={'code':'candidate.py','dependency':'helper.py','test':'tests/test_one.py'}[kind]
         with (tmp_path/name).open('a') as stream: stream.write('\n# changed implementation input\n')
@@ -107,7 +110,10 @@ def test_content_or_environment_change_invalidates(tmp_path,monkeypatch,kind):
     else:
         import shared_execution
         actual=environment_identity()
-        if kind=='windows': actual['system']='Windows'
+        if kind=='windows':
+            original_system=actual['system']
+            actual['system']='Linux' if original_system=='Windows' else 'Windows'
+            assert actual['system']!=original_system
         else: actual['environment']='changed'
         monkeypatch.setattr(shared_execution,'environment_identity',lambda:actual)
     second=run(tmp_path,semantic,bundle,descriptor(bundle,'S2','terminal','run2'))
@@ -259,15 +265,23 @@ def test_reference_explains_undeclared_dependency_and_os_drift(tmp_path,monkeypa
     run(tmp_path,semantic,bundle,descriptor(bundle))
     desc=descriptor(bundle,'S2','terminal','run2')
     receipt=run(tmp_path,semantic,bundle,desc)
+    assert receipt['process_attempts']==0
+    assert validate_use(desc,receipt)['run_id']=='run1'
     helper.write_text('VALUE=2\n')
     with pytest.raises(ValueError,match='reuse-dependency-content-changed:implicit_helper.py'):
         validate_use(desc,receipt)
     helper.write_text('VALUE=1\n')
+    assert validate_use(desc,receipt)['run_id']=='run1'
     import shared_execution
-    current=environment_identity();current['system']='Windows'
+    original=environment_identity()
+    current=deepcopy(original)
+    current['system']='Linux' if original['system']=='Windows' else 'Windows'
+    assert current['system']!=original['system']
     monkeypatch.setattr(shared_execution,'environment_identity',lambda:current)
     with pytest.raises(ValueError,match='reuse-environment-changed:system'):
         validate_use(desc,receipt)
+    monkeypatch.setattr(shared_execution,'environment_identity',lambda:original)
+    assert validate_use(desc,receipt)['run_id']=='run1'
 
 
 def test_missing_declared_input_is_a_specific_nonreuse_reason(tmp_path):
@@ -276,3 +290,97 @@ def test_missing_declared_input_is_a_specific_nonreuse_reason(tmp_path):
     receipt={"case_report":{"dependency_errors":[],"dependency_files":{str(tmp_path/'new.py'):'sha256:'+'a'*64}}}
     with pytest.raises(ValueError,match='reuse-unbound-read-or-import'):
         validate_observed_dependencies(tmp_path,manifest,receipt)
+
+
+def runtime_layout(tmp_path, monkeypatch, *, prefix, base, executable, base_executable, shared=None):
+    import shared_execution
+    stdlib=tmp_path/'stdlib';stdlib.mkdir()
+    (stdlib/'fixture.py').write_bytes(b'# standard library fixture\n')
+    monkeypatch.setattr(shared_execution.sys,'platform','win32')
+    monkeypatch.setattr(shared_execution.sys,'prefix',str(prefix))
+    monkeypatch.setattr(shared_execution.sys,'base_prefix',str(base))
+    monkeypatch.setattr(shared_execution.sys,'executable',str(executable))
+    monkeypatch.setattr(shared_execution.sys,'_base_executable',str(base_executable) if base_executable else None,
+                        raising=False)
+    monkeypatch.setattr(shared_execution.sysconfig,'get_path',lambda name:str(stdlib))
+    monkeypatch.setattr(shared_execution.sysconfig,'get_config_var',lambda name:shared)
+    monkeypatch.setattr(shared_execution.importlib.metadata,'distributions',lambda:())
+    monkeypatch.setattr(shared_execution.shutil,'which',lambda name:None)
+    return shared_execution
+
+
+@pytest.mark.parametrize('layout',['installed','venv','embedded'])
+def test_windows_runtime_inventory_hashes_native_bytes_without_directory_admission(tmp_path,monkeypatch,layout):
+    base=tmp_path/'base';base.mkdir()
+    executable=base/'python.exe';executable.write_bytes(b'base executable')
+    prefix=base
+    if layout=='venv':
+        prefix=tmp_path/'venv';(prefix/'Scripts').mkdir(parents=True)
+        executable=prefix/'Scripts/python.exe';executable.write_bytes(b'venv executable')
+    native_dir=base if layout=='embedded' else base/'DLLs'
+    native_dir.mkdir(exist_ok=True)
+    extension=native_dir/'_fixture.PYD';extension.write_bytes(b'native extension')
+    runtime=base/'python312.dll';runtime.write_bytes(b'python runtime')
+    support=native_dir/'native.dll';support.write_bytes(b'native support')
+    archive=base/'python312.zip';archive.write_bytes(b'stdlib archive')
+    excluded=native_dir/'undeclared.txt';excluded.write_bytes(b'unbound data')
+    (native_dir/'nested').mkdir()
+    nested=native_dir/'nested/other.pyd';nested.write_bytes(b'unbound nested extension')
+    shared=runtime_layout(tmp_path,monkeypatch,prefix=prefix,base=base,executable=executable,
+                          base_executable=base/'python.exe')
+    first=environment_identity()
+    for path in (executable,base/'python.exe',extension,runtime,support,archive):
+        assert first['files'][str(path.resolve())]==sha256_bytes(path.read_bytes())
+    assert str(excluded.resolve()) not in first['files']
+    assert str(nested.resolve()) not in first['files']
+    workspace=tmp_path/'workspace';workspace.mkdir()
+    manifest={'environment':first,'files':{},'engine':{}}
+    receipt={'case_report':{'dependency_errors':[],
+                           'dependency_files':{str(extension.resolve()):sha256_bytes(extension.read_bytes())}}}
+    shared.validate_observed_dependencies(workspace,manifest,receipt)
+    for path in (excluded,nested):
+        unknown=deepcopy(receipt)
+        unknown['case_report']['dependency_files']={str(path.resolve()):sha256_bytes(path.read_bytes())}
+        with pytest.raises(ValueError,match='reuse-unbound-read-or-import'):
+            shared.validate_observed_dependencies(workspace,manifest,unknown)
+    extension.write_bytes(b'changed native extension')
+    changed=environment_identity()
+    assert changed['files'][str(extension.resolve())]==sha256_bytes(extension.read_bytes())
+    assert changed['files'][str(extension.resolve())]!=first['files'][str(extension.resolve())]
+    assert changed['installed_content']!=first['installed_content']
+    receipt['case_report']['dependency_files'][str(extension.resolve())]=sha256_bytes(extension.read_bytes())
+    with pytest.raises(ValueError,match='reuse-unbound-read-or-import'):
+        shared.validate_observed_dependencies(workspace,manifest,receipt)
+
+
+def test_windows_runtime_inventory_uses_configured_base_executable_and_destshared(tmp_path,monkeypatch):
+    prefix=tmp_path/'prefix';prefix.mkdir()
+    base=tmp_path/'base';base.mkdir()
+    launcher=tmp_path/'launcher';launcher.mkdir()
+    runtime=tmp_path/'runtime';runtime.mkdir()
+    extensions=tmp_path/'extensions';extensions.mkdir()
+    executable=launcher/'python.exe';executable.write_bytes(b'launcher')
+    base_executable=runtime/'python.exe';base_executable.write_bytes(b'base executable')
+    expected=[]
+    for directory in (prefix,base,launcher,runtime,extensions):
+        path=directory/'native.dll';path.write_bytes(b'runtime bytes')
+        expected.append(path)
+    shared=runtime_layout(tmp_path,monkeypatch,prefix=prefix,base=base,executable=executable,
+                          base_executable=base_executable,shared=str(extensions))
+    identity=environment_identity()
+    for path in [executable,base_executable,*expected]:
+        assert identity['files'][str(path.resolve())]==sha256_bytes(path.read_bytes())
+    monkeypatch.setattr(shared.sysconfig,'get_config_var',lambda name:'relative-native')
+    with pytest.raises(ValueError,match='native extension directory is not absolute'):
+        environment_identity()
+
+
+def test_windows_runtime_inventory_allows_missing_base_executable_only(tmp_path,monkeypatch):
+    executable=tmp_path/'python.exe';executable.write_bytes(b'executable')
+    shared=runtime_layout(tmp_path,monkeypatch,prefix=tmp_path,base=tmp_path,executable=executable,
+                          base_executable=None)
+    assert str(executable.resolve()) in environment_identity()['files']
+    monkeypatch.delattr(shared.sys,'_base_executable')
+    assert str(executable.resolve()) in environment_identity()['files']
+    monkeypatch.setattr(shared.sys,'platform','linux')
+    assert shared._windows_runtime_files()==set()

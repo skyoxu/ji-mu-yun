@@ -609,19 +609,19 @@
           "path": "scripts/workflow_unit_budget.py",
           "function": "worker_input",
           "line": 39,
-          "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f"
+          "sha256": "9e1a3d0863e0f2e6ddd3a0b51bff5a6a182893dacb44f864d85977fecb45fd88"
         },
         {
           "path": "scripts/workflow_unit_budget.py",
           "function": "Budget",
           "line": 126,
-          "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f"
+          "sha256": "9e1a3d0863e0f2e6ddd3a0b51bff5a6a182893dacb44f864d85977fecb45fd88"
         },
         {
           "path": "scripts/workflow_unit_budget.py",
           "function": "supervise",
           "line": 239,
-          "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f"
+          "sha256": "9e1a3d0863e0f2e6ddd3a0b51bff5a6a182893dacb44f864d85977fecb45fd88"
         },
         {
           "path": "scripts/vdd/compiler_watchdog.py",
@@ -679,7 +679,7 @@
           "path": ".agents/skills/vdd-execution-plan/scripts/planning_observation_resume.py",
           "function": "reference",
           "line": 272,
-          "sha256": "58dd7e890e429f6b782f125d014fe111730664a376e06a78151770a7ab672f35"
+          "sha256": "4dcbbd28d35e2ea4a6d0adf20f186cdfea2fd4e429f843eef17a36d58ecbc501"
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/semantic_phase_source_scope.py",
@@ -981,17 +981,17 @@
       "implementation": [
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "fe298bd3be4748c5a1f1f1dd662e8578501f0498d8907591609eed51fb647fbc",
+          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:87 manifests repository bytes, full contract minus provenance, argv/cwd, engine and installed environment."
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "fe298bd3be4748c5a1f1f1dd662e8578501f0498d8907591609eed51fb647fbc",
+          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:267 uses exact content key under logs/quick-dev-shared-executions; :149 requires complete nonzero all-passed structured events."
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "fe298bd3be4748c5a1f1f1dd662e8578501f0498d8907591609eed51fb647fbc",
+          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py:195 re-reads immutable original descriptor/receipt/output; uses retain original case-report identity and are revalidated at Q7/Q8."
         }
       ],
@@ -1040,7 +1040,7 @@
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py",
-          "sha256": "fe298bd3be4748c5a1f1f1dd662e8578501f0498d8907591609eed51fb647fbc",
+          "sha256": "692a643e9059769748c51b8187c9b9764b85fa51d17f8c23b548f7b482c9413b",
           "original_anchor": ".agents/skills/quick-dev-tdd-adapter/tools/shared_execution.py uses quick-dev.pytest-environment.v2 and rejects unknown/older environment schema before comparing hashes."
         },
         {
@@ -1507,7 +1507,7 @@
         },
         {
           "path": "scripts/workflow_unit_budget.py",
-          "sha256": "94b8e42b24f84dc93b0c85dfa5149058a2c75d9a8ce3695fc526adfa939a2d8f",
+          "sha256": "9e1a3d0863e0f2e6ddd3a0b51bff5a6a182893dacb44f864d85977fecb45fd88",
           "original_anchor": "scripts/workflow_unit_budget.py per-content-key total/idle budget; execution_environment strips only supervisor variables; retries cannot renew allowance."
         },
         {
@@ -2228,7 +2228,7 @@
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/pytest_case_collector.py",
-          "sha256": "237d2d854cc9610e055b328bc6bf648c748bf2dd0052c3562e95ecf3949fd054"
+          "sha256": "1913901d41037c5183448bc523fd067abb15d1868b84f2d418aad0103c091c48"
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/independent_judge_v2.py",
@@ -2483,7 +2483,7 @@
         },
         {
           "path": "scripts/toolchain/knowledge_query/adapter.py",
-          "sha256": "01700fda09c8a6e57739e726b9f74fde476d89678dc60428012193da2ae26edf"
+          "sha256": "70a2403293c6589a0964b8ef509014bdaffb9fea40e5ea57806c495d68cb46f1"
         },
         {
           "path": ".agents/skills/quick-dev-tdd-adapter/tools/knowledge_context.py",
@@ -2779,7 +2779,7 @@
       "implementation": [
         {
           "path": "scripts/toolchain/knowledge_query/adapter.py",
-          "sha256": "01700fda09c8a6e57739e726b9f74fde476d89678dc60428012193da2ae26edf"
+          "sha256": "70a2403293c6589a0964b8ef509014bdaffb9fea40e5ea57806c495d68cb46f1"
         }
       ],
       "tests": [
@@ -3294,7 +3294,7 @@
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/planning_observation_resume.py",
-          "sha256": "58dd7e890e429f6b782f125d014fe111730664a376e06a78151770a7ab672f35"
+          "sha256": "4dcbbd28d35e2ea4a6d0adf20f186cdfea2fd4e429f843eef17a36d58ecbc501"
         },
         {
           "path": ".agents/skills/vdd-execution-plan/scripts/semantic_v1_classification_repair.py",
@@ -3388,7 +3388,7 @@
       "implementation": [
         {
           "path": "scripts/skill_baseline.py",
-          "sha256": "0c3c5f9781d994599720f300db02d71fb794d00f10015bcb7afaf45d7b673448"
+          "sha256": "4817111ae9dc956ac858456c7ac25b7e6848226db7bb0dd5e94c4f7ee25a67d2"
         },
         {
           "path": "scripts/vdd/compile_plan.py",
@@ -3431,6 +3431,8 @@
         "scripts/tests/test_skill_baseline.py::test_approved_startup_rechecks_bytes_without_reparsing_sealed_ast",
         "scripts/tests/test_skill_baseline.py::test_controlled_entry_does_not_duplicate_the_brokers_live_check",
         "scripts/tests/test_skill_baseline.py::test_authenticated_fixture_startup_delegates_both_old_approval_and_live_scan_to_broker",
+        "scripts/tests/test_skill_baseline.py::test_dependency_import_nodes_preserve_all_statement_containers",
+        "scripts/tests/test_skill_baseline.py::test_dependency_import_nodes_match_full_walk_for_current_sources",
         "scripts/tests/test_skill_baseline.py::test_repeated_import_resolution_has_no_cross_call_filesystem_cache",
         "scripts/tests/test_skill_baseline.py::test_param_display_labels_cannot_turn_a_copy_into_substantive_growth",
         "scripts/tests/test_skill_baseline.py::test_candidate_path_options_refuse_noncanonical_or_ambiguous_forms",
@@ -3465,11 +3467,11 @@
       "implementation": [
         {
           "path": ".github/workflows/ch456-capability.yml",
-          "sha256": "dceb61ae289d16bbb13bfe48daa1ecd71ae9564b424734f96c372a7637fdf72f"
+          "sha256": "4929f39fac7955444fa6f9a140a761be9e23867ce95965e29381921b507bea4e"
         },
         {
           "path": "scripts/skill_baseline.py",
-          "sha256": "0c3c5f9781d994599720f300db02d71fb794d00f10015bcb7afaf45d7b673448"
+          "sha256": "4817111ae9dc956ac858456c7ac25b7e6848226db7bb0dd5e94c4f7ee25a67d2"
         }
       ],
       "tests": [
@@ -3500,6 +3502,8 @@
         "scripts/tests/test_skill_baseline.py::test_approved_startup_rechecks_bytes_without_reparsing_sealed_ast",
         "scripts/tests/test_skill_baseline.py::test_controlled_entry_does_not_duplicate_the_brokers_live_check",
         "scripts/tests/test_skill_baseline.py::test_authenticated_fixture_startup_delegates_both_old_approval_and_live_scan_to_broker",
+        "scripts/tests/test_skill_baseline.py::test_dependency_import_nodes_preserve_all_statement_containers",
+        "scripts/tests/test_skill_baseline.py::test_dependency_import_nodes_match_full_walk_for_current_sources",
         "scripts/tests/test_skill_baseline.py::test_repeated_import_resolution_has_no_cross_call_filesystem_cache",
         "scripts/tests/test_skill_baseline.py::test_param_display_labels_cannot_turn_a_copy_into_substantive_growth",
         "scripts/tests/test_skill_baseline.py::test_candidate_path_options_refuse_noncanonical_or_ambiguous_forms",
@@ -3558,7 +3562,7 @@
         },
         {
           "path": "scripts/sc/skill_replay_runtime.py",
-          "sha256": "b14cd5dcd5f0bbeaa7aa89708f95657837235a690fd174435a85d9d60fa4ce8e"
+          "sha256": "a04a553eebe45ea78687077a11e6b6f0bece2a9569a948a8cf08ba3112ca5af8"
         },
         {
           "path": "scripts/sc/skill_replay_observer.py",
@@ -3628,6 +3632,8 @@
         "scripts/sc/tests/test_skill_replay_review_regressions.py::ReviewRegressionTests::test_six_labels_and_copies_do_not_qualify_as_stable_matrix",
         "scripts/sc/tests/test_skill_replay_review_regressions.py::ReviewRegressionTests::test_consumer_executable_changes_invalidate_snapshot",
         "scripts/sc/tests/test_skill_replay_review_regressions.py::ReviewRegressionTests::test_failed_required_consumer_cannot_be_a_successful_replay",
+        "scripts/sc/tests/test_skill_replay_review_regressions.py::NativeRuntimeTests::test_isolated_observer_refuses_unknown_or_foreign_runtime",
+        "scripts/sc/tests/test_skill_replay_review_regressions.py::NativeRuntimeTests::test_isolated_observer_keeps_actual_process_identity",
         "scripts/sc/tests/test_skill_replay_review_regressions.py::NativeRuntimeTests::test_real_target_reads_and_same_location_probe_oracle",
         "scripts/sc/tests/test_skill_replay_review_regressions.py::NativeRuntimeTests::test_path_only_validator_with_valid_immutable_trust_is_rejected",
         "scripts/sc/tests/test_skill_replay_review_regressions.py::NativeRuntimeTests::test_joint_validator_source_and_descriptor_drift_requires_external_approval",
@@ -3662,7 +3668,7 @@
         "scripts/sc/tests/test_805_round6_full_replay.py::test_s2_evaluation_seeds_and_matrix",
         "scripts/sc/tests/test_805_round6_full_replay.py::test_s3_consumer_and_terminal_integration"
       ],
-      "replacement_basis": "Accepted ADR-0058/0060: real fixture-based replay behavior remains current. Windows syscall tests use injected APIs on Linux and do not claim actual Windows execution. The RMAP integration case now uses the official v3 prepare-matrix producer and also proves legacy v2 remains non-promotable; the six real scenarios and immutable historical input remain required. It grants no task acceptance authority.",
+      "replacement_basis": "Accepted ADR-0058/0060: real fixture-based replay behavior remains current. Windows syscall tests use injected APIs on Linux and do not claim actual Windows execution. The isolated stdlib observer uses the exact base interpreter on Windows to retain strict launched PID, nonce, target and read binding across venv redirectors; unknown or foreign runtime identities are rejected. The RMAP integration case now uses the official v3 prepare-matrix producer and also proves legacy v2 remains non-promotable; the six real scenarios and immutable historical input remain required. It grants no task acceptance authority.",
       "commits": [
         "00d773a87ae50aaba57b9810f12f6bcf694a33e3",
         "0c4ffefd93486c4a737a187a66c149cb1e9d55c7",

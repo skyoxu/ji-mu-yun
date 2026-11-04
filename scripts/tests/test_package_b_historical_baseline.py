@@ -12,8 +12,11 @@ import posixpath
 from pathlib import Path, PurePosixPath
 import subprocess
 import re
+import shutil
+import stat
 import sys
 import tarfile
+import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,7 +25,58 @@ HISTORICAL_TEST = 'scripts/sc/tests/test_skill_quality_package_b.py'
 RECEIPT = 'logs/package-b-rebuild-20261028/LIBRARY-STAGE003-DURABLE-RECEIPT.json'
 
 
+def _ordinary_metadata(path):
+    metadata = path.lstat()
+    if (getattr(metadata, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0)
+            or not (stat.S_ISDIR(metadata.st_mode) or stat.S_ISREG(metadata.st_mode))):
+        raise ValueError('Historical stage contains a reparse point or special file.')
+    return metadata
+
+
+def _directory_identity(path):
+    metadata = _ordinary_metadata(path)
+    if not stat.S_ISDIR(metadata.st_mode):
+        raise ValueError('Historical stage requires an ordinary directory.')
+    return {'st_dev': metadata.st_dev, 'st_ino': metadata.st_ino}
+
+
+def _remove_owned_stage(stage, parent, canonical_parent, parent_identity, stage_identity):
+    def check_anchors():
+        if (parent.resolve(strict=True) != canonical_parent or stage.parent != parent
+                or stage.resolve(strict=True).parent != canonical_parent
+                or _directory_identity(parent) != parent_identity
+                or _directory_identity(stage) != stage_identity):
+            raise ValueError('Historical stage ownership changed before cleanup.')
+    check_anchors()
+    pending = [stage]
+    while pending:
+        directory = pending.pop()
+        _directory_identity(directory)
+        for child in directory.iterdir():
+            if stat.S_ISDIR(_ordinary_metadata(child).st_mode):
+                pending.append(child)
+    check_anchors()
+    shutil.rmtree(stage)
+
+
 def test_all_original_package_b_assertions_replay_on_their_published_candidate(tmp_path, tmp_path_factory):
+    stage_parent = ROOT / 'logs'
+    parent_identity = _directory_identity(stage_parent)
+    canonical_parent = stage_parent.resolve(strict=True)
+    if canonical_parent != stage_parent:
+        raise ValueError('Historical stage requires its canonical repository logs directory.')
+    stage = Path(tempfile.mkdtemp(prefix='h', dir=stage_parent))
+    stage_identity = _directory_identity(stage)
+    if (stage.parent != stage_parent or stage.resolve(strict=True).parent != canonical_parent
+            or stage_parent.resolve(strict=True) != canonical_parent
+            or _directory_identity(stage_parent) != parent_identity):
+        raise ValueError('Historical stage escaped its ordinary repository logs directory.')
+    with (tmp_path / 'historical-stage-identity.json').open('x', encoding='utf-8') as evidence:
+        json.dump({'authorizes': [], 'published_commit': PUBLISHED,
+                   'stage_path': str(stage), 'stage_identity': stage_identity,
+                   'parent_path': str(stage_parent), 'canonical_parent': str(canonical_parent),
+                   'parent_identity': parent_identity}, evidence, indent=2)
+        evidence.write('\n')
     def blob(relative):
         return subprocess.check_output(['git', 'show', PUBLISHED + ':' + relative], cwd=ROOT)
     receipt = json.loads(blob(RECEIPT))
@@ -50,8 +104,6 @@ def test_all_original_package_b_assertions_replay_on_their_published_candidate(t
     all_paths = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', PUBLISHED], cwd=ROOT, text=True).splitlines()
     paths += [p for p in all_paths if (p in ['scripts/__init__.py', 'scripts/sc/__init__.py']
               or (p.startswith('.agents/skills/workflow-chapter') and p.endswith('/SKILL.md')))]
-    stage = tmp_path / 'published-package-b'
-    stage.mkdir()
     process = subprocess.Popen(['git', 'archive', '--format=tar', PUBLISHED, *paths],
                                cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     manifest, size = [], 0
@@ -105,3 +157,4 @@ def test_all_original_package_b_assertions_replay_on_their_published_candidate(t
     junit = ET.parse(output / 'junit.xml')
     assert len(junit.findall('.//testcase')) == 77
     assert not junit.findall('.//failure') and not junit.findall('.//error') and not junit.findall('.//skipped')
+    _remove_owned_stage(stage, stage_parent, canonical_parent, parent_identity, stage_identity)

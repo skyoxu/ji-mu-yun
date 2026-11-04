@@ -42,6 +42,90 @@ def normalized_path(value: str) -> str:
     return path.as_posix()
 
 
+def read_commit_blob(repository_root: Path, commit: str, path: str) -> bytes:
+    """Read exact committed blob bytes without worktree path guessing (ADR-0044)."""
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("invalid_blob_commit")
+    normalized = normalized_path(path)
+    return subprocess.check_output(
+        ["git", "-C", str(repository_root), "cat-file", "blob", f"{commit}:{normalized}"]
+    )
+
+
+
+class CommittedBlobBatch:
+    """ADR-0044: reuse transport only; read every requested immutable object."""
+
+    def __init__(self, repository_root: Path, commit: str):
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise ValueError("invalid_blob_commit")
+        self.root, self.commit = repository_root, commit
+        self.process = None
+
+    def __enter__(self):
+        return self
+
+    def _single(self, path: str) -> bytes:
+        return subprocess.check_output(
+            ["git", "-C", str(self.root), "cat-file", "blob", f"{self.commit}:{path}"],
+            stderr=subprocess.PIPE,
+        )
+
+    def read(self, path: str) -> bytes:
+        # Preserve single-object semantics for names outside the LF protocol.
+        if any(char in path for char in ("\n", "\r", "\0")):
+            return self._single(path)
+        if self.process is None:
+            self.process = subprocess.Popen(
+                ["git", "-C", str(self.root), "cat-file", "--batch"],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            )
+        child = self.process
+        child.stdin.write(f"{self.commit}:{path}\n".encode("utf-8"))
+        child.stdin.flush()
+        header = child.stdout.readline(512)
+        fields = header.rstrip(b"\n").split(b" ")
+        if header.endswith(b" missing\n"):
+            return self._single(path)
+        if (not header.endswith(b"\n") or len(fields) != 3
+                or not re.fullmatch(rb"[0-9a-f]{40}", fields[0])
+                or not fields[2].isdigit()):
+            raise ValueError("invalid_git_blob_batch_header")
+        size = int(fields[2])
+        chunks = []
+        while size:
+            block = child.stdout.read(min(size, 65536))
+            if not block:
+                raise ValueError("truncated_git_blob_batch")
+            chunks.append(block)
+            size -= len(block)
+        if child.stdout.read(1) != b"\n":
+            raise ValueError("invalid_git_blob_batch_separator")
+        if fields[1] != b"blob":
+            return self._single(path)
+        return b"".join(chunks)
+
+    def __exit__(self, kind, value, traceback):
+        child = self.process
+        if child is None:
+            return False
+        try:
+            if kind is not None and child.poll() is None:
+                child.kill()
+            child.stdin.close()
+            try:
+                code = child.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
+                raise
+            if kind is None and code:
+                raise subprocess.CalledProcessError(code, child.args)
+        finally:
+            child.stdout.close()
+        return False
+
+
 def select_versioned_plan_resource(
     directory: str,
     paths: Iterable[str],
@@ -104,6 +188,7 @@ class MainSnapshot:
     commit: str = field(init=False)
     paths: tuple[str, ...] = field(init=False)
     _bytes: dict[str, bytes] = field(default_factory=dict, init=False)
+    _batch: CommittedBlobBatch | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.repository_root = self.repository_root.resolve()
@@ -128,9 +213,8 @@ class MainSnapshot:
         if is_hard_excluded(normalized):
             raise ValueError("hard_excluded_source")
         if normalized not in self._bytes:
-            self._bytes[normalized] = subprocess.check_output(
-                ["git", "-C", str(self.repository_root), "show", f"{self.commit}:{normalized}"]
-            )
+            self._bytes[normalized] = (self._batch.read(normalized) if self._batch is not None
+                                       else read_commit_blob(self.repository_root, self.commit, normalized))
         return self._bytes[normalized]
 
     def read_text(self, path: str) -> str:
@@ -879,7 +963,11 @@ def build_layers(
     authority_ref: str = "refs/heads/main",
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     snapshot = MainSnapshot(repository_root, authority_ref=authority_ref)
-    builder = CatalogBuilder(snapshot, policy, exclusions)
-    source_snapshot, catalog = builder.build()
+    # The batch lifetime is one build; every original source guard stays active.
+    with CommittedBlobBatch(snapshot.repository_root, snapshot.commit) as batch:
+        snapshot._batch = batch
+        builder = CatalogBuilder(snapshot, policy, exclusions)
+        source_snapshot, catalog = builder.build()
+    snapshot._batch = None
     projections = build_consumer_projections(catalog, policy)
     return source_snapshot, catalog, projections, compatibility_catalog(catalog)

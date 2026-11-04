@@ -151,8 +151,8 @@ def test_gate_rejects_reintroduced_defects(mutation, expected):
 
 
 @pytest.fixture
-def cli_root(tmp_path):
-    root = tmp_path / 'repo'
+def cli_root(tmp_path_factory):
+    root = tmp_path_factory.mktemp('r')
     for directory in ['.agents/skills/vdd-execution-plan/scripts', 'scripts/vdd']:
         shutil.copytree(ROOT / directory, root / directory, ignore=shutil.ignore_patterns('__pycache__', 'tests'))
     files = ['AGENTS.md', 'scripts/workflow_unit_budget.py', str(SCOPE / 'assembled-requirements.md')]
@@ -209,6 +209,7 @@ def test_cli_refuses_drift_or_missing_review_without_publishing(cli_root, fault)
         path.write_text(json.dumps(value), encoding='utf-8')
     result, out = invoke(cli_root)
     assert result.returncode == 1
+    assert result.stdout, result.stderr
     assert json.loads(result.stdout)['status'] == 'repair-vdd'
     assert not (out / 'compiler-state.v1.json').exists()
 

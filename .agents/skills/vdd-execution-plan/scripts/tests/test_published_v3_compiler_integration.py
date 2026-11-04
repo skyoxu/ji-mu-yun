@@ -40,13 +40,14 @@ from scripts.toolchain.knowledge_query.tests.test_planning_query import (
 
 
 @pytest.fixture(autouse=True)
-def _portable_real_published_advice(request, tmp_path, monkeypatch, published_vdd_base):
+def _portable_real_published_advice(request, tmp_path_factory, monkeypatch, published_vdd_base):
     """Keep the original integration oracle while isolating device publication."""
     if request.node.name != 'test_real_0805_predecessor_reuses_v3_but_invokes_v4':
         return
     source_root, source_plan, source_requirements, source_index = ROOT, PLAN, REQUIREMENTS, INDEX
-    fixture = tmp_path / 'published-repair-fixture'
-    _copy_published_fixture(published_vdd_base, fixture)
+    # ADR-0041: keep the full published source paths below the Windows path limit.
+    fixture = tmp_path_factory.mktemp('p')
+    _copy_published_fixture(published_vdd_base, fixture, dirs_exist_ok=True)
     catalog = json.loads((fixture / 'knowledge/catalogs/repository-knowledge-catalog.v2.json').read_text())
     projections = json.loads((fixture / 'knowledge/projections/consumer-projections.v1.json').read_text())
     allowed = set(next(p for p in projections['projections'] if p['consumer'] == 'vdd')['eligible_module_ids'])
