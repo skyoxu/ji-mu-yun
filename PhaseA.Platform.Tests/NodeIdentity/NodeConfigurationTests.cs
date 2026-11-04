@@ -12,6 +12,148 @@ namespace PhaseA.Platform.Tests.NodeIdentity;
 
 public sealed class NodeConfigurationTests(ITestOutputHelper output)
 {
+    // ADR-0061: this real parser observation is supplementary, never provenance/authority proof.
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_3541A1914CAF()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-3541A1914CAF", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_57C432D34201()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-57C432D34201", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_5FB690F6AA79()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-5FB690F6AA79", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_B6F8A8621F40()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-B6F8A8621F40", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_E0AF971772C4()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-E0AF971772C4", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    [Fact]
+    public void O_A45D4EDED200()
+    {
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-provenance-" + Guid.NewGuid().ToString("N"))
+        });
+        output.WriteLine("S206_SOURCE_PROVENANCE:" + JsonSerializer.Serialize(new
+        {
+            entry = "PhaseAPlatformOptionsLoader.FromDictionary", phaseServiceState = configuration.PhaseServiceState,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
     [Fact]
     public async Task O_C8FCBDB2A9F7()
     {
