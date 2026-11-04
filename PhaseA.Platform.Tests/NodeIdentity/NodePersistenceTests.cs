@@ -11,8 +11,217 @@ using Xunit.Abstractions;
 
 namespace PhaseA.Platform.Tests.NodeIdentity;
 
+[CollectionDefinition("S206 persistence environment", DisableParallelization = true)]
+public sealed class S206PersistenceEnvironmentCollection { }
+
+[Collection("S206 persistence environment")]
 public sealed class NodePersistenceTests(ITestOutputHelper output)
 {
+    // ADR-0061: real local persistence survives a new test-host process; no service/global owner startup.
+    [Fact]
+    public async Task O_E173D2E7279D()
+    {
+        using var environment = FoundationEnvironment.Create();
+        var restartInput = Environment.GetEnvironmentVariable("S206_PERSISTENCE_RESTART_INPUT");
+        if (!string.IsNullOrEmpty(restartInput))
+        {
+            output.WriteLine("S206_FOUNDATION_REOPEN:" + JsonSerializer.Serialize(await ReadFoundationAsync(restartInput)));
+            return;
+        }
+        var root = S206TestSupport.CreateOwnedFixtureRoot("f7-");
+        Directory.CreateDirectory(root);
+        var database = Path.Combine(root, "metadata.sqlite3");
+        var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
+        var options = FoundationOptions(root);
+        await SqliteMetadataSchema.InitializeSingleNodeTestAsync(connectionString, options);
+        var store = new PhaseAMetadataStore(connectionString, options);
+        var account = await store.CreateUserAccountAsync("foundation-synthetic", 2);
+        var credential = PhaseAAuth.HashTokenForStorage(account.Token);
+        var context = await S206TestSupport.FixtureContextAsync(store, credential);
+        var projectId = "f7" + Guid.NewGuid().ToString("N")[..8];
+        var layout = PhaseA.Platform.Workspaces.WorkspaceLayoutBuilder.Build(options.HostedWorkspaceRoot, account.AccountId, projectId);
+        foreach (var directory in new[] { layout.RootPath, layout.RepoPath, layout.RuntimePath, layout.MetaPath }) Directory.CreateDirectory(directory);
+        if (layout.RepoPath.Length > 247 || Path.Combine(layout.RepoPath, ".snapshots-f7.protected").Length > 259)
+            throw new InvalidOperationException("Owned persistence fixture exceeds native cleanup path limits.");
+        var content = System.Text.Encoding.UTF8.GetBytes("foundation-byte-control\r\n\0\u4e2d\n");
+        File.WriteAllBytes(Path.Combine(layout.RepoPath, "persisted.txt"), content);
+        var creation = await store.CreateProjectAsync(new(projectId, account.AccountId, "Foundation", "Foundation", "manual", "default", false, [],
+            layout.RootPath, layout.RepoPath, layout.RuntimePath, layout.MetaPath));
+        if (!creation.Succeeded) throw new InvalidOperationException("Actual temporary project setup failed.");
+        var project = await store.GetProjectSnapshotAsync(projectId) ?? throw new InvalidOperationException("Created project missing.");
+        using (S206TestSupport.EnterCurrentContext(context))
+            store.CreateWorkspaceStorageService().CreateSnapshot(context, project.RepoPath, "f7", project.WorkspaceId,
+                project.ProjectId, "foundation-test", new HashSet<string>());
+        var input = Path.Combine(root, "restart-input.json");
+        File.WriteAllText(input, JsonSerializer.Serialize(new { root, accountId = account.AccountId, projectId, credential }));
+        var before = await ReadFoundationAsync(input);
+        // A fresh exact test-host process recreates the production store/workspace service.
+        var results = Path.Combine(root, "restart-trx"); Directory.CreateDirectory(results);
+        var start = new System.Diagnostics.ProcessStartInfo("dotnet")
+        {
+            WorkingDirectory = S206TestSupport.RepositoryRoot, UseShellExecute = false,
+            RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+        };
+        foreach (var arg in new[] { "test", "PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj", "--no-restore", "--no-build", "--filter",
+            "FullyQualifiedName=PhaseA.Platform.Tests.NodeIdentity.NodePersistenceTests.O_E173D2E7279D", "--logger", "trx", "--results-directory", results })
+            start.ArgumentList.Add(arg);
+        start.Environment["S206_PERSISTENCE_RESTART_INPUT"] = input;
+        using var child = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("Readback child did not start.");
+        var stdout = child.StandardOutput.ReadToEndAsync(); var stderr = child.StandardError.ReadToEndAsync();
+        try { await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(90)); }
+        catch { if (!child.HasExited) child.Kill(entireProcessTree: true); await child.WaitForExitAsync(); throw; }
+        var captured = await stdout; var errors = await stderr;
+        if (child.ExitCode != 0) throw new InvalidOperationException("Separate readback harness failed: " + captured + errors);
+        var files = Directory.GetFiles(results, "*.trx");
+        if (files.Length != 1) throw new InvalidOperationException("Separate readback requires one fresh TRX.");
+        var trx = System.Xml.Linq.XDocument.Load(files[0]); System.Xml.Linq.XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
+        var units = trx.Descendants(ns + "UnitTestResult").ToArray();
+        var methods = trx.Descendants(ns + "TestMethod").ToArray();
+        if (units.Length != 1 || units[0].Attribute("outcome")?.Value != "Passed" || methods.Length != 1 ||
+            methods[0].Attribute("name")?.Value != nameof(O_E173D2E7279D) ||
+            methods[0].Attribute("className")?.Value.Split(',')[0] != GetType().FullName)
+            throw new InvalidOperationException("Separate readback ran the wrong native case.");
+        var lines = units[0].Descendants(ns + "StdOut").SelectMany(n => n.Value.Split('\n')).Select(s => s.Trim())
+            .Where(s => s.StartsWith("S206_FOUNDATION_REOPEN:", StringComparison.Ordinal)).ToArray();
+        if (lines.Length != 1) throw new InvalidOperationException("Separate readback observation is ambiguous.");
+        var after = JsonSerializer.Deserialize<JsonElement>(lines[0]["S206_FOUNDATION_REOPEN:".Length..]);
+        output.WriteLine("S206_FOUNDATION:" + JsonSerializer.Serialize(new
+        {
+            schema = "s206.local-foundation.v1", before, after, expectedContentSha256 = Convert.ToHexString(SHA256.HashData(content)).ToLowerInvariant(),
+            processId = Environment.ProcessId, childLauncherProcessId = child.Id,
+            framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            storeAssembly = typeof(PhaseAMetadataStore).Assembly.GetName().Name,
+            sqliteAssembly = typeof(SqliteConnection).Assembly.GetName().Name,
+            storageAssembly = typeof(PhaseA.Platform.Workspaces.WorkspaceStorageService).Assembly.GetName().Name,
+            sourceHead = await FoundationHeadAsync(),
+            sourceHashes = new[] { "PhaseA.Platform/Program.cs", "PhaseA.Platform/Data/PhaseAMetadataStore.cs", "PhaseA.Platform/Data/SqliteMetadataSchema.cs",
+                "PhaseA.Platform/Workspaces/WorkspaceStorageService.cs", "PhaseA.Platform/PhaseA.Platform.csproj", "PhaseA.Platform/packages.lock.json" }
+                .ToDictionary(p => p, p => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(Path.Combine(S206TestSupport.RepositoryRoot, p)))).ToLowerInvariant()),
+            nativeReadbackTrx = files[0], fixedAnchorOpened = false, windowsAccountOrCredentialCreated = false
+        }));
+    }
+
+    // The nonparallel collection confines these temporary process environment values.
+    // No machine/user environment, key directory or existing ACL is modified.
+    private sealed class FoundationEnvironment : IDisposable
+    {
+        private readonly string? _oldOwner = Environment.GetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT");
+        private readonly string? _oldKeys = Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT");
+        private bool _changed;
+        internal static FoundationEnvironment Create()
+        {
+            var scope = new FoundationEnvironment();
+            if (string.IsNullOrWhiteSpace(scope._oldOwner) && string.IsNullOrWhiteSpace(scope._oldKeys))
+            {
+                var owner = S206TestSupport.CreateOwnedFixtureRoot("f7s-");
+                Directory.CreateDirectory(owner);
+                Environment.SetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT", owner);
+                Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", Path.Combine(owner, "synthetic-snapshot-keys"));
+                scope._changed = true;
+            }
+            try
+            {
+                var owner = Environment.GetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT");
+                var keys = Environment.GetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT");
+                if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(keys) || !Directory.Exists(owner) ||
+                    !Path.GetFullPath(keys).StartsWith(Path.GetFullPath(owner) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Foundation keys require an explicit owned fixture scope.");
+                RunnerIsolationPolicy.RequireNoReparsePoint(owner, owner);
+                if (Directory.Exists(keys)) RunnerIsolationPolicy.RequireNoReparsePoint(owner, keys);
+                return scope;
+            }
+            catch { scope.Dispose(); throw; }
+        }
+        public void Dispose()
+        {
+            if (!_changed) return;
+            Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", _oldKeys);
+            Environment.SetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT", _oldOwner);
+            _changed = false;
+        }
+    }
+
+    private static PhaseAPlatformOptions FoundationOptions(string root) => S206TestSupport.OwnedNodeOptions(new()
+    {
+        ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(root, "w"),
+        ["PHASEA_METADATA_DB_PATH"] = Path.Combine(root, "metadata.sqlite3"),
+        ["PHASEA_ADMIN_TOKEN_HASH"] = PhaseAAuth.HashTokenForStorage("synthetic-foundation-admin-not-a-real-credential")
+    });
+
+    private static async Task<object> ReadFoundationAsync(string input)
+    {
+        var owner = Environment.GetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT") ?? throw new InvalidOperationException("Owned fixture parent required.");
+        var full = Path.GetFullPath(input);
+        if (!full.StartsWith(Path.GetFullPath(owner) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Readback path escapes the owned fixture.");
+        RunnerIsolationPolicy.RequireNoReparsePoint(owner, full);
+        using var document = JsonDocument.Parse(File.ReadAllBytes(full)); var state = document.RootElement;
+        var root = state.GetProperty("root").GetString()!;
+        if (Path.GetDirectoryName(full) != root) throw new InvalidOperationException("Readback root does not match its input.");
+        var database = Path.Combine(root, "metadata.sqlite3");
+        var connectionString = new SqliteConnectionStringBuilder { DataSource = database, Pooling = false }.ToString();
+        var store = new PhaseAMetadataStore(connectionString, FoundationOptions(root));
+        var context = await S206TestSupport.FixtureContextAsync(store, state.GetProperty("credential").GetString()!);
+        var project = await store.GetProjectSnapshotAsync(state.GetProperty("projectId").GetString()!)
+            ?? throw new InvalidOperationException("Persisted project readback is missing.");
+        PhaseA.Platform.Workspaces.WorkspaceSnapshotRecord[] snapshots;
+        using (S206TestSupport.EnterCurrentContext(context))
+            snapshots = store.CreateWorkspaceStorageService().ListSnapshots(context.AccountId, project.ProjectId).ToArray();
+        var snapshot = snapshots.Single();
+        var manifestRaw = File.ReadAllBytes(snapshot.ManifestPath);
+        var contentPath = Path.Combine(project.RepoPath, "persisted.txt");
+        var payloadPath = Path.ChangeExtension(snapshot.ManifestPath, ".protected");
+        var databases = new List<object>();
+        await using (var connection = new SqliteConnection(connectionString))
+        {
+            await connection.OpenAsync(); await using var command = connection.CreateCommand(); command.CommandText = "PRAGMA database_list;";
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) databases.Add(new { name = reader.GetString(1), file = reader.GetString(2) });
+        }
+        var header = new byte[16]; using (var file = new FileStream(database, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) file.ReadExactly(header);
+        return new
+        {
+            processId = Environment.ProcessId, accountId = context.AccountId, projectId = project.ProjectId, workspaceId = project.WorkspaceId,
+            expectedAccountId = state.GetProperty("accountId").GetString(), projectAccountId = project.AccountId,
+            databasePath = database, databases, sqliteHeaderHex = Convert.ToHexString(header),
+            databaseIdentity = FoundationFileIdentity(database), contentIdentity = FoundationFileIdentity(contentPath),
+            contentSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(contentPath))).ToLowerInvariant(),
+            manifestIdentity = FoundationFileIdentity(snapshot.ManifestPath), manifestSha256 = Convert.ToHexString(SHA256.HashData(manifestRaw)).ToLowerInvariant(),
+            payloadIdentity = FoundationFileIdentity(payloadPath), payloadSha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(payloadPath))).ToLowerInvariant(),
+            snapshotId = snapshot.Manifest.SnapshotId, snapshotManifest = snapshot.Manifest,
+            serviceType = store.CreateWorkspaceStorageService().GetType().FullName
+        };
+    }
+
+    private static string FoundationFileIdentity(string path)
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("This observation requires Windows file identity.");
+        using var file = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, FileOptions.None);
+        if (!FoundationFileInformation(file, out var data)) throw new System.ComponentModel.Win32Exception(System.Runtime.InteropServices.Marshal.GetLastWin32Error());
+        if ((data.Attributes & 0x400) != 0 || data.Links != 1) throw new InvalidOperationException("Readback file is aliased.");
+        return $"{data.Volume:X8}:{((ulong)data.High << 32) | data.Low}";
+    }
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct FoundationFileInfo
+    {
+        public uint Attributes;
+        public System.Runtime.InteropServices.ComTypes.FILETIME Creation, Access, Write;
+        public uint Volume, SizeHigh, SizeLow, Links, High, Low;
+    }
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", EntryPoint = "GetFileInformationByHandle", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool FoundationFileInformation(Microsoft.Win32.SafeHandles.SafeFileHandle file, out FoundationFileInfo data);
+    private static async Task<string> FoundationHeadAsync()
+    {
+        var start = new System.Diagnostics.ProcessStartInfo("git") { WorkingDirectory = S206TestSupport.RepositoryRoot,
+            RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+        start.ArgumentList.Add("rev-parse"); start.ArgumentList.Add("HEAD");
+        using var process = System.Diagnostics.Process.Start(start)!;
+        var text = process.StandardOutput.ReadToEndAsync(); await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        if (process.ExitCode != 0) throw new InvalidOperationException("Source HEAD unavailable.");
+        return (await text).Trim();
+    }
+
     [Fact]
     public async Task O_B093CBB29DA6()
     {
