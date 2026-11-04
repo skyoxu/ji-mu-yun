@@ -628,3 +628,140 @@ def test_o_e0af971772c4(tmp_path):
     if assessment['violations']:
         print('FAILURE_ID:FAILURE-O-E0AF971772C4')
     assert not assessment['violations'], assessment['violations']
+
+
+@pytest.mark.cer_assertion('S206_NO_INFERRED_WAL_OR_INDEPENDENT_SERVICE_AUTH',
+    'S206_REFERENCES_NOT_PLATFORM_WINDOWS_PROOF', 'S206_STACK_NET8_ASPNET8_PRESERVED',
+    'S206_STACK_SQLITE808_BUNDLE217_RESOLVED', 'S206_WINDOWS_CONSTRAINT_NO_OS_UPGRADE')
+def test_preserved_stack_pins_and_windows_constraint(tmp_path):
+    import hashlib
+    import json
+    import xml.etree.ElementTree as ET
+    root = Path(__file__).resolve().parents[2]
+    fresh_trx_directory = tmp_path / 'stack-trx'
+    fresh_trx_directory.mkdir()
+    completed = subprocess.run(
+        ['dotnet', 'test', 'PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj', '--filter',
+         'FullyQualifiedName=PhaseA.Platform.Tests.NodeIdentity.NodeConfigurationTests.StackPinsAndWindowsConstraintsPreserved',
+         '--logger', 'trx', '--results-directory', str(fresh_trx_directory)],
+        cwd=root, shell=False, check=False, capture_output=True, text=True, encoding='utf-8', timeout=180)
+    value = read_observations(completed, fresh_trx_directory,
+        'PhaseA.Platform.Tests.NodeIdentity.NodeConfigurationTests.StackPinsAndWindowsConstraintsPreserved', 'S206_STACK:')
+    if value.get('schema') != 's206.built-stack.v1' or not value.get('depsSha256'):
+        raise RuntimeError('Actual fresh built target/dependency metadata is missing')
+    errors = []
+    target = '.NETCoreApp,Version=v8.0'
+    if (not value['framework'].startswith('.NET 8.') or value['platform']['target'] != target
+            or value['test']['target'] != target or not value['depsTarget'].startswith(target)
+            or value['aspnet']['name'] != 'Microsoft.AspNetCore' or not value['aspnet']['version'].startswith('8.')):
+        errors.append('Actual built platform/test/ASP.NET/runtime targets no longer preserve the frozen .NET 8 foundation')
+    expected_sqlite = {'Microsoft.Data.Sqlite/8.0.8', 'Microsoft.Data.Sqlite.Core/8.0.8',
+        'SQLitePCLRaw.bundle_e_sqlite3/2.1.7', 'SQLitePCLRaw.core/2.1.7',
+        'SQLitePCLRaw.lib.e_sqlite3/2.1.7', 'SQLitePCLRaw.provider.e_sqlite3/2.1.7'}
+    if (set(value['sqliteLibraries']) != expected_sqlite or value['sqlite']['productVersion'] != '8.0.8'
+            or value['batteries']['productVersion'].split('+')[0].split('.')[:3] != ['2', '1', '7']):
+        errors.append('Actual resolved/built SQLite 8.0.8 and native bundle 2.1.7 dependency graph changed')
+    if (value['schemaOwnerAssembly'] != value['platform']['identity']
+            or value['builtAssemblyIdentity'] != value['platform']['identity']
+            or not value['engineVersion'] or value['schemaAccountsTables'] != 1
+            or value['databases'] != [{'name': 'main', 'file': ''}]):
+        errors.append('The actual existing schema/provider did not execute on its isolated memory database')
+    if type(value['isWindows']) is not bool or not value['isWindows'] or not value['osDescription']:
+        errors.append('Current actual execution is not Windows; reference documents cannot supply Windows evidence')
+    # Verify exact declared project/lock graphs against the explicit baseline;
+    # coverage may instrument a test copy, so record both binary hashes without
+    # inventing raw loaded/build byte identity from equal assembly metadata.
+    baseline = 'f44270486828d0848703a4b36796222825efc9ca'
+    for path in ('PhaseA.Platform/PhaseA.Platform.csproj', 'PhaseA.Platform/packages.lock.json',
+                 'PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj', 'PhaseA.Platform.Tests/packages.lock.json'):
+        original = subprocess.run(['git', '-c', 'safe.directory=' + str(root), 'show', baseline + ':' + path],
+            cwd=root, shell=False, check=True, capture_output=True, timeout=15).stdout
+        if original.replace(b'\r\n', b'\n') != (root / path).read_bytes().replace(b'\r\n', b'\n'):
+            errors.append('Actual allowed project/lock dependency graph changed: ' + path)
+    project = ET.parse(root / 'PhaseA.Platform/PhaseA.Platform.csproj').getroot()
+    if project.attrib.get('Sdk') != 'Microsoft.NET.Sdk.Web' or project.findtext('.//TargetFramework') != 'net8.0':
+        errors.append('The actual ASP.NET Core application target changed')
+    pins = {p.attrib['Include']: p.attrib.get('Version') for p in project.findall('.//PackageReference')}
+    if pins != {'Microsoft.Data.Sqlite': '8.0.8', 'SQLitePCLRaw.bundle_e_sqlite3': '2.1.7'}:
+        errors.append('The actual approved production package pins changed')
+    fixed_sources = {
+        'PhaseA.Platform/Program.cs': 'c0aa86d38ad5c2a3b6b68dbcf36ccca22c294b8ffe688dd5d53b119c2dcd6035',
+        'PhaseA.Platform/Data/SqliteMetadataSchema.cs': '0281f1c228bfab52b0f207ffc6c1569e6321df955e23cd7dacad5b3c52f79cca',
+        'PhaseA.Platform/README.md': '6978e2bae3f0fac6f22c9c44cc99808e4e841d31b4d2363feb55889013846cc4',
+        'docs/workflows/phase-service-node-identity-and-roles.md': '56de3c8f138910b5a9b933536fe7beee9e9a920b1ebad129f0e5949638e20728'}
+    for path, digest in fixed_sources.items():
+        if hashlib.sha256((root / path).read_bytes()).hexdigest() != digest:
+            errors.append('Changed Program/schema/support content needs a new WAL/auth/Windows claim assessment: ' + path)
+    print('S206_STACK_CONSTRAINT_ASSESSMENT:' + json.dumps({'authorizes': [],
+        'actual_framework': value['framework'], 'actual_resolved_sqlite': value['sqliteLibraries'],
+        'actual_windows_observation': value['osDescription'],
+        'source_claim_assessment': 'The unchanged Program/schema retain local SQLite and single-service boundaries; the reviewed README/workflow retain pending native Windows and cross-host proof. No source/project/OS upgrade is made.',
+        'proof_limits': ['No WAL-mode claim or change', 'No independent-service authentication proof',
+            'Reference documents are rationale, not Windows Runner/ACL/Job Object evidence', 'No OS edition/build upgrade authority'],
+        'built_binary_sha256': value['builtAssemblySha256'], 'loaded_binary_sha256': value['platform']['sha256']}, sort_keys=True))
+    if errors:
+        print('FAILURE_ID:S206_STACK_PINS_OR_WINDOWS_BOUNDARY_CHANGED')
+    assert not errors, errors
+
+
+@pytest.mark.cer_assertion('A-O-116AC63F1FFB-1', 'A-O-116AC63F1FFB-2',
+    'A-O-116AC63F1FFB-3', 'A-O-116AC63F1FFB-4')
+def test_o_116ac63f1ffb(tmp_path):
+    import hashlib
+    import json
+    root = Path(__file__).resolve().parents[2]
+    fresh_trx_directory = tmp_path / 'topology-trx'
+    fresh_trx_directory.mkdir()
+    completed = subprocess.run(
+        ['dotnet', 'test', 'PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj', '--filter',
+         'FullyQualifiedName=PhaseA.Platform.Tests.NodeIdentity.NodeConfigurationTests.O_116AC63F1FFB',
+         '--logger', 'trx', '--results-directory', str(fresh_trx_directory)],
+        cwd=root, shell=False, check=False, capture_output=True, text=True, encoding='utf-8', timeout=180)
+    value = read_observations(completed, fresh_trx_directory,
+        'PhaseA.Platform.Tests.NodeIdentity.NodeConfigurationTests.O_116AC63F1FFB', 'S206_TOPOLOGY_BOUNDARY:')
+    if value.get('schema') != 's206.config-topology-boundary.v1' or not value.get('sourceHashes'):
+        raise RuntimeError('Actual current configuration/topology observations are missing')
+    for path, digest in value['sourceHashes'].items():
+        if hashlib.sha256((root / path).read_bytes()).hexdigest() != digest:
+            raise RuntimeError('Actual configuration/authority source binding changed')
+    rows = value['observations']
+    if len(rows) != 3 or {r['requested'] for r in rows} != {'single_service', 'independent_services', 'cross_host'}:
+        raise RuntimeError('The real positive and unsupported-topology matrix is incomplete')
+    errors = []
+    for row in rows:
+        if type(row['rejected']) is not bool or type(row['parserReturned']) is not bool:
+            raise RuntimeError('Actual explicit local identity/topology values are malformed')
+        if row['parserReturned'] and (row['actual'] != row['requested'] or row['node'] != 'isolated-config-node'
+                or row['scope'] != 'single_node_test' or row['roles'] != ['entry', 'production']):
+            raise RuntimeError('Actual parsed local identity/topology values are malformed')
+        if not row['parserReturned'] and not row['rejected']:
+            raise RuntimeError('A missing configuration has no observed rejection')
+        if row['rejected'] != (row['requested'] != 'single_service'):
+            errors.append('Actual identity validation accepts an unsupported topology or loses the valid local control')
+    expected = {
+        'docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md': '2792b5ae5d890120a630787e82b97299434e88252bfc3fb9b9603ce336fc986c',
+        'docs/workflows/phase-service-node-identity-and-roles.md': '56de3c8f138910b5a9b933536fe7beee9e9a920b1ebad129f0e5949638e20728',
+        'docs/requirements/s2-06/vdd-input.md': 'f6e4bacdd952da675a0aeb70c94da6cb7478b0b2f7d6543b0a8b48072db90654'}
+    for path, digest in expected.items():
+        if hashlib.sha256((root / path).read_bytes()).hexdigest() != digest:
+            errors.append('Current adopted semantic/governance source requires a new bounded assessment: ' + path)
+    workflow = (root / 'docs/workflows/phase-service-node-identity-and-roles.md').read_text(encoding='utf-8')
+    graph = json.loads(workflow.split('```json\n', 1)[1].split('\n```', 1)[0])
+    spine = root / graph['source_authority']['adopted_spine']
+    if (hashlib.sha256(spine.read_bytes()).hexdigest() != graph['source_authority']['adopted_spine_sha256']
+            or graph['source_authority']['decisions'] != list(range(14, 27)) or graph['authorizes']
+            or graph['unresolved_authority_contradictions']):
+        errors.append('Actual scoped adoption, original decision namespace or authority boundary changed')
+    changed = subprocess.run(['git', '-c', 'safe.directory=' + str(root), 'diff', '--name-only',
+        '338ec4dafb03e619109228efe1759f430106bd2c', '--'], cwd=root, shell=False, check=True,
+        capture_output=True, text=True, encoding='utf-8', timeout=15).stdout.splitlines()
+    unknown = [p for p in changed if not (p.startswith('PhaseA.Platform.Tests/NodeIdentity/') or p.startswith('tests/s2_06/'))]
+    if unknown:
+        errors.append('Actual non-test semantic/governance implementation delta needs review: ' + repr(unknown))
+    print('S206_TOPOLOGY_CLAIM_ASSESSMENT:' + json.dumps({'authorizes': [], 'actual_configurations': rows,
+        'actual_changed_paths': changed, 'source_assessment': 'The exact Accepted ADR and original scoped spine are unchanged; current delta adds tests, not a governance platform, replacement ADR or new SPEC semantics.',
+        'future_remote_condition': 'A separate Accepted authenticated service/projection design is required; the current real validator rejects independent_services and cross_host.',
+        'proof_limit': 'Pure identity validation is not service startup, remote protocol, deployment, Windows ownership or opening evidence.'}, sort_keys=True))
+    if errors:
+        print('FAILURE_ID:FAILURE-O-116AC63F1FFB')
+    assert not errors, errors
