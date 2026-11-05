@@ -13,7 +13,7 @@ import subprocess
 from fnmatch import fnmatchcase
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 
 DOMAINS = ("toolchain", "phase", "workspace", "marketplace")
@@ -50,6 +50,55 @@ def read_commit_blob(repository_root: Path, commit: str, path: str) -> bytes:
     return subprocess.check_output(
         ["git", "-C", str(repository_root), "cat-file", "blob", f"{commit}:{normalized}"]
     )
+
+
+def read_published_v3_plan(directory: str, read_bytes: Callable[[str], bytes]) -> dict[str, Any] | None:
+    """ADR-0057: adapt the existing VDD publication identity, not its authority.
+
+    The caller supplies committed-main reads. Only bound, independently
+    materialized semantic arrays are discoverable content. Bundle/state bytes
+    are integrity witnesses, never global semantic resources or instructions.
+    This recognizes a source format; it does not rerun or grant VDD readiness.
+    """
+    try:
+        if (normalized_path(directory) != directory or len(PurePosixPath(directory).parts) != 2
+                or PurePosixPath(directory).parts[0] != "execution-plans"):
+            return None
+        bundle_path = f"{directory}/semantic-plan-bundle.v1.json"
+        state_path = f"{directory}/compiler-state.v1.json"
+        bundle = json.loads(read_bytes(bundle_path).decode("utf-8"))
+        state = json.loads(read_bytes(state_path).decode("utf-8"))
+        if not isinstance(bundle, dict) or not isinstance(state, dict):
+            return None
+        plan_id = bundle.get("plan_id")
+        # semantic_compiler.canonical_bytes includes LF; Catalog identity does not.
+        native_hash = prefixed_sha256(canonical_bytes(bundle) + b"\n")
+        if (bundle.get("schema_version") != "vdd.semantic-plan-bundle.v1"
+                or state.get("schema") != "vdd.compiler-state.v1"
+                or not isinstance(plan_id, str) or not plan_id
+                or state.get("plan_id") != plan_id or state.get("state") != "plan-ready"
+                or state.get("semantic_plan_sha256") != native_hash):
+            return None
+        semantic = (
+            ("obligations", "obligations.v1.json"),
+            ("acceptances", "acceptances.v1.json"),
+            ("failure_intents", "failure-intents.v1.json"),
+        )
+        for field, name in semantic:
+            value = bundle.get(field)
+            materialized = json.loads(read_bytes(f"{directory}/{name}").decode("utf-8"))
+            if (not isinstance(value, list) or not all(isinstance(row, dict) for row in value)
+                    or canonical_bytes(materialized) != canonical_bytes(value)):
+                return None
+        return {
+            "source_path": f"{directory}/obligations.v1.json",
+            "resources": (("acceptances", f"{directory}/acceptances.v1.json"),
+                          ("failure-intents", f"{directory}/failure-intents.v1.json")),
+            "integrity_paths": (bundle_path, state_path),
+            "state": state["state"],
+        }
+    except (FileNotFoundError, KeyError, ValueError, UnicodeError, subprocess.CalledProcessError):
+        return None
 
 
 
@@ -359,12 +408,13 @@ class CatalogBuilder:
         resources: Iterable[tuple[str, str]] = (),
         relations: Iterable[dict[str, str]] = (),
         consumer_ids: Iterable[str] | None = None,
+        fallback_title: str | None = None,
     ) -> dict[str, Any] | None:
         source = self.add_source(source_path, source_role)
         if source is None:
             return None
         content = self.snapshot.read_text(source_path)
-        title = _title(content, PurePosixPath(source_path).name)
+        title = _title(content, fallback_title or PurePosixPath(source_path).name)
         bound_resources: list[dict[str, Any]] = []
         seen_paths = {source_path}
         for role, path in resources:
@@ -794,6 +844,38 @@ class CatalogBuilder:
                     {"type": "references", "target": f"adr.{identifier}"}
                     for identifier in sorted(set(ADR_ID.findall(content)))
                 ],
+            )
+
+        # Native VDD publications have no legacy Markdown index. Keep legacy
+        # precedence and adapt only direct, committed execution-plan directories.
+        legacy_directories = {path.rsplit("/", 1)[0] for path in plan_indexes}
+        native_directories = {
+            path.rsplit("/", 1)[0] for path in self.snapshot.under("execution-plans")
+            if path.count("/") == 2 and path.endswith("/semantic-plan-bundle.v1.json")
+        }
+
+        def committed(path: str) -> bytes:
+            if not self.snapshot.contains(path):
+                raise FileNotFoundError(path)
+            return self.snapshot.read_bytes(path)
+
+        for directory in sorted(native_directories - legacy_directories):
+            native = read_published_v3_plan(directory, committed)
+            if native is None:
+                continue
+            semantic_paths = [native["source_path"], *(path for _, path in native["resources"])]
+            if any(is_policy_excluded(path, self.exclusions) for path in [*semantic_paths, *native["integrity_paths"]]):
+                continue
+            for path in native["integrity_paths"]:
+                self.add_source(path, "integrity-only")
+            title = PurePosixPath(directory).name
+            domain, dependencies = _domain_for_plan(native["source_path"], title)
+            self.add_module(
+                module_id="plan." + _slug(title), kind="execution-plan",
+                source_path=native["source_path"], source_role="plan-obligations",
+                primary_domain=domain, dependencies=dependencies,
+                status=_plan_catalog_status(native["state"]), resources=native["resources"],
+                fallback_title=title,
             )
 
     def add_runtime_entrypoints(self) -> None:

@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from _knowledge_catalog_builder import build_layers, canonical_bytes, compatibility_catalog, prefixed_sha256, read_commit_blob
+from _knowledge_catalog_builder import build_layers, canonical_bytes, compatibility_catalog, prefixed_sha256, read_commit_blob, read_published_v3_plan
 from _knowledge_locator_core import verify_current_publication
 from evaluate_knowledge_queries import evaluate
 
@@ -154,7 +154,10 @@ def _validate_publication_request(
         try:
             _main_blob(repository_root, expected_main, Path(target) / "00-index.md")
         except ValueError as exc:
-            raise ValueError("knowledge_publication_request_target_invalid") from exc
+            if read_published_v3_plan(
+                target, lambda path: _main_blob(repository_root, expected_main, Path(path))
+            ) is None:
+                raise ValueError("knowledge_publication_request_target_invalid") from exc
         if source_route is not None:
             _validate_source_route(repository_root, target, source_route)
     return {
