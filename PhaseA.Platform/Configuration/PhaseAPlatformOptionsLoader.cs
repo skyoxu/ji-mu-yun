@@ -377,7 +377,18 @@ public static class PhaseAPlatformOptionsLoader
             throw new PhaseAPlatformConfigException("PHASEA_METADATA_DB_PATH must be an absolute path.");
         }
 
-        return Path.GetFullPath(value);
+        var fullPath = Path.GetFullPath(value);
+        if (OperatingSystem.IsWindows())
+        {
+            // ADR-0033/0061: classify lexically; never probe a network path.
+            var lexical = fullPath.Replace('/', '\\');
+            var devicePrefix = lexical.StartsWith(@"\\?\", StringComparison.Ordinal)
+                || lexical.StartsWith(@"\\.\", StringComparison.Ordinal);
+            if (lexical.StartsWith(@"\\", StringComparison.Ordinal)
+                && (!devicePrefix || lexical.AsSpan(4).StartsWith(@"UNC\", StringComparison.OrdinalIgnoreCase)))
+                throw new PhaseAPlatformConfigException("PHASEA_METADATA_DB_PATH must not use a network namespace.");
+        }
+        return fullPath;
     }
 
     private static string NormalizeDirectoryPath(string value, string name)
