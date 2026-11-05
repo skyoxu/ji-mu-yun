@@ -1,0 +1,1404 @@
+{
+  "schema": "s206.s164-runtime-handoff-migration.v1",
+  "generated_at": "2026-11-05T15:39:58.261525+00:00",
+  "repository": "skyoxu/ji-mu-yun",
+  "head": "16b36bae36e4bd9756752db27e0f7660e67bb085",
+  "equivalent_main_tree_commit": "f44270486828d0848703a4b36796222825efc9ca",
+  "successor": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105",
+  "successor_files": [
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/acceptances.v1.json",
+      "bytes": 1418705,
+      "sha256": "c4906cccc068c23b2d9cbab6ec268f788504844712188e04802b84d236a5602f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S1/agent-context.json",
+      "bytes": 32967,
+      "sha256": "2eec790d7a996e0433182676e1871398c3833d89322fd16674cef26f898c5ba7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S10/agent-context.json",
+      "bytes": 3833,
+      "sha256": "fab9188f0767bcfc55b213f99a2a1867a33df37796143f44a8257f9bb04403f3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S100/agent-context.json",
+      "bytes": 10790,
+      "sha256": "cf29ba9da892745640b93c9a039218e95d423dd8cc0cf665c7165baef94df1fc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S101/agent-context.json",
+      "bytes": 3366,
+      "sha256": "4b0f99173a8e6d2ab6e8041f3c8597d79fe0bc44c8b099e198ee85e1d8ae53b2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S102/agent-context.json",
+      "bytes": 15906,
+      "sha256": "b5e86a95d5b1cb586ab8c18351e33f80ecdcf2b8ccde6bd82cd2be182255ace4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S103/agent-context.json",
+      "bytes": 11438,
+      "sha256": "1d02d59348c27dfa6405113f35968942d465bdd78ddfdba0a7cb4dc86bf0e57a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S104/agent-context.json",
+      "bytes": 5453,
+      "sha256": "455b5a7bf5fe29f72efdd2975798a75d72f2941686cd457d64b33295ee2a3edb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S105/agent-context.json",
+      "bytes": 57091,
+      "sha256": "1e12ceb1701b2e36f514c868c2070dc5045609ef7c560684e81b97a3e0c73c57"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S106/agent-context.json",
+      "bytes": 24525,
+      "sha256": "f76b8194035ca2b94328522e4bd747a928a5b91adb5f29095d846c91f69a9fdf"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S107/agent-context.json",
+      "bytes": 3170,
+      "sha256": "014ccaa6abc4631bb512d881d92d0b11732c5b2bf1165a679826db4df86958ae"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S108/agent-context.json",
+      "bytes": 5297,
+      "sha256": "bb62454b9267a4885788535865f1c9d359802800d165b83b7919a8261e6711e2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S109/agent-context.json",
+      "bytes": 3640,
+      "sha256": "0f824ed929c7983e9c1a83f95640bddcb6e9ef64b1aea9962e83dbbebfdd08a7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S11/agent-context.json",
+      "bytes": 3691,
+      "sha256": "4f08b462544844436e1faad66ebf6d321a0d660a9b2f9cf3901c03bfd8701f79"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S110/agent-context.json",
+      "bytes": 3566,
+      "sha256": "c4e7ee7a37f37ed9014699d16717101b63c002325b45716cf31d0c3d24e003b7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S111/agent-context.json",
+      "bytes": 4803,
+      "sha256": "0d842627e5e0ebcd50865c8046cea22960f79462230d13ede79b198bed272885"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S112/agent-context.json",
+      "bytes": 8594,
+      "sha256": "eabe71fb11d6055847233bafbcf1ec8aef7093e7e486360c940702b6cd08999c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S113/agent-context.json",
+      "bytes": 5189,
+      "sha256": "5651c0674f76c872e3a8f9eecba8e31cca9b97439b4bd849709168ecaadcad4e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S114/agent-context.json",
+      "bytes": 14008,
+      "sha256": "9ce146b3f8480cd77fbae09e3427ffdc55ec964240d842f1b3e97f80bfb6e917"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S115/agent-context.json",
+      "bytes": 2400,
+      "sha256": "e7cc7b878ebf36d724a39d90e3cbdefdd9314c09a7e96d9f9675ce3de9f8d40e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S116/agent-context.json",
+      "bytes": 4184,
+      "sha256": "074652e88c63d1aea72fd8a2283e27347e34b28903826654220ca0a7f54ca19b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S117/agent-context.json",
+      "bytes": 2015,
+      "sha256": "f2eb8ec07829f9827a24c05a1a276aa4531ab12074410210f36526ca7cde9d4d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S118/agent-context.json",
+      "bytes": 5009,
+      "sha256": "7c9d0349789f5899f24337e69d6f98964e5928a6d80aa39aff35c842c75847b5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S119/agent-context.json",
+      "bytes": 4382,
+      "sha256": "a281734414cdd7d6576f561b02ee1c93e0eb1c3cdb72ef36bc12df0434cafb13"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S12/agent-context.json",
+      "bytes": 5568,
+      "sha256": "9a0d10273982a7090f26cb50aacf2f9f0d145b150802addd2cdb870923194e0d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S120/agent-context.json",
+      "bytes": 2982,
+      "sha256": "7c34b40bc706e16fc3483778bd0efb08adbead0e1c7093c084af738e8eb091ae"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S121/agent-context.json",
+      "bytes": 3201,
+      "sha256": "6ab17ed1b5496f6730108fa20d30f6f324b3b71225db062a0d34251ff89f3b40"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S122/agent-context.json",
+      "bytes": 5102,
+      "sha256": "a54b88f112e05e34c068a4be929c549820b0199011b282d9b7e6db764e69976e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S123/agent-context.json",
+      "bytes": 4065,
+      "sha256": "2e8fe321af4ce87791c28122e4f59e477d4eee7dcf4bdc887dc49896dad3d738"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S124/agent-context.json",
+      "bytes": 32064,
+      "sha256": "7515d02e762182a64da83d378d7812cb55c945b99127cb5c4e7b88163b1cf6ac"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S125/agent-context.json",
+      "bytes": 2964,
+      "sha256": "ce38d350416d3160a552819f1064ba4cd393806fff87d6971d28e0e94bf6f3fb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S126/agent-context.json",
+      "bytes": 3603,
+      "sha256": "db1ea3caf546f6e76e9c1c6a3fe2408f7244e4e9dba71032750c3ff5380138b1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S127/agent-context.json",
+      "bytes": 3421,
+      "sha256": "64f902feca3520aac257a1da410e3fd5439d67a0c701050bd4d4008ae70e27da"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S128/agent-context.json",
+      "bytes": 13874,
+      "sha256": "48e9ad1d42aac780578c86329aa78f47f57ecf65612c9783e1cd73adc9419b10"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S129/agent-context.json",
+      "bytes": 3287,
+      "sha256": "c34a5b8789f61ae333119c3646ef6aafddb1bf4360bfb6dd351f7c9100f2184d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S13/agent-context.json",
+      "bytes": 10478,
+      "sha256": "8805cbaef3ac4a08f8fced644b73692d7bfe6e14012bebf27812ed4b2af35a2a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S130/agent-context.json",
+      "bytes": 3454,
+      "sha256": "6f54f03d8aaf108f2c2fa5bb5e1ed6ba8a59d53880e7a21fdab893ec99a1ea24"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S131/agent-context.json",
+      "bytes": 8185,
+      "sha256": "d4c12e8ef3db45643a1e6863bab7b175962f019e8fb4e266e1958b2a2a448435"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S132/agent-context.json",
+      "bytes": 6591,
+      "sha256": "4bc0d1c69a5ce30885aa627fc9c0d2ce966bb7c4b05ce1f2f1a9f588c9eba558"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S133/agent-context.json",
+      "bytes": 16587,
+      "sha256": "09065f0ff476764d3d92f9c47fbd6dc43f7ad916aab72198a4911d954ac7bab2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S134/agent-context.json",
+      "bytes": 9184,
+      "sha256": "ab42624c65d4d57eed4425775c32bda25678a3bf60b2660a67fb1e1371becf14"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S135/agent-context.json",
+      "bytes": 4739,
+      "sha256": "23f5ebd102e9e9f41295c3462f8695f0d02d9e22b322495d7ea24ccd23a26895"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S136/agent-context.json",
+      "bytes": 4381,
+      "sha256": "ed513c2044f8f7d75553c9a6aec8cda0a776eb5ab3b554b552f8e0d8ec8d99cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S137/agent-context.json",
+      "bytes": 4662,
+      "sha256": "171c2a180cfcbe07a4df6d2f6863b29a48b8ccbd3f3848f3fc0df338c910b18d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S138/agent-context.json",
+      "bytes": 3885,
+      "sha256": "fd9295c6dd70d5199409e1c462b2553a277921930757fa667ebdce8da784c2a9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S139/agent-context.json",
+      "bytes": 4312,
+      "sha256": "9260dfb60f1740ea503fe673e0b1243990458d9f162ae5ca18bfba02fc20d8b6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S14/agent-context.json",
+      "bytes": 3864,
+      "sha256": "358b7e567e62ee0db6ef42694815259d638b091c085b7550d8269209d4553c07"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S140/agent-context.json",
+      "bytes": 2419,
+      "sha256": "dde21c222fd842bb418075fdae2d287a670c52033f5abcac3fa3123655f75403"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S141/agent-context.json",
+      "bytes": 6097,
+      "sha256": "7e45d33bb8b92f1e1ccd0afc8b71d8d3219bf4f9fc97f2f23f6aa7db26035d2a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S142/agent-context.json",
+      "bytes": 3526,
+      "sha256": "bad630b9ff93734682eff8683c39eab7252389cdc7cbbce503255fc2187103af"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S143/agent-context.json",
+      "bytes": 2993,
+      "sha256": "cdaf535c733c5c38acfea34e29c89ce980afefe0f3d142057da24e707fa556ee"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S144/agent-context.json",
+      "bytes": 4939,
+      "sha256": "509a3b58dfa40901c38aee31a9c8571088df813b442a35637e87a99c36c338b7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S145/agent-context.json",
+      "bytes": 10549,
+      "sha256": "983d9c6981598a971a5d11c67fb39234b8a3e7fab8466a6aa345440dc1921e73"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S146/agent-context.json",
+      "bytes": 3785,
+      "sha256": "c5d2e5d6438d41fe0c3789709f3083ce1e09b1577d8f9f3ee8913cc93147296e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S147/agent-context.json",
+      "bytes": 5173,
+      "sha256": "4ea93c12655a79df7195b24d408ccad7726a2c45696b146f86cdf15191bdffa7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S148/agent-context.json",
+      "bytes": 11345,
+      "sha256": "787e4977ca0238ac70399e76658ddc8346888850367cf97bffa0130ffad0a816"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S149/agent-context.json",
+      "bytes": 9094,
+      "sha256": "5b0755d453090f17d4162c9d59fe24e5b431ad60cf021e2dec79f3cfba9f8b1f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S15/agent-context.json",
+      "bytes": 3747,
+      "sha256": "30b4b113ee29e83d6248835e2db778ad936fd3ec4254574865c98f6c3f5642a0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S150/agent-context.json",
+      "bytes": 2924,
+      "sha256": "8336c56071cbd2d111255f048848ba4f79d0a08c54894e438ba5878dab370c48"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S151/agent-context.json",
+      "bytes": 3320,
+      "sha256": "94ca22fdf1f1f75f1cf7373d156d728eac7417f1c15ecec282b1e0d276431053"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S152/agent-context.json",
+      "bytes": 6739,
+      "sha256": "db1ecce45b20c33ecf70346956d82a47764c7667c34e3918eea6de06ce4c3e28"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S153/agent-context.json",
+      "bytes": 6230,
+      "sha256": "30b7fa23340c476ad8c35500d851712045e1a8710e2381aaa26cc0c72d66fac7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S154/agent-context.json",
+      "bytes": 37517,
+      "sha256": "dc7da2f293b4644dfcf5bce14aa6efd327e3d5588e23e8509e9cd0cde9878f5b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S155/agent-context.json",
+      "bytes": 19636,
+      "sha256": "7d85477225922420048e08234f12a0a1538cfe9304d85da4b441a8351655a7ef"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S156/agent-context.json",
+      "bytes": 2902,
+      "sha256": "964874ea238a5610f043f8b81a4975258a4965b181d8041b2334b217b161e415"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S157/agent-context.json",
+      "bytes": 3050,
+      "sha256": "893687cba2047d143c1e42c72b916644d50061d2f67f680c6cdaeb84fe4f8cf0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S158/agent-context.json",
+      "bytes": 10206,
+      "sha256": "b53a2921342525cfd9bd8fcf6d7a1c67ed8b4ea9fafea7e1e66ed4dd274fc8de"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S159/agent-context.json",
+      "bytes": 2880,
+      "sha256": "c8e4f8883ab37c653a1e7c885afa92339dd1e3bbdf43cae08f4790fa4291ec4b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S16/agent-context.json",
+      "bytes": 7808,
+      "sha256": "df1303ad818c50173b97b54f79f7ce118d210b2d95769a8aa0c08f1d6f734093"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S160/agent-context.json",
+      "bytes": 4840,
+      "sha256": "4a1d1c4f4ff1ac4c7bd9aa792bd9ab28048bf69fdc2e91aa0356e413afd3b24c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S161/agent-context.json",
+      "bytes": 5182,
+      "sha256": "447f7e973e42a19f561de9c9d67ca4e9a8f75d6b21ca88dd1ddfeea273c43691"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S162/agent-context.json",
+      "bytes": 23570,
+      "sha256": "d288ac7c97d55d8e16b4a1958d67baaa1301a262a890ce3cc56e869dedaa2c1e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S163/agent-context.json",
+      "bytes": 5468,
+      "sha256": "b5c55c51eaed651ed4aefdd539b5257f0a8e00d209599bd4bd28a041dd59b3b5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S164/agent-context.json",
+      "bytes": 3573,
+      "sha256": "a075d7edae1259c7dcfb4ec2069dc2873a75d28b5425b2f947a668020eff44b3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S165/agent-context.json",
+      "bytes": 2736,
+      "sha256": "cb452439f8fa8b79fb88b0100fc100beae4777383dc7c7ef60daa44dc2d4685e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S166/agent-context.json",
+      "bytes": 3280,
+      "sha256": "b1ecad4d69be4b59c482301d686a33d72df3599415166c9b7214a4168c5b6b5f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S167/agent-context.json",
+      "bytes": 4153,
+      "sha256": "2a93ef5e6014861c4d9bea0f218727f9e132011a9c94bcbc30f4e7ca765b918c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S168/agent-context.json",
+      "bytes": 4310,
+      "sha256": "583777af74776aebf0d5f1ad9583107bdffabd4df818fab4d3fce14b824da9b3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S169/agent-context.json",
+      "bytes": 7379,
+      "sha256": "f09005de87d0c64185e9d3dffe1205e111225385105ac808d122f298e7cc9a05"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S17/agent-context.json",
+      "bytes": 3373,
+      "sha256": "ea9d78b4313bd912d9267a89b70840d6ebc08c8f4fa8b617b359e881cad29204"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S170/agent-context.json",
+      "bytes": 5429,
+      "sha256": "60642f30ef2979f2d95efdcb6144007ff1d42eaa778f75414b028cb4dbc9c5b2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S171/agent-context.json",
+      "bytes": 3626,
+      "sha256": "e7943dacdac930f489f87651bb9eb5418047e3365fb797fa95c0296e4f21b57a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S172/agent-context.json",
+      "bytes": 5904,
+      "sha256": "f732aad450fbe6387efed17eba6fd465f384019a26e2e3dba5198d438466b033"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S173/agent-context.json",
+      "bytes": 4610,
+      "sha256": "31e0dbfc9ef21e2bc74ed59e6475d137096d1e8e31c75119d66a6d487a3c65ec"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S174/agent-context.json",
+      "bytes": 3825,
+      "sha256": "322278cd06844f6b9bbcc74bd8001f82f8c3fe6d55c69f11f9300ed3df131fc8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S175/agent-context.json",
+      "bytes": 2200,
+      "sha256": "bb390404fcb93825803e9bd5a1ce332e228390d60a36d77da4aa719d6e20c2f8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S176/agent-context.json",
+      "bytes": 4958,
+      "sha256": "8f57b26200fe333dcadbd7e1d83f2574836affa3a8d3b08e3e7a58650928857b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S177/agent-context.json",
+      "bytes": 3875,
+      "sha256": "dfae5856f5ef878cde7a01bc7d67a2372182cf36a22f0914c9348cc03f8314ba"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S178/agent-context.json",
+      "bytes": 12267,
+      "sha256": "0cd3f3e5391ba49828ca221e4899d725d9f6d192b479315d1a963808ed375425"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S179/agent-context.json",
+      "bytes": 3335,
+      "sha256": "ca84d0d55ca96311c3c1699be31d9ffee5772953da907c4385147bec0f44dae3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S18/agent-context.json",
+      "bytes": 17166,
+      "sha256": "074dbd9288f7d0af238feaaab26eca0bb1b240682d7c76edef6617e0c0ec1b49"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S180/agent-context.json",
+      "bytes": 6536,
+      "sha256": "38a2074a52d4fe2ae84ce49476092f806cec5074895d4a7bc27eaf1351c65309"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S181/agent-context.json",
+      "bytes": 5359,
+      "sha256": "a010ae18698483fe52b166226421f9c43e99aa907f1153ac548192fefa98a753"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S182/agent-context.json",
+      "bytes": 3924,
+      "sha256": "d083b9a03f2defd14ed1def571465f7a30d72013bc28c2a9a530c976b096d2a3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S183/agent-context.json",
+      "bytes": 2229,
+      "sha256": "92e64f065231d2641a01d9e25d30a161bbd5f97f68a0abda1af5290c9b2a48cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S184/agent-context.json",
+      "bytes": 2132,
+      "sha256": "8df5c8664952be108a5f3228db0624b331a42e4cc737edc240d7f9089fbfb4d9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S185/agent-context.json",
+      "bytes": 13795,
+      "sha256": "e2303280ca7a0c151d3f01c3955497837a89659ca3eff1922244a7eba4aa24f6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S186/agent-context.json",
+      "bytes": 6466,
+      "sha256": "cce537967844b11502b46207f5e04f9e15477900458b4ff9536d9eaa3fe08eb5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S187/agent-context.json",
+      "bytes": 3583,
+      "sha256": "a156c4ae2318ccb0f2f88878865864623afe9c642975db116a36453dbb7fac50"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S188/agent-context.json",
+      "bytes": 3829,
+      "sha256": "d17f586cfc3dee0ee1e4303774e1888598bb782976210813cb6bd02f31597484"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S189/agent-context.json",
+      "bytes": 14939,
+      "sha256": "61ac230cc949e2c9e3dadaf541ab659b574c68c767030638c47f3c16373471e3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S19/agent-context.json",
+      "bytes": 4179,
+      "sha256": "fe1f9096b0349cb85cae86acbe410bdfbf86bb1893ad370c0d9a29a734d17d22"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S190/agent-context.json",
+      "bytes": 5423,
+      "sha256": "f13b0a07fa007cbec5a67dd25cdddcba12071d58e57af614a584c97d89696be1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S191/agent-context.json",
+      "bytes": 3810,
+      "sha256": "fbdb83cd5529d532765b66e03351854255d7fffadb8f6412481010c203ca25d0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S192/agent-context.json",
+      "bytes": 4431,
+      "sha256": "706194ef9ec6a52bdadf7af48949ef73ad90929ee78a63358f2a62d4ab60fcdc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S193/agent-context.json",
+      "bytes": 4251,
+      "sha256": "d61986781a7fdb244f488b0a725fa2d536d00b065442d46225f1e35858e4c864"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S194/agent-context.json",
+      "bytes": 11515,
+      "sha256": "70b2369f71919c74d0b525cb9ee99611db760fc20d8a9864fe22652e2f6d1232"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S195/agent-context.json",
+      "bytes": 4226,
+      "sha256": "17ae420765178d153285472706959d4be7a820c87ae424d65018d4bddf3608d8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S196/agent-context.json",
+      "bytes": 4000,
+      "sha256": "9398f83ca9d7ca0c0279fc9719ffca933a464cfb41152c11ba891c747cdcabd8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S197/agent-context.json",
+      "bytes": 5395,
+      "sha256": "1e56b91277ae25d580671173775abf6ade20481dfb73bde6dbb85fe1303dae40"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S198/agent-context.json",
+      "bytes": 8013,
+      "sha256": "6bef4261ce2e2b61e5cd5a7e296692083f8be73e4a57ade31ab3c9e6747ff73e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S199/agent-context.json",
+      "bytes": 2372,
+      "sha256": "2dc100b3c819827cddc2b12ea6b1d6798466b41b37371873da767810d8ab4abf"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S2/agent-context.json",
+      "bytes": 3686,
+      "sha256": "9d34a21ff1c9d35b81a323483b5521051d6f6a353c160246c44233639bf2ca21"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S20/agent-context.json",
+      "bytes": 4125,
+      "sha256": "579928ea1268ed40855a31bac036c4bea55f37bc37982c2de83542437ea88821"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S200/agent-context.json",
+      "bytes": 3727,
+      "sha256": "4dc63489aac1cc4e2566f1a522fe589c473344284328853d0fe2cc1d012b87f7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S201/agent-context.json",
+      "bytes": 3375,
+      "sha256": "9cf9ff0c626ae897da36fcbbd0903d06adaea7499675dd946561962e1a6d5c30"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S202/agent-context.json",
+      "bytes": 2165,
+      "sha256": "af833feb0e044cc2507ca9a6691eb1f7386deababb515c2194f19d320465a7ea"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S203/agent-context.json",
+      "bytes": 4139,
+      "sha256": "c4ff7d72166a59914685f6bf0bd807936ba7336019bc5d624409c7bf531015e8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S204/agent-context.json",
+      "bytes": 5117,
+      "sha256": "f39c3dab72b1ddb58b61e2bdb5a541447534e99bb32ed6ce10aed39a4a5eab2a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S205/agent-context.json",
+      "bytes": 3763,
+      "sha256": "fdd3c85af0216b82ba6e52cd9aaf06b2d70aaf99eb4289bf6ef3cac0808b9029"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S206/agent-context.json",
+      "bytes": 5301,
+      "sha256": "66d11e0e89c530dcf70750eb418e5583ce09022d47e9eb36f4147d4c11d1938a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S207/agent-context.json",
+      "bytes": 4136,
+      "sha256": "cd520c4100b47cd9c180a0bfc43f869700bac54b0d6fe8a0c93a766d3f0a2b73"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S208/agent-context.json",
+      "bytes": 5636,
+      "sha256": "67b8a06abb1b5a7bd2d1ed42473f98b82c4440abfc5bf4ff90b379bd22e854e7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S209/agent-context.json",
+      "bytes": 4102,
+      "sha256": "a52cf46151da12655d2b8d6f3f2d519d8e03c5c578e633a3a81003e3b6d3856b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S21/agent-context.json",
+      "bytes": 3419,
+      "sha256": "6e62ab19a87d864cbde1802403c88dc1551fd328c9b98e7e6d673e19d5978fff"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S210/agent-context.json",
+      "bytes": 7524,
+      "sha256": "b7c81348f590c9f7de8dfd121c3240f82f6e8c9ce527205cb8da32f3db5acac5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S211/agent-context.json",
+      "bytes": 4895,
+      "sha256": "a76d11ce1dd0c8ef69f506a91c3731db2ece8165f0f6c413d560dec5a174837c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S212/agent-context.json",
+      "bytes": 3934,
+      "sha256": "cdfd0a4bed88595b606c044babe0150821f0f3c4e1d7b04514e4f8a9209973e9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S213/agent-context.json",
+      "bytes": 15563,
+      "sha256": "2b66102b0ddf824bfc1860a017efb9607f29304fc3bc32addb637b7b12832af6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S214/agent-context.json",
+      "bytes": 3443,
+      "sha256": "ae461f1d87643588dcd68fd4e41611c2c5f6fd8014b7ee5f5b6080570dfd0431"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S215/agent-context.json",
+      "bytes": 4048,
+      "sha256": "aecc86d2fc9b8c637e23f84fcb99c93d934e6f032bf934fce39526e1789e7652"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S216/agent-context.json",
+      "bytes": 5515,
+      "sha256": "ebd6c6dafa4329cfff4eba8b62e2c38fe7fc553cc7b8ecaafe04629760d1619a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S217/agent-context.json",
+      "bytes": 3238,
+      "sha256": "196717f6625e6baa97f170e5ac741683918754494fd59d505c396b22d60ef040"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S218-R1/agent-context.json",
+      "bytes": 59752,
+      "sha256": "fcee93863ddfd5c47bf5dbaa32ee2e2305b4e3fabf5e20043dfdfdae949f5a46"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S218-R2-1/agent-context.json",
+      "bytes": 3805,
+      "sha256": "ee8d0d811649b40f59a12bd9e0618e46de3185876e51d575ae84d8e3f49ecd49"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S219/agent-context.json",
+      "bytes": 3907,
+      "sha256": "b310a0be31bf7dada2b459a85181116db64f99577b5340171f98c2920245d45d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S22/agent-context.json",
+      "bytes": 4031,
+      "sha256": "3911ba4c75a21224e26b36b4b891d6343612806f3844f0cf20971146d08ba07a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S220/agent-context.json",
+      "bytes": 12651,
+      "sha256": "30bcd6d754fb165e0c2bd57db31bd3bdd04ebe1c9048cd3b699c591142452207"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S221/agent-context.json",
+      "bytes": 12392,
+      "sha256": "778390d0d57a3f385ac61cca6fbb1ccacbb8ef6f55bf77ab921d0ea9d5ad3abe"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S222/agent-context.json",
+      "bytes": 3427,
+      "sha256": "72cf76c35be3a477fd3dcb3977f7c6ab55ed1c479da43e9762e5741e82b52902"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S223/agent-context.json",
+      "bytes": 11390,
+      "sha256": "a75febae67a0f0dc17e467f661e3fca54f11943858040b57246c182519aa5019"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S224/agent-context.json",
+      "bytes": 3992,
+      "sha256": "7d79ebc83172019b755dfb99e07033395e3ee0b670d39b12da7082965e45d190"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S225/agent-context.json",
+      "bytes": 4912,
+      "sha256": "1d47ed9305547b070899cb45ddf0bbdb322d0a0e7fe540cd20988950d9a40aea"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S226/agent-context.json",
+      "bytes": 2876,
+      "sha256": "211d9e52e067bc0e0d9cc17c7d055bde0d94cc9e70fe17bef04f6697539d2c98"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S227/agent-context.json",
+      "bytes": 4987,
+      "sha256": "8fa5c0f5c57682a8bfd97c1cb487ff7578d26c1cd53a0f190e181a69492b2a4c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S228/agent-context.json",
+      "bytes": 4986,
+      "sha256": "e13b053f12a8a20aee9885172b740707eb645629e8517986805da73f4d663423"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S229/agent-context.json",
+      "bytes": 55273,
+      "sha256": "dd5ef215bc939b8c432573909aff216e610c13041d5211e9dec4be9f43cf5ecf"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S23/agent-context.json",
+      "bytes": 16769,
+      "sha256": "881e4c649bef2fc870b8387bf04b61a54ef0090ce2db18b73d2b510bd17ea2d2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S230/agent-context.json",
+      "bytes": 3969,
+      "sha256": "617cef6db763f16f07cd987475688c2a470af6784ef7c77679dfc9f9ab30f535"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S231/agent-context.json",
+      "bytes": 4897,
+      "sha256": "b9996084d855375e5360c61ae1396841cc6687b5d82f032cc73af70d56737c79"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S232/agent-context.json",
+      "bytes": 3061,
+      "sha256": "20108fcb16153f580325b809167983fa7a6b15ab465926eaf347883d04e20501"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S233/agent-context.json",
+      "bytes": 2622,
+      "sha256": "0a7bd5f718c5744aeacdfad222a51744b1863356573e868aa7e2e3c32f3e3929"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S234/agent-context.json",
+      "bytes": 2764,
+      "sha256": "9539fd7d75302127f5a575da097d9f5780ade5046341acc41bdd28da476591a3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S235/agent-context.json",
+      "bytes": 3510,
+      "sha256": "5c34b5c6ea6a7feb7144db0f77cad71f0f68fb60c2c2fb30a88dd3a5de38f209"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S236-R1-1/agent-context.json",
+      "bytes": 8595,
+      "sha256": "a83500682677a08d180455ecf01f3494e2ff44e21043dc806d806a491e906cc5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S236-R2-1/agent-context.json",
+      "bytes": 9595,
+      "sha256": "a27d5e13e84efc7df3a59b53a29d6b7804142fc99d04ed61a00aa0f64aeb333f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S237/agent-context.json",
+      "bytes": 8237,
+      "sha256": "c8d4f131b860a5b1b683363610536437dbf175a3cb7392493ddce68fac9c6cbc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S24/agent-context.json",
+      "bytes": 7023,
+      "sha256": "fb37173e125fb85f28be626b2cfb795e32b4cce68235b90e3259424e7ae9459d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S25/agent-context.json",
+      "bytes": 3052,
+      "sha256": "172cf2ffe6c68d294102ba9b68aa91aaca35ce780a7f0819519394db6b82bcb4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S26/agent-context.json",
+      "bytes": 13627,
+      "sha256": "081664f91c49fb75f09a7b658c096886a3cddd52a0a4d106f166f047eb2e9c76"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S27/agent-context.json",
+      "bytes": 7888,
+      "sha256": "6a67fb35e57a0a529255df5bfec6e291738b4f1c54a4b3800dc7b16595480f7f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S28/agent-context.json",
+      "bytes": 3124,
+      "sha256": "dacb9706234e7c60d4918f9d872ebd78c737ebf127c5dc5f3f32964bef9186d1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S29/agent-context.json",
+      "bytes": 2215,
+      "sha256": "590f2e0f272f52d11495a2ca6bf9fc1fc3fb37e3d810a2bc85962f11e4e27694"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S3/agent-context.json",
+      "bytes": 2069,
+      "sha256": "b102e9a7aae2dae3c5817cf76f6eed816bdbf9644856da9599086119f9242246"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S30/agent-context.json",
+      "bytes": 5300,
+      "sha256": "02767161f11cdd47d381b3c4f904109f28db29b4335f42baef58697cbc36f584"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S31/agent-context.json",
+      "bytes": 2482,
+      "sha256": "8b6916d3640eac96ed41bee31a19e0215115a812695fffecd64d50cd4de95b55"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S32/agent-context.json",
+      "bytes": 2928,
+      "sha256": "c9f105fd3e128cc2c49da7698eef1343f9650441822d757b6f1b128965139585"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S33/agent-context.json",
+      "bytes": 3436,
+      "sha256": "e817e402826fe57e1c0f02c654934c9efce9f21d9d10ea012c3222f31561fd1b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S34/agent-context.json",
+      "bytes": 3775,
+      "sha256": "7ffebdaf9c3bc0b28eae142b3f09b93c2af505b436f7bdf13e39af091580b9ad"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S35/agent-context.json",
+      "bytes": 9105,
+      "sha256": "7763d365ef4a1769270e6fed9bb84168b8cb73667c4fbb058735ea43aafa0542"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S36/agent-context.json",
+      "bytes": 8734,
+      "sha256": "8fe0c7bac1c5ce38dfff4848a00006bc4279b5c9cb61c1b945fcca0fade76182"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S37/agent-context.json",
+      "bytes": 3903,
+      "sha256": "5f582a806ea7ae1a77a99d8d1884aeaf3e97653d2cf10c41f29fa436b05ff366"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S38/agent-context.json",
+      "bytes": 6211,
+      "sha256": "627ed94e3e704ad78a287410617169788a0691ddf9022421cc78e8c24bc61e05"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S39/agent-context.json",
+      "bytes": 3786,
+      "sha256": "f820d27f6ba18e95318a7a28cc062f32ab29b2e2ae966e107645fe2a81429ca3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S4/agent-context.json",
+      "bytes": 2995,
+      "sha256": "bb3ba7a3e3e4bc030fcd21417200f902222d054a95b2d1d4955b6c663a5041e1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S40/agent-context.json",
+      "bytes": 4171,
+      "sha256": "8eeb0785cb5b2d317766aea38b26a480f232e9125f3190b80d2d55648236c2d6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S41/agent-context.json",
+      "bytes": 2276,
+      "sha256": "70eaad9a58b23ce7f7c97c679573b56dec699a56794c25180442adf4d37159da"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S42/agent-context.json",
+      "bytes": 12357,
+      "sha256": "1c98ecb2693cdf256fe2a2e7e8b260b0cf60c7b4d53c4be64ef2a7f169be7a77"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S43/agent-context.json",
+      "bytes": 5978,
+      "sha256": "89920165e8885d84f770daa3dd01135d316faf3c00d1c278b55563a29c1115b3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S44/agent-context.json",
+      "bytes": 3879,
+      "sha256": "8e8f90c7ba7c5977633ab4b543a3e05789fdb4253a930afc75c3e1bf34add99b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S45/agent-context.json",
+      "bytes": 7889,
+      "sha256": "d1156106a7352831a4a363d440eb3f41fdb10b88a976c00192c8284d48ffe825"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S46/agent-context.json",
+      "bytes": 5130,
+      "sha256": "14e113cb595557a489e2cef9c8f6200090f3966f7b5bcf5195792e2ce4a83996"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S47/agent-context.json",
+      "bytes": 4020,
+      "sha256": "f73c8652a3c9292de7b1aa50383a6c7c0559128ff8d5b7d2d725f65444af2e81"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S48/agent-context.json",
+      "bytes": 4281,
+      "sha256": "d1d2bd117d3a69a35a42d7e6de3f65d27aa637c148dd4fd17c8f6695a03d5d2c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S49/agent-context.json",
+      "bytes": 2456,
+      "sha256": "b5f07d86fd0228a8d0ee9f39ecba23663a6967001f502bc6b8ac7dba88379867"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S5/agent-context.json",
+      "bytes": 5491,
+      "sha256": "a7937ad54df5bba550a50f2eaefafa4686dcd1c5bd0c41803011164029633d97"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S50/agent-context.json",
+      "bytes": 4303,
+      "sha256": "d0d4d867be2fc7edfec80c76ca20dbb59e911d0dea779b8a9b0c6e5da610d208"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S51/agent-context.json",
+      "bytes": 6582,
+      "sha256": "ce34fac8820c79cf4971c53f1554f07d341a5cf7f2b8da66163ded61ac61f476"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S52/agent-context.json",
+      "bytes": 4981,
+      "sha256": "f2da4b7017687944b9cb14924fc2904e2cf6abc73d7e75caeb20d6274731bea4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S53/agent-context.json",
+      "bytes": 5361,
+      "sha256": "41f856113ea05f978539124d8fd4bab556559d191529b090d6c9ccd3acbf2fa0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S54/agent-context.json",
+      "bytes": 5170,
+      "sha256": "ec75c0be798c2c051714615d814cb3d0bfcff18af6cf9c0e1a4f45c9220e33c8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S55/agent-context.json",
+      "bytes": 2954,
+      "sha256": "9bf5c74bbf4099f0ea0bacc5525c911d80728288e0922d5f91c5e0edd7ede9d2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S56/agent-context.json",
+      "bytes": 5421,
+      "sha256": "17247ecb987273fabca3e4462fb78d4434f2f84fd6c979e45583aade6b96e88b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S57/agent-context.json",
+      "bytes": 4114,
+      "sha256": "4b6b927f97c539a239f46871445ac6877f14256ff75eed0a05f8c6319bdcdd35"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S58/agent-context.json",
+      "bytes": 6850,
+      "sha256": "56ed5362b91cd3a931e6c197ea273564a6c66059aa57ee55a01664d95960a966"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S59/agent-context.json",
+      "bytes": 5247,
+      "sha256": "14b3a0288e70d55dd56ff1da12e40127f0e2aa44bb0736098d1e5949890aedd8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S6/agent-context.json",
+      "bytes": 4202,
+      "sha256": "8a7f8d5a0742cfa9ca598b5775e0322ab81458b46c8bd37c02560ee715fd821b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S60/agent-context.json",
+      "bytes": 14223,
+      "sha256": "069d77d9e2f630591218582d533a92cf0aba848faea5f5ee68dadeae761a410a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S61/agent-context.json",
+      "bytes": 5688,
+      "sha256": "2bbc5bb7b2e116b951d9f00483afa9ee14f53a631fc50ae43318aed854e73b67"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S62/agent-context.json",
+      "bytes": 2945,
+      "sha256": "ace59f5084e00e4b216558ecf9f9e7493d68b0f54627d35d75a4f366a764cbfc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S63/agent-context.json",
+      "bytes": 4842,
+      "sha256": "de7e241071bd7e9263d3b738ee7611c048de3c09b1292df47e0f1695248b2f93"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S64/agent-context.json",
+      "bytes": 5097,
+      "sha256": "d1fe709eb749fcde955cbac8d86e29908bb2af991594e16f25a3acd861c52e0d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S65/agent-context.json",
+      "bytes": 5883,
+      "sha256": "e634946574298730e60a00139dc8ce96d1523f6b7315d22c4f6c7fc78fdf5792"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S66/agent-context.json",
+      "bytes": 3754,
+      "sha256": "b4a6a77226fab43216bd9bd5adf90467c5ad4c8197ea9c07081c2c1517c25941"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S67/agent-context.json",
+      "bytes": 2997,
+      "sha256": "044e136da0d72d3ee784e872ee3a3dd214a98bfc5ebefe7b497d25c752bc031a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S68/agent-context.json",
+      "bytes": 10495,
+      "sha256": "8d6885c2980d87b2e972f7d646fd04047ebfddf16f88acab0e6a463ae4a9d253"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S69/agent-context.json",
+      "bytes": 2864,
+      "sha256": "c10fa82b53a9eed0369bca4c5f829840b24d676fe24c542966decb981253f958"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S7/agent-context.json",
+      "bytes": 4733,
+      "sha256": "54bb6e627372564c6f78a2db8d78a0973e950278a2c869f33e2c56185d113ac0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S70/agent-context.json",
+      "bytes": 3274,
+      "sha256": "fff92aabebd45260a90a943bb9e5b4bb16f55e89e848bb54a5b000afbfb8489f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S71/agent-context.json",
+      "bytes": 7066,
+      "sha256": "41dd1fd16a206fdff080b4760bc960597038bbeb475289b49a854dfb7cf17ba4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S72/agent-context.json",
+      "bytes": 2832,
+      "sha256": "5ae1e9f949808c5c4790d5e429abaaee2aea17c37379bee31e94d92a2b92cec1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S73/agent-context.json",
+      "bytes": 5466,
+      "sha256": "a622f6548ef220c40b02ff0ed1e95d8a6b68f0ef6073af4a3356536fee1f0483"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S74/agent-context.json",
+      "bytes": 3766,
+      "sha256": "62c84fce53c3e1d895e1b32f88e0fcd2cb32ca5052650dfece0978a6a7105ba4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S75/agent-context.json",
+      "bytes": 5213,
+      "sha256": "2b5741e3e1c7dee7ca5f04aa92fda5bebf2abbf2ddc5f6cda3c8f5a5e1ae23c0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S76/agent-context.json",
+      "bytes": 9549,
+      "sha256": "5db49cd97027928d28972ee186d42636ff6d3f3249ee0f978c555bd1bd77d926"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S77/agent-context.json",
+      "bytes": 7930,
+      "sha256": "dd2d11964fd897893c63ba7aa8dc66af79bd9a542c7edc9b3a98de40ec5d529b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S78/agent-context.json",
+      "bytes": 5328,
+      "sha256": "cb1a45d04291bccf95eec0f016c5d4b97d9b96dfe0f8927154693f1806ce12dd"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S79/agent-context.json",
+      "bytes": 6042,
+      "sha256": "b8601eea7833ffcc19d865eda952b6337ced5de81ca2a05fa9454f760c6fda0d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S8/agent-context.json",
+      "bytes": 2232,
+      "sha256": "6e679667c5f8d3d49341de12648c730a64a357bf11a34f6562f000f8fa7d27e1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S80/agent-context.json",
+      "bytes": 5318,
+      "sha256": "8a568ef7adfd282ee898b0de8e8f25876a4e3cc14d3d7b63d39458d00874f535"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S81/agent-context.json",
+      "bytes": 10641,
+      "sha256": "195def7d4e33009d6be2f657ade0fbf507d463379cf731cd66f70162d5b73372"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S82/agent-context.json",
+      "bytes": 3554,
+      "sha256": "79f7f771b6198e039347a35db308990704c11f7dc280bcb346d081d642cfa6eb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S83/agent-context.json",
+      "bytes": 32273,
+      "sha256": "86ed00b45e93ebb719848115b4325b4033c7dc7732170df25bf18e3cddc994a0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S84/agent-context.json",
+      "bytes": 5319,
+      "sha256": "40f4866b33c02ce96392f67b8c38430f04db1970f33eb77aac086c8b3bb314ea"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S85/agent-context.json",
+      "bytes": 17650,
+      "sha256": "eeb98fadce86acb1052b602600bb4db7096a7e6f10bb55028fe2d9eba0884e1e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S86/agent-context.json",
+      "bytes": 2792,
+      "sha256": "1063756727f541e16d97cda5e80c95e71162f2a9173c8601db4966584bcbb974"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S87/agent-context.json",
+      "bytes": 2162,
+      "sha256": "700582984972e5fe47da82824be6cdc972e95c41c22be1d08256ca442ea20f9f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S88/agent-context.json",
+      "bytes": 8986,
+      "sha256": "0543e8539423bbd2353129822c04800879b552e9ef33fd4309964fe806cc3ce4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S89/agent-context.json",
+      "bytes": 7303,
+      "sha256": "56e3ead40f7433ced5e6be681b95f34cf03ade4b5febd0d973f40d0a8a7939fc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S9/agent-context.json",
+      "bytes": 9299,
+      "sha256": "e96dac90d1abdcccc989bf607c7d6f686816f9130d84eb4c0c3c63fb89b5762f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S90/agent-context.json",
+      "bytes": 6697,
+      "sha256": "c23ac940486205aa8990cd9cdb8c6aaddc7159e09868da7e9e8943eb3bd5f698"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S91/agent-context.json",
+      "bytes": 8566,
+      "sha256": "aa416060d751bf83e7b2da850fdc590fb4087c2cc56f1941cee738334ade76ca"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S92/agent-context.json",
+      "bytes": 3221,
+      "sha256": "8ae778cd24320b6303d976c551d6cd08568429125fea8810f8aa360b4dabd4cc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S93/agent-context.json",
+      "bytes": 3690,
+      "sha256": "e294b33cced0aa1f96c86d946fc2b1cc012e291e9dbb864cc7802e983015fab0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S94/agent-context.json",
+      "bytes": 6259,
+      "sha256": "0489015b3353ec6de9feedf806a9788ef928836f5c0697b7d8b17293fcc83f35"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S95/agent-context.json",
+      "bytes": 6365,
+      "sha256": "d8b6f1a335a0fdee14837d2c621ff58221ed3872f4d55c12b13c443f039e267e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S96/agent-context.json",
+      "bytes": 3327,
+      "sha256": "42f3adda1a26cf9b27168e241f6ded0056717993b106bdcc2d33a76d7836b4cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S97/agent-context.json",
+      "bytes": 3280,
+      "sha256": "546d2671c8cf1c36209a2ce58c9af762a76d8e01bf6553a7580365d2b857938e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S98/agent-context.json",
+      "bytes": 3436,
+      "sha256": "6a229e72383caab3f5a0134fdbeb3a70143e448dcdd8cd6a8d5fa4c30129ee8e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/agent-context/S99/agent-context.json",
+      "bytes": 11024,
+      "sha256": "b66d8f9583f06ac73d3b0394b7e7d92691a77081781756d01be4792f5259b5d7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/atomic-recall-alignment.v1.json",
+      "bytes": 8290,
+      "sha256": "fc1e61b6d51a1ed2d45fef87be0e3acddf9db0a3923ef9b6a8ecc0e0ac1af888"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/compiler-state.v1.json",
+      "bytes": 353,
+      "sha256": "a67590d79b9bb366ddada72d5728a302a99d6b92d385398fd420964433fa12ac"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/failure-intents.v1.json",
+      "bytes": 648587,
+      "sha256": "006bd216ae593fd63b5c7b96e79b38f3a32f335dbb67dc2f273c2fdbc83c9fcc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/feasibility.v1.json",
+      "bytes": 63,
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/final-plan-coverage.v1.json",
+      "bytes": 3248385,
+      "sha256": "d372095da2929ddba8e16a60b09541cdca7a0c7810f72e6f6e21d891318e65f5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/handoff-repair.v1.json",
+      "bytes": 3668,
+      "sha256": "7d31d7f7f2cf77535518d91423f122bd47bee3300cb98a30f3780acac82414d4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/obligations.v1.json",
+      "bytes": 477035,
+      "sha256": "db0cdd622d7aed1aad69fd667f4737980f586cb1024320ee9dbefdff488fb932"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/pre-slice-coverage.v1.json",
+      "bytes": 103072,
+      "sha256": "ae2731f9440cce2f8a9deac74ba0d4349de9bc6a7d1f838cfcc422de707ec76c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/semantic-alignment.v1.json",
+      "bytes": 8020,
+      "sha256": "d3d6761c6cc13431b64bb63a5ba228a551d9348d659f23faf8837867b83b4397"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/semantic-chain-audit.v1.json",
+      "bytes": 368,
+      "sha256": "bd1daa39da7ff2c3a46a30c39f39b524dd09e4c0e162c598cece54b8655e552e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/semantic-plan-bundle.v1.json",
+      "bytes": 14297251,
+      "sha256": "a5a20e42b4c615344b0632e618c5f66091b98b4ee9b85dca21b6889731ae51e2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/slices.v1.json",
+      "bytes": 2839377,
+      "sha256": "eaffc699202092d000978b74541e2ae439feb4611e36c6b2d60dbe623524e059"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/source-index.v1.json",
+      "bytes": 208635,
+      "sha256": "129ce29bb055179053ec376dd0fd4aa915cbba715fd5ffa154a23ad0fa5d1030"
+    }
+  ],
+  "source_scope_files": [
+    {
+      "path": "PhaseA.Platform/PhaseA.Platform.csproj",
+      "bytes": 531,
+      "sha256": "4ca72cb0044b3f00b3d943a80a88e204c11758e12575de6e583ddb96fe052cc5"
+    },
+    {
+      "path": "PhaseA.Platform/packages.lock.json",
+      "bytes": 2145,
+      "sha256": "c81b91a880c139baeac449838ecf7896e177d820f23999fc7382ee61ad5d4732"
+    },
+    {
+      "path": "docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md",
+      "bytes": 15955,
+      "sha256": "2792b5ae5d890120a630787e82b97299434e88252bfc3fb9b9603ce336fc986c"
+    },
+    {
+      "path": "docs/requirements/s2-06/vdd-input.md",
+      "bytes": 100475,
+      "sha256": "f6e4bacdd952da675a0aeb70c94da6cb7478b0b2f7d6543b0a8b48072db90654"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S215-ROOT-PATH-AUTHORIZATION-20261031.json",
+      "bytes": 983,
+      "sha256": "45376fa35b4b778ad3d5382c9661753e7d0066f9919a0480ac8a9aa9e408dd49"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/source-scope-readback-fixtures-r7.v1.json",
+      "bytes": 9676,
+      "sha256": "5c51d3b13abcffde7a2e6922f52f8971def7aab51a4b00e35d261837ed997c78"
+    }
+  ],
+  "audit_and_budget_files": [
+    {
+      "path": "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/PREFLIGHT.json",
+      "bytes": 95804,
+      "sha256": "17a2abcd54140a043e26b5d6fc142ec995ebb6027b04057162d31ba474d44694"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/compiler-result.json",
+      "bytes": 180,
+      "sha256": "afc4bad72859be5b3d39991d185a7a6d8fdb9fd6b6b475e0e6abaec803e8fa72"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/compiler-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/compiler-stdout.log",
+      "bytes": 180,
+      "sha256": "afc4bad72859be5b3d39991d185a7a6d8fdb9fd6b6b475e0e6abaec803e8fa72"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/S236-terminal-binding-native-result-r12-20261102.json",
+      "bytes": 3493,
+      "sha256": "bbd15e62c5a37407e5833d907f76258c5634a308fc069aa0c69458b9d5533ec1"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/quick-dev/425d32a29672cc77010f2734d6d3a89a8360f0b60fefb61d0aeb037c6acf24c1/budget-ledger.json",
+      "bytes": 275,
+      "sha256": "3c0f69c557087420648501179a41572c9c91a1812443598aad95f128572caa70"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/quick-dev/c825be1cf6b153d3af7b93b18fd3b60139ed436fed3e44989316c751a9b99ed4/budget-ledger.json",
+      "bytes": 272,
+      "sha256": "ee2a77905df099b9956156591dc730b4cf710b420749ddbecd8b366b45d23348"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/vdd/7a5de464c4575ce8bf8bd0cd36aa160dcbddde0f85e01a73d71a1c63bfef57df/9ec66d1e50844b88bfb1a4f2cc2bb474.events.jsonl",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/vdd/7a5de464c4575ce8bf8bd0cd36aa160dcbddde0f85e01a73d71a1c63bfef57df/9ec66d1e50844b88bfb1a4f2cc2bb474.json",
+      "bytes": 1290,
+      "sha256": "aa3dec7e736bc0716187baf59d1eece22eba874b34e23953cde258557c8bdf16"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/vdd/7a5de464c4575ce8bf8bd0cd36aa160dcbddde0f85e01a73d71a1c63bfef57df/budget-ledger.json",
+      "bytes": 99,
+      "sha256": "242febae8f524fed66d9cc6fce9d8bf43b153177b8150484bbb43ce689db4fcd"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/vdd/afb40302b8f6b5780c0ad4f1cfd7687ac2a129c88e8423f33d2486c3137379cb/1042889a5ed1426f827e620416d309d8.json",
+      "bytes": 4601,
+      "sha256": "af4b4e6c278c0e14be37ff3b01f497ca88fabacaeefcd607c5542651b3eddca0"
+    },
+    {
+      "path": "logs/workflow-unit-budgets/vdd/afb40302b8f6b5780c0ad4f1cfd7687ac2a129c88e8423f33d2486c3137379cb/budget-ledger.json",
+      "bytes": 3193,
+      "sha256": "74d2c3de1442b4b09b444f9938603d67b7ea0c44113fb9d242d7bedb8b231a91"
+    }
+  ],
+  "retained_predecessor": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+  "predecessor_review_files": [
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-plan-bundle.v1.json",
+      "bytes": 14265867,
+      "sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/compiler-state.v1.json",
+      "bytes": 262,
+      "sha256": "8b60a9de638cc1d1431244bb3fcd2bb2148dff99066b4fde0f1c5be5eb2eeef4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/source-index.v1.json",
+      "bytes": 208635,
+      "sha256": "129ce29bb055179053ec376dd0fd4aa915cbba715fd5ffa154a23ad0fa5d1030"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-alignment.v1.json",
+      "bytes": 8020,
+      "sha256": "d3d6761c6cc13431b64bb63a5ba228a551d9348d659f23faf8837867b83b4397"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/atomic-recall-alignment.v1.json",
+      "bytes": 8290,
+      "sha256": "fc1e61b6d51a1ed2d45fef87be0e3acddf9db0a3923ef9b6a8ecc0e0ac1af888"
+    }
+  ],
+  "instructions": [
+    "Transfer every successor file with its original relative path and exact bytes. Verify all hashes before consumption.",
+    "Retain the original r12 and current Windows native failure, permission, admission, and budget records. These cloud S236 ledgers are historical provenance, not substitutes for S164 Windows failure or execution proof. Never overwrite a newer Windows ledger with an older cloud copy.",
+    "Use the existing public Quick Dev entry on the successor and current machine identity. The added runtime role authorizes no implementation or observed RED by itself.",
+    "Do not import Linux machine-bound runtime evidence as Windows proof. No product tests or Windows execution were performed in this operation.",
+    "No automatic transfer, upload, Git commit, or push was performed."
+  ]
+}

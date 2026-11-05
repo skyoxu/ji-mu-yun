@@ -1,0 +1,119 @@
+{
+  "schema": "s206.s164-runtime-handoff-result.v1",
+  "at": "2026-11-05T15:39:58.276527+00:00",
+  "status": "plan-ready",
+  "public_command_argv": [
+    "logs/s2-06-bmad-20261028/tooling/venv/bin/python",
+    "-B",
+    "scripts/vdd/compile_plan.py",
+    "--requirements",
+    "docs/requirements/s2-06/vdd-input.md",
+    "--out-dir",
+    "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105",
+    "--profile",
+    "resumable",
+    "--source-scope",
+    "logs/s2-06-resume-20261031/source-scope-readback-fixtures-r7.v1.json",
+    "--repair-quick-dev-handoff-from",
+    "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+    "--runtime-red-intent",
+    "FI-B4F10A9126A0",
+    "--result-json",
+    "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/compiler-result.json"
+  ],
+  "public_process_exit_code": 0,
+  "result": {
+    "path": "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/compiler-result.json",
+    "bytes": 180,
+    "sha256": "afc4bad72859be5b3d39991d185a7a6d8fdb9fd6b6b475e0e6abaec803e8fa72"
+  },
+  "successor_bundle": {
+    "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/semantic-plan-bundle.v1.json",
+    "bytes": 14297251,
+    "sha256": "a5a20e42b4c615344b0632e618c5f66091b98b4ee9b85dca21b6889731ae51e2"
+  },
+  "handoff_repair": {
+    "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/handoff-repair.v1.json",
+    "bytes": 3668,
+    "sha256": "7d31d7f7f2cf77535518d91423f122bd47bee3300cb98a30f3780acac82414d4"
+  },
+  "successor_state": {
+    "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105/compiler-state.v1.json",
+    "bytes": 353,
+    "sha256": "a67590d79b9bb366ddada72d5728a302a99d6b92d385398fd420964433fa12ac"
+  },
+  "migration_manifest": {
+    "path": "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/MIGRATION-MANIFEST.json",
+    "bytes": 74605,
+    "sha256": "1987a962dc50ee4873dcf7580264e9bbf684d40a280c0ed41863350302d8c375"
+  },
+  "obligations": 459,
+  "slices": 239,
+  "original_intent": "FI-B4F10A9126A0",
+  "added_runtime_intent": "FI-C08532A0787F",
+  "runtime_marker": "S206_UNSUPPORTED_STORAGE_PLACEMENT_ENABLED",
+  "selected_acceptance": "A-C8B20F1B0FBD",
+  "semantic_changed_slices": [
+    "S164"
+  ],
+  "legacy_projection": {
+    "slice_count": 239,
+    "fields_added": [
+      "depends_on",
+      "slice_input_hash"
+    ],
+    "source": "immutable predecessor obligation dependencies and slice membership; native _project_slice_dependencies",
+    "nonselected_slices_equal_after_projection": true,
+    "contexts_changed": [
+      "S164"
+    ],
+    "warning": "All successor slice serializations/hash fields changed through this supported legacy projection. Do not treat historical execution receipts as fresh successor runtime evidence."
+  },
+  "checks": {
+    "V0A": true,
+    "V2": true,
+    "V3A": true,
+    "V7": true,
+    "final-validation": true,
+    "quick-dev-handoff": true,
+    "semantic-chain": true
+  },
+  "protected_checks": {
+    "r12_files_unchanged": 317,
+    "original_dirty_files_unchanged": 7,
+    "failure_history_files_unchanged": 2,
+    "old_budget_ledgers_byte_unchanged": 3,
+    "source_scope_inputs_match": 6,
+    "all_original_failure_intents_retained": true,
+    "acceptance_oracle_assertions_owners_unchanged": true
+  },
+  "budget": {
+    "diagnostic": {
+      "path": "logs/workflow-unit-budgets/vdd/7a5de464c4575ce8bf8bd0cd36aa160dcbddde0f85e01a73d71a1c63bfef57df/9ec66d1e50844b88bfb1a4f2cc2bb474.json",
+      "bytes": 1290,
+      "sha256": "aa3dec7e736bc0716187baf59d1eece22eba874b34e23953cde258557c8bdf16"
+    },
+    "ledger": {
+      "path": "logs/workflow-unit-budgets/vdd/7a5de464c4575ce8bf8bd0cd36aa160dcbddde0f85e01a73d71a1c63bfef57df/budget-ledger.json",
+      "bytes": 99,
+      "sha256": "242febae8f524fed66d9cc6fce9d8bf43b153177b8150484bbb43ce689db4fcd"
+    },
+    "elapsed_seconds": 50.13951658899998,
+    "spent": {
+      "c37166533b82d04d3b0bc4b4d791dd70ae5d159ed3c87e4a540a3d2cff0e7f6d": 50.13867648899998
+    },
+    "prior_r12_native_elapsed_seconds": 384.39913289499964,
+    "prior_costs_preserved": true,
+    "note": "Independent native handoff operation recorded by the unmodified public supervisor; prior source-plan and Quick Dev ledgers are retained, not reset or replaced."
+  },
+  "model_called": false,
+  "product_tests_run": false,
+  "push_performed": false,
+  "free_bytes": 3330613248,
+  "limits": [
+    "Handoff-only plan-ready; no actual RED, implementation, Q7/Q8 or Acceptance success asserted.",
+    "No Windows execution or transfer performed.",
+    "S164 exact planned test is not present in the cloud implementation; author/validate the actual case on Windows through native Quick Dev, preserving all existing evidence.",
+    "Existing 21 missing historical reports and failed database incident gap remain unchanged."
+  ]
+}

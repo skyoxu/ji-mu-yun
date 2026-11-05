@@ -1,0 +1,1741 @@
+{
+  "schema": "s206.s164-handoff-repair-preflight.v1",
+  "at": "2026-11-05T15:36:59.260621+00:00",
+  "head": "16b36bae36e4bd9756752db27e0f7660e67bb085",
+  "branch": "feat/s2-06-preparation-20261028",
+  "argv": [
+    "logs/s2-06-bmad-20261028/tooling/venv/bin/python",
+    "-B",
+    "scripts/vdd/compile_plan.py",
+    "--requirements",
+    "docs/requirements/s2-06/vdd-input.md",
+    "--out-dir",
+    "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-runtime-red-S164-r13-20261105",
+    "--profile",
+    "resumable",
+    "--source-scope",
+    "logs/s2-06-resume-20261031/source-scope-readback-fixtures-r7.v1.json",
+    "--repair-quick-dev-handoff-from",
+    "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102",
+    "--runtime-red-intent",
+    "FI-B4F10A9126A0",
+    "--result-json",
+    "logs/s2-06-resume-20261031/S164-runtime-red-handoff-20261105/compiler-result.json"
+  ],
+  "predecessor_files": [
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-attempts/v4-published-recall-1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267.json",
+      "bytes": 444,
+      "sha256": "84a337d35583e7634c3db60ac542f7d833c7947b5263ab5060bacd1fd185091c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-01-92e9c79bdda0c8c93ad8307c.json",
+      "bytes": 924,
+      "sha256": "1ba926594ec2f14ca3c60f593da1e277c4a6b064249d6ee7490bbb6dbd8d1c3f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-02-9cc4fc8ab1717c5dd874e57b.json",
+      "bytes": 1783,
+      "sha256": "b16a5683962567621019fae54c152eb3542626101e68953d177d05942e7e6644"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-03-f1d7bf254e9b6243c26bec9a.json",
+      "bytes": 1321,
+      "sha256": "e27677066222c245e1985e9e77504b9092e0aef062aa920677bb8474519b8419"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-04-1ea144dea714a96bae573408.json",
+      "bytes": 2047,
+      "sha256": "c5780f0c0bab4a36ef75c87f1a28fc563133fec20749b6392afb2a14524d56bd"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-05-56a3854ad922ab553e4ece3f.json",
+      "bytes": 3721,
+      "sha256": "95090a4e2bb78dcb5eb4c7f48877324fe43c3b28ad4dbe07f2501c3a17b5eb65"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-06-dd5c9af80b86ac561e9333b8.json",
+      "bytes": 3842,
+      "sha256": "f56303462fbfb82040fa61b4961cbe944ce31c61407594e8dbdb118c0763d9f6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-07-85af89945450c25794e553b7.json",
+      "bytes": 1971,
+      "sha256": "5eb8445760e3ae815f2d84d96fbb7a309cc73055afe805467ecb9d955099a666"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-08-b42a8e885ae220bfa9c904d2.json",
+      "bytes": 1750,
+      "sha256": "fb05fae29c1808b0be34666d78013684ae481b061eb2ac102b2fb2043a75f36f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-09-1c81ade5c8eddf3dbb3de3e3.json",
+      "bytes": 2471,
+      "sha256": "aa0fc33e900026b93b55e0bf6941cb739df20c91760dfd1cd2c48a7e33d42310"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-10-5e9dc532feff72563655aeba.json",
+      "bytes": 1948,
+      "sha256": "fba7ff3f7c5c3ce9207f19d6229bb77bd4620c38c365bc85654a3ade64582e04"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-11-1bb95033ba8acc32cf375c1f.json",
+      "bytes": 1134,
+      "sha256": "cf8b87522f4b723d48dd2ba0e12a64ecf79e8d57be433601701b10930adeac25"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-12-35379f1d11176d76d88404b0.json",
+      "bytes": 3159,
+      "sha256": "880dc3177b105b76a5f00e6d4a0b9cc74738498c83545847874a542b67295963"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-13-200e04b940d6266e8e16630c.json",
+      "bytes": 4908,
+      "sha256": "acfe3d9f702854b1553115e2f64636112ecb73a0cace0d67cb23570e50a20d11"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-14-437b585514f4d4ae35339e25.json",
+      "bytes": 13007,
+      "sha256": "61712d1d7248ef2ef6adac3991bf42a09be55ecaea547e7254df49dda958e988"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-15-ab4e5c9f03ba9c177ab624e4.json",
+      "bytes": 76998,
+      "sha256": "6c54666fd2981bdd18c2ce44f26d62716b8a548da24a681030eafcbe3a6d7a80"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-16-67248bb924af6002c81be962.json",
+      "bytes": 83073,
+      "sha256": "d31f6827bfc47a00edaa6e94bb86b47c95b8b68b04313dd70db66cf300a03c29"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-17-efd857351890446b0f2bcdc4.json",
+      "bytes": 67365,
+      "sha256": "5b3a3ff9456fb954ab5e3df805e3d96d5dbdf68931e933ad92816a6501a5307d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-18-1d1cad77d615d7c3ad4cda67.json",
+      "bytes": 60016,
+      "sha256": "d271e6ebb1fc81a27dc05ee2cd39bafe25e1b1644b3dc984b33159d412551203"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-19-8d9cf3f7aafa265a8144ba24.json",
+      "bytes": 213211,
+      "sha256": "0362de2533fe4b3ff9819fd1cbf50f5c7e8b5bc912686abccca3de8ecf5532a7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-cache/v4-source-chunk-20-165b09fb3f7d801bacbf46ef.json",
+      "bytes": 29278,
+      "sha256": "a1ab197bd26e0f397cf47ae217ab6277e9886aca29dc6d9025f5a4d43d976a49"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/candidate-repairs/49b681db6b4f766c0f71f7f7f6b02c2c4ad7cc4efb5f11987becebd68e905809.json",
+      "bytes": 24229,
+      "sha256": "49b681db6b4f766c0f71f7f7f6b02c2c4ad7cc4efb5f11987becebd68e905809"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/compiler-progress.jsonl",
+      "bytes": 23662,
+      "sha256": "a2533e9a0134dc9dca760cb30461a412518a8b4dfbb0237f179b60a4c76666db"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/published-v3-repair-active.json",
+      "bytes": 16,
+      "sha256": "fa5c6480f5fe8b937833535f92d3cea0214cef456265448064b02836abfaebb1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-01-d2f96e4b621deae79cae9b55-last-message.json",
+      "bytes": 939,
+      "sha256": "cc0372cf0501422ce6bfe0823cb38e7d54511dda2cbde29bbdee709b2287f157"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-02-948fd32261a39b77303c50cc-last-message.json",
+      "bytes": 1804,
+      "sha256": "32951c3f50fe0a7a029a99d4a0fa5e13ebba72cb738d8bc23346780844afd95b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-03-ab768b13b748cd3519082048-last-message.json",
+      "bytes": 1339,
+      "sha256": "5333ed8db49d506222822470c91a30ae9630ce45033dbb0ca1365d3df74d1d87"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-04-78aed45e00b8ea67afd8f487-last-message.json",
+      "bytes": 2065,
+      "sha256": "164ae2ce81bb99fef89e136c4404cf815d9adee4836ad44fb802716993fb1866"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-05-13c063fa08cde7a2628c18b7-last-message.json",
+      "bytes": 3748,
+      "sha256": "2d71606aaec3f975ae9885aaf84f149e957b07a487685917c6a7faa588957774"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-06-0c8fd2957454f0a2c6f8a189-last-message.json",
+      "bytes": 3869,
+      "sha256": "0c4662617905b0a536562dd24996d7807037a2053d52ac178c16d55fdbf873a6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-07-b5c4ab96bc1823d476e26ce1-last-message.json",
+      "bytes": 1989,
+      "sha256": "9c17239d35405172f29a0bfe2e259c97b724276347e1ea18b4057d863fc37fbe"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-08-ceb37d82c87d9d342387dc39-last-message.json",
+      "bytes": 1768,
+      "sha256": "61f582071cb14789aefb3e1c600af46bdc977cf32f4654afb9575bb3489134d3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-09-d56e77633392d21946129ab9-last-message.json",
+      "bytes": 2492,
+      "sha256": "d6ca033245c4adcbf019edf1e7c89fbe2a324f6610ff9286e45ffde869f929e6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-10-a57141433abb020dac4aac4a-last-message.json",
+      "bytes": 1966,
+      "sha256": "ef0069925603e827de9a392dd228146389940cdc4a528045ebb70503619d05c2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-11-8efb76da7ea9d5ec59d0d0c7-last-message.json",
+      "bytes": 1149,
+      "sha256": "6767a064e1213c13020238d6b292edff46e0e23aea350068380cf01603963d63"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-12-5964ecf6c8d5a401d0f11890-last-message.json",
+      "bytes": 3183,
+      "sha256": "43fcfb484a7aa2fd3a462ba2b27dcf30f1085707bb8e25bf984f0961046e08f1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-13-6a9b3c6e17db29373eb25b6e-last-message.json",
+      "bytes": 4938,
+      "sha256": "c55b17124dfe4169f10006168a3abbc060570db638e048ce183ff4d2ee183557"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-14-f0d5df3f7190f1157b7cfd03-last-message.json",
+      "bytes": 13085,
+      "sha256": "05d0aeb788bbdd795875603541dd7ef2d6b3e426d02d89a04fbcb998b93389ef"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-15-b817c9ab8302bacd26c0c44e-last-message.json",
+      "bytes": 77211,
+      "sha256": "83d03dde0a92cd3e77b86ee26854e65a4eb2b222bc1d7c51cabc297eb2d6f125"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-16-79cba8f364005657f259f1ec-last-message.json",
+      "bytes": 83262,
+      "sha256": "b71953e54890ac0b1cfcd99be45227344cd9db474b146ed0678cb97d5cdc0c8b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-17-26614fc7ce02d0d28c6e03f9-last-message.json",
+      "bytes": 67527,
+      "sha256": "30bc047a48208aa14d3bd36a3ade0f408b98ae0c095410d922dc5a161c3d8064"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-18-00db1a49e4bd26f944f696dd-last-message.json",
+      "bytes": 60169,
+      "sha256": "18bad2eed0dd8dafa96315775a9aa247cdfe7490d2359fd67baddcb5ce1db7a0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-19-6a6a49262997637b432c78a3-last-message.json",
+      "bytes": 213619,
+      "sha256": "1767e30b2db28de12b9ca1481d6ea33fc3a1bf9354a08759c1bede52eea3f2b8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/v4-source-chunk-20-c2f85f5c63b2627bc3b2afea-last-message.json",
+      "bytes": 29362,
+      "sha256": "68a178186936849c295e5d00a8171e172074633425e949e844ff955af7e697ca"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-01-d2f96e4b621d-cecd37eb4a6c.json",
+      "bytes": 649,
+      "sha256": "7ae1ca62e1610dedfe94f7e5579a90af9c3ce23ba27fe1338f1483c1e8236b0b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-02-948fd32261a3-cecd37eb4a6c.json",
+      "bytes": 648,
+      "sha256": "eedc4929be3f6b429523d08647cdf7c3409e8a20c2774d07e8119a5fe0a0cafa"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-03-ab768b13b748-cecd37eb4a6c.json",
+      "bytes": 648,
+      "sha256": "572cb5290b807bd09439ca037742ec8dfbdfa80a700fe54ede95817e3ac9c1cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-04-78aed45e00b8-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "de2de54f0f2a94e8426548d72d1b6fdbc1305a6d9267e81859569b22a688f41a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-05-13c063fa08cd-cecd37eb4a6c.json",
+      "bytes": 646,
+      "sha256": "020816b0140a6ea3d961393fd9a9147694d2cf73eeb3fe3a28f2d264e769a5ae"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-06-0c8fd2957454-cecd37eb4a6c.json",
+      "bytes": 646,
+      "sha256": "e57bd355da254232cbb8f1f11a6bc450e1812fae36fca3d3bcd579499cebdb88"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-07-b5c4ab96bc18-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "0bcea3a276b73040cecaa5af85d8c34a965670c7fdba54fa813467b3c1288704"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-08-ceb37d82c87d-cecd37eb4a6c.json",
+      "bytes": 646,
+      "sha256": "eb37d248c52960a2719dc4a7158f1c1aa7737a3e16f9e410b574c993eed160d2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-09-d56e77633392-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "1979f7549fc1edbd3fb87ceca2d9abc56e7102de628f3e550f465fb33f1e8e7f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-10-a57141433abb-cecd37eb4a6c.json",
+      "bytes": 646,
+      "sha256": "99bc878b92dafee57928e3a41dfd6e4a8b4ab467fa13dcf4bc5753966c73c2e9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-11-8efb76da7ea9-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "d7b0e6189634e61808d7878d735f541acc49bf688cdb14da6db9b55713b088a9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-12-5964ecf6c8d5-cecd37eb4a6c.json",
+      "bytes": 646,
+      "sha256": "2bd7fd4c06a71626c5432b61a46baadcb8ddda48a039bf15aa93ab84897e6e07"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-13-6a9b3c6e17db-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "16ea01dc8aee6c109f26261b2425da24f2069ed23309c6277f110114560c41c0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-14-f0d5df3f7190-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "aca8117cb1cde4a9fcd7c1538ebe83074b07a0f879432c6951db740fc5797a5e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-15-b817c9ab8302-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "4b676857ee8aedca0577b40c849f16917e73d2f4bc8853efd284b7d934e4c9ac"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-16-79cba8f36400-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "cbe45444cef2ad4ff05bcfc1872b6e1dcdb87df1dfa22b59c89615871b7533d3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-17-26614fc7ce02-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "ed4cf9e85185c2d67ce9dfab62d38eab2ee19232297103e40ed158a840d20831"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-18-00db1a49e4bd-cecd37eb4a6c.json",
+      "bytes": 646,
+      "sha256": "ff7561437cef5e2972772f20329b90726f742b6cd158f30ab062dbbaaac1b370"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-19-6a6a49262997-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "e74a994dd76a05caaff0cde482071a10dda29ca2d4498bc1916ee7984ed643b4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/.compiler-work/worker-receipts/v4-source-chunk-20-c2f85f5c63b2-cecd37eb4a6c.json",
+      "bytes": 647,
+      "sha256": "637da1542b9804d8fb5dca30747f7c6392fff67c45e93483189e02f92d804916"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/acceptances.v1.json",
+      "bytes": 1418687,
+      "sha256": "3c4cd86bfb870555e4d075bbd82b448e103ee4a2d1e3df9c112f51d977f5fd6a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S1/agent-context.json",
+      "bytes": 32967,
+      "sha256": "2eec790d7a996e0433182676e1871398c3833d89322fd16674cef26f898c5ba7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S10/agent-context.json",
+      "bytes": 3833,
+      "sha256": "fab9188f0767bcfc55b213f99a2a1867a33df37796143f44a8257f9bb04403f3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S100/agent-context.json",
+      "bytes": 10790,
+      "sha256": "cf29ba9da892745640b93c9a039218e95d423dd8cc0cf665c7165baef94df1fc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S101/agent-context.json",
+      "bytes": 3366,
+      "sha256": "4b0f99173a8e6d2ab6e8041f3c8597d79fe0bc44c8b099e198ee85e1d8ae53b2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S102/agent-context.json",
+      "bytes": 15906,
+      "sha256": "b5e86a95d5b1cb586ab8c18351e33f80ecdcf2b8ccde6bd82cd2be182255ace4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S103/agent-context.json",
+      "bytes": 11438,
+      "sha256": "1d02d59348c27dfa6405113f35968942d465bdd78ddfdba0a7cb4dc86bf0e57a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S104/agent-context.json",
+      "bytes": 5453,
+      "sha256": "455b5a7bf5fe29f72efdd2975798a75d72f2941686cd457d64b33295ee2a3edb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S105/agent-context.json",
+      "bytes": 57091,
+      "sha256": "1e12ceb1701b2e36f514c868c2070dc5045609ef7c560684e81b97a3e0c73c57"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S106/agent-context.json",
+      "bytes": 24525,
+      "sha256": "f76b8194035ca2b94328522e4bd747a928a5b91adb5f29095d846c91f69a9fdf"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S107/agent-context.json",
+      "bytes": 3170,
+      "sha256": "014ccaa6abc4631bb512d881d92d0b11732c5b2bf1165a679826db4df86958ae"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S108/agent-context.json",
+      "bytes": 5297,
+      "sha256": "bb62454b9267a4885788535865f1c9d359802800d165b83b7919a8261e6711e2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S109/agent-context.json",
+      "bytes": 3640,
+      "sha256": "0f824ed929c7983e9c1a83f95640bddcb6e9ef64b1aea9962e83dbbebfdd08a7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S11/agent-context.json",
+      "bytes": 3691,
+      "sha256": "4f08b462544844436e1faad66ebf6d321a0d660a9b2f9cf3901c03bfd8701f79"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S110/agent-context.json",
+      "bytes": 3566,
+      "sha256": "c4e7ee7a37f37ed9014699d16717101b63c002325b45716cf31d0c3d24e003b7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S111/agent-context.json",
+      "bytes": 4803,
+      "sha256": "0d842627e5e0ebcd50865c8046cea22960f79462230d13ede79b198bed272885"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S112/agent-context.json",
+      "bytes": 8594,
+      "sha256": "eabe71fb11d6055847233bafbcf1ec8aef7093e7e486360c940702b6cd08999c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S113/agent-context.json",
+      "bytes": 5189,
+      "sha256": "5651c0674f76c872e3a8f9eecba8e31cca9b97439b4bd849709168ecaadcad4e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S114/agent-context.json",
+      "bytes": 14008,
+      "sha256": "9ce146b3f8480cd77fbae09e3427ffdc55ec964240d842f1b3e97f80bfb6e917"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S115/agent-context.json",
+      "bytes": 2400,
+      "sha256": "e7cc7b878ebf36d724a39d90e3cbdefdd9314c09a7e96d9f9675ce3de9f8d40e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S116/agent-context.json",
+      "bytes": 4184,
+      "sha256": "074652e88c63d1aea72fd8a2283e27347e34b28903826654220ca0a7f54ca19b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S117/agent-context.json",
+      "bytes": 2015,
+      "sha256": "f2eb8ec07829f9827a24c05a1a276aa4531ab12074410210f36526ca7cde9d4d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S118/agent-context.json",
+      "bytes": 5009,
+      "sha256": "7c9d0349789f5899f24337e69d6f98964e5928a6d80aa39aff35c842c75847b5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S119/agent-context.json",
+      "bytes": 4382,
+      "sha256": "a281734414cdd7d6576f561b02ee1c93e0eb1c3cdb72ef36bc12df0434cafb13"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S12/agent-context.json",
+      "bytes": 5568,
+      "sha256": "9a0d10273982a7090f26cb50aacf2f9f0d145b150802addd2cdb870923194e0d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S120/agent-context.json",
+      "bytes": 2982,
+      "sha256": "7c34b40bc706e16fc3483778bd0efb08adbead0e1c7093c084af738e8eb091ae"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S121/agent-context.json",
+      "bytes": 3201,
+      "sha256": "6ab17ed1b5496f6730108fa20d30f6f324b3b71225db062a0d34251ff89f3b40"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S122/agent-context.json",
+      "bytes": 5102,
+      "sha256": "a54b88f112e05e34c068a4be929c549820b0199011b282d9b7e6db764e69976e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S123/agent-context.json",
+      "bytes": 4065,
+      "sha256": "2e8fe321af4ce87791c28122e4f59e477d4eee7dcf4bdc887dc49896dad3d738"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S124/agent-context.json",
+      "bytes": 32064,
+      "sha256": "7515d02e762182a64da83d378d7812cb55c945b99127cb5c4e7b88163b1cf6ac"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S125/agent-context.json",
+      "bytes": 2964,
+      "sha256": "ce38d350416d3160a552819f1064ba4cd393806fff87d6971d28e0e94bf6f3fb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S126/agent-context.json",
+      "bytes": 3603,
+      "sha256": "db1ea3caf546f6e76e9c1c6a3fe2408f7244e4e9dba71032750c3ff5380138b1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S127/agent-context.json",
+      "bytes": 3421,
+      "sha256": "64f902feca3520aac257a1da410e3fd5439d67a0c701050bd4d4008ae70e27da"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S128/agent-context.json",
+      "bytes": 13874,
+      "sha256": "48e9ad1d42aac780578c86329aa78f47f57ecf65612c9783e1cd73adc9419b10"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S129/agent-context.json",
+      "bytes": 3287,
+      "sha256": "c34a5b8789f61ae333119c3646ef6aafddb1bf4360bfb6dd351f7c9100f2184d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S13/agent-context.json",
+      "bytes": 10478,
+      "sha256": "8805cbaef3ac4a08f8fced644b73692d7bfe6e14012bebf27812ed4b2af35a2a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S130/agent-context.json",
+      "bytes": 3454,
+      "sha256": "6f54f03d8aaf108f2c2fa5bb5e1ed6ba8a59d53880e7a21fdab893ec99a1ea24"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S131/agent-context.json",
+      "bytes": 8185,
+      "sha256": "d4c12e8ef3db45643a1e6863bab7b175962f019e8fb4e266e1958b2a2a448435"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S132/agent-context.json",
+      "bytes": 6591,
+      "sha256": "4bc0d1c69a5ce30885aa627fc9c0d2ce966bb7c4b05ce1f2f1a9f588c9eba558"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S133/agent-context.json",
+      "bytes": 16587,
+      "sha256": "09065f0ff476764d3d92f9c47fbd6dc43f7ad916aab72198a4911d954ac7bab2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S134/agent-context.json",
+      "bytes": 9184,
+      "sha256": "ab42624c65d4d57eed4425775c32bda25678a3bf60b2660a67fb1e1371becf14"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S135/agent-context.json",
+      "bytes": 4739,
+      "sha256": "23f5ebd102e9e9f41295c3462f8695f0d02d9e22b322495d7ea24ccd23a26895"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S136/agent-context.json",
+      "bytes": 4381,
+      "sha256": "ed513c2044f8f7d75553c9a6aec8cda0a776eb5ab3b554b552f8e0d8ec8d99cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S137/agent-context.json",
+      "bytes": 4662,
+      "sha256": "171c2a180cfcbe07a4df6d2f6863b29a48b8ccbd3f3848f3fc0df338c910b18d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S138/agent-context.json",
+      "bytes": 3885,
+      "sha256": "fd9295c6dd70d5199409e1c462b2553a277921930757fa667ebdce8da784c2a9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S139/agent-context.json",
+      "bytes": 4312,
+      "sha256": "9260dfb60f1740ea503fe673e0b1243990458d9f162ae5ca18bfba02fc20d8b6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S14/agent-context.json",
+      "bytes": 3864,
+      "sha256": "358b7e567e62ee0db6ef42694815259d638b091c085b7550d8269209d4553c07"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S140/agent-context.json",
+      "bytes": 2419,
+      "sha256": "dde21c222fd842bb418075fdae2d287a670c52033f5abcac3fa3123655f75403"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S141/agent-context.json",
+      "bytes": 6097,
+      "sha256": "7e45d33bb8b92f1e1ccd0afc8b71d8d3219bf4f9fc97f2f23f6aa7db26035d2a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S142/agent-context.json",
+      "bytes": 3526,
+      "sha256": "bad630b9ff93734682eff8683c39eab7252389cdc7cbbce503255fc2187103af"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S143/agent-context.json",
+      "bytes": 2993,
+      "sha256": "cdaf535c733c5c38acfea34e29c89ce980afefe0f3d142057da24e707fa556ee"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S144/agent-context.json",
+      "bytes": 4939,
+      "sha256": "509a3b58dfa40901c38aee31a9c8571088df813b442a35637e87a99c36c338b7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S145/agent-context.json",
+      "bytes": 10549,
+      "sha256": "983d9c6981598a971a5d11c67fb39234b8a3e7fab8466a6aa345440dc1921e73"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S146/agent-context.json",
+      "bytes": 3785,
+      "sha256": "c5d2e5d6438d41fe0c3789709f3083ce1e09b1577d8f9f3ee8913cc93147296e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S147/agent-context.json",
+      "bytes": 5173,
+      "sha256": "4ea93c12655a79df7195b24d408ccad7726a2c45696b146f86cdf15191bdffa7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S148/agent-context.json",
+      "bytes": 11345,
+      "sha256": "787e4977ca0238ac70399e76658ddc8346888850367cf97bffa0130ffad0a816"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S149/agent-context.json",
+      "bytes": 9094,
+      "sha256": "5b0755d453090f17d4162c9d59fe24e5b431ad60cf021e2dec79f3cfba9f8b1f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S15/agent-context.json",
+      "bytes": 3747,
+      "sha256": "30b4b113ee29e83d6248835e2db778ad936fd3ec4254574865c98f6c3f5642a0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S150/agent-context.json",
+      "bytes": 2924,
+      "sha256": "8336c56071cbd2d111255f048848ba4f79d0a08c54894e438ba5878dab370c48"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S151/agent-context.json",
+      "bytes": 3320,
+      "sha256": "94ca22fdf1f1f75f1cf7373d156d728eac7417f1c15ecec282b1e0d276431053"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S152/agent-context.json",
+      "bytes": 6739,
+      "sha256": "db1ecce45b20c33ecf70346956d82a47764c7667c34e3918eea6de06ce4c3e28"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S153/agent-context.json",
+      "bytes": 6230,
+      "sha256": "30b7fa23340c476ad8c35500d851712045e1a8710e2381aaa26cc0c72d66fac7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S154/agent-context.json",
+      "bytes": 37517,
+      "sha256": "dc7da2f293b4644dfcf5bce14aa6efd327e3d5588e23e8509e9cd0cde9878f5b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S155/agent-context.json",
+      "bytes": 19636,
+      "sha256": "7d85477225922420048e08234f12a0a1538cfe9304d85da4b441a8351655a7ef"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S156/agent-context.json",
+      "bytes": 2902,
+      "sha256": "964874ea238a5610f043f8b81a4975258a4965b181d8041b2334b217b161e415"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S157/agent-context.json",
+      "bytes": 3050,
+      "sha256": "893687cba2047d143c1e42c72b916644d50061d2f67f680c6cdaeb84fe4f8cf0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S158/agent-context.json",
+      "bytes": 10206,
+      "sha256": "b53a2921342525cfd9bd8fcf6d7a1c67ed8b4ea9fafea7e1e66ed4dd274fc8de"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S159/agent-context.json",
+      "bytes": 2880,
+      "sha256": "c8e4f8883ab37c653a1e7c885afa92339dd1e3bbdf43cae08f4790fa4291ec4b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S16/agent-context.json",
+      "bytes": 7808,
+      "sha256": "df1303ad818c50173b97b54f79f7ce118d210b2d95769a8aa0c08f1d6f734093"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S160/agent-context.json",
+      "bytes": 4840,
+      "sha256": "4a1d1c4f4ff1ac4c7bd9aa792bd9ab28048bf69fdc2e91aa0356e413afd3b24c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S161/agent-context.json",
+      "bytes": 5182,
+      "sha256": "447f7e973e42a19f561de9c9d67ca4e9a8f75d6b21ca88dd1ddfeea273c43691"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S162/agent-context.json",
+      "bytes": 23570,
+      "sha256": "d288ac7c97d55d8e16b4a1958d67baaa1301a262a890ce3cc56e869dedaa2c1e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S163/agent-context.json",
+      "bytes": 5468,
+      "sha256": "b5c55c51eaed651ed4aefdd539b5257f0a8e00d209599bd4bd28a041dd59b3b5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S164/agent-context.json",
+      "bytes": 2383,
+      "sha256": "c96f9a50bc5ed99855eccab72f0e5822afcbddd4b6873217ac46e3739dcda315"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S165/agent-context.json",
+      "bytes": 2736,
+      "sha256": "cb452439f8fa8b79fb88b0100fc100beae4777383dc7c7ef60daa44dc2d4685e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S166/agent-context.json",
+      "bytes": 3280,
+      "sha256": "b1ecad4d69be4b59c482301d686a33d72df3599415166c9b7214a4168c5b6b5f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S167/agent-context.json",
+      "bytes": 4153,
+      "sha256": "2a93ef5e6014861c4d9bea0f218727f9e132011a9c94bcbc30f4e7ca765b918c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S168/agent-context.json",
+      "bytes": 4310,
+      "sha256": "583777af74776aebf0d5f1ad9583107bdffabd4df818fab4d3fce14b824da9b3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S169/agent-context.json",
+      "bytes": 7379,
+      "sha256": "f09005de87d0c64185e9d3dffe1205e111225385105ac808d122f298e7cc9a05"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S17/agent-context.json",
+      "bytes": 3373,
+      "sha256": "ea9d78b4313bd912d9267a89b70840d6ebc08c8f4fa8b617b359e881cad29204"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S170/agent-context.json",
+      "bytes": 5429,
+      "sha256": "60642f30ef2979f2d95efdcb6144007ff1d42eaa778f75414b028cb4dbc9c5b2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S171/agent-context.json",
+      "bytes": 3626,
+      "sha256": "e7943dacdac930f489f87651bb9eb5418047e3365fb797fa95c0296e4f21b57a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S172/agent-context.json",
+      "bytes": 5904,
+      "sha256": "f732aad450fbe6387efed17eba6fd465f384019a26e2e3dba5198d438466b033"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S173/agent-context.json",
+      "bytes": 4610,
+      "sha256": "31e0dbfc9ef21e2bc74ed59e6475d137096d1e8e31c75119d66a6d487a3c65ec"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S174/agent-context.json",
+      "bytes": 3825,
+      "sha256": "322278cd06844f6b9bbcc74bd8001f82f8c3fe6d55c69f11f9300ed3df131fc8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S175/agent-context.json",
+      "bytes": 2200,
+      "sha256": "bb390404fcb93825803e9bd5a1ce332e228390d60a36d77da4aa719d6e20c2f8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S176/agent-context.json",
+      "bytes": 4958,
+      "sha256": "8f57b26200fe333dcadbd7e1d83f2574836affa3a8d3b08e3e7a58650928857b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S177/agent-context.json",
+      "bytes": 3875,
+      "sha256": "dfae5856f5ef878cde7a01bc7d67a2372182cf36a22f0914c9348cc03f8314ba"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S178/agent-context.json",
+      "bytes": 12267,
+      "sha256": "0cd3f3e5391ba49828ca221e4899d725d9f6d192b479315d1a963808ed375425"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S179/agent-context.json",
+      "bytes": 3335,
+      "sha256": "ca84d0d55ca96311c3c1699be31d9ffee5772953da907c4385147bec0f44dae3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S18/agent-context.json",
+      "bytes": 17166,
+      "sha256": "074dbd9288f7d0af238feaaab26eca0bb1b240682d7c76edef6617e0c0ec1b49"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S180/agent-context.json",
+      "bytes": 6536,
+      "sha256": "38a2074a52d4fe2ae84ce49476092f806cec5074895d4a7bc27eaf1351c65309"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S181/agent-context.json",
+      "bytes": 5359,
+      "sha256": "a010ae18698483fe52b166226421f9c43e99aa907f1153ac548192fefa98a753"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S182/agent-context.json",
+      "bytes": 3924,
+      "sha256": "d083b9a03f2defd14ed1def571465f7a30d72013bc28c2a9a530c976b096d2a3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S183/agent-context.json",
+      "bytes": 2229,
+      "sha256": "92e64f065231d2641a01d9e25d30a161bbd5f97f68a0abda1af5290c9b2a48cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S184/agent-context.json",
+      "bytes": 2132,
+      "sha256": "8df5c8664952be108a5f3228db0624b331a42e4cc737edc240d7f9089fbfb4d9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S185/agent-context.json",
+      "bytes": 13795,
+      "sha256": "e2303280ca7a0c151d3f01c3955497837a89659ca3eff1922244a7eba4aa24f6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S186/agent-context.json",
+      "bytes": 6466,
+      "sha256": "cce537967844b11502b46207f5e04f9e15477900458b4ff9536d9eaa3fe08eb5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S187/agent-context.json",
+      "bytes": 3583,
+      "sha256": "a156c4ae2318ccb0f2f88878865864623afe9c642975db116a36453dbb7fac50"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S188/agent-context.json",
+      "bytes": 3829,
+      "sha256": "d17f586cfc3dee0ee1e4303774e1888598bb782976210813cb6bd02f31597484"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S189/agent-context.json",
+      "bytes": 14939,
+      "sha256": "61ac230cc949e2c9e3dadaf541ab659b574c68c767030638c47f3c16373471e3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S19/agent-context.json",
+      "bytes": 4179,
+      "sha256": "fe1f9096b0349cb85cae86acbe410bdfbf86bb1893ad370c0d9a29a734d17d22"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S190/agent-context.json",
+      "bytes": 5423,
+      "sha256": "f13b0a07fa007cbec5a67dd25cdddcba12071d58e57af614a584c97d89696be1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S191/agent-context.json",
+      "bytes": 3810,
+      "sha256": "fbdb83cd5529d532765b66e03351854255d7fffadb8f6412481010c203ca25d0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S192/agent-context.json",
+      "bytes": 4431,
+      "sha256": "706194ef9ec6a52bdadf7af48949ef73ad90929ee78a63358f2a62d4ab60fcdc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S193/agent-context.json",
+      "bytes": 4251,
+      "sha256": "d61986781a7fdb244f488b0a725fa2d536d00b065442d46225f1e35858e4c864"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S194/agent-context.json",
+      "bytes": 11515,
+      "sha256": "70b2369f71919c74d0b525cb9ee99611db760fc20d8a9864fe22652e2f6d1232"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S195/agent-context.json",
+      "bytes": 4226,
+      "sha256": "17ae420765178d153285472706959d4be7a820c87ae424d65018d4bddf3608d8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S196/agent-context.json",
+      "bytes": 4000,
+      "sha256": "9398f83ca9d7ca0c0279fc9719ffca933a464cfb41152c11ba891c747cdcabd8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S197/agent-context.json",
+      "bytes": 5395,
+      "sha256": "1e56b91277ae25d580671173775abf6ade20481dfb73bde6dbb85fe1303dae40"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S198/agent-context.json",
+      "bytes": 8013,
+      "sha256": "6bef4261ce2e2b61e5cd5a7e296692083f8be73e4a57ade31ab3c9e6747ff73e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S199/agent-context.json",
+      "bytes": 2372,
+      "sha256": "2dc100b3c819827cddc2b12ea6b1d6798466b41b37371873da767810d8ab4abf"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S2/agent-context.json",
+      "bytes": 3686,
+      "sha256": "9d34a21ff1c9d35b81a323483b5521051d6f6a353c160246c44233639bf2ca21"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S20/agent-context.json",
+      "bytes": 4125,
+      "sha256": "579928ea1268ed40855a31bac036c4bea55f37bc37982c2de83542437ea88821"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S200/agent-context.json",
+      "bytes": 3727,
+      "sha256": "4dc63489aac1cc4e2566f1a522fe589c473344284328853d0fe2cc1d012b87f7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S201/agent-context.json",
+      "bytes": 3375,
+      "sha256": "9cf9ff0c626ae897da36fcbbd0903d06adaea7499675dd946561962e1a6d5c30"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S202/agent-context.json",
+      "bytes": 2165,
+      "sha256": "af833feb0e044cc2507ca9a6691eb1f7386deababb515c2194f19d320465a7ea"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S203/agent-context.json",
+      "bytes": 4139,
+      "sha256": "c4ff7d72166a59914685f6bf0bd807936ba7336019bc5d624409c7bf531015e8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S204/agent-context.json",
+      "bytes": 5117,
+      "sha256": "f39c3dab72b1ddb58b61e2bdb5a541447534e99bb32ed6ce10aed39a4a5eab2a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S205/agent-context.json",
+      "bytes": 3763,
+      "sha256": "fdd3c85af0216b82ba6e52cd9aaf06b2d70aaf99eb4289bf6ef3cac0808b9029"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S206/agent-context.json",
+      "bytes": 5301,
+      "sha256": "66d11e0e89c530dcf70750eb418e5583ce09022d47e9eb36f4147d4c11d1938a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S207/agent-context.json",
+      "bytes": 4136,
+      "sha256": "cd520c4100b47cd9c180a0bfc43f869700bac54b0d6fe8a0c93a766d3f0a2b73"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S208/agent-context.json",
+      "bytes": 5636,
+      "sha256": "67b8a06abb1b5a7bd2d1ed42473f98b82c4440abfc5bf4ff90b379bd22e854e7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S209/agent-context.json",
+      "bytes": 4102,
+      "sha256": "a52cf46151da12655d2b8d6f3f2d519d8e03c5c578e633a3a81003e3b6d3856b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S21/agent-context.json",
+      "bytes": 3419,
+      "sha256": "6e62ab19a87d864cbde1802403c88dc1551fd328c9b98e7e6d673e19d5978fff"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S210/agent-context.json",
+      "bytes": 7524,
+      "sha256": "b7c81348f590c9f7de8dfd121c3240f82f6e8c9ce527205cb8da32f3db5acac5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S211/agent-context.json",
+      "bytes": 4895,
+      "sha256": "a76d11ce1dd0c8ef69f506a91c3731db2ece8165f0f6c413d560dec5a174837c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S212/agent-context.json",
+      "bytes": 3934,
+      "sha256": "cdfd0a4bed88595b606c044babe0150821f0f3c4e1d7b04514e4f8a9209973e9"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S213/agent-context.json",
+      "bytes": 15563,
+      "sha256": "2b66102b0ddf824bfc1860a017efb9607f29304fc3bc32addb637b7b12832af6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S214/agent-context.json",
+      "bytes": 3443,
+      "sha256": "ae461f1d87643588dcd68fd4e41611c2c5f6fd8014b7ee5f5b6080570dfd0431"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S215/agent-context.json",
+      "bytes": 4048,
+      "sha256": "aecc86d2fc9b8c637e23f84fcb99c93d934e6f032bf934fce39526e1789e7652"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S216/agent-context.json",
+      "bytes": 5515,
+      "sha256": "ebd6c6dafa4329cfff4eba8b62e2c38fe7fc553cc7b8ecaafe04629760d1619a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S217/agent-context.json",
+      "bytes": 3238,
+      "sha256": "196717f6625e6baa97f170e5ac741683918754494fd59d505c396b22d60ef040"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S218-R1/agent-context.json",
+      "bytes": 59752,
+      "sha256": "fcee93863ddfd5c47bf5dbaa32ee2e2305b4e3fabf5e20043dfdfdae949f5a46"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S218-R2-1/agent-context.json",
+      "bytes": 3805,
+      "sha256": "ee8d0d811649b40f59a12bd9e0618e46de3185876e51d575ae84d8e3f49ecd49"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S219/agent-context.json",
+      "bytes": 3907,
+      "sha256": "b310a0be31bf7dada2b459a85181116db64f99577b5340171f98c2920245d45d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S22/agent-context.json",
+      "bytes": 4031,
+      "sha256": "3911ba4c75a21224e26b36b4b891d6343612806f3844f0cf20971146d08ba07a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S220/agent-context.json",
+      "bytes": 12651,
+      "sha256": "30bcd6d754fb165e0c2bd57db31bd3bdd04ebe1c9048cd3b699c591142452207"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S221/agent-context.json",
+      "bytes": 12392,
+      "sha256": "778390d0d57a3f385ac61cca6fbb1ccacbb8ef6f55bf77ab921d0ea9d5ad3abe"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S222/agent-context.json",
+      "bytes": 3427,
+      "sha256": "72cf76c35be3a477fd3dcb3977f7c6ab55ed1c479da43e9762e5741e82b52902"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S223/agent-context.json",
+      "bytes": 11390,
+      "sha256": "a75febae67a0f0dc17e467f661e3fca54f11943858040b57246c182519aa5019"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S224/agent-context.json",
+      "bytes": 3992,
+      "sha256": "7d79ebc83172019b755dfb99e07033395e3ee0b670d39b12da7082965e45d190"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S225/agent-context.json",
+      "bytes": 4912,
+      "sha256": "1d47ed9305547b070899cb45ddf0bbdb322d0a0e7fe540cd20988950d9a40aea"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S226/agent-context.json",
+      "bytes": 2876,
+      "sha256": "211d9e52e067bc0e0d9cc17c7d055bde0d94cc9e70fe17bef04f6697539d2c98"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S227/agent-context.json",
+      "bytes": 4987,
+      "sha256": "8fa5c0f5c57682a8bfd97c1cb487ff7578d26c1cd53a0f190e181a69492b2a4c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S228/agent-context.json",
+      "bytes": 4986,
+      "sha256": "e13b053f12a8a20aee9885172b740707eb645629e8517986805da73f4d663423"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S229/agent-context.json",
+      "bytes": 55273,
+      "sha256": "dd5ef215bc939b8c432573909aff216e610c13041d5211e9dec4be9f43cf5ecf"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S23/agent-context.json",
+      "bytes": 16769,
+      "sha256": "881e4c649bef2fc870b8387bf04b61a54ef0090ce2db18b73d2b510bd17ea2d2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S230/agent-context.json",
+      "bytes": 3969,
+      "sha256": "617cef6db763f16f07cd987475688c2a470af6784ef7c77679dfc9f9ab30f535"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S231/agent-context.json",
+      "bytes": 4897,
+      "sha256": "b9996084d855375e5360c61ae1396841cc6687b5d82f032cc73af70d56737c79"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S232/agent-context.json",
+      "bytes": 3061,
+      "sha256": "20108fcb16153f580325b809167983fa7a6b15ab465926eaf347883d04e20501"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S233/agent-context.json",
+      "bytes": 2622,
+      "sha256": "0a7bd5f718c5744aeacdfad222a51744b1863356573e868aa7e2e3c32f3e3929"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S234/agent-context.json",
+      "bytes": 2764,
+      "sha256": "9539fd7d75302127f5a575da097d9f5780ade5046341acc41bdd28da476591a3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S235/agent-context.json",
+      "bytes": 3510,
+      "sha256": "5c34b5c6ea6a7feb7144db0f77cad71f0f68fb60c2c2fb30a88dd3a5de38f209"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S236-R1-1/agent-context.json",
+      "bytes": 8595,
+      "sha256": "a83500682677a08d180455ecf01f3494e2ff44e21043dc806d806a491e906cc5"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S236-R2-1/agent-context.json",
+      "bytes": 9595,
+      "sha256": "a27d5e13e84efc7df3a59b53a29d6b7804142fc99d04ed61a00aa0f64aeb333f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S237/agent-context.json",
+      "bytes": 8237,
+      "sha256": "c8d4f131b860a5b1b683363610536437dbf175a3cb7392493ddce68fac9c6cbc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S24/agent-context.json",
+      "bytes": 7023,
+      "sha256": "fb37173e125fb85f28be626b2cfb795e32b4cce68235b90e3259424e7ae9459d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S25/agent-context.json",
+      "bytes": 3052,
+      "sha256": "172cf2ffe6c68d294102ba9b68aa91aaca35ce780a7f0819519394db6b82bcb4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S26/agent-context.json",
+      "bytes": 13627,
+      "sha256": "081664f91c49fb75f09a7b658c096886a3cddd52a0a4d106f166f047eb2e9c76"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S27/agent-context.json",
+      "bytes": 7888,
+      "sha256": "6a67fb35e57a0a529255df5bfec6e291738b4f1c54a4b3800dc7b16595480f7f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S28/agent-context.json",
+      "bytes": 3124,
+      "sha256": "dacb9706234e7c60d4918f9d872ebd78c737ebf127c5dc5f3f32964bef9186d1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S29/agent-context.json",
+      "bytes": 2215,
+      "sha256": "590f2e0f272f52d11495a2ca6bf9fc1fc3fb37e3d810a2bc85962f11e4e27694"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S3/agent-context.json",
+      "bytes": 2069,
+      "sha256": "b102e9a7aae2dae3c5817cf76f6eed816bdbf9644856da9599086119f9242246"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S30/agent-context.json",
+      "bytes": 5300,
+      "sha256": "02767161f11cdd47d381b3c4f904109f28db29b4335f42baef58697cbc36f584"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S31/agent-context.json",
+      "bytes": 2482,
+      "sha256": "8b6916d3640eac96ed41bee31a19e0215115a812695fffecd64d50cd4de95b55"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S32/agent-context.json",
+      "bytes": 2928,
+      "sha256": "c9f105fd3e128cc2c49da7698eef1343f9650441822d757b6f1b128965139585"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S33/agent-context.json",
+      "bytes": 3436,
+      "sha256": "e817e402826fe57e1c0f02c654934c9efce9f21d9d10ea012c3222f31561fd1b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S34/agent-context.json",
+      "bytes": 3775,
+      "sha256": "7ffebdaf9c3bc0b28eae142b3f09b93c2af505b436f7bdf13e39af091580b9ad"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S35/agent-context.json",
+      "bytes": 9105,
+      "sha256": "7763d365ef4a1769270e6fed9bb84168b8cb73667c4fbb058735ea43aafa0542"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S36/agent-context.json",
+      "bytes": 8734,
+      "sha256": "8fe0c7bac1c5ce38dfff4848a00006bc4279b5c9cb61c1b945fcca0fade76182"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S37/agent-context.json",
+      "bytes": 3903,
+      "sha256": "5f582a806ea7ae1a77a99d8d1884aeaf3e97653d2cf10c41f29fa436b05ff366"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S38/agent-context.json",
+      "bytes": 6211,
+      "sha256": "627ed94e3e704ad78a287410617169788a0691ddf9022421cc78e8c24bc61e05"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S39/agent-context.json",
+      "bytes": 3786,
+      "sha256": "f820d27f6ba18e95318a7a28cc062f32ab29b2e2ae966e107645fe2a81429ca3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S4/agent-context.json",
+      "bytes": 2995,
+      "sha256": "bb3ba7a3e3e4bc030fcd21417200f902222d054a95b2d1d4955b6c663a5041e1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S40/agent-context.json",
+      "bytes": 4171,
+      "sha256": "8eeb0785cb5b2d317766aea38b26a480f232e9125f3190b80d2d55648236c2d6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S41/agent-context.json",
+      "bytes": 2276,
+      "sha256": "70eaad9a58b23ce7f7c97c679573b56dec699a56794c25180442adf4d37159da"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S42/agent-context.json",
+      "bytes": 12357,
+      "sha256": "1c98ecb2693cdf256fe2a2e7e8b260b0cf60c7b4d53c4be64ef2a7f169be7a77"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S43/agent-context.json",
+      "bytes": 5978,
+      "sha256": "89920165e8885d84f770daa3dd01135d316faf3c00d1c278b55563a29c1115b3"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S44/agent-context.json",
+      "bytes": 3879,
+      "sha256": "8e8f90c7ba7c5977633ab4b543a3e05789fdb4253a930afc75c3e1bf34add99b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S45/agent-context.json",
+      "bytes": 7889,
+      "sha256": "d1156106a7352831a4a363d440eb3f41fdb10b88a976c00192c8284d48ffe825"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S46/agent-context.json",
+      "bytes": 5130,
+      "sha256": "14e113cb595557a489e2cef9c8f6200090f3966f7b5bcf5195792e2ce4a83996"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S47/agent-context.json",
+      "bytes": 4020,
+      "sha256": "f73c8652a3c9292de7b1aa50383a6c7c0559128ff8d5b7d2d725f65444af2e81"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S48/agent-context.json",
+      "bytes": 4281,
+      "sha256": "d1d2bd117d3a69a35a42d7e6de3f65d27aa637c148dd4fd17c8f6695a03d5d2c"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S49/agent-context.json",
+      "bytes": 2456,
+      "sha256": "b5f07d86fd0228a8d0ee9f39ecba23663a6967001f502bc6b8ac7dba88379867"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S5/agent-context.json",
+      "bytes": 5491,
+      "sha256": "a7937ad54df5bba550a50f2eaefafa4686dcd1c5bd0c41803011164029633d97"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S50/agent-context.json",
+      "bytes": 4303,
+      "sha256": "d0d4d867be2fc7edfec80c76ca20dbb59e911d0dea779b8a9b0c6e5da610d208"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S51/agent-context.json",
+      "bytes": 6582,
+      "sha256": "ce34fac8820c79cf4971c53f1554f07d341a5cf7f2b8da66163ded61ac61f476"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S52/agent-context.json",
+      "bytes": 4981,
+      "sha256": "f2da4b7017687944b9cb14924fc2904e2cf6abc73d7e75caeb20d6274731bea4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S53/agent-context.json",
+      "bytes": 5361,
+      "sha256": "41f856113ea05f978539124d8fd4bab556559d191529b090d6c9ccd3acbf2fa0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S54/agent-context.json",
+      "bytes": 5170,
+      "sha256": "ec75c0be798c2c051714615d814cb3d0bfcff18af6cf9c0e1a4f45c9220e33c8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S55/agent-context.json",
+      "bytes": 2954,
+      "sha256": "9bf5c74bbf4099f0ea0bacc5525c911d80728288e0922d5f91c5e0edd7ede9d2"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S56/agent-context.json",
+      "bytes": 5421,
+      "sha256": "17247ecb987273fabca3e4462fb78d4434f2f84fd6c979e45583aade6b96e88b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S57/agent-context.json",
+      "bytes": 4114,
+      "sha256": "4b6b927f97c539a239f46871445ac6877f14256ff75eed0a05f8c6319bdcdd35"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S58/agent-context.json",
+      "bytes": 6850,
+      "sha256": "56ed5362b91cd3a931e6c197ea273564a6c66059aa57ee55a01664d95960a966"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S59/agent-context.json",
+      "bytes": 5247,
+      "sha256": "14b3a0288e70d55dd56ff1da12e40127f0e2aa44bb0736098d1e5949890aedd8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S6/agent-context.json",
+      "bytes": 4202,
+      "sha256": "8a7f8d5a0742cfa9ca598b5775e0322ab81458b46c8bd37c02560ee715fd821b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S60/agent-context.json",
+      "bytes": 14223,
+      "sha256": "069d77d9e2f630591218582d533a92cf0aba848faea5f5ee68dadeae761a410a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S61/agent-context.json",
+      "bytes": 5688,
+      "sha256": "2bbc5bb7b2e116b951d9f00483afa9ee14f53a631fc50ae43318aed854e73b67"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S62/agent-context.json",
+      "bytes": 2945,
+      "sha256": "ace59f5084e00e4b216558ecf9f9e7493d68b0f54627d35d75a4f366a764cbfc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S63/agent-context.json",
+      "bytes": 4842,
+      "sha256": "de7e241071bd7e9263d3b738ee7611c048de3c09b1292df47e0f1695248b2f93"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S64/agent-context.json",
+      "bytes": 5097,
+      "sha256": "d1fe709eb749fcde955cbac8d86e29908bb2af991594e16f25a3acd861c52e0d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S65/agent-context.json",
+      "bytes": 5883,
+      "sha256": "e634946574298730e60a00139dc8ce96d1523f6b7315d22c4f6c7fc78fdf5792"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S66/agent-context.json",
+      "bytes": 3754,
+      "sha256": "b4a6a77226fab43216bd9bd5adf90467c5ad4c8197ea9c07081c2c1517c25941"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S67/agent-context.json",
+      "bytes": 2997,
+      "sha256": "044e136da0d72d3ee784e872ee3a3dd214a98bfc5ebefe7b497d25c752bc031a"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S68/agent-context.json",
+      "bytes": 10495,
+      "sha256": "8d6885c2980d87b2e972f7d646fd04047ebfddf16f88acab0e6a463ae4a9d253"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S69/agent-context.json",
+      "bytes": 2864,
+      "sha256": "c10fa82b53a9eed0369bca4c5f829840b24d676fe24c542966decb981253f958"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S7/agent-context.json",
+      "bytes": 4733,
+      "sha256": "54bb6e627372564c6f78a2db8d78a0973e950278a2c869f33e2c56185d113ac0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S70/agent-context.json",
+      "bytes": 3274,
+      "sha256": "fff92aabebd45260a90a943bb9e5b4bb16f55e89e848bb54a5b000afbfb8489f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S71/agent-context.json",
+      "bytes": 7066,
+      "sha256": "41dd1fd16a206fdff080b4760bc960597038bbeb475289b49a854dfb7cf17ba4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S72/agent-context.json",
+      "bytes": 2832,
+      "sha256": "5ae1e9f949808c5c4790d5e429abaaee2aea17c37379bee31e94d92a2b92cec1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S73/agent-context.json",
+      "bytes": 5466,
+      "sha256": "a622f6548ef220c40b02ff0ed1e95d8a6b68f0ef6073af4a3356536fee1f0483"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S74/agent-context.json",
+      "bytes": 3766,
+      "sha256": "62c84fce53c3e1d895e1b32f88e0fcd2cb32ca5052650dfece0978a6a7105ba4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S75/agent-context.json",
+      "bytes": 5213,
+      "sha256": "2b5741e3e1c7dee7ca5f04aa92fda5bebf2abbf2ddc5f6cda3c8f5a5e1ae23c0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S76/agent-context.json",
+      "bytes": 9549,
+      "sha256": "5db49cd97027928d28972ee186d42636ff6d3f3249ee0f978c555bd1bd77d926"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S77/agent-context.json",
+      "bytes": 7930,
+      "sha256": "dd2d11964fd897893c63ba7aa8dc66af79bd9a542c7edc9b3a98de40ec5d529b"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S78/agent-context.json",
+      "bytes": 5328,
+      "sha256": "cb1a45d04291bccf95eec0f016c5d4b97d9b96dfe0f8927154693f1806ce12dd"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S79/agent-context.json",
+      "bytes": 6042,
+      "sha256": "b8601eea7833ffcc19d865eda952b6337ced5de81ca2a05fa9454f760c6fda0d"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S8/agent-context.json",
+      "bytes": 2232,
+      "sha256": "6e679667c5f8d3d49341de12648c730a64a357bf11a34f6562f000f8fa7d27e1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S80/agent-context.json",
+      "bytes": 5318,
+      "sha256": "8a568ef7adfd282ee898b0de8e8f25876a4e3cc14d3d7b63d39458d00874f535"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S81/agent-context.json",
+      "bytes": 10641,
+      "sha256": "195def7d4e33009d6be2f657ade0fbf507d463379cf731cd66f70162d5b73372"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S82/agent-context.json",
+      "bytes": 3554,
+      "sha256": "79f7f771b6198e039347a35db308990704c11f7dc280bcb346d081d642cfa6eb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S83/agent-context.json",
+      "bytes": 32273,
+      "sha256": "86ed00b45e93ebb719848115b4325b4033c7dc7732170df25bf18e3cddc994a0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S84/agent-context.json",
+      "bytes": 5319,
+      "sha256": "40f4866b33c02ce96392f67b8c38430f04db1970f33eb77aac086c8b3bb314ea"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S85/agent-context.json",
+      "bytes": 17650,
+      "sha256": "eeb98fadce86acb1052b602600bb4db7096a7e6f10bb55028fe2d9eba0884e1e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S86/agent-context.json",
+      "bytes": 2792,
+      "sha256": "1063756727f541e16d97cda5e80c95e71162f2a9173c8601db4966584bcbb974"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S87/agent-context.json",
+      "bytes": 2162,
+      "sha256": "700582984972e5fe47da82824be6cdc972e95c41c22be1d08256ca442ea20f9f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S88/agent-context.json",
+      "bytes": 8986,
+      "sha256": "0543e8539423bbd2353129822c04800879b552e9ef33fd4309964fe806cc3ce4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S89/agent-context.json",
+      "bytes": 7303,
+      "sha256": "56e3ead40f7433ced5e6be681b95f34cf03ade4b5febd0d973f40d0a8a7939fc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S9/agent-context.json",
+      "bytes": 9299,
+      "sha256": "e96dac90d1abdcccc989bf607c7d6f686816f9130d84eb4c0c3c63fb89b5762f"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S90/agent-context.json",
+      "bytes": 6697,
+      "sha256": "c23ac940486205aa8990cd9cdb8c6aaddc7159e09868da7e9e8943eb3bd5f698"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S91/agent-context.json",
+      "bytes": 8566,
+      "sha256": "aa416060d751bf83e7b2da850fdc590fb4087c2cc56f1941cee738334ade76ca"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S92/agent-context.json",
+      "bytes": 3221,
+      "sha256": "8ae778cd24320b6303d976c551d6cd08568429125fea8810f8aa360b4dabd4cc"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S93/agent-context.json",
+      "bytes": 3690,
+      "sha256": "e294b33cced0aa1f96c86d946fc2b1cc012e291e9dbb864cc7802e983015fab0"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S94/agent-context.json",
+      "bytes": 6259,
+      "sha256": "0489015b3353ec6de9feedf806a9788ef928836f5c0697b7d8b17293fcc83f35"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S95/agent-context.json",
+      "bytes": 6365,
+      "sha256": "d8b6f1a335a0fdee14837d2c621ff58221ed3872f4d55c12b13c443f039e267e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S96/agent-context.json",
+      "bytes": 3327,
+      "sha256": "42f3adda1a26cf9b27168e241f6ded0056717993b106bdcc2d33a76d7836b4cb"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S97/agent-context.json",
+      "bytes": 3280,
+      "sha256": "546d2671c8cf1c36209a2ce58c9af762a76d8e01bf6553a7580365d2b857938e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S98/agent-context.json",
+      "bytes": 3436,
+      "sha256": "6a229e72383caab3f5a0134fdbeb3a70143e448dcdd8cd6a8d5fa4c30129ee8e"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/agent-context/S99/agent-context.json",
+      "bytes": 11024,
+      "sha256": "b66d8f9583f06ac73d3b0394b7e7d92691a77081781756d01be4792f5259b5d7"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/atomic-recall-alignment.v1.json",
+      "bytes": 8290,
+      "sha256": "fc1e61b6d51a1ed2d45fef87be0e3acddf9db0a3923ef9b6a8ecc0e0ac1af888"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/compiler-state.v1.json",
+      "bytes": 262,
+      "sha256": "8b60a9de638cc1d1431244bb3fcd2bb2148dff99066b4fde0f1c5be5eb2eeef4"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/execution-record.md",
+      "bytes": 129727,
+      "sha256": "9142ee5f3c4763b63ea072eaf9bda60f4e417a94bf06da4ac217004f7fd9d4d8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/failure-intents.v1.json",
+      "bytes": 647459,
+      "sha256": "e0b68f62e71c573b55194d67f7fea62c2d65af69609e280bf39e637c07fa35d1"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/feasibility.v1.json",
+      "bytes": 63,
+      "sha256": "5f88ee4804b8abaa468fd93312c6ef1814635331acb9b24103af3566667e4baa"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/final-plan-coverage.v1.json",
+      "bytes": 3247469,
+      "sha256": "9bfa0ec2dee4ae8f7805203032ef046429b6208e3447ab3b4020e632a31399d6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/obligations.v1.json",
+      "bytes": 477035,
+      "sha256": "db0cdd622d7aed1aad69fd667f4737980f586cb1024320ee9dbefdff488fb932"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/pre-slice-coverage.v1.json",
+      "bytes": 102845,
+      "sha256": "484cb310ff32963e3e1c578efd6b76a798e053deadc1df589cb181b36e7436ba"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-alignment.v1.json",
+      "bytes": 8020,
+      "sha256": "d3d6761c6cc13431b64bb63a5ba228a551d9348d659f23faf8837867b83b4397"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-chain-audit.v1.json",
+      "bytes": 368,
+      "sha256": "403b7a9bbe990ce475d35f14010b8fd1bfd0d15d5087036af90a83bf9f0eeac8"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/semantic-plan-bundle.v1.json",
+      "bytes": 14265867,
+      "sha256": "1265610311329a7a236da14b09c184f3fa37e363ea6c4a17d8161ac2bd972267"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/slices.v1.json",
+      "bytes": 2812390,
+      "sha256": "ba65a1ee372dc11692f87f8ae46b35bffedfb6a68228fa45327dd5a1997c8bf6"
+    },
+    {
+      "path": "execution-plans/2026-10-28-s2-06-node-identity-and-role-boundaries-terminal-binding-r12-20261102/source-index.v1.json",
+      "bytes": 208635,
+      "sha256": "129ce29bb055179053ec376dd0fd4aa915cbba715fd5ffa154a23ad0fa5d1030"
+    }
+  ],
+  "protected_dirty": [
+    {
+      "path": "execution-plans/2026-08-18-toolchain-workflow-repair/skill-input/prestart-40-output/skill-input-context.v1.json",
+      "bytes": 1731,
+      "sha256": "4bfa9206a23122810ec7c41783ce8c6866d91917ab1633a795891a2937c596d9"
+    },
+    {
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v1.json",
+      "bytes": 182542,
+      "sha256": "82d4d4b5ce43148f6bfd381f12f6f28b1dbf7f8db6100e83333dc80e4cdcee23"
+    },
+    {
+      "path": "knowledge/catalogs/repository-knowledge-catalog.v2.json",
+      "bytes": 1492026,
+      "sha256": "6df586b8718c08b93c8d9b52631ea63ced31f357651d565cc398209abfcda18e"
+    },
+    {
+      "path": "knowledge/indexes/current.json",
+      "bytes": 406,
+      "sha256": "72d1ec0d298c989d33b7984ae86f65384faef967e8c4d2110449f20d63dbfd63"
+    },
+    {
+      "path": "knowledge/indexes/last-known-good.json",
+      "bytes": 406,
+      "sha256": "72d1ec0d298c989d33b7984ae86f65384faef967e8c4d2110449f20d63dbfd63"
+    },
+    {
+      "path": "knowledge/projections/consumer-projections.v1.json",
+      "bytes": 29321,
+      "sha256": "3b6b8d5e89be42c1e166579ea557cb8b5e3cd81ea01bebec7b3942a3c32b29df"
+    },
+    {
+      "path": "knowledge/snapshots/repository-source-snapshot.v1.json",
+      "bytes": 75354,
+      "sha256": "d4827504102baa081db49ee482d95ae5635b6258ca30e842cf1e0cc3357e173f"
+    }
+  ],
+  "failure_history": [
+    {
+      "path": "logs/s2-06-resume-20261031/failure-history-after-S236-milestone-observer-20261102.json",
+      "bytes": 16723,
+      "sha256": "45615f5dc1f8b0dfcc9d3c60727f10f2c4425a6b07fb75eaa6cb46853aa7a9d5"
+    },
+    {
+      "path": "logs/s2-06-resume-20261031/postmerge-continuation-20261103/failure-history-with-first-probe.json",
+      "bytes": 17030,
+      "sha256": "d5d1048c880245adde672f6baf7e66c766e7cdd293e352482134ea939ff8ddd6"
+    }
+  ],
+  "preserved_budget_ledgers": [
+    {
+      "file": {
+        "path": "logs/workflow-unit-budgets/vdd/afb40302b8f6b5780c0ad4f1cfd7687ac2a129c88e8423f33d2486c3137379cb/budget-ledger.json",
+        "bytes": 3193,
+        "sha256": "74d2c3de1442b4b09b444f9938603d67b7ea0c44113fb9d242d7bedb8b231a91"
+      },
+      "data": {
+        "spent": {
+          "10c2250b7f3e56ce5f0245c7bbf5c4ed51499d5681e380a4893c8b62c52e7680": 1.8111471880001773,
+          "130268b645e1969933acd43b4324f8c92cb77580314cee6ccd4f3caaf0f148cd": 0.0018348539997532498,
+          "2433082b424398c989c23e9a8b43b5c277b185c5fa69c3a5100209cd2fdc7966": 0.3176462219998939,
+          "350e8e98bb56ffd3bde45cca809c315bd25dcf22ace55b7640d7b323a4bb6b9f": 0.002562628000305267,
+          "36d7b3c77daab6e222b5fe4848183bde3f6a8348626f8da7dbb3af275f0ba6ee": 10.752770709001197,
+          "3a7584f11e9a936bbe4d7566df419d1a811a187e2346416e4f30bbe6e6f494f9": 0.0031482000013056677,
+          "4a2a71f947886e5cbcf01a166b0de63a74e706fd0488471fe46bc5ed31d30cb3": 0.5151971470004355,
+          "51e1dc97cd239817c4ba9fc52461e8af106b655683b139333417d92f34a1706d": 1.8238400989976071,
+          "576f0164da405ec7d958e3ac48f2799b6439d10d983fe88f5683ffd431f7ca18": 0.5072041820021695,
+          "65f2ba04e17ab3392bd3bfdc170fefa5f1f0dc9fa0948fe1a2f7cab6f0a0f2b4": 11.008391962001042,
+          "6834cf4bd9ae74625295228adc7040d88e189233fec7e48c54bf4dc0f686471d": 0.0031349450000561774,
+          "693677d3aa4e7fc279dc0d3a1a7aa2d7f0efd9000198bcf42409d5d593a4639c": 1.9272312639986922,
+          "6abc6aa31ecdb3809fac75bf82a0e72cae19429370d891576982d8941f3479bd": 170.3037553110007,
+          "7174a38a739334022b76edad40e2e68f8e693f03c718de86bf9f55175fa818ae": 1.8173480650002602,
+          "71dfeda45aa82670983e5ac3364081aedf84d46d53e1944316b44195faa488d9": 1.7102335290001065,
+          "7270e3b2da90e4e720ab811260e94f57dda2e6b602eda7f6c46fb5d0e9682a12": 1.8168152520011063,
+          "766d5432fc43af07921948138ee952e0384ea0807d78c0d1d6458b19c22cdee4": 0.40640303300097,
+          "7d0808a22e0cf2961b7ddafc0eb31b9e1dd5642ccb743784357020877129cec0": 0.506747985000402,
+          "818eb815ac8b5f3191ff1f0dfa40e2a437948663c6e6a2a60a1ccf26297a4c1b": 0.004660906997742131,
+          "9545b1c18c50f0d3b6b2feca3bdfb6e0c59d1756e3ed428e2359f53d5fd9acf0": 0.5082544489996508,
+          "98c338b62488cd6c70625861ab3ce0b8d55f317bb09761628b318b46a8207840": 1.8126990810014831,
+          "a87fa97da3fae3d6194f821408baeb44cfb9fa14b1604d3eb61941c96930c5eb": 1.8179524499973923,
+          "aa11e255867399c5cac70282c87dff53cfe2587725464f5d2cce6f01c2608ab5": 0.5078456369992637,
+          "aa1c1bd1e5812b8f616212a40e7610f4dee5cd8a21dfd9b844e344463a6526b0": 1.4584302210023452,
+          "b7717a6a6f549ce4e79220b026c01c426d8e40bfea4d1ca84cbc955368f28736": 0.010457811997184763,
+          "bb4ac23cabc5185dbd997e962c7b32dcbaa753a2ee737116cce85690384ab032": 53.04133706399807,
+          "bb9f0cbd47a4d05a046a53a4096a98b5b45578e237c95ba2925296fedf722000": 92.14014083599977,
+          "cfee0dea09b8859fba2d9f45525a9ee8ddb0b40c5963258e8e90a1a3612ae958": 21.114180062999367,
+          "d15fb83e2af18fe4fd8150b6f0350b4d1af9c36dff4cada275155ce7fba3ec44": 0.0024289670000143815,
+          "e1451a4c2c4ec573afd63d9233a88024820ca8f4a4472c2c8e23c55c13e1a53c": 0.03800070099896402,
+          "e1ce616acb569361eb1f43e8f09570b9c60063943d89587b184973d796cd6240": 1.8144456070003798,
+          "e46399c435f64b931fb979166a13e5c490f2c66cfa4f198df186f0be79b7d4af": 0.3957267660043726,
+          "efead2a1234ff20b5911afd62668e90ed460232e6fcad59169c3166a1056b669": 0.9415060270002868,
+          "fb4a70d2b2bda40682a8c0d506c727bb6bcee5e72bfd5f9e5a51137184325133": 1.711065912997583,
+          "fbea59dfe1da91b44dd93812d28bbfb1a273d8408bb7601adc054ae11fb9973d": 1.8096275850002712,
+          "ffac40616f962babe497f7902dea59d82133ad810c8f4d8c057834546a2f1a2f": 0.03413582299981499
+        }
+      }
+    },
+    {
+      "file": {
+        "path": "logs/workflow-unit-budgets/quick-dev/c825be1cf6b153d3af7b93b18fd3b60139ed436fed3e44989316c751a9b99ed4/budget-ledger.json",
+        "bytes": 272,
+        "sha256": "ee2a77905df099b9956156591dc730b4cf710b420749ddbecd8b366b45d23348"
+      },
+      "data": {
+        "spent": {
+          "5d358bc3d015291bdbc543d286dbf309c1b05d6c8a7dec1fe42b69ff6d519df5": 2.839155937999749,
+          "a4e7d3e8718eb7c89048c6bf783be29162c8d26d8ad0f453579bfc7f63df799f": 81.5623803089984,
+          "af0e3317723704a9a50304872fc687dc5d519451bf308989acec91e8c9f1db74": 3.512065971000993
+        }
+      }
+    },
+    {
+      "file": {
+        "path": "logs/workflow-unit-budgets/quick-dev/425d32a29672cc77010f2734d6d3a89a8360f0b60fefb61d0aeb037c6acf24c1/budget-ledger.json",
+        "bytes": 275,
+        "sha256": "3c0f69c557087420648501179a41572c9c91a1812443598aad95f128572caa70"
+      },
+      "data": {
+        "spent": {
+          "1193eeeec5b64fd225aa4cac68a36035499d54178673645a515ab8070da07aa2": 2.9932777270005317,
+          "a4e7d3e8718eb7c89048c6bf783be29162c8d26d8ad0f453579bfc7f63df799f": 21.32014957100182,
+          "a8590ae999c163a8ff488c8a18ccc3f122971f76e63f2bfbed0f72191a160d36": 3.5251929299993208
+        }
+      }
+    }
+  ],
+  "successor_budget_directory": "logs/workflow-unit-budgets/vdd/7a5de464c4575ce8bf8bd0cd36aa160dcbddde0f85e01a73d71a1c63bfef57df",
+  "budget_notes": "Existing predecessor and S236 cost ledgers are retained, not transplanted or reset. Public supervisor determines successor execution unit identity. This is a new explicit deterministic handoff operation; no earlier exact S164 runtime-red repair diagnostic was found.",
+  "product_tests_authorized": false
+}
