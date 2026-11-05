@@ -12,7 +12,7 @@ import quick_dev_handoff as handoff
 
 
 def original():
-    return json.loads((ROOT / 'execution-plans/2026-08-06-skill-authoring-standard/dependency-atomic-plan-03/semantic-plan-bundle.v1.json').read_text())
+    return json.loads((ROOT / 'execution-plans/2026-08-06-skill-authoring-standard/dependency-atomic-plan-03/semantic-plan-bundle.v1.json').read_text(encoding='utf-8'))
 
 
 def test_explicit_runtime_role_keeps_current_0806_test_surface(tmp_path):
