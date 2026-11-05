@@ -73,6 +73,24 @@ code. A timeout or malformed/missing report never produces case proof. Repeated
 collection IDs or repeated `(node_id, phase)` events are ambiguous and rejected;
 this version does not stitch attempts together.
 
+Under ADR-0041, pytest 9 built-in subtests are observed as typed final reports
+and aggregated into their selected parent case; they do not add selected cases
+or extra phase events. A subtest-bearing case provides only complete all-pass
+proof: its parent and every child must pass without xfail. Child failure, skip,
+unknown reports or an absent parent call cannot provide proof. Such cases never
+authorize expected RED, including when a passing child's output contains a
+failure ID before the parent fails. Ordinary cases retain scoped RED support;
+ordinary repeated phases remain ambiguous. Original pytest output and JUnit
+retain child diagnostics; historical reports are not rewritten.
+
+Each observed `makereport` must reach its final report without changing its
+outcome, except a passed parent call may become failed when an already observed
+typed child failed; this downgrade still cannot authorize RED. Unlogged
+observations, including hidden attempts created during session
+finish, provide no proof. A child and parent cannot consume one observation;
+ordinary duplicate phases remain visible and are rejected as ambiguous.
+Observations created after the session-finish check are also rejected.
+
 ## Admission and closure
 
 | Stage or condition | Admission |

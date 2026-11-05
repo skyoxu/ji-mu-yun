@@ -197,3 +197,84 @@ def test_o_b77520560ca4(tmp_path):
     if errors:
         print('FAILURE_ID:FAILURE-O-B77520560CA4')
     assert not errors, errors
+
+
+@pytest.mark.cer_assertion('A-O-E173D2E7279D-ACTUAL-LOCAL-DISK-BYTES-RETAINED',
+    'A-O-E173D2E7279D-ACTUAL-LOCAL-SQLITE-PERSISTENCE-RETAINED',
+    'A-O-E173D2E7279D-DOTNET-FOUNDATION-RETAINED',
+    'A-O-E173D2E7279D-NO-REMOTE-USER-STORAGE-AUTHORITY',
+    'A-O-E173D2E7279D-NO-REPLACEMENT-DATABASE-PROVIDER',
+    'A-O-E173D2E7279D-REOPEN-RESTART-RETAINS-IDS-DATA')
+def test_o_e173d2e7279d(tmp_path):
+    # ADR-0061: retain actual local persistence; conformance failures remain artifact-integrity.
+    import hashlib
+    import os
+    import xml.etree.ElementTree as ET
+    root = Path(__file__).resolve().parents[2]
+    results_directory = tmp_path / 'foundation-trx'
+    results_directory.mkdir()
+    completed = subprocess.run(
+        ['dotnet', 'test', 'PhaseA.Platform.Tests/PhaseA.Platform.Tests.csproj', '--filter',
+         'FullyQualifiedName=PhaseA.Platform.Tests.NodeIdentity.NodePersistenceTests.O_E173D2E7279D',
+         '--logger', 'trx', '--results-directory', str(results_directory)],
+        cwd=root, shell=False, check=False, capture_output=True, text=True, encoding='utf-8', timeout=180)
+    value = read_observations(completed, results_directory,
+        'PhaseA.Platform.Tests.NodeIdentity.NodePersistenceTests.O_E173D2E7279D', 'S206_FOUNDATION:')
+    if not isinstance(value, dict) or value.get('schema') != 's206.local-foundation.v1':
+        raise RuntimeError('Fresh actual foundation observation is missing')
+    head = subprocess.run(['git', '-c', 'safe.directory=' + str(root), 'rev-parse', 'HEAD'],
+        cwd=root, shell=False, check=True, capture_output=True, text=True, encoding='utf-8', timeout=10).stdout.strip()
+    if value['sourceHead'] != head or not value['sourceHashes']:
+        raise RuntimeError('Foundation observation source does not match current HEAD')
+    for relative, digest in value['sourceHashes'].items():
+        if hashlib.sha256((root / relative).read_bytes()).hexdigest() != digest:
+            raise RuntimeError('Foundation observation source bytes changed')
+    before, after = value['before'], value['after']
+    if any(type(x) is not int or x <= 0 for x in (value['processId'], value['childLauncherProcessId'], before['processId'], after['processId'])):
+        raise RuntimeError('Actual process identities are missing')
+    errors = []
+    if not (value['processId'] == before['processId'] and before['processId'] != after['processId']
+            and value['childLauncherProcessId'] not in (before['processId'], after['processId'])):
+        errors.append('Readback did not recreate the real services in a distinct process')
+    if (not value['framework'].startswith('.NET 8.') or value['storeAssembly'] != 'PhaseA.Platform'
+            or value['storageAssembly'] != 'PhaseA.Platform' or value['sqliteAssembly'] != 'Microsoft.Data.Sqlite'):
+        errors.append('Existing .NET/local SQLite service implementation was replaced')
+    fields = ('accountId', 'projectId', 'workspaceId', 'projectAccountId', 'databasePath', 'databaseIdentity',
+              'contentIdentity', 'contentSha256', 'manifestIdentity', 'manifestSha256', 'payloadIdentity',
+              'payloadSha256', 'snapshotId', 'snapshotManifest', 'databases', 'serviceType')
+    if any(before[name] != after[name] for name in fields):
+        errors.append('Actual account/project/workspace, file identity, snapshot or bytes changed across process restart')
+    if not all(before[name] for name in ('accountId', 'projectId', 'workspaceId', 'databaseIdentity', 'contentIdentity', 'manifestIdentity', 'payloadIdentity')):
+        errors.append('Returned actual identifiers are empty')
+    if before['accountId'] != before['expectedAccountId'] or before['accountId'] != before['projectAccountId']:
+        errors.append('Reopened project/account identity differs')
+    if any(v['contentSha256'] != value['expectedContentSha256'] for v in (before, after)):
+        errors.append('Actual local file bytes were not retained')
+    if any(v['sqliteHeaderHex'] != b'SQLite format 3\0'.hex().upper() for v in (before, after)):
+        errors.append('Actual database file is not SQLite')
+    owned = Path(os.environ['S206_OWNED_FIXTURE_ROOT']).resolve()
+    for observation in (before, after):
+        database = Path(observation['databasePath']).resolve()
+        if not database.is_relative_to(owned) or observation['databases'] != [{'name': 'main', 'file': str(database)}]:
+            errors.append('Actual SQLite attachment is not the one owned local file')
+        manifest = observation['snapshotManifest']
+        entries = [entry for entry in manifest['Files'] if entry['RelativePath'] == 'persisted.txt']
+        if (len(entries) != 1 or entries[0]['Sha256'] != value['expectedContentSha256']
+                or manifest['AccountId'] != before['accountId'] or manifest['ProjectId'] != before['projectId']
+                or manifest['WorkspaceId'] != before['workspaceId']):
+            errors.append('Production snapshot manifest does not retain actual workspace content and ownership')
+    # Inspect the actual scoped dependency/diff boundary alongside executed storage operations.
+    baseline = 'f44270486828d0848703a4b36796222825efc9ca'
+    for relative in ('PhaseA.Platform/PhaseA.Platform.csproj', 'PhaseA.Platform/packages.lock.json'):
+        original = subprocess.run(['git', '-c', 'safe.directory=' + str(root), 'show', baseline + ':' + relative],
+            cwd=root, shell=False, check=True, capture_output=True, timeout=10).stdout
+        # Git stores LF, while the checkout may retain CRLF; compare semantic dependency bytes.
+        if original.replace(b'\r\n', b'\n') != (root / relative).read_bytes().replace(b'\r\n', b'\n'):
+            errors.append('Actual production database dependency boundary changed from the explicit baseline')
+    project = ET.parse(root / 'PhaseA.Platform/PhaseA.Platform.csproj').getroot()
+    packages = {p.attrib['Include']: p.attrib.get('Version') for p in project.findall('.//PackageReference')}
+    if packages != {'Microsoft.Data.Sqlite': '8.0.8', 'SQLitePCLRaw.bundle_e_sqlite3': '2.1.7'}:
+        errors.append('Production persistence provider/dependency set changed')
+    if errors:
+        print('FAILURE_ID:FAILURE_O_E173D2E7279D')
+    assert not errors, errors

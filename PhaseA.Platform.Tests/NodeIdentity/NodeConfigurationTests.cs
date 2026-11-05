@@ -12,6 +12,237 @@ namespace PhaseA.Platform.Tests.NodeIdentity;
 
 public sealed class NodeConfigurationTests(ITestOutputHelper output)
 {
+    // ADR-0061: this real parser observation is supplementary, never provenance/authority proof.
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    // ADR-0061: real built metadata and a fresh shared in-memory schema; no deployment or WAL claim.
+    [Fact]
+    public async Task StackPinsAndWindowsConstraintsPreserved()
+    {
+        var platform = typeof(PhaseAPlatformOptionsLoader).Assembly;
+        var configuration = new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name;
+        var productionOutput = Path.Combine(S206TestSupport.RepositoryRoot, "PhaseA.Platform", "bin", configuration, "net8.0");
+        var depsPath = Path.Combine(productionOutput, "PhaseA.Platform.deps.json");
+        using var deps = JsonDocument.Parse(File.ReadAllBytes(depsPath));
+        var libraries = deps.RootElement.GetProperty("libraries").EnumerateObject().Select(x => x.Name).Order().ToArray();
+        var sourceDll = Path.Combine(productionOutput, "PhaseA.Platform.dll");
+        var connectionString = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder
+        {
+            DataSource = "stack-" + Guid.NewGuid().ToString("N"), Mode = Microsoft.Data.Sqlite.SqliteOpenMode.Memory,
+            Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared, Pooling = false
+        }.ToString();
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
+        await connection.OpenAsync();
+        await SqliteMetadataSchema.InitializeAsync(connectionString);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT sqlite_version();";
+        var engine = (string)(await command.ExecuteScalarAsync())!;
+        command.CommandText = "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='accounts';";
+        var schemaTables = Convert.ToInt64(await command.ExecuteScalarAsync());
+        command.CommandText = "PRAGMA database_list;";
+        var databases = new List<object>();
+        await using (var rows = await command.ExecuteReaderAsync())
+            while (await rows.ReadAsync()) databases.Add(new { name = rows.GetString(1), file = rows.GetString(2) });
+        output.WriteLine("S206_STACK:" + JsonSerializer.Serialize(new
+        {
+            schema = "s206.built-stack.v1", framework = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,
+            platform = StackAssemblyMetadata(platform), test = StackAssemblyMetadata(GetType().Assembly),
+            aspnet = StackAssemblyMetadata(typeof(Microsoft.AspNetCore.Builder.WebApplication).Assembly),
+            sqlite = StackAssemblyMetadata(typeof(Microsoft.Data.Sqlite.SqliteConnection).Assembly),
+            batteries = StackAssemblyMetadata(typeof(SQLitePCL.Batteries_V2).Assembly),
+            schemaOwnerAssembly = typeof(SqliteMetadataSchema).Assembly.GetName().FullName,
+            builtAssemblyIdentity = System.Reflection.AssemblyName.GetAssemblyName(sourceDll).FullName,
+            builtAssemblySha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(sourceDll))).ToLowerInvariant(),
+            depsTarget = deps.RootElement.GetProperty("runtimeTarget").GetProperty("name").GetString(),
+            depsSha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(depsPath))).ToLowerInvariant(),
+            sqliteLibraries = libraries.Where(x => x.Contains("sqlite", StringComparison.OrdinalIgnoreCase)).ToArray(),
+            engineVersion = engine, schemaAccountsTables = schemaTables, databases,
+            isWindows = OperatingSystem.IsWindows(), osDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription
+        }));
+    }
+
+    private static object StackAssemblyMetadata(System.Reflection.Assembly assembly)
+    {
+        var target = assembly.GetCustomAttributes(typeof(System.Runtime.Versioning.TargetFrameworkAttribute), false)
+            .Cast<System.Runtime.Versioning.TargetFrameworkAttribute>().SingleOrDefault()?.FrameworkName;
+        var name = assembly.GetName();
+        return new
+        {
+            name = name.Name, identity = name.FullName, version = name.Version!.ToString(), target,
+            productVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location).ProductVersion,
+            sha256 = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(assembly.Location))).ToLowerInvariant()
+        };
+    }
+
+    // ADR-0061 AD15: actual identity validation fails closed without any service/network action.
+    [Fact]
+    public void O_116AC63F1FFB()
+    {
+        var observations = new List<object>();
+        foreach (var topology in new[] { "single_service", "independent_services", "cross_host" })
+        {
+            var settings = new Dictionary<string, string?>
+            {
+                ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "topology-" + Guid.NewGuid().ToString("N")),
+                ["PHASEA_SERVICE_STATE"] = "test", ["PHASEA_NODE_ID"] = "isolated-config-node",
+                ["PHASEA_NODE_SCOPE"] = "single_node_test", ["PHASEA_NODE_TOPOLOGY"] = topology,
+                ["PHASEA_ENABLED_ROLES"] = "entry,production", ["PHASEA_ACCEPT_NEW_ACCOUNTS"] = "false"
+            };
+            var rejected = false; string? diagnostic = null;
+            PhaseAPlatformOptions? configuration = null;
+            try { configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings); configuration.ValidateServiceIdentity(); }
+            catch (PhaseAPlatformConfigException error) { rejected = true; diagnostic = error.Message; }
+            observations.Add(new { requested = topology, actual = configuration?.NodeTopology, parserReturned = configuration is not null, rejected, diagnostic,
+                node = configuration?.NodeId, scope = configuration?.NodeScope, roles = configuration?.EnabledRoles.Order().ToArray() });
+        }
+        output.WriteLine("S206_TOPOLOGY_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            schema = "s206.config-topology-boundary.v1", observations,
+            sourceHashes = new[] { "PhaseA.Platform/Configuration/PhaseAPlatformOptions.cs", "PhaseA.Platform/Configuration/PhaseAPlatformOptionsLoader.cs",
+                "docs/adr/ADR-0061-phase-b-c-identity-isolation-workspace-recovery-spine.md", "docs/workflows/phase-service-node-identity-and-roles.md" }
+                .ToDictionary(p => p, p => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(S206TestSupport.RepositoryRoot, p)))).ToLowerInvariant())
+        }));
+    }
+
+    [Fact]
+    public void O_3541A1914CAF()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-3541A1914CAF", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_57C432D34201()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-57C432D34201", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_5FB690F6AA79()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-5FB690F6AA79", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_B6F8A8621F40()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-B6F8A8621F40", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    // ADR-0061: real existing parser/HTTPS validation; source claim assessment remains in Python.
+    [Fact]
+    public void O_E0AF971772C4()
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["PUBLIC_BASE_URL"] = "https://localhost",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-scope-" + Guid.NewGuid().ToString("N"))
+        };
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(settings);
+        settings["PUBLIC_BASE_URL"] = "http://localhost";
+        var insecureRejected = false;
+        try { _ = PhaseAPlatformOptionsLoader.FromDictionary(settings); }
+        catch (PhaseAPlatformConfigException) { insecureRejected = true; }
+        output.WriteLine("S206_SCOPE_BOUNDARY:" + JsonSerializer.Serialize(new
+        {
+            @case = "O-E0AF971772C4", phaseServiceState = configuration.PhaseServiceState,
+            httpsAccepted = Uri.TryCreate(configuration.PublicBaseUrl, UriKind.Absolute, out var publicUrl) && publicUrl.Scheme == Uri.UriSchemeHttps,
+            insecurePublicUrlRejected = insecureRejected,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
+    [Fact]
+    public void O_A45D4EDED200()
+    {
+        var configuration = PhaseAPlatformOptionsLoader.FromDictionary(new Dictionary<string, string?>
+        {
+            ["PHASEA_SERVICE_STATE"] = "test",
+            ["HOSTED_WORKSPACE_ROOT"] = Path.Combine(Path.GetTempPath(), "s162-provenance-" + Guid.NewGuid().ToString("N"))
+        });
+        output.WriteLine("S206_SOURCE_PROVENANCE:" + JsonSerializer.Serialize(new
+        {
+            entry = "PhaseAPlatformOptionsLoader.FromDictionary", phaseServiceState = configuration.PhaseServiceState,
+            actualConfigurationType = configuration.GetType().FullName,
+            productionRoleEnabled = configuration.ProductionRoleEnabled
+        }));
+    }
+
     [Fact]
     public async Task O_C8FCBDB2A9F7()
     {

@@ -174,7 +174,7 @@ def _copy_published_fixture(source, destination, **kwargs):
 _PUBLISHED_FIXTURE_MAIN = '25580d700da91d2702fd234a024a616d55419f90'
 
 
-def _prepare_published_main_fixture(root):
+def _prepare_published_main_fixture(root, *, current_controls=False):
     """Build genuine fixture-only data from immutable main, never device state."""
     root = Path(root).resolve()
     if root == ROOT.resolve() or (root / '.git').exists():
@@ -195,6 +195,32 @@ def _prepare_published_main_fixture(root):
         payload = subprocess.check_output(['git', '-C', str(ROOT), 'show',
                                           _PUBLISHED_FIXTURE_MAIN + ':' + name], timeout=10)
         _put(root, name, payload)
+    fixture_main = _PUBLISHED_FIXTURE_MAIN
+    if current_controls:
+        # ADR-0041: only this fresh fixture may bind current native controls.
+        # Commit their real bytes before the unchanged main-bound producer runs.
+        controls = {relative: (ROOT / relative).read_bytes() for relative in publication.CONTROL_PATHS}
+        changed = {relative.as_posix() for relative, payload in controls.items()
+                   if (root / relative).read_bytes() != payload}
+        for relative, payload in controls.items():
+            _put(root, relative, payload)
+        _git(root, 'add', '--', *(relative.as_posix() for relative in controls))
+        staged = set(_git(root, 'diff', '--cached', '--name-only', _PUBLISHED_FIXTURE_MAIN).splitlines())
+        assert staged == changed
+        if changed:
+            _git(root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                 'commit', '-qm', 'Fixture current publication controls')
+            fixture_main = _git(root, 'rev-parse', 'refs/heads/main')
+            assert _git(root, 'rev-parse', fixture_main + '^') == _PUBLISHED_FIXTURE_MAIN
+            assert set(_git(root, 'diff-tree', '--no-commit-id', '--name-only', '-r',
+                            fixture_main).splitlines()) == changed
+        else:
+            assert _git(root, 'rev-parse', 'refs/heads/main') == _PUBLISHED_FIXTURE_MAIN
+        assert _git(root, 'rev-parse', 'HEAD') == fixture_main
+        for relative, payload in controls.items():
+            committed = subprocess.check_output(['git', '-C', str(root), 'show',
+                fixture_main + ':' + relative.as_posix()], timeout=10)
+            assert committed == (root / relative).read_bytes() == (ROOT / relative).read_bytes() == payload
     request_path = Path('logs/knowledge-context/publication-requests/pytest-fixture.json')
     # This operator record and generation exist only inside the fresh fixture.
     # Use the real preparer and producer: no private tokens, forged manifests,
@@ -207,8 +233,20 @@ def _prepare_published_main_fixture(root):
     subprocess.run(command, check=True, capture_output=True, text=True, timeout=20)
     result = publication.run(root, publish=True, repeat=1, publication_request=request_path)
     assert result['status'] == 'published', result
-    assert result['main_commit'] == _PUBLISHED_FIXTURE_MAIN
+    if current_controls:
+        assert result['main_commit'] == fixture_main
+    else:
+        assert result['main_commit'] == _PUBLISHED_FIXTURE_MAIN
     assert result['evaluation']['failed'] == result['evaluation']['protocol_failed'] == 0
+    request = json.loads((root / request_path).read_bytes())
+    pointer = json.loads((root / 'knowledge/indexes/current.json').read_bytes())
+    manifest_bytes = (root / 'knowledge/indexes/generations' / pointer['generation_id'] / 'manifest.json').read_bytes()
+    manifest = json.loads(manifest_bytes)
+    assert request['main_commit'] == pointer['main_commit'] == manifest['main_commit'] == fixture_main
+    assert result['generation_id'] == pointer['generation_id'] == manifest['generation_id']
+    assert result['generation_sha256'] == pointer['generation_sha256'] == 'sha256:' + hashlib.sha256(manifest_bytes).hexdigest()
+    assert manifest['publication_request'] == publication._load_publication_request(
+        root, request_path, expected_main=fixture_main).summary
     paths = [root / p for p in ('knowledge/catalogs/repository-knowledge-catalog.v2.json',
         'knowledge/policies/consumer-policies.v2.json', 'knowledge/projections/consumer-projections.v1.json')]
     assert core.verify_current_publication(root, catalog_path=paths[0], policy_path=paths[1],
@@ -268,6 +306,25 @@ def test_published_fixture_does_not_read_device_generation(tmp_path, monkeypatch
 def test_published_fixture_refuses_actual_repository_before_writes():
     with pytest.raises(ValueError, match='fresh non-repository root'):
         _prepare_published_main_fixture(ROOT)
+
+
+@pytest.mark.parametrize('root_kind', ['actual', 'git-directory', 'git-file'])
+def test_published_fixture_current_controls_refuses_nonfresh_roots_before_writes(tmp_path, monkeypatch, root_kind):
+    """ADR-0041: opt-in never reaches source reads or Git writes before root guards."""
+    root = ROOT if root_kind == 'actual' else tmp_path
+    if root_kind == 'git-directory':
+        (root / '.git').mkdir()
+    elif root_kind == 'git-file':
+        (root / '.git').write_bytes(b'gitdir: fixture-only\n')
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Rejected roots must not read source bytes or run Git.')
+
+    monkeypatch.setattr(Path, 'read_bytes', forbidden)
+    monkeypatch.setattr(subprocess, 'run', forbidden)
+    monkeypatch.setattr(subprocess, 'check_output', forbidden)
+    with pytest.raises(ValueError, match='fresh non-repository root'):
+        _prepare_published_main_fixture(root, current_controls=True)
 
 
 def test_published_fixture_index_storage_preserves_independent_git_writes(published_vdd_base, tmp_path):
@@ -883,6 +940,39 @@ def _s12_raw_query(request, *args, **kwargs):
     return core.query_with_diagnostics(request, *args, **kwargs)
 
 
+
+def _materialize_planning_sources(source_root, destination, commit, paths):
+    # ADR-0044/0048: preserve every byte and the original ten-second read bound.
+    # One bounded transport per fixture; no source data is cached across cases.
+    names = sorted(paths)
+    if not names:
+        return
+    if (len(commit) != 40 or any(c not in '0123456789abcdef' for c in commit)
+            or any(any(c in name for c in '\r\n\0') for name in names)):
+        raise ValueError('invalid fixture Git request')
+    wire = ''.join(commit+':'+name+'\n' for name in names).encode('utf-8')
+    data = subprocess.check_output(['git','-C',str(source_root),'cat-file','--batch'],
+                                  input=wire, stderr=subprocess.PIPE, timeout=10)
+    offset, objects = 0, []
+    for name in names:
+        end = data.find(b'\n',offset,offset+512)
+        parts = data[offset:end].split(b' ') if end >= 0 else []
+        if (len(parts) != 3 or len(parts[0]) != 40
+                or any(c not in b'0123456789abcdef' for c in parts[0])
+                or parts[1] != b'blob' or not parts[2].isdigit()):
+            raise ValueError('invalid fixture Git blob header')
+        start = end+1
+        stop = start+int(parts[2])
+        if stop >= len(data) or data[stop:stop+1] != b'\n':
+            raise ValueError('truncated fixture Git blob')
+        objects.append((name,data[start:stop]))
+        offset = stop+1
+    if offset != len(data):
+        raise ValueError('unexpected fixture Git output')
+    for name, raw in objects:
+        _put(destination,name,raw)
+
+
 @pytest.fixture
 def published_planning(published_vdd_base, tmp_path):
     root, paths, catalog, policy, _, envelope = _s7_inputs(published_vdd_base, tmp_path)
@@ -900,9 +990,7 @@ def published_planning(published_vdd_base, tmp_path):
             max_candidates=20, eligible_module_ids=core._projection_for(envelope,catalog,policy,
                 json.loads(paths[2].read_text(encoding='utf-8'))))['candidates']
         needed.update(r['path'] for r in rows)
-    for path in sorted(needed):
-        data = subprocess.check_output(['git','-C',str(ROOT),'show',pointer['main_commit']+':'+path],timeout=10)
-        _put(root, path, data)
+    _materialize_planning_sources(ROOT, root, pointer['main_commit'], needed)
     (root/'execution-plans/example').mkdir(parents=True, exist_ok=True)
     (root/'knowledge/planning-query.toml').unlink()
     request = {k:v for k,v in envelope.items() if k in {
@@ -1875,7 +1963,7 @@ def _s7_delivery_boundary(fixture):
     for read in reads:
         assert read.get('excerpt_range') and isinstance(read.get('excerpt'), str)
         assert read['sha256'].removeprefix('sha256:') == hashlib.sha256(source.read_bytes()).hexdigest()
-        assert read['excerpt'] and read['excerpt'] in source.read_text(encoding='utf-8')
+        assert read['excerpt'] and read['excerpt'] in source.read_bytes().decode('utf-8')
         assert len(read['excerpt'].encode('utf-8')) > len(read['excerpt'])
         assert len(read['excerpt'].encode('utf-8')) < len(source.read_bytes())
     next_delivery = io.BytesIO()
@@ -4127,3 +4215,49 @@ def test_retained_generation_switch_uses_preloaded_fixture_bytes(published_vdd_b
     pointer = _s12_restore_existing_generation(root)
     assert pointer == expected
     assert json.loads((root / 'knowledge/indexes/current.json').read_text()) == expected
+
+
+def test_planning_fixture_materialization_keeps_all_committed_sources(published_planning, tmp_path, monkeypatch):
+    """ADR-0048: the optimized fixture must preserve every original source byte."""
+    root, paths, request = published_planning
+    catalog, policy, projection = [json.loads(path.read_bytes()) for path in paths]
+    commit = json.loads((root/'knowledge/indexes/current.json').read_bytes())['main_commit']
+    vdd = next(p for p in policy['policies'] if p['consumer']=='vdd')
+    needed = {'AGENTS.md', 'README.md'}
+    for query in ('AGENTS.md', 'repository knowledge authority'):
+        rows = core.locate({'consumer':'vdd','query':query},catalog,policy=vdd,max_candidates=20,
+            eligible_module_ids=core._projection_for(request,catalog,policy,projection))['candidates']
+        needed.update(row['path'] for row in rows)
+    originals = {name:subprocess.check_output(['git','-C',str(ROOT),'cat-file','blob',commit+':'+name]) for name in needed}
+    assert originals and all((root/name).read_bytes()==raw for name,raw in originals.items())
+    launches=[];original=subprocess.Popen
+    def launch(argv,*args,**kwargs):
+        launches.append(argv);return original(argv,*args,**kwargs)
+    monkeypatch.setattr(subprocess,'Popen',launch)
+    destination=tmp_path/'transport-parity'
+    _materialize_planning_sources(ROOT,destination,commit,needed)
+    assert launches==[['git','-C',str(ROOT),'cat-file','--batch']]
+    assert {name:(destination/name).read_bytes() for name in needed}==originals
+
+
+@pytest.mark.parametrize('wire', [b'bad header\n', b'a'*40+b' missing\n',
+    b'a'*40+b' tree 0\n\n', b'a'*40+b' blob 4\nx',
+    b'a'*40+b' blob 1\nx!', b'a'*40+b' blob 1\nx\nextra'])
+def test_planning_materialization_rejects_incomplete_transport(tmp_path, monkeypatch, wire):
+    # ADR-0048: malformed source transport cannot materialize partial evidence.
+    monkeypatch.setattr(subprocess,'check_output',lambda *args,**kwargs:wire)
+    destination=tmp_path/'materialized'
+    with pytest.raises(ValueError):
+        _materialize_planning_sources(ROOT,destination,'a'*40,['source.md'])
+    assert not destination.exists()
+
+
+def test_planning_materialization_keeps_original_timeout(tmp_path, monkeypatch):
+    def timeout(argv,**kwargs):
+        assert kwargs['timeout']==10
+        raise subprocess.TimeoutExpired(argv,10)
+    monkeypatch.setattr(subprocess,'check_output',timeout)
+    destination=tmp_path/'materialized'
+    with pytest.raises(subprocess.TimeoutExpired):
+        _materialize_planning_sources(ROOT,destination,'a'*40,['source.md'])
+    assert not destination.exists()

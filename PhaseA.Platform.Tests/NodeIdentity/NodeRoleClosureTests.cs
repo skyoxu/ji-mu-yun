@@ -20,6 +20,11 @@ using Xunit.Abstractions;
 
 namespace PhaseA.Platform.Tests.NodeIdentity;
 
+[CollectionDefinition("S206 role closure environment", DisableParallelization = true)]
+public sealed class S206RoleClosureEnvironmentCollection { }
+
+// ADR-0061 AD19/20: Program fixtures mutate process environment and console state.
+[Collection("S206 role closure environment")]
 // ADR-0061 AD19/20: all state is disposable; actual services and real hosted timer.
 public sealed class NodeRoleClosureTests(ITestOutputHelper output)
 {
@@ -1139,7 +1144,14 @@ public sealed class NodeRoleClosureTests(ITestOutputHelper output)
             using var subscription=DiagnosticListener.AllListeners.Subscribe(new Observer<DiagnosticListener>(listener=>
             {
                 if(listener.Name=="Microsoft.Extensions.Hosting")listener.Subscribe(new Observer<KeyValuePair<string,object?>>(e=>
-                {if(e.Key=="HostBuilt" && e.Value is IHost h)source.TrySetResult(h);}));
+                {
+                    // ADR-0061: a global diagnostic event must identify this exact owned host.
+                    if(e.Key=="HostBuilt" && e.Value is IHost h &&
+                        h.Services.GetService<PhaseAPlatformOptions>() is { } actual &&
+                        string.Equals(actual.MetadataDatabasePath,f.Options.MetadataDatabasePath,StringComparison.Ordinal) &&
+                        string.Equals(actual.AppBindUrl,address,StringComparison.Ordinal))
+                        source.TrySetResult(h);
+                }));
             }));
             Task program=Task.Run(async()=>
             {

@@ -6,9 +6,15 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+
+PYTHON_ROOT = Path(__file__).resolve().parents[4] / "scripts" / "python"
+if str(PYTHON_ROOT) not in sys.path:
+    sys.path.insert(0, str(PYTHON_ROOT))
+from _knowledge_catalog_builder import read_commit_blob, read_published_v3_plan
 
 
 def _canonical_hash(value: dict) -> str:
@@ -49,7 +55,13 @@ def _target_exists_at_main(root: Path, main_commit: str, target_plan: str) -> bo
         capture_output=True,
         check=False,
     )
-    return completed.returncode == 0
+    if completed.returncode == 0:
+        return True
+    # ADR-0057: the native VDD publication format is an existing main source,
+    # not a substitute maintainer confirmation or a new lifecycle transition.
+    return read_published_v3_plan(
+        target_plan, lambda path: read_commit_blob(root, main_commit, path)
+    ) is not None
 
 
 def _source_route(root: Path, raw: Path, target_plan: str) -> dict[str, str]:
@@ -113,7 +125,7 @@ def main() -> int:
     main_commit = _main_commit(root)
     target_plan = _target_plan(root, args.target_plan)
     if not _target_exists_at_main(root, main_commit, target_plan):
-        raise SystemExit("target plan must exist at current main with 00-index.md")
+        raise SystemExit("target plan must exist at current main as a legacy index or hash-bound native VDD plan-ready source")
     if args.trigger == "catalog-stale-maintenance" and args.source_route is None:
         raise SystemExit("catalog-stale-maintenance requires --source-route")
     if args.trigger == "operator-requested" and args.source_route is not None:

@@ -254,7 +254,9 @@ def supervise(argv, *, cwd, directory, total=1800, idle=600, cancel=None, env=No
     budget.apply({"event": "start", "at": started, "call": "entry", "key": identity(argv),
                   "label": "entry overhead", "parent": None, "container": True})
     process = subprocess.Popen(argv, cwd=cwd, env=child_env, shell=False,
-                               start_new_session=os.name != "nt")
+                               start_new_session=os.name != "nt",
+                               creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+                               **({"stdin": 0, "stdout": 1, "stderr": 2} if os.name == "nt" else {}))
     reason = None
     prior_term = None
     if threading.current_thread() is threading.main_thread():

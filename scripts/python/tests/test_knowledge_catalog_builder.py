@@ -1,20 +1,158 @@
 from __future__ import annotations
 
 import hashlib
+import io
+from unittest import mock
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPOSITORY_ROOT / "scripts" / "python"))
-from _knowledge_catalog_builder import build_layers, is_policy_excluded, select_versioned_plan_resource
+from _knowledge_catalog_builder import CommittedBlobBatch, MainSnapshot, build_layers, is_policy_excluded, read_commit_blob, select_versioned_plan_resource
+import publish_knowledge_catalog as publication
 CATALOG_PATH = REPOSITORY_ROOT / "knowledge/catalogs/repository-knowledge-catalog.v2.json"
 SNAPSHOT_PATH = REPOSITORY_ROOT / "knowledge/snapshots/repository-source-snapshot.v1.json"
 PROJECTION_PATH = REPOSITORY_ROOT / "knowledge/projections/consumer-projections.v1.json"
 BUILDER_PATH = REPOSITORY_ROOT / "scripts/python/build_knowledge_catalog.py"
+
+
+class CommittedBlobReaderTests(unittest.TestCase):
+    """ADR-0044: long worktree paths never replace pinned Git blob authority."""
+
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(temporary.cleanup)
+        base = Path(temporary.name)
+        self.root = base / ("r" * max(1, 190 - len(str(base)) - 1))
+        self.root.mkdir()
+        self.source = "docs/facts-" + "x" * 30 + ".bin"
+        self.payload = b"\xef\xbb\xbfcommitted\r\n\x00\xff\n"
+        files = {
+            self.source: self.payload,
+            "docs/migration/excluded.md": b"historical excluded input\n",
+            "execution-plans/example/00-index.md": b"# Committed plan\n",
+            **{path.as_posix(): b"committed control\n" for path in publication.CONTROL_PATHS},
+        }
+        for relative, raw in files.items():
+            target = self.root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(raw)
+        self._git("init", "--initial-branch=main")
+        self._git("config", "core.longpaths", "false")
+        self._git("add", "--", ".")
+        self._git("commit", "-m", "Commit exact knowledge fixtures")
+        self.commit = self._git("rev-parse", "refs/heads/main").decode("ascii").strip()
+        # git show's ambiguous revision/path probe exceeds Windows MAX_PATH,
+        # while every actual source and Git object remains below that boundary.
+        self.assertGreater(len(str(self.root / f"{self.commit}:{self.source}")), 260)
+        (self.root / self.source).write_bytes(b"dirty worktree must never become fact\n")
+
+    def _git(self, *arguments: str) -> bytes:
+        return subprocess.check_output(
+            ["git", "-c", "core.longpaths=false", "-c", "core.autocrlf=false",
+             "-c", "user.name=Knowledge Fixture", "-c", "user.email=fixture@example.invalid",
+             "-C", str(self.root), *arguments],
+            stderr=subprocess.PIPE,
+        )
+
+    def test_long_path_readers_return_exact_committed_bytes_and_hash(self) -> None:
+        snapshot = MainSnapshot(self.root)
+        self.assertEqual(self.commit, snapshot.commit)
+        self.assertEqual(self.payload, snapshot.read_bytes(self.source))
+        self.assertEqual(hashlib.sha256(self.payload).hexdigest(), snapshot.digest(self.source))
+        self.assertEqual(self.payload, publication._main_blob(self.root, self.commit, Path(self.source)))
+        self.assertNotEqual(self.payload, (self.root / self.source).read_bytes())
+
+    def test_invalid_commit_path_tree_and_excluded_source_remain_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "invalid_blob_commit"):
+            read_commit_blob(self.root, "refs/heads/main", self.source)
+        with self.assertRaisesRegex(ValueError, "invalid_repository_path"):
+            read_commit_blob(self.root, self.commit, "../outside.bin")
+        with self.assertRaisesRegex(ValueError, "main_input_unavailable"):
+            publication._main_blob(self.root, "0" * 40, Path(self.source))
+        with self.assertRaisesRegex(ValueError, "main_input_unavailable"):
+            publication._main_blob(self.root, self.commit, Path("docs"))
+        with self.assertRaises(subprocess.CalledProcessError):
+            MainSnapshot(self.root, authority_ref="refs/heads/missing")
+        with self.assertRaisesRegex(ValueError, "hard_excluded_source"):
+            MainSnapshot(self.root).read_bytes("docs/migration/excluded.md")
+
+    def test_batch_reuses_only_transport_and_preserves_binary_committed_bytes(self) -> None:
+        original = subprocess.Popen
+        with mock.patch("_knowledge_catalog_builder.subprocess.Popen", wraps=original) as launches:
+            with CommittedBlobBatch(self.root, self.commit) as reader:
+                self.assertEqual(self.payload, reader.read(self.source))
+                self.assertEqual(b"committed control\n", reader.read("scripts/python/publish_knowledge_catalog.py"))
+                self.assertEqual(self.payload, reader.read(self.source))
+                child = reader.process
+            self.assertEqual(1, launches.call_count)
+            self.assertIsNotNone(child.poll())
+        self.assertNotEqual(self.payload, (self.root / self.source).read_bytes())
+
+    def test_batch_missing_and_tree_fail_without_poisoning_next_object(self) -> None:
+        with CommittedBlobBatch(self.root, self.commit) as reader:
+            for path in ("docs/missing.bin", "docs"):
+                with self.assertRaises(subprocess.CalledProcessError) as error:
+                    reader.read(path)
+                self.assertTrue(error.exception.stderr.strip())
+                self.assertEqual(self.payload, reader.read(self.source))
+            snapshot = MainSnapshot(self.root)
+            snapshot._batch = reader
+            with self.assertRaisesRegex(ValueError, "hard_excluded_source"):
+                snapshot.read_bytes("docs/migration/excluded.md")
+
+    def test_batch_malformed_truncated_and_wrong_separator_are_rejected(self) -> None:
+        for wire in (b"bad header\n", b"a" * 40 + b" blob 4\nx", b"a" * 40 + b" blob 1\nx!"):
+            child = mock.Mock(stdin=io.BytesIO(), stdout=io.BytesIO(wire), args=["git"])
+            child.poll.return_value = None
+            child.wait.return_value = 0
+            with self.subTest(wire=wire), mock.patch("_knowledge_catalog_builder.subprocess.Popen", return_value=child):
+                with self.assertRaises(ValueError), CommittedBlobBatch(self.root, self.commit) as reader:
+                    reader.read(self.source)
+            child.kill.assert_called_once()
+            child.wait.assert_called_once()
+
+    def test_publication_still_requires_main_bound_maintainer_authorization(self) -> None:
+        request = {
+            "schema_version": publication.PUBLICATION_REQUEST_SCHEMA_VERSION,
+            "request_id": "committed-blob-regression",
+            "caller": "maintain-knowledge-base",
+            "trigger": "operator-requested",
+            "target_plan": "execution-plans/example",
+            "main_commit": self.commit,
+            "automatic": False,
+            "maintainer_confirmation": True,
+            "recorded_at": "2026-11-03T00:00:00+00:00",
+            "authorizes": ["knowledge-publication"],
+            "source_route": None,
+        }
+        summary = publication._validate_publication_request(
+            request, expected_main=self.commit, repository_root=self.root
+        )
+        self.assertEqual(request["request_id"], summary["request_id"])
+        for field, value, reason in (
+            ("caller", "refactor-acceptance", "caller_invalid"),
+            ("main_commit", "0" * 40, "main_mismatch"),
+            ("automatic", True, "confirmation_required"),
+            ("maintainer_confirmation", False, "confirmation_required"),
+        ):
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, reason):
+                publication._validate_publication_request(
+                    {**request, field: value}, expected_main=self.commit, repository_root=self.root
+                )
+        self.assertFalse((self.root / "knowledge/indexes/current.json").exists())
+
+    def test_publication_controls_still_require_pinned_main_bytes(self) -> None:
+        publication._require_main_controls(self.root, self.commit)
+        changed = self.root / publication.CONTROL_PATHS[0]
+        changed.write_bytes(b"dirty control\n")
+        with self.assertRaisesRegex(ValueError, "dirty_or_stale_publication_control"):
+            publication._require_main_controls(self.root, self.commit)
 
 
 class KnowledgeCatalogBuilderTests(unittest.TestCase):

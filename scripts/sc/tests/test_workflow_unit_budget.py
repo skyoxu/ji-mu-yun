@@ -87,6 +87,73 @@ class ClockTests(unittest.TestCase):
 
 
 class ProcessTests(unittest.TestCase):
+    def test_supervision_preserves_captured_standard_streams_and_exit_code(self):
+        root = Path(tempfile.mkdtemp(prefix="owned-stdio-"))
+        nonce = "owned-stdio-" + os.urandom(12).hex()
+        known_input = nonce + "-input\n"
+        worker = ("import json,os,sys,threading\n"
+                  # The fixture cannot leak a blocked reader on any platform.
+                  "timer=threading.Timer(4,lambda:os._exit(91));timer.daemon=True;timer.start()\n"
+                  "received=sys.stdin.read()\n"
+                  f"sys.stdout.write(json.dumps({{'nonce':{nonce!r},'received':received,'channel':'stdout'}},sort_keys=True)+'\\n');sys.stdout.flush()\n"
+                  f"sys.stderr.write({(nonce+'-stderr'+chr(10))!r});sys.stderr.flush()\n"
+                  "timer.cancel()\nraise SystemExit(7)\n")
+        worker_path = root / "worker.py"
+        worker_path.write_text(worker, encoding="utf-8", newline="\n")
+        supervisor = (f"import sys;sys.path.insert(0,{str(SCRIPTS)!r});"
+                      "from workflow_unit_budget import supervise;"
+                      f"raise SystemExit(supervise([sys.executable,'-B',{str(worker_path)!r}],"
+                      f"cwd={str(root)!r},directory={str(root/'budget')!r},total=5,idle=5))")
+        supervisor_path = root / "supervisor.py"
+        supervisor_path.write_text(supervisor, encoding="utf-8", newline="\n")
+        guard, process = None, None
+        try:
+            if os.name == "nt":
+                from scripts.sc.skill_replay_windows_job import WindowsJob
+                guard = WindowsJob()
+                options = {"creationflags": subprocess.CREATE_NO_WINDOW | 0x4}
+            else:
+                options = {"start_new_session": True}
+            process = subprocess.Popen([sys.executable, "-B", str(supervisor_path)], cwd=root,
+                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       **options)
+            if guard is not None:
+                guard.assign_and_resume(process)
+            stdout, stderr = process.communicate(input=known_input.encode("utf-8"), timeout=8)
+            (root / "captured-stdout.bin").write_bytes(stdout)
+            (root / "captured-stderr.bin").write_bytes(stderr)
+            (root / "capture-result.json").write_text(json.dumps({"authorizes": [], "nonce": nonce,
+                "known_input": known_input, "exit_code": process.returncode}, sort_keys=True) + "\n", encoding="utf-8")
+            self.assertEqual(7, process.returncode, stderr.decode("utf-8", errors="replace"))
+            self.assertEqual({"nonce": nonce, "received": known_input, "channel": "stdout"},
+                             json.loads(stdout.decode("utf-8")))
+            self.assertEqual(nonce + "-stderr\n", stderr.decode("utf-8").replace("\r\n", "\n"))
+            reports = [path for path in (root / "budget").glob("*.json") if path.name != "budget-ledger.json"]
+            self.assertEqual(1, len(reports))
+            report = json.loads(reports[0].read_text(encoding="utf-8"))
+            self.assertEqual(7, report["exit_code"])
+            self.assertIsNone(report["reason"])
+            self.assertEqual([], report["authorizes"])
+        finally:
+            try:
+                if guard is not None:
+                    # All transport assertions precede this failure guard.
+                    guard.terminate()
+                elif process is not None and process.poll() is None:
+                    wb.terminate_tree(process)
+            finally:
+                try:
+                    if process is not None:
+                        if process.poll() is None:
+                            process.kill()
+                        stdout, stderr = process.communicate(timeout=3)
+                        if not (root / "captured-stdout.bin").exists():
+                            (root / "captured-stdout.bin").write_bytes(stdout)
+                            (root / "captured-stderr.bin").write_bytes(stderr)
+                finally:
+                    if guard is not None:
+                        guard.close()
+
     def test_silent_process_timeout_retains_diagnostic_and_cleans_child(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -127,8 +194,12 @@ class ProcessTests(unittest.TestCase):
         self.assertEqual(run.call_args.args[0], ['taskkill', '/PID', '12345', '/T', '/F'])
         self.assertLessEqual(run.call_args.kwargs['timeout'], 10)
 
-    @unittest.skipIf(os.name == 'nt', 'POSIX termination signal test')
     def test_sigterm_stops_supervisor_and_owned_process(self):
+        if os.name == "nt":
+            # Windows SIGTERM terminates directly. Exercise the existing
+            # headless cancellation API instead of claiming signal support.
+            self._headless_cancel_stops_supervisor_and_owned_processes()
+            return
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             pidfile = root / 'pid'
@@ -149,6 +220,137 @@ class ProcessTests(unittest.TestCase):
                 if process.poll() is None:
                     process.kill()
                     process.wait()
+
+    def _headless_cancel_stops_supervisor_and_owned_processes(self):
+        import ctypes
+        from scripts.sc.skill_replay_windows_job import WindowsJob
+
+        api = ctypes.WinDLL("kernel32", use_last_error=True)
+        api.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+        api.OpenProcess.restype = ctypes.c_void_p
+        api.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+        api.WaitForSingleObject.restype = ctypes.c_uint32
+        api.IsProcessInJob.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_int)]
+        api.IsProcessInJob.restype = ctypes.c_int
+        api.CloseHandle.argtypes = [ctypes.c_void_p]
+        api.CloseHandle.restype = ctypes.c_int
+
+        # Retain this fixture's actual startup/cleanup evidence on failure.
+        root = Path(tempfile.mkdtemp(prefix="owned-cancel-"))
+        with (root / "supervisor-stdout.txt").open("wb") as out, \
+             (root / "supervisor-stderr.txt").open("wb") as err:
+            ready, descendant_ready = root / "owned.json", root / "descendant-ready"
+            descendant = ("import os,time;from pathlib import Path;"
+                          f"path=Path({str(descendant_ready)!r});"
+                          "temporary=path.with_suffix('.tmp');temporary.write_text(str(os.getpid()));"
+                          "temporary.replace(path);time.sleep(30)")
+            # ADR-0041: this stdlib-only leaf must expose the actual launch PID.
+            leaf_python = Path(getattr(sys, "_base_executable", sys.executable)).resolve()
+            self.assertEqual(Path(sys.base_prefix).resolve(), leaf_python.parent)
+            self.assertTrue(leaf_python.is_file())
+            worker = ("import json,os,subprocess,sys,time;from pathlib import Path;"
+                      f"Path({str(root/'worker-started')!r}).write_text(str(os.getpid()));"
+                      f"child=subprocess.Popen([{str(leaf_python)!r},'-I','-S','-c',{descendant!r}],"
+                      "creationflags=subprocess.CREATE_NEW_PROCESS_GROUP|subprocess.CREATE_NO_WINDOW);"
+                      f"path=Path({str(ready)!r});temporary=path.with_suffix('.tmp');"
+                      "temporary.write_text(json.dumps({'worker':os.getpid(),'descendant':child.pid}));"
+                      "temporary.replace(path);time.sleep(30)")
+            code = ("import os,sys,threading;from pathlib import Path;"
+                    f"Path({str(root/'supervisor-started')!r}).write_text(str(os.getpid()));"
+                    f"sys.path.insert(0,{str(SCRIPTS)!r});from workflow_unit_budget import supervise;"
+                    f"Path({str(root/'supervisor-imported')!r}).write_text(str(os.getpid()));"
+                    "cancel=threading.Event()\n"
+                    "def request_cancel():\n"
+                    # Match the parent's post-readiness cancel handshake.
+                    "    import time\n"
+                    f"    while not (Path({str(ready)!r}).exists() and Path({str(descendant_ready)!r}).exists()):\n"
+                    "        time.sleep(.01)\n"
+                    "    if sys.stdin.buffer.readline() == b'cancel\\n':\n"
+                    "        cancel.set()\n"
+                    "threading.Thread(target=request_cancel,daemon=True).start()\n"
+                    f"raise SystemExit(supervise([sys.executable,'-c',{worker!r}],"
+                    f"cwd={str(root)!r},directory={str(root/'budget')!r},"
+                    "total=15,idle=15,cancel=cancel))")
+            (root / "fixture-input.json").write_text(json.dumps({"authorizes": [], "sources": {
+                "supervisor": code, "worker": worker, "descendant": descendant}}, sort_keys=True) + "\n", encoding="utf-8")
+            process, handles = None, []
+            guard = WindowsJob()
+            try:
+                # The dedicated job is a failure guard only. Product cleanup
+                # must finish before this test terminates or closes the job.
+                started = time.monotonic()
+                process = subprocess.Popen([sys.executable, "-c", code], stdin=subprocess.PIPE,
+                                           stdout=out, stderr=err,
+                                           creationflags=subprocess.CREATE_NO_WINDOW | 0x4)
+                guard.assign_and_resume(process)
+                deadline = time.monotonic() + 5
+                while not (ready.exists() and descendant_ready.exists()) and process.poll() is None and time.monotonic() < deadline:
+                    time.sleep(.01)
+                worker_ready_at_stop, descendant_ready_at_stop = ready.exists(), descendant_ready.exists()
+                observation = {"schema": "workflow.cancel-fixture-startup.v1", "authorizes": [],
+                               "supervisor_pid": process.pid, "supervisor_exit_code": process.poll(),
+                               "elapsed_seconds": time.monotonic() - started,
+                               "startup_limit_seconds": 5,
+                               "worker_ready_at_stop": worker_ready_at_stop,
+                               "descendant_ready_at_stop": descendant_ready_at_stop,
+                               "milestones": {name: {"exists": (root / name).exists(),
+                                                     "mtime_ns": (root / name).stat().st_mtime_ns if (root / name).exists() else None}
+                                              for name in ("supervisor-started", "supervisor-imported", "worker-started", "owned.json", "descendant-ready")}}
+                (root / "startup-observation.json").write_text(json.dumps(observation, sort_keys=True) + "\n", encoding="utf-8")
+                self.assertTrue(descendant_ready_at_stop, f"the actual owned descendant must start; retained diagnostics: {root}")
+                self.assertTrue(worker_ready_at_stop, "the actual owned worker must identify its tree")
+                owned = json.loads(ready.read_text())
+                self.assertEqual(owned["descendant"], int(descendant_ready.read_text()))
+                self.assertEqual(2, len(set(owned.values())))
+                for pid in owned.values():
+                    # Read-only handles retain these exact live identities;
+                    # neither exit checks nor failure cleanup reopen a PID.
+                    handle = api.OpenProcess(0x100000 | 0x1000, False, pid)
+                    if not handle:
+                        raise ctypes.WinError(ctypes.get_last_error())
+                    handles.append(handle)
+                    belongs = ctypes.c_int()
+                    if not api.IsProcessInJob(handle, guard.handle, ctypes.byref(belongs)):
+                        raise ctypes.WinError(ctypes.get_last_error())
+                    self.assertTrue(belongs.value, "the process must belong to this test's dedicated job")
+                    self.assertEqual(0x102, api.WaitForSingleObject(handle, 0),
+                                     "the owned process must be alive before cancellation")
+                process.stdin.write(b"cancel\n")
+                process.stdin.flush()
+                self.assertEqual(130, process.wait(timeout=10))
+                reports = [p for p in (root / "budget").glob("*.json") if p.name != "budget-ledger.json"]
+                self.assertEqual(1, len(reports))
+                report = json.loads(reports[0].read_text())
+                self.assertEqual(130, report["exit_code"])
+                self.assertEqual({"reason": "cancelled"}, report["reason"])
+                self.assertEqual([], report["authorizes"])
+                self.assertTrue((root / "budget" / "budget-ledger.json").is_file())
+                for handle in handles:
+                    self.assertEqual(0, api.WaitForSingleObject(handle, 3000),
+                                     "product cancellation must stop the owned worker and descendant")
+            finally:
+                try:
+                    # This can never supply the preceding success evidence.
+                    guard.terminate()
+                finally:
+                    try:
+                        if process is not None:
+                            if process.poll() is None:
+                                # A failed assignment leaves only the exact
+                                # suspended Popen process outside this job.
+                                process.kill()
+                            process.wait(timeout=5)
+                            process.stdin.close()
+                    finally:
+                        try:
+                            close_error = None
+                            for handle in handles:
+                                if not api.CloseHandle(handle):
+                                    close_error = close_error or ctypes.get_last_error()
+                            if close_error is not None:
+                                raise ctypes.WinError(close_error)
+                        finally:
+                            guard.close()
 
     def test_real_subunit_events_prevent_round_deadline(self):
         with tempfile.TemporaryDirectory() as raw:

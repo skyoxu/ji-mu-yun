@@ -88,13 +88,18 @@ def test_timeout_stops_separate_session_descendant_and_preserves_unrelated_proce
     finally:
         # Only the child PID created by this fixture is eligible for fallback
         # cleanup when exercising the old failing implementation.
-        if pid_file.exists():
-            try:
-                os.kill(int(pid_file.read_text()), signal.SIGTERM)
-            except ProcessLookupError:
-                pass
-        unrelated.terminate()
-        unrelated.wait(timeout=5)
+        try:
+            if pid_file.exists():
+                try:
+                    os.kill(int(pid_file.read_text()), signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                except OSError as exc:
+                    if os.name != 'nt' or getattr(exc, 'winerror', None) != 87:
+                        raise
+        finally:
+            unrelated.terminate()
+            unrelated.wait(timeout=5)
 
 
 def test_normal_completion_is_not_timeout_and_logs_are_utf8_bytes(tmp_path):

@@ -13,7 +13,7 @@ import subprocess
 from fnmatch import fnmatchcase
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 
 DOMAINS = ("toolchain", "phase", "workspace", "marketplace")
@@ -40,6 +40,139 @@ def normalized_path(value: str) -> str:
     if path.is_absolute() or ".." in path.parts or not path.parts:
         raise ValueError("invalid_repository_path")
     return path.as_posix()
+
+
+def read_commit_blob(repository_root: Path, commit: str, path: str) -> bytes:
+    """Read exact committed blob bytes without worktree path guessing (ADR-0044)."""
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("invalid_blob_commit")
+    normalized = normalized_path(path)
+    return subprocess.check_output(
+        ["git", "-C", str(repository_root), "cat-file", "blob", f"{commit}:{normalized}"]
+    )
+
+
+def read_published_v3_plan(directory: str, read_bytes: Callable[[str], bytes]) -> dict[str, Any] | None:
+    """ADR-0057: adapt the existing VDD publication identity, not its authority.
+
+    The caller supplies committed-main reads. Only bound, independently
+    materialized semantic arrays are discoverable content. Bundle/state bytes
+    are integrity witnesses, never global semantic resources or instructions.
+    This recognizes a source format; it does not rerun or grant VDD readiness.
+    """
+    try:
+        if (normalized_path(directory) != directory or len(PurePosixPath(directory).parts) != 2
+                or PurePosixPath(directory).parts[0] != "execution-plans"):
+            return None
+        bundle_path = f"{directory}/semantic-plan-bundle.v1.json"
+        state_path = f"{directory}/compiler-state.v1.json"
+        bundle = json.loads(read_bytes(bundle_path).decode("utf-8"))
+        state = json.loads(read_bytes(state_path).decode("utf-8"))
+        if not isinstance(bundle, dict) or not isinstance(state, dict):
+            return None
+        plan_id = bundle.get("plan_id")
+        # semantic_compiler.canonical_bytes includes LF; Catalog identity does not.
+        native_hash = prefixed_sha256(canonical_bytes(bundle) + b"\n")
+        if (bundle.get("schema_version") != "vdd.semantic-plan-bundle.v1"
+                or state.get("schema") != "vdd.compiler-state.v1"
+                or not isinstance(plan_id, str) or not plan_id
+                or state.get("plan_id") != plan_id or state.get("state") != "plan-ready"
+                or state.get("semantic_plan_sha256") != native_hash):
+            return None
+        semantic = (
+            ("obligations", "obligations.v1.json"),
+            ("acceptances", "acceptances.v1.json"),
+            ("failure_intents", "failure-intents.v1.json"),
+        )
+        for field, name in semantic:
+            value = bundle.get(field)
+            materialized = json.loads(read_bytes(f"{directory}/{name}").decode("utf-8"))
+            if (not isinstance(value, list) or not all(isinstance(row, dict) for row in value)
+                    or canonical_bytes(materialized) != canonical_bytes(value)):
+                return None
+        return {
+            "source_path": f"{directory}/obligations.v1.json",
+            "resources": (("acceptances", f"{directory}/acceptances.v1.json"),
+                          ("failure-intents", f"{directory}/failure-intents.v1.json")),
+            "integrity_paths": (bundle_path, state_path),
+            "state": state["state"],
+        }
+    except (FileNotFoundError, KeyError, ValueError, UnicodeError, subprocess.CalledProcessError):
+        return None
+
+
+
+class CommittedBlobBatch:
+    """ADR-0044: reuse transport only; read every requested immutable object."""
+
+    def __init__(self, repository_root: Path, commit: str):
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise ValueError("invalid_blob_commit")
+        self.root, self.commit = repository_root, commit
+        self.process = None
+
+    def __enter__(self):
+        return self
+
+    def _single(self, path: str) -> bytes:
+        return subprocess.check_output(
+            ["git", "-C", str(self.root), "cat-file", "blob", f"{self.commit}:{path}"],
+            stderr=subprocess.PIPE,
+        )
+
+    def read(self, path: str) -> bytes:
+        # Preserve single-object semantics for names outside the LF protocol.
+        if any(char in path for char in ("\n", "\r", "\0")):
+            return self._single(path)
+        if self.process is None:
+            self.process = subprocess.Popen(
+                ["git", "-C", str(self.root), "cat-file", "--batch"],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            )
+        child = self.process
+        child.stdin.write(f"{self.commit}:{path}\n".encode("utf-8"))
+        child.stdin.flush()
+        header = child.stdout.readline(512)
+        fields = header.rstrip(b"\n").split(b" ")
+        if header.endswith(b" missing\n"):
+            return self._single(path)
+        if (not header.endswith(b"\n") or len(fields) != 3
+                or not re.fullmatch(rb"[0-9a-f]{40}", fields[0])
+                or not fields[2].isdigit()):
+            raise ValueError("invalid_git_blob_batch_header")
+        size = int(fields[2])
+        chunks = []
+        while size:
+            block = child.stdout.read(min(size, 65536))
+            if not block:
+                raise ValueError("truncated_git_blob_batch")
+            chunks.append(block)
+            size -= len(block)
+        if child.stdout.read(1) != b"\n":
+            raise ValueError("invalid_git_blob_batch_separator")
+        if fields[1] != b"blob":
+            return self._single(path)
+        return b"".join(chunks)
+
+    def __exit__(self, kind, value, traceback):
+        child = self.process
+        if child is None:
+            return False
+        try:
+            if kind is not None and child.poll() is None:
+                child.kill()
+            child.stdin.close()
+            try:
+                code = child.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait()
+                raise
+            if kind is None and code:
+                raise subprocess.CalledProcessError(code, child.args)
+        finally:
+            child.stdout.close()
+        return False
 
 
 def select_versioned_plan_resource(
@@ -104,6 +237,7 @@ class MainSnapshot:
     commit: str = field(init=False)
     paths: tuple[str, ...] = field(init=False)
     _bytes: dict[str, bytes] = field(default_factory=dict, init=False)
+    _batch: CommittedBlobBatch | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.repository_root = self.repository_root.resolve()
@@ -128,9 +262,8 @@ class MainSnapshot:
         if is_hard_excluded(normalized):
             raise ValueError("hard_excluded_source")
         if normalized not in self._bytes:
-            self._bytes[normalized] = subprocess.check_output(
-                ["git", "-C", str(self.repository_root), "show", f"{self.commit}:{normalized}"]
-            )
+            self._bytes[normalized] = (self._batch.read(normalized) if self._batch is not None
+                                       else read_commit_blob(self.repository_root, self.commit, normalized))
         return self._bytes[normalized]
 
     def read_text(self, path: str) -> str:
@@ -275,12 +408,13 @@ class CatalogBuilder:
         resources: Iterable[tuple[str, str]] = (),
         relations: Iterable[dict[str, str]] = (),
         consumer_ids: Iterable[str] | None = None,
+        fallback_title: str | None = None,
     ) -> dict[str, Any] | None:
         source = self.add_source(source_path, source_role)
         if source is None:
             return None
         content = self.snapshot.read_text(source_path)
-        title = _title(content, PurePosixPath(source_path).name)
+        title = _title(content, fallback_title or PurePosixPath(source_path).name)
         bound_resources: list[dict[str, Any]] = []
         seen_paths = {source_path}
         for role, path in resources:
@@ -712,6 +846,43 @@ class CatalogBuilder:
                 ],
             )
 
+        # Native VDD publications have no legacy Markdown index. Keep legacy
+        # precedence and adapt only direct, committed execution-plan directories.
+        legacy_directories = {path.rsplit("/", 1)[0] for path in plan_indexes}
+        native_directories = {
+            path.rsplit("/", 1)[0] for path in self.snapshot.under("execution-plans")
+            if path.count("/") == 2 and path.endswith("/semantic-plan-bundle.v1.json")
+        }
+
+        def committed(path: str) -> bytes:
+            if not self.snapshot.contains(path):
+                raise FileNotFoundError(path)
+            return self.snapshot.read_bytes(path)
+
+        for directory in sorted(native_directories - legacy_directories):
+            native = read_published_v3_plan(directory, committed)
+            if native is None:
+                continue
+            semantic_paths = [native["source_path"], *(path for _, path in native["resources"])]
+            if any(is_policy_excluded(path, self.exclusions) for path in [*semantic_paths, *native["integrity_paths"]]):
+                continue
+            for path in native["integrity_paths"]:
+                self.add_source(path, "integrity-only")
+            title = PurePosixPath(directory).name
+            domain, dependencies = _domain_for_plan(native["source_path"], title)
+            module = self.add_module(
+                module_id="plan." + _slug(title), kind="execution-plan",
+                source_path=native["source_path"], source_role="plan-obligations",
+                primary_domain=domain, dependencies=dependencies,
+                status=_plan_catalog_status(native["state"]), resources=native["resources"],
+                fallback_title=title,
+            )
+            if module is not None:
+                # ADR-0057: discover the stable plan entry, not every frozen
+                # source excerpt, query fixture or oracle in compiler JSON.
+                # The complete semantic arrays remain the verified read-set.
+                module["content"] = title
+
     def add_runtime_entrypoints(self) -> None:
         self.add_module(
             module_id="runtime.phase-a.startup",
@@ -879,7 +1050,11 @@ def build_layers(
     authority_ref: str = "refs/heads/main",
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     snapshot = MainSnapshot(repository_root, authority_ref=authority_ref)
-    builder = CatalogBuilder(snapshot, policy, exclusions)
-    source_snapshot, catalog = builder.build()
+    # The batch lifetime is one build; every original source guard stays active.
+    with CommittedBlobBatch(snapshot.repository_root, snapshot.commit) as batch:
+        snapshot._batch = batch
+        builder = CatalogBuilder(snapshot, policy, exclusions)
+        source_snapshot, catalog = builder.build()
+    snapshot._batch = None
     projections = build_consumer_projections(catalog, policy)
     return source_snapshot, catalog, projections, compatibility_catalog(catalog)

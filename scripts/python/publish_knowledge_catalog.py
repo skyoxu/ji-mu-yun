@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-from _knowledge_catalog_builder import build_layers, canonical_bytes, compatibility_catalog, prefixed_sha256
+from _knowledge_catalog_builder import build_layers, canonical_bytes, compatibility_catalog, prefixed_sha256, read_commit_blob, read_published_v3_plan
 from _knowledge_locator_core import verify_current_publication
 from evaluate_knowledge_queries import evaluate
 
@@ -154,7 +154,10 @@ def _validate_publication_request(
         try:
             _main_blob(repository_root, expected_main, Path(target) / "00-index.md")
         except ValueError as exc:
-            raise ValueError("knowledge_publication_request_target_invalid") from exc
+            if read_published_v3_plan(
+                target, lambda path: _main_blob(repository_root, expected_main, Path(path))
+            ) is None:
+                raise ValueError("knowledge_publication_request_target_invalid") from exc
         if source_route is not None:
             _validate_source_route(repository_root, target, source_route)
     return {
@@ -229,10 +232,10 @@ def _main_commit(repository_root: Path) -> str:
 
 
 def _main_blob(repository_root: Path, commit: str, relative_path: Path) -> bytes:
-    completed = _git(repository_root, "show", f"{commit}:{relative_path.as_posix()}")
-    if completed.returncode:
-        raise ValueError(f"main_input_unavailable:{relative_path.as_posix()}")
-    return completed.stdout
+    try:
+        return read_commit_blob(repository_root, commit, relative_path.as_posix())
+    except (subprocess.CalledProcessError, ValueError) as exc:
+        raise ValueError(f"main_input_unavailable:{relative_path.as_posix()}") from exc
 
 
 def _require_main_controls(repository_root: Path, commit: str) -> None:

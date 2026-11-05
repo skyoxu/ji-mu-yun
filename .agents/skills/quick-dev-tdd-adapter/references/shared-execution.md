@@ -43,6 +43,13 @@ with bounded exclusions for logs, execution-plans, Python caches and virtual
 environments. Explicit declared paths inside excluded trees are always added.
 The semantic bundle is separately bound. Installed Python dependencies are
 hashed from their actual distribution inventory, not only version metadata.
+On Windows, that same file/byte budget also binds direct `.pyd`, `.dll` and
+`.zip` files in the configured prefix/base-prefix and executable/base-executable
+directories, their direct `DLLs` subdirectories, and an absolute `DESTSHARED`
+directory when configured. This covers base-interpreter native files used by
+virtual environments without searching PATH or admitting whole directories.
+Each observed dependency still requires its exact inventoried byte hash;
+unknown layouts and unsupported virtual zip-import paths remain fail-closed.
 The collector also records actual Python-visible file reads and imported module
 bytes. Reads/imports outside those inventories, incomplete observation, child
 processes and network connections prevent reusable publication with a specific

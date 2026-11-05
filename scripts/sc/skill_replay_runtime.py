@@ -123,6 +123,9 @@ def bindings(root: Path, names) -> list[dict]:
 def child_environment() -> dict:
     # Do not inherit candidate Python injection or arbitrary model credentials.
     permitted = ("PATH", "SystemRoot", "WINDIR", "TEMP", "TMP", "HOME", "USERPROFILE", "LANG", "LC_ALL", "TC_D1_NATIVE_TRACE_DIR")
+    if os.name == "nt":
+        # CPython's Windows user site is rooted in this standard OS directory.
+        permitted += ("APPDATA",)
     value = {name: os.environ[name] for name in permitted if name in os.environ}
     value.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8", PYTHONDONTWRITEBYTECODE="1")
     return value
@@ -686,11 +689,27 @@ def trusted_validator(root: Path, capability_path: str):
             raise ValueError("validator trust closure changed during execution")
 
 
+
+def isolated_observer_python() -> str:
+    """ADR-0058: an -I -S observer must bind the actual launched interpreter PID."""
+    if sys.platform != "win32":
+        return sys.executable
+    # Windows venv redirectors start another process. The observer already
+    # excludes all site packages; use this runtime's exact base executable.
+    base = getattr(sys, "_base_executable", None)
+    if not base or not Path(base).is_absolute():
+        raise ValueError("isolated observer runtime identity unavailable")
+    image = Path(base).resolve()
+    if image.parent != Path(sys.base_prefix).resolve() or not image.is_file():
+        raise ValueError("isolated observer runtime identity unavailable")
+    return str(image)
+
+
 def observed_validator(root: Path, validator: Path, value: dict, target: Path, timeout_ms=None):
     with tempfile.TemporaryDirectory(prefix="tc-d1-observer-") as directory:
         output, nonce = Path(directory) / "reads.json", secrets.token_hex(24)
         observer = Path(__file__).with_name("skill_replay_observer.py")
-        command = [sys.executable, "-X", "utf8", "-I", "-S", "-B", str(observer), str(validator), str(target), str(output), nonce, *[str(target) if item == "{target}" else item for item in value["probe_args"]]]
+        command = [isolated_observer_python(), "-X", "utf8", "-I", "-S", "-B", str(observer), str(validator), str(target), str(output), nonce, *[str(target) if item == "{target}" else item for item in value["probe_args"]]]
         result = execute(command, root, min(TIMEOUT_SECONDS, timeout_ms / 1000) if timeout_ms is not None else TIMEOUT_SECONDS)
         if not output.is_file():
             raise ValueError("validator did not complete its independent read observation")

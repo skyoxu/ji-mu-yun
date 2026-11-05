@@ -73,8 +73,12 @@ LKG and writes append-only failure evidence under `logs/knowledge-context/`.
 the request binds caller, trigger, one target plan, current main, confirmation,
 publication authority. `catalog-stale-maintenance` also requires the hash-verified
 Acceptance maintenance route; `operator-requested` does not require that route. The
-target plan must exist at pinned main with `00-index.md`; the request summary
-and hash are recorded in the immutable generation. Do not call
+target plan must exist at pinned main as a legacy `00-index.md` plan or a native
+VDD V3 `plan-ready` source with matching plan identity, native canonical bundle
+hash, and materialized obligations, acceptances, and failure intents. This is
+source-format recognition, not execution or publication authorization
+(ADR-0057). The request summary and hash are recorded in the immutable
+generation. Do not call
 `build_knowledge_catalog.py` as a publication substitute; that CLI is read-only.
 
 `--restore-lkg` is the only recovery mode. It restores the four formal layers

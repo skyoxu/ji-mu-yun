@@ -1,11 +1,13 @@
 """ADR-0041: regression admission integrity and fixture-only candidate execution."""
 from copy import deepcopy
+import ast
 import gzip
 import json
 import os
 from pathlib import Path
 import shutil
 import shlex
+import stat
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -15,6 +17,439 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import skill_baseline as baseline
+
+
+
+@pytest.mark.parametrize('system,image_kind,entry_kind,base_kind,expected', [
+    ('Windows', 'base', 'runner', 'valid', True),
+    ('Windows', 'launcher', 'runner', 'valid', False),
+    ('Windows', 'foreign', 'runner', 'valid', False),
+    ('Windows', 'other_venv', 'runner', 'valid', False),
+    ('Windows', 'base', 'other', 'valid', False),
+    ('Windows', 'base', 'runner', 'missing', False),
+    ('Windows', 'base', 'runner', 'foreign', False),
+    ('Windows', 'base', 'runner', 'relative', False),
+    ('Linux', 'launcher', 'runner', 'missing', True),
+    ('Linux', 'base', 'runner', 'valid', False),
+])
+def test_runner_ancestor_binds_exact_runtime_image(tmp_path, monkeypatch, system, image_kind, entry_kind, base_kind, expected):
+    # ADR-0041: neither an arbitrary interpreter nor a claimed ticket grants trust.
+    runtime = tmp_path / 'runtime'
+    base = runtime / 'python.exe'
+    launcher = tmp_path / 'venv/Scripts/python.exe'
+    foreign = tmp_path / 'foreign/python.exe'
+    claimed_base = {'valid':str(base), 'missing':None, 'foreign':str(foreign), 'relative':'python.exe'}[base_kind]
+    monkeypatch.setattr(baseline, 'sys', SimpleNamespace(executable=str(launcher), _base_executable=claimed_base, base_prefix=str(runtime)))
+    monkeypatch.setattr(baseline, 'platform', SimpleNamespace(system=lambda:system))
+    image = {'base':base,'launcher':launcher,'foreign':foreign,'other_venv':base}[image_kind].resolve()
+    entry = 'scripts/skill_baseline.py' if entry_kind == 'runner' else 'scripts/other.py'
+    argv = [str(launcher), '-u', '-B', str(tmp_path / entry), 'test']
+    parent_pid = os.getpid() + 2000000
+    def process(pid):
+        if pid == parent_pid:
+            return 0, argv, tmp_path, (foreign if image_kind == 'other_venv' else launcher).resolve()
+        return parent_pid, argv, tmp_path, image
+    monkeypatch.setattr(baseline, '_process', process)
+    assert baseline._runner_ancestor(tmp_path, os.getpid()) is expected
+    assert not baseline._runner_ancestor(tmp_path, os.getpid() + 1000000)
+
+
+def _successful_scratch_fixture(tmp_path):
+    root = tmp_path / 'repository'
+    out = root / 'logs' / 'measurement'
+    scratch = out / 'quick-dev' / '0' / 'scratch'
+    scratch.mkdir(parents=True)
+    payload = scratch / 'payload.bin'
+    payload.write_bytes(b'fixture payload')
+    report = scratch.parent / 'stdout.log'
+    report.write_bytes(b'raw report retained')
+    return root, out, scratch, payload, report
+
+
+def _make_cleanup_alias(alias, target, *, junction=False):
+    if junction and os.name == 'nt':
+        import _winapi
+        _winapi.CreateJunction(str(target), str(alias))
+    else:
+        alias.symlink_to(target, target_is_directory=True)
+
+
+def _remove_cleanup_alias(alias):
+    try:
+        metadata = alias.lstat()
+    except FileNotFoundError:
+        return
+    if os.name == 'nt' and getattr(metadata, 'st_file_attributes', 0) & stat.FILE_ATTRIBUTE_DIRECTORY:
+        alias.rmdir()
+    else:
+        alias.unlink()
+
+
+def test_successful_scratch_accepts_real_pytest_current_aliases(tmp_path, monkeypatch):
+    """ADR-0041: pytest's retained numbered-directory aliases are private fixtures."""
+    from _pytest.pathlib import make_numbered_dir
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    targets = [make_numbered_dir(scratch, prefix='test_first_'),
+               make_numbered_dir(scratch, prefix='test_second_')]
+    aliases = [scratch / 'test_first_current', scratch / 'test_second_current']
+    for target in targets:
+        put(target, 'proof.txt', 'ordinary owned target')
+    assert all(stat.S_ISLNK(alias.lstat().st_mode) for alias in aliases)
+    real_tree = baseline.shutil.rmtree
+    observed = []
+
+    def checked_tree(target, **kwargs):
+        for alias in aliases:
+            with pytest.raises(FileNotFoundError):
+                alias.lstat()
+        assert all((entry / 'proof.txt').read_text() == 'ordinary owned target' for entry in targets)
+        observed.append(target)
+        real_tree(target, **kwargs)
+
+    monkeypatch.setattr(baseline.shutil, 'rmtree', checked_tree)
+    baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+    assert observed == [scratch]
+    assert not scratch.exists()
+    assert report.read_bytes() == b'raw report retained'
+
+
+@pytest.mark.parametrize('form', ['absolute', 'relative', 'junction', 'verbatim'])
+def test_successful_scratch_accepts_only_proven_internal_alias_forms(tmp_path, monkeypatch, form):
+    """ADR-0041: namespace spelling does not turn an internal link into a target traversal."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    target = scratch / 'ordinary-target'
+    put(target, 'proof.txt', 'ordinary owned target')
+    alias = scratch / 'targetcurrent'
+    raw_target = target.name if form == 'relative' else str(target)
+    if form == 'verbatim' and os.name == 'nt':
+        raw_target = '\\\\?\\' + str(target)
+    _make_cleanup_alias(alias, raw_target, junction=form == 'junction')
+    real_tree = baseline.shutil.rmtree
+
+    def checked_tree(path, **kwargs):
+        with pytest.raises(FileNotFoundError):
+            alias.lstat()
+        assert (target / 'proof.txt').read_text() == 'ordinary owned target'
+        real_tree(path, **kwargs)
+
+    monkeypatch.setattr(baseline.shutil, 'rmtree', checked_tree)
+    baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+    assert not scratch.exists()
+    assert report.read_bytes() == b'raw report retained'
+
+
+@pytest.mark.parametrize('invalid', ['external', 'chain', 'ancestor', 'missing', 'network'])
+def test_successful_scratch_preserves_all_aliases_when_any_target_is_unproven(tmp_path, monkeypatch, invalid):
+    """ADR-0041: a safe-looking alias name cannot permit external or chained cleanup."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    target = scratch / 'ordinary-target'
+    put(target, 'proof.txt', 'ordinary owned target')
+    outside = tmp_path / 'outside'
+    put(outside, 'proof.txt', 'outside data')
+    good, bad = scratch / 'goodcurrent', scratch / 'badcurrent'
+    _make_cleanup_alias(good, target)
+    destinations = {'external': os.path.relpath(outside, scratch), 'chain': good,
+                    'ancestor': scratch, 'missing': scratch / 'missing-target', 'network': target}
+    _make_cleanup_alias(bad, destinations[invalid])
+    real_readlink, real_metadata = os.readlink, baseline._cleanup_metadata
+
+    def read_alias(path):
+        if invalid == 'network' and Path(path) == bad:
+            return r'\\unreachable.invalid\share\target'
+        return real_readlink(path)
+
+    def private_metadata(path):
+        assert path == root or path.is_relative_to(root), 'External target metadata must never be read.'
+        return real_metadata(path)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(baseline.os, 'readlink', read_alias)
+            patch.setattr(baseline, '_cleanup_metadata', private_metadata)
+            with pytest.raises(ValueError, match='scratch-cleanup-reparse-point'):
+                baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+        assert stat.S_ISLNK(good.lstat().st_mode)
+        assert stat.S_ISLNK(bad.lstat().st_mode)
+        assert payload.read_bytes() == b'fixture payload'
+        assert (target / 'proof.txt').read_text() == 'ordinary owned target'
+        assert (outside / 'proof.txt').read_text() == 'outside data'
+        assert report.read_bytes() == b'raw report retained'
+    finally:
+        _remove_cleanup_alias(bad)
+        _remove_cleanup_alias(good)
+
+
+def test_successful_scratch_rejects_alias_target_string_drift_before_deletion(tmp_path, monkeypatch):
+    """ADR-0041: cleanup rereads the original link string before removing an alias."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    first, second = scratch / 'first-target', scratch / 'second-target'
+    put(first, 'proof.txt', 'first target')
+    put(second, 'proof.txt', 'second target')
+    alias = scratch / 'targetcurrent'
+    _make_cleanup_alias(alias, first)
+    real_readlink = os.readlink
+    reads = []
+
+    def changed_readlink(path):
+        value = real_readlink(path)
+        if Path(path) == alias:
+            reads.append(value)
+            return value if len(reads) == 1 else str(second)
+        return value
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(baseline.os, 'readlink', changed_readlink)
+            with pytest.raises(ValueError, match='scratch-cleanup-reparse-point:alias-changed'):
+                baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+        assert len(reads) >= 2
+        assert stat.S_ISLNK(alias.lstat().st_mode)
+        assert (first / 'proof.txt').read_text() == 'first target'
+        assert (second / 'proof.txt').read_text() == 'second target'
+        assert report.read_bytes() == b'raw report retained'
+    finally:
+        _remove_cleanup_alias(alias)
+
+
+def test_successful_scratch_rejects_unknown_reparse_tags(tmp_path, monkeypatch):
+    """ADR-0041: arbitrary reparse behavior is never inferred from an internal target."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    target = scratch / 'ordinary-target'
+    put(target, 'proof.txt', 'ordinary owned target')
+    alias = scratch / 'targetcurrent'
+    _make_cleanup_alias(alias, target)
+    real_lstat = Path.lstat
+
+    def unknown_metadata(path):
+        value = real_lstat(path)
+        if path == alias:
+            return SimpleNamespace(st_mode=value.st_mode, st_dev=value.st_dev, st_ino=value.st_ino,
+                                   st_nlink=value.st_nlink, st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                                   st_reparse_tag=0x8000000A)
+        return value
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(Path, 'lstat', unknown_metadata)
+            with pytest.raises(ValueError, match='scratch-cleanup-reparse-point'):
+                baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+        assert stat.S_ISLNK(alias.lstat().st_mode)
+        assert payload.read_bytes() == b'fixture payload'
+        assert (target / 'proof.txt').read_text() == 'ordinary owned target'
+        assert report.read_bytes() == b'raw report retained'
+    finally:
+        _remove_cleanup_alias(alias)
+
+
+def test_successful_scratch_removes_readonly_files_and_preserves_reports(tmp_path, monkeypatch):
+    """ADR-0041: Windows Git-style read-only payloads cannot abort a successful unit."""
+    root = small_root(tmp_path / 'repository')
+    _, enrolled = candidate_file(root)
+    retained = []
+
+    def passed_unit(repository, target, unit, channel, key):
+        scratch = unit / 'scratch'
+        payload = put(scratch, 'repo/.git/objects/ab/fixture-object', 'owned fixture')
+        os.chmod(payload, stat.S_IREAD)
+        report = put(unit, 'stdout.log', 'raw successful unit report')
+        retained.append((scratch, report))
+        return {'target': target, 'nonce': 'fixture-only', 'source': report}
+
+    monkeypatch.setattr(baseline, 'run_unit', passed_unit)
+    result = baseline.run_tests(root, enrolled, 'logs/measurement',
+                                diagnostic_target='tests/test_feature.py')
+    assert result['status'] == 'diagnostic-only'
+    assert result['authorizes'] == []
+    assert len(retained) == 2
+    assert all(not scratch.exists() for scratch, _ in retained)
+    assert all(report.read_text() == 'raw successful unit report' for _, report in retained)
+    assert not (root / baseline.STORE / 'current.json').exists()
+
+
+@pytest.mark.parametrize('invalid', ['outside-logs', 'parent-traversal', 'skill', 'index'])
+def test_successful_scratch_rejects_other_cleanup_boundaries(tmp_path, invalid):
+    """ADR-0041: a unit cleanup cannot become a general directory deleter."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    skill, index = 'quick-dev', 0
+    if invalid == 'outside-logs':
+        out = root / 'outside'
+    elif invalid == 'parent-traversal':
+        out = out / '..' / 'elsewhere'
+    elif invalid == 'skill':
+        skill = 'unregistered-skill'
+    else:
+        index = True
+    with pytest.raises(ValueError, match='scratch-cleanup-boundary'):
+        baseline._remove_successful_scratch(root, out, skill, index)
+    assert payload.read_bytes() == b'fixture payload'
+    assert report.read_bytes() == b'raw report retained'
+
+
+@pytest.mark.parametrize('placement', ['ancestor', 'root', 'descendant'])
+def test_successful_scratch_rejects_reparse_objects_before_removing_payload(tmp_path, placement):
+    """ADR-0041: real Windows junctions and POSIX links never widen cleanup."""
+    root = tmp_path / 'repository'
+    out = root / 'logs' / 'measurement'
+    out.mkdir(parents=True)
+    outside = tmp_path / 'outside'
+    outside.mkdir()
+    sentinel = put(outside, 'sentinel.txt', 'outside data')
+    scratch = out / 'quick-dev' / '0' / 'scratch'
+    if placement == 'ancestor':
+        put(outside, '0/scratch/owned.txt', 'retained private payload')
+        link = out / 'quick-dev'
+    elif placement == 'root':
+        scratch.parent.mkdir(parents=True)
+        link = scratch
+    else:
+        scratch.mkdir(parents=True)
+        put(scratch, 'owned.txt', 'retained private payload')
+        link = scratch / 'linked'
+    if os.name == 'nt':
+        import _winapi
+        _winapi.CreateJunction(str(outside), str(link))
+    else:
+        link.symlink_to(outside, target_is_directory=True)
+    try:
+        with pytest.raises(ValueError, match='scratch-cleanup-reparse-point'):
+            baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+        assert sentinel.read_text() == 'outside data'
+        if placement != 'root':
+            assert (scratch / 'owned.txt').read_text() == 'retained private payload'
+    finally:
+        if os.name == 'nt':
+            link.rmdir()
+        else:
+            link.unlink()
+    assert sentinel.read_text() == 'outside data'
+
+
+@pytest.mark.parametrize('failure_kind', ['acl', 'other-error', 'directory'])
+def test_successful_scratch_preserves_unrelated_permission_errors(tmp_path, monkeypatch, failure_kind):
+    """ADR-0041: only a regular file's actual read-only attribute permits a retry."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    error = PermissionError('fixture access denied') if failure_kind != 'other-error' else OSError('fixture I/O error')
+
+    def failed_tree(target, *, onerror):
+        function = os.rmdir if failure_kind == 'directory' else os.unlink
+        onerror(function, str(payload), (type(error), error, None))
+
+    def forbidden_attribute_change(*args, **kwargs):
+        raise AssertionError('An unrelated denial must not change file attributes.')
+
+    monkeypatch.setattr(baseline.shutil, 'rmtree', failed_tree)
+    monkeypatch.setattr(baseline.os, 'chmod', forbidden_attribute_change)
+    with pytest.raises(type(error)) as caught:
+        baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+    assert caught.value is error
+    assert payload.read_bytes() == b'fixture payload'
+    assert report.read_bytes() == b'raw report retained'
+
+
+def test_successful_scratch_restores_readonly_when_delete_retry_is_denied(tmp_path, monkeypatch):
+    """ADR-0041: clearing a read-only bit cannot swallow a real ACL denial."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    real_metadata, real_chmod = baseline._cleanup_metadata, os.chmod
+    original_mode = payload.stat().st_mode
+    real_chmod(payload, original_mode & ~stat.S_IWRITE)
+    before = payload.stat()
+    changes = []
+    denied = PermissionError('fixture ACL still denies deletion')
+
+    def readonly_metadata(target):
+        value = real_metadata(target)
+        if target == payload:
+            return SimpleNamespace(st_mode=value.st_mode, st_nlink=value.st_nlink,
+                                   st_dev=value.st_dev, st_ino=value.st_ino,
+                                   st_file_attributes=stat.FILE_ATTRIBUTE_READONLY)
+        return value
+
+    def denied_unlink(filename):
+        raise denied
+
+    def failed_tree(target, *, onerror):
+        onerror(os.unlink, str(payload), (PermissionError, denied, None))
+
+    def record_attribute_change(target, mode):
+        changes.append(mode)
+        real_chmod(target, mode)
+
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(baseline, '_cleanup_metadata', readonly_metadata)
+            patch.setattr(baseline.os, 'unlink', denied_unlink)
+            patch.setattr(baseline.os, 'chmod', record_attribute_change)
+            patch.setattr(baseline.shutil, 'rmtree', failed_tree)
+            with pytest.raises(PermissionError) as caught:
+                baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+        assert caught.value is denied
+        assert changes == [before.st_mode | stat.S_IWRITE, before.st_mode]
+        assert payload.stat().st_mode == before.st_mode
+        assert payload.read_bytes() == b'fixture payload'
+        assert report.read_bytes() == b'raw report retained'
+    finally:
+        real_chmod(payload, original_mode)
+
+
+def test_successful_scratch_refuses_readonly_hardlink_attribute_changes(tmp_path, monkeypatch):
+    """ADR-0041: a scratch link must not change an object's outside alias attributes."""
+    root, out, scratch, payload, report = _successful_scratch_fixture(tmp_path)
+    outside = tmp_path / 'outside-alias.bin'
+    os.link(payload, outside)
+    real_metadata = baseline._cleanup_metadata
+    denied = PermissionError('fixture read-only hardlink')
+
+    def readonly_metadata(target):
+        value = real_metadata(target)
+        if target == payload:
+            return SimpleNamespace(st_mode=value.st_mode, st_nlink=value.st_nlink,
+                                   st_dev=value.st_dev, st_ino=value.st_ino,
+                                   st_file_attributes=stat.FILE_ATTRIBUTE_READONLY)
+        return value
+
+    def failed_tree(target, *, onerror):
+        onerror(os.unlink, str(payload), (PermissionError, denied, None))
+
+    def forbidden_attribute_change(*args, **kwargs):
+        raise AssertionError('Hardlinked object attributes must remain unchanged.')
+
+    monkeypatch.setattr(baseline, '_cleanup_metadata', readonly_metadata)
+    monkeypatch.setattr(baseline.shutil, 'rmtree', failed_tree)
+    monkeypatch.setattr(baseline.os, 'chmod', forbidden_attribute_change)
+    with pytest.raises(PermissionError) as caught:
+        baseline._remove_successful_scratch(root, out, 'quick-dev', 0)
+    assert caught.value is denied
+    assert payload.stat().st_ino == outside.stat().st_ino
+    assert payload.read_bytes() == outside.read_bytes() == b'fixture payload'
+    assert report.read_bytes() == b'raw report retained'
+
+
+def test_successful_scratch_cleanup_never_runs_for_failed_units(tmp_path, monkeypatch):
+    """ADR-0041: failed scratch and raw reports retain their original locations."""
+    root = small_root(tmp_path / 'repository')
+    _, enrolled = candidate_file(root)
+    retained = []
+
+    def failed_unit(repository, target, unit, channel, key):
+        payload = put(unit, 'scratch/failure.txt', 'original failed fixture')
+        report = put(unit, 'stdout.log', 'original failed report')
+        retained.append((payload, report))
+        raise ValueError('fixture unit failed')
+
+    def forbidden_cleanup(*args, **kwargs):
+        raise AssertionError('Failed units must retain their fixture.')
+
+    monkeypatch.setattr(baseline, 'run_unit', failed_unit)
+    monkeypatch.setattr(baseline, '_remove_successful_scratch', forbidden_cleanup)
+    with pytest.raises(ValueError, match='mandatory-regression-units-failed:2'):
+        baseline.run_tests(root, enrolled, 'logs/measurement', diagnostic_target='tests/test_feature.py')
+    assert len(retained) == 2
+    assert all(payload.read_text() == 'original failed fixture' for payload, _ in retained)
+    assert all(report.read_text() == 'original failed report' for _, report in retained)
+    failures = json.loads((root / 'logs/measurement/failed-units.json').read_text())
+    assert len(failures) == 2
+    assert all(row['reason'] == 'fixture unit failed' for row in failures)
+    assert not (root / baseline.STORE / 'current.json').exists()
 
 
 @pytest.mark.parametrize('required_case_passes', [True, False])
@@ -32,7 +467,13 @@ def test_actual_ci_admission_sequence_runs_complete_candidate_and_stops_on_failu
     assert not any('--diagnostic-target' in command for command in commands)
     assert all('--skill' not in command or command[command.index('--skill') + 1] == 'all'
                for command in commands)
-    root = small_root(tmp_path / 'ci-repository')
+    # The parsed CI contract is unchanged. Short fixture-only root/output names
+    # leave room for atomic record suffixes on Windows without system changes.
+    fixture_prefix = 'logs/ch456-skill-baseline'
+    commands = [[('logs/b' + value[len(fixture_prefix):])
+                 if value.startswith(fixture_prefix + '/') else value for value in command]
+                for command in commands]
+    root = small_root(tmp_path / 'r')
     if not required_case_passes:
         target = root / 'tests/test_feature.py'
         target.write_text(target.read_text().replace('assert 2 + 2 == 4', 'assert 2 + 2 == 5'), encoding='utf-8')
@@ -268,7 +709,7 @@ def test_resource_recovery_real_cli_preserves_two_failures_costs_and_all_skill_u
     root, candidate, successor, request, value, ledger, prior = disk_stopped_fixture(tmp_path, monkeypatch)
     before_pointer = (root / baseline.STORE / 'current.json').read_bytes()
     result = invoke(root, 'test', '--candidate', str(candidate.relative_to(root)), '--out', value['output'],
-                    '--resource-recovery', str(request.relative_to(root)), '--defer-admission')
+                    '--resource-recovery', request.relative_to(root).as_posix(), '--defer-admission')
     assert result.returncode == 0, result.stdout + result.stderr
     state = baseline.read_json(ledger)
     assert state['failures'] == 2
@@ -277,6 +718,8 @@ def test_resource_recovery_real_cli_preserves_two_failures_costs_and_all_skill_u
     receipt = baseline.read_json(root / measured['resource_recovery']['receipt'])
     assert receipt['status'] == 'complete' and receipt['expected_uses'] == 2
     assert [row['status'] for row in receipt['uses']] == ['passed', 'passed']
+    assert [row['out'] for row in receipt['uses']] == [
+        value['output'] + '/' + name + '/0' for name in measured['candidate']['skills']]
     assert receipt['unit_key'] == value['unit_key'] and receipt['prior'] == json.loads(prior)
     assert (root / value['output'] / 'resource-recovery-ledger-preimage.json').read_bytes() == prior
     assert (root / baseline.STORE / 'current.json').read_bytes() == before_pointer
@@ -297,8 +740,9 @@ def test_resource_recovery_real_cli_preserves_two_failures_costs_and_all_skill_u
     assert invoke(root, 'admit', '--measurement', value['output'] + '/measurement.json').returncode != 0
     receipt_path.write_bytes(receipt_bytes)
     repeated = invoke(root, 'test', '--candidate', str(candidate.relative_to(root)), '--out', value['output'],
-                      '--resource-recovery', str(request.relative_to(root)), '--defer-admission')
+                      '--resource-recovery', request.relative_to(root).as_posix(), '--defer-admission')
     assert repeated.returncode != 0
+    assert 'resource-recovery-ledger-identity' in repeated.stdout and 'unsafe-path' not in repeated.stdout
     renewed = deepcopy(value)
     renewed.update(output='logs/reuse-forbidden', ledger_sha256=baseline.digest(ledger.read_bytes()))
     renewed_file = put(root, 'logs/renewed-request.json', json.dumps(renewed))
@@ -316,6 +760,45 @@ def test_resource_recovery_real_cli_preserves_two_failures_costs_and_all_skill_u
 @pytest.fixture
 def stopped_recovery(tmp_path, monkeypatch):
     return disk_stopped_fixture(tmp_path, monkeypatch)
+
+
+@pytest.mark.parametrize('defect', ['backslash', 'wrong-unit', 'reordered'])
+def test_resource_recovery_admission_rejects_rebound_noncanonical_unit_paths(stopped_recovery, defect):
+    """ADR-0041: real recovery admission compares canonical ordered unit paths."""
+    root, candidate, successor, request, value, ledger, prior = stopped_recovery
+    before_pointer = (root / baseline.STORE / 'current.json').read_bytes()
+    measured = invoke(root, 'test', '--candidate', candidate.relative_to(root).as_posix(),
+                      '--out', value['output'], '--resource-recovery', request.relative_to(root).as_posix(),
+                      '--defer-admission')
+    assert measured.returncode == 0, measured.stdout + measured.stderr
+    measurement_path = root / value['output'] / 'measurement.json'
+    measurement_bytes = measurement_path.read_bytes()
+    measurement = json.loads(measurement_bytes)
+    receipt_path = root / measurement['resource_recovery']['receipt']
+    receipt_bytes = receipt_path.read_bytes()
+    receipt = json.loads(receipt_bytes)
+    expected = [value['output'] + '/' + name + '/0' for name in measurement['candidate']['skills']]
+    assert [row['out'] for row in receipt['uses']] == expected
+    if defect == 'backslash':
+        receipt['uses'][0]['out'] = receipt['uses'][0]['out'].replace('/', '\\')
+    elif defect == 'wrong-unit':
+        receipt['uses'][0]['out'] += '-different'
+    else:
+        receipt['uses'].reverse()
+    receipt_path.write_bytes(baseline.wire(receipt))
+    # Rebind the raw hash so rejection must reach the ordered unit-path guard.
+    measurement['resource_recovery']['sha256'] = baseline.digest(receipt_path.read_bytes())
+    measurement_path.write_bytes(baseline.wire(measurement))
+    refused = invoke(root, 'admit', '--measurement', value['output'] + '/measurement.json')
+    assert refused.returncode != 0, refused.stdout + refused.stderr
+    assert 'measurement-resource-recovery-units' in refused.stdout and 'unsafe-path' not in refused.stdout
+    assert (root / baseline.STORE / 'current.json').read_bytes() == before_pointer
+    assert baseline.read_json(ledger)['failures'] == json.loads(prior)['failures'] == 2
+    receipt_path.write_bytes(receipt_bytes)
+    measurement_path.write_bytes(measurement_bytes)
+    admitted = invoke(root, 'admit', '--measurement', value['output'] + '/measurement.json')
+    assert admitted.returncode == 0, admitted.stdout + admitted.stderr
+    assert invoke(root, 'check').returncode == 0
 
 
 @pytest.mark.parametrize('defect', ['assertion', 'ordinary-timeout', 'wrong-key', 'wrong-platform',
@@ -387,8 +870,10 @@ def test_resource_recovery_real_failed_assertion_keeps_third_failure_and_stops_s
     value['candidate_sha256'] = baseline.digest(baseline.wire(successor))
     request.write_bytes(baseline.wire(value))
     result = invoke(root, 'test', '--candidate', str(candidate.relative_to(root)), '--out', value['output'],
-                    '--resource-recovery', str(request.relative_to(root)), '--defer-admission')
+                    '--resource-recovery', request.relative_to(root).as_posix(), '--defer-admission')
     assert result.returncode != 0
+    assert 'resource-recovery-batch-failed:' + value['target'] in result.stdout
+    assert 'unsafe-path' not in result.stdout
     state = baseline.read_json(ledger)
     assert state['failures'] == 3 and state['spent'] > json.loads(prior)['spent']
     receipt = baseline.read_json(root / 'logs/workflow-unit-budgets/skill-baseline/resource-recoveries' / (value['unit_key'] + '.json'))
@@ -789,6 +1274,80 @@ def test_repeated_import_resolution_has_no_cross_call_filesystem_cache(tmp_path)
     assert baseline.fingerprint(root, 'vdd') == first
 
 
+def test_dependency_import_nodes_preserve_all_statement_containers(monkeypatch):
+    # ADR-0041: expression pruning must retain every statically bound import.
+    source = '''
+import top
+from package import member
+def ordinary():
+    import function_body
+    if condition:
+        from conditional import member
+    else:
+        import alternate
+    for item in values:
+        import loop_body
+    else:
+        import loop_else
+    while condition:
+        import while_body
+    else:
+        import while_else
+    with resource():
+        import context_body
+    try:
+        import try_body
+    except Exception:
+        import handler_body
+    else:
+        import try_else
+    finally:
+        import final_body
+    try:
+        import group_try
+    except* Exception:
+        import group_handler
+    match value:
+        case {'key': item} if item:
+            import match_body
+    return [str(item + 1) for item in values if item]
+class Container:
+    import class_body
+    async def asynchronous(self):
+        async for item in stream:
+            import async_loop
+        else:
+            import async_else
+        async with manager():
+            import async_context
+        return await operation()
+'''
+    tree = ast.parse(source)
+    expected = [ast.dump(node) for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
+    original = ast.iter_child_nodes
+    def children(node):
+        assert not isinstance(node, ast.expr), 'dependency traversal must not descend expression trees'
+        return original(node)
+    with monkeypatch.context() as context:
+        context.setattr(ast, 'iter_child_nodes', children)
+        actual = [ast.dump(node) for node in baseline._dependency_import_nodes(tree)]
+    assert len(expected) == 21
+    assert actual == expected
+
+
+def test_dependency_import_nodes_match_full_walk_for_current_sources():
+    # ADR-0041: compare against the original full AST walk on actual source bytes.
+    inventory = baseline.fingerprint(ROOT, 'vdd')['files']
+    compared = 0
+    for relative in inventory:
+        if relative.endswith('.py'):
+            tree = ast.parse((ROOT / relative).read_text(encoding='utf-8-sig'))
+            expected = [ast.dump(node) for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))]
+            assert [ast.dump(node) for node in baseline._dependency_import_nodes(tree)] == expected, relative
+            compared += 1
+    assert compared > 100
+
+
 @pytest.mark.parametrize('kind', ['parametrize-ids', 'param-id', 'cer-param-mark'])
 def test_param_display_labels_cannot_turn_a_copy_into_substantive_growth(tmp_path, kind):
     test = tmp_path / 'test_values.py'
@@ -963,7 +1522,7 @@ def test_published_guard_fixture_is_self_contained_and_preserves_all_failure_rol
 def native_refresh_pair(tmp_path_factory):
     from scripts.toolchain.knowledge_query.tests.test_planning_query import _prepare_published_main_fixture
     import publish_knowledge_catalog as publication
-    root = _prepare_published_main_fixture(tmp_path_factory.mktemp('baseline-publication-base'))
+    root = _prepare_published_main_fixture(tmp_path_factory.mktemp('baseline-publication-base'), current_controls=True)
     tooling = small_root(tmp_path_factory.mktemp('tiny-baseline-tooling'))
     for source in tooling.rglob('*'):
         if source.is_file():
@@ -976,18 +1535,46 @@ def native_refresh_pair(tmp_path_factory):
     # Native validation code is actual source, not a replacement verifier.
     for relative in publication.CONTROL_PATHS:
         assert (root / relative).read_bytes() == (ROOT / relative).read_bytes()
-    candidate_file(root, 'seed.json')
+    seed_main = subprocess.check_output(['git', 'rev-parse', 'refs/heads/main'], cwd=root, text=True).strip()
+    seed_publication = baseline.read_json(root / 'knowledge/indexes/current.json')
+    assert seed_publication['main_commit'] == seed_main
+    _, seed_candidate = candidate_file(root, 'seed.json')
     seed = invoke(root, 'test', '--candidate', 'logs/seed.json', '--out', 'logs/seed',
                   '--bootstrap', '--defer-admission')
     assert seed.returncode == 0, seed.stdout + seed.stderr
     admitted = invoke(root, 'admit', '--measurement', 'logs/seed/measurement.json')
     assert admitted.returncode == 0, admitted.stdout + admitted.stderr
     before = baseline.current(root)
+    for name in baseline.SKILLS:
+        record = baseline.record(root, before['platforms'][baseline.platform_key()][name])
+        assert record['bootstrap'] is True and record['predecessor'] is None
+        assert record['derived_publication']['pointer'] == seed_publication
+        baseline._verify_admission_proofs(root, record)
     agents = root / 'AGENTS.md'
     agents.write_bytes(agents.read_bytes() + b'\nRead-only fixture source refresh.\n')
     _refresh_fixture_commit(root, ['AGENTS.md'])
-    _native_fixture_publish(root, 'refresh')
+    refresh_main = subprocess.check_output(['git', 'rev-parse', 'refs/heads/main'], cwd=root, text=True).strip()
+    assert subprocess.check_output(['git', 'rev-parse', refresh_main + '^'], cwd=root, text=True).strip() == seed_main
+    changed = subprocess.check_output(['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', refresh_main],
+                                     cwd=root, text=True).splitlines()
+    assert changed == ['AGENTS.md']
+    # Seed and successor differ only in derived publication, never execution inputs.
+    assert baseline.candidate(root, list(baseline.SKILLS)) == seed_candidate
+    for relative in publication.CONTROL_PATHS:
+        assert (root / relative).read_bytes() == (ROOT / relative).read_bytes()
+    refreshed = _native_fixture_publish(root, 'refresh')
+    current_publication = baseline.read_json(root / 'knowledge/indexes/current.json')
+    assert refreshed['main_commit'] == current_publication['main_commit'] == refresh_main
+    assert refreshed['generation_id'] == current_publication['generation_id'] != seed_publication['generation_id']
     assert baseline.current(root) == before
+    successor = baseline.candidate(root, list(baseline.SKILLS))
+    assert {key: successor[key] for key in ('policy_sha256', 'runner_sha256', 'tool_versions')} == {
+        key: seed_candidate[key] for key in ('policy_sha256', 'runner_sha256', 'tool_versions')}
+    for name in baseline.SKILLS:
+        assert successor['skills'][name]['suite'] == seed_candidate['skills'][name]['suite']
+        previous = baseline.record(root, before['platforms'][baseline.platform_key()][name])
+        assert previous['derived_publication']['pointer'] == seed_publication
+        baseline._verify_admission_proofs(root, previous)
     return root
 
 
@@ -1007,6 +1594,17 @@ def _native_fixture_publish(root, name):
     subprocess.run(command, check=True, capture_output=True, timeout=20)
     result = publication.run(root, publish=True, repeat=1, publication_request=Path(relative))
     assert result['status'] == 'published', result
+    main = subprocess.check_output(['git', 'rev-parse', 'refs/heads/main'], cwd=root, text=True).strip()
+    request = baseline.read_json(root / relative)
+    pointer = baseline.read_json(root / 'knowledge/indexes/current.json')
+    manifest_path = root / 'knowledge/indexes/generations' / pointer['generation_id'] / 'manifest.json'
+    manifest = baseline.read_json(manifest_path)
+    assert result['main_commit'] == request['main_commit'] == pointer['main_commit'] == manifest['main_commit'] == main
+    assert result['generation_id'] == pointer['generation_id'] == manifest['generation_id']
+    assert result['generation_sha256'] == pointer['generation_sha256'] == 'sha256:' + baseline.digest(manifest_path.read_bytes())
+    assert manifest['publication_request'] == publication._load_publication_request(
+        root, Path(relative), expected_main=main).summary
+    assert result['evaluation']['failed'] == result['evaluation']['protocol_failed'] == 0
     return result
 
 
@@ -1015,8 +1613,8 @@ def _refresh_copy(base, path):
     return _copy_published_fixture(base, path)
 
 
-def test_native_publication_refresh_requires_full_remeasurement_and_activates_both_skills(native_refresh_pair, tmp_path):
-    root = _refresh_copy(native_refresh_pair, tmp_path / 'refresh')
+def test_native_publication_refresh_requires_full_remeasurement_and_activates_both_skills(native_refresh_pair, tmp_path_factory):
+    root = _refresh_copy(native_refresh_pair, tmp_path_factory.mktemp('r') / 'refresh')
     before = baseline.current(root)
     _, enrolled = candidate_file(root)
     for name, skill in enrolled['skills'].items():
@@ -1051,8 +1649,8 @@ def test_native_publication_refresh_requires_full_remeasurement_and_activates_bo
 @pytest.mark.parametrize('defect', ['code', 'test-bytes', 'unknown-derived', 'projection-permission',
     'corrupt-layer', 'corrupt-manifest', 'missing-request', 'corrupt-predecessor', 'missing-predecessor',
     'missing-predecessor-proof', 'corrupt-predecessor-proof'])
-def test_native_publication_refresh_exception_refuses_unproved_or_mixed_change(native_refresh_pair, tmp_path, defect):
-    root = _refresh_copy(native_refresh_pair, tmp_path / 'negative')
+def test_native_publication_refresh_exception_refuses_unproved_or_mixed_change(native_refresh_pair, tmp_path_factory, defect):
+    root = _refresh_copy(native_refresh_pair, tmp_path_factory.mktemp('r') / 'negative')
     if defect == 'code': put(root, 'shared.py', 'VALUE = 2\n')
     elif defect == 'test-bytes':
         target = root / 'tests/test_feature.py'; target.write_bytes(target.read_bytes() + b'\n# no semantic growth\n')
@@ -1086,8 +1684,8 @@ def test_native_publication_refresh_exception_refuses_unproved_or_mixed_change(n
 
 
 @pytest.mark.parametrize('kind', ['policy', 'scope'])
-def test_native_valid_publication_cannot_hide_policy_or_scope_change(native_refresh_pair, tmp_path, kind):
-    root = _refresh_copy(native_refresh_pair, tmp_path / 'semantic-change')
+def test_native_valid_publication_cannot_hide_policy_or_scope_change(native_refresh_pair, tmp_path_factory, kind):
+    root = _refresh_copy(native_refresh_pair, tmp_path_factory.mktemp('r') / 'semantic-change')
     if kind == 'policy':
         target = root / 'knowledge/policies/consumer-policies.v2.json'; value = baseline.read_json(target)
         next(p for p in value['policies'] if p['consumer'] == 'vdd')['max_candidates'] = 19
@@ -1104,8 +1702,8 @@ def test_native_valid_publication_cannot_hide_policy_or_scope_change(native_refr
 
 
 @pytest.mark.parametrize('defect', ['incomplete', 'other-publication', 'post-measure-code'])
-def test_native_refresh_measurement_cannot_approve_other_or_partial_content(native_refresh_pair, tmp_path, defect):
-    root = _refresh_copy(native_refresh_pair, tmp_path / 'measurement')
+def test_native_refresh_measurement_cannot_approve_other_or_partial_content(native_refresh_pair, tmp_path_factory, defect):
+    root = _refresh_copy(native_refresh_pair, tmp_path_factory.mktemp('r') / 'measurement')
     candidate_file(root)
     measured = invoke(root, 'test', '--candidate', 'logs/candidate.json', '--out', 'logs/measured', '--defer-admission')
     assert measured.returncode == 0, measured.stdout + measured.stderr

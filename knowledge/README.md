@@ -46,10 +46,18 @@ verifies every returned read-set hash.
 - Standards are individual modules under the standards collection.
 - Governance Skills are component modules binding their Skill entrypoint,
   CLI, orchestrator, route registry or policy, operations, and freeze point.
-- Each execution-plan directory contributes one discoverable plan module at
-  `00-index.md`. The module binds available requirements, implementation
-  contract, plan state, and command registry files. Context-bound lifecycle
-  artifacts such as authority manifests and knowledge contexts never enter the
+- Each legacy execution-plan directory contributes one discoverable plan module
+  at `00-index.md`, binding available requirements, implementation contract,
+  plan state, and command registry files. Native VDD V3 directories without
+  that index use the existing `plan-ready` compiler state and native canonical
+  bundle hash to bind the materialized obligations, acceptances, and failure
+  intents. Discovery uses the stable directory title; the three arrays remain
+  its verified semantic read-set, without importing frozen query examples or
+  compiler metadata as global search text. They form one conditional plan
+  module; bundle and compiler-state files are integrity witnesses only.
+  Discovery grants neither execution readiness nor publication authority. A
+  legacy index retains precedence. Context-bound lifecycle artifacts such as
+  authority manifests and knowledge contexts never enter the
   global semantic source closure; this prevents catalog-to-plan-to-context
   recursion. Fixtures, tools, tests, and implementation reports do not become
   global semantic modules. Versioned top-level plan resources use the highest

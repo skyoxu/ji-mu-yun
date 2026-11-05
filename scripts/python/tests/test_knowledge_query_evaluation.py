@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from collections import Counter
 from pathlib import Path
@@ -26,6 +28,54 @@ def _load_evaluator():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+class EvaluatorBlobReaderTests(unittest.TestCase):
+    """ADR-0044: evaluator source evidence retains exact committed authority."""
+
+    def setUp(self) -> None:
+        temporary = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.addCleanup(temporary.cleanup)
+        base = Path(temporary.name)
+        self.root = base / ("r" * max(1, 190 - len(str(base)) - 1))
+        self.root.mkdir()
+        self.source = "docs/facts-" + "x" * 30 + ".bin"
+        self.payload = b"\xef\xbb\xbfcommitted\r\n\x00\xff\n"
+        target = self.root / self.source
+        target.parent.mkdir()
+        target.write_bytes(self.payload)
+        self._git("init", "--initial-branch=main")
+        self._git("config", "core.longpaths", "false")
+        self._git("add", "--", ".")
+        self._git("commit", "-m", "Commit evaluator blob fixture")
+        self.commit = self._git("rev-parse", "refs/heads/main").decode("ascii").strip()
+        self.assertGreater(len(str(self.root / f"{self.commit}:{self.source}")), 260)
+        target.write_bytes(b"dirty worktree cannot replace committed source\n")
+
+    def _git(self, *arguments: str) -> bytes:
+        return subprocess.check_output(
+            ["git", "-c", "core.longpaths=false", "-c", "core.autocrlf=false",
+             "-c", "user.name=Evaluator Fixture", "-c", "user.email=fixture@example.invalid",
+             "-C", str(self.root), *arguments],
+            stderr=subprocess.PIPE,
+        )
+
+    def test_long_logical_blob_retains_exact_bytes_despite_dirty_worktree(self) -> None:
+        evaluator = _load_evaluator()
+        raw = evaluator._main_blob(self.root, self.commit, self.source)
+        self.assertEqual(self.payload, raw)
+        self.assertEqual(hashlib.sha256(self.payload).hexdigest(), hashlib.sha256(raw).hexdigest())
+        self.assertNotEqual(raw, (self.root / self.source).read_bytes())
+
+    def test_missing_blob_and_tree_remain_errors_with_captured_git_detail(self) -> None:
+        evaluator = _load_evaluator()
+        for path in ("docs/missing.bin", "docs"):
+            with self.subTest(path=path):
+                with self.assertRaises(ValueError) as caught:
+                    evaluator._main_blob(self.root, self.commit, path)
+                prefix = f"cannot read main blob {path}: "
+                self.assertTrue(str(caught.exception).startswith(prefix))
+                self.assertTrue(str(caught.exception)[len(prefix):].strip())
 
 
 class KnowledgeQueryEvaluationTests(unittest.TestCase):

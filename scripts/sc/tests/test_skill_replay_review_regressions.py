@@ -10,6 +10,7 @@ import unittest
 import os
 from pathlib import Path
 from unittest import mock
+from types import SimpleNamespace
 
 ENTRY = Path(__file__).resolve().parents[1] / "skill_package_replay.py"
 SPEC = importlib.util.spec_from_file_location("review_replay", ENTRY)
@@ -86,6 +87,40 @@ class ReviewRegressionTests(unittest.TestCase):
 
 class NativeRuntimeTests(unittest.TestCase):
     """Actual processes and immutable Git inputs; no mocked validation results."""
+
+    def test_isolated_observer_refuses_unknown_or_foreign_runtime(self):
+        # ADR-0058: choosing a real image never accepts an arbitrary executable.
+        prefix=self.root/'runtime'
+        for value in (None,'python.exe',str(self.root/'foreign/python.exe'),str(prefix/'missing.exe')):
+            with self.subTest(base=value), mock.patch.object(replay.runtime,'sys',
+                    SimpleNamespace(platform='win32',_base_executable=value,base_prefix=str(prefix),executable=sys.executable)):
+                with self.assertRaisesRegex(ValueError,'runtime identity unavailable'):
+                    replay.runtime.isolated_observer_python()
+        with mock.patch.object(replay.runtime,'sys',SimpleNamespace(platform='linux',executable=sys.executable)):
+            self.assertEqual(sys.executable,replay.runtime.isolated_observer_python())
+
+    def test_isolated_observer_keeps_actual_process_identity(self):
+        # ADR-0058: retain strict nonce, actual PID, target, and read binding.
+        observed = {}
+        original = replay.runtime.execute
+        def execute(command, *args, **kwargs):
+            result = original(command, *args, **kwargs)
+            witness = json.loads(Path(command[9]).read_text(encoding='utf-8'))
+            observed.update(launched_pid=result.pid, witness_pid=witness['pid'],
+                            nonce_matches=witness['nonce']==command[10],
+                            target_matches=witness['target']==str((self.root/'candidate').resolve()))
+            (self.root/'observer-process-identity.json').write_text(json.dumps(observed),encoding='utf-8')
+            evidence=ENTRY.parents[2]/'logs/observer-process-identity-probe'
+            evidence.mkdir(parents=True,exist_ok=True)
+            with (evidence/f'{os.getpid()}-{result.pid}.json').open('x',encoding='utf-8',newline='\n') as stream:
+                json.dump(observed,stream);stream.write('\n')
+            return result
+        with mock.patch.object(replay.runtime,'execute',side_effect=execute):
+            result=replay.runtime.observed_validator(self.root,self.root/'validator/check.py',self.cap,self.root/'candidate')
+        self.assertEqual(0,result.returncode)
+        self.assertEqual(result.pid,result.read_witness['pid'])
+        self.assertTrue(observed['nonce_matches'] and observed['target_matches'])
+        self.assertTrue(any(row['path']=='fixture.json' and row['bytes_read']>0 for row in result.read_witness['reads']))
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
