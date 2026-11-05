@@ -205,14 +205,13 @@ internal static class S206TestSupport
         var stderr = process.StandardError.ReadToEndAsync();
         try
         {
-            using var client = new HttpClient { BaseAddress = new Uri(url), Timeout = TimeSpan.FromSeconds(2) };
+            using var client = RoleObservationHttpTransport.CreateClient(url);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var healthy = false;
             for (var attempt = 0; attempt < 50; attempt++)
             {
                 if (process.HasExited) break;
-                try { healthy = (await client.GetAsync("/healthz")).IsSuccessStatusCode; }
-                catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException) { }
+                healthy = await RoleObservationHttpTransport.IsHealthyAsync(client);
                 if (healthy) break;
                 await Task.Delay(100);
             }

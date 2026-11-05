@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import json
 import os
@@ -80,6 +81,55 @@ def _is_sha256(value: Any) -> bool:
         and value.startswith("sha256:")
         and all(character in "0123456789abcdef" for character in value[7:])
     )
+
+
+def _access_refused(error: BaseException) -> bool:
+    """ADR-0050/0057: causal access refusal forbids path-based recovery I/O."""
+    pending, seen = [error], set()
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, PermissionError) or (isinstance(current, OSError) and (
+            current.errno in {errno.EACCES, errno.EPERM} or getattr(current, "winerror", None) == 5
+        )):
+            return True
+        pending.extend(item for item in (current.__cause__, current.__context__) if item is not None)
+        if isinstance(current, BaseExceptionGroup):
+            pending.extend(current.exceptions)
+    return False
+
+
+def _refusal_result(phase: str, error: BaseException, main_commit: str | None) -> dict[str, Any]:
+    # Emit cached diagnostics on stdout; do not try another path for evidence.
+    return {"status": "blocked", "phase": phase, "error": str(error),
+            "main_commit": main_commit, "evidence": None,
+            "access_refused": True, "retained_state_unverified": True}
+
+
+@contextmanager
+def _private_staging(parent: Path, prefix: str) -> Iterator[Path]:
+    """Retain failed private staging; never re-query an access-denied object.
+
+    Unlike TemporaryDirectory, there is no GC finalizer that can retry cleanup.
+    This retains the existing private allocator and does not grant new access.
+    """
+    temporary = Path(tempfile.mkdtemp(prefix=prefix, dir=parent))
+    try:
+        yield temporary
+    except BaseException as error:
+        if _access_refused(error):
+            raise
+        try:
+            if temporary.exists():
+                shutil.rmtree(temporary)
+        except BaseException as cleanup_error:
+            raise RuntimeError(f"staging_failure:{error}; staging_cleanup_failure:{cleanup_error}") from error
+        raise
+    else:
+        if temporary.exists():
+            shutil.rmtree(temporary)
 
 
 def _load_json_bytes(payload: bytes, label: str) -> dict[str, Any]:
@@ -395,10 +445,14 @@ def _recover_stale_lock(index_root: Path, lock_path: Path) -> bool:
     try:
         payload = lock_path.read_bytes()
         lock = _load_json_bytes(payload, "publication_lock")
-    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        if _access_refused(error):
+            raise
         try:
             age = time.time() - lock_path.stat().st_mtime
-        except OSError:
+        except OSError as error:
+            if _access_refused(error):
+                raise
             return False
         if age < MALFORMED_LOCK_GRACE_SECONDS:
             return False
@@ -416,7 +470,9 @@ def _recover_stale_lock(index_root: Path, lock_path: Path) -> bool:
         if lock_path.read_bytes() != payload:
             return False
         os.replace(lock_path, quarantine)
-    except OSError:
+    except OSError as error:
+        if _access_refused(error):
+            raise
         return False
     try:
         _atomic_bytes(evidence, _render({
@@ -427,7 +483,9 @@ def _recover_stale_lock(index_root: Path, lock_path: Path) -> bool:
             "lock": lock,
         }))
         quarantine.unlink()
-    except OSError:
+    except OSError as error:
+        if _access_refused(error):
+            raise
         if not lock_path.exists() and quarantine.exists():
             os.replace(quarantine, lock_path)
         return False
@@ -452,6 +510,8 @@ def _single_writer(index_root: Path) -> Iterator[None]:
     except OSError as exc:
         raise ValueError("knowledge_publication_lock_conflict") from exc
     assert descriptor is not None
+    refused = False
+    body_error: BaseException | None = None
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
             json.dump({
@@ -464,13 +524,23 @@ def _single_writer(index_root: Path) -> Iterator[None]:
             handle.flush()
             os.fsync(handle.fileno())
         yield
+    except BaseException as error:
+        body_error = error
+        refused = _access_refused(error)
+        raise
     finally:
-        try:
-            lock = json.loads(lock_path.read_text(encoding="utf-8"))
-            if lock.get("token") == token:
-                lock_path.unlink()
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            pass
+        if not refused:
+            try:
+                lock = json.loads(lock_path.read_text(encoding="utf-8"))
+                if lock.get("token") == token:
+                    lock_path.unlink()
+            except OSError as error:
+                if _access_refused(error):
+                    if body_error is not None:
+                        raise RuntimeError(f"{body_error}; lock_cleanup_access_refused:{error}") from body_error
+                    raise
+            except (UnicodeError, json.JSONDecodeError):
+                pass
 
 
 def _validate_layers(
@@ -769,7 +839,9 @@ def _rollback_and_verify(backups: dict[Path, bytes | None]) -> None:
     for path, payload in backups.items():
         try:
             _restore_bytes(path, payload)
-        except Exception as error:  # every target must still be attempted
+        except Exception as error:  # Ordinary failures still attempt all targets.
+            if _access_refused(error):
+                raise RuntimeError(f"activation_rollback_access_refused:{path.as_posix()}:{error}") from error
             errors.append(f"restore:{path.as_posix()}:{error}")
     for path, payload in backups.items():
         try:
@@ -777,6 +849,8 @@ def _rollback_and_verify(backups: dict[Path, bytes | None]) -> None:
             if current != payload:
                 errors.append(f"verify:{path.as_posix()}")
         except Exception as error:
+            if _access_refused(error):
+                raise RuntimeError(f"activation_rollback_verification_access_refused:{path.as_posix()}:{error}") from error
             errors.append(f"verify:{path.as_posix()}:{error}")
     if errors:
         raise RuntimeError("activation_rollback_failed:" + "|".join(errors))
@@ -832,6 +906,8 @@ def _activate_lkg(
             _atomic_bytes(evidence_path, _render(report))
         return report
     except Exception as error:
+        if _access_refused(error):
+            raise
         try:
             _rollback_and_verify(backups)
         except Exception as rollback_error:
@@ -896,6 +972,8 @@ def restore_last_known_good(repository_root: Path, *, repeat: int) -> dict[str, 
                 "evidence": evidence.relative_to(repository_root).as_posix(),
             }
     except (OSError, UnicodeError, ValueError, RuntimeError, KeyError, TypeError, json.JSONDecodeError, subprocess.SubprocessError) as error:
+        if _access_refused(error):
+            return _refusal_result(phase, error, pinned_main)
         evidence = _write_failure(
             repository_root,
             phase=phase,
@@ -988,17 +1066,13 @@ def _publish_bundle(
                 raise ValueError("generation_identity_conflict")
     else:
         generation_root.parent.mkdir(parents=True, exist_ok=True)
-        temporary = Path(tempfile.mkdtemp(prefix=f".{generation_id}.", dir=generation_root.parent))
-        try:
+        with _private_staging(generation_root.parent, prefix=f".{generation_id}.") as temporary:
             for path, payload in bundle_payloads.items():
                 target = temporary / path
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(payload)
             (temporary / "manifest.json").write_bytes(manifest_bytes)
             os.replace(temporary, generation_root)
-        finally:
-            if temporary.exists():
-                shutil.rmtree(temporary)
     pointer = {
         "schema_version": POINTER_SCHEMA_VERSION,
         "generation_id": generation_id,
@@ -1034,6 +1108,8 @@ def _publish_bundle(
         if _main_commit(repository_root) != main_commit:
             raise ValueError("main_advanced_during_publication")
     except Exception as error:
+        if _access_refused(error):
+            raise
         try:
             _rollback_and_verify(backups)
         except Exception as rollback_error:
@@ -1085,8 +1161,7 @@ def run(repository_root: Path, *, publish: bool, repeat: int, publication_reques
             }
             _validate_layers(snapshot, catalog, projections, legacy, inputs["policy"], inputs["exclusions"])
             layer_bytes = {name: _render(value) for name, value in layer_values.items()}
-            with tempfile.TemporaryDirectory(prefix=".publication-", dir=index_root) as staging_name:
-                staging = Path(staging_name)
+            with _private_staging(index_root, prefix=".publication-") as staging:
                 staged_paths: dict[str, Path] = {}
                 for name, payload in {**layer_bytes, **input_bytes}.items():
                     target = staging / f"{name}.json"
@@ -1132,6 +1207,8 @@ def run(repository_root: Path, *, publish: bool, repeat: int, publication_reques
                 "evaluation": report["summary"],
             }
     except (OSError, UnicodeError, ValueError, RuntimeError, json.JSONDecodeError, subprocess.SubprocessError) as error:
+        if _access_refused(error):
+            return _refusal_result(phase, error, pinned_main)
         evidence = _write_failure(
             repository_root,
             phase=phase,
