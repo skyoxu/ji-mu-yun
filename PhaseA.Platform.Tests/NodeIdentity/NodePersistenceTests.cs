@@ -113,7 +113,10 @@ public sealed class NodePersistenceTests(ITestOutputHelper output)
             var scope = new FoundationEnvironment();
             if (string.IsNullOrWhiteSpace(scope._oldOwner) && string.IsNullOrWhiteSpace(scope._oldKeys))
             {
-                var owner = S206TestSupport.CreateOwnedFixtureRoot("f7s-");
+                // ADR-0061: direct .NET runs use the same repository-owned boundary as Python.
+                var logs = Path.Combine(S206TestSupport.RepositoryRoot, "logs");
+                RunnerIsolationPolicy.RequireNoReparsePoint(S206TestSupport.RepositoryRoot, logs);
+                var owner = Path.Combine(logs, "f7s-" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(owner);
                 Environment.SetEnvironmentVariable("S206_OWNED_FIXTURE_ROOT", owner);
                 Environment.SetEnvironmentVariable("PHASEA_SNAPSHOT_KEY_ROOT", Path.Combine(owner, "synthetic-snapshot-keys"));
