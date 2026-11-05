@@ -16,6 +16,7 @@ from unittest import mock
 ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT/'scripts/python'))
 from _knowledge_catalog_builder import CatalogBuilder, MainSnapshot
+from _knowledge_locator_core import locate
 import publish_knowledge_catalog as publication
 
 spec=importlib.util.spec_from_file_location('v3_publication_request_helper',
@@ -167,6 +168,28 @@ class NativeV3PlanAdapterTests(unittest.TestCase):
         root,commit=self.repository()
         self.assertFalse(helper._target_exists_at_main(root,commit,self.target))
         self.assertEqual([],self.catalog(root).modules)
+
+    def test_native_discovery_does_not_promote_embedded_query_fixture_text(self):
+        # ADR-0057: a bounded plan entry locates its semantic read-set. Frozen
+        # compiler examples must not become global discovery claims.
+        examples=['PostgreSQL logical replication WAL slot failover topology',
+                  'Helm chart rollback Kubernetes namespace reconciliation']
+        def embed(files,bundle,state):
+            bundle['obligations'][0]['source_text']='Query fixture examples: '+'. '.join(examples)
+            files[self.target+'/obligations.v1.json']=native_bytes(bundle['obligations'])
+            files[self.target+'/semantic-plan-bundle.v1.json']=native_bytes(bundle)
+            state['semantic_plan_sha256']='sha256:'+hashlib.sha256(native_bytes(bundle)).hexdigest()
+            files[self.target+'/compiler-state.v1.json']=native_bytes(state)
+        root,_=self.repository(mutate=embed)
+        catalog={'modules':self.catalog(root).modules}
+        for query in examples:
+            with self.subTest(query=query):
+                result=locate({'query':query},catalog)
+                self.assertEqual('insufficient_match',result['status'])
+                self.assertEqual([],result['candidates'])
+        positive=locate({'query':'native-v3-example'},catalog)
+        self.assertEqual('matched',positive['status'])
+        self.assertEqual(3,len(positive['candidates'][0]['read_set']))
 
     def test_legacy_index_keeps_precedence_and_compatibility(self):
         def broken(files,bundle,state):files[self.target+'/compiler-state.v1.json']=b'{}\n'

@@ -870,13 +870,18 @@ class CatalogBuilder:
                 self.add_source(path, "integrity-only")
             title = PurePosixPath(directory).name
             domain, dependencies = _domain_for_plan(native["source_path"], title)
-            self.add_module(
+            module = self.add_module(
                 module_id="plan." + _slug(title), kind="execution-plan",
                 source_path=native["source_path"], source_role="plan-obligations",
                 primary_domain=domain, dependencies=dependencies,
                 status=_plan_catalog_status(native["state"]), resources=native["resources"],
                 fallback_title=title,
             )
+            if module is not None:
+                # ADR-0057: discover the stable plan entry, not every frozen
+                # source excerpt, query fixture or oracle in compiler JSON.
+                # The complete semantic arrays remain the verified read-set.
+                module["content"] = title
 
     def add_runtime_entrypoints(self) -> None:
         self.add_module(
